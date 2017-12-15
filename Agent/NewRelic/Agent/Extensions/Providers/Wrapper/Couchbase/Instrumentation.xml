@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="Couchbase" className="Couchbase.CouchbaseClient">
+				<exactMethodMatcher methodName="ExecuteRemove" parameters="System.String,Couchbase.Operations.PersistTo,Couchbase.Operations.ReplicateTo" />
+				<exactMethodMatcher methodName="Get" parameters="Couchbase.IView" />
+				<exactMethodMatcher methodName="PerformConcatenate"/>
+				<exactMethodMatcher methodName="PerformMutate"/>
+				<exactMethodMatcher methodName="PerformRemove"/>
+				<exactMethodMatcher methodName="PerformStore" />
+				<exactMethodMatcher methodName="PerformTryGet" />
+				<exactMethodMatcher methodName="PerformTryGetAndTouch"/>
+				<exactMethodMatcher methodName="PerformTryGetWithLock"/>
+				<exactMethodMatcher methodName="Touch" />
+				<exactMethodMatcher methodName="Unlock"/>
+			</match>
+			<match assemblyName="Couchbase.NetClient" className="Couchbase.CouchbaseBucket">
+				<exactMethodMatcher methodName="Append"/>
+				<exactMethodMatcher methodName="AppendAsync"/>
+				<exactMethodMatcher methodName="Decrement" parameters="System.String,System.UInt64,System.UInt64,System.UInt32" />
+				<exactMethodMatcher methodName="DecrementAsync" parameters="System.String,System.UInt64,System.UInt64,System.UInt32" />
+				<exactMethodMatcher methodName="Exists"/>
+				<exactMethodMatcher methodName="ExistsAsync"/>
+				<!-- the following exactMethodMatcher is commented out since the method it matches, while callable directly by applications,
+				     is also called from GetMultiple methods (those that take lists of keys) which are instrumented as single calls.  
+					 Instrumenting this method would thus result in double instrumentation.  To safely instrument this method, uncomment
+					 this exactMethodMatcher and comment out the GetMultiple exactMethodMatchers.  Note however, that any calls to the
+					 GetMultiple methods will then be captured only as unscoped metrics.-->
+				<!--<exactMethodMatcher methodName="Get" parameters="System.String"/>-->
+				<exactMethodMatcher methodName="Get" parameters="System.Collections.Generic.IList`1[System.String]"/>
+				<exactMethodMatcher methodName="Get" parameters="System.Collections.Generic.IList`1[System.String],System.Threading.Tasks.ParallelOptions"/>
+				<exactMethodMatcher methodName="Get" parameters="System.Collections.Generic.IList`1[System.String],System.Threading.Tasks.ParallelOptions,System.Int32"/>
+				<exactMethodMatcher methodName="GetAndLock" parameters="System.String,System.UInt32"/>
+				<exactMethodMatcher methodName="GetAndLockAsync" parameters="System.String,System.UInt32"/>
+				<exactMethodMatcher methodName="GetAsync"/>
+				<exactMethodMatcher methodName="GetAndTouch"/>
+				<exactMethodMatcher methodName="GetAndTouchAsync"/>
+				<exactMethodMatcher methodName="GetDocument"/>
+				<exactMethodMatcher methodName="GetFromReplica"/>
+				<exactMethodMatcher methodName="GetFromReplicaAsync"/>
+				<exactMethodMatcher methodName="GetWithLock" parameters="System.String,System.UInt32"/>
+				<exactMethodMatcher methodName="GetWithLockAsync" parameters="System.String,System.UInt32"/>
+				<exactMethodMatcher methodName="Increment" parameters="System.String,System.UInt64,System.UInt64,System.UInt32"/>
+				<exactMethodMatcher methodName="IncrementAsync" parameters="System.String,System.UInt64,System.UInt64,System.UInt32"/>
+				<exactMethodMatcher methodName="Insert" parameters="System.String,!!0"/>
+				<exactMethodMatcher methodName="Insert" parameters="System.String,!!0,System.UInt32"/>
+				<exactMethodMatcher methodName="Insert" parameters="System.String,!!0,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Insert" parameters="System.String,!!0,System.UInt32,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="InsertAsync" parameters="System.String,!!0"/>
+				<exactMethodMatcher methodName="InsertAsync" parameters="System.String,!!0,System.UInt32"/>
+				<exactMethodMatcher methodName="InsertAsync" parameters="System.String,!!0,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="InsertAsync" parameters="System.String,!!0,System.UInt32,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Invoke"/>
+				<exactMethodMatcher methodName="InvokeAsync"/>
+				<exactMethodMatcher methodName="Observe"/>
+				<exactMethodMatcher methodName="ObserveAsync"/>
+				<exactMethodMatcher methodName="Prepend" />
+				<exactMethodMatcher methodName="PrependAsync" />
+				<exactMethodMatcher methodName="Query"/>
+				<exactMethodMatcher methodName="QueryAsync"/>
+				<!-- the following exactMethodMatcher is commented out since the method it matches, while callable directly by applications,
+				     is also called from RemoveMultiple methods (those that take lists of keys) which are instrumented as single calls.  
+					 Instrumenting this method would thus result in double instrumentation.  To safely instrument this method, uncomment
+					 this exactMethodMatcher and comment out the RemoveMultiple exactMethodMatchers.  Note however, that any calls to the
+					 RemoveMultiple methods will then be captured only as unscoped metrics.-->
+				<!--<exactMethodMatcher methodName="Remove" parameters="System.String,System.UInt64"/>-->
+				<exactMethodMatcher methodName="Remove" parameters="System.String,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Remove" parameters="System.String,System.UInt64,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Remove" parameters="System.Collections.Generic.IList`1[System.String]"/>
+				<exactMethodMatcher methodName="Remove" parameters="System.Collections.Generic.IList`1[System.String],System.Threading.Tasks.ParallelOptions"/>
+				<exactMethodMatcher methodName="Remove" parameters="System.Collections.Generic.IList`1[System.String],System.Threading.Tasks.ParallelOptions,System.Int32"/>
+				<exactMethodMatcher methodName="RemoveAsync"/>
+				<exactMethodMatcher methodName="Replace" parameters="System.String,!!0"/>
+				<exactMethodMatcher methodName="Replace" parameters="System.String,!!0,System.UInt64"/>
+				<exactMethodMatcher methodName="Replace" parameters="System.String,!!0,System.UInt32"/>
+				<exactMethodMatcher methodName="Replace" parameters="System.String,!!0,System.UInt64,System.UInt32"/>
+				<exactMethodMatcher methodName="Replace" parameters="System.String,!!0,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Replace" parameters="System.String,!!0,System.UInt64,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Replace" parameters="System.String,!!0,System.UInt64,System.UInt32,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0"/>
+				<exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0,System.UInt64"/>
+				<exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0,System.UInt32"/>
+				<exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0,System.UInt64,System.UInt32"/>
+				<exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0,System.UInt64,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="ReplaceAsync" parameters="System.String,!!0,System.UInt64,System.UInt32,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Touch"/>
+				<exactMethodMatcher methodName="TouchAsync"/>
+				<exactMethodMatcher methodName="Unlock"/>
+				<exactMethodMatcher methodName="UnlockAsync"/>
+				<!-- the following exactMethodMatcher is commented out since the method it matches, while callable directly by applications,
+				     is also called from UpsertMultiple methods (those that take lists of keys) which are instrumented as single calls.  
+					 Instrumenting this method would thus result in double instrumentation.  To safely instrument this method, uncomment
+					 this exactMethodMatcher and comment out the UpsertMultiple exactMethodMatchers.  Note however, that any calls to the
+					 UpsertMultiple methods will then be captured only as unscoped metrics.-->
+				<!--<exactMethodMatcher methodName="Upsert" parameters="System.String,!!0"/>-->
+				<exactMethodMatcher methodName="Upsert" parameters="System.String,!!0,System.UInt64,System.UInt32"/>
+				<exactMethodMatcher methodName="Upsert" parameters="System.String,!!0,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Upsert" parameters="System.String,!!0,System.UInt32,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Upsert" parameters="System.String,!!0,System.UInt64,System.UInt32,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+				<exactMethodMatcher methodName="Upsert" parameters="System.Collections.Generic.IDictionary`2[System.String,!!0]"/>
+				<exactMethodMatcher methodName="Upsert" parameters="System.Collections.Generic.IDictionary`2[System.String,!!0],System.Threading.Tasks.ParallelOptions"/>
+				<exactMethodMatcher methodName="Upsert" parameters="System.Collections.Generic.IDictionary`2[System.String,!!0],System.Threading.Tasks.ParallelOptions,System.Int32"/>
+				<exactMethodMatcher methodName="UpsertAsync" parameters="System.String,!!0"/>
+				<exactMethodMatcher methodName="UpsertAsync" parameters="System.String,!!0,System.UInt64,System.UInt32"/>
+				<exactMethodMatcher methodName="UpsertAsync" parameters="System.String,!!0,System.UInt64,System.UInt32,Couchbase.ReplicateTo,Couchbase.PersistTo"/>
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

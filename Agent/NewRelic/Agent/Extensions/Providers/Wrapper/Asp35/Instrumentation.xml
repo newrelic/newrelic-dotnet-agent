@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.UI.Page">
+				<!--<exactMethodMatcher methodName="Render" parameters="System.Web.UI.HtmlTextWriter" />-->
+				<exactMethodMatcher methodName="PerformPreInit" />
+			</match>
+			<match assemblyName="System.Web" className="System.Web.Compilation.AssemblyBuilder">
+				<exactMethodMatcher methodName="Compile" />
+			</match>
+			<match assemblyName="System.Web" className="System.Web.Compilation.BuildManager">
+				<exactMethodMatcher methodName="CompileWebFile" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.HttpApplication">
+				<exactMethodMatcher methodName="CreateEventExecutionSteps" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.HttpApplication">
+				<exactMethodMatcher methodName="ExecuteStep" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.HttpRuntime">
+				<exactMethodMatcher methodName="FinishPipelineRequest"/>
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.HttpApplication">
+				<exactMethodMatcher methodName="RecordError"/>
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.Routing.RouteCollection">
+				<exactMethodMatcher methodName="GetRouteData"/>
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.HttpApplication+CallHandlerExecutionStep">
+				<exactMethodMatcher methodName="System.Web.HttpApplication.IExecutionStep.Execute" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.HttpWriter">
+				<exactMethodMatcher methodName="Filter" />
+				<exactMethodMatcher methodName="FilterIntegrated" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web" className="System.Web.UI.Page">
+				<exactMethodMatcher methodName="ProcessRequest" parameters="System.Boolean,System.Boolean" />
+			</match>
+			<match assemblyName="System.Web" className="System.Web.UI.Page">
+				<exactMethodMatcher methodName="AsyncPageBeginProcessRequest" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory>
+			<match assemblyName="System.Messaging" className="System.Messaging.MessageQueue">
+				<exactMethodMatcher methodName="SendInternal" />
+			</match>
+			<match assemblyName="System.Messaging" className="System.Messaging.MessageQueue">
+				<exactMethodMatcher methodName="ReceiveCurrent" />
+			</match>
+			<match assemblyName="System.Messaging" className="System.Messaging.MessageQueue">
+				<exactMethodMatcher methodName="Purge" />
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>

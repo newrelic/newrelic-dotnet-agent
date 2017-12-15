@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+    <PropertyGroup>
+        <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
+        <AssemblyName>NewRelic.Api.Agent</AssemblyName>
+        <RootNamespace>NewRelic.Api.Agent</RootNamespace>
+        <Description>The New Relic .NET Agent Api</Description>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile> 
+        <DocumentationFile>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\NewRelic.Api.Agent.XML</DocumentationFile>
+        <IntermediateOutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
+        <OutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DebugType>full</DebugType>
+        <DebugSymbols>True</DebugSymbols>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="..\Shared\SharedAssemblyInfo.cs">
+          <Link>Properties\SharedAssemblyInfo.cs</Link>
+        </Compile>
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Documentation.xslt" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    </ItemGroup>
+    <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+    <Target Name="AfterBuild">
+        <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.Xml" OutputPaths="$(TargetDir)\AgentApi.html" />
+    </Target>
+</Project>

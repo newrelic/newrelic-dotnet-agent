@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory>
+			<match assemblyName="OpenRasta.Hosting.AspNet" className="OpenRasta.Hosting.AspNet.OpenRastaHandler">
+				<exactMethodMatcher methodName="GetHandler" />
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>

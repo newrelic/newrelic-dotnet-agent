@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.ExecuteTaskAsync">
+      <match assemblyName="RestSharp" className="RestSharp.RestClient">
+        <exactMethodMatcher methodName="ExecuteTaskAsync" parameters="RestSharp.IRestRequest,System.Threading.CancellationToken" />
+      </match>
+    </tracerFactory>
+    <tracerFactory name="NewRelic.Providers.Wrapper.RestSharp.AppendHeaders">
+      <match assemblyName="RestSharp" className="RestSharp.Http">
+        <exactMethodMatcher methodName="AppendHeaders" parameters="System.Net.HttpWebRequest" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

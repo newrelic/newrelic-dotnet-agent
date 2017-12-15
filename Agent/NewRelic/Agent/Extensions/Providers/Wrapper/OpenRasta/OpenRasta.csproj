@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+    <PropertyGroup>
+        <TargetFramework>net40</TargetFramework>
+        <AssemblyName>NewRelic.Providers.Wrapper.OpenRasta</AssemblyName>
+        <RootNamespace>NewRelic.Providers.Wrapper.OpenRasta</RootNamespace>
+        <Description>OpenRasta Wrapper Provider for New Relic .NET Agent</Description>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <DebugType>full</DebugType>
+        <DebugSymbols>True</DebugSymbols>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="System.Web" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Instrumentation.xml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
+        <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    </ItemGroup>
+    <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+</Project>

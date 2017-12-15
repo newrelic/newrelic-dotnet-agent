@@ -1,0 +1,22 @@
+#!/bin/bash
+
+PACKAGE_NAME='newrelic-netcore20-agent'
+NEWRELIC_HOME=/usr/local/${PACKAGE_NAME}
+
+# create logs dir
+mkdir -p $NEWRELIC_HOME/logs 2> /dev/null
+
+if [ ! -L /var/log/newrelic/dotnet ]; then
+  mkdir -p /var/log/newrelic 2> /dev/null
+  ln -sTf $NEWRELIC_HOME/logs /var/log/newrelic/dotnet 2> /dev/null
+fi
+
+echo "export CORECLR_NEWRELIC_HOME=/usr/local/${PACKAGE_NAME}" > /etc/profile.d/${PACKAGE_NAME}-path.sh
+source /etc/profile.d/${PACKAGE_NAME}-path.sh
+
+chmod o+w $NEWRELIC_HOME/logs
+chmod +x $NEWRELIC_HOME/*.sh 2> /dev/null
+
+printf "Initialize the New Relic .NET Agent environment variables by running:\n"
+printf "\t\033[1msource /etc/profile.d/${PACKAGE_NAME}-path.sh\033[0m\n"
+printf "\t\033[1msource $CORECLR_NEWRELIC_HOME/setenv.sh\033[0m\n"

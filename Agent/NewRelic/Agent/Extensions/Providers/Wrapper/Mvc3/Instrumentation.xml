@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="System.Web.Mvc" className="System.Web.Mvc.ControllerActionInvoker">
+				<exactMethodMatcher methodName="InvokeAction" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web.Mvc" className="System.Web.Mvc.Async.AsyncControllerActionInvoker">
+				<exactMethodMatcher methodName="BeginInvokeAction" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web.Mvc" className="System.Web.Mvc.Async.AsyncControllerActionInvoker">
+				<exactMethodMatcher methodName="EndInvokeAction" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web.Mvc" className="System.Web.Mvc.ControllerActionInvoker">
+				<exactMethodMatcher methodName="InvokeExceptionFilters" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

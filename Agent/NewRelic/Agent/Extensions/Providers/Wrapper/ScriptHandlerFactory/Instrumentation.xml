@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory  transactionNamingPriority="3">
+			<match assemblyName="System.Web.Extensions" className="System.Web.Script.Services.ScriptHandlerFactory+HandlerWrapper">
+				<exactMethodMatcher methodName="ProcessRequest" parameters="System.Web.HttpContext" />
+			</match>
+			<match assemblyName="System.Web.Extensions" className="System.Web.Script.Services.ScriptHandlerFactory+AsyncHandlerWrapper">
+				<exactMethodMatcher methodName="BeginProcessRequest" />
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>

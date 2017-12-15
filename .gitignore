@@ -1,0 +1,114 @@
+# git ignore file
+
+# Visual Studio Solution preference files.
+*.suo
+*.sdf
+*.opensdf
+*.vcxproj.user
+*.DotSettings.user
+*.userprefs
+*.vsmdi
+*.csproj.user
+.vs/
+
+*.tlog
+
+#NCrunch
+_NCrunch_*/
+*.ncrunchsolution
+*.ncrunchsolution.user
+*.ncrunchproject
+*.ncrunchproject.user
+
+# NuGet package files
+Agent/NewRelic/Tray/packages/
+Agent/packages/
+FunctionalTests/packages/
+PerformanceTests/packages/
+PhantomJSTests/packages/
+
+# Version Files
+VersionAssemblyInfo.cs
+
+# Misc build artifacts
+
+# Build output
+bin/
+obj/
+*.ipch
+*.idl
+*.tlb
+*.mrg.h
+UpgradeLog.htm
+
+# Development stuff
+*.swp
+tags
+FILES
+junk
+*.out
+*.jmconfig
+Agent/.vs/config/applicationhost.config
+
+# Windows image thumbnail cache file
+Thumbs.db
+
+# NDepends utility
+NDependOut/
+*.ndproj
+
+*.pidb
+
+test-results
+
+# Ignore FullAgent build output
+Agent/_build/
+Agent/NewRelic/Tray/_build/
+
+# Build tools should be saved in full, even if they match ignore patterns.
+!Agent/BuildTools/*
+!Agent/BuildTools/SignTool/*
+
+# External libraries should be saved in full, even if they match ignore patterns.
+!Agent/ExternalLibs/*
+
+# Don't save any of the logs in NewRelicHome
+Agent/NewRelicHome/Logs/*
+
+# Ignore C++ generated source files.
+Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.idl
+Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.tlb
+
+# Ignore build output files copied to New Relic Home x86/x64
+Agent/New Relic Home*
+
+# Ignore New Relic Home generated registry files
+Agent/New Relic Home x86.reg
+Agent/New Relic Home x64.reg
+
+# Ignore generated version files
+Agent/NewRelic.Agent.IL/NewRelicCoreVersion.h
+Agent/Shared/SharedAssemblyInfoVersion.cs
+Agent/NewRelic/Profiler/Profiler/VersionInfo.h
+
+# Ignore source files generated during build
+Agent/Installer/Core.wxs
+
+
+
+# Ignore license reviewer output files
+LicenseData/license_errors.txt
+
+# Sample apps
+App_Data
+
+#Functional Tests
+FunctionalTests/InstallUtil.InstallLog
+*.coverage
+Agent/TestResults/*
+*.pubxml.user
+IntegrationTests/Applications/*/Deploy/
+IntegrationTests/UnboundedApplications/*/Deploy/
+IntegrationTests/.vs/config/applicationhost.config
+.DS_Store
+Agent/UpgradeLog*.htm

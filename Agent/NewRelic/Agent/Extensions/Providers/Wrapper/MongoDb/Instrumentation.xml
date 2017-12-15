@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabase">
+				<exactMethodMatcher methodName="CreateCollection" parameters="System.String,MongoDB.Driver.IMongoCollectionOptions"/>	
+			</match>
+			
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollection">
+				<exactMethodMatcher methodName="Aggregate"/>
+				<exactMethodMatcher methodName="CreateIndex" parameters="MongoDB.Driver.IMongoIndexKeys,MongoDB.Driver.IMongoIndexOptions" />
+				<exactMethodMatcher methodName="Drop" />
+				<exactMethodMatcher methodName="FindAs"/>
+				<exactMethodMatcher methodName="FindAndModify" parameters="MongoDB.Driver.FindAndModifyArgs" />
+				<exactMethodMatcher methodName="FindAndRemove" parameters="MongoDB.Driver.FindAndRemoveArgs" />
+				<exactMethodMatcher methodName="FindOneAs" parameters="MongoDB.Driver.FindOneArgs" />
+				<exactMethodMatcher methodName="GetIndexes" />
+				<exactMethodMatcher methodName="IndexExistsByName" />
+				<exactMethodMatcher methodName="InsertBatch" parameters="System.Type,System.Collections.IEnumerable,MongoDB.Driver.MongoInsertOptions" />
+				<exactMethodMatcher methodName="InitializeOrderedBulkOperation"/>
+				<exactMethodMatcher methodName="InitializeUnorderedBulkOperation" />
+				<exactMethodMatcher methodName="ParallelScanAs" parameters="MongoDB.Driver.ParallelScanArgs"/>
+				<exactMethodMatcher methodName="Remove" parameters="MongoDB.Driver.IMongoQuery,MongoDB.Driver.RemoveFlags,MongoDB.Driver.WriteConcern"/>
+				<exactMethodMatcher methodName="Save" parameters="System.Type,System.Object,MongoDB.Driver.MongoInsertOptions"/>
+				<exactMethodMatcher methodName="Update" parameters="MongoDB.Driver.IMongoQuery,MongoDB.Driver.IMongoUpdate,MongoDB.Driver.MongoUpdateOptions"/>
+				<exactMethodMatcher methodName="Validate" parameters="MongoDB.Driver.ValidateCollectionArgs"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.BulkWriteOperation">
+				<exactMethodMatcher methodName="Insert"/>
+				<exactMethodMatcher methodName="ExecuteHelper"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCursor`1">
+				<exactMethodMatcher methodName="GetEnumerator" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

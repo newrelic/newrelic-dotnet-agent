@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory>
+      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer">
+        <exactMethodMatcher methodName="ExecuteSyncImpl" />
+      </match>
+			<match assemblyName="StackExchange.Redis.StrongName" className="StackExchange.Redis.ConnectionMultiplexer">
+				<exactMethodMatcher methodName="ExecuteSyncImpl" />
+			</match>
+    </tracerFactory>
+    <!--<tracerFactory>
+      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer">
+        <exactMethodMatcher methodName="ExecuteAsyncImpl" />
+      </match>
+    </tracerFactory>-->
+  </instrumentation>
+</extension>

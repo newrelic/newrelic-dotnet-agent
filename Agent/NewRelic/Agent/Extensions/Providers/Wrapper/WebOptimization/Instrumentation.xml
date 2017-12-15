@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		
+		<tracerFactory>
+			<match assemblyName="System.Web.Optimization" className="System.Web.Optimization.BundleHandler">
+				<exactMethodMatcher methodName="ProcessRequest" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

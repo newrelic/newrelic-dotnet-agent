@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory name="BuildCommonServicesWrapper">
+			<match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.AspNetCore.Hosting.WebHostBuilder">
+				<exactMethodMatcher methodName="BuildCommonServices" />
+			</match>
+		</tracerFactory>
+		<tracerFactory name="NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync">
+			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker">
+				<exactMethodMatcher methodName="InvokeActionMethodAsync" />
+			</match>
+		</tracerFactory>
+		<tracerFactory name="NewRelic.Providers.Wrapper.AspNetCore.ExceptionHandlerMiddlewareWrapper">
+			<match assemblyName="Microsoft.AspNetCore.Diagnostics" className="Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware">
+				<exactMethodMatcher methodName="Invoke" />
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>

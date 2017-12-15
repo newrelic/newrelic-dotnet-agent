@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="System.Web.Services" className="System.Web.Services.Protocols.LogicalMethodInfo">
+				<exactMethodMatcher methodName="Invoke" parameters="System.Object,System.Object[]" />
+				<exactMethodMatcher methodName="BeginInvoke" parameters="System.Object,System.Object[],System.AsyncCallback,System.Object" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.Web.Extensions" className="System.Web.Script.Services.WebServiceMethodData">
+				<exactMethodMatcher methodName="CallMethod"/>
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

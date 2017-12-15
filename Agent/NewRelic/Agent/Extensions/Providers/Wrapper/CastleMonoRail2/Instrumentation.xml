@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="Castle.MonoRail.Framework" className="Castle.MonoRail.Framework.ActionMethodExecutor">
+				<exactMethodMatcher methodName="Execute" />
+			</match>
+			<match assemblyName="Castle.MonoRail.Framework" className="Castle.MonoRail.Framework.ActionMethodExecutorCompatible">
+				<exactMethodMatcher methodName="Execute" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

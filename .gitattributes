@@ -1,0 +1,26 @@
+# Default to normalizing line endings.
+* text=auto
+
+# For all text files types, normalize line endings (LF on the way out, OS style on the way in).
+*.cmd text
+*.cs text
+*.csproj text
+*.nuspec text
+*.txt text
+*.wixproj text
+*.wxs text
+*.xml text
+*.ps1 text
+LICENSE text
+
+# For certain binary file types, don't mess with their "line endings".
+VSDNETCFG binary
+MSVBDPCADLL binary
+*.chm binary
+*.xpi binary
+
+# For docker-for-Windows-based build/testing, force some files to be checkout out with Linux-style line endings
+*.sh text eol=lf
+/Agent/packaging/test/applications/custom_xml/*.xml text eol=lf
+/Agent/packaging/redhat/newrelic-dotnetagent.spec text eol=lf
+

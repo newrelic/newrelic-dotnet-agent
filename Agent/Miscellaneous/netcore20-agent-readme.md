@@ -1,0 +1,1 @@
+Documentation on how to install, configure and use the agent can be found at: https://docs.newrelic.com/docs/agents/net-agent/getting-started/introduction-new-relic-net

@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		
+		<tracerFactory>
+			<match assemblyName="System" className="System.Net.HttpWebRequest">
+				<exactMethodMatcher methodName="SerializeHeaders" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory name="NewRelic.Agent.Core.Tracer.Factories.Net.HttpWebRequestTracerFactory">
+			<match assemblyName="System" className="System.Net.HttpWebRequest">
+				<exactMethodMatcher methodName="GetResponse" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

@@ -1,0 +1,5 @@
+Maintainer: New Relic <support@newrelic.com>
+Architecture: all
+Description: The New Relic .NET Agent for CoreCLR
+Section: non-free
+Homepage: http://www.newrelic.com/

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<!-- WCF 4 -->
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel.Activation" className="System.ServiceModel.Activation.HostedHttpRequestAsyncResult">
+				<exactMethodMatcher methodName=".ctor" parameters="System.Web.HttpApplication,System.String,System.Boolean,System.Boolean,System.AsyncCallback,System.Object" />
+			</match>
+		</tracerFactory>
+
+		<!-- WCF 3 -->
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Activation.HostedHttpRequestAsyncResult">
+				<exactMethodMatcher methodName=".ctor" parameters="System.Web.HttpApplication,System.Boolean,System.AsyncCallback,System.Object" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Channels.ServiceChannelProxy">
+				<exactMethodMatcher methodName="InvokeService" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.SyncMethodInvoker">
+				<exactMethodMatcher methodName="Invoke" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.AsyncMethodInvoker">
+				<exactMethodMatcher methodName="InvokeBegin" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.AsyncMethodInvoker">
+				<exactMethodMatcher methodName="InvokeEnd" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

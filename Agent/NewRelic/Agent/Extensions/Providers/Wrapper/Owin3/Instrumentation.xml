@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory>
+      <match assemblyName="Microsoft.Owin.Host.HttpListener" className="Microsoft.Owin.Host.HttpListener.OwinHttpListener">
+        <exactMethodMatcher methodName="ProcessRequestAsync" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

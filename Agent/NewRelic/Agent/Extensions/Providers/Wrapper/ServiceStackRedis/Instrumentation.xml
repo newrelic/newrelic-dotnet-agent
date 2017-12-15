@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory>
+			<match assemblyName="ServiceStack.Redis" className="ServiceStack.Redis.RedisNativeClient">
+				<exactMethodMatcher methodName="SendCommand" />
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory>
+      <match assemblyName="custom_xml" className="custom_xml.Program">
+        <exactMethodMatcher methodName="Transaction" />
+        <exactMethodMatcher methodName="Thing" />
+      </match>
+    </tracerFactory>
+    
+  </instrumentation>
+</extension>

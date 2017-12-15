@@ -1,0 +1,7 @@
+
+Thanks for your interest in our .NET Core 2.0 Beta. We are providing agent builds for Windows and for Linux (specific Linux distributions will be outlined in a different document as they are created).
+NOTE: TO PARTICIPATE, YOU MUST MEET THE FOLLOWING CRITERIA
+1. You must, per your New Relic MSA, be eligible to participate in pre-releases with New Relic. Some accounts are specifically enjoined from participation. If you are unsure, contact your New Relic account rep to clarify.
+2. You must provide a one-time acknowledgement of our Pre-release Terms and Services agreement. If you have already agreed to the terms in the past, there is no requirement to do it again. If you are unsure, contact your New Relic account rep to clarify. Access the agreement here: https://goo.gl/FzrfyL
+3. Fill-in the .NET Core 2.0 Beta participation form. This helps us understand your specific distribution and version needs. It will also help us support you with any issues. Support for this Beta is not managed through the New Relic Customer Support team. Access the form here: https://goo.gl/jaGxVK
+NOTE: FOR DETAILS ON HOW TO CONTRIBUTE FEEDBACK, ASK QUESTIONS, OR GET SUPPORT, ACCESS OUR ONLINE TECHNICAL COMMUNITY POSTING HERE: https://goo.gl/muzmD7

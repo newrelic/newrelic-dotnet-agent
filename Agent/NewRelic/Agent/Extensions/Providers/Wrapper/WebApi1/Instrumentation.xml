@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="System.Web.Http" className="System.Web.Http.Controllers.ApiControllerActionInvoker">
+				<exactMethodMatcher methodName="InvokeActionAsync" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

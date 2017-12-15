@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+
+		<tracerFactory>
+			<match assemblyName="System.Net.Http" className="System.Net.Http.HttpClient">
+				<exactMethodMatcher methodName="SendAsync" parameters="System.Net.Http.HttpRequestMessage,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken" />
+			</match>
+		</tracerFactory>
+
+	</instrumentation>
+</extension>

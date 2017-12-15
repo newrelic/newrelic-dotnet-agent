@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory>
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Framing.Impl.Model">
+        <exactMethodMatcher methodName="_Private_BasicPublish" />
+        <exactMethodMatcher methodName="_Private_BasicGet" />
+        <exactMethodMatcher methodName="_Private_QueuePurge" />
+      </match>
+
+      <match assemblyName="RabbitMQ.Client" className="RabbitMQ.Client.Events.EventingBasicConsumer">
+        <exactMethodMatcher methodName="HandleBasicDeliver" />
+      </match>
+    </tracerFactory>
+  </instrumentation>
+</extension>

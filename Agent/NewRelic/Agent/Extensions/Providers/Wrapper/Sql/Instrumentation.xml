@@ -1,0 +1,186 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+    <tracerFactory>
+
+      <!-- built in MS SQL driver (framework) -->
+      <match assemblyName="System.Data" className="System.Data.SqlClient.SqlCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior,System.String" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
+      </match>
+
+      <!-- built in MS SQL driver (core / nuget) -->
+      <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
+      </match>
+
+      <!-- built in OLE driver -->
+      <match assemblyName="System.Data" className="System.Data.OleDb.OleDbCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+
+      <!-- built in ODBC driver -->
+      <match assemblyName="System.Data" className="System.Data.Odbc.OdbcCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+
+      <!-- built in deprecated Oracle driver -->
+      <match assemblyName="System.Data.OracleClient" className="System.Data.OracleClient.OracleCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+
+      <!-- Oracle vendor driver -->
+      <match assemblyName="Oracle.DataAccess" className="Oracle.DataAccess.Client.OracleCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Boolean,System.Boolean,System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Boolean,System.Boolean,System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
+      </match>
+
+      <!-- MySql (official) driver -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+      </match>
+
+      <!-- MySql CoreLabs driver -->
+      <match assemblyName="Devart.Data.MySql" className="Devart.Data.MySql.MySqlCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+      </match>
+
+      <!-- Npgsql Postgres data provider -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
+        <exactMethodMatcher methodName="ExecuteReader" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+
+      <!-- IBM DB2 driver -->
+      <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2Command">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior"/>
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader"/>
+      </match>
+    </tracerFactory>
+
+    <!-- DataReader methods. DISABLED by default due to possible performance impact. Set enabled to "true" (or omit completely) to enable this instrumentation. -->
+    <tracerFactory enabled="false">
+      <!-- built in MS SQL driver (framework) -->
+      <match assemblyName="System.Data" className="System.Data.SqlClient.SqlDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- built in MS SQL driver (core / nuget) -->
+      <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- built in deprecated Oracle driver -->
+      <match assemblyName="System.Data.OracleClient" className="System.Data.OracleClient.OracleDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- Oracle vendor driver -->
+      <match assemblyName="Oracle.DataAccess" className="Oracle.DataAccess.Client.OracleDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- MySql (official) driver -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- Postgres data provider -->
+      <match assemblyName="Npgsql" className="Npgsql.ForwardsOnlyDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+      <match assemblyName="Npgsql" className="Npgsql.CachingDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+      
+      <!-- IBM DB2 driver -->
+      <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2DataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+    </tracerFactory>
+
+    <!-- DbConnection.Open() -->
+    <tracerFactory>
+      <!-- built in MS SQL driver (framework) -->
+      <match assemblyName="System.Data" className="System.Data.SqlClient.SqlConnection,System.Data.Odbc.OdbcConnection,System.Data.OleDb.OleDbConnection">
+        <exactMethodMatcher methodName="Open" />
+      </match>
+
+      <!-- built in MS SQL driver (core / nuget) -->
+      <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlConnection">
+        <exactMethodMatcher methodName="Open" />
+      </match>
+
+      <!-- built in deprecated Oracle driver -->
+      <match assemblyName="System.Data.OracleClient" className="System.Data.OracleClient.OracleConnection">
+        <exactMethodMatcher methodName="Open" />
+      </match>
+
+      <!-- Oracle vendor driver -->
+      <match assemblyName="Oracle.DataAccess" className="Oracle.DataAccess.Client.OracleConnection">
+        <exactMethodMatcher methodName="Open"/>
+      </match>
+
+      <!-- Oracle vendor driver for ManagedDataAccess -->
+      <match assemblyName="Oracle.ManagedDataAccess" className="Oracle.ManagedDataAccess.Client.OracleConnection">
+        <exactMethodMatcher methodName="Open"/>
+      </match>
+
+      <!-- MySql (official) driver -->
+      <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection">
+        <exactMethodMatcher methodName="Open"/>
+      </match>
+
+      <!-- Npgsql Postgres data provider -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection">
+        <exactMethodMatcher methodName="Open"/>
+      </match>
+
+      <!-- IBM DB2 driver -->
+      <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2Connection">
+        <exactMethodMatcher methodName="Open"/>
+      </match>
+    </tracerFactory>
+    
+  </instrumentation>
+</extension>
