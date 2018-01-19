@@ -37,7 +37,7 @@ namespace NewRelic.SystemInterfaces
 		}
 	}
 
-#if NET35
+#if NET45
 
 	public class ConfigurationManagerStatic : IConfigurationManagerStatic
 	{

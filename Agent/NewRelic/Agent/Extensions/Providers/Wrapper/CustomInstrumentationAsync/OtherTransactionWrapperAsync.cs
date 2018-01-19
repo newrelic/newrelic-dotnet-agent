@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -48,13 +47,15 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 				transaction.AttachToAsync();
 			}
 
-			var segment = !String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+			var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
 				? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
 				: transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
-
-			if (!String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
+			
+			var hasMetricName = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName);
+			if (hasMetricName)
 			{
-				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
+				var priority = instrumentedMethodCall.RequestedTransactionNamePriority ?? 1;
+				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, priority);
 			}
 
 			return Delegates.GetDelegateFor<Task>(

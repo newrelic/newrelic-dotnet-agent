@@ -8,6 +8,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.SqlAsync
 {
@@ -59,13 +60,13 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 
 			// NOTE: this wrapper currently only supports NpgsqlCommand. If support for other commands is added to this wrapper then the vendor will need to be determined dynamically.
 			const DatastoreVendor vendor = DatastoreVendor.Postgres;
-			object GetConnectionInfo() => ConnectionInfo.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
+			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
 			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
 
 			// TODO - Tracer had a supportability metric here to report timing duration of the parser.
-			var parsedStatement = transaction.GetParsedDatabaseStatement(sqlCommand.CommandType, sql);
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement?.Operation, vendor, parsedStatement?.Model, sql,
-				host: connectionInfo.Host, portPathOrId: connectionInfo.PortPathOrId, databaseName: connectionInfo.DatabaseName);
+			var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+				parsedStatement, connectionInfo, sql);
 
 			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}

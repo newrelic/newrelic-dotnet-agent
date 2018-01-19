@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <AssemblyName>NewRelic.Agent.Configuration</AssemblyName>
     <RootNamespace>NewRelic.Agent.Configuration</RootNamespace>
     <Description></Description>
@@ -21,7 +21,7 @@
     <PackageReference Include="log4net" Version="2.0.8" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -30,9 +30,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Shared\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\Shared\SharedLog4NetRepository.cs">
       <Link>Properties\SharedLog4NetRepository.cs</Link>
     </Compile>

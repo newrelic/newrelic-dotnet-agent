@@ -60,20 +60,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 				() => Assert.AreEqual(0, metric2.Data.Value5)
 				);
 		}
-
-		[Test]
-		public void ReportWrapperShutdown_SendsExpectedMetrics_ToLegacyAgent()
-		{
-			var names = new Collection<String>();
-			using (new EventSubscription<CounterMetricEvent>(eventData => names.Add(eventData.Name)))
-			{
-				_agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(String), "FooMethod", "FooParam"));
-			}
-			Assert.AreEqual(3, names.Count);
-			Assert.AreEqual("Supportability/WrapperShutdown/all", names[0]);
-			Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/all", names[1]);
-			Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/String.FooMethod", names[2]);
-		}
 		
 		[Test]
 		public void ReportWrapperShutdown_SendsExpectedMetrics()

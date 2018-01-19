@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-#if NET40
+#if NET45
 using System.Configuration;
 using System.Runtime.Versioning;
 using System.Web.Hosting;

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using JetBrains.Annotations;
@@ -17,6 +15,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Providers;
 using System.Data;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -111,7 +110,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		ITransactionSegmentState TransactionSegmentState { get; }
 
 		object GetOrSetValueFromCache(string key, Func<object> func);
-		ParsedSqlStatement GetParsedDatabaseStatement(CommandType commandType, string sql);
+		ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql);
 	}
 
 	public class Transaction : ITransaction, ITransactionSegmentState
@@ -149,8 +148,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	
 		public ICallStackManager CallStackManager { get; }
 
-		private volatile Func<CommandType, string, ParsedSqlStatement> _databaseStatementParser;
-		private Func<CommandType, string, ParsedSqlStatement> DatabaseStatementParser => _databaseStatementParser ?? new DatabaseStatementParser().ParseDatabaseStatement;
+		private volatile Func<DatastoreVendor, CommandType, string, ParsedSqlStatement> _databaseStatementParser;
+		private Func<DatastoreVendor, CommandType, string, ParsedSqlStatement> DatabaseStatementParser => _databaseStatementParser ?? new DatabaseStatementParser().ParseDatabaseStatement;
 
 		private readonly SqlObfuscator _sqlObfuscator;
 		
@@ -342,9 +341,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			return CallStackManager.TryPeek();
 		}
 
-		public ParsedSqlStatement GetParsedDatabaseStatement(CommandType commandType, string sql)
+		public ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql)
 		{
-			return DatabaseStatementParser(commandType, sql);
+			return DatabaseStatementParser(datastoreVendor, commandType, sql);
 		}
 	}
 }

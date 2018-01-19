@@ -93,19 +93,15 @@
 		<Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
 
 		<!-- Get the .NET Framework properties. -->
-		<PropertyRef Id="NETFRAMEWORK20"/>
-		<PropertyRef Id="NETFRAMEWORK35"/>
-		<PropertyRef Id="NETFRAMEWORK40FULL"/>
-		<PropertyRef Id="NETFRAMEWORK35INSTALLROOTDIR"/>
+		<PropertyRef Id="WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED"/>
 		<PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR"/>
 		<?ifdef IsWin64?>
-		<PropertyRef Id="NETFRAMEWORK35INSTALLROOTDIR64"/>
 		<PropertyRef Id="NETFRAMEWORK40FULLINSTALLROOTDIR64"/>
 		<?endif?>
 
 		<!-- Prompt the user with an error window if they don't have .NET 3.5, 4.0, 4.5 or 4.5.1 installed. -->
-		<Condition Message="New Relic requires that .NET Framework 2.0/3.0 be upgraded to 3.5 prior to installation.">
-			<![CDATA[Installed OR NETFRAMEWORK35 OR (NOT NETFRAMEWORK20 AND NETFRAMEWORK40FULL)]]>
+		<Condition Message="New Relic requires that .NET Framework 4.5 be present prior to installation.">
+			<![CDATA[Installed OR WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED]]>
 		</Condition>
 
 		<!-- Get the IIS major version number. Used to determine of the IIS Feature is available. -->
@@ -253,15 +249,15 @@
 			
 			<!-- Call stack trackers -->
 			<Component Id="AsyncLocalCallStackTrackerComponent" Guid="{2C25F20D-113E-4314-940F-9B54469F184D}">
-				<File Id="AsyncLocalCallStackTrackerFile" Name="NewRelic.Providers.CallStack.AsyncLocal.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.CallStack.AsyncLocal.dll"/>
+				<File Id="AsyncLocalCallStackTrackerFile" Name="NewRelic.Providers.Storage.CallContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.CallContext.dll"/>
 			</Component>
 			
 			<!-- Context providers -->
-			<Component Id="AspTransactionContextProviderComponent" Guid="{D02A537E-3221-4DEB-BC77-E15DEFF15E81}">
-				<File Id="AspTransactionContextProviderFile" Name="NewRelic.Providers.TransactionContext.Asp.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.TransactionContext.Asp.dll"/>
+			<Component Id="HttpContextProviderComponent" Guid="{D02A537E-3221-4DEB-BC77-E15DEFF15E81}">
+				<File Id="HttpContextProviderFile" Name="NewRelic.Providers.Storage.HttpContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.HttpContext.dll"/>
 			</Component>
-			<Component Id="Wcf3TransactionContextProviderComponent" Guid="{6BE8050A-0A01-4F5B-B3B6-274652DF24E6}">
-				<File Id="Wcf3TransactionContextProviderFile" Name="NewRelic.Providers.TransactionContext.Wcf3.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.TransactionContext.Wcf3.dll"/>
+			<Component Id="OperationContextProviderComponent" Guid="{6BE8050A-0A01-4F5B-B3B6-274652DF24E6}">
+				<File Id="OperationContextProviderFile" Name="NewRelic.Providers.Storage.OperationContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.OperationContext.dll"/>
 			</Component>
 
 			<!-- Wrappers -->
@@ -441,7 +437,7 @@
 		
 		<!-- API -->
 		<Component Id="ApiComponent" Guid="{26BF7AE0-A921-438C-A16C-FF6F8E0F9366}" Directory="NETAGENTFOLDER">
-			<File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.SolutionDir)_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll" />
+			<File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.SolutionDir)_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll" />
 		</Component>
 
 		<!-- Configuration -->
@@ -468,17 +464,8 @@
 			<Component Id="ProfilerEventSourceComponent" Guid="{2D25D34B-D067-4778-9467-DC7AAE3BBD4A}">
 				<util:EventSource Log="Application" Name="New Relic .NET Profiler" EventMessageFile="[NETAGENTFOLDER]\NewRelic.Agent.Messages.dll" KeyPath="yes"/>
 			</Component>
-
-			<Component Id="AgentEventSource35Component" Guid="{CB5D7847-AF11-406D-B7CA-CFDAE9B53CE6}">
-				<Condition><![CDATA[NETFRAMEWORK35 AND NOT NETFRAMEWORK40FULL]]></Condition>
-				<?ifdef IsWin64?>
-				<util:EventSource Log="Application" Name="New Relic .NET Agent" EventMessageFile="[NETFRAMEWORK35INSTALLROOTDIR64]EventLogMessages.dll" KeyPath="yes"/>
-				<?else?>
-				<util:EventSource Log="Application" Name="New Relic .NET Agent" EventMessageFile="[NETFRAMEWORK35INSTALLROOTDIR]EventLogMessages.dll" KeyPath="yes"/>
-				<?endif?>
-			</Component>
 			<Component Id="AgentEventSource4Component" Guid="{0A541B33-D4D7-4A97-B5C5-0B3FAF05CB09}">
-				<Condition><![CDATA[NETFRAMEWORK40FULL]]></Condition>
+				<Condition><![CDATA[WIX_IS_NETFRAMEWORK_45_OR_LATER_INSTALLED]]></Condition>
 				<?ifdef IsWin64?>
 				<util:EventSource Log="Application" Name="New Relic .NET Agent" EventMessageFile="[NETFRAMEWORK40FULLINSTALLROOTDIR64]EventLogMessages.dll" KeyPath="yes"/>
 				<?else?>

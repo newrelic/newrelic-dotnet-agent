@@ -1,11 +1,4 @@
-# Combined Install Test  
-
-#Server report
-Write-Host ""
-Write-Host "---------------------------"
-Write-Host "RUNNING ON SERVER: $env:SERVER"
-Write-Host "---------------------------"
-Write-Host ""
+# Tests that agent installs at all and only on supported systems.
 
 # Elevate
 Write-Host "Elevating to Administrator"
@@ -35,9 +28,11 @@ Function CheckForInstallFailure([string] $frameworkVersion)
 {
     Write-Host ""
     Write-Host "---------------------------"
-    Write-Host "Install Failure Check"
+    Write-Host "Install Failure Check on $env:SERVER"
     Write-Host "---------------------------"
     Write-Host ""
+
+    iisreset /stop
 
     # Copy the install "agent" folder
     $install = Get-ChildItem Agent\_build\x64-Release\Installer\NewRelicAgent_x64_*.msi -Name
@@ -60,6 +55,7 @@ Function CheckForInstallFailure([string] $frameworkVersion)
         if(-Not (Test-Path -Path "C:\installLog.txt"))
         {
             Write-Host "No install.log, exiting."
+            ReportError 1
             exit 1
         }
 
@@ -72,7 +68,9 @@ Function CheckForInstallFailure([string] $frameworkVersion)
         Write-Host "-------installLog.txt------"
         Write-Host ""
 
-        if (Select-String -InputObject $installLog -SimpleMatch "New Relic requires that .NET Framework 2.0/3.0 be upgraded to 3.5 prior to installation." -Quiet)
+        # LEGACY: Swap the IFs below to enable 3.5 testing!
+        # if (Select-String -InputObject $installLog -SimpleMatch "New Relic requires that .NET Framework 2.0/3.0 be upgraded to 3.5 prior to installation." -Quiet)
+        if (Select-String -InputObject $installLog -SimpleMatch "New Relic requires that .NET Framework 4.5 be present prior to installation." -Quiet)
         {
             Write-Host "FrameworkVersion $frameworkVersion - Passed (found magic string)"
         }
@@ -80,19 +78,24 @@ Function CheckForInstallFailure([string] $frameworkVersion)
         {
             Write-Host "FrameworkVersion $frameworkVersion - Failed"
             $exitCode = $result.ReturnValue
+            ReportError $exitCode
         }
     }
 
+    iisreset /start
     Write-Host "FrameworkVersion $frameworkVersion Exit Code: $exitCode"
+    ReportError $exitCode
 }
 
 Function CheckForInstallSuccess([string] $frameworkVersion)
 {
     Write-Host ""
     Write-Host "---------------------------"
-    Write-Host " Install Success Check"
+    Write-Host " Install Success Check on $env:SERVER"
     Write-Host "---------------------------"
     Write-Host ""
+
+    iisreset /stop
 
     # Copy the install out to the server
     $install = Get-ChildItem Agent\_build\x64-Release\Installer\NewRelicAgent_x64_*.msi -Name
@@ -110,6 +113,7 @@ Function CheckForInstallSuccess([string] $frameworkVersion)
         Write-Host "There was an error attempting to install the .NET Agent - Code: $($result.ReturnValue)"
         Write-Host "FrameworkVersion $frameworkVersion - Failed"
         $exitCode = $result.ReturnValue
+        ReportError $exitCode
     }
     else
     {
@@ -121,37 +125,66 @@ Function CheckForInstallSuccess([string] $frameworkVersion)
         {
             Write-Host "newrelic.config file is missing, exiting."
             Write-Host "FrameworkVersion $frameworkVersion Exit Code: 1"
+            ReportError 1
             exit 1
         }
     }
 
+    iisreset /start
     Write-Host "FrameworkVersion $frameworkVersion Exit Code:$exitCode"
-    $exitCode
+    ReportError $exitCode
 }
+
+Function ReportError([int] $errorCode) 
+{
+    if($realExitCode -ne 0 -and $errorCode -gt 0) 
+    {
+        $realExitCode = $errorCode
+    }
+}
+
 
 $exitCode = 0
 $realExitCode = 0
 
-if($env:SERVER -like "dn-inst-300*")
+# LEGACY: Uncomment me to enable legacy agent testing!
+# if($env:SERVER -like "dn-inst-300*")
+# {
+#     CheckForInstallFailure "3.0"
+#     Write-Host "Real exit code $realExitCode "
+# }
+if($env:SERVER -like "dn-inst-350*")
 {
-    $realExitCode = CheckForInstallFailure "3.0"
-    Write-Host "Real exit code $realExitCode "
-}
-elseif($env:SERVER -like "dn-inst-350*")
-{
-    $realExitCode = CheckForInstallSuccess "3.5"
+    # LEGACY: Swap the two checks out to enable legacy agent testing!
+    # CheckForInstallSuccess "3.5"
+    CheckForInstallFailure "3.5"
     Write-Host "Real exit code $realExitCode "
 }
 elseif($env:SERVER -like "dn-inst-400v2*")
 {
-    $realExitCode = CheckForInstallSuccess "4.0"
+    # LEGACY: Swap the two checks out to enable legacy agent testing!
+    # CheckForInstallSuccess "4.0"
+    CheckForInstallFailure "4.0"
     Write-Host "Real exit code $realExitCode "
 }
 elseif($env:SERVER -like "dn-inst-452*")
 {
-    $realExitCode = CheckForInstallSuccess "4.5.2"
+    CheckForInstallSuccess "4.5.2"
     Write-Host "Real exit code $realExitCode "
 }
+# Likely Future test servers
+# LEGACY: Comment out below hereto enable legacy agent testing!
+# elseif($env:SERVER -like "dn-inst-462*")
+# {
+#     $realExitCode = CheckForInstallSuccess "4.6.2"
+#     Write-Host "Real exit code $realExitCode "
+# }
+# elseif($env:SERVER -like "dn-inst-470*")
+# {
+#     $realExitCode = CheckForInstallSuccess "4.7.0"
+#     Write-Host "Real exit code $realExitCode "
+# }
 
+# Don't comment this out!  Stop, go no further
 Write-Host "Final exit code $realExitCode"
 exit $realExitCode

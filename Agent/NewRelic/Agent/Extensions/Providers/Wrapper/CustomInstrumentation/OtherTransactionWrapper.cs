@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -35,13 +34,15 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 				agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, name, false) :
 				agentWrapperApi.CreateOtherTransaction("Custom", name, mustBeRootTransaction: false);
 
-			var segment = !String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+			var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
 				? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
 				: transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
-			if (!String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
+			var hasMetricName = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName);
+			if (hasMetricName)
 			{
-				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
+				var priority = instrumentedMethodCall.RequestedTransactionNamePriority ?? 1;
+				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, priority);
 			}
 
 			return Delegates.GetDelegateFor(

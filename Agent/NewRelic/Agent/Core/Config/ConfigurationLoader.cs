@@ -26,28 +26,6 @@ namespace NewRelic.Agent.Core.Config
 	{
 		private const String NewRelicConfigFileName = "newrelic.config";
 
-
-		public static String NewRelicHome
-		{
-			get
-			{
-				// try the environment variable first, if that isn't found fallback to the registry key
-				var environmentHome = System.Environment.GetEnvironmentVariable(DefaultConfiguration.NewRelicHomeEnvironmentVariable);
-				if (environmentHome != null)
-				{
-					return environmentHome;
-				}
-
-#if NETSTANDARD2_0
-				return null;
-#else
-				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\New Relic\.NET Agent");
-				if (key == null) return null;
-				return (String)key.GetValue("NewRelicHome");
-#endif
-			}
-		}
-
 		/// <summary>
 		/// Reads an application setting from the web configuration associated with the current virtual path,
 		/// or from the web site if none is found.
@@ -85,7 +63,7 @@ namespace NewRelic.Agent.Core.Config
 		[NotNull]
 		public static ValueWithProvenance<String> GetConfigSetting(String key) {
 			ValueWithProvenance<String> value = GetWebConfigAppSetting(key);
-#if NET35
+#if NET45
 			if (value.Value == null)
 			{
 				value = new ValueWithProvenance<String>(ConfigurationManager.AppSettings[key],
@@ -235,7 +213,7 @@ namespace NewRelic.Agent.Core.Config
 		{
 			try
 			{
-				var newRelicHome = NewRelicHome;
+				var newRelicHome = AgentInstallConfiguration.NewRelicHome;
 				if (newRelicHome == null)
 					return null;
 
@@ -403,10 +381,10 @@ namespace NewRelic.Agent.Core.Config
 
 		private static string GetConfigSchemaContents()
 		{
-#if NET35
+#if NET45
 			return Properties.Resources.Configuration;
 #else
-			var home = System.Environment.GetEnvironmentVariable(DefaultConfiguration.NewRelicHomeEnvironmentVariable);
+			var home = AgentInstallConfiguration.NewRelicHome;
 			var xsdFile = Path.Combine(home, "newrelic.xsd");
 			return File.ReadAllText(xsdFile);
 #endif
@@ -455,9 +433,9 @@ namespace NewRelic.Agent.Core.Config
 			String logDirectory = directory;
 			if (logDirectory == null)
 			{
-				if (ConfigurationLoader.NewRelicHome != null)
+				if (AgentInstallConfiguration.NewRelicHome != null)
 				{
-					fileName.Append(ConfigurationLoader.NewRelicHome);
+					fileName.Append(AgentInstallConfiguration.NewRelicHome);
 					if (!fileName.ToString().EndsWith(Path.DirectorySeparatorChar.ToString()))
 						fileName.Append(Path.DirectorySeparatorChar);
 					fileName.Append("logs").Append(Path.DirectorySeparatorChar);

@@ -105,7 +105,7 @@ namespace NewRelic.Installer
 		private string Core20ReadmeFileName = "netcore20-agent-readme.md";
 		private string ReadmeFilePath => Path.Combine(SolutionPath, "Miscellaneous", Core20ReadmeFileName);
 
-		private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net35", "NewRelic.Api.Agent.dll");
+		private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net45", "NewRelic.Api.Agent.dll");
 
 		private string _homeBuilderProjectPath => Path.Combine(SolutionPath, "NewRelic", "Installer", "New Relic Home Builder", "New Relic Home Builder.csproj");
 		private string _coreProjectPath => Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj");
@@ -135,7 +135,7 @@ namespace NewRelic.Installer
 		}
 
 		[NotNull]
-		private String CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
+		private String CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net45"); } }
 		[NotNull]
 		private String NewRelicAgentExtensionsPath { get { return Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
 		[NotNull]

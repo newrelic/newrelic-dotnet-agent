@@ -62,7 +62,7 @@
   <Import Project="$(WixTargetsPath)" />
   <Target Name="SignInstaller">
     <!-- <Exec Command="&quot;$(ProjectDir)..\BuildTools\SignTool\signtool.exe&quot; sign /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)\$(OutputName).msi&quot;" /> -->
-    <GetAssemblyIdentity AssemblyFiles="$(SolutionDir)\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net35\NewRelic.Agent.Core.dll">
+    <GetAssemblyIdentity AssemblyFiles="$(SolutionDir)\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
     <Copy SourceFiles="$(OutputPath)\$(OutputName).msi" DestinationFiles="$(OutputPath)\NewRelicAgent_$(Platform)_%(AssemblyVersion.Version).msi" />

@@ -7,18 +7,15 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
-using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.BrowserMonitoring;
-using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utils;
@@ -544,26 +541,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action));
 			}
 
-			public ISegment StartDatastoreSegment(MethodCall methodCall, [CanBeNull]String operation, DatastoreVendor datastoreVendorName, [CanBeNull]String model, [CanBeNull]String commandText, String host = null, String portPathOrId = null, String databaseName = null)
+			public ISegment StartDatastoreSegment(MethodCall methodCall, [NotNull] ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo, [CanBeNull] String commandText)
 			{
 				if (transaction.Ignored)
 					return _noOpSegment;
 
-				var data = new DatastoreSegmentData()
-				{
-					Operation = operation,
-					DatastoreVendorName = datastoreVendorName,
-					Model = model,
-					CommandText = commandText,
-					Host = string.IsNullOrEmpty(host) ? "unknown" : host,
-					PortPathOrId = string.IsNullOrEmpty(portPathOrId) ? "unknown" : portPathOrId,
-					DatabaseName = string.IsNullOrEmpty(databaseName) ? "unknown" : databaseName
-				};
+				var data = new DatastoreSegmentData(parsedSqlStatement, commandText, connectionInfo);
 				var segment = new TypedSegment<DatastoreSegmentData>(transaction.TransactionSegmentState, GetMethodCallData(methodCall), data);
 
 				return segment;
 			}
-
 
 			public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, String method)
 			{
@@ -624,7 +611,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 				Log.Debug($"Noticed application error: {exception}");
 
-				var errorData = ErrorData.FromException(exception);
+				var stripErrorMessage = agentWrapperApi._configurationService.Configuration.HighSecurityModeEnabled;
+				var errorData = ErrorData.FromException(exception, stripErrorMessage);
+
 				transaction.TransactionMetadata.AddExceptionData(errorData);
 			}
 
@@ -795,20 +784,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentNullException(nameof(parameters));
 				}
 
-				MoreEnumerable.ForEach(parameters
-					.Where(parameter => parameter.Key != null)
-					.Where(parameter => parameter.Value != null), parameter =>
+				foreach(var parameter in parameters)
 				{
-					switch (bucket)
+					if ( parameter.Key != null && parameter.Value != null)
 					{
-						case RequestParameterBucket.RequestParameters:
-							transaction.TransactionMetadata.AddRequestParameter(parameter.Key, parameter.Value);
-							return;
-						case RequestParameterBucket.ServiceRequest:
-							transaction.TransactionMetadata.AddServiceParameter(parameter.Key, parameter.Value);
-							return;
+						switch(bucket)
+						{
+							case RequestParameterBucket.RequestParameters:
+								transaction.TransactionMetadata.AddRequestParameter(parameter.Key, parameter.Value);
+								return;
+							case RequestParameterBucket.ServiceRequest:
+								transaction.TransactionMetadata.AddServiceParameter(parameter.Key, parameter.Value);
+								return;
+						}
 					}
-				});
+				}
 			}
 
 			public object GetOrSetValueFromCache(string key, Func<object> func)
@@ -829,9 +819,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				}
 			}
 
-			public ParsedSqlStatement GetParsedDatabaseStatement(CommandType commandType, string sql)
+			public ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor vendor, CommandType commandType, string sql)
 			{
-				return transaction.GetParsedDatabaseStatement(commandType, sql);
+				return transaction.GetParsedDatabaseStatement(vendor, commandType, sql);
 			}
 		}
 
@@ -859,7 +849,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				return this;
 			}
 
-			public ISegment StartDatastoreSegment(MethodCall methodCall, [CanBeNull] string operation, DatastoreVendor datastoreVendorName, [CanBeNull] string model, [CanBeNull] string commandText, string host = null, string portPathOrId = null, string databaseName = null)
+			public ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo, [CanBeNull] string commandText)
 			{
 #if DEBUG
 				Log.Finest("Skipping StartDatastoreSegment outside of a transaction");
@@ -1022,7 +1012,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 			}
 
-			public ParsedSqlStatement GetParsedDatabaseStatement(CommandType commandType, string sql)
+			public ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor vendor, CommandType commandType, string sql)
 			{
 				return null;
 			}

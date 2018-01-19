@@ -36,7 +36,6 @@
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LazyMap\LazyMap.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
   </ItemGroup>
@@ -103,10 +102,10 @@
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\incomplete_non_meta_tags.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_no_meta.html" >
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_no_meta.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_charset.html" >
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_charset.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>	
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_x_ua_compatible.html">

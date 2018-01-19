@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
@@ -34,12 +32,20 @@ namespace NewRelic.Agent.Core.Time
 
 			lock (_lock)
 			{
-				// Clear out timers that have already executed
-				_oneTimeTimers
-					.Where(execution => execution != null)
-					.Where(execution => execution.HasRun)
-					.ToList()
-					.ForEach(execution => _oneTimeTimers.Remove(execution));
+				// Removes processed oneTimeTimers
+				var timersToRemove = new List<TimerStatus>();
+				for(var x = 0; x < _oneTimeTimers.Count; x++)
+				{
+					var execution = _oneTimeTimers[x];
+					if (execution.HasRun)
+					{
+						timersToRemove.Add(execution);
+					}
+				}
+				foreach (var ttr in timersToRemove)
+				{
+					_oneTimeTimers.Remove(ttr);
+				}
 
 				// Create a new timer that will mark itself as complete after it executes. The timer needs to be stored somewhere so that it won't be GC'd before it runs.
 				var newExecution = new TimerStatus();
@@ -74,6 +80,11 @@ namespace NewRelic.Agent.Core.Time
 			}
 		}
 
+		public static Timer CreateExecuteOnceTimer(Action action)
+		{
+			return PrivateCreateExecuteOnceTimer(action, DisablePeriodicExecution);
+		}
+
 		/// <summary>
 		/// Schedules <paramref name="action"/> to execute asynchronously a single time after waiting for <paramref name="timeUntilExecution"/>.
 		/// </summary>
@@ -84,6 +95,11 @@ namespace NewRelic.Agent.Core.Time
 			if (timeUntilExecution < TimeSpan.Zero)
 				throw new ArgumentException("Must be non-negative", "timeUntilExecution");
 
+			return PrivateCreateExecuteOnceTimer(action, timeUntilExecution);
+		}
+
+		private static Timer PrivateCreateExecuteOnceTimer(Action action, TimeSpan timeUntilExecution)
+		{
 			var ignoreWorkAction = new TimerCallback(_ =>
 			{
 				using (new IgnoreWork())
@@ -168,9 +184,13 @@ namespace NewRelic.Agent.Core.Time
 			{
 				_oneTimeTimers.Dispose();
 
-				_recurringTimers.Values
-					.Where(timer => timer != null)
-					.ForEach(timer => timer.Dispose());
+				foreach(var timer in _recurringTimers.Values)
+				{
+					if ( timer != null)
+					{
+						timer.Dispose();
+					}
+				}
 				_recurringTimers.Clear();
 			}
 		}

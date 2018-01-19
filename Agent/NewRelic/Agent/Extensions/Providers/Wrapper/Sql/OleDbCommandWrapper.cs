@@ -1,4 +1,4 @@
-﻿#if NET35
+﻿#if NET45
 using System;
 using System.Data.OleDb;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -34,8 +34,8 @@ namespace NewRelic.Providers.Wrapper.Sql
 				var vendor = SqlWrapperHelper.GetVendorName(oleDbCommand);
 
 				// TODO - Tracer had a supportability metric here to report timing duration of the parser.
-				var parsedStatement = transaction.GetParsedDatabaseStatement(oleDbCommand.CommandType, sql);
-				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement?.Operation, vendor, parsedStatement?.Model, sql);
+				var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, oleDbCommand.CommandType, sql);
+				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, null, sql);
 
 				return Delegates.GetDelegateFor(segment);
 			}

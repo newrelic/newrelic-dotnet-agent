@@ -1,11 +1,9 @@
-#Remove Agent Manually
+# Remove Agent Manually
 Write-Host ""
 Write-Host "---------------------------"
 Write-Host "Starting Agent Cleanup Script"
 Write-Host "---------------------------"
 Write-Host ""
-
-iisreset /stop
 
 # Elevate
 Write-Host "Elevating to Administrator"
@@ -29,6 +27,9 @@ else
  
 # Run your code that needs to be elevated here
 Write-Host "Elevated"
+
+iisreset /stop
+
 Write-Host -NoNewline "Removing Files... "
 $paths = @(
     "C:\Program Files\New Relic\.Net Agent\",
@@ -89,5 +90,5 @@ Write-Host -NoNewline "Removing System Environment Variables... "
 Write-Host "Done"
 
 Write-Host "Removal Completed"
-Start-Sleep -s 10
-Write-Host ""
+Start-Sleep -s 5
+Write-Host "" # Needed to allow some longer operations to complete

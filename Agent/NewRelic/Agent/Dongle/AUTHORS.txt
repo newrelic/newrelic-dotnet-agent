@@ -1,0 +1,9 @@
+Authors ordered by first contribution.
+
+Afonso França <afonso.franca@gmail.com>
+Thiago Sciotta <thiagog3@gmail.com>
+Renan Borges <renan@renanborges.com>
+Rodrigo Feijolo <r.feijolo@gmail.com>
+Yan Borowski <yanborowski@gmail.com>
+Walter Amorim <amorimwalter@gmail.com>
+Luiz Moura <lf.moura@hotmail.com>

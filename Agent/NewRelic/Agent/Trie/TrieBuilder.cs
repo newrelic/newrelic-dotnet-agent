@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
 
 namespace NewRelic.Trie
 {
@@ -45,14 +44,18 @@ namespace NewRelic.Trie
 
 			var rootNode = new TrieNode<T>(rootNodeMetaData);
 
-			nodeMetaDatas
+			var datas = nodeMetaDatas
 				.OrderBy(nodeMetaData => nodeMetaData, _nodeComparor)
 				.GroupBy(nodeMetaData => nodeMetaData, _nodeComparor)
 				.Where(NodeDataGroupingIsNotEmpty)
 				.Select(MergeNodeDatas)
-				.Select(TrieNodeFromData)
-				.ForEach(orphan => TryAddNodeAsChild(rootNode, orphan));
+				.Select(TrieNodeFromData);
 
+			foreach(var orphan in datas)
+			{
+				TryAddNodeAsChild(rootNode, orphan);
+			}
+			
 			return rootNode;
 		}
 

@@ -1,14 +1,14 @@
 $ErrorActionPreference = "Stop"
 
 # Annotate the build
-$agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll").Version.ToString()
+$agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll").Version.ToString()
 $authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
 Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$agentVersion" -Method POST -Headers @{'Authorization'=$authorization}
 
 # Copy the api .dll
 Remove-Item -Recurse -Force lib
 New-Item lib -Type Directory
-New-Item lib\net35 -Type Directory
+New-Item lib\net45 -Type Directory
 New-Item lib\netstandard2.0 -Type Directory
 Copy-Item CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll lib\net35
 Copy-Item CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll lib\netstandard2.0

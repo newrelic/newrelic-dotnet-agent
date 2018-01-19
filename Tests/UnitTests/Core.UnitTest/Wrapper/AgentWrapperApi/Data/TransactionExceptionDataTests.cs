@@ -23,14 +23,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
 				ex = e;
 			}
 
-			var errorData = ErrorData.FromException(ex);
+			var errorData = ErrorData.FromException(ex, false);
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual("Oh no!", errorData.ErrorMessage),
 				() => Assert.AreEqual("System.Exception", errorData.ErrorTypeName),
 				() => Assert.IsFalse(String.IsNullOrEmpty(errorData.StackTrace)),
 				() => Assert.IsTrue(errorData.NoticedAt > now.AddMinutes(-1) && errorData.NoticedAt < now.AddMinutes(1))
-				);
+			);
 		}
 	}
 }

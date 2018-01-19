@@ -1,4 +1,5 @@
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -86,14 +87,26 @@ namespace NewRelic.Parsing
 		/// Heursitical crawl through a database command to find features suitable for making metric names.
 		/// This uses linear search through the regexp patterns.
 		/// </summary>
-		/// <returns>A ParsedDatabaseStaetment if some heuristic matches; otherwise null</returns>
-		public static ParsedSqlStatement GetParsedDatabaseStatement(CommandType commandType, String commandText)
-		{			
+		/// <returns>A ParsedDatabaseStatement if some heuristic matches; otherwise null</returns>
+		public static ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, String commandText)
+		{			 
 			try {
+				switch (commandType)
+				{
+					case CommandType.TableDirect:
+						return new ParsedSqlStatement(datastoreVendor, commandText, "select");
+					case CommandType.StoredProcedure:
+						return new ParsedSqlStatement(datastoreVendor, StringsHelper.FixDatabaseObjectName(commandText), "ExecuteProcedure");
+				}
 				// Remove comments.
 				var statement = CommentPattern.Replace(commandText, "").TrimStart();
 
-				return _statementParser(commandType, commandText, statement);
+				if (statement.IndexOf(' ') < 0)
+				{
+					return new ParsedSqlStatement(datastoreVendor, StringsHelper.FixDatabaseObjectName(statement), "ExecuteProcedure");
+				}
+
+				return _statementParser(datastoreVendor, commandType, commandText, statement);
 			} 
 			catch//
 			{
@@ -114,7 +127,7 @@ namespace NewRelic.Parsing
 			return ValidMetricNameMatcher.IsMatch(name);
 		}
 
-		private readonly static List<string> _operations = new List<string>();
+		private readonly static HashSet<string> _operations = new HashSet<string>();
 		public static IEnumerable<string> Operations => _operations;
 		
 		static SqlParser()
@@ -126,7 +139,6 @@ namespace NewRelic.Parsing
 			// Order these statement parsers in descending order of frequency of use.
 			// We'll do a linear search through the table to find the appropriate matcher.
 			_statementParser = CreateCompoundStatementParser(
-				CreateTableDirectAndStoredProcedureStatementParser(),
 
 				// selects are tricky with the set crap on the front of the statement..
 				// leave those out of the dictionary
@@ -163,37 +175,16 @@ namespace NewRelic.Parsing
 				new WaitforStatementParser().ParseStatement);
 		}
 
-		private delegate ParsedSqlStatement ParseStatement(CommandType commandType, String commandText, String statement);
+		private delegate ParsedSqlStatement ParseStatement(DatastoreVendor datastoreVendor, CommandType commandType, String commandText, String statement);
 
 		private static ParseStatement CreateCompoundStatementParser(params ParseStatement[] parsers)
 		{
-			return (commandType, commandText, statement) =>
+			return (datastoreVendor, commandType, commandText, statement) =>
 			{
 				foreach (var parser in parsers)
 				{
-					var parsedStatement = parser(commandType, commandText, statement);
+					var parsedStatement = parser(datastoreVendor, commandType, commandText, statement);
 					if (parsedStatement != null) return parsedStatement;
-				}
-				return null;
-			};
-		}
-
-		/// <summary>
-		/// A direct match to a table, using the featuers in the IDbCommand.
-		/// </summary>
-		private static ParseStatement CreateTableDirectAndStoredProcedureStatementParser()
-		{
-			return (commandType, commandText, statement) =>
-			{
-				switch (commandType)
-				{
-					case CommandType.TableDirect:
-						return new ParsedSqlStatement(commandText, "select");
-					case CommandType.Text:
-						if (statement.IndexOf(' ') > 0) return null;
-						return new ParsedSqlStatement(StringsHelper.FixDatabaseObjectName(commandText), "ExecuteProcedure");
-					case CommandType.StoredProcedure:
-						return new ParsedSqlStatement(StringsHelper.FixDatabaseObjectName(commandText), "ExecuteProcedure");
 				}
 				return null;
 			};
@@ -208,7 +199,7 @@ namespace NewRelic.Parsing
 				keywordToParser[parser.Keyword] = parser.ParseStatement;
 			}
 
-			return (commandType, commandText, statement) =>
+			return (datastoreVendor, commandType, commandText, statement) =>
 			{
 				int splitIndex = statement.Length;
 				foreach (char c in delimiters)
@@ -228,7 +219,7 @@ namespace NewRelic.Parsing
 
 				if (keywordToParser.TryGetValue(keyword, out ParseStatement parser))
 				{
-					return parser(commandType, commandText, statement);
+					return parser(datastoreVendor, commandType, commandText, statement);
 				}
 
 				return null;
@@ -253,7 +244,7 @@ namespace NewRelic.Parsing
 				SqlParser._operations.Add(key);
 			}
 
-			public virtual ParsedSqlStatement ParseStatement(CommandType commandType, String commandText, String statement)
+			public virtual ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, String commandText, String statement)
 			{
 				var matcher = _pattern.Match(statement);
 				if (!matcher.Success) 
@@ -278,33 +269,30 @@ namespace NewRelic.Parsing
 					if (!IsValidModelName(model))
 						model = "ParseError"; 
 				}
-				return CreateParsedDatabaseStatement(model);
+				return CreateParsedDatabaseStatement(vendor, model);
 			}
 			
 			protected virtual Boolean IsValidModelName(String name) {
 				return IsValidName(name);
 			}
 			
-			protected virtual ParsedSqlStatement CreateParsedDatabaseStatement(String model)
+			protected virtual ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
 			{
-				return new ParsedSqlStatement(model.ToLower(), _key);
+				return new ParsedSqlStatement(vendor, model.ToLower(), _key);
 			}
 		}
 		
 		private class SelectVariableStatementParser
 		{
-			private readonly ParsedSqlStatement _innerSelectStatement = new ParsedSqlStatement("(subquery)", "select");
-			private readonly ParsedSqlStatement _variableStatement = new ParsedSqlStatement("VARIABLE", "select");
-
 			private static readonly Regex SelectMatcher = new Regex(@"^select\s+([^\s,]*).*", PatternSwitches);
 			private static readonly Regex FromMatcher   = new Regex(@"\s+from\s+", PatternSwitches);
 
-			public ParsedSqlStatement ParseStatement(CommandType commandType, String commandText, String statement)
+			public ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, String commandText, String statement)
 			{
 				var matcher = SelectMatcher.Match(statement);
 				if (matcher.Success)
 				{
-					return FromMatcher.Match(statement).Success ? _innerSelectStatement : _variableStatement;
+					return FromMatcher.Match(statement).Success ? new ParsedSqlStatement(vendor, "(subquery)", "select") : new ParsedSqlStatement(vendor, "VARIABLE", "select");
 				}
 				return null;
 			}
@@ -319,19 +307,19 @@ namespace NewRelic.Parsing
 				return true;
 			}
 			
-			protected override ParsedSqlStatement CreateParsedDatabaseStatement(String model)
+			protected override ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
 			{
 				if (model.Length > 50)
 				{
 				    model = model.Substring(0, 50);
 				}
-				return new ParsedSqlStatement(model, "show");
+				return new ParsedSqlStatement(vendor, model, "show");
 			}
 		}
 
 		/// <summary>
 		/// The Waitfor statement is [probably] only in Transact SQL.  There are multiple variations of the statement.
-		/// See http://msdn.microsoft.com/en-us/library/ms187331.aspx
+		/// See https://docs.microsoft.com/en-us/sql/t-sql/language-elements/waitfor-transact-sql
 		/// </summary>
 		private class WaitforStatementParser : DefaultStatementParser {
 			public WaitforStatementParser() : base("waitfor", new Regex(@"^waitfor\s+(delay|time)\s+([^\s,(;]*).*", PatternSwitches)) {
@@ -342,10 +330,10 @@ namespace NewRelic.Parsing
 				return true;
 			}
 
-			protected override ParsedSqlStatement CreateParsedDatabaseStatement(String model)
+			protected override ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
 			{
 				// We drop the time string in this.model on the floor.  It may contain quotes, colons, periods, etc.
-				return new ParsedSqlStatement("time", "waitfor");
+				return new ParsedSqlStatement(vendor, "time", "waitfor");
 			}
 		}
 
@@ -417,7 +405,7 @@ namespace NewRelic.Parsing
 			"Guid",
 		};
 
-		public static readonly ParsedSqlStatement NullStatement = new ParsedSqlStatement(null, null);
+		public static readonly ParsedSqlStatement NullStatement = new ParsedSqlStatement(DatastoreVendor.Other, null, null);
 
 		private static String QuoteString(String str)
 		{

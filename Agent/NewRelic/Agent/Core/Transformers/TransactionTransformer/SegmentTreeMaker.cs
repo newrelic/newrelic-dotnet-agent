@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -82,7 +80,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				lastSegment = segmentNode;
 			}
 
-			allNodes.Values.ForEach(CombineSimilarChildren);
+			foreach(var node in allNodes.Values)
+			{
+				CombineSimilarChildren(node);
+			}
+
 			if (rootNodes.Count == 0)
 			{
 				// if there's only one root, don't use the rootNodes list which will end up allocating an array
@@ -150,7 +152,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// Add all of the other nodes' children into this new combined node
 			var combinedNode = new SegmentTreeNodeBuilder(combinedSegment);
-			nodeList.SelectMany(node => node.Children).ForEach(combinedNode.Children.Add);
+			var groupedNodes = nodeList.SelectMany(node => node.Children);
+			foreach(var node in groupedNodes)
+			{
+				combinedNode.Children.Add(node);
+			}
 
 			return combinedNode;
 		}

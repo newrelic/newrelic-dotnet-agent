@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-#if NET35
+#if NET45
 using System.Data.Odbc;
 using System.Data.OleDb;
 #endif
@@ -24,7 +24,7 @@ namespace NewRelic.Parsing
 		public static DatastoreVendor GetVendorName([NotNull] IDbCommand command)
 		{
 
-#if NET35
+#if NET45
 			// If this is an OdbcCommand, the only way to give the data store name is by looking at the connection driver
 
 			var odbcCommand = command as OdbcCommand;

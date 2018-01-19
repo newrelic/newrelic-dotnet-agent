@@ -62,8 +62,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsErrorTrace_IfExceptionIsNoticed()
 		{
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorDataIn = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
+			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 			var attributes = new Attributes();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -77,18 +76,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("My message", errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri),
-				() => Assert.AreEqual("\tframe1", errorTrace.Attributes.StackTrace?.ElementAt(0)),
-				() => Assert.AreEqual("\tframe2", errorTrace.Attributes.StackTrace?.ElementAt(1))
-				);
+				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+			);
 		}
 
 		[Test]
 		public void GetErrorTrace_ReturnsFirstException_IfMultipleExceptionsNoticed()
 		{
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorData1 = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
-			var errorData2 = new ErrorData("My message2", "My type name2", null, DateTime.UtcNow);
+			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
+			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData1, errorData2 });
 			var attributes = new Attributes();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -102,17 +98,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("My message", errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri),
-				() => Assert.AreEqual("\tframe1", errorTrace.Attributes.StackTrace?.ElementAt(0)),
-				() => Assert.AreEqual("\tframe2", errorTrace.Attributes.StackTrace?.ElementAt(1))
-				);
+				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+			);
 		}
 
 		[Test]
 		public void GetErrorTrace_ReturnsExceptionsBeforeStatusCodes()
 		{
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorDataIn = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
+			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 			var attributes = new Attributes();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -126,10 +119,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("My message", errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri),
-				() => Assert.AreEqual("\tframe1", errorTrace.Attributes.StackTrace?.ElementAt(0)),
-				() => Assert.AreEqual("\tframe2", errorTrace.Attributes.StackTrace?.ElementAt(1))
-				);
+				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+			);
 		}
 
 		[NotNull]

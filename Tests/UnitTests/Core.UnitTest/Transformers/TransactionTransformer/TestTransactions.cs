@@ -16,6 +16,7 @@ using Telerik.JustMock;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 using NewRelic.Collections;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -90,15 +91,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (txSegmentState == null)
 				txSegmentState = Mock.Create<ITransactionSegmentState>();
 			methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-			var data = new DatastoreSegmentData()
-			{
-				DatastoreVendorName = vendor,
-				Model = model,
-				CommandText = commandText,
-				Host = host,
-				PortPathOrId = portPathOrId,
-				DatabaseName = databaseName
-			};
+			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
 			return new TypedSegment<DatastoreSegmentData>(startTime, duration, 
 				new TypedSegment<DatastoreSegmentData>(txSegmentState, methodCallData, data, false));
 		}

@@ -2,6 +2,7 @@
 using System.Collections;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Couchbase
 {
@@ -56,12 +57,9 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 			}
 
 			var model = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
-				
-			var segment = transaction.StartDatastoreSegment(
-				instrumentedMethodCall.MethodCall, 
-				operation, 
-				DatastoreVendor.Couchbase,
-				model);
+
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+				new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation));
 
 			return Delegates.GetDelegateFor(segment);
 		}

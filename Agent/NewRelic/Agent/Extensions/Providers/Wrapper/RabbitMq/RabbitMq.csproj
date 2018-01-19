@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
     <PropertyGroup>
-        <TargetFramework>net35</TargetFramework>
+        <TargetFramework>net45</TargetFramework>
         <AssemblyName>NewRelic.Providers.Wrapper.RabbitMq</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.RabbitMq</RootNamespace>
         <Description>RabbitMq Wrapper Provider for New Relic .NET Agent</Description>

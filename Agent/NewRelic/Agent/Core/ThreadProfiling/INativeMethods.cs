@@ -8,5 +8,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		void RequestFunctionNames(ulong[] functionIds, IntPtr callback);
 
 		void RequestProfile(IntPtr successCallback, IntPtr failureCallback, IntPtr completeCallback);
+
+		int InstrumentationRefresh();
+
+		int AddCustomInstrumentation(string fileName, string xml);
+
+		int ApplyCustomInstrumentation();
 	}
 }

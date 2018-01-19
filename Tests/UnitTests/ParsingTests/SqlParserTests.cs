@@ -3,6 +3,7 @@ using NewRelic.Parsing;
 using System.Data;
 using System.Text;
 using NUnit.Framework;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace ParsingTests
 {
@@ -12,15 +13,16 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_SelectQueryParsed()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "SELECT * FROM MyAwesomeTable");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "SELECT * FROM MyAwesomeTable");
 			Assert.AreEqual("myawesometable", parsedDatabaseStatement.Model);
 			Assert.AreEqual("select", parsedDatabaseStatement.Operation);
+			Assert.AreEqual("Datastore/statement/MSSQL/myawesometable/select", parsedDatabaseStatement.DatastoreStatementMetricName);
 		}
 
 		[Test]
 		public void SqlParserTest_StoredProcedureParsed()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.StoredProcedure, "dbo.MySchema.scalar_getMeSomeData");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.StoredProcedure, "dbo.MySchema.scalar_getMeSomeData");
 			Assert.AreEqual("dbo.myschema.scalar_getmesomedata", parsedDatabaseStatement.Model);
 			Assert.AreEqual("ExecuteProcedure", parsedDatabaseStatement.Operation);
 		}
@@ -28,7 +30,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TableDirectQueryParsed()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.TableDirect, "MyAwesomeTable");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.TableDirect, "MyAwesomeTable");
 			Assert.AreEqual("MyAwesomeTable", parsedDatabaseStatement.Model);
 			Assert.AreEqual("select", parsedDatabaseStatement.Operation);
 		}
@@ -36,7 +38,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_InvalidTextCantBeParsed()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "Lorem ipsum dolar sit amet");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "Lorem ipsum dolar sit amet");
 			Assert.IsNull(parsedDatabaseStatement);
 		}
 
@@ -57,7 +59,7 @@ namespace ParsingTests
 		public void SqlParserTest_TestDeclareStatement()
 		{
 			// Motivated by the petshop application.
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "Declare @ID int");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "Declare @ID int");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("id", parsedDatabaseStatement.Model);
 			Assert.AreEqual("declare", parsedDatabaseStatement.Operation);
@@ -66,12 +68,12 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestWaitForStatement()
 		{
-			var parsedDatabaseStatementDelay = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "WaitFor Delay \"00:00:00.5\"");
+			var parsedDatabaseStatementDelay = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "WaitFor Delay \"00:00:00.5\"");
 			Assert.IsNotNull(parsedDatabaseStatementDelay);
 			Assert.AreEqual("waitfor", parsedDatabaseStatementDelay.Operation);
 			Assert.AreEqual("time", parsedDatabaseStatementDelay.Model);
 
-			var parsedDatabaseStatementTime = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "WaitFor Time \"08:17:00\"");
+			var parsedDatabaseStatementTime = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "WaitFor Time \"08:17:00\"");
 			Assert.IsNotNull(parsedDatabaseStatementTime);
 			Assert.AreEqual("waitfor", parsedDatabaseStatementTime.Operation);
 			Assert.AreEqual("time", parsedDatabaseStatementTime.Model);
@@ -80,7 +82,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestCompoundStatement()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "set @FOO=17; set @BAR=18;");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set @FOO=17; set @BAR=18;");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("foo", parsedDatabaseStatement.Model);
 			Assert.AreEqual("set", parsedDatabaseStatement.Operation);
@@ -89,7 +91,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestSelect_with_nocount()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "set nocount on; select * from dude");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set nocount on; select * from dude");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("select", parsedDatabaseStatement.Operation);
 			Assert.AreEqual("dude", parsedDatabaseStatement.Model);
@@ -98,7 +100,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestCommntInFront()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, @"/* ignore the comment */
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, @"/* ignore the comment */
 				select * from dude");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("select", parsedDatabaseStatement.Operation);
@@ -108,7 +110,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestCommentInMiddle()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, @"select *
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, @"select *
 				/* ignore the comment */
 				from dude");
 			Assert.IsNotNull(parsedDatabaseStatement);
@@ -118,7 +120,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestSelectWithBracket()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "select * from [dude]");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from [dude]");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("dude/select", parsedDatabaseStatement.ToString());
 		}
@@ -126,7 +128,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestSelectWithNestedParens()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "select * from (((dude)))");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from (((dude)))");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("dude/select", parsedDatabaseStatement.ToString());
 		}
@@ -134,7 +136,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestSelectMultipleLine()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "Select *\nfrom MAN\nwhere id = 5");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "Select *\nfrom MAN\nwhere id = 5");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("man/select", parsedDatabaseStatement.ToString());
 		}
@@ -142,7 +144,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestSelectMultipleTables()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "SELECT * FROM man, dude where dude.id = man.id");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "SELECT * FROM man, dude where dude.id = man.id");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("man/select", parsedDatabaseStatement.ToString());
 		}
@@ -150,7 +152,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestUpdate()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "Update  dude set man = 'yeah' where id = 666");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "Update  dude set man = 'yeah' where id = 666");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("dude/update", parsedDatabaseStatement.ToString());
 		}
@@ -158,7 +160,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestSet()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "SET character_set_results=NULL");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "SET character_set_results=NULL");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("character_set_results/set", parsedDatabaseStatement.ToString());
 		}
@@ -166,7 +168,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_verify_match_on_select_with_set()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "SET nocount on ; select * from test");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "SET nocount on ; select * from test");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("test/select", parsedDatabaseStatement.ToString());
 		}
@@ -174,7 +176,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_verify_match_on_select_with_set_and_subselect()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "set nocount on;select * from test where this in (select * from testing)");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set nocount on;select * from test where this in (select * from testing)");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("test/select", parsedDatabaseStatement.ToString());
 		}
@@ -182,7 +184,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_verify_match_on_select_with_beginning_comment()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "/* test */ select * from test");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "/* test */ select * from test");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("test/select", parsedDatabaseStatement.ToString());
 		}
@@ -190,7 +192,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_verify_match_on_select_with_beginning_comment_and_set()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "/* test */ set nocount on; select * from test");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "/* test */ set nocount on; select * from test");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("test/select", parsedDatabaseStatement.ToString());
 		}
@@ -198,7 +200,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_verify_match_on_select_with_multi_sets()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "set test; set test2; select * from test");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "set test; set test2; select * from test");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("test/select", parsedDatabaseStatement.ToString());
 		}
@@ -206,7 +208,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestInsertWithSelect()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "INSERT into   cars  select * from man");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "INSERT into   cars  select * from man");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("cars/insert", parsedDatabaseStatement.ToString());
 		}
@@ -214,7 +216,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestInsertWithValues()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "insert   into test(id, name) values(6, 'Bubba')");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "insert   into test(id, name) values(6, 'Bubba')");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("test/insert", parsedDatabaseStatement.ToString());
 		}
@@ -222,7 +224,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestDeleteFrom()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "delete from actors where title = 'The Dude'");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "delete from actors where title = 'The Dude'");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("actors/delete", parsedDatabaseStatement.ToString());
 		}
@@ -230,7 +232,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestDelete()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "delete actors where title = 'The Dude'");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "delete actors where title = 'The Dude'");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("actors/delete", parsedDatabaseStatement.ToString());
 		}
@@ -238,7 +240,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestCreateTable()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "create table actors as select * from dudes");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "create table actors as select * from dudes");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("table/create", parsedDatabaseStatement.ToString());
 		}
@@ -246,7 +248,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestCreateProcedure()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "create procedure actors as select * from dudes");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "create procedure actors as select * from dudes");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("procedure/create", parsedDatabaseStatement.ToString());
 		}
@@ -254,7 +256,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestProcedure()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.StoredProcedure, "MyProc");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.StoredProcedure, "MyProc");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("myproc/ExecuteProcedure", parsedDatabaseStatement.ToString());
 		}
@@ -262,7 +264,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestStoredProcedureTextCommand()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "sp_MyProc");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "sp_MyProc");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("sp_myproc/ExecuteProcedure", parsedDatabaseStatement.ToString());
 		}
@@ -270,7 +272,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestStoredProcedureTextCommandWithArguments()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "sp_MyProc ?, ?");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "sp_MyProc ?, ?");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("sp_myproc/ExecuteProcedure", parsedDatabaseStatement.ToString());
 
@@ -279,7 +281,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestProcedureWithBrackets()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.StoredProcedure, "[DotNetNuke].[sys].[sp_dude]");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.StoredProcedure, "[DotNetNuke].[sys].[sp_dude]");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("dotnetnuke.sys.sp_dude/ExecuteProcedure", parsedDatabaseStatement.ToString());
 		}
@@ -287,7 +289,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestExecProcedureWithReturnAssignment()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "EXEC @RETURN_VALUE = [ClassSearchPublicSite] @programArea_ID = @p?,"
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "EXEC @RETURN_VALUE = [ClassSearchPublicSite] @programArea_ID = @p?,"
 											+ " @courseTitle = @p?,"
 											+ " @eventID = @p?,"
 											+ " @courseType = @p?,"
@@ -303,7 +305,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestExecProcedureNoAssignment()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "EXEC [ClassSearchPublicSite] @programArea_ID = @p?,"
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "EXEC [ClassSearchPublicSite] @programArea_ID = @p?,"
 											+ " @courseTitle = @p?,"
 											+ " @eventID = @p?,"
 											+ " @courseType = @p?,"
@@ -319,7 +321,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestExecuteProcedureNoAssignment()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "EXECUTE [ClassSearchPublicSite] @programArea_ID = @p?,"
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "EXECUTE [ClassSearchPublicSite] @programArea_ID = @p?,"
 											+ " @courseTitle = @p?,"
 											+ " @eventID = @p?,"
 											+ " @courseType = @p?,"
@@ -335,7 +337,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestExecProcedureNoArguments()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "EXEC @RTN = [ClassSearchPublicSite]");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "EXEC @RTN = [ClassSearchPublicSite]");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("classsearchpublicsite/ExecuteProcedure", parsedDatabaseStatement.ToString());
 		}
@@ -343,7 +345,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestTableDirect()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.TableDirect, "MyTable");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.TableDirect, "MyTable");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("MyTable/select", parsedDatabaseStatement.ToString());
 		}
@@ -351,7 +353,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestShow()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "show stuff");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "show stuff");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("stuff/show", parsedDatabaseStatement.ToString());
 		}
@@ -359,7 +361,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestStoredProcedureDatabaseOffset()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "dbo.AspNet_SqlCachePollingStoredProcedure");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "dbo.AspNet_SqlCachePollingStoredProcedure");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("ExecuteProcedure", parsedDatabaseStatement.Operation);
 			Assert.AreEqual("dbo.aspnet_sqlcachepollingstoredprocedure", parsedDatabaseStatement.Model);
@@ -368,7 +370,7 @@ namespace ParsingTests
 		[Test]
 		public void SqlParserTest_TestShowLongName()
 		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "show wow_this_is_a_really_long_name_isnt_it_cmon_man_it_s_crazy_no_way_bruh");
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "show wow_this_is_a_really_long_name_isnt_it_cmon_man_it_s_crazy_no_way_bruh");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("show", parsedDatabaseStatement.Operation);
 			Assert.AreEqual("wow_this_is_a_really_long_name_isnt_it_cmon_man_it", parsedDatabaseStatement.Model);
@@ -393,7 +395,7 @@ namespace ParsingTests
 				<hr><b>Recipients:</B><br>**REDACTED**<br />**REDACTED**<br />
 			";
 
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
 			Assert.IsNull(parsedDatabaseStatement);
 		}
 
@@ -412,7 +414,7 @@ namespace ParsingTests
 						" WHERE Ord.OrderID = OrdDet.OrderID) AS MaxUnitPrice" +
 						" FROM Northwind.dbo.Orders AS Ord";
 
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
 			Assert.IsNotNull(parsedDatabaseStatement);
 			// TODO: we choke on the space inside of token separators ...[Order Details] (PORTED from pre-async)
 			Assert.AreEqual("order", parsedDatabaseStatement.Model);
@@ -425,7 +427,7 @@ namespace ParsingTests
 			// Example of subbquery
 			const string test = "DELETE FROM [ADI-?].[dbo].[UserSession] WHERE [SessionKey] = @p0";
 
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("usersession", parsedDatabaseStatement.Model);
 			Assert.AreEqual("delete", parsedDatabaseStatement.Operation);
@@ -436,7 +438,7 @@ namespace ParsingTests
 		{
 			const string test = "SELECT x,y SELECT a,b if a > b";  // made up SQL
 
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("VARIABLE", parsedDatabaseStatement.Model);
 			Assert.AreEqual("select", parsedDatabaseStatement.Operation);
@@ -450,7 +452,7 @@ namespace ParsingTests
 			// DotNetTestApp/test.sqlserver.aspx
 			const string test = "SELECT * FROM (SELECT * FROM [dbo].[Account] Where UserId like 'John') as test";
 
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("(subquery)", parsedDatabaseStatement.Model, string.Format($"Expected model (subquery) but was {parsedDatabaseStatement.Model}", "(subquery)", parsedDatabaseStatement.Model));
 			Assert.AreEqual("select", parsedDatabaseStatement.Operation, string.Format($"Expected operation select but was {parsedDatabaseStatement.Operation}", "select", parsedDatabaseStatement.Operation));
@@ -496,7 +498,7 @@ namespace ParsingTests
 					}
 					string test = sb.ToString();
 
-					var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
+					var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
 					Assert.IsNotNull(parsedDatabaseStatement);
 				}
 			}

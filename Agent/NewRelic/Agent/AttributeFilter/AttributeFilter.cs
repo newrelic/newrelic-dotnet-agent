@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using JetBrains.Annotations;
-using MoreLinq;
-using NewRelic.SystemExtensions.Threading;
 using NewRelic.Trie;
 using NewRelic.Collections;
 
@@ -67,10 +64,13 @@ namespace NewRelic.Agent
 			}
 
 			var filteredAttributes = new List<T>();
-			attributes
-				.Where(attribute => attribute != null)
-				.Where(attribute => ShouldIncludeAttribute(attribute, destination))
-				.ForEach(filteredAttributes.Add);
+			foreach(var attr in attributes)
+			{
+				if(attr != null && ShouldIncludeAttribute(attr, destination))
+				{
+					filteredAttributes.Add(attr);
+				}
+			}
 
 			return filteredAttributes;
 		}

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFrameworks>net45</TargetFrameworks>
+    <AssemblyName>NewRelic.Providers.Storage.OperationContext</AssemblyName>
+    <RootNamespace>NewRelic.Providers.Storage.OperationContext</RootNamespace>
+    <Description>WCF 3 Transaction Context Provider for New Relic .NET Agent</Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="OperationContext.v2.ncrunchproject" />
+  </ItemGroup>  
+  
+  <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+</Project>

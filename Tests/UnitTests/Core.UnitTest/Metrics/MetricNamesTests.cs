@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Metrics
 		[Test]
 		public void GetDatastoreVendorAllOther()
 		{
-			Assert.AreEqual("Datastore/Cassandra/allOther", DatastoreVendor.Cassandra.GetDatastoreVendorAllOther().ToString());
+			Assert.AreEqual("Datastore/Oracle/allOther", DatastoreVendor.Oracle.GetDatastoreVendorAllOther().ToString());
 		}
 
 		[Test]
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.Metrics
 		[Test]
 		public void GetDatastoreStatement()
 		{
-			Assert.AreEqual("Datastore/statement/SQLite/users/select", MetricNames.GetDatastoreStatement(DatastoreVendor.SQLite, "users", "select").ToString());
+			Assert.AreEqual("Datastore/statement/MySQL/users/select", MetricNames.GetDatastoreStatement(DatastoreVendor.MySQL, "users", "select").ToString());
 		}
 
 		[Test]

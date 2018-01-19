@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
-using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -127,12 +125,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			
 			GenerateAndCollectSqlTrace(immutableTransaction, transactionMetricName, txStats);
 			GenerateAndCollectMetrics(immutableTransaction, transactionMetricName, errorData.IsAnError, apdexT, transactionApdexMetricName, totalTime, txStats);
-
-			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+			
+			// defer the creation of attributes until something asks for them.
+			Func<Attributes> attributes = () => _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+			attributes = attributes.Memoize();
 
 			// Must generate errors first so other wire models get attribute updates
 			if (errorData.IsAnError) {
-				GenerateAndCollectErrorEventTracesAndEvents(immutableTransaction, attributes, transactionMetricName, errorData);
+				GenerateAndCollectErrorEventTracesAndEvents(immutableTransaction, attributes.Invoke(), transactionMetricName, errorData);
 			}
 
 			GenerateAndCollectTransactionEvent(immutableTransaction, attributes);
@@ -250,7 +250,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_metricAggregator.Collect(txStats);
 		}
 
-		private void GenerateAndCollectTransactionEvent([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes attributes)
+		private void GenerateAndCollectTransactionEvent([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Func<Attributes> attributes)
 		{
 			if (!_configurationService.Configuration.TransactionEventsEnabled)
 				return;
@@ -258,11 +258,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (!_configurationService.Configuration.TransactionEventsTransactionsEnabled)
 				return;
 
-			var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
+			var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes.Invoke());
 			_transactionEventAggregator.Collect(transactionEvent);
 		}
 
-		private void GenerateAndCollectTransactionTrace([NotNull] ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, [NotNull] Attributes attributes)
+		private void GenerateAndCollectTransactionTrace([NotNull] ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, [NotNull] Func<Attributes> attributes)
 		{
 			if (!_configurationService.Configuration.TransactionTracerEnabled)
 				return;
@@ -271,7 +271,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 							transactionMetricName,
 							immutableTransaction.Duration,
 							immutableTransaction.TransactionMetadata.IsSynthetics,
-							() => _transactionTraceMaker.GetTransactionTrace(immutableTransaction, _segmentTreeMaker.BuildSegmentTrees(immutableTransaction.Segments), transactionMetricName, attributes));
+							() => _transactionTraceMaker.GetTransactionTrace(immutableTransaction, _segmentTreeMaker.BuildSegmentTrees(immutableTransaction.Segments), transactionMetricName, attributes.Invoke()));
 
 			_transactionTraceAggregator.Collect(traceComponents);
 		}
@@ -283,10 +283,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var txSqlTrStats = new SqlTraceStatsCollection();
 
-			immutableTransaction.Segments.OfType<TypedSegment<DatastoreSegmentData>>().Where(
-				segment => segment.TypedData.CommandText != null &&
-				segment.Duration >= _configurationService.Configuration.SqlExplainPlanThreshold)
-				.ForEach(segment => AddSqlTraceStats(txSqlTrStats, _sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, segment)));
+			foreach(var segment in immutableTransaction.Segments.OfType<TypedSegment<DatastoreSegmentData>>())
+			{
+				if ( segment.TypedData.CommandText != null &&
+					 segment.Duration >= _configurationService.Configuration.SqlExplainPlanThreshold)
+				{
+					AddSqlTraceStats(txSqlTrStats, _sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, segment));
+				}
+			}
 
 			if (txSqlTrStats.Collection.Count > 0)
 			{
@@ -294,7 +298,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 				MetricBuilder.TryBuildSqlTracesCollectedMetric(txSqlTrStats.TracesCollected, txStats);
 			}
-
 		}
 
 		private void TryGenerateExplainPlans(IEnumerable<Segment> segments)

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Transactions
@@ -84,14 +83,13 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public virtual void Add([NotNull] IEnumerable<Attribute> attributes)
 		{
-			attributes.Where(attribute => attribute != null).ForEach(Add);
-		}
-
-		public virtual void Add([NotNull] Attributes attributes)
-		{
-			attributes._agentAttributes.ForEach(_agentAttributes.Add);
-			attributes._intrinsics.ForEach(_intrinsics.Add);
-			attributes._userAttributes.ForEach(_userAttributes.Add);
+			foreach (var attr in attributes)
+			{
+				if ( attr != null)
+				{
+					Add(attr);
+				}
+			}
 		}
 
 		public virtual void TryAdd<T>([NotNull] Func<T, Attribute> attributeBuilder, [CanBeNull] T value)

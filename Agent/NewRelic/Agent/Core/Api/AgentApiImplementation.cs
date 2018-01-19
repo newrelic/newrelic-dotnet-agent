@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Events;
@@ -15,10 +14,8 @@ using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 
@@ -53,11 +50,11 @@ namespace NewRelic.Agent.Core.Api
 		private readonly IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
 
 		[NotNull]
-		private readonly ITransactionMetricNameMaker _transactionMetricNameMaker;
+		private readonly IConfigurationService _configurationService;
 
 		[NotNull] private readonly IAgentWrapperApi _agentWrapperApi;
 
-		public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] IAgentWrapperApi agentWrapperApi)
+		public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi)
 		{
 			_transactionService = transactionService;
 			_agentHealthReporter = agentHealthReporter;
@@ -67,7 +64,7 @@ namespace NewRelic.Agent.Core.Api
 			_customErrorDataTransformer = customErrorDataTransformer;
 			_browserMonitoringPrereqChecker = browserMonitoringPrereqChecker;
 			_browserMonitoringScriptMaker = browserMonitoringScriptMaker;
-			_transactionMetricNameMaker = transactionMetricNameMaker;
+			_configurationService = configurationService;
 			_agentWrapperApi = agentWrapperApi;
 		}
 
@@ -174,16 +171,24 @@ namespace NewRelic.Agent.Core.Api
 					if (exception == null)
 						throw new ArgumentNullException(nameof(exception));
 
-					var errorData = ErrorData.FromException(exception);
+					var stripErrorMessage = _configurationService.Configuration.HighSecurityModeEnabled;
+					var errorData = ErrorData.FromException(exception, stripErrorMessage);
 
 					var transaction = TryGetCurrentInternalTransaction();
 					if (transaction != null)
 					{
 						transaction.TransactionMetadata.AddCustomErrorData(errorData);
 
-						customAttributes?
-							.Where(attr => attr.Key != null && attr.Value != null)
-							.ForEach(attr => transaction.TransactionMetadata.AddUserErrorAttribute(attr.Key, attr.Value));
+						if ( customAttributes != null)
+						{
+							foreach(var customAttribute in customAttributes)
+							{
+								if (customAttribute.Key != null && customAttribute.Value != null)
+								{
+									transaction.TransactionMetadata.AddUserErrorAttribute(customAttribute.Key, customAttribute.Value);
+								}
+							}
+						}
 					}
 					else
 					{
@@ -208,7 +213,8 @@ namespace NewRelic.Agent.Core.Api
 					if (exception == null)
 						throw new ArgumentNullException(nameof(exception));
 
-					var errorData = ErrorData.FromException(exception);
+					var stripErrorMessage = _configurationService.Configuration.HighSecurityModeEnabled;
+					var errorData = ErrorData.FromException(exception, stripErrorMessage);
 
 					var transaction = TryGetCurrentInternalTransaction();
 					if (transaction != null)
@@ -238,16 +244,24 @@ namespace NewRelic.Agent.Core.Api
 					if (message == null)
 						throw new ArgumentNullException(nameof(message));
 
-					var errorData = new ErrorData(message, "Custom Error", null, DateTime.UtcNow);
+					var stripErrorMessage = _configurationService.Configuration.HighSecurityModeEnabled;
+					var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, stripErrorMessage);
 
 					var transaction = TryGetCurrentInternalTransaction();
 					if (transaction != null)
 					{
 						transaction.TransactionMetadata.AddCustomErrorData(errorData);
 
-						customAttributes?
-							.Where(attr => attr.Key != null && attr.Value != null)
-							.ForEach(attr => transaction.TransactionMetadata.AddUserErrorAttribute(attr.Key, attr.Value));
+						if (customAttributes != null)
+						{
+							foreach (var customAttribute in customAttributes)
+							{
+								if (customAttribute.Key != null && customAttribute.Value != null)
+								{
+									transaction.TransactionMetadata.AddUserErrorAttribute(customAttribute.Key, customAttribute.Value);
+								}
+							}
+						}
 					}
 					else
 					{

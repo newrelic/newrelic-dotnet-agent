@@ -3,7 +3,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Configuration;
 
 namespace NewRelic.Agent.Core
 {
@@ -46,8 +45,8 @@ namespace NewRelic.Agent.Core
 
 			static Assembly LoadFromSameFolder(object sender, ResolveEventArgs args)
 			{
-				string folderPath = System.Environment.GetEnvironmentVariable(DefaultConfiguration.NewRelicInstallPathEnvironmentVariable); ;
-				if (folderPath == null) folderPath = System.Environment.GetEnvironmentVariable(DefaultConfiguration.NewRelicHomeEnvironmentVariable); ;
+				string folderPath = AgentInstallConfiguration.NewRelicInstallPath;
+				if (folderPath == null) folderPath = AgentInstallConfiguration.NewRelicHome;
 				string assemblyPath = Path.Combine(folderPath, new AssemblyName(args.Name).Name + ".dll");
 				if (!File.Exists(assemblyPath)) return null;
 				Assembly assembly = Assembly.LoadFrom(assemblyPath);

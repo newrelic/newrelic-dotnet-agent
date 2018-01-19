@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <RootNamespace>Dongle</RootNamespace>
+    <AssemblyName>Dongle</AssemblyName>
+    <Description></Description>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+	  <SignAssembly>true</SignAssembly>
+	  <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+</Project>

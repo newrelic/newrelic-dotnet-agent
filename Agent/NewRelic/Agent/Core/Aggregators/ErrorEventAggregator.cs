@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -146,9 +145,13 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			errorEvents = errorEvents.ToList();
 
-			errorEvents
-				.Where(@event => @event != null)
-				.ForEach(AddEventToCollection);
+			foreach(var errorEvent in errorEvents)
+			{
+				if ( errorEvent != null)
+				{
+					AddEventToCollection(errorEvent);
+				}
+			}
 		}
 
 		#endregion

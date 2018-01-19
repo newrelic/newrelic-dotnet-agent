@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
-using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
-using MoreLinq;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
@@ -166,7 +164,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		/// <returns>true if a new thread profiling session is started. false if one already exists.</returns>
 		public Boolean StartThreadProfilingSession(Int32 profileSessionId, UInt32 frequencyInMsec, UInt32 durationInMsec)
 		{
-#if NET35
+#if NET45
 			Log.Info("Starting a thread profiling session");
 			var startedNewSession = false;
 

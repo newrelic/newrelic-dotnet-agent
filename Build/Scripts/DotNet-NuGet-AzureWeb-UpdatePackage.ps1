@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 # Annotate the build
-$agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll").Version.ToString()
+$agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll").Version.ToString()
 
 $annotation = "$env:Repository - $agentVersion"
 $authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
@@ -22,7 +22,7 @@ else
     Write-Host "32-bit"
     Copy-Item "CopiedArtifacts\Agent\New Relic Home x86\*" -Destination content\newrelic -Force -Recurse
 }
-Copy-Item CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll lib -Force
+Copy-Item CopiedArtifacts\Agent\_build\AnyCPU-Release\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll lib -Force
 
 # Remove PDBs before committing
 Remove-Item content\newrelic\* -recurse -include *.pdb

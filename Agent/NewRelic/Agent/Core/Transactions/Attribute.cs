@@ -380,7 +380,7 @@ namespace NewRelic.Agent.Core.Transactions
 		[NotNull]
 		public static Attribute BuildErrorDotMessageAttribute([NotNull] String errorMessage)
 		{
-			return new Attribute("error.message", errorMessage, false, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
+			return new Attribute("error.message", errorMessage, true, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
 		}
 
 		#endregion

@@ -3,19 +3,52 @@ using System.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Collections;
 using NewRelic.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
-	internal class DatabaseStatementParser
+	public class DatabaseStatementParser
 	{
-		private readonly ConcurrentDictionary<CommandType, ConcurrentDictionary<string, ParsedSqlStatement>> _typeToStatementCache =
-			new ConcurrentDictionary<CommandType, ConcurrentDictionary<string, ParsedSqlStatement>>(3);
+		/// <summary>
+		/// An array of caches of sql to parsed sql statements.  The index of the array is
+		/// the DatabaseVendor.
+		/// </summary>
+		private readonly ConcurrentDictionary<string, ParsedSqlStatement>[] _vendorToStatementCache;
 
-		internal ParsedSqlStatement ParseDatabaseStatement(CommandType commandType, string sql)
+		public DatabaseStatementParser()
 		{
-			var sqlToStatement = _typeToStatementCache.GetOrSetValue(commandType, () => new ConcurrentDictionary<string, ParsedSqlStatement>());
-			var cachedStatement = sqlToStatement.GetOrSetValue(sql, () => SqlParser.GetParsedDatabaseStatement(commandType, sql) ?? SqlParser.NullStatement);
-			return SqlParser.NullStatement == cachedStatement ? null : cachedStatement;
+			var vendorCount = Enum.GetValues(typeof(DatastoreVendor)).Length;
+			_vendorToStatementCache = new ConcurrentDictionary<string, ParsedSqlStatement>[vendorCount];
+		}
+
+		public ParsedSqlStatement ParseDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql)
+		{
+			switch (commandType)
+			{
+				case CommandType.TableDirect:
+				case CommandType.StoredProcedure:
+					return SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql);
+				default:
+					var sqlToStatement = GetOrCreateSqlCache(datastoreVendor);
+					var cachedStatement = sqlToStatement.GetOrSetValue(sql, () => SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql) ?? SqlParser.NullStatement);
+					return SqlParser.NullStatement == cachedStatement ? null : cachedStatement;
+			}
+		}
+
+		private ConcurrentDictionary<string, ParsedSqlStatement> GetOrCreateSqlCache(DatastoreVendor datastoreVendor)
+		{
+			var vendorIndex = (int)datastoreVendor;
+			var sqlToStatement = Interlocked.CompareExchange(ref _vendorToStatementCache[vendorIndex], null, null);
+			if (null == sqlToStatement)
+			{
+				Interlocked.CompareExchange(ref _vendorToStatementCache[vendorIndex], new ConcurrentDictionary<string, ParsedSqlStatement>(), null);
+			}
+			else
+			{
+				return sqlToStatement;
+			}
+			return Interlocked.CompareExchange(ref _vendorToStatementCache[vendorIndex], null, null);
 		}
 	}
 }

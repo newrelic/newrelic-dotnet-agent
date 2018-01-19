@@ -308,7 +308,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(32, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -340,7 +340,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("pathHash", transactionAttributes["nr.alternatePathHashes"]),
 				() => Assert.AreEqual("400", transactionAttributes["error.class"]),
 				() => Assert.AreEqual("400", transactionAttributes["errorType"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"])
+				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"]),
+				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"])
 			);
 		}
 
@@ -385,7 +386,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var tripId = immutableTransaction.Guid;
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(28, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(29, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -413,7 +414,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("pathHash", transactionAttributes["nr.alternatePathHashes"]),
 				() => Assert.AreEqual("400", transactionAttributes["error.class"]),
 				() => Assert.AreEqual("400", transactionAttributes["errorType"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"])
+				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"]),
+				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"])
 			);
 		}
 
@@ -493,7 +495,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["name"]),
@@ -525,7 +527,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace, transactionAttributes["userErrorAttributeKey"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.class"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["errorType"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["errorMessage"])
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["errorMessage"]),
+				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.message"])
 			);
 		}
 
@@ -574,7 +577,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
@@ -607,7 +610,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.alternatePathHashes"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.class"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorType"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorMessage"])
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorMessage"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.message"])
 			);
 		}
 

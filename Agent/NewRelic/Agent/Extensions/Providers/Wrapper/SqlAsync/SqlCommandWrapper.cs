@@ -1,22 +1,26 @@
 ﻿using System;
 using System.Data;
-using System.Threading;
-using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.SqlAsync
 {
 	public class SqlCommandWrapper : IWrapper
 	{
+		public const string WrapperName = "SqlCommandWrapperAsync";
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(
+
+			var isRequestedByName = WrapperName == methodInfo.RequestedWrapperName;
+
+			var canWrap = isRequestedByName || method.MatchesAny(
 				assemblyNames: new[]
 				{
 					"System.Data",
@@ -60,13 +64,12 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 
 			// NOTE: this wrapper currently only supports SqlCommand. If support for other commands is added then the vendor will need to be determined dynamically.
 			var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
-			object GetConnectionInfo() => ConnectionInfo.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
+			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
 			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
 
 			// TODO - Tracer had a supportability metric here to report timing duration of the parser.
-			var parsedStatement = transaction.GetParsedDatabaseStatement(sqlCommand.CommandType, sql);
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement?.Operation, vendor, parsedStatement?.Model, sql,
-				host: connectionInfo.Host, portPathOrId: connectionInfo.PortPathOrId, databaseName: connectionInfo.DatabaseName);
+			var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql);
 
 			if (vendor == DatastoreVendor.MSSQL)
 			{

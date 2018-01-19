@@ -12,5 +12,20 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		public void RequestProfile(IntPtr successCallback, IntPtr failureCallback, IntPtr completeCallback)
 		{
 		}
+
+		public int InstrumentationRefresh()
+		{
+			return 0;
+		}
+
+		public int AddCustomInstrumentation(string fileName, string xml)
+		{
+			return 0;
+		}
+
+		public int ApplyCustomInstrumentation()
+		{
+			return 0;
+		}
 	}
 }

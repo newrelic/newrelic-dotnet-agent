@@ -9,6 +9,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
 	public class FilterWrapper : IWrapper
 	{
+		private const String BrowerAgentInjectedKey = "NewRelic.BrowerAgentInjected";
+
 		public bool IsTransactionRequired => false;
 
 		private static class Statics
@@ -26,24 +28,33 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
 		{
-			var httpWriter = (HttpWriter)instrumentedMethodCall.MethodCall.InvocationTarget;
-			if (httpWriter == null)
-				throw new NullReferenceException("httpWriter");
-
 			var httpContext = HttpContext.Current;
 			// we have seen httpContext == null in the wild, so don't throw an exception
 			if (httpContext == null)
 				return Delegates.NoOp;
 
+			//have we already added our filter?  If so, we are done.
+			if (httpContext.Items.Contains(BrowerAgentInjectedKey))
+				return Delegates.NoOp;
+
 			if (httpContext.Response.StatusCode >= 400)
 				return Delegates.NoOp;
+
+			var httpWriter = (HttpWriter)instrumentedMethodCall.MethodCall.InvocationTarget;
+			if (httpWriter == null)
+				throw new NullReferenceException("httpWriter");
 
 			if (Statics.IgnoringFurtherWrites(httpWriter))
 				return Delegates.NoOp;
 
+			//add our filter and add a key to httpContext.Items to reflect this. 
+			//   (the key is used above to insure we only add our filter once).
 			var newFilter = TryGetStreamInjector(agentWrapperApi, httpContext);
 			if (newFilter != null)
+			{
 				httpContext.Response.Filter = newFilter;
+				httpContext.Items[BrowerAgentInjectedKey] = true;
+			}
 
 			return Delegates.NoOp;
 		}

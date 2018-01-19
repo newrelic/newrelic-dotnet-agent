@@ -13,6 +13,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Collections;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -272,12 +273,7 @@ namespace NewRelic.Agent.Core.Transformers
 		[NotNull]
 		private static Segment GetSegment([NotNull] DatastoreVendor vendor, [NotNull] String operation, [NotNull] String model, [CanBeNull] CrossApplicationResponseData catResponseData = null)
 		{
-			var data = new DatastoreSegmentData()
-			{
-				Operation = operation,
-				DatastoreVendorName = vendor,
-				Model = model
-			};
+			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, operation));
 			return new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), data);
 		}
 
@@ -285,15 +281,7 @@ namespace NewRelic.Agent.Core.Transformers
 		private static TypedSegment<DatastoreSegmentData> GetSegment([NotNull] DatastoreVendor vendor, [NotNull] String operation, [NotNull] String model, double duration, [CanBeNull] CrossApplicationResponseData catResponseData = null, [CanBeNull] String host = null, [CanBeNull] String portPathOrId = null)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
-			var datastoreVendorName = vendor;
-			var data = new DatastoreSegmentData()
-			{
-				Operation = operation,
-				DatastoreVendorName = datastoreVendorName,
-				Model = model,
-				Host = host,
-				PortPathOrId = portPathOrId
-			};
+			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, operation), null, new ConnectionInfo(host, portPathOrId, null));
 
 			return new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false)
 				.CreateSimilar(new TimeSpan(), TimeSpan.FromSeconds(duration), null) as TypedSegment<DatastoreSegmentData>;

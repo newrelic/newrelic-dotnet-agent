@@ -1,4 +1,4 @@
-﻿#if NET35
+﻿#if NET45
 using System;
 
 namespace NewRelic.SystemInterfaces.Web

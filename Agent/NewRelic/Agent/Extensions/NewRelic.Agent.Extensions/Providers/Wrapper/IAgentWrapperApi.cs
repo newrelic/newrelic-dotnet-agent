@@ -129,12 +129,12 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 
 	public enum DatastoreVendor
 	{
-		Cassandra,
+//		Cassandra,
 		Couchbase,
-		Derby,
-		Firebird,
+//		Derby,
+//		Firebird,
 		IBMDB2,
-		Informix,
+//		Informix,
 		Memcached,
 		MongoDB,
 		MySQL,
@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		Oracle,
 		Postgres,
 		Redis,
-		SQLite,
+//		SQLite,
 		Other
 	}
 

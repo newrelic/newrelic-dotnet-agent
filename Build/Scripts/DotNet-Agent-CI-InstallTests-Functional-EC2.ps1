@@ -1,4 +1,4 @@
-# Combined Install Test  
+# Function Install Tests (4.5+ only)
 
 # Elevate
 Write-Host "Elevating to Administrator"
@@ -32,7 +32,7 @@ Function RunFunctionalTests
     Write-Host "---------------------------"
     Write-Host ""
 
-    iisreset /start
+    iisreset /stop
     Write-Host "SERVER is $env:SERVER"
 
     $install = Get-ChildItem $env:WORKSPACE\Agent\_build\x64-Release\Installer\NewRelicAgent_x64_*.msi -Name
@@ -46,6 +46,8 @@ Function RunFunctionalTests
     $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='TestApplicationsPath']").Value = "C:\TestApplications"
     $appConfig.Save($appConfigPath)
 
+    iisreset /start
+    
     # Execute the functional tests
     Write-Host "Executing the install-specific functional tests"
 
@@ -64,22 +66,23 @@ Function RunFunctionalTests
     Remove-Item -Path "c:\$install" -Force
 }
 
-Function CreateAppInRPM
+Function SetupWebConfig
 {
     Write-Host ""
     Write-Host "---------------------------"
-    Write-Host "Ensure App Exists in RPM"
+    Write-Host "Setup web.config with servername"
     Write-Host "---------------------------"
     Write-Host ""
 
-    $serviceConfigPath = "C:\code\dotnet_web_sandbox\DotNet-Functional-WindowsService\DotNet-Functional-WindowsService\bin\Release\DotNet-Functional-WindowsService.exe.config"
-    if(Test-Path -Path "$serviceConfigPath")
+    iisreset /stop
+    $appConfigPath = "C:\inetpub\wwwroot\DotNet-Functional-InstallTestApp\Web.config"
+    if(Test-Path -Path "$appConfigPath")
     {
         Write-Host "Setting up test services with correct name"
         $myhostname = $(hostname).Trim().ToUpper()
-        [Xml]$serviceConfig = Get-Content $serviceConfigPath
-        $serviceConfig.SelectSingleNode("/configuration/appSettings/add[@key='NewRelic.AppName']").Value = "DotNet-Functional-WindowsService_$myhostname"
-        $serviceConfig.Save($serviceConfigPath)
+        [Xml]$appConfig = Get-Content $appConfigPath
+        $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='NewRelic.AppName']").Value = "DotNet-Functional-InstallTestApp_$myhostname"
+        $appConfig.Save($appConfigPath)
     }
     else
     {
@@ -87,45 +90,19 @@ Function CreateAppInRPM
         exit 1
     }
 
-    $agentConfigPath = "C:\ProgramData\New Relic\.NET Agent\newrelic.config"
-    if(Test-Path -Path "$agentConfigPath")
-    {
-        Write-Host "Setting up the agent to report to staging"
-        [Xml]$agentConfig = Get-Content $agentConfigPath
-        $hostAtt = $agentConfig.CreateAttribute("host")
-        $hostAtt.Value = "staging-collector.newrelic.com"
-        $agentConfig.configuration.service.Attributes.Append($hostAtt)
-        $keyAtt = $agentConfig.CreateAttribute("licenseKey")
-        $keyAtt.Value = "b25fd3ca20fe323a9a7c4a092e48d62dc64cc61d"
-        $agentConfig.configuration.service.Attributes.Append($keyAtt)
-        $agentConfig.Save($agentConfigPath)
-    }
-    else
-    {
-        Write-Host "newrelic.config file is missing, exiting."
-        exit 1
-    }
-
-
-    Write-Host "Cycling test service to create appid"
-    Start-Service -Name DotNet-Functional-WindowsService
-    Start-Sleep -Seconds 65
-    Stop-Service -Name DotNet-Functional-WindowsService
-
-
-    if($LastExitCode -ge "1")
-    {
-        Write-Host "An error occured, exiting with $LastExitCode"
-        exit $LastExitCode
-    }
-
     Write-Host "Prep completed with $LastExitCode"
 }
 
-Stop-Service -Name DotNet-Functional-WindowsService
 $exitCode = 0
 
-CreateAppInRPM
+# Clean out the previous runs logs
+Remove-Item -Force -Path "c:\installLog.txt" -ErrorAction SilentlyContinue
+Remove-Item -Force -Path "c:\repairLog.txt" -ErrorAction SilentlyContinue
+Remove-Item -Force -Path "c:\moved_installLog.txt" -ErrorAction SilentlyContinue
+Remove-Item -Force -Path "c:\moved_uninstallLog.txt" -ErrorAction SilentlyContinue
+Remove-Item -Force -Path "c:\moved_repairLog.txt" -ErrorAction SilentlyContinue
+
+SetupWebConfig
 RunFunctionalTests
 
 exit $exitCode

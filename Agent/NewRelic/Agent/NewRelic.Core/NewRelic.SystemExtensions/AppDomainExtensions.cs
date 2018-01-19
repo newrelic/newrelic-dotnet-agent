@@ -22,7 +22,7 @@ namespace NewRelic.SystemExtensions
 				.Where(assemblyName => assemblyName != null)
 				.Where(assemblyName => assemblyName.Name == simpleName);
 		}
-#if NET35
+#if NET45
 		[NotNull]
 		public static IEnumerable<String> GetLoadedAssemblyFullNamesBySimpleName([CanBeNull] this AppDomain appDomain, [CanBeNull] String simpleName)
 		{

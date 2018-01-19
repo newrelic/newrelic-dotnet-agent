@@ -13,6 +13,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -305,12 +306,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
-			var data = new DatastoreSegmentData() {
-				CommandText = "SELECT * FROM test_table",
-				DatastoreVendorName = DatastoreVendor.MSSQL,
-				Operation = "SELECT",
-				Model = "test_table"
-			};
+			var data = new DatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"), "SELECT * FROM test_table");
 
 			return new SegmentTreeNodeBuilder(
 				new TypedSegment<DatastoreSegmentData>(startTime, duration ?? TimeSpan.Zero, new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false)))
@@ -321,15 +317,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
-			var data = new DatastoreSegmentData() {
-				CommandText = "SELECT * FROM test_table",
-				DatastoreVendorName = DatastoreVendor.MSSQL,
-				Operation = "SELECT",
-				Model = "test_table",
-				Host = "My Host",
-				PortPathOrId = "My Port",
-				DatabaseName = "My Database"
-			};
+			var data = new DatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"),
+				"SELECT * FROM test_table",
+				new ConnectionInfo("My Host", "My Port", "My Database"));
+
 			return new SegmentTreeNodeBuilder(new TypedSegment<DatastoreSegmentData>(startTime, duration ?? TimeSpan.Zero, 
 				new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false)))
 				.Build();

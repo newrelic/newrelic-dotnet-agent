@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -89,12 +87,21 @@ namespace NewRelic.Agent.Core.Aggregators
 			ResetCollections();
 
 			// It is possible that newer, incoming error traces will be added to our collection before we add the retained and saved ones.
-			errorTraceWireModels
-				.Where(@error => @error != null)
-				.ForEach(AddToCollection);
-			savedErrorTraceWireModels
-				.Where(@error => @error != null)
-				.ForEach(AddToCollection);
+			foreach(var model in errorTraceWireModels)
+			{
+				if ( model != null)
+				{
+					AddToCollection(model);
+				}
+			}
+
+			foreach(var model in savedErrorTraceWireModels)
+			{
+				if ( model != null)
+				{
+					AddToCollection(model);
+				}
+			}
 		}
 
 		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)

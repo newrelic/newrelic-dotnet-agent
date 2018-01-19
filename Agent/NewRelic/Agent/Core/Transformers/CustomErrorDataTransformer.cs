@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
@@ -57,14 +55,18 @@ namespace NewRelic.Agent.Core.Transformers
 			var errorEventAttributes = new Attributes();
 			var errorTraceAttributes = new Attributes();
 
-			customAttributes?
-				.Where(attr => attr.Key != null && attr.Value != null)
-				.Select(attr => Attribute.BuildCustomAttribute(attr.Key, attr.Value))
-				.ForEach(attr =>
+			if (customAttributes != null)
+			{
+				foreach(var customAttr in customAttributes)
 				{
-					errorEventAttributes.Add(attr);
-					errorTraceAttributes.Add(attr);
-				});
+					if ( customAttr.Key != null && customAttr.Value != null)
+					{
+						var attr = Attribute.BuildCustomAttribute(customAttr.Key, customAttr.Value);
+						errorEventAttributes.Add(attr);
+						errorTraceAttributes.Add(attr);
+					}
+				}
+			}
 
 			errorEventAttributes = _attributeService.FilterAttributes(errorEventAttributes, AttributeDestinations.ErrorEvent);
 			errorTraceAttributes = _attributeService.FilterAttributes(errorTraceAttributes, AttributeDestinations.ErrorTrace);

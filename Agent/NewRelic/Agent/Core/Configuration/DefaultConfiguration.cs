@@ -23,14 +23,6 @@ namespace NewRelic.Agent.Core.Configuration
 	/// </summary>
 	public class DefaultConfiguration : IConfiguration
 	{
-#if NETSTANDARD2_0
-		public const string NewRelicHomeEnvironmentVariable = "CORECLR_NEWRELIC_HOME";
-		public const string NewRelicInstallPathEnvironmentVariable = "CORECLR_NEWRELIC_INSTALL_PATH";
-#else
-		public const string NewRelicHomeEnvironmentVariable = "NEWRELIC_HOME";
-		public const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
-#endif
-
 		private static Int64 _currentConfigurationVersion;
 
 		[NotNull]

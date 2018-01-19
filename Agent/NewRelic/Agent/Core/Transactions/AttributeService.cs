@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
-using MoreLinq;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.Utilities;
@@ -35,25 +34,38 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			var filteredAttributes = new Attributes();
 
-			attributes.GetAgentAttributes()
+			var filteredAgentAttrs = attributes.GetAgentAttributes()
 				.Where(ShouldIncludeInHighSecurity)
-				.FilterAttributes(_attributeFilter, attributeDestination)
-				.ForEach(filteredAttributes.Add);
+				.FilterAttributes(_attributeFilter, attributeDestination);
+			
+			foreach(var agentAttr in filteredAgentAttrs)
+			{
+				filteredAttributes.Add(agentAttr);
+			}
 
-			attributes.GetUserAttributes()
+			var filteredUserAttrs = attributes.GetUserAttributes()
 				.Where(_ => _configuration.CaptureCustomParameters)
 				.Take(CUSTOM_ATTRIBUTE_CLAMP)
 				.Where(ShouldIncludeInHighSecurity)
-				.FilterAttributes(_attributeFilter, attributeDestination)
-				.ForEach(filteredAttributes.Add);
+				.FilterAttributes(_attributeFilter, attributeDestination);
 
-			attributes.GetIntrinsics()
+			foreach(var userAttr in filteredUserAttrs)
+			{
+				filteredAttributes.Add(userAttr);
+			}
+
+			var filteredIntrinsicAttrs = attributes.GetIntrinsics()
 				.Where(ShouldIncludeInHighSecurity)
-				.FilterAttributes(_attributeFilter, attributeDestination)
-				.ForEach(filteredAttributes.Add);
+				.FilterAttributes(_attributeFilter, attributeDestination);
+
+			foreach(var intrinsic in filteredIntrinsicAttrs)
+			{
+				filteredAttributes.Add(intrinsic);
+			}
 
 			return filteredAttributes;
 		}
+
 
 		#endregion
 

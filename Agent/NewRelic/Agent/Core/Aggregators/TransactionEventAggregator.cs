@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -116,9 +114,13 @@ namespace NewRelic.Agent.Core.Aggregators
 			transactionEvents = transactionEvents.ToList();
 			_agentHealthReporter.ReportTransactionEventsRecollected(transactionEvents.Count());
 
-			transactionEvents
-				.Where(@event => @event != null)
-				.ForEach(AddEventToCollection);
+			foreach(var transactionEvent in transactionEvents)
+			{
+				if (transactionEvent != null)
+				{
+					AddEventToCollection(transactionEvent);
+				}
+			}
 		}
 
 		private UInt32 GetReservoirSize()

@@ -5,6 +5,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 {
@@ -75,10 +76,11 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 
 			var host = TryGetPropertyName(PropertyHost, contextObject) ?? "unknown";
 			host = ConnectionStringParserHelper.NormalizeHostname(host);
-			var portPathOrId = TryGetPropertyName(PropertyPortPathOrId, contextObject) ?? "unknown";
-			var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject) ?? "unknown";
+			var portPathOrId = TryGetPropertyName(PropertyPortPathOrId, contextObject);
+			var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject);
+			var connectionInfo = new ConnectionInfo(host, portPathOrId, databaseName);
 
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, operation, DatastoreVendor.Redis,host:host,portPathOrId:portPathOrId, databaseName:databaseName);
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 
 			return Delegates.GetDelegateFor(segment);
 		}

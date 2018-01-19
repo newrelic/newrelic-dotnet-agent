@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemExtensions.Collections.Generic;
 using System;
@@ -123,7 +122,21 @@ namespace NewRelic.Agent.Core.Aggregators
 			{
 				_sqlTraceWireModels.Remove(_shortestMax.SqlId);
 				_sqlTraceWireModels[newSqlTrace.SqlId] = newSqlTrace;
-				_shortestMax = _sqlTraceWireModels.Values.MinBy(trace => trace.MaxCallTime);
+
+				_shortestMax = null;
+
+				foreach(var trace in _sqlTraceWireModels.Values)
+				{
+					if (_shortestMax == null)
+					{
+						_shortestMax = trace;
+					}
+					else if (_shortestMax.MaxCallTime > trace.MaxCallTime)
+					{
+						_shortestMax = trace;
+					}
+				}
+			
 			}
 		}
 	}

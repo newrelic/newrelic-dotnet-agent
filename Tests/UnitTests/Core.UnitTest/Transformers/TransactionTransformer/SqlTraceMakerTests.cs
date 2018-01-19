@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -97,15 +98,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[NotNull]
 		private static TypedSegment<DatastoreSegmentData> BuildSegment(DatastoreVendor vendor, String model, String commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null, String host = null, String portPathOrId = null, String databaseName = null)
 		{
-			var data = new DatastoreSegmentData()
-			{
-				DatastoreVendorName = vendor,
-				Model = model,
-				CommandText = commandText,
-				Host = host,
-				PortPathOrId = portPathOrId,
-				DatabaseName = databaseName
-			};
+			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, null), commandText,
+				new ConnectionInfo(host, portPathOrId, databaseName));
 			methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 			return new TypedSegment<DatastoreSegmentData>(startTime, duration,
 				new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false));

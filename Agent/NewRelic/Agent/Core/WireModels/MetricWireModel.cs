@@ -12,6 +12,7 @@ using NewRelic.SystemExtensions;
 using Newtonsoft.Json;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -356,9 +357,9 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 
 			// Datastore/statement/<vendor>/<model>/<operation>
-			public static void TryBuildDatastoreStatementMetric(DatastoreVendor vendor, String model, String operation, TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
+			public static void TryBuildDatastoreStatementMetric(DatastoreVendor vendor, ParsedSqlStatement sqlStatement, TimeSpan totalTime, TimeSpan exclusiveDuration, TransactionMetricStatsCollection txStats)
 			{
-				var proposedName = MetricNames.GetDatastoreStatement(vendor, model, operation);
+				var proposedName = InternalMetricName.Create(sqlStatement.DatastoreStatementMetricName);
 				var data = MetricDataWireModel.BuildTimingData(totalTime, exclusiveDuration);
 				txStats.MergeUnscopedStats(proposedName, data);
 				txStats.MergeScopedStats(proposedName, data);

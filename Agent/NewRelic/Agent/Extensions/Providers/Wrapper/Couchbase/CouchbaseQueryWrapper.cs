@@ -1,6 +1,7 @@
 ﻿using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Couchbase
 {
@@ -36,9 +37,8 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 
 			var segment = transaction.StartDatastoreSegment(
 				instrumentedMethodCall.MethodCall,
-				operation,
-				DatastoreVendor.Couchbase,
-				model,
+				new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation),
+				null,
 				commandText);
 
 			return Delegates.GetDelegateFor(segment);

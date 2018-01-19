@@ -7,9 +7,5 @@ namespace NewRelic.Agent.Core.Utilization
 	{
 		[JsonIgnore]
 		String VendorName { get; }
-
-		[JsonProperty("id")]
-		String Id { get; }
-
 	}
 }

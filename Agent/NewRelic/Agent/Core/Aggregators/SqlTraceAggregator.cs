@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -87,7 +86,11 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter.ReportSqlTracesRecollected(traces.Count);
 
 			var tracesCollection = new SqlTraceStatsCollection();
-			traces.ForEach(tracesCollection.Insert);
+
+			foreach(var trace in traces)
+			{
+				tracesCollection.Insert(trace);
+			}
 
 			Collect(tracesCollection);
 		}

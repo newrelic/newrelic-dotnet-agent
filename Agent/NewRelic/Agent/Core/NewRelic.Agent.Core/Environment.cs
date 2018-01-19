@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-#if NET35
+#if NET45
 using System.Management;
 using System.Web.Configuration;
 #endif
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core
 				AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
 				AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
 
-#if NET35
+#if NET45
 				// This stuff is only available to web apps.
 				if (TryGetAppDomainAppId() != null)
 				{
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core
 				AddVariable("Debug Build", () => true.ToString());
 #endif
 
-#if NET35
+#if NET45
 				var compilationSection = WebConfigurationManager.GetSection("system.web/compilation") as CompilationSection;
 				if (compilationSection?.DefaultLanguage != null)
 					AddVariable("system.web.compilation.defaultLanguage", () => compilationSection.DefaultLanguage);
@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core
 			}
 		}
 
-#if NET35
+#if NET45
 		[CanBeNull]
 		private static String TryGetAppDomainAppId()
 		{
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.Core
 			}
 		}
 
-#if NET35
+#if NET45
 		[CanBeNull]
 		public Version TryGetIisVersion()
 		{
@@ -223,14 +223,14 @@ namespace NewRelic.Agent.Core
 			return AppDomain.CurrentDomain.GetAssemblies()
 				.Where(assembly => assembly != null)
 				.Where(assembly => assembly.GetName().Version != versionZero)
-#if NET35
+#if NET45
 				.Where(assembly => !(assembly is System.Reflection.Emit.AssemblyBuilder))
 #endif
 				.Select(assembly => assembly.FullName)
 				.ToList();
 		}
 
-#if NET35
+#if NET45
 		[NotNull]
 		private static IEnumerable<ManagementBaseObject> TryGetManagementObjects([NotNull] String query)
 		{

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
-using MoreLinq;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -33,7 +32,10 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		public override void Collect(TransactionTraceWireModelComponents transactionTraceWireModel)
 		{
-			_transactionCollectors.ForEach(collector => collector?.Collect(transactionTraceWireModel));
+			foreach(var transactionCollector in _transactionCollectors)
+			{
+				transactionCollector?.Collect(transactionTraceWireModel);
+			}
 		}
 
 		protected override void Harvest()
@@ -73,17 +75,23 @@ namespace NewRelic.Agent.Core.Aggregators
 			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
 			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-			_transactionCollectors.ForEach(collector => collector?.GetAndClearCollectedSamples());
+			foreach(var transactionCollector in _transactionCollectors)
+			{
+				transactionCollector?.GetAndClearCollectedSamples();
+			}
 		}
 
 		private void LogUnencodedTraceData([NotNull] IEnumerable<TransactionTraceWireModel> samples)
 		{
 			if (Log.IsDebugEnabled)
 			{
-				samples
-					.Where(transactionSample => transactionSample != null)
-					.Select(SerializeTransactionTraceData)
-					.ForEach(serializedTransactionData => Log.DebugFormat("TransactionTraceData: {0}", serializedTransactionData));
+				foreach(var sample in samples)
+				{
+					if ( sample != null)
+					{
+						Log.DebugFormat("TransactionTraceData: {0}", SerializeTransactionTraceData(sample));
+					}
+				}
 			}
 		}
 

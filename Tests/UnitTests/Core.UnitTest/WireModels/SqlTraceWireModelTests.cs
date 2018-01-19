@@ -15,6 +15,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -72,11 +73,7 @@ namespace NewRelic.Agent.Core.WireModels
 			
 			foreach (String query in queries)
 			{
-				var data = new DatastoreSegmentData()
-					{
-						CommandText = query,
-						DatastoreVendorName = DatastoreVendor.MSSQL
-					};
+				var data = new DatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.MSSQL, null, null), query);
 				var segments = new List<Segment>()
 					{
 						new TypedSegment<DatastoreSegmentData>(new TimeSpan(), TotalCallTime,

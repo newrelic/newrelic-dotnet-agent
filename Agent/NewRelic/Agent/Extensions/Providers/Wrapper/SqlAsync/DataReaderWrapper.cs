@@ -1,19 +1,21 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 
 namespace NewRelic.Providers.Wrapper.SqlAsync
 {
 	public class DataReaderWrapper : IWrapper
 	{
+		public const string WrapperName = "DataReaderWrapperAsync";
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyNames: new[]
+
+			var isRequestedByName = WrapperName == methodInfo.RequestedWrapperName;
+
+			var canWrap = isRequestedByName || method.MatchesAny(assemblyNames: new[]
 				{
 					"System.Data",
 					"System.Data.SqlClient"

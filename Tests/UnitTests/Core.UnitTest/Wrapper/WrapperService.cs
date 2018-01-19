@@ -144,7 +144,6 @@ namespace NewRelic.Agent.Core.Wrapper
 			var trackedWrapper = new TrackedWrapper(wrapper);
 			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Throws(new Exception());
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
-			Mock.Arrange(() => _wrapperMap.Override(Arg.IsAny<InstrumentedMethodInfo>(), null)).OccursNever();
 
 			var type = typeof(Class_WrapperService);
 			const String methodName = "MyMethod";
@@ -180,7 +179,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var method = new Method(type, methodName, argumentSignature);
 			var methodCall = new MethodCall(method, invocationTarget, arguments);
 			var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
-			wrapperMap.Override(info, trackedWrapper);
+			Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 
 			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
 
@@ -196,7 +195,6 @@ namespace NewRelic.Agent.Core.Wrapper
 			var trackedWrapper = new TrackedWrapper(wrapper);
 			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((result, exception) => { throw new Exception(); });
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
-			Mock.Arrange(() => _wrapperMap.Override(Arg.IsAny<InstrumentedMethodInfo>(), null)).OccursNever();
 
 			var type = typeof(Class_WrapperService);
 			const String methodName = "MyMethod";
@@ -232,7 +230,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var method = new Method(type, methodName, argumentSignature);
 			var methodCall = new MethodCall(method, invocationTarget, arguments);
 			var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
-			wrapperMap.Override(info,  trackedWrapper);
+			Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 
 			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
 

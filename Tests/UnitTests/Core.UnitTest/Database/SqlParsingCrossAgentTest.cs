@@ -12,7 +12,7 @@ using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Parsing;
 using Newtonsoft.Json;
 using NUnit.Framework;
-
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 {
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 		[TestCaseSource("GetSqlParsingTestCases")]
 		public void SqlParsingTest([NotNull] String inputSql, [NotNull] String expectedOperation, [NotNull] String expectedTable)
 		{
-			var parsed = SqlParser.GetParsedDatabaseStatement(CommandType.Text, inputSql);
+			var parsed = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, inputSql);
 			Assert.AreEqual(expectedOperation.ToLower(), parsed.Operation, String.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
 			Assert.AreEqual(expectedTable.ToLower(), parsed.Model, String.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
 		}
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 			{
 				foreach (var c in cases)
 				{
-					var parsed = SqlParser.GetParsedDatabaseStatement(CommandType.Text, c.Arguments[0] as string);
+					var parsed = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, c.Arguments[0] as string);
 				}
 			}
 

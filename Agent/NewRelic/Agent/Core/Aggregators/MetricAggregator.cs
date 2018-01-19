@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
-using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -46,9 +44,13 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter = agentHealthReporter;
 			_dnsStatic = dnsStatic;
 
-			outOfBandMetricSources
-				.Where(source => source != null)
-				.ForEach(source => source.RegisterPublishMetricHandler(Collect));
+			foreach(var source in outOfBandMetricSources)
+			{
+				if (source != null)
+				{
+					source.RegisterPublishMetricHandler(Collect);
+				}
+			}
 
 			_metricStatsEngineQueue = CreateMetricStatsEngineQueue();
 		}

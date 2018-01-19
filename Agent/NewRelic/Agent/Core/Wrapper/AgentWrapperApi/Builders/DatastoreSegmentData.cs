@@ -15,24 +15,28 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Parsing.ConnectionString;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
 	public class DatastoreSegmentData : AbstractSegmentData
 	{
+		private readonly static ConnectionInfo EmptyConnectionInfo = new ConnectionInfo(null, null, null);
+
 		[CanBeNull]
-		public String Operation { protected get; set; }
-		public DatastoreVendor DatastoreVendorName { protected get; set; }
+		public String Operation => _parsedSqlStatement?.Operation;
+		public DatastoreVendor DatastoreVendorName => _parsedSqlStatement.DatastoreVendor;
 		[CanBeNull]
-		public String Model { protected get; set; }
+		public String Model => _parsedSqlStatement?.Model;
 		[CanBeNull]
 		public String CommandText { get; set; }
 		[CanBeNull]
-		public String Host { get; set; }
+		public String Host => _connectionInfo.Host;
 		[CanBeNull]
-		public String PortPathOrId { get; set; }
+		public String PortPathOrId => _connectionInfo.PortPathOrId;
 		[CanBeNull]
-		public String DatabaseName { get; set; }
+		public String DatabaseName => _connectionInfo.DatabaseName;
 		[CanBeNull]
 		public Func<Object> GetExplainPlanResources { get; set; }
 		[CanBeNull]
@@ -42,22 +46,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		private Object _explainPlanResources;
 		private ExplainPlan _explainPlan;
+
+		private ConnectionInfo _connectionInfo;
+		private ParsedSqlStatement _parsedSqlStatement;
+
 		public ExplainPlan ExplainPlan => _explainPlan;
 
-		public DatastoreSegmentData()
+		public DatastoreSegmentData(ParsedSqlStatement parsedSqlStatement, string commandText = null, ConnectionInfo connectionInfo = null)
 		{
-		}
-
-		public DatastoreSegmentData(string operation, DatastoreVendor datastoreVendorName, string model, string commandText, ExplainPlan explainPlan, string host, string portPathOrId, string databaseName)
-		{
-			Operation = operation;
-			DatastoreVendorName = datastoreVendorName;
-			Model = model;
+			this._connectionInfo = connectionInfo ?? EmptyConnectionInfo;
+			this._parsedSqlStatement = parsedSqlStatement;
 			CommandText = commandText;
-			_explainPlan = explainPlan;
-			Host = host;
-			PortPathOrId = portPathOrId;
-			DatabaseName = databaseName;
 		}
 
 		internal override void AddTransactionTraceParameters(IConfigurationService configurationService, Segment segment, IDictionary<string, object> segmentParameters, ImmutableTransaction immutableTransaction)
@@ -180,13 +179,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			if (!String.IsNullOrEmpty(Model))
 			{
-				MetricBuilder.TryBuildDatastoreStatementMetric(DatastoreVendorName, Model, Operation, duration, exclusiveDuration, txStats);
+				MetricBuilder.TryBuildDatastoreStatementMetric(DatastoreVendorName, _parsedSqlStatement, duration, exclusiveDuration, txStats);
 				MetricBuilder.TryBuildDatastoreVendorOperationMetric(DatastoreVendorName, Operation, duration, exclusiveDuration, txStats, true);
 			}
 			else
 			{
 				MetricBuilder.TryBuildDatastoreVendorOperationMetric(DatastoreVendorName, Operation, duration, exclusiveDuration, txStats, false);
-
 			}
 
 			MetricBuilder.TryBuildDatastoreRollupMetrics(DatastoreVendorName, duration, exclusiveDuration, txStats);

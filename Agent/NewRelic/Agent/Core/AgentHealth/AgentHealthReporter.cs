@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+//using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
@@ -68,10 +67,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 			_scheduler = scheduler;
 			_scheduler.ExecuteEvery(LogRecurringLogs, TimeBetweenExecutions);
 
-			// Initialize agent health event counters to zero
-			Enum.GetValues(typeof(AgentHealthEvent))
-				.Cast<AgentHealthEvent>()
-				.ForEach(agentHealthEvent => _agentHealthEventCounters[agentHealthEvent] = new InterlockedCounter());
+			var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
+			foreach(var agentHealthEvent in agentHealthEvents)
+			{
+				_agentHealthEventCounters[agentHealthEvent] = new InterlockedCounter();
+			}
 		}
 
 		public override void Dispose()
@@ -82,19 +82,23 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		private void LogRecurringLogs()
 		{
-			_recurringLogDatas
-				.Where(data => data != null)
-				.ForEach(data => data.LogAction(data.Message));
-
-			_agentHealthEventCounters
-				.Where(kvp => kvp.Value != null)
-				.Where(kvp => kvp.Value.Value > 0)
-				.ForEach(kvp =>
+			foreach(var data in _recurringLogDatas)
+			{
+				if ( data != null)
 				{
-					var agentHealthEvent = kvp.Key;
-					var timesOccurred = kvp.Value.Exchange(0);
-					Log.Info($"Event {agentHealthEvent} has occurred {timesOccurred} times in the last {TimeBetweenExecutions.TotalSeconds} seconds");
-				});
+					data.LogAction(data.Message);
+				}
+			}
+
+			foreach(var counter in _agentHealthEventCounters)
+			{
+				if ( counter.Value != null && counter.Value.Value > 0)
+				{
+					var agentHealthEvent = counter.Key;
+					var timesOccured = counter.Value.Exchange(0);
+					Log.Info($"Event {agentHealthEvent} has occurred {timesOccured} times in the last {TimeBetweenExecutions.TotalSeconds} seconds");
+				}
+			}
 		}
 
 		public void ReportAgentVersion(String agentVersion, String hostName)
@@ -105,7 +109,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildAgentVersionByHostMetric(hostName, agentVersion)
 			};
 
-			metrics.ForEach(TrySend);
+			foreach(var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		#region TransactionEvents
@@ -117,7 +124,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildTransactionEventReservoirResizedMetric(),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach(var metric in metrics)
+			{
+				TrySend(metric);
+			}
 
 			Log.Warn("Resizing transaction event reservoir to " + newSize + " events.");
 		}
@@ -132,7 +142,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildTransactionEventsSeenMetric()
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportTransactionEventsRecollected(Int32 count)
@@ -142,7 +155,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildTransactionEventsRecollectedMetric(count)
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportTransactionEventsSent(Int32 count)
@@ -153,7 +169,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildTransactionEventsSentMetric(count),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		#endregion TransactionEvents
@@ -167,7 +186,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildCustomEventReservoirResizedMetric(),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 
 			Log.Warn("Resizing custom event reservoir to " + newSize + " events.");
 		}
@@ -182,7 +204,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildCustomEventsSeenMetric()
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportCustomEventsRecollected(Int32 count)
@@ -192,7 +217,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildCustomEventsRecollectedMetric(count)
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportCustomEventsSent(Int32 count)
@@ -203,7 +231,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildCustomEventsSentMetric(count),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		#endregion CustomEvents
@@ -217,7 +248,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildErrorTracesCollectedMetric(),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportErrorTracesRecollected(Int32 count)
@@ -227,7 +261,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildErrorTracesRecollectedMetric(count)
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportErrorTracesSent(Int32 count)
@@ -237,7 +274,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildErrorTracesSentMetric(count),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		#endregion ErrorTraces
@@ -251,7 +291,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildErrorEventsSeenMetric(),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportErrorEventsSent(Int32 count)
@@ -261,7 +304,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildErrorEventsSentMetric(count),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 		#endregion ErrorEvents
 
@@ -274,7 +320,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildSqlTracesRecollectedMetric(count)
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportSqlTracesSent(Int32 count)
@@ -284,7 +333,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildSqlTracesSentMetric(count),
 			};
 
-			metrics.ForEach(TrySend);
+			foreach (var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		#endregion ErrorTraces
@@ -308,8 +360,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildAgentHealthEventMetric(AgentHealthEvent.WrapperShutdown, wrapperName, method.Type.Name, method.MethodName)
 			};
 
-			metrics.ForEach(TrySend);
-			metrics.ForEach(TrySendToLegacyMetricService);
+			foreach(var metric in metrics)
+			{
+				TrySend(metric);
+			}
 
 			Log.Error($"Wrapper {wrapperName} is being disabled for {method.MethodName} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted.");
 
@@ -323,7 +377,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildAgentApiMetric(methodName)
 			};
 
-			metrics.ForEach(TrySend);
+			foreach(var metric in metrics)
+			{
+				TrySend(metric);
+			}
 		}
 
 		public void ReportIfHostIsLinuxOs()
@@ -349,14 +406,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 				Log.Warn("Existing PublishMetricDelegate registration being overwritten.");
 
 			_publishMetricDelegate = publishMetricDelegate;
-		}
-
-		private void TrySendToLegacyMetricService([CanBeNull] MetricWireModel metric)
-		{
-			if (metric == null)
-				return;
-
-			EventBus<CounterMetricEvent>.Publish(new CounterMetricEvent(metric.MetricName.Name));
 		}
 
 		private void TrySend([CanBeNull] MetricWireModel metric)

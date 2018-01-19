@@ -3,6 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using MongoDB.Driver;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.MongoDb
 {
@@ -21,7 +22,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 		{
 			var operation = GetOperationName(instrumentedMethodCall.MethodCall);
 			var model = MongoDBHelper.GetCollectionModelName(instrumentedMethodCall.MethodCall);
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, operation, DatastoreVendor.MongoDB, model);
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation));
 
 			return Delegates.GetDelegateFor(segment);
 		}

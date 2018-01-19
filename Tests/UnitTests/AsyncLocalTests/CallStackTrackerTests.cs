@@ -5,7 +5,7 @@ using System.Runtime.Remoting;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Providers.CallStack.AsyncLocal;
+using NewRelic.Providers.Storage.CallContext;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;

@@ -27,17 +27,10 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// Creates a segment for a datastore operation.
 		/// </summary>
 		/// <param name="methodCall">The method call that is responsible for starting this segment.</param>
-		/// <param name="operation">The name of the datastore operation that will appear in the created segment. Must not be null.</param>
-		/// <param name="datastoreVendorName">The vendor or datastore name.</param>
-		/// <param name="model">The data table or model to which the operation applies. If null, a datastore operation segment is created, otherwise
-		/// a datastore statement segment is created.</param>
 		/// <param name="commandText">The text representation of the operation being performed.  Not required, though when provided it's used for generating traces.</param>
-		/// <param name="host">The name of the server hosting the actual datastore. It is where this process is connecting. This value will be used in combination with the port_path_or_id to construct the instance identifer.</param>
-		/// <param name="portPathOrId">The value passed in can represent either the port, path, or id of the datastore being connected to. The value of this field combined with the host will be used to construct the instance identifer for this datastore.</param>
-		/// <param name="databaseName">The name of database where the current query is being executed.</param>
 		/// <exception cref="System.ArgumentNullException">Is thrown if <paramref name="operation"/> is null.</exception>
 		/// <returns>An opaque object that will be needed when you want to end the segment.</returns>
-		ISegment StartDatastoreSegment(MethodCall methodCall, [CanBeNull] String operation, DatastoreVendor datastoreVendorName, [CanBeNull] String model = null, [CanBeNull] String commandText = null, String host = null, String portPathOrId = null, String databaseName = null);
+		ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo = null, [CanBeNull] String commandText = null);
 
 		/// <summary>
 		/// Creates a segment for an external request operation.
@@ -246,6 +239,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <returns></returns>
 		object GetOrSetValueFromCache(string key, Func<object> func);
 
-		ParsedSqlStatement GetParsedDatabaseStatement(CommandType commandType, string sql);
+		ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql);
 	}
 }

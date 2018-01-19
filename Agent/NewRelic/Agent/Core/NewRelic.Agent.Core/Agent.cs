@@ -141,11 +141,8 @@ namespace NewRelic.Agent.Core
 		{
 			AgentInitializer.OnExit += ProcessExit;
 
-#if NET35
-			INativeMethods nativeMethods = new WindowsNativeMethods();
-#else
-			INativeMethods nativeMethods = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) ? (INativeMethods)new WindowsNativeMethods() : new NativeMethods();
-#endif
+			var nativeMethods = AgentInstallConfiguration.IsWindows ? (INativeMethods) new WindowsNativeMethods() : new NativeMethods();
+
 			// TODO: remove IAgent dependency from these services so they can be DI'd
 			ThreadProfilingService = new ThreadProfilingService(this, _container.Resolve<IDataTransportService>(), _container.Resolve<IScheduler>(), nativeMethods);
 
@@ -155,7 +152,8 @@ namespace NewRelic.Agent.Core
 				new RestartCommand(),
 				new ShutdownCommand(),
 				new StartThreadProfilerCommand(ThreadProfilingService),
-				new StopThreadProfilerCommand(ThreadProfilingService)
+				new StopThreadProfilerCommand(ThreadProfilingService),
+				new InstrumentationUpdateCommand(nativeMethods)
 				);
 
 			StartServices();

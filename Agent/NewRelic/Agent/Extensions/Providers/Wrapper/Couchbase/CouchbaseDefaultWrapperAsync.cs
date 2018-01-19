@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.Reflection;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Couchbase
 {
@@ -74,9 +75,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 
 			var segment = transaction.StartDatastoreSegment(
 				instrumentedMethodCall.MethodCall,
-				operation,
-				DatastoreVendor.Couchbase,
-				model);
+				new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation));
 
 			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}

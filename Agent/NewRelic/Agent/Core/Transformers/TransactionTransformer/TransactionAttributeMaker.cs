@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using MoreLinq;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
@@ -33,11 +32,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.Transaction));
 
 			if (errorData.IsAnError)
+			{
 				attributes.Add(Attribute.BuildTimeStampAttribute(errorData.NoticedAt));
+			}
 			else
+			{
 				attributes.Add(Attribute.BuildTimeStampAttribute(immutableTransaction.StartTime));
+			}
 
-			
 			attributes.Add(Attribute.BuildTransactionNameAttribute(transactionMetricName.PrefixedName));
 
 			// Duration (response time) is just EndTime minus StartTime
@@ -81,6 +83,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				attributes.TryAdd(Attribute.BuildErrorClassAttribute, errorData.ErrorTypeName);
 				attributes.TryAdd(Attribute.BuildErrorTypeAttribute, errorData.ErrorTypeName);
 				attributes.TryAdd(Attribute.BuildErrorMessageAttribute, errorData.ErrorMessage);
+				attributes.TryAdd(Attribute.BuildErrorDotMessageAttribute, errorData.ErrorMessage);
 			}
 
 			var isCatParticipant = IsCatParticipant(immutableTransaction);
@@ -135,19 +138,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			attributes.TryAdd(Attribute.BuildQueueWaitTimeAttribute, metadata.QueueTime);
 			attributes.TryAdd(Attribute.BuildResponseStatusAttribute, metadata.HttpResponseStatusCode?.ToString());
 
-			metadata.RequestParameters
-				.Select(param => Attribute.BuildRequestParameterAttribute(param.Key, param.Value))
-				.ForEach(attributes.Add);
-			metadata.ServiceParameters
-				.Select(param => Attribute.BuildServiceRequestAttribute(param.Key, param.Value))
-				.ForEach(attributes.Add);
-			metadata.UserAttributes
-				.Select(param => Attribute.BuildCustomAttribute(param.Key, param.Value))
-				.ForEach(attributes.Add);
+			foreach(var reqParam in metadata.RequestParameters)
+			{
+				var rpa = Attribute.BuildRequestParameterAttribute(reqParam.Key, reqParam.Value);
+				attributes.Add(rpa);
+			}
+
+			foreach(var svcParam in metadata.ServiceParameters)
+			{
+				var sra = Attribute.BuildServiceRequestAttribute(svcParam.Key, svcParam.Value);
+				attributes.Add(sra);
+			}
+
+			foreach(var userAttr in metadata.UserAttributes)
+			{
+				var ca = Attribute.BuildCustomAttribute(userAttr.Key, userAttr.Value);
+				attributes.Add(ca);
+			}
+
 			//hmm pretty sure this is wrong - error attributes only go on errors
-			metadata.UserErrorAttributes
-				.Select(param => Attribute.BuildCustomErrorAttribute(param.Key, param.Value))
-				.ForEach(attributes.Add);
+			foreach(var errAttr in metadata.UserErrorAttributes)
+			{
+				var cea = Attribute.BuildCustomErrorAttribute(errAttr.Key, errAttr.Value);
+				attributes.Add(cea);
+			}
 
 			return attributes;
 		}

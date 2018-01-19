@@ -1,6 +1,7 @@
 ﻿using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.MongoDb
 {
@@ -20,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 			var model = GetCollectionName(instrumentedMethodCall.MethodCall);
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, operation, DatastoreVendor.MongoDB, model);
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation));
 
 			return Delegates.GetDelegateFor(segment);
 		}

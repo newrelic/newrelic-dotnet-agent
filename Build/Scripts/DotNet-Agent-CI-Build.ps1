@@ -43,7 +43,7 @@ foreach ($applicationFull in $applicationsFull.Keys) {
     }
 }
 
-$agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\Agent\_build\AnyCPU-Release\NewRelic.Agent.Core\net35\NewRelic.Agent.Core.dll").Version.ToString()
+$agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\Agent\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").Version.ToString()
 
 ###############
 # Linux build #

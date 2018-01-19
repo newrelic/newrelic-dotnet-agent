@@ -13,6 +13,8 @@ namespace NewRelic.Agent.Core.Wrapper
 	{
 		[CanBeNull]
 		AfterWrappedMethodDelegate BeforeWrappedMethod([NotNull] Type type, [NotNull] String methodName, [NotNull] String argumentSignature, [CanBeNull] Object invocationTarget, [NotNull] Object[] methodArguments, [CanBeNull] String tracerFactoryName, [CanBeNull] String metricName, [NotNull] uint tracerArguments, UInt64 functionId);
+
+		void ClearCaches();
 	}
 
 	public class WrapperService : IWrapperService
@@ -132,6 +134,11 @@ namespace NewRelic.Agent.Core.Wrapper
 			}
 		}
 
+		public void ClearCaches()
+		{
+			_functionIdToWrapper.Clear();
+		}
+
 		public static string ResolveTracerFactoryNameForAttributeInstrumentation(uint tracerArguments, bool isAsync, string tracerFactoryName)
 		{
 			if (TracerArgument.IsFlagSet(tracerArguments, TracerFlags.AttributeInstrumentation))
@@ -155,8 +162,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			if (trackedWrapper.NumberOfConsecutiveFailures >= _maxConsecutiveFailures)
 			{
 				_agentHealthReporter.ReportWrapperShutdown(trackedWrapper.Wrapper, instrumentedMethodCall.MethodCall.Method);
-				var wrapper = _wrapperMap.SetNoOpWrapper(instrumetedMethodInfo);
-				_functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, wrapper);
+				_functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, _wrapperMap.GetNoOpWrapper());
 			}
 		}
 	}

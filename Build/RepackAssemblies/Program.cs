@@ -22,23 +22,23 @@ namespace NewRelic.Build.RepackAssemblies
 
 			switch (repackTarget)
 			{
-				case "AsyncLocal":
-					RepackAsyncLocal();
+				case "CallContext":
+					RepackCallContext();
 					break;
 				default:
 					throw new ArgumentException($"No matching repack targets setup in RepackAssemblies.Program for value: {repackTarget}");
 			}
 		}
 		
-		private static void RepackAsyncLocal()
+		private static void RepackCallContext()
 		{
-			var asyncLocalDirectory = Path.Combine(ExtensionsDirectoryPath, "Providers", "CallStack", "AsyncLocal");
+			var asyncLocalDirectory = Path.Combine(ExtensionsDirectoryPath, "Providers", "Storage", "CallContext");
 			var binConfigurationPath = Path.Combine(asyncLocalDirectory, "bin", Configuration);
 			var frameworkBuildDirectories = Directory.EnumerateDirectories(binConfigurationPath, "*net*", SearchOption.AllDirectories);
 
 			foreach (var directory in frameworkBuildDirectories)
 			{
-				var asyncLocalDllFilePath = Path.Combine(directory, "NewRelic.Providers.CallStack.AsyncLocal.dll");
+				var asyncLocalDllFilePath = Path.Combine(directory, "NewRelic.Providers.Storage.CallContext.dll");
 				var keyFilePath = Path.Combine(SolutionPath, "KeyFile.snk");
 
 				var assemblyPathsToRepack = new List<string>

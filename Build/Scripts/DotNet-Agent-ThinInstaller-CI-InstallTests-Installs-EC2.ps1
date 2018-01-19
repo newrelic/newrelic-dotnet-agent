@@ -467,9 +467,9 @@ Function ValidateRequiredTargetFolderFilesExist([string] $targetFullPath)
 	
 	If (
 		(!(CheckFileExists("Extensions\NewRelic.Core.dll"))) -or
-		(!(CheckFileExists("Extensions\NewRelic.Providers.TransactionContext.Asp.dll"))) -or
+		(!(CheckFileExists("Extensions\NewRelic.Providers.Storage.HttpContext.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.TransactionContext.Default.dll"))) -or
-		(!(CheckFileExists("Extensions\NewRelic.Providers.TransactionContext.Wcf3.dll"))) -or
+		(!(CheckFileExists("Extensions\NewRelic.Providers.Storage.OperationContext.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Asp35.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Mvc3.dll"))) -or

@@ -1,17 +1,21 @@
-﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
 	public class DataReaderWrapper : IWrapper
 	{
+		public const string WrapperName = "DataReaderWrapper";
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyNames: new[]
+
+			var isRequestedByName = WrapperName == methodInfo.RequestedWrapperName;
+
+			var canWrap = isRequestedByName || method.MatchesAny(
+				assemblyNames: new[]
 				{
 					"System.Data",
 					"System.Data.SqlClient",
@@ -38,6 +42,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 					"NextResult",
 					"Read"
 				});
+
 			return new CanWrapResponse(canWrap);
 		}
 

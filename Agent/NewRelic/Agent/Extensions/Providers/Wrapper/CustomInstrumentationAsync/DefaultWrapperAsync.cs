@@ -47,11 +47,12 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 
 			var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "<unknown>";
 			var methodName = instrumentedMethodCall.MethodCall.Method.MethodName;
-			var segment = !String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+			var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
 				? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
 				: transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 
-			if (!String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
+			//Only override transaction name if priority set since this is segment-level instrumentation
+			if (!string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
 			{
 				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
 			}

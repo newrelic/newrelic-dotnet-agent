@@ -17,6 +17,7 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.TransactionTraces;
@@ -41,7 +42,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 		[NotNull]
 		public static IContainer GetContainer()
 		{
-#if NET35
+#if NET45
 			return new WindsorContainer();
 #else
 			return new CoreContainer();
@@ -96,7 +97,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<ICustomEventAggregator, CustomEventAggregator>();
 			container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
 			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
-#if NET35
+#if NET45
 			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
 #endif
 			container.Register<IThreadPoolStatic, ThreadPoolStatic>();
@@ -143,6 +144,16 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<CommandService, CommandService>();
 			container.Register<ConfigurationTracker, ConfigurationTracker>();
 			container.Register<IDatabaseService, DatabaseService>();
+			container.Register<InstrumentationWatcher, InstrumentationWatcher>();
+
+			if (AgentInstallConfiguration.IsWindows)
+			{
+				container.Register<INativeMethods, WindowsNativeMethods>();
+			}
+			else
+			{
+				container.Register<INativeMethods, NativeMethods>();
+			}
 
 			container.Build();
 		}
@@ -158,6 +169,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Resolve<CpuSampler>();
 			container.Resolve<MemorySampler>();
 			container.Resolve<ConfigurationTracker>();
+			container.Resolve<InstrumentationWatcher>();
 		}
 	}
 }

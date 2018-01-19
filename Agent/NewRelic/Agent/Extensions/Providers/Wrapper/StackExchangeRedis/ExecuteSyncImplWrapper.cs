@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 {
@@ -68,10 +69,10 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			//calling here to setup a static prior to actual bypasser init to speed up all subsequent calls..
 			AssignFullName(instrumentedMethodCall);
 			var connectionOptions = TryGetPropertyName(PropertyConfiguration, instrumentedMethodCall.MethodCall.InvocationTarget);
-			object GetConnectionInfo() => ConnectionInfo.FromConnectionString(DatastoreVendor.Redis, connectionOptions);
+			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(DatastoreVendor.Redis, connectionOptions);
 			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(connectionOptions, GetConnectionInfo);
 
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, operation, DatastoreVendor.Redis, host: connectionInfo.Host, portPathOrId:connectionInfo.PortPathOrId, databaseName:connectionInfo.DatabaseName);
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 			return Delegates.GetDelegateFor(segment);
 		}
 

@@ -203,9 +203,17 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 
 		public class InstrumentationConfig
-		{
-			[JsonProperty("config")]
+		{		
+			[JsonProperty("config")]		
 			public String Config { get; set; }
+
+			[JsonProperty("name")]
+			public String Name { get; set; }
+
+			public InstrumentationConfig()
+			{
+				Name = "live_instrumentation";
+			}
 		}
 
 		public class Message
