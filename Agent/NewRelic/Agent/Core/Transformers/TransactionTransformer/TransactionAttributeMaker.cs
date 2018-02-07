@@ -33,11 +33,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.Transaction));
 
 			if (errorData.IsAnError)
+			{
 				attributes.Add(Attribute.BuildTimeStampAttribute(errorData.NoticedAt));
+			}
 			else
+			{
 				attributes.Add(Attribute.BuildTimeStampAttribute(immutableTransaction.StartTime));
+			}
 
-			
 			attributes.Add(Attribute.BuildTransactionNameAttribute(transactionMetricName.PrefixedName));
 
 			// Duration (response time) is just EndTime minus StartTime
@@ -81,6 +84,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				attributes.TryAdd(Attribute.BuildErrorClassAttribute, errorData.ErrorTypeName);
 				attributes.TryAdd(Attribute.BuildErrorTypeAttribute, errorData.ErrorTypeName);
 				attributes.TryAdd(Attribute.BuildErrorMessageAttribute, errorData.ErrorMessage);
+				attributes.TryAdd(Attribute.BuildErrorDotMessageAttribute, errorData.ErrorMessage);
 			}
 
 			var isCatParticipant = IsCatParticipant(immutableTransaction);

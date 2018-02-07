@@ -8,46 +8,37 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 namespace NewRelic.Agent.Core.Wrapper
 {
 	/// <summary>
-	/// A map that links instrumented methods to wrappers that can wrap those methods. Intentionally excludes DefaultWrapper.
+	/// A factory that returns wrappers for instrumented methods.
 	/// </summary>
 	public interface IWrapperMap
 	{
 		/// <summary>
-		/// Get the tracked wrapper that is mapped to the given method.
+		/// Return a tracked wrapper that CanWrap the given method.
 		/// </summary>
 		[NotNull]
 		TrackedWrapper Get(InstrumentedMethodInfo instrumentedMethodInfo);
 
 		/// <summary>
-		/// Overrides whatever value is currently cached for the given key.
-		/// </summary>
-		void Override(InstrumentedMethodInfo instrumentedMethodInfo, [CanBeNull] TrackedWrapper trackedWrapper);
-
-		/// <summary>
-		/// Overrides the instrumented method to use the NoOp wrapper.
+		/// Returns the NoOp wrapper.
 		/// </summary>
 		/// <param name="instrumentedMethodInfo"></param>
-		TrackedWrapper SetNoOpWrapper(InstrumentedMethodInfo instrumentedMethodInfo);
+		TrackedWrapper GetNoOpWrapper();
 	}
 
 	public class WrapperMap : IWrapperMap
 	{
-		[NotNull]
-		private readonly LazyMap<InstrumentedMethodInfo, TrackedWrapper> _lazyMap;
-
-		private readonly IList<IDefaultWrapper> _defaultWrappers;
+		private readonly IEnumerable<IDefaultWrapper> _defaultWrappers;
+		private readonly IEnumerable<IWrapper> _nonDefaultWrappers;
 
 		private readonly TrackedWrapper _noOpTrackedWrapper;
 
 		public WrapperMap([NotNull] IEnumerable<IWrapper> wrappers, [NotNull] IDefaultWrapper defaultWrapper, [NotNull] INoOpWrapper noOpWrapper)
 		{
-			var trackedWrappers = wrappers
+			_nonDefaultWrappers = wrappers
 				.Where(wrapper => wrapper != null)
-				// DefaultWrapper intentionally does not get included in the wrapper map because it is specially handled by WrapperService
-				.Where(wrapper => !(wrapper is IDefaultWrapper) && !(wrapper is INoOpWrapper))
-				.Select(wrapper => new TrackedWrapper(wrapper)).ToList();
+				.Where(wrapper => !(wrapper is IDefaultWrapper) && !(wrapper is INoOpWrapper));
 
-			_defaultWrappers = new List<IDefaultWrapper> {defaultWrapper};
+			var defaultWrappers = new List<IDefaultWrapper> {defaultWrapper};
 
 			var otherDefaultWrappers = wrappers
 				.OfType<IDefaultWrapper>()
@@ -55,12 +46,12 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			foreach (var wrapper in otherDefaultWrappers)
 			{
-				_defaultWrappers.Add(wrapper);
+				defaultWrappers.Add(wrapper);
 			}
+			_defaultWrappers = defaultWrappers;
 
 			_noOpTrackedWrapper = new TrackedWrapper(noOpWrapper);
 
-			_lazyMap = new LazyMap<InstrumentedMethodInfo, TrackedWrapper>(trackedWrappers, CanWrap);
 			if (wrappers.Count() == 0)
 			{
 				Log.Error("No wrappers were loaded.  The agent will not behave as expected.");
@@ -69,30 +60,28 @@ namespace NewRelic.Agent.Core.Wrapper
 
 		public TrackedWrapper Get(InstrumentedMethodInfo instrumentedMethodInfo)
 		{
-			return _lazyMap.Get(instrumentedMethodInfo) ?? GetDefaultWrapperOrSetNoOp(instrumentedMethodInfo);
+			foreach (var wrapper in _nonDefaultWrappers)
+			{
+				if (CanWrap(instrumentedMethodInfo, wrapper))
+				{
+					return new TrackedWrapper(wrapper);
+				}
+			}
+			return GetDefaultWrapperOrSetNoOp(instrumentedMethodInfo);
 		}
 
-		public void Override(InstrumentedMethodInfo method, TrackedWrapper trackedWrapper)
+		public TrackedWrapper GetNoOpWrapper()
 		{
-			_lazyMap.Override(method, trackedWrapper);
-		}
-
-		public TrackedWrapper SetNoOpWrapper(InstrumentedMethodInfo method)
-		{
-			Override(method, _noOpTrackedWrapper);
 			return _noOpTrackedWrapper;
 		}
 
 		private TrackedWrapper GetDefaultWrapperOrSetNoOp(InstrumentedMethodInfo instrumentedMethodInfo)
 		{
-			TrackedWrapper trackedWrapper;
-
 			var defaultWrapper = _defaultWrappers.FirstOrDefault(wrapper => wrapper.CanWrap(instrumentedMethodInfo).CanWrap);
 
 			if (defaultWrapper != null)
 			{
-				trackedWrapper = new TrackedWrapper(defaultWrapper);
-				Override(instrumentedMethodInfo, trackedWrapper);
+				return new TrackedWrapper(defaultWrapper);
 			}
 			else
 			{
@@ -103,19 +92,14 @@ namespace NewRelic.Agent.Core.Wrapper
 					instrumentedMethodInfo.Method.Type.Assembly.FullName,
 					instrumentedMethodInfo.RequestedWrapperName);
 
-				return SetNoOpWrapper(instrumentedMethodInfo);
+				return _noOpTrackedWrapper;
 			}
-
-			return trackedWrapper;
 		}
 
-		private static Boolean CanWrap(InstrumentedMethodInfo instrumentedMethodInfo, [CanBeNull] TrackedWrapper trackedWrapper)
+		private static bool CanWrap(InstrumentedMethodInfo instrumentedMethodInfo, IWrapper wrapper)
 		{
-			if (trackedWrapper == null)
-				return false;
-
 			var method = instrumentedMethodInfo.Method;
-			var canWrapResponse = trackedWrapper.Wrapper.CanWrap(instrumentedMethodInfo);
+			var canWrapResponse = wrapper.CanWrap(instrumentedMethodInfo);
 
 			if (canWrapResponse.AdditionalInformation != null && !canWrapResponse.CanWrap)
 				Log.Warn(canWrapResponse.AdditionalInformation);
@@ -123,7 +107,7 @@ namespace NewRelic.Agent.Core.Wrapper
 				Log.Info(canWrapResponse.AdditionalInformation);
 
 			if (canWrapResponse.CanWrap)
-				Log.Debug($"Wrapper \"{trackedWrapper.Wrapper.GetType().FullName}\" will be used for instrumented method \"{method.Type}.{method.MethodName}\"");
+				Log.Debug($"Wrapper \"{wrapper.GetType().FullName}\" will be used for instrumented method \"{method.Type}.{method.MethodName}\"");
 
 			return canWrapResponse.CanWrap;
 		}

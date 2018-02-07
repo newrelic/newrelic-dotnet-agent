@@ -624,7 +624,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 				Log.Debug($"Noticed application error: {exception}");
 
-				var errorData = ErrorData.FromException(exception);
+				var stripErrorMessage = agentWrapperApi._configurationService.Configuration.HighSecurityModeEnabled;
+				var errorData = ErrorData.FromException(exception, stripErrorMessage);
+
 				transaction.TransactionMetadata.AddExceptionData(errorData);
 			}
 

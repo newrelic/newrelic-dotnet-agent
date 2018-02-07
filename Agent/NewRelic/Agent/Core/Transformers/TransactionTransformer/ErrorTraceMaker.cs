@@ -53,22 +53,19 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <returns></returns>
 		public ErrorTraceWireModel GetErrorTrace([NotNull] Attributes customAttributes, [NotNull] ErrorData errorData)
 		{
-			var uri = String.Empty;
-			ICollection<string> stackTrace = null;
-			if (errorData.StackTrace != null) {
-				stackTrace = StackTraces.ScrubAndTruncate(errorData.StackTrace, _configurationService.Configuration.StackTraceMaximumFrames);
-			}
+			var uri = string.Empty;
+			var stackTrace = GetFormattedStackTrace(errorData);
 
 			var timestamp = errorData.NoticedAt;
-			const String path = "NewRelic.Api.Agent.NoticeError API Call";
-			var message = errorData.ErrorMessage;
+			const string path = "NewRelic.Api.Agent.NoticeError API Call";
+			var message = GetStrippedErrorMessage(errorData.ErrorMessage);
 			var exceptionClassName = errorData.ErrorTypeName;
 			var errorAttributesWireModel = GetErrorTraceAttributes(uri, customAttributes, stackTrace);
-			const String guid = null;
+			const string guid = null;
 
 			return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
 		}
-
+		
 		/// <summary>
 		/// Gets an <see cref="NewRelic.Agent.Core.WireModels.ErrorTraceWireModel"/> given
 		/// a transaction, transaction attributes and an error referenced by an <see cref="NewRelic.Agent.Core.Errors.ErrorData"/>
@@ -86,19 +83,37 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public ErrorTraceWireModel GetErrorTrace([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes transactionAttributes, [NotNull] TransactionMetricName transactionMetricName, [NotNull] ErrorData errorData)
 		{
 			var uri = immutableTransaction.TransactionMetadata.Uri?.TrimAfter("?");
-			ICollection<string> stackTrace = null;
-			if (errorData.StackTrace != null) {
-				stackTrace = StackTraces.ScrubAndTruncate(errorData.StackTrace, _configurationService.Configuration.StackTraceMaximumFrames);
-			}
+			var stackTrace = GetFormattedStackTrace(errorData);
 
 			var timestamp = errorData.NoticedAt;
 			var path = transactionMetricName.PrefixedName;
-			var message = errorData.ErrorMessage;
+			var message = GetStrippedErrorMessage(errorData.ErrorMessage);
 			var exceptionClassName = errorData.ErrorTypeName;
-			var errorAttributesWireModel = GetErrorTraceAttributes(uri ?? String.Empty, transactionAttributes, stackTrace);
+			var errorAttributesWireModel = GetErrorTraceAttributes(uri ?? string.Empty, transactionAttributes, stackTrace);
 			var guid = immutableTransaction.Guid;
 
 			return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
+		}
+
+		private IEnumerable<string> GetFormattedStackTrace(ErrorData errorData)
+		{
+			if (errorData.StackTrace == null)
+			{
+				return null;
+			}
+
+			var stackTrace = StackTraces.ScrubAndTruncate(errorData.StackTrace, _configurationService.Configuration.StackTraceMaximumFrames);
+			return stackTrace;
+		}
+
+		private string GetStrippedErrorMessage(string errorMessage)
+		{
+			if (_configurationService.Configuration.HighSecurityModeEnabled)
+			{
+				return null;
+			}
+
+			return errorMessage;
 		}
 
 		[NotNull]

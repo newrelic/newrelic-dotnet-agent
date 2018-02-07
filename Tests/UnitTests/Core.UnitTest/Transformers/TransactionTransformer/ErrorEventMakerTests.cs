@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes()
 		{
 			var error = new OutOfMemoryException("Out of Memory Message");
-			var errorData = new ErrorData(error.Message, "OutOfMemoryError", error.StackTrace, DateTime.UtcNow);
+			var errorData = ErrorData.FromParts(error.Message, "OutOfMemoryError", DateTime.UtcNow, false);
 
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", isSynthetics: false, isCAT: false, referrerUri: "http://referrer.uri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -180,7 +180,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes_FullAttributes()
 		{
 			var error = new OutOfMemoryException("Out of Memory Message");
-			var errorData = new ErrorData(error.Message, "OutOfMemoryError", error.StackTrace, DateTime.UtcNow);
+			var errorData = ErrorData.FromParts(error.Message, "OutOfMemoryError", DateTime.UtcNow, false);
 
 			var transaction = BuildTestTransaction(statusCode: 404,
 															customErrorData: errorData,
@@ -246,7 +246,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var customAttributes = new Attributes();
 
 			customAttributes.Add(Attribute.BuildCustomAttribute("custom attribute name", "custom attribute value"));
-			var errorData = ErrorData.FromException(new System.NullReferenceException("NRE message"));
+			var errorData = ErrorData.FromException(new System.NullReferenceException("NRE message"), false);
 
 			// Act
 			var errorEvent = _errorEventMaker.GetErrorEvent(errorData, customAttributes);

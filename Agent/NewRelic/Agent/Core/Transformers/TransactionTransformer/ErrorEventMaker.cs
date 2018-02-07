@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
@@ -29,14 +30,19 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(transactionAttributes, AttributeDestinations.ErrorEvent);
 
+			
+			// *** DO NOT COPY THIS PATTERN ***
+			// Because of the cached filtering model, this has to be added here to avoid being filtered out due to 
+			// the identically named attribute for Transaction Events.
+			//
+			// This style of attribute adding can result in security issues if not done correctly to filter out
+			// based on HSM logic, etc.
+			//
+			// Most attributes should be added via the TransactionAttributeMaker.
+			// The attribute system needs a large overhaul to help prevent mistakes and also prevent collection of
+			// sensitive data that we will just drop on the floor.
 			var typeAttribute = Attribute.BuildTypeAttribute(TypeAttributeValue.TransactionError);
 			filteredAttributes.Add(typeAttribute);
-
-			var errorClassAttribute = Attribute.BuildErrorClassAttribute(errorData.ErrorTypeName);
-			filteredAttributes.Add(errorClassAttribute);
-
-			var errorMessageAttribute = Attribute.BuildErrorDotMessageAttribute(errorData.ErrorMessage);
-			filteredAttributes.Add(errorMessageAttribute);
 
 			return CreateErrorEvent(immutableTransaction, filteredAttributes);
 		}
@@ -44,6 +50,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes)
 		{
 			// These attributes are for an ErrorEvent outside of a transaction
+
+			// WARNING: It is important that filtering happens on attributes to prevent leaking sensitive data. 
+			// Currently, custom attributes are filtered before this method and everything is refiltered in CreateErrorEvent
 
 			var typeAttribute = Attribute.BuildTypeAttribute(TypeAttributeValue.TransactionError);
 			customAttributes.Add(typeAttribute);
@@ -57,6 +66,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var timestampAttribute = Attribute.BuildTimeStampAttribute(errorData.NoticedAt);
 			customAttributes.Add(timestampAttribute);
 
+		
 			return CreateErrorEvent(customAttributes);
 		}
 

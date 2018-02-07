@@ -87,10 +87,9 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		[Test]
 		public void TryGetErrorData_ReturnsErrorTrace_IfExceptionIsNoticed()
 		{
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
 			var timeOfError = DateTime.UtcNow;
 
-			var errorDataIn = new ErrorData("My message", "My type name", stackTrace, timeOfError);
+			var errorDataIn = ErrorData.FromParts("My message", "My type name", timeOfError, false);
 
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 
@@ -100,17 +99,15 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			NrAssert.Multiple(
 				() => Assert.AreEqual("My type name", errorDataOut.ErrorTypeName),
 				() => Assert.AreEqual("My message", errorDataOut.ErrorMessage),
-				() => Assert.AreEqual(errorDataIn.NoticedAt, errorDataOut.NoticedAt),
-				() => Assert.AreEqual(stackTrace, errorDataOut.StackTrace)
-				);
+				() => Assert.AreEqual(errorDataIn.NoticedAt, errorDataOut.NoticedAt)
+			);
 		}
 
 		[Test]
 		public void TryGetErrorData_ReturnsFirstException_IfMultipleExceptionsNoticed()
 		{
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorData1 = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
-			var errorData2 = new ErrorData("My message2", "My type name2", null, DateTime.UtcNow);
+			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
+			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData1, errorData2 });
 
 			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
@@ -119,16 +116,14 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			NrAssert.Multiple(
 				() => Assert.AreEqual("My type name", errorDataOut.ErrorTypeName),
 				() => Assert.AreEqual("My message", errorDataOut.ErrorMessage),
-				() => Assert.AreEqual(errorData1.NoticedAt, errorDataOut.NoticedAt),
-				() => Assert.AreEqual(stackTrace, errorDataOut.StackTrace)
-				);
+				() => Assert.AreEqual(errorData1.NoticedAt, errorDataOut.NoticedAt)
+			);
 		}
 		
 		[Test]
 		public void TryGetErrorData_ReturnsExceptionsBeforeStatusCodes()
 		{
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorDataIn = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
+			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 
 			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
@@ -138,9 +133,8 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			NrAssert.Multiple(
 				() => Assert.AreEqual("My type name", errorDataOut.ErrorTypeName),
 				() => Assert.AreEqual("My message", errorDataOut.ErrorMessage),
-				() => Assert.AreEqual(errorDataIn.NoticedAt, errorDataOut.NoticedAt),
-				() => Assert.AreEqual(stackTrace, errorDataOut.StackTrace)
-				);
+				() => Assert.AreEqual(errorDataIn.NoticedAt, errorDataOut.NoticedAt)
+			);
 		}
 		
 		[Test]
@@ -158,8 +152,8 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		public void TryGetErrorData_ReturnsNull_IfStatusCodeIsIgnoredByConfig_EvenIfExceptionIsNoticed()
 		{
 			Mock.Arrange(() => _configuration.HttpStatusCodesToIgnore).Returns(new[] { "404" });
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorDataIn = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
+			
+			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(statusCode: 404, transactionExceptionDatas: new[] { errorDataIn });
 			
 			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
@@ -171,9 +165,9 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		public void TryGetErrorData_ReturnsNull_IfAnyExceptionIsIgnored()
 		{
 			Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new[] { "My type name2" });
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorData1 = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
-			var errorData2 = new ErrorData("My message2", "My type name2", null, DateTime.UtcNow);
+			
+			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
+			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(transactionExceptionDatas: new[] { errorData1, errorData2 });
 
 			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
@@ -185,9 +179,9 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		public void TryGetErrorTrace_ReturnsNull_IfAnyExceptionIsIgnored_EvenIfStatusCodeIs404()
 		{
 			Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new[] { "My type name2" });
-			var stackTrace = $"frame1{System.Environment.NewLine}frame2";
-			var errorData1 = new ErrorData("My message", "My type name", stackTrace, DateTime.UtcNow);
-			var errorData2 = new ErrorData("My message2", "My type name2", null, DateTime.UtcNow);
+
+			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
+			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(statusCode: 404, transactionExceptionDatas: new[] { errorData1, errorData2 });
 
 			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);

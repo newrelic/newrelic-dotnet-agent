@@ -55,6 +55,7 @@ namespace NewRelic.Agent.Core.Transactions
 			return filteredAttributes;
 		}
 
+
 		#endregion
 
 		#region Private Helpers

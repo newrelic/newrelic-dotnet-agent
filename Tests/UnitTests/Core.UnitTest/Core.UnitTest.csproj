@@ -36,7 +36,6 @@
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LazyMap\LazyMap.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
   </ItemGroup>

@@ -79,7 +79,6 @@
         <ProjectReference Include="..\Configuration\Configuration.csproj" />
         <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
         <ProjectReference Include="..\LabelsService\LabelsService.csproj" />
-        <ProjectReference Include="..\LazyMap\LazyMap.csproj" />
         <ProjectReference Include="..\NewRelic.Core\NewRelic.Core.csproj" />
         <ProjectReference Include="..\Parsing\Parsing.csproj" />
     </ItemGroup>

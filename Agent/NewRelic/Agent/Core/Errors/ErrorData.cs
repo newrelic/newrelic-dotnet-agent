@@ -11,19 +11,19 @@ namespace NewRelic.Agent.Core.Errors
 	public struct ErrorData
 	{
 		[NotNull]
-		public readonly String ErrorMessage;
+		public readonly string ErrorMessage;
 
 		[CanBeNull]
-		public readonly String ErrorTypeName;
+		public readonly string ErrorTypeName;
 
 		[CanBeNull]
-		public readonly String StackTrace;
+		public readonly string StackTrace;
 
 		public readonly DateTime NoticedAt;
 
 		public readonly bool IsAnError;
 
-		public ErrorData([NotNull] String errorMessage, [CanBeNull] String errorTypeName, [CanBeNull] String stackTrace, DateTime noticedAt)
+		private ErrorData([NotNull] string errorMessage, [CanBeNull] string errorTypeName, [CanBeNull] string stackTrace, DateTime noticedAt)
 		{
 			NoticedAt = noticedAt;
 			StackTrace = stackTrace;
@@ -32,15 +32,20 @@ namespace NewRelic.Agent.Core.Errors
 			IsAnError = true;
 		}
 
-		public static ErrorData FromException([NotNull] Exception exception)
+		public static ErrorData FromParts([NotNull] string errorMessage, [CanBeNull] string errorTypeName, DateTime noticedAt, bool stripErrorMessage)
 		{
-			var message = exception.GetBaseException().Message;
+			var message = stripErrorMessage ? string.Empty : errorMessage;
+			return new ErrorData(message, errorTypeName, null, noticedAt);
+		}
+
+		public static ErrorData FromException([NotNull] Exception exception, bool stripErrorMessage)
+		{
+			var message = stripErrorMessage ? string.Empty : exception.GetBaseException().Message;
 			var exceptionTypeName = exception.GetType().FullName;
-			var stackTrace = exception.ToString();
+			var stackTrace = ExceptionFormatter.FormatStackTrace(exception, stripErrorMessage);
 			var noticedAt = DateTime.UtcNow;
 			return new ErrorData(message, exceptionTypeName, stackTrace, noticedAt);
 		}
-
 
 		public static ErrorData TryGetErrorData([NotNull] ImmutableTransaction immutableTransaction, [NotNull] IConfigurationService configurationService)
 		{

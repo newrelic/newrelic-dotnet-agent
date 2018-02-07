@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Utils;
 using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands
@@ -75,14 +76,23 @@ namespace NewRelic.Agent.Core.Commands
 				if (arguments == null)
 					continue;
 
+				object returnValue;
 				var command = _knownCommands.GetValueOrDefault(name);
 				if (command == null)
 				{
-					Log.DebugFormat("Ignoring command named '{0}' that the agent doesn't know how to execute", name);
-					continue;
+					var msg = $"Ignoring command named '{name}' that the agent doesn't know how to execute";
+					Log.Debug(msg);
+					returnValue = new Dictionary<string, object>
+					{
+						{ "errors", msg },
+						{ "error", msg }
+					};
+				}
+				else
+				{
+					returnValue = command.Process(arguments);
 				}
 
-				var returnValue = command.Process(arguments);
 				results.Add(id.ToString(CultureInfo.InvariantCulture), returnValue);
 			}
 			return results;

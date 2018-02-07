@@ -132,6 +132,11 @@ namespace NewRelic.Agent.Core.Wrapper
 			}
 		}
 
+		public void ClearCaches()
+		{
+			_functionIdToWrapper.Clear();
+		}
+
 		public static string ResolveTracerFactoryNameForAttributeInstrumentation(uint tracerArguments, bool isAsync, string tracerFactoryName)
 		{
 			if (TracerArgument.IsFlagSet(tracerArguments, TracerFlags.AttributeInstrumentation))
@@ -155,8 +160,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			if (trackedWrapper.NumberOfConsecutiveFailures >= _maxConsecutiveFailures)
 			{
 				_agentHealthReporter.ReportWrapperShutdown(trackedWrapper.Wrapper, instrumentedMethodCall.MethodCall.Method);
-				var wrapper = _wrapperMap.SetNoOpWrapper(instrumetedMethodInfo);
-				_functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, wrapper);
+				_functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, _wrapperMap.GetNoOpWrapper());
 			}
 		}
 	}
