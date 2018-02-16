@@ -12,9 +12,13 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void when_default_fixture_values_are_used_then_serializes_correctly()
 		{
-			var vendors = new List<IVendorModel>
+			var vendors = new Dictionary<string,IVendorModel>
 			{
-				new AwsVendorModel("123456", "t2.micro", "us-west-1")
+				{ "aws", new AwsVendorModel("myZone", "myInstanceId", "myInstanceType") },
+				{ "azure", new AzureVendorModel("myLocation", "myName", "myVmId", "myVmSize") },
+				{ "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", "myZone") },
+				{ "pcf", new PcfVendorModel("myInstanceGuid", "myInstanceIp", "myMemoryLimit") },
+				{ "docker", new DockerVendorModel("myBootId") }
 			};
 			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
 			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
@@ -42,9 +46,41 @@ namespace NewRelic.Agent.Core.Utilization
 						{
 							"aws", new Dictionary<String, Object>
 							{
-								{"id", "123456"},
-								{"type", "t2.micro"},
-								{"zone", "us-west-1"}
+								{"availabilityZone", "myZone"},
+								{"instanceId", "myInstanceId"},
+								{"instanceType", "myInstanceType"}
+							}
+						},
+						{
+							"azure", new Dictionary<String,Object>
+							{
+								{"location", "myLocation" },
+								{"name", "myName" },
+								{"vmId", "myVmId" },
+								{"vmSize", "myVmSize" }
+							}
+						},
+						{
+							"gcp", new Dictionary<String,Object>
+							{
+								{"id", "myId" },
+								{"machineType", "myMachineType" },
+								{"name", "myName" },
+								{"zone", "myZone" }
+							}
+						},
+						{
+							"pcf", new Dictionary<String,Object>
+							{
+								{"cf_instance_guid", "myInstanceGuid" },
+								{"cf_instance_ip", "myInstanceIp" },
+								{"memory_limit", "myMemoryLimit" }
+							}
+						},
+						{
+							"docker", new Dictionary<String,Object>
+							{
+								{"id", "myBootId" }
 							}
 						}
 					}
@@ -52,13 +88,89 @@ namespace NewRelic.Agent.Core.Utilization
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
 			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+		}
 
+		[Test]
+		public void when_vendors_contain_null_values_serializes_correctly()
+		{
+			var vendors = new Dictionary<string, IVendorModel>
+			{
+				{ "aws", new AwsVendorModel(null, "myInstanceId", "myInstanceType") },
+				{ "azure", new AzureVendorModel("myLocation", null, "myVmId", "myVmSize") },
+				{ "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", null) },
+				{ "pcf", new PcfVendorModel("myInstanceGuid", null, "myMemoryLimit") },
+				{ "docker", new DockerVendorModel("myBootId") }
+			};
+			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+
+			// ACT
+			var actualJson = JsonConvert.SerializeObject(settingsModel);
+
+			var expectedObject = new Dictionary<String, Object>
+			{
+				{"metadata_version", 3},
+				{"logical_processors", 4},
+				{"total_ram_mib", 1024},
+				{"hostname", "lo-calhost"},
+				{
+					"config",  new Dictionary<String, Object>
+					{
+						{"hostname", "loc-alhost"},
+						{"logical_processors", 2},
+						{"total_ram_mib", 2048}
+					}
+				},
+				{
+					"vendors", new Dictionary<String, Object>
+					{
+						{
+							"aws", new Dictionary<String, Object>
+							{
+								{"instanceId", "myInstanceId"},
+								{"instanceType", "myInstanceType"}
+							}
+						},
+						{
+							"azure", new Dictionary<String,Object>
+							{
+								{"location", "myLocation" },
+								{"vmId", "myVmId" },
+								{"vmSize", "myVmSize" }
+							}
+						},
+						{
+							"gcp", new Dictionary<String,Object>
+							{
+								{"id", "myId" },
+								{"machineType", "myMachineType" },
+								{"name", "myName" },
+							}
+						},
+						{
+							"pcf", new Dictionary<String,Object>
+							{
+								{"cf_instance_guid", "myInstanceGuid" },
+								{"memory_limit", "myMemoryLimit" }
+							}
+						},
+						{
+							"docker", new Dictionary<String,Object>
+							{
+								{"id", "myBootId" }
+							}
+						}
+					}
+				}
+			};
+			var expectedJson = JsonConvert.SerializeObject(expectedObject);
+			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 		}
 
 		[Test]
 		public void when_no_vendors_then_serializes_correctly()
 		{
-			var vendors = Enumerable.Empty<IVendorModel>();
+			var vendors = new Dictionary<string,IVendorModel>();
 			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
 			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
 
@@ -88,7 +200,7 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void UtilizationHashWithNullIConfigurationSerializesCorrectly()
 		{
-			var vendors = Enumerable.Empty<IVendorModel>();
+			var vendors = new Dictionary<string,IVendorModel>();
 			UtilitizationConfig config = GetUtilitizationConfig(null);
 			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
 
@@ -109,7 +221,7 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void UtilizationHashWithNullEntriesSerializesCorrectly()
 		{
-			var vendors = Enumerable.Empty<IVendorModel>();
+			var vendors = new Dictionary<string, IVendorModel>();
 			UtilitizationConfig config = GetUtilitizationConfig(null, null, null);
 			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
 
@@ -130,7 +242,7 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void UtilizationHashWithAllConfigHashEntriesSerializesCorrectly()
 		{
-			var vendors = Enumerable.Empty<IVendorModel>();
+			var vendors = new Dictionary<string, IVendorModel>();
 			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
 			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
 
@@ -159,7 +271,7 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void UtilizationHashWithSingleConfigHashEntrySerializesCorrectly()
 		{
-			var vendors = Enumerable.Empty<IVendorModel>();
+			var vendors = new Dictionary<string, IVendorModel>();
 			var config = new UtilitizationConfig(null, null, 2048);
 			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
 

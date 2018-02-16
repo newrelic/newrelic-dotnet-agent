@@ -546,6 +546,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				if (transaction.Ignored)
 					return _noOpSegment;
 
+				if (parsedSqlStatement == null)
+				{
+					Log.Error("StartDatastoreSegment - parsedSqlStatement is null. The parsedSqlStatement should never be null. This indicates that the instrumentation was unable to parse a datastore statement.");
+					parsedSqlStatement = new ParsedSqlStatement(DatastoreVendor.Other, null, null);
+				}
+
 				var data = new DatastoreSegmentData(parsedSqlStatement, commandText, connectionInfo);
 				var segment = new TypedSegment<DatastoreSegmentData>(transaction.TransactionSegmentState, GetMethodCallData(methodCall), data);
 

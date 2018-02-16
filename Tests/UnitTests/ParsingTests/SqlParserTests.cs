@@ -36,10 +36,13 @@ namespace ParsingTests
 		}
 
 		[Test]
-		public void SqlParserTest_InvalidTextCantBeParsed()
+		public void SqlParserTest_InvalidTextCantBeParsed_And_DoesNotResultInNullParsedDatabaseStatement()
 		{
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "Lorem ipsum dolar sit amet");
-			Assert.IsNull(parsedDatabaseStatement);
+			Assert.IsNotNull(parsedDatabaseStatement); // It is important that GetParsedDatabaseStatement never returns null
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+			Assert.AreEqual(DatastoreVendor.MSSQL, parsedDatabaseStatement.DatastoreVendor);
 		}
 
 		[Test]
@@ -374,29 +377,6 @@ namespace ParsingTests
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("show", parsedDatabaseStatement.Operation);
 			Assert.AreEqual("wow_this_is_a_really_long_name_isnt_it_cmon_man_it", parsedDatabaseStatement.Model);
-		}
-
-		/// <summary>
-		/// Test that some historical gibberish doesn't get picked up as a database statement.
-		/// </summary>
-		[Test]
-		public void SqlParserTest_BogusTest()
-		{
-			const string test = @"
-				<h1>Bulkmail Report</h1>
-				Operation started at: 6/15/2010 9:44:10 AM<br>
-				EmailRecipients: 2<br>
-				EmailMessages: 2<br>
-				Operation completed: 6/15/2010 9:44:10 AM<br>
-
-				<br>
-				Status Report: <br>
-				<pre>No errors occured during sending.</pre>
-				<hr><b>Recipients:</B><br>**REDACTED**<br />**REDACTED**<br />
-			";
-
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, test);
-			Assert.IsNull(parsedDatabaseStatement);
 		}
 
 		/// <summary>

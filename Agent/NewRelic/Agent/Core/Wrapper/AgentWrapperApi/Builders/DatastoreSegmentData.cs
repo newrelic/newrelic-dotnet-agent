@@ -25,10 +25,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private readonly static ConnectionInfo EmptyConnectionInfo = new ConnectionInfo(null, null, null);
 
 		[CanBeNull]
-		public String Operation => _parsedSqlStatement?.Operation;
+		public String Operation => _parsedSqlStatement.Operation;
 		public DatastoreVendor DatastoreVendorName => _parsedSqlStatement.DatastoreVendor;
 		[CanBeNull]
-		public String Model => _parsedSqlStatement?.Model;
+		public String Model => _parsedSqlStatement.Model;
 		[CanBeNull]
 		public String CommandText { get; set; }
 		[CanBeNull]

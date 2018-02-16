@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-//using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
@@ -40,6 +39,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 		void ReportAgentApiMethodCalled([NotNull] String methodName);
 		void ReportIfHostIsLinuxOs();
 		void ReportBootIdError();
+		void ReportAwsUtilizationError();
+		void ReportAzureUtilizationError();
+		void ReportPcfUtilizationError();
+		void ReportGcpUtilizationError();
 	}
 
 	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
@@ -397,6 +400,30 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void ReportBootIdError()
 		{
 			var metric = _metricBuilder.TryBuildBootIdError();
+			TrySend(metric);
+		}
+
+		public void ReportAwsUtilizationError()
+		{
+			var metric = _metricBuilder.TryBuildAwsUsabilityError();
+			TrySend(metric);
+		}
+
+		public void ReportAzureUtilizationError()
+		{
+			var metric = _metricBuilder.TryBuildAzureUsabilityError();
+			TrySend(metric);
+		}
+
+		public void ReportPcfUtilizationError()
+		{
+			var metric = _metricBuilder.TryBuildPcfUsabilityError();
+			TrySend(metric);
+		}
+
+		public void ReportGcpUtilizationError()
+		{
+			var metric = _metricBuilder.TryBuildGcpUsabilityError();
 			TrySend(metric);
 		}
 

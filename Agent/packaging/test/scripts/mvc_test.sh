@@ -20,4 +20,3 @@ verify_logs_exist
 
 verify_agent_log_exists "mvc"
 
-verify_agent_log_grep "ProcessRequestAsync"

@@ -31,8 +31,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 					return SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql);
 				default:
 					var sqlToStatement = GetOrCreateSqlCache(datastoreVendor);
-					var cachedStatement = sqlToStatement.GetOrSetValue(sql, () => SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql) ?? SqlParser.NullStatement);
-					return SqlParser.NullStatement == cachedStatement ? null : cachedStatement;
+					var cachedStatement = sqlToStatement.GetOrSetValue(sql, () => SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql));
+					return cachedStatement;
 			}
 		}
 

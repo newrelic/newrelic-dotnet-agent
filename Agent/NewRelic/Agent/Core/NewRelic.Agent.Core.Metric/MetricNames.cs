@@ -569,6 +569,30 @@ namespace NewRelic.Agent.Core.Metric
 			return Supportability + PathSeparator + "utilization" + PathSeparator + "boot_id" + PathSeparator + "error";
 		}
 
+		[NotNull]
+		public static string GetSupportabilityAwsUsabilityError()
+		{
+			return Supportability + PathSeparator + "utilization" + PathSeparator + "aws" + PathSeparator + "error";
+		}
+
+		[NotNull]
+		public static string GetSupportabilityAzureUsabilityError()
+		{
+			return Supportability + PathSeparator + "utilization" + PathSeparator + "azure" + PathSeparator + "error";
+		}
+
+		[NotNull]
+		public static string GetSupportabilityGcpUsabilityError()
+		{
+			return Supportability + PathSeparator + "utilization" + PathSeparator + "gcp" + PathSeparator + "error";
+		}
+
+		[NotNull]
+		public static string GetSupportabilityPcfUsabilityError()
+		{
+			return Supportability + PathSeparator + "utilization" + PathSeparator + "pcf" + PathSeparator + "error";
+		}
+
 		// Metrics
 		// NOTE: This metric is REQUIRED by the collector (it is used as a heartbeat)
 		public const String SupportabilityMetricHarvestTransmit = Supportability + PathSeparator + "MetricHarvest" + PathSeparator + "transmit";

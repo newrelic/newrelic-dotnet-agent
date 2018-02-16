@@ -169,7 +169,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Resolve<CpuSampler>();
 			container.Resolve<MemorySampler>();
 			container.Resolve<ConfigurationTracker>();
-			container.Resolve<InstrumentationWatcher>();
 		}
 	}
 }

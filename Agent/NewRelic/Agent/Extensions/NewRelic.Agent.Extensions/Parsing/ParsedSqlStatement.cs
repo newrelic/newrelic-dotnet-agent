@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Extensions.Parsing
 		/// </summary>
 		/// <param name="model">What the statement is operating on, eg the "direct object" of the operation.</param>
 		/// <param name="operation">What the operation is doing.</param>
-		public ParsedSqlStatement([NotNull] DatastoreVendor datastoreVendor, [CanBeNull] string model, [NotNull] string operation)
+		public ParsedSqlStatement(DatastoreVendor datastoreVendor, string model, string operation)
 		{
 			Model = model;
 			Operation = operation ?? "other";

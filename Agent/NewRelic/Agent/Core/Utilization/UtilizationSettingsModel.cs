@@ -9,16 +9,14 @@ namespace NewRelic.Agent.Core.Utilization
 	[JsonObject(MemberSerialization.OptIn)]
 	public class UtilizationSettingsModel
 	{
-		public UtilizationSettingsModel(int logicalProcessors, ulong totalRamBytes, [NotNull] string hostname, string bootId, [NotNull] IEnumerable<IVendorModel> vendors, [CanBeNull] UtilitizationConfig utilitizationConfig)
+		public UtilizationSettingsModel(int logicalProcessors, ulong totalRamBytes, [NotNull] string hostname, string bootId, [NotNull] IDictionary<string, IVendorModel> vendors, [CanBeNull] UtilitizationConfig utilitizationConfig)
 		{
 			LogicalProcessors = logicalProcessors;
 			TotalRamMebibytes = totalRamBytes / (1024 * 1024);
 			Hostname = hostname;
 			BootId = bootId;
-			Vendors = vendors
-				.Where(vendor => vendor != null)
-				.ToDictionary(vendor => vendor.VendorName, vendor => vendor);
-
+			Vendors = vendors;
+				
 			Config = utilitizationConfig;
 		}
 

@@ -5,26 +5,26 @@ namespace NewRelic.Agent.Core.Utilization
 {
 	public class AwsVendorModel : IVendorModel
 	{
-		private readonly String _id;
-		private readonly String _type;
-		private readonly String _zone;
+		private readonly String _availabilityZone;
+		private readonly String _instanceId;
+		private readonly String _instanceType;
 
-		public AwsVendorModel(String id, String type, String zone)
+		public AwsVendorModel(String availabilityZone, String instanceId, String instanceType)
 		{
-			_id = id;
-			_type = type;
-			_zone = zone;
+			_availabilityZone = availabilityZone;
+			_instanceId = instanceId;
+			_instanceType = instanceType;
 		}
 
 		public String VendorName { get { return "aws"; } }
 
-		[JsonProperty("id")]
-		public String Id { get { return _id; } }
+		[JsonProperty("availabilityZone", NullValueHandling = NullValueHandling.Ignore)]
+		public String AvailabilityZone { get { return _availabilityZone; } }
 
-		[JsonProperty("type")]
-		public String Type { get { return _type; } }
+		[JsonProperty("instanceId", NullValueHandling = NullValueHandling.Ignore)]
+		public String InstanceId { get { return _instanceId; } }
 
-		[JsonProperty("zone")]
-		public String Zone { get { return _zone; } }
+		[JsonProperty("instanceType", NullValueHandling = NullValueHandling.Ignore)]
+		public String InstanceType { get { return _instanceType; } }
 	}
 }

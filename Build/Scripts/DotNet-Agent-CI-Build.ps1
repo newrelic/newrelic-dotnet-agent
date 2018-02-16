@@ -43,6 +43,25 @@ foreach ($applicationFull in $applicationsFull.Keys) {
     }
 }
 
+pushd "Build"
+
+Invoke-Expression "& .\package.ps1 NugetAzureWebsites -configuration Release -platform x64 -pushNugetPackage"
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
+Invoke-Expression "& .\package.ps1 NugetAzureWebsites -configuration Release -platform x86 -pushNugetPackage"
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
+Invoke-Expression "& .\package.ps1 AzureSiteExtension -version 1.0.0"
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
+popd
+
 $agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\Agent\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").Version.ToString()
 
 ###############

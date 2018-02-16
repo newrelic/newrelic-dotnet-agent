@@ -52,5 +52,10 @@ namespace NewRelic.Agent.Core.WireModels
 
 		MetricWireModel TryBuildLinuxOsMetric(bool isLinux);
 		MetricWireModel TryBuildBootIdError();
+
+		MetricWireModel TryBuildAwsUsabilityError();
+		MetricWireModel TryBuildAzureUsabilityError();
+		MetricWireModel TryBuildPcfUsabilityError();
+		MetricWireModel TryBuildGcpUsabilityError();
 	}
 }

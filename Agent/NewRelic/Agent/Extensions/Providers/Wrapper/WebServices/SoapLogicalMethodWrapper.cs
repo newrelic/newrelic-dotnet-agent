@@ -34,9 +34,22 @@ namespace NewRelic.Providers.Wrapper.WebServices
 			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
 			return Delegates.GetDelegateFor(
-				onFailure: ex => transaction.NoticeError(ex),
+				onFailure: OnFailure,
 				onComplete: segment.End
 				);
+
+			void OnFailure(Exception ex)
+			{
+				if (ex is System.Reflection.TargetInvocationException && ex.InnerException != null)
+				{
+					ex = ex.InnerException;
+				}
+
+				if (ex != null)
+				{
+					transaction.NoticeError(ex);
+				}
+			}
 		}
 	}
 }

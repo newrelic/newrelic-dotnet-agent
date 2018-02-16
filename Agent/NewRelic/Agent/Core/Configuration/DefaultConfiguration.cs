@@ -537,6 +537,9 @@ namespace NewRelic.Agent.Core.Configuration
 		public virtual String EncodingKey { get { return _serverConfiguration.EncodingKey; } }
 
 		public virtual Boolean HighSecurityModeEnabled { get { return _localConfiguration.highSecurity.enabled; } }
+
+		// When/if a config flag for liveInstrumentation is introduced with LASP, replace 'true' below with the value from _localConfiguration (e.g. _localConfiguration.liveInstrumentation.enabled).
+		public virtual Boolean LiveInstrumentationAllowed { get { return HighSecurityModeOverrides(false, true); } }
 		public virtual Int32 InstrumentationLevel { get { return ServerOverrides(_serverConfiguration.RpmConfig.InstrumentationLevel, 3); } }
 		public virtual Boolean InstrumentationLoggingEnabled { get { return _localConfiguration.instrumentation.log; } }
 
@@ -827,31 +830,26 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#region Utilization
 
-		// Not currently used.
 		public bool UtilizationDetectAws
 		{
 			get { return _localConfiguration.utilization.detectAws; }
 		}
 
-		// Not currently used.
 		public bool UtilizationDetectAzure
 		{
 			get { return _localConfiguration.utilization.detectAzure; }
 		}
 
-		// Not currently used.
 		public bool UtilizationDetectGcp
 		{
 			get { return _localConfiguration.utilization.detectGcp; }
 		}
 
-		// Not currently used.
 		public bool UtilizationDetectPcf
 		{
 			get { return _localConfiguration.utilization.detectPcf; }
 		}
 
-		// Not currently used.
 		public bool UtilizationDetectDocker
 		{
 			get { return _localConfiguration.utilization.detectDocker; }

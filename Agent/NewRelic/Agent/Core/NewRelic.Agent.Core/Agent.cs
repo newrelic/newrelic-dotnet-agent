@@ -88,6 +88,8 @@ namespace NewRelic.Agent.Core
 
 		public ThreadProfilingService ThreadProfilingService { get; private set; }
 
+		public InstrumentationWatcher InstrumentationWatcher { get; private set; }
+
 		[NotNull]
 		private readonly IWrapperService _wrapperService;
 
@@ -121,7 +123,11 @@ namespace NewRelic.Agent.Core
 
 			// Resolve all services once we've ensured that the agent is enabled
 			_wrapperService = _container.Resolve<IWrapperService>();
+
 			AgentServices.StartServices(_container);
+
+			InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
+
 			AgentApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
 
 			Initialize();
@@ -158,7 +164,7 @@ namespace NewRelic.Agent.Core
 
 			StartServices();
 			LogInitialized();
-			 
+
 			_agentState = AgentStateHelper.Transition(_agentState, AgentState.Started);
 		}
 
@@ -181,6 +187,7 @@ namespace NewRelic.Agent.Core
 		private void StartServices()
 		{
 			ThreadProfilingService.Start(this);
+			InstrumentationWatcher.Start();
 		}
 
 		private void StopServices()

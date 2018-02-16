@@ -1654,5 +1654,74 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		}
 
 		#endregion CrossApplicationTracingEnabled
+
+		#region Utilization
+
+		[Test]
+		public void Property_UtilizationDetectAws_IsTrueByDefault()
+		{
+			Assert.IsTrue(_defaultConfig.UtilizationDetectAws);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectAzure_IsTrueByDefault()
+		{
+			Assert.IsTrue(_defaultConfig.UtilizationDetectAzure);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectPcf_IsTrueByDefualt()
+		{
+			Assert.IsTrue(_defaultConfig.UtilizationDetectPcf);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectGcp_IsTrueByDefault()
+		{
+			Assert.IsTrue(_defaultConfig.UtilizationDetectGcp);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectDocker_IsTrueByDefault()
+		{
+			Assert.IsTrue(_defaultConfig.UtilizationDetectDocker);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectAws_IsSetToFalse()
+		{
+			_localConfig.utilization.detectAws = false;
+			Assert.IsFalse(_defaultConfig.UtilizationDetectAws);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectAzure_IsSetToFalse()
+		{
+			_localConfig.utilization.detectAzure = false;
+			Assert.IsFalse(_defaultConfig.UtilizationDetectAzure);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectPcf_IsSetToFalse()
+		{
+			_localConfig.utilization.detectPcf = false;
+			Assert.IsFalse(_defaultConfig.UtilizationDetectPcf);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectGcp_IsSetToFalse()
+		{
+			_localConfig.utilization.detectGcp = false;
+			Assert.IsFalse(_defaultConfig.UtilizationDetectGcp);
+		}
+
+		[Test]
+		public void Property_UtilizationDetectDocker_IsSetToFalse()
+		{
+			_localConfig.utilization.detectDocker = false;
+			Assert.IsFalse(_defaultConfig.UtilizationDetectDocker);
+		}
+
+		#endregion
 	}
 }

@@ -88,6 +88,7 @@ namespace NewRelic.Agent.Configuration
 		IEnumerable<String> ExceptionsToIgnore { get; }
 		String EncodingKey { get; }
 		Boolean HighSecurityModeEnabled { get; }
+		Boolean LiveInstrumentationAllowed { get; }
 		Boolean InstanceReportingEnabled { get; }
 		Int32 InstrumentationLevel { get; }
 		Boolean InstrumentationLoggingEnabled { get; }

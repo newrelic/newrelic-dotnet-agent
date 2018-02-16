@@ -1,14 +1,11 @@
 using System;
 using System.IO;
-using System.Threading;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
-using NewRelic.Agent.Core.Utilities;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Events;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Config
 {
@@ -16,31 +13,35 @@ namespace NewRelic.Agent.Core.Config
 	/// <summary>
 	/// 
 	/// </summary>
-	public class InstrumentationWatcher : IDisposable
+	public class InstrumentationWatcher : ConfigurationBasedService
 	{
 		private const int RequestRejitDelayMilliseconds = 15000;
 
 		private readonly FileSystemWatcher _watcher;
 		private readonly INativeMethods _nativeMethods;
 		private readonly IWrapperService _wrapperService;
-		[NotNull]
-		private readonly Subscriptions _subscriptions = new Subscriptions();
 
 		private readonly SignalableAction _action;
 
 		public InstrumentationWatcher(INativeMethods nativeMethods, IWrapperService wrapperService)
 		{
-			if (AgentInstallConfiguration.HomeExtensionsDirectory == null)
-				return;
-
 			_nativeMethods = nativeMethods;
 			_wrapperService = wrapperService;
-			_subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
-
 			_action = new SignalableAction(RequestRejit, RequestRejitDelayMilliseconds);
+			_watcher = new FileSystemWatcher();
+			_subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
+		}
+
+		public void Start()
+		{
+			if (AgentInstallConfiguration.HomeExtensionsDirectory == null)
+			{
+				Log.WarnFormat("Live instrumentation updates due to instrumentation file changes will not be applied because HomeExtensionsDirectory is null.");
+				return;
+			}
+
 			_action.Start();
 
-			_watcher = new FileSystemWatcher();
 			_watcher.Path = AgentInstallConfiguration.HomeExtensionsDirectory;
 			_watcher.Filter = "*.xml";
 			_watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
@@ -71,37 +72,50 @@ namespace NewRelic.Agent.Core.Config
 			_action.Signal();
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			_action?.Dispose();
 			_watcher?.Dispose();
+
+			base.Dispose();
+		}
+
+		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+		{
+			// This implementation only exists to satisfy the derivation from ConfigurationBasedService, which exists for access to
+			// to the liveInstrumentation configuration option, which is influenced by the highSecurity configuration.
 		}
 
 		private void OnServerConfigurationUpdated([NotNull] ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
 		{
-			try
+			var instrumentation = serverConfigurationUpdatedEvent.Configuration.Instrumentation;
+
+			if (instrumentation != null && !instrumentation.IsEmpty())
 			{
-				bool receivedInstrumentation = false;
-				var instrumentation = serverConfigurationUpdatedEvent.Configuration.Instrumentation;
-				if (instrumentation != null)
+				if (_configuration.LiveInstrumentationAllowed)
 				{
-					foreach (var instrumentationSet in instrumentation)
+					try
 					{
-						receivedInstrumentation = true;
-						_nativeMethods.AddCustomInstrumentation(instrumentationSet.Name, instrumentationSet.Config);
+						foreach (var instrumentationSet in instrumentation)
+						{
+							_nativeMethods.AddCustomInstrumentation(instrumentationSet.Name, instrumentationSet.Config);
+						}
+
+						Log.InfoFormat("Applying live instrumentation");
+
+						// We want to apply custom instrumentation regardless of whether or not any was received on
+						// this connect because we may have received instrumentation on a previous connect.
+						_nativeMethods.ApplyCustomInstrumentation();
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex);
 					}
 				}
-				if (receivedInstrumentation)
+				else
 				{
-					Log.InfoFormat("Applying live instrumentation");
+					Log.WarnFormat("Live instrumentation received from server not applied due to configuration.");
 				}
-				// We want to apply custom instrumentation regardless of whether or not any was received on
-				// this connect because we may have received instrumentation on a previous connect.
-				_nativeMethods.ApplyCustomInstrumentation();
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
 			}
 		}
 	}

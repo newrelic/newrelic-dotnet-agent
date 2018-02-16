@@ -108,17 +108,9 @@ namespace NewRelic.Parsing
 
 				return _statementParser(datastoreVendor, commandType, commandText, statement);
 			} 
-			catch//
+			catch
 			{
-				// TODO: Add Wrapper logging
-				// Obfuscating SQL is expensive so only do it if we are actually going to write the log line
-				//if (!Log.IsFinestEnabled)
-				//{
-				//	var obfuscatedSQL = SqlObfuscator.GetObfuscatingSqlObfuscator().GetObfuscatedSql(commandText).Trim();
-				//	Log.FinestFormat("Unable to parse SQL, possibly due to a syntax error in the SQL. " + "Command text: \"{0}\". Error: {1}", obfuscatedSQL, e);
-				//	Log.Finest("SQL parsing error", e);
-				//}
-				return null;
+				return new ParsedSqlStatement(datastoreVendor, null, null);
 			}
 		}
 		
@@ -186,7 +178,7 @@ namespace NewRelic.Parsing
 					var parsedStatement = parser(datastoreVendor, commandType, commandText, statement);
 					if (parsedStatement != null) return parsedStatement;
 				}
-				return null;
+				return new ParsedSqlStatement(datastoreVendor, null, null);
 			};
 		}
 		
@@ -404,8 +396,6 @@ namespace NewRelic.Parsing
 			"Xml",
 			"Guid",
 		};
-
-		public static readonly ParsedSqlStatement NullStatement = new ParsedSqlStatement(DatastoreVendor.Other, null, null);
 
 		private static String QuoteString(String str)
 		{

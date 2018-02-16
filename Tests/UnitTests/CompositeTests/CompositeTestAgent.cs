@@ -21,19 +21,17 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.TestUtilities;
 using NewRelic.SystemInterfaces;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 using NewRelic.Agent.Core.CallStack;
 
 namespace CompositeTests
 {
-    /// <summary>
-    /// An agent used for composite tests that spins up almost all of the stack that the normal Agent spins up. Only a few outlying services are mocked (most notably, <see cref="DataTransportService"/>. Using this test agent in combination with the <see cref="AgentWrapperApi"/> allows us to write tests that cover a very broad stroke of the code base with very good performance (e.g. no/minimal disk activity).
-    /// </summary>
-    public class CompositeTestAgent
+	/// <summary>
+	/// An agent used for composite tests that spins up almost all of the stack that the normal Agent spins up. Only a few outlying services are mocked (most notably, <see cref="DataTransportService"/>. Using this test agent in combination with the <see cref="AgentWrapperApi"/> allows us to write tests that cover a very broad stroke of the code base with very good performance (e.g. no/minimal disk activity).
+	/// </summary>
+	public class CompositeTestAgent
 	{
 		[NotNull]
 		private readonly IContainer _container;
@@ -72,6 +70,10 @@ namespace CompositeTests
 
 		public IConfiguration CurrentConfiguration { get; private set; }
 
+		public NewRelic.Agent.Core.ThreadProfiling.INativeMethods NativeMethods { get; private set; }
+
+		public InstrumentationWatcher InstrumentationWatcher { get; private set; }
+
 		private readonly bool _shouldAllowThreads;
 
 
@@ -95,6 +97,7 @@ namespace CompositeTests
 			var mockEnvironment = Mock.Create<IEnvironment>();
 			var dataTransportService = Mock.Create<IDataTransportService>();
 			var scheduler = Mock.Create<IScheduler>();
+			NativeMethods = Mock.Create<NewRelic.Agent.Core.ThreadProfiling.INativeMethods>();
 			_harvestActions = new List<Action>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestActions.Add(action));
@@ -119,13 +122,16 @@ namespace CompositeTests
 			_container.ReplaceRegistration(wrappers);
 			_container.ReplaceRegistration(dataTransportService);
 			_container.ReplaceRegistration(scheduler);
-
+			_container.ReplaceRegistration(NativeMethods);
+			
 			if (!_shouldAllowThreads)
 			{
 				_container.ReplaceRegistration(threadPoolStatic);
 			}
 
 			_container.ReplaceRegistration(configurationManagerStatic);
+
+			InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
 			AgentServices.StartServices(_container);
 
 			DisableAgentInitializer();
@@ -134,6 +140,7 @@ namespace CompositeTests
 			// Update configuration (will also start services)
 			LocalConfiguration = GetDefaultTestLocalConfiguration();
 			ServerConfiguration = GetDefaultTestServerConfiguration();
+			InstrumentationWatcher.Start();
 			PushConfiguration();
 
 			// Redirect the mock DataTransportService to capture harvested wire models

@@ -644,6 +644,35 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
+			public MetricWireModel TryBuildAwsUsabilityError()
+			{
+				var proposedName = MetricNames.GetSupportabilityAwsUsabilityError();
+				var data = MetricDataWireModel.BuildAwsUsabilityError();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+			public MetricWireModel TryBuildAzureUsabilityError()
+			{
+				var proposedName = MetricNames.GetSupportabilityAzureUsabilityError();
+				var data = MetricDataWireModel.BuildAzureUsabilityError();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+			public MetricWireModel TryBuildPcfUsabilityError()
+			{
+				var proposedName = MetricNames.GetSupportabilityPcfUsabilityError();
+				var data = MetricDataWireModel.BuildPcfUsabilityError();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+			public MetricWireModel TryBuildGcpUsabilityError()
+			{
+				var proposedName = MetricNames.GetSupportabilityGcpUsabilityError();
+				var data = MetricDataWireModel.BuildGcpUsabilityError();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+
 			#endregion Supportability builders
 		}
 	}
@@ -846,6 +875,26 @@ namespace NewRelic.Agent.Core.WireModels
 		}
 
 		public static MetricDataWireModel BuildBootIdError()
+		{
+			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
+		}
+
+		public static MetricDataWireModel BuildAwsUsabilityError()
+		{
+			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
+		}
+
+		public static MetricDataWireModel BuildAzureUsabilityError()
+		{
+			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
+		}
+
+		public static MetricDataWireModel BuildPcfUsabilityError()
+		{
+			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
+		}
+
+		public static MetricDataWireModel BuildGcpUsabilityError()
 		{
 			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
 		}

@@ -14,12 +14,6 @@ namespace NewRelic.Agent.Core.Utilization
 {
 	public class UtilizationStore
 	{
-		// AWS metadata accessor URIs
-		private const string AwsVendorName = @"aws";
-		private const string AwsIdUri = @"http://169.254.169.254/2008-02-01/meta-data/instance-id";
-		private const string AwsTypeUri = @"http://169.254.169.254/2008-02-01/meta-data/instance-type";
-		private const string AwsZoneUri = @"http://169.254.169.254/2008-02-01/meta-data/placement/availability-zone";
-
 		[NotNull]
 		private readonly ISystemInfo _systemInfo;
 
@@ -69,53 +63,10 @@ namespace NewRelic.Agent.Core.Utilization
 		}
 
 		[NotNull]
-		public IEnumerable<IVendorModel> GetVendorSettings()
+		public IDictionary<string, IVendorModel> GetVendorSettings()
 		{
-			return new[] {GetAwsVendorInfo()}
-				.Where(vendor => vendor != null);
-		}
-
-		[CanBeNull]
-		public IVendorModel GetAwsVendorInfo()
-		{
-			var awsId = GetHttpResponseString(AwsIdUri, AwsVendorName);
-			if (awsId == null)
-				return null;
-
-			return new AwsVendorModel(awsId, GetHttpResponseString(AwsTypeUri, AwsVendorName), GetHttpResponseString(AwsZoneUri, AwsVendorName));
-		}
-
-		[CanBeNull]
-		private string GetHttpResponseString([NotNull] string uri, [NotNull] string vendorName)
-		{
-			try
-			{
-				var request = WebRequest.Create(uri);
-				request.Timeout = (int) TimeSpan.FromSeconds(1).TotalMilliseconds;
-				request.Method = "GET";
-				using (var response = request.GetResponse() as HttpWebResponse)
-				{
-					if (response == null)
-						return null;
-
-					var stream = response.GetResponseStream();
-					if (stream == null)
-						return null;
-
-					var reader = new StreamReader(stream);
-					return NormalizeString(reader.ReadToEnd());
-				}
-			}
-			catch
-			{
-				return null;
-			}
-		}
-
-		[NotNull]
-		private string NormalizeString([NotNull] string data)
-		{
-			return Clamper.ClampLength(data.Trim(), 255);
+			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			return vendorInfo.GetVendors();	
 		}
 
 		[CanBeNull]
