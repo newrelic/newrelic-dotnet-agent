@@ -9,7 +9,6 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -186,7 +185,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 															customErrorData: errorData,
 															uri: "http://www.newrelic.com/test?param=value",
 															referrerUri: "http://referrer.uri",
-															includeServiceRequest: true,
 															includeUserAttributes: true);
 
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -284,7 +282,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		[NotNull]
-		private static ITransaction BuildTestTransaction(Boolean isWebTransaction = true, String uri = null, String referrerUri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, Boolean includeServiceRequest = false, Boolean includeUserAttributes = false)
+		private static ITransaction BuildTestTransaction(Boolean isWebTransaction = true, String uri = null, String referrerUri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, Boolean includeUserAttributes = false)
 		{
 			var name = isWebTransaction
 				? new WebTransactionName(transactionCategory, transactionName)
@@ -298,12 +296,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
 			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
 			var transactionMetadata = internalTransaction.TransactionMetadata;
-			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeServiceRequest, includeUserAttributes);
+			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
 			return internalTransaction;
 		}
 
-		private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, String referrerUri = null, Boolean includeServiceRequest = false, Boolean includeUserAttributes = false)
+		private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, String referrerUri = null, Boolean includeUserAttributes = false)
 		{
 			if (uri != null)
 				metadata.SetUri(uri);
@@ -319,8 +317,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				metadata.AddCustomErrorData((ErrorData)customErrorData);
 			if (referrerUri != null)
 				metadata.SetReferrerUri(referrerUri);
-			if (includeServiceRequest)
-				metadata.AddServiceParameter("service.request", "service.request.string");
 			if (isCAT)
 			{
 				metadata.SetCrossApplicationReferrerProcessId("cross application process id");

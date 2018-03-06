@@ -275,7 +275,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.SetHttpResponseStatusCode(400, null);
@@ -308,7 +307,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(32, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -327,7 +326,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
 				() => Assert.AreEqual("requestParameterValue", transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual("serviceRequestValue", transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual("referrerProcessId", transactionAttributes["client_cross_process_id"]),
 				() => Assert.AreEqual("referrerTripId", transactionAttributes["trip_id"]),
@@ -356,7 +354,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.SetHttpResponseStatusCode(400, null);
@@ -386,7 +383,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var tripId = immutableTransaction.Guid;
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(29, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(28, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -405,7 +402,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
 				() => Assert.AreEqual("requestParameterValue", transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual("serviceRequestValue", transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(tripId, transactionAttributes["trip_id"]),
 				() => Assert.AreEqual(tripId, transactionAttributes["nr.tripId"]),
@@ -463,7 +459,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -495,7 +490,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["name"]),
@@ -522,7 +517,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["response.status"]),
 				() => Assert.AreEqual(AttributeDestinations.None, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeDestinations.None, transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual(AttributeDestinations.All, transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace, transactionAttributes["userErrorAttributeKey"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.class"]),
@@ -544,7 +538,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -577,7 +570,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
@@ -596,7 +589,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["response.status"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userErrorAttributeKey"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["client_cross_process_id"]),
@@ -626,7 +618,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -660,7 +651,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
@@ -680,7 +671,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["response.status"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userErrorAttributeKey"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["client_cross_process_id"]),
@@ -737,7 +727,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -771,26 +760,24 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(9, builderAttributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(8, builderAttributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("originalUri", txBuilderAttributes["original_url"]),
 				() => Assert.AreEqual("uri", transactionAttributes["request_uri"]),
 				() => Assert.AreEqual("referrerUri", txBuilderAttributes["request.referer"]),
 				() => Assert.AreEqual("1000", txBuilderAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", txBuilderAttributes["response.status"]),
 				() => Assert.AreEqual("requestParameterValue", txBuilderAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual("serviceRequestValue", txBuilderAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual("userAttributeValue", txBuilderAttributes["userAttributeKey"]),
 				() => Assert.AreEqual("userErrorAttributeValue", txBuilderAttributes["userErrorAttributeKey"])
 			);
 			NrAssert.Multiple(
-				() => Assert.AreEqual(9, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
 				() => Assert.AreEqual("uri", transactionAttributes["request_uri"]),
 				() => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
 				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
 				() => Assert.AreEqual("requestParameterValue", transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual("serviceRequestValue", transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual("userErrorAttributeValue", transactionAttributes["userErrorAttributeKey"])
 			);
@@ -839,7 +826,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -872,26 +858,24 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(9, builderAttributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(8, builderAttributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["original_url"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, txBuilderAttributes["request_uri"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["response.status"]),
 				() => Assert.AreEqual(AttributeDestinations.None, txBuilderAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeDestinations.None, txBuilderAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual(AttributeDestinations.All, txBuilderAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace, txBuilderAttributes["userErrorAttributeKey"])
 			);
 			NrAssert.Multiple(
-				() => Assert.AreEqual(9, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["original_url"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, txBuilderAttributes["request_uri"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["response.status"]),
 				() => Assert.AreEqual(AttributeDestinations.None, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeDestinations.None, transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual(AttributeDestinations.All, transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace, transactionAttributes["userErrorAttributeKey"])
 			);
@@ -906,7 +890,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			transaction.TransactionMetadata.AddServiceParameter("serviceRequestKey", "serviceRequestValue");
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -939,26 +922,24 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(9, builderAttributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(8, builderAttributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["original_url"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["request_uri"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["response.status"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, txBuilderAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, txBuilderAttributes["userErrorAttributeKey"])
 			);
 			NrAssert.Multiple(
-				() => Assert.AreEqual(9, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["original_url"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request_uri"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["response.status"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["service.request.serviceRequestKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userAttributeKey"]),
 				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userErrorAttributeKey"])
 			);

@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		private string GetStrippedErrorMessage(string errorMessage)
 		{
-			if (_configurationService.Configuration.HighSecurityModeEnabled)
+			if (_configurationService.Configuration.StripExceptionMessages)
 			{
 				return null;
 			}

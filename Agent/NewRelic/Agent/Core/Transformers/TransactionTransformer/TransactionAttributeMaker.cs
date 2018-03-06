@@ -144,12 +144,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				attributes.Add(rpa);
 			}
 
-			foreach(var svcParam in metadata.ServiceParameters)
-			{
-				var sra = Attribute.BuildServiceRequestAttribute(svcParam.Key, svcParam.Value);
-				attributes.Add(sra);
-			}
-
 			foreach(var userAttr in metadata.UserAttributes)
 			{
 				var ca = Attribute.BuildCustomAttribute(userAttr.Key, userAttr.Value);

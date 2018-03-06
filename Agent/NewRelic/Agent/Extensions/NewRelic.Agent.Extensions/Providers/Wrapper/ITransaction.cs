@@ -227,9 +227,8 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// Set the request parameters for the current transaction (if there is one). If duplicate keys are used, or if this method is called twice with the same keys, it is undefined whether or not the new values will override the old values for those duplicate keys.
 		/// </summary>
 		/// <param name="parameters">The request parameters for this transaction. Must not be null.</param>
-		/// <param name="bucket">The bucket to put the request parameters in.  This controls filtering and UI grouping.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void SetRequestParameters([NotNull] IEnumerable<KeyValuePair<string, string>> parameters, RequestParameterBucket bucket);
+		void SetRequestParameters([NotNull] IEnumerable<KeyValuePair<string, string>> parameters);
 
 		/// <summary>
 		/// Saves and returns the value of evaluating func to a cache. func is only evaluated if the key does not yet exist in the cache.

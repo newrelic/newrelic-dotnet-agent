@@ -59,7 +59,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 			transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
 			transaction.SetWebTransactionName(WebTransactionType.WCF, name, 6);
-			transaction.SetRequestParameters(parameters, RequestParameterBucket.ServiceRequest);
+			transaction.SetRequestParameters(parameters);
 			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
 			return Delegates.GetDelegateFor(

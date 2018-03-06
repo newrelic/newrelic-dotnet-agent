@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using JetBrains.Annotations;
+﻿using NUnit.Framework;
 using NewRelic.Agent.Configuration;
 using Telerik.JustMock;
+
 
 namespace NewRelic.Agent.Core.DataTransport
 {
 	[TestFixture]
 	public class ConnectionInfoTests
     {
-	    [Test]
+		[Test]
 	    public void check_for_connectioninfo_proxy_uripath()
 	    {
 		    var configuration = Mock.Create<IConfiguration>();

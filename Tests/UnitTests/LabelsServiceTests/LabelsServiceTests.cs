@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent;
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
@@ -53,7 +51,7 @@ namespace Tests.NewRelic.Agent
 			}
 		}
 
-		public static IEnumerable<TestCase[]> CrossAgentTestCases
+		public static IEnumerable<TestCase> CrossAgentTestCases
 		{
 			get
 			{
@@ -261,11 +259,11 @@ namespace Tests.NewRelic.Agent
 				Assert.NotNull(testCases);
 				return testCases
 					.Where(testCase => testCase != null)
-					.Select(testCase => new[] {testCase});
+					.ToArray();
 			}
 		}
 
-		[TestCaseSource(typeof(LabelsServiceTests), "CrossAgentTestCases")]
+		[TestCaseSource(nameof(CrossAgentTestCases))]
 		public void cross_agent_tests(TestCase testCase)
 		{
 			var logAppender = new log4net.Appender.MemoryAppender();

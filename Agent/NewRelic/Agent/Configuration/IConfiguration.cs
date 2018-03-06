@@ -63,7 +63,6 @@ namespace NewRelic.Agent.Configuration
 		[NotNull]
 		String CollectorHost { get; }
 		[NotNull]
-		String CollectorHttpProtocol { get; }
 		UInt32 CollectorPort { get; }
 		Boolean CollectorSendDataOnExit { get; }
 		Single CollectorSendDataOnExitThreshold { get; }
@@ -88,7 +87,8 @@ namespace NewRelic.Agent.Configuration
 		IEnumerable<String> ExceptionsToIgnore { get; }
 		String EncodingKey { get; }
 		Boolean HighSecurityModeEnabled { get; }
-		Boolean LiveInstrumentationAllowed { get; }
+		Boolean LiveInstrumentationEnabled { get; }
+		Boolean StripExceptionMessages { get; }
 		Boolean InstanceReportingEnabled { get; }
 		Int32 InstrumentationLevel { get; }
 		Boolean InstrumentationLoggingEnabled { get; }

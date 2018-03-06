@@ -127,14 +127,6 @@ namespace NewRelic.Agent.Core.Transactions
 		}
 
 		[NotNull]
-		public static Attribute BuildServiceRequestAttribute([NotNull] string key, [NotNull] string value)
-		{
-			key = TruncateUserProvidedValue("service.request." + key);
-			value = TruncateUserProvidedValue(value);
-			return new Attribute(key, value, true, AttributeClassification.AgentAttributes, AttributeDestinations.None);
-		}
-
-		[NotNull]
 		public static Attribute BuildResponseStatusAttribute([NotNull] String value)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;

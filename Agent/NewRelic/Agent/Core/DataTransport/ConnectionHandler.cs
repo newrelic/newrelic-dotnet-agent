@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 			try
 			{
-				_connectionInfo = SendRedirectHostRequest();
+				_connectionInfo = SendPreconnect();
 				var serverConfiguration = SendConnectRequest();
 				EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(serverConfiguration));
 				_dataRequestWire = _collectorWireFactory.GetCollectorWire(_configuration);
@@ -124,10 +124,10 @@ namespace NewRelic.Agent.Core.DataTransport
 		#region Connect helper methods
 
 		[NotNull]
-		private ConnectionInfo SendRedirectHostRequest()
+		private ConnectionInfo SendPreconnect()
 		{
 			_connectionInfo = new ConnectionInfo(_configuration);
-			var redirectHost = SendNonDataRequest<String>("get_redirect_host");
+			var redirectHost = SendNonDataRequest<String>("preconnect");
 			return new ConnectionInfo(_configuration, redirectHost);
 		}
 

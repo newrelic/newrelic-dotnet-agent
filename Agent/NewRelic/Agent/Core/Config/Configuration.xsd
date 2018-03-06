@@ -93,7 +93,7 @@
 							</xs:annotation>
 						</xs:attribute>
 
-						<xs:attribute name="host" type="xs:string" default="collector.newrelic.com">
+						<xs:attribute name="host" type="xs:string" use="optional">
 							<xs:annotation>
 								<xs:documentation>
 									The name of the collector host within newrelic.com where the agent is to send its data.
@@ -105,16 +105,6 @@
 							<xs:annotation>
 								<xs:documentation>
 									The port number on the collector host to talk to.
-								</xs:documentation>
-							</xs:annotation>
-						</xs:attribute>
-
-						<xs:attribute name="ssl" type="xs:boolean" default="true">
-							<xs:annotation>
-								<xs:documentation>
-									The agent communicates with the New Relic service via http by default.
-									If you want to communicate via https to increase security, then turn on SSL by setting this value to true.
-									Note, this will result in increased CPU overhead to perform the encryption involved in SSL communication, but this work is done asynchronously to the threads that process your application code, so it should not impact response times.
 								</xs:documentation>
 							</xs:annotation>
 						</xs:attribute>
@@ -478,34 +468,6 @@
 									</xs:attribute>
 								</xs:complexType>
 							</xs:element>
-								
-								<xs:element name="serviceRequestParameters" minOccurs="0" maxOccurs="1">
-										<xs:annotation>
-												<xs:documentation>
-														Deprecated: The serviceRequestParameters element tells the transaction tracer and the error collector whether or not to capture service request parameters sent.
-												</xs:documentation>
-										</xs:annotation>
-
-										<xs:complexType>
-												<xs:sequence minOccurs="0" maxOccurs="unbounded">
-														<xs:element name="ignore" type="xs:string">
-																<xs:annotation>
-																		<xs:documentation>
-																				Deprecated: The name of a specific service request parameter to not capture.
-																		</xs:documentation>
-																</xs:annotation>
-														</xs:element>
-												</xs:sequence>
-												<xs:attribute name="enabled" type="xs:boolean" use="optional">
-														<xs:annotation>
-																<xs:documentation>
-																		Deprecated: Turns on service request parameter capturing for the Transaction Tracer and Error Collector features.
-																		Default is false.
-																</xs:documentation>
-														</xs:annotation>
-												</xs:attribute>
-										</xs:complexType>
-								</xs:element>
 								
 						</xs:all>
 					</xs:complexType>
@@ -931,6 +893,42 @@
 					<xs:annotation>
 						<xs:documentation>
 							Turns on/off High Security Mode.
+						</xs:documentation>
+					</xs:annotation>
+
+					<xs:complexType>
+						<xs:attribute name="enabled" type="xs:boolean" default="false">
+							<xs:annotation>
+								<xs:documentation>
+									It is disabled by default.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+
+				<xs:element name="liveInstrumentation" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>
+							Turns on/off allowing live/remote instrumentation from the server.
+						</xs:documentation>
+					</xs:annotation>
+
+					<xs:complexType>
+						<xs:attribute name="enabled" type="xs:boolean" default="true">
+							<xs:annotation>
+								<xs:documentation>
+									It is enabled by default.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+
+				<xs:element name="stripExceptionMessages" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>
+							Enables/Disables the stripping of error messages for errors sent to APM.
 						</xs:documentation>
 					</xs:annotation>
 

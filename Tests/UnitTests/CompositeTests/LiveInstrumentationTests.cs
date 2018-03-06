@@ -42,5 +42,14 @@ namespace CompositeTests
 
 			Mock.Assert(() => _compositeTestAgent.NativeMethods.ApplyCustomInstrumentation(), Occurs.Never());
 		}
+
+		[Test]
+		public void LiveInstrumentation_Disabled_NotApplied()
+		{
+			_compositeTestAgent.LocalConfiguration.liveInstrumentation.enabled = false;
+			_compositeTestAgent.PushConfiguration();
+
+			Mock.Assert(() => _compositeTestAgent.NativeMethods.ApplyCustomInstrumentation(), Occurs.Never());
+		}
 	}
 }

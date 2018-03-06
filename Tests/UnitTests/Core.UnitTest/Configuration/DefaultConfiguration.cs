@@ -551,6 +551,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.HighSecurityModeEnabled;
 		}
 
+		[TestCase(true, true, ExpectedResult = false)]
+		[TestCase(true, false, ExpectedResult = false)]
+		[TestCase(false, false, ExpectedResult = false)]
+		[TestCase(false, true, ExpectedResult = true)]
+		public bool Property_LiveInstrumentation_HighSecurityOverrides(bool highSecurity, bool liveInstrumentation)
+		{
+			_localConfig.highSecurity.enabled = highSecurity;
+			_localConfig.liveInstrumentation.enabled = liveInstrumentation;
+
+			return _defaultConfig.LiveInstrumentationEnabled;
+		}
+
+		[TestCase(true, true, ExpectedResult = true)]
+		[TestCase(true, false, ExpectedResult = true)]
+		[TestCase(false, false, ExpectedResult = false)]
+		[TestCase(false, true, ExpectedResult = true)]
+		public bool Property_StripExceptionMessages_HighSecurityOverrides(bool highSecurity, bool stripErrorMessages)
+		{
+			_localConfig.highSecurity.enabled = highSecurity;
+			_localConfig.stripExceptionMessages.enabled = stripErrorMessages;
+
+			return _defaultConfig.StripExceptionMessages;
+		}
+
 		[Test]
 		public void Property_UseSsl_overridden_by_local_HighSecurity()
 		{
@@ -675,34 +699,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			Assert.IsFalse(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*"));
 		}
 
-		[TestCase(true, ExpectedResult = false)]
-		[TestCase(false, ExpectedResult = true)]
-		public Boolean Property_CaptureServiceRequestParameters_set_from_local(Boolean isEnabled)
-		{
-			_localConfig.parameterGroups.serviceRequestParameters.enabled = isEnabled;
-			return _defaultConfig.CaptureAttributesExcludes.Contains("service.request.*");
-		}
-
-		[Test]
-		public void Property_CaptureServiceRequestParameters_set_from_local_defaults_to_false()
-		{
-			Assert.IsTrue(_defaultConfig.CaptureAttributesDefaultExcludes.Contains("service.request.*"));
-		}
-
 		[Test]
 		public void Property_ResponseHeaderParametersToIgnore_set_from_local()
 		{
 			_localConfig.parameterGroups.responseHeaderParameters.ignore = new List<String>() {"local"};
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.local"));
-		}
-
-		[Test]
-		public void Property_ServiceRequestParametersToIgnore_set_from_local()
-		{
-			_localConfig.parameterGroups.serviceRequestParameters.ignore = new List<String>() {"local"};
-
-			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("service.request.local"));
 		}
 
 		[TestCase(new[] {"local"}, new[] {"server"}, ExpectedResult = "server")]
@@ -997,15 +999,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_localConfig.transactionEvents.attributes.enabledSpecified = false;
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.headers.foo"));
-		}
-
-		[Test]
-		public void Property_deprecated_ignore_serviceRequestParameters_value_becomes_exclude()
-		{
-			_localConfig.parameterGroups.serviceRequestParameters.ignore = new List<String>() {"foo"};
-			_localConfig.transactionEvents.attributes.enabledSpecified = false;
-
-			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("service.request.foo"));
 		}
 
 		[Test]

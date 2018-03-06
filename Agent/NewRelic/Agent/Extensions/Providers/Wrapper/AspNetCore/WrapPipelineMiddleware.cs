@@ -125,7 +125,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 					parameters.Add(keyValuePair.Key, keyValuePair.Value);
 				}
 
-				transaction.SetRequestParameters(parameters, RequestParameterBucket.RequestParameters);
+				transaction.SetRequestParameters(parameters);
 			}
 
 			return transaction;

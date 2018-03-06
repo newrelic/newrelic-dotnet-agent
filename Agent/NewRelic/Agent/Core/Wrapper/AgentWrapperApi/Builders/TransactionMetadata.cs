@@ -38,7 +38,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		void SetReferrerUri([NotNull] string uri);
 		void SetQueueTime(TimeSpan queueTime);
 		void AddRequestParameter([NotNull] string key, [NotNull] string value);
-		void AddServiceParameter([NotNull] string key, [NotNull] string value);
 		void AddUserAttribute([NotNull] string key, [NotNull] Object value);
 		void AddUserErrorAttribute([NotNull] string key, [NotNull] Object value);
 		void SetHttpResponseStatusCode(int statusCode, int? subStatusCode);
@@ -96,8 +95,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[NotNull]
 		private readonly IDictionary<string, string> _requestParameters = new ConcurrentDictionary<string, string>();
 		[NotNull]
-		private readonly IDictionary<string, string> _serviceParameters = new ConcurrentDictionary<string, string>();
-		[NotNull]
 		private readonly IDictionary<string, Object> _userAttributes = new ConcurrentDictionary<string, Object>();
 		[NotNull]
 		private readonly IDictionary<string, Object> _userErrorAttributes = new ConcurrentDictionary<string, Object>();
@@ -122,7 +119,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				.Except(new[] { _latestCrossApplicationPathHash })
 				.Take(PathHashMaker.AlternatePathHashMaxSize);
 
-			return new ImmutableTransactionMetadata(_uri, _originalUri, _path, _referrerUri, GetTimeSpan(), _requestParameters, _serviceParameters , _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders);
+			return new ImmutableTransactionMetadata(_uri, _originalUri, _path, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders);
 		}
 
 		public bool IsSynthetics
@@ -159,16 +156,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_timeSpanQueueTime = () => queueTime;
 		}
 
-
-
 		public void AddRequestParameter(string key, string value)
 		{
 			_requestParameters.Add(key, value);
-		}
-
-		public void AddServiceParameter(string key, string value)
-		{
-			_serviceParameters.Add(key, value);
 		}
 
 		public void AddUserAttribute(string key, Object value)
@@ -287,7 +277,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 
 		public IEnumerable<KeyValuePair<string, string>> RequestParameters => _requestParameters.ToList();
-		public IEnumerable<KeyValuePair<string, string>> ServiceParameters => _serviceParameters.ToList();
 		public IEnumerable<KeyValuePair<string, Object>> UserAttributes => _userAttributes.ToList();
 		public IEnumerable<KeyValuePair<string, Object>> UserErrorAttributes => _userErrorAttributes.ToList();
 

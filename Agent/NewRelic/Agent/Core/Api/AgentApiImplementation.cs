@@ -171,8 +171,7 @@ namespace NewRelic.Agent.Core.Api
 					if (exception == null)
 						throw new ArgumentNullException(nameof(exception));
 
-					var stripErrorMessage = _configurationService.Configuration.HighSecurityModeEnabled;
-					var errorData = ErrorData.FromException(exception, stripErrorMessage);
+					var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
 
 					var transaction = TryGetCurrentInternalTransaction();
 					if (transaction != null)
@@ -213,8 +212,7 @@ namespace NewRelic.Agent.Core.Api
 					if (exception == null)
 						throw new ArgumentNullException(nameof(exception));
 
-					var stripErrorMessage = _configurationService.Configuration.HighSecurityModeEnabled;
-					var errorData = ErrorData.FromException(exception, stripErrorMessage);
+					var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
 
 					var transaction = TryGetCurrentInternalTransaction();
 					if (transaction != null)
@@ -244,8 +242,7 @@ namespace NewRelic.Agent.Core.Api
 					if (message == null)
 						throw new ArgumentNullException(nameof(message));
 
-					var stripErrorMessage = _configurationService.Configuration.HighSecurityModeEnabled;
-					var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, stripErrorMessage);
+					var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, _configurationService.Configuration.StripExceptionMessages);
 
 					var transaction = TryGetCurrentInternalTransaction();
 					if (transaction != null)

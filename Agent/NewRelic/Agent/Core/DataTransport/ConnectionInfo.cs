@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 
@@ -25,11 +26,20 @@ namespace NewRelic.Agent.Core.DataTransport
 		[CanBeNull]
 		public readonly WebProxy Proxy;
 
+		[NotNull]
+		private static readonly Regex accountRegionRegex = new Regex("^.+?x");
+
 		public ConnectionInfo([NotNull] IConfiguration configuration)
+			: this(configuration, null)
 		{
-			Host = configuration.CollectorHost;
+
+		}
+
+		public ConnectionInfo([NotNull] IConfiguration configuration, [CanBeNull] string redirectHost)
+		{
+			Host = redirectHost ?? GetCollectorHost(configuration);
 			Port = configuration.CollectorPort;
-			HttpProtocol = configuration.CollectorHttpProtocol;
+			HttpProtocol = "https";
 			ProxyHost = configuration.ProxyHost;
 			ProxyUriPath = configuration.ProxyUriPath;
 			ProxyPort = configuration.ProxyPort;
@@ -40,19 +50,33 @@ namespace NewRelic.Agent.Core.DataTransport
 			Proxy = GetWebProxy(ProxyHost, ProxyUriPath, ProxyPort, ProxyUsername, ProxyPassword, ProxyDomain);
 		}
 
-		public ConnectionInfo([NotNull] IConfiguration configuration, [CanBeNull] String redirectHost)
+		[NotNull]
+		private static string GetCollectorHost([NotNull]IConfiguration configuration)
 		{
-			Host = redirectHost ?? configuration.CollectorHost;
-			Port = configuration.CollectorPort;
-			HttpProtocol = configuration.CollectorHttpProtocol;
-			ProxyHost = configuration.ProxyHost;
-			ProxyUriPath = configuration.ProxyUriPath;
-			ProxyPort = configuration.ProxyPort;
-			ProxyUsername = configuration.ProxyUsername;
-			ProxyPassword = configuration.ProxyPassword;
-			ProxyDomain = configuration.ProxyDomain;
+			const string defaultCollectorUrl = "collector.newrelic.com";
+			const string regionAwareDefaultCollectorUrl = "collector.nr-data.net";
+			const char domainSeparator = '.';
+			const char regionSeparator = 'x';
 
-			Proxy = GetWebProxy(ProxyHost, ProxyUriPath, ProxyPort, ProxyUsername, ProxyPassword, ProxyDomain);
+			if (!String.IsNullOrEmpty(configuration.CollectorHost))
+			{
+				return configuration.CollectorHost;
+			}
+
+			if ( configuration.AgentLicenseKey != null)
+			{
+				var match = accountRegionRegex.Match(configuration.AgentLicenseKey);
+
+				if (match.Success)
+				{
+					var regionSegment = match.Value.TrimEnd(regionSeparator);
+					var collectorUrlRegionStartPosition = regionAwareDefaultCollectorUrl.IndexOf(domainSeparator) + 1;
+					var regionAwareCollectorUrl = regionAwareDefaultCollectorUrl.Insert(collectorUrlRegionStartPosition, regionSegment + domainSeparator);
+					return regionAwareCollectorUrl;
+				}
+			}
+
+			return defaultCollectorUrl;
 		}
 
 		[CanBeNull]

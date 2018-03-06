@@ -95,7 +95,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
 			var metadata = new ImmutableTransactionMetadata("uri", "originalUri", "path", "referrerUri",
 			new TimeSpan(1), new ConcurrentDictionary<String, String>(),
-			new ConcurrentDictionary<String, String>(),
 			new ConcurrentDictionary<String, Object>(),
 			userErrorAttributes, 200,
 			201, new List<ErrorData>(),

@@ -23,6 +23,8 @@ namespace NewRelic.Agent.Core.Configuration
 	/// </summary>
 	public class DefaultConfiguration : IConfiguration
 	{
+		private const int DefaultSslPort = 443;
+
 		private static Int64 _currentConfigurationVersion;
 
 		[NotNull]
@@ -243,7 +245,7 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureAttributesDefaultExcludes, () => new HashSet<String> {"service.request.*", "identity.*"});
+				return Memoizer.Memoize(ref _captureAttributesDefaultExcludes, () => new HashSet<String> {"identity.*"});
 			}
 		}
 		private IEnumerable<String> _captureAttributesDefaultExcludes;
@@ -313,8 +315,6 @@ namespace NewRelic.Agent.Core.Configuration
 					var includes = new HashSet<String>(_localConfiguration.transactionTracer.attributes.include);
 					if (CaptureRequestParameters)
 						includes.Add("request.parameters.*");
-					if (DeprecatedCaptureServiceRequestParameters)
-						includes.Add("service.request.*");
 					if (DeprecatedCaptureIdentityParameters)
 						includes.Add("identity.*");
 					return includes;
@@ -360,8 +360,6 @@ namespace NewRelic.Agent.Core.Configuration
 					var includes = new HashSet<String>(_localConfiguration.errorCollector.attributes.include);
 					if (CaptureRequestParameters)
 						includes.Add("request.parameters.*");
-					if (DeprecatedCaptureServiceRequestParameters)
-						includes.Add("service.request.*");
 					if (DeprecatedCaptureIdentityParameters)
 						includes.Add("identity.*");
 					return includes;
@@ -451,8 +449,7 @@ namespace NewRelic.Agent.Core.Configuration
 		#region Collector Connection
 
 		public virtual String CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
-		public virtual String CollectorHttpProtocol { get { return (HighSecurityModeEnabled || _localConfiguration.service.ssl) ? "https" : "http"; } }
-		public virtual UInt32 CollectorPort { get { return (UInt32)(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : ((CollectorHttpProtocol == "https") ? 443 : 80)); } }
+		public virtual uint CollectorPort => (uint)(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : DefaultSslPort);
 		public virtual Boolean CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
 		public virtual Single CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
 		public virtual Boolean CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
@@ -537,9 +534,8 @@ namespace NewRelic.Agent.Core.Configuration
 		public virtual String EncodingKey { get { return _serverConfiguration.EncodingKey; } }
 
 		public virtual Boolean HighSecurityModeEnabled { get { return _localConfiguration.highSecurity.enabled; } }
-
-		// When/if a config flag for liveInstrumentation is introduced with LASP, replace 'true' below with the value from _localConfiguration (e.g. _localConfiguration.liveInstrumentation.enabled).
-		public virtual Boolean LiveInstrumentationAllowed { get { return HighSecurityModeOverrides(false, true); } }
+		public virtual Boolean LiveInstrumentationEnabled { get { return HighSecurityModeOverrides(false, _localConfiguration.liveInstrumentation.enabled); } }
+		public virtual Boolean StripExceptionMessages { get { return HighSecurityModeOverrides(true, _localConfiguration.stripExceptionMessages.enabled); } }
 		public virtual Int32 InstrumentationLevel { get { return ServerOverrides(_serverConfiguration.RpmConfig.InstrumentationLevel, 3); } }
 		public virtual Boolean InstrumentationLoggingEnabled { get { return _localConfiguration.instrumentation.log; } }
 
@@ -1156,29 +1152,8 @@ namespace NewRelic.Agent.Core.Configuration
 					LogDeprecatedPropertyUse("parameterGroups.requestHeaderParameters.enabled", "attributes.exclude");
 					disabledProperties.Add("request.headers.*");
 				}
-				if (_localConfiguration.parameterGroups.serviceRequestParameters != null &&
-					_localConfiguration.parameterGroups.serviceRequestParameters.enabledSpecified &&
-					!_localConfiguration.parameterGroups.serviceRequestParameters.enabled)
-				{
-					LogDeprecatedPropertyUse("parameterGroups.serviceRequestParameters.enabled", "attributes.exclude");
-					disabledProperties.Add("service.request.*");
-				}
-
 			}
 			return disabledProperties;
-		}
-
-		private Boolean DeprecatedCaptureServiceRequestParameters
-		{
-			get
-			{
-				var localAttributeValue = false;
-				if (_localConfiguration.parameterGroups.serviceRequestParameters.enabledSpecified)
-				{
-					localAttributeValue = _localConfiguration.parameterGroups.serviceRequestParameters.enabled;
-				}
-				return localAttributeValue;
-			}
 		}
 
 		private Boolean DeprecatedCaptureIdentityParameters
@@ -1202,7 +1177,6 @@ namespace NewRelic.Agent.Core.Configuration
 			ignoreParameters.AddRange(DeprecatedIgnoreIdentityParameters().Select(param => "identity." + param));
 			ignoreParameters.AddRange(DeprecatedIgnoreResponseHeaderParameters().Select(param => "response.headers." + param));
 			ignoreParameters.AddRange(DeprecatedIgnoreRequestHeaderParameters().Select(param => "request.headers." + param));
-			ignoreParameters.AddRange(DeprecatedIgnoreServiceRequestParameters().Select(param => "service.request." + param));
 			ignoreParameters.AddRange(DeprecatedIgnoreRequestParameters().Select(param => "request.parameters." + param));
 
 			return ignoreParameters.Distinct();
@@ -1265,20 +1239,6 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 
 		[NotNull]
-		private IEnumerable<String> DeprecatedIgnoreServiceRequestParameters()
-		{
-			if (_localConfiguration.parameterGroups != null
-				&& _localConfiguration.parameterGroups.serviceRequestParameters != null
-				&& _localConfiguration.parameterGroups.serviceRequestParameters.ignore != null
-				&& _localConfiguration.parameterGroups.serviceRequestParameters.ignore.Count > 0)
-			{
-				LogDeprecatedPropertyUse("parameterGroups.serviceRequestParameters.ignore", "attributes.exclude");
-				return _localConfiguration.parameterGroups.serviceRequestParameters.ignore;
-			}
-			return Enumerable.Empty<String>();
-		}
-
-		[NotNull]
 		private IEnumerable<String> DeprecatedIgnoreRequestParameters()
 		{
 			if (_localConfiguration.requestParameters != null
@@ -1298,7 +1258,6 @@ namespace NewRelic.Agent.Core.Configuration
 		private const Boolean DeprecatedResponseHeaderParametersEnabledDefault = true;
 		private const Boolean DeprecatedCustomParametersEnabledDefault = true;
 		private const Boolean DeprecatedRequestHeaderParametersEnabledDefault = true;
-		private const Boolean DeprecatedServiceRequestParametersEnabledDefault = false;
 		private const Boolean DeprecatedRequestParametersEnabledDefault = false;
 
 		private const Boolean CaptureTransactionEventsAttributesDefault = true;

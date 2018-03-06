@@ -123,6 +123,29 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			);
 		}
 
+		[Test]
+		public void GetErrorTrace_ReturnsExceptionWithoutMessage_IfStripExceptionMessageEnabled()
+		{
+			Mock.Arrange(() => _configurationService.Configuration.StripExceptionMessages).Returns(true);
+
+			var errorData = ErrorData.FromParts("This message should be stripped.", "My type name", DateTime.UtcNow, false);
+			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
+			var attributes = new Attributes();
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
+
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName, errorDataOut);
+
+			Assert.NotNull(errorTrace);
+			NrAssert.Multiple(
+				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
+				() => Assert.AreEqual(null, errorTrace.Message),
+				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
+				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
+				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+			);
+		}
+
 		[NotNull]
 		private static ImmutableTransaction BuildTestTransaction(String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
 		{

@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.Config
 
 			if (instrumentation != null && !instrumentation.IsEmpty())
 			{
-				if (_configuration.LiveInstrumentationAllowed)
+				if (_configuration.LiveInstrumentationEnabled)
 				{
 					try
 					{

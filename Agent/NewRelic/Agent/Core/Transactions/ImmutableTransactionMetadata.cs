@@ -13,9 +13,6 @@ namespace NewRelic.Agent.Core.Transactions
 		public IEnumerable<KeyValuePair<string, string>> RequestParameters { get; }
 
 		[NotNull]
-		public IEnumerable<KeyValuePair<string, string>> ServiceParameters { get; }
-
-		[NotNull]
 		public IEnumerable<KeyValuePair<string, Object>> UserAttributes { get; }
 
 		[NotNull]
@@ -58,7 +55,6 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public ImmutableTransactionMetadata(string uri, string originalUri, string path, string referrerUri,
 			TimeSpan? queueTime, [NotNull] IEnumerable<KeyValuePair<string, string>> requestParameters,
-			[NotNull] IEnumerable<KeyValuePair<string, String>> serviceParameters,
 			[NotNull] IEnumerable<KeyValuePair<string, Object>> userAttributes,
 			[NotNull] IEnumerable<KeyValuePair<string, Object>> userErrorAttributes, int? httpResponseStatusCode,
 			Int32? httpResponseSubStatusCode, [NotNull] IEnumerable<ErrorData> transactionExceptionDatas,
@@ -73,7 +69,6 @@ namespace NewRelic.Agent.Core.Transactions
 			ReferrerUri = referrerUri;
 			QueueTime = queueTime;
 			RequestParameters = requestParameters.ToList();
-			ServiceParameters = serviceParameters.ToList();
 			UserAttributes = userAttributes.ToList();
 			UserErrorAttributes = userErrorAttributes.ToList();
 			HttpResponseStatusCode = httpResponseStatusCode;

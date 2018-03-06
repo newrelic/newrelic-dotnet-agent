@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
 using JetBrains.Annotations;
@@ -127,7 +126,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		{
 			var parameters = QueryStringRetriever.TryGetQueryStringAsDictionary(httpContext.Request, agentWrapperApi)
 				?? Enumerable.Empty<KeyValuePair<String, String>>();
-			agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters, RequestParameterBucket.RequestParameters);
+			agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters);
 		}
 
 		private static void NameTransaction([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)

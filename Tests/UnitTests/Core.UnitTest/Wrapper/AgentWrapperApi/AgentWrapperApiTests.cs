@@ -306,18 +306,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public void SetTransactionRequestParameters_SetsTransactionRequestParameters_ForRequestBucket()
 		{
 			var parameters = new Dictionary<String, String> { { "key", "value" } };
-			_agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters, RequestParameterBucket.RequestParameters);
+			_agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters);
 
 			Mock.Assert(() => _transaction.TransactionMetadata.AddRequestParameter("key", "value"));
-		}
-
-		[Test]
-		public void SetTransactionRequestParameters_SetsTransactionRequestParameters_ForServiceBucket()
-		{
-			var parameters = new Dictionary<String, String> { { "key", "value" } };
-			_agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters, RequestParameterBucket.ServiceRequest);
-
-			Mock.Assert(() => _transaction.TransactionMetadata.AddServiceParameter("key", "value"));
 		}
 
 		[Test]

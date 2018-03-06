@@ -202,24 +202,47 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			return segment as ISegment ?? _noOpSegment;
 		}
 
-		public void EnableExplainPlans(ISegment segment, Func<Object> allocateExplainPlanResources, Func<Object, ExplainPlan> generateExplainPlan)
+		public void EnableExplainPlans(ISegment segment, Func<object> allocateExplainPlanResources, Func<object, ExplainPlan> generateExplainPlan, Func<VendorExplainValidationResult> vendorValidateShouldExplain)
 		{
 			if (!_configurationService.Configuration.SqlExplainPlansEnabled || !segment.IsValid)
+			{ 
 				return;
+			}
 
 			var datastoreSegment = segment as TypedSegment<DatastoreSegmentData>;
 			if (datastoreSegment == null)
+			{ 
 				throw new ArgumentException("Received a datastore segment object which was not of expected type");
-
-			// Ensure the condition is not called until after the segment is finished (to get accurate duration)
-			Func<Boolean> condition = () => _configurationService.Configuration.SqlExplainPlansEnabled &&
-											datastoreSegment.Duration >= _configurationService.Configuration.SqlExplainPlanThreshold;
+			}
 
 			var data = datastoreSegment.TypedData;
 			data.GetExplainPlanResources = allocateExplainPlanResources;
 			data.GenerateExplainPlan = generateExplainPlan;
-			data.DoExplainPlanCondition = condition;
+			data.DoExplainPlanCondition = ShouldRunExplain;
 
+			// Ensure the condition is not called until after the segment is finished (to get accurate duration)
+			bool ShouldRunExplain()
+			{
+				var shouldRunExplainPlan = _configurationService.Configuration.SqlExplainPlansEnabled &&
+				                           datastoreSegment.Duration >= _configurationService.Configuration.SqlExplainPlanThreshold;
+
+				if (!shouldRunExplainPlan)
+				{
+					return false;
+				}
+
+				if (vendorValidateShouldExplain != null)
+				{
+					var vendorValidationResult = vendorValidateShouldExplain();
+					if (!vendorValidationResult.IsValid)
+					{
+						Log.DebugFormat("Failed vendor condition for executing explain plan: {0}", vendorValidationResult.ValidationMessage);
+						return false;
+					}
+				}
+
+				return true;
+			}
 		}
 
 		private static MethodCallData GetMethodCallData(MethodCall methodCall)
@@ -617,8 +640,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 				Log.Debug($"Noticed application error: {exception}");
 
-				var stripErrorMessage = agentWrapperApi._configurationService.Configuration.HighSecurityModeEnabled;
-				var errorData = ErrorData.FromException(exception, stripErrorMessage);
+				var errorData = ErrorData.FromException(exception, agentWrapperApi._configurationService.Configuration.StripExceptionMessages);
 
 				transaction.TransactionMetadata.AddExceptionData(errorData);
 			}
@@ -783,7 +805,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				transaction.TransactionMetadata.SetQueueTime(queueTime);
 			}
 
-			public void SetRequestParameters(IEnumerable<KeyValuePair<string, string>> parameters, RequestParameterBucket bucket)
+			public void SetRequestParameters(IEnumerable<KeyValuePair<string, string>> parameters)
 			{
 				if (parameters == null)
 				{ 
@@ -794,15 +816,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				{
 					if ( parameter.Key != null && parameter.Value != null)
 					{
-						switch(bucket)
-						{
-							case RequestParameterBucket.RequestParameters:
-								transaction.TransactionMetadata.AddRequestParameter(parameter.Key, parameter.Value);
-								return;
-							case RequestParameterBucket.ServiceRequest:
-								transaction.TransactionMetadata.AddServiceParameter(parameter.Key, parameter.Value);
-								return;
-						}
+						transaction.TransactionMetadata.AddRequestParameter(parameter.Key, parameter.Value);
+						return;
 					}
 				}
 			}
@@ -1004,7 +1019,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			}
 
-			public void SetRequestParameters(IEnumerable<KeyValuePair<string, string>> parameters, RequestParameterBucket bucket)
+			public void SetRequestParameters(IEnumerable<KeyValuePair<string, string>> parameters)
 			{
 
 			}

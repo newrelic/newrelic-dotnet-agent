@@ -2,13 +2,37 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing
 {
 	public class MySqlExplainPlanActions
 	{
+		
+		public static VendorExplainValidationResult ShouldGenerateExplainPlan(string sql, ParsedSqlStatement parsedSqlStatement)
+		{
+			var validationMessage = "";
+			var isValid = true;
+
+			var isSelectStatement = parsedSqlStatement.Operation.Equals("select", StringComparison.CurrentCultureIgnoreCase);
+			if (!isSelectStatement)
+			{
+				validationMessage += "Will not run EXPLAIN on non-select statements. ";
+				isValid = false;
+			}
+
+			var isSingleStatement = SqlParser.IsSingleSqlStatement(sql);
+			if (!isSingleStatement)
+			{
+				validationMessage += "Will not run EXPLAIN on multi-statement SQL query. ";
+				isValid = false;
+			}
+
+			return new VendorExplainValidationResult(isValid, validationMessage);
+		}
+
+
 		public static ExplainPlan GenerateExplainPlan(Object resources)
 		{
 			if (!(resources is IDbCommand))

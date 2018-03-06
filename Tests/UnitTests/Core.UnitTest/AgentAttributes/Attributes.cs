@@ -90,17 +90,6 @@ namespace NewRelic.Agent.Core.AgentAttributes
 		}
 
 		[Test]
-		public void service_request_attributes_are_filtered_out_for_error_events()
-		{
-			_attributes.Add(Attribute.BuildServiceRequestAttribute("service.request.username", "Crash Override"));
-			_attributes.Add(Attribute.BuildServiceRequestAttribute("service.request.password", "p455w0rd"));
-
-			var filteredAttributes = _attributeService.FilterAttributes(_attributes, AttributeDestinations.ErrorEvent);
-
-			Assert.IsTrue(filteredAttributes.Count() == 0);
-		}
-
-		[Test]
 		public void request_parameter_attributes_are_filtered_out_for_error_events()
 		{
 			_attributes.Add(Attribute.BuildRequestParameterAttribute("request.parameter.username", "Crash Override"));

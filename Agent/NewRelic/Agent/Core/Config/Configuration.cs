@@ -48,6 +48,10 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationHighSecurity highSecurityField;
         
+        private configurationLiveInstrumentation liveInstrumentationField;
+        
+        private configurationStripExceptionMessages stripExceptionMessagesField;
+        
         private configurationSlowSql slowSqlField;
         
         private configurationErrorCollector errorCollectorField;
@@ -87,6 +91,8 @@ namespace NewRelic.Agent.Core.Config
             this.browserMonitoringField = new configurationBrowserMonitoring();
             this.errorCollectorField = new configurationErrorCollector();
             this.slowSqlField = new configurationSlowSql();
+            this.stripExceptionMessagesField = new configurationStripExceptionMessages();
+            this.liveInstrumentationField = new configurationLiveInstrumentation();
             this.highSecurityField = new configurationHighSecurity();
             this.crossApplicationTracerField = new configurationCrossApplicationTracer();
             this.datastoreTracerField = new configurationDatastoreTracer();
@@ -288,6 +294,30 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.highSecurityField = value;
+            }
+        }
+        
+        public configurationLiveInstrumentation liveInstrumentation
+        {
+            get
+            {
+                return this.liveInstrumentationField;
+            }
+            set
+            {
+                this.liveInstrumentationField = value;
+            }
+        }
+        
+        public configurationStripExceptionMessages stripExceptionMessages
+        {
+            get
+            {
+                return this.stripExceptionMessagesField;
+            }
+            set
+            {
+                this.stripExceptionMessagesField = value;
             }
         }
         
@@ -494,8 +524,6 @@ namespace NewRelic.Agent.Core.Config
         
         private System.Nullable<int> portField;
         
-        private bool sslField;
-        
         private bool syncStartupField;
         
         private bool autoStartField;
@@ -512,8 +540,6 @@ namespace NewRelic.Agent.Core.Config
         {
             this.proxyField = new configurationServiceProxy();
             this.sendEnvironmentInfoField = true;
-            this.hostField = "collector.newrelic.com";
-            this.sslField = true;
             this.syncStartupField = false;
             this.autoStartField = true;
             this.sendDataOnExitField = false;
@@ -558,7 +584,6 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        [System.ComponentModel.DefaultValueAttribute("collector.newrelic.com")]
         public string host
         {
             get
@@ -603,19 +628,6 @@ namespace NewRelic.Agent.Core.Config
                 {
                     this.portField = null;
                 }
-            }
-        }
-        
-        [System.ComponentModel.DefaultValueAttribute(true)]
-        public bool ssl
-        {
-            get
-            {
-                return this.sslField;
-            }
-            set
-            {
-                this.sslField = value;
             }
         }
         
@@ -1107,11 +1119,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationParameterGroupsRequestHeaderParameters requestHeaderParametersField;
         
-        private configurationParameterGroupsServiceRequestParameters serviceRequestParametersField;
-        
         public configurationParameterGroups()
         {
-            this.serviceRequestParametersField = new configurationParameterGroupsServiceRequestParameters();
             this.requestHeaderParametersField = new configurationParameterGroupsRequestHeaderParameters();
             this.customParametersField = new configurationParameterGroupsCustomParameters();
             this.responseHeaderParametersField = new configurationParameterGroupsResponseHeaderParameters();
@@ -1163,18 +1172,6 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.requestHeaderParametersField = value;
-            }
-        }
-        
-        public configurationParameterGroupsServiceRequestParameters serviceRequestParameters
-        {
-            get
-            {
-                return this.serviceRequestParametersField;
-            }
-            set
-            {
-                this.serviceRequestParametersField = value;
             }
         }
     }
@@ -1367,66 +1364,6 @@ namespace NewRelic.Agent.Core.Config
         private System.Nullable<bool> enabledField;
         
         public configurationParameterGroupsRequestHeaderParameters()
-        {
-            this.ignoreField = new List<string>();
-        }
-        
-        public List<string> ignore
-        {
-            get
-            {
-                return this.ignoreField;
-            }
-            set
-            {
-                this.ignoreField = value;
-            }
-        }
-        
-        public bool enabled
-        {
-            get
-            {
-                if (this.enabledField.HasValue)
-                {
-                    return this.enabledField.Value;
-                }
-                else
-                {
-                    return default(bool);
-                }
-            }
-            set
-            {
-                this.enabledField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool enabledSpecified
-        {
-            get
-            {
-                return this.enabledField.HasValue;
-            }
-            set
-            {
-                if (value==false)
-                {
-                    this.enabledField = null;
-                }
-            }
-        }
-    }
-    
-    public partial class configurationParameterGroupsServiceRequestParameters
-    {
-        
-        private List<string> ignoreField;
-        
-        private System.Nullable<bool> enabledField;
-        
-        public configurationParameterGroupsServiceRequestParameters()
         {
             this.ignoreField = new List<string>();
         }
@@ -2498,6 +2435,54 @@ namespace NewRelic.Agent.Core.Config
         private bool enabledField;
         
         public configurationHighSecurity()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+    }
+    
+    public partial class configurationLiveInstrumentation
+    {
+        
+        private bool enabledField;
+        
+        public configurationLiveInstrumentation()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+    }
+    
+    public partial class configurationStripExceptionMessages
+    {
+        
+        private bool enabledField;
+        
+        public configurationStripExceptionMessages()
         {
             this.enabledField = false;
         }

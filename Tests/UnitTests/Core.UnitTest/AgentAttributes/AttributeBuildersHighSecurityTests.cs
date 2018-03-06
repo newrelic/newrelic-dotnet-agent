@@ -256,13 +256,6 @@ namespace NewRelic.Agent.Core.AgentAttributes
 			}
 
 			[Test]
-			public void ShouldExcludeServiceRequestInHighSecurityMode()
-			{
-				var attribute = Transactions.Attribute.BuildServiceRequestAttribute("key", "value");
-				Assert.IsTrue(attribute.ExcludeForHighSecurity);
-			}
-
-			[Test]
 			public void ShouldExcludeCustomErrorInHighSecurityMode()
 			{
 				var attribute = Transactions.Attribute.BuildCustomErrorAttribute("key", "value");

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Text;
 using JetBrains.Annotations;
 
@@ -66,7 +65,8 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="segment">The datastore segment candidate for an explain plan</param>
 		/// <param name="allocateExplainPlanResources">Function which returns the resources necessary for executing the explain plan</param>
 		/// <param name="generateExplainPlan">Function for executing the explain plan</param>
-		void EnableExplainPlans(ISegment segment, Func<Object> allocateExplainPlanResources, Func<Object, ExplainPlan> generateExplainPlan);
+		/// <param name="vendorValidateShouldExplain">Function for executing any additional vendor validation on if an explain plan should be ran</param>
+		void EnableExplainPlans(ISegment segment, Func<object> allocateExplainPlanResources, Func<object, ExplainPlan> generateExplainPlan, Func<VendorExplainValidationResult> vendorValidateShouldExplain);
 
 		/// <summary>
 		/// Processes headers from an inbound request.
@@ -144,12 +144,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		Redis,
 //		SQLite,
 		Other
-	}
-
-	public enum RequestParameterBucket
-	{
-		RequestParameters,
-		ServiceRequest,
 	}
 
 	public interface ISegment {

@@ -364,6 +364,7 @@ namespace NewRelic.Agent.Core.Config
 
 					document.Load(xmlReader);
 					RemoveApdexAttribute(document);
+					RemoveSslAttribute(document);
 
 					document.Schemas.Add(XmlSchema.Read(schemaReader, eventHandler));
 					document.Validate(eventHandler);
@@ -378,7 +379,7 @@ namespace NewRelic.Agent.Core.Config
 
 			return config;
 		}
-
+		
 		private static string GetConfigSchemaContents()
 		{
 #if NET45
@@ -412,6 +413,33 @@ namespace NewRelic.Agent.Core.Config
 			}
 			catch (Exception)
 			{
+			}
+		}
+
+		/// <summary>
+		/// Removes deprecated attribute to avoid validation errors. 
+		/// The generated error isn't super clear and could risk causing support tickets.
+		/// </summary>
+		/// <param name="document"></param>
+		private static void RemoveSslAttribute(XmlDocument document)
+		{
+			try
+			{
+				var ns = new XmlNamespaceManager(document.NameTable);
+				ns.AddNamespace("nr", "urn:newrelic-config");
+				var node = document.SelectSingleNode("//nr:configuration/nr:service", ns);
+
+				var sslAttribute = node?.Attributes?["ssl"];
+				if (sslAttribute != null)
+				{
+					Log.WarnFormat("'ssl' is no longer a configurable service attribute and cannot be disabled. Please remove from {0}.", NewRelicConfigFileName);
+
+					node.Attributes.Remove(sslAttribute);
+				}
+			}
+			catch (Exception)
+			{
+				// ignored
 			}
 		}
 	}
