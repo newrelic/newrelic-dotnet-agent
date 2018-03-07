@@ -3,6 +3,7 @@ using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
@@ -65,17 +66,18 @@ namespace NewRelic.Providers.Wrapper.Sql
 
 			if (vendor == DatastoreVendor.MSSQL)
 			{
-				agentWrapperApi.EnableExplainPlans(segment, () => SqlServerExplainPlanActions.AllocateResources(sqlCommand), SqlServerExplainPlanActions.GenerateExplainPlan);
+				agentWrapperApi.EnableExplainPlans(segment, () => SqlServerExplainPlanActions.AllocateResources(sqlCommand), SqlServerExplainPlanActions.GenerateExplainPlan, null);
 			}
 			else if (vendor == DatastoreVendor.MySQL)
 			{
-				if (parsedStatement != null && parsedStatement.Operation.Equals("select", StringComparison.CurrentCultureIgnoreCase))
+				if (parsedStatement != null)
 				{
-					agentWrapperApi.EnableExplainPlans(segment, () => MySqlExplainPlanActions.AllocateResources(sqlCommand), MySqlExplainPlanActions.GenerateExplainPlan);
+					agentWrapperApi.EnableExplainPlans(segment, () => MySqlExplainPlanActions.AllocateResources(sqlCommand), MySqlExplainPlanActions.GenerateExplainPlan, () => MySqlExplainPlanActions.ShouldGenerateExplainPlan(sql, parsedStatement));
 				}
 			}
 
 			return Delegates.GetDelegateFor(segment);
 		}
+
 	}
 }

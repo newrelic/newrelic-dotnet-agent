@@ -83,10 +83,10 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainEnabled = true;
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
 			_compositeTestAgent.PushConfiguration();
-			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			using (var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
 				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", commandText);
-				_agentWrapperApi.EnableExplainPlans(segment, () => AllocateResources(sqlCommand), GenerateExplainPlan);
+				_agentWrapperApi.EnableExplainPlans(segment, () => AllocateResources(sqlCommand), GenerateExplainPlan, () => new VendorExplainValidationResult(true));
 				segment.End();
 			}
 			_compositeTestAgent.Harvest();
@@ -106,6 +106,35 @@ namespace CompositeTests
 				() => Assert.AreEqual(sqlTrace.ParameterData.Values.First(), explainPlan),
 				() => Assert.AreEqual(transactionExplainPlan.ExplainPlanDatas, explainPlan.ExplainPlanDatas),
 				() => Assert.AreEqual(transactionExplainPlan.ExplainPlanHeaders, explainPlan.ExplainPlanHeaders)
+			);
+		}
+
+		[Test]
+		public void CreatesDatastoreTransactionButNoExplainPlanWhenVendorValidationFails()
+		{
+			var sqlCommand = new SqlCommand();
+			var commandText = "SELECT * FROM Table1";
+			sqlCommand.CommandText = commandText;
+
+			_compositeTestAgent.LocalConfiguration.transactionTracer.explainEnabled = true;
+			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
+			_compositeTestAgent.PushConfiguration();
+			using (var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", commandText);
+				_agentWrapperApi.EnableExplainPlans(segment, () => AllocateResources(sqlCommand), GenerateExplainPlan, () => new VendorExplainValidationResult(false));
+				segment.End();
+			}
+			_compositeTestAgent.Harvest();
+
+			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+			var sqlTrace = _compositeTestAgent.SqlTraces.First();
+			var transactionSegments = transactionTrace.TransactionTraceData.RootSegment.Children;
+			var transactionTraceSegmentParameters = transactionSegments.First().Children.First().Parameters;
+
+			NrAssert.Multiple(
+				() => Assert.IsFalse(sqlTrace.ParameterData.ContainsKey("explain_plan")),
+				() => Assert.IsFalse(transactionTraceSegmentParameters.ContainsKey("explain_plan"))
 			);
 		}
 

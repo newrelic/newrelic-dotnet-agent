@@ -43,6 +43,9 @@ namespace NewRelic.Parsing
 		private const String SetPhrase = @"^set\s+@?";
 		private const String DeclarePhrase = @"^declare\s+@?";
 
+		// Regex to match only single SQL statements (i.e. no semicolon other than at the end - DOTNET-3029)
+		private const String SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
+
 		private const String CommentPhrase = @"/\*.*?\*/";
 		private const String StartObjectNameSeparator = @"[\s\(\[`\""]*";
 		private const String EndObjectNameSeparator = @"[\s\)\]`\""]*";
@@ -68,6 +71,7 @@ namespace NewRelic.Parsing
 
 		private static readonly Regex CommentPattern = new Regex(CommentPhrase, RegexOptions.Compiled | RegexOptions.Singleline);
 		private static readonly Regex ValidMetricNameMatcher = new Regex(MetricNamePhrase, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex SingleSqlStatementMatcher = new Regex(SingleSqlStatementPhrase, PatternSwitches);
 		private static readonly Regex SelectRegex = new Regex(SelectString, PatternSwitches);
 		private static readonly Regex InsertRegex = new Regex(InsertString, PatternSwitches);
 		private static readonly Regex UpdateRegex = new Regex(UpdateString, PatternSwitches);
@@ -112,6 +116,11 @@ namespace NewRelic.Parsing
 		public static Boolean IsValidName(String name)
 		{
 			return ValidMetricNameMatcher.IsMatch(name);
+		}
+
+		public static bool IsSingleSqlStatement(string sql)
+		{
+			return SingleSqlStatementMatcher.IsMatch(sql);
 		}
 
 		private readonly static List<string> _operations = new List<string>();

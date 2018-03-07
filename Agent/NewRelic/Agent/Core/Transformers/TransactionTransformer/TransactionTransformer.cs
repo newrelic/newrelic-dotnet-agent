@@ -315,10 +315,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 					{
 						if (segment.Duration > threshold && segment is TypedSegment<DatastoreSegmentData>)
 						{
-							((TypedSegment<DatastoreSegmentData>)segment).TypedData.ExecuteExplainPlan(obfuscator);
-							if (++count >= sqlExplainPlansMax)
+							var datastoreSegmentData = ((TypedSegment<DatastoreSegmentData>)segment).TypedData;
+							if (datastoreSegmentData.DoExplainPlanCondition?.Invoke() == true)
 							{
-								return;
+								datastoreSegmentData.ExecuteExplainPlan(obfuscator);
+								if (++count >= sqlExplainPlansMax)
+								{
+									return;
+								}
 							}
 						}
 					}

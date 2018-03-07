@@ -54,6 +54,21 @@ namespace ParsingTests
 		}
 
 		[Test]
+		[TestCase("SELECT name FROM user", ExpectedResult = true)]
+		[TestCase("SELECT name FROM user;", ExpectedResult = true)]
+		[TestCase("SELECT name FROM user;   ", ExpectedResult = true)]
+		[TestCase("SELECT name FROM user; DELETE FROM user", ExpectedResult = false)]
+		// The test cases below this comment demonstrate the limitations of the IsSingleSqlCommand function - it has false positives on semicolons that are embedded in comments or in string literals
+		[TestCase("SELECT name FROM user WHERE name like 'semi ; colon';", ExpectedResult = false)]
+		[TestCase("/* This is just a comment but for some reason I put a semicolon in it; I hope this doesn't ruin anything */ SELECT name FROM user;", ExpectedResult = false)]
+
+		public static bool SqlParserTest_TestIsSingleSqlStatement(String sql)
+		{
+			return SqlParser.IsSingleSqlStatement(sql);
+		}
+
+
+		[Test]
 		public void SqlParserTest_TestDeclareStatement()
 		{
 			// Motivated by the petshop application.
@@ -96,7 +111,7 @@ namespace ParsingTests
 		}
 
 		[Test]
-		public void SqlParserTest_TestCommntInFront()
+		public void SqlParserTest_TestCommentInFront()
 		{
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, @"/* ignore the comment */
 				select * from dude");

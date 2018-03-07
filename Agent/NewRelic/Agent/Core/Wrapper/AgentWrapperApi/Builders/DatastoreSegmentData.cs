@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[CanBeNull]
 		public Func<Object, ExplainPlan> GenerateExplainPlan { get; set; }
 		[CanBeNull]
-		public Func<Boolean> DoExplainPlanCondition { protected get; set; }
+		public Func<Boolean> DoExplainPlanCondition { get; set; }
 
 		private Object _explainPlanResources;
 		private ExplainPlan _explainPlan;
