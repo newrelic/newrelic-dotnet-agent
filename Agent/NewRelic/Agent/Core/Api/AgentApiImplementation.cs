@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 		}
 
-		public void NoticeError(Exception exception, IDictionary<String, String> customAttributes)
+		public void NoticeError(Exception exception, IDictionary<string, string> customAttributes)
 		{
 			try
 			{
@@ -169,30 +169,12 @@ namespace NewRelic.Agent.Core.Api
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(NoticeError));
 
 					if (exception == null)
+					{ 
 						throw new ArgumentNullException(nameof(exception));
+					}
 
 					var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
-
-					var transaction = TryGetCurrentInternalTransaction();
-					if (transaction != null)
-					{
-						transaction.TransactionMetadata.AddCustomErrorData(errorData);
-
-						if ( customAttributes != null)
-						{
-							foreach(var customAttribute in customAttributes)
-							{
-								if (customAttribute.Key != null && customAttribute.Value != null)
-								{
-									transaction.TransactionMetadata.AddUserErrorAttribute(customAttribute.Key, customAttribute.Value);
-								}
-							}
-						}
-					}
-					else
-					{
-						_customErrorDataTransformer.Transform(errorData, customAttributes);
-					}
+					ProcessedNoticedError(errorData, customAttributes);
 				}
 			}
 			catch (Exception ex)
@@ -210,19 +192,12 @@ namespace NewRelic.Agent.Core.Api
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(NoticeError));
 
 					if (exception == null)
+					{ 
 						throw new ArgumentNullException(nameof(exception));
+					}
 
 					var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
-
-					var transaction = TryGetCurrentInternalTransaction();
-					if (transaction != null)
-					{
-						transaction.TransactionMetadata.AddCustomErrorData(errorData);
-					}
-					else
-					{
-						_customErrorDataTransformer.Transform(errorData);
-					}
+					ProcessedNoticedError(errorData, null);
 				}
 			}
 			catch (Exception ex)
@@ -231,7 +206,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 		}
 
-		public void NoticeError(String message, IDictionary<String, String> customAttributes)
+		public void NoticeError(string message, IDictionary<string, string> customAttributes)
 		{
 			try
 			{
@@ -240,30 +215,12 @@ namespace NewRelic.Agent.Core.Api
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(NoticeError));
 
 					if (message == null)
+					{ 
 						throw new ArgumentNullException(nameof(message));
-
+					}
+					
 					var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, _configurationService.Configuration.StripExceptionMessages);
-
-					var transaction = TryGetCurrentInternalTransaction();
-					if (transaction != null)
-					{
-						transaction.TransactionMetadata.AddCustomErrorData(errorData);
-
-						if (customAttributes != null)
-						{
-							foreach (var customAttribute in customAttributes)
-							{
-								if (customAttribute.Key != null && customAttribute.Value != null)
-								{
-									transaction.TransactionMetadata.AddUserErrorAttribute(customAttribute.Key, customAttribute.Value);
-								}
-							}
-						}
-					}
-					else
-					{
-						_customErrorDataTransformer.Transform(errorData, customAttributes);
-					}
+					ProcessedNoticedError(errorData, customAttributes);
 				}
 			}
 			catch (Exception ex)
@@ -272,7 +229,31 @@ namespace NewRelic.Agent.Core.Api
 			}
 		}
 
-		public void AddCustomParameter(String key, IConvertible value)
+		private void ProcessedNoticedError(ErrorData errorData, IDictionary<string, string> customAttributes)
+		{
+			var transaction = TryGetCurrentInternalTransaction();
+			if (transaction != null)
+			{
+				transaction.TransactionMetadata.AddCustomErrorData(errorData);
+
+				if (customAttributes != null && _configurationService.Configuration.CaptureCustomParameters)
+				{
+					foreach (var customAttribute in customAttributes)
+					{
+						if (customAttribute.Key != null && customAttribute.Value != null)
+						{
+							transaction.TransactionMetadata.AddUserErrorAttribute(customAttribute.Key, customAttribute.Value);
+						}
+					}
+				}
+			}
+			else
+			{
+				_customErrorDataTransformer.Transform(errorData, customAttributes);
+			}
+		}
+
+		public void AddCustomParameter(string key, IConvertible value)
 		{
 			try
 			{
@@ -290,8 +271,7 @@ namespace NewRelic.Agent.Core.Api
 						? value
 						: value.ToString(CultureInfo.InvariantCulture);
 
-					var transaction = GetCurrentInternalTransaction();
-					transaction.TransactionMetadata.AddUserAttribute(key, normalizedValue);
+					AddUserAttributeToCurrentTransaction(key, normalizedValue);
 				}
 			}
 			catch (Exception ex)
@@ -300,7 +280,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 		}
 
-		public void AddCustomParameter(String key, String value)
+		public void AddCustomParameter(string key, string value)
 		{
 			try
 			{
@@ -313,13 +293,21 @@ namespace NewRelic.Agent.Core.Api
 
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(AddCustomParameter));
 
-					var transaction = GetCurrentInternalTransaction();
-					transaction.TransactionMetadata.AddUserAttribute(key, value);
+					AddUserAttributeToCurrentTransaction(key, value);
 				}
 			}
 			catch (Exception ex)
 			{
 				LogApiError(nameof(AddCustomParameter), ex);
+			}
+		}
+
+		private void AddUserAttributeToCurrentTransaction(string key, object value)
+		{
+			if (_configurationService.Configuration.CaptureCustomParameters)
+			{
+				var transaction = GetCurrentInternalTransaction();
+				transaction.TransactionMetadata.AddUserAttribute(key, value);
 			}
 		}
 
@@ -351,7 +339,7 @@ namespace NewRelic.Agent.Core.Api
 					var newTransactionName = currentTranasctionName.IsWeb
 						? new WebTransactionName(category, name)
 						: new OtherTransactionName(category, name) as ITransactionName;
-					transaction.CandidateTransactionName.TrySet(newTransactionName, AgentApi.CustomTransactionNamePriority);
+					transaction.CandidateTransactionName.TrySet(newTransactionName, AgentApi.UserTransactionNamePriority);
 				}
 			}
 			catch (Exception ex)
@@ -383,16 +371,19 @@ namespace NewRelic.Agent.Core.Api
 				{
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(SetUserParameters));
 
-					var transaction = GetCurrentInternalTransaction();
+					if (_configurationService.Configuration.CaptureCustomParameters)
+					{
+						var transaction = GetCurrentInternalTransaction();
 
-					if (!String.IsNullOrEmpty(userName))
-						transaction.TransactionMetadata.AddUserAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
+						if (!String.IsNullOrEmpty(userName))
+							transaction.TransactionMetadata.AddUserAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
 
-					if (!String.IsNullOrEmpty(accountName))
-						transaction.TransactionMetadata.AddUserAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
+						if (!String.IsNullOrEmpty(accountName))
+							transaction.TransactionMetadata.AddUserAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
 
-					if (!String.IsNullOrEmpty(productName))
-						transaction.TransactionMetadata.AddUserAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
+						if (!String.IsNullOrEmpty(productName))
+							transaction.TransactionMetadata.AddUserAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
+					}
 				}
 			}
 			catch (Exception ex)

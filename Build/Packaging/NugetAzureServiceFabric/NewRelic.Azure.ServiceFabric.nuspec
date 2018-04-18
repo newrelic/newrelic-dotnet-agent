@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata minClientVersion="3.3.0">
+    <id>NewRelic.Azure.ServiceFabric</id>
+    <version>TO_BE_REPLACED</version>
+    <title>New Relic for Azure Service Fabric</title>
+    <authors>New Relic</authors>
+    <owners>New Relic</owners>
+    <licenseUrl>http://newrelic.com/terms</licenseUrl>
+    <projectUrl>https://github.com/newrelic</projectUrl>
+    <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Make sure you go to New Relic first to sign up and get your license key at http://newrelic.com. Performance monitoring will never be the same after you do!  
+            The package is available through your NuGet package manager and on the web at http://nuget.org/packages/NugetAzureServiceFabric
+
+            Set up:  
+            1. install-package NewRelic.Azure.ServiceFabric
+            2. The Package installer will prompt you for your desired application name and your New Relic license key  
+
+            Note: If you want to instrument more than one project in your solution, simply change the "Default project" in the package manager console and install the package 
+
+            Visit http://rpm.newrelic.com after your package deploy is complete to see your performance metrics.  
+
+            For more information on what this package is doing go to: https://support.newrelic.com/help/kb/dotnet/installing-the-net-agent-on-azure</description>
+    <summary>Includes the latest New Relic .Net Framework x64 Agent artifacts, so that you can easily include New Relic in your Azure Service Fabric deployment.</summary>
+    <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/releases/dotnet</releaseNotes>
+    <contentFiles>
+      <files include="**/newrelic/extensions/*.*" buildAction="None" copyToOutput="true" flatten="false" />
+      <files include="**/newrelic/logs/*.*" buildAction="None" copyToOutput="true" flatten="false" />
+      <files include="**/newrelic/*.*" buildAction="None" copyToOutput="true" flatten="false" />
+    </contentFiles>
+  </metadata>
+</package>

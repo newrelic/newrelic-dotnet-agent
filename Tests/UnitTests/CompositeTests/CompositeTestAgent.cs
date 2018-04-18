@@ -70,11 +70,15 @@ namespace CompositeTests
 
 		public IConfiguration CurrentConfiguration { get; private set; }
 
+		public SecurityPoliciesConfiguration SecurityConfiguration { get; private set; }
+
 		public NewRelic.Agent.Core.ThreadProfiling.INativeMethods NativeMethods { get; private set; }
 
 		public InstrumentationWatcher InstrumentationWatcher { get; private set; }
 
 		private readonly bool _shouldAllowThreads;
+
+		public IContainer Container => _container;
 
 
 		[NotNull]
@@ -140,6 +144,7 @@ namespace CompositeTests
 			// Update configuration (will also start services)
 			LocalConfiguration = GetDefaultTestLocalConfiguration();
 			ServerConfiguration = GetDefaultTestServerConfiguration();
+			SecurityConfiguration = GetDefaultSecurityPoliciesConfiguration();
 			InstrumentationWatcher.Start();
 			PushConfiguration();
 
@@ -238,6 +243,8 @@ namespace CompositeTests
 			// Push ServerConfigurationUpdates
 			EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(ServerConfiguration));
 
+			EventBus<SecurityPoliciesConfigurationUpdatedEvent>.Publish(new SecurityPoliciesConfigurationUpdatedEvent(SecurityConfiguration));
+
 			// Update CurrentConfiguration
 			IConfiguration newConfig = null;
 			RequestBus<GetCurrentConfigurationRequest, IConfiguration>.Post(new GetCurrentConfigurationRequest(), config => newConfig = config);
@@ -265,6 +272,12 @@ namespace CompositeTests
 					TransactionTracerThreshold = TimeSpan.FromTicks(1).TotalSeconds,
 				}
 			};
+		}
+
+		[NotNull]
+		private static SecurityPoliciesConfiguration GetDefaultSecurityPoliciesConfiguration()
+		{
+			return new SecurityPoliciesConfiguration();
 		}
 	}
 }

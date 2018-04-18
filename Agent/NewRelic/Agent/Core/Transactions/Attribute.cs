@@ -23,16 +23,13 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public AttributeDestinations DefaultDestinations { get { return _defaultDestinations; } }
 		private readonly AttributeDestinations _defaultDestinations;
-		
-		public readonly Boolean ExcludeForHighSecurity;
 
 		public virtual AttributeClassification Classification { get; private set; }
 
-		private Attribute([NotNull] String key, [NotNull] Object value, bool excludeForHighSecurity, AttributeClassification classification, AttributeDestinations defaultDestinations = AttributeDestinations.None)
+		private Attribute([NotNull] string key, [NotNull] object value, AttributeClassification classification, AttributeDestinations defaultDestinations)
 		{
 			_key = key;
 			_value = CheckAttributeValueForAllowedType(key, value) ? value : string.Empty;
-			ExcludeForHighSecurity = excludeForHighSecurity;
 			Classification = classification;
 			_defaultDestinations = defaultDestinations;
 		}
@@ -79,7 +76,7 @@ namespace NewRelic.Agent.Core.Transactions
 			const AttributeDestinations destinations = AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent;
 
 			var value = queueTime.TotalMilliseconds.ToString(CultureInfo.InvariantCulture);
-			return new Attribute("queue_wait_time_ms", value, false, AttributeClassification.AgentAttributes, destinations);
+			return new Attribute("queue_wait_time_ms", value, AttributeClassification.AgentAttributes, destinations);
 		}
 
 		[NotNull]
@@ -88,56 +85,62 @@ namespace NewRelic.Agent.Core.Transactions
 			const AttributeDestinations destinations =
 				AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
 			var value = queueTime.TotalSeconds;
-			return new Attribute("queueDuration", value, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("queueDuration", value, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildOriginalUrlAttribute([NotNull] string value)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent;
-			return new Attribute("original_url", value, false, AttributeClassification.AgentAttributes, destinations);
+			return new Attribute("original_url", value, AttributeClassification.AgentAttributes, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildRequestUriAttribute([NotNull] string value)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("request_uri", value, false, AttributeClassification.AgentAttributes, destinations);
+			return new Attribute("request_uri", value, AttributeClassification.AgentAttributes, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildRequestRefererAttribute([NotNull] string value)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent;
-			return new Attribute("request.referer", value, false, AttributeClassification.AgentAttributes, destinations);
+			return new Attribute("request.referer", value, AttributeClassification.AgentAttributes, destinations);
 		}
 
-		[NotNull]
-		public static Attribute BuildRequestUsernameAttribute([NotNull] string value)
-		{
-			return new Attribute("identity.username", value, true, AttributeClassification.AgentAttributes, AttributeDestinations.None);
-		}
-
+		/// <summary>
+		/// Warning: We do not prevent the capturing of request parameters based on our configuration settings.
+		/// Instead, we rely on the configuration settings being set correctly to control the inclusion of these attributes.
+		/// See DefaultConfiguration.CaptureTransactionTraceAttributesIncludes for an example of how the inclusion
+		/// of these attributes are controlled.
+		/// <para>
+		/// Constructs a request.parameter.{key} attribute with the provided {value}.
+		/// </para>
+		/// </summary>
+		/// <param name="key">Name of the request parameter</param>
+		/// <param name="value">Value of the attribute</param>
+		/// <returns>The constructed attribute.</returns>
 		[NotNull]
 		public static Attribute BuildRequestParameterAttribute([NotNull] string key, [NotNull] string value)
 		{
 			key = TruncateUserProvidedValue("request.parameters." + key);
 			value = TruncateUserProvidedValue(value);
-			return new Attribute(key, value, true, AttributeClassification.AgentAttributes, AttributeDestinations.None);
+			return new Attribute(key, value, AttributeClassification.AgentAttributes, AttributeDestinations.None);
 		}
 
 		[NotNull]
 		public static Attribute BuildResponseStatusAttribute([NotNull] String value)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("response.status", value, false, AttributeClassification.AgentAttributes, destinations);
+			return new Attribute("response.status", value, AttributeClassification.AgentAttributes, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildClientCrossProcessIdAttribute([NotNull] String value)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace;
-			return new Attribute("client_cross_process_id", value, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("client_cross_process_id", value, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
@@ -145,8 +148,8 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("trip_id", value, false, AttributeClassification.Intrinsics, AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace),
-				new Attribute("nr.tripId", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
+				new Attribute("trip_id", value, AttributeClassification.Intrinsics, AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace),
+				new Attribute("nr.tripId", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
 			};
 		}
 
@@ -155,7 +158,7 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("nr.tripId", value, false, AttributeClassification.AgentAttributes, AttributeDestinations.JavaScriptAgent)
+				new Attribute("nr.tripId", value, AttributeClassification.AgentAttributes, AttributeDestinations.JavaScriptAgent)
 			};
 		}
 
@@ -164,8 +167,8 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("path_hash", value, false, AttributeClassification.Intrinsics, AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace),
-				new Attribute("nr.pathHash", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
+				new Attribute("path_hash", value, AttributeClassification.Intrinsics, AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace),
+				new Attribute("nr.pathHash", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
 			};
 		}
 
@@ -174,7 +177,7 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("nr.referringPathHash", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
+				new Attribute("nr.referringPathHash", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
 			};
 		}
 
@@ -184,8 +187,8 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("referring_transaction_guid", value, false, AttributeClassification.Intrinsics, AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace),
-				new Attribute("nr.referringTransactionGuid", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent)
+				new Attribute("referring_transaction_guid", value, AttributeClassification.Intrinsics, AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace),
+				new Attribute("nr.referringTransactionGuid", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent)
 			};
 		}
 
@@ -194,7 +197,7 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("nr.alternatePathHashes", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
+				new Attribute("nr.alternatePathHashes", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent)
 			};
 		}
 
@@ -204,27 +207,27 @@ namespace NewRelic.Agent.Core.Transactions
 			key = TruncateUserProvidedValue(key);
 			value = TruncateUserProvidedValue(value);
 			const AttributeDestinations destinations = AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace;
-			return new Attribute(key, value, true, AttributeClassification.UserAttributes, destinations);
+			return new Attribute(key, value, AttributeClassification.UserAttributes, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildErrorTypeAttribute([NotNull] String errorType)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent;
-			return new Attribute("errorType", errorType, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("errorType", errorType, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildErrorMessageAttribute([NotNull] String errorMessage)
 		{
-			return new Attribute("errorMessage", errorMessage, true, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent);
+			return new Attribute("errorMessage", errorMessage, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent);
 		}
 
 		[NotNull]
 		public static Attribute BuildTimeStampAttribute(DateTime startTime)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("timestamp", startTime.ToUnixTime(), false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("timestamp", startTime.ToUnixTime(), AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
@@ -232,8 +235,8 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("name", transactionName, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent),
-				new Attribute("transactionName", transactionName, false, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent)
+				new Attribute("name", transactionName, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent),
+				new Attribute("transactionName", transactionName, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent)
 			};
 		}
 
@@ -241,7 +244,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public static Attribute BuildGuidAttribute([NotNull] String guid)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("nr.guid", guid, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("nr.guid", guid, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
@@ -249,8 +252,8 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("nr.syntheticsResourceId", syntheticsResourceId, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent),
-				new Attribute("synthetics_resource_id", syntheticsResourceId, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace)
+				new Attribute("nr.syntheticsResourceId", syntheticsResourceId, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent),
+				new Attribute("synthetics_resource_id", syntheticsResourceId, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace)
 			};
 		}
 
@@ -259,8 +262,8 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 			{
-				new Attribute("nr.syntheticsJobId", syntheticsJobId, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent),
-				new Attribute("synthetics_job_id", syntheticsJobId, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace)
+				new Attribute("nr.syntheticsJobId", syntheticsJobId, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent),
+				new Attribute("synthetics_job_id", syntheticsJobId, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace)
 			};
 		}
 
@@ -269,8 +272,8 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			return new[]
 {
-				new Attribute("nr.syntheticsMonitorId", syntheticsMonitorId, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent),
-				new Attribute("synthetics_monitor_id", syntheticsMonitorId, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace)
+				new Attribute("nr.syntheticsMonitorId", syntheticsMonitorId, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent),
+				new Attribute("synthetics_monitor_id", syntheticsMonitorId, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace)
 			};
 		}
 
@@ -278,14 +281,14 @@ namespace NewRelic.Agent.Core.Transactions
 		public static Attribute BuildDurationAttribute(TimeSpan transactionDuration)
 		{
 			var value = transactionDuration.TotalSeconds;
-			return new Attribute("duration", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent);
+			return new Attribute("duration", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent);
 		}
 
 		[NotNull]
 		public static Attribute BuildWebDurationAttribute(TimeSpan webTransactionDuration)
 		{
 			var value = webTransactionDuration.TotalSeconds;
-			return new Attribute("webDuration", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent);
+			return new Attribute("webDuration", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent);
 		}
 
 
@@ -293,54 +296,54 @@ namespace NewRelic.Agent.Core.Transactions
 		public static Attribute BuildTotalTime(TimeSpan totalTime)
 		{
 			var value = totalTime.TotalSeconds;
-			return new Attribute("totalTime", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace);
+			return new Attribute("totalTime", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace);
 		}
 
 		[NotNull]
 		public static Attribute BuildCpuTime(TimeSpan cpuTime)
 		{
 			var value = cpuTime.TotalSeconds;
-			return new Attribute("cpuTime", value, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace);
+			return new Attribute("cpuTime", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace);
 		}
 
 		[NotNull]
 		public static Attribute BuildApdexPerfZoneAttribute([NotNull] String apdexPerfZone)
 		{
-			return new Attribute("nr.apdexPerfZone", apdexPerfZone, false, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent);
+			return new Attribute("nr.apdexPerfZone", apdexPerfZone, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent);
 		}
 
 		[NotNull]
 		public static Attribute BuildExternalDurationAttribute(Single durationInSec)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("externalDuration", durationInSec, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("externalDuration", durationInSec, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildExternalCallCountAttribute(Single count)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("externalCallCount", count, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("externalCallCount", count, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildDatabaseDurationAttribute(Single durationInSec)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("databaseDuration", durationInSec, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("databaseDuration", durationInSec, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildDatabaseCallCountAttribute(Single count)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.ErrorEvent | AttributeDestinations.TransactionEvent;
-			return new Attribute("databaseCallCount", count, false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("databaseCallCount", count, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]
 		public static Attribute BuildErrorClassAttribute(String errorClass)
 		{
-			return new Attribute("error.class", errorClass, false, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);	
+			return new Attribute("error.class", errorClass, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
 		}
 
 
@@ -354,7 +357,7 @@ namespace NewRelic.Agent.Core.Transactions
 			else if (typeAttribute == TypeAttributeValue.Transaction)
 				destinations |= AttributeDestinations.TransactionEvent;
 
-			return new Attribute("type", Enum.GetName(typeof(TypeAttributeValue), typeAttribute), false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("type", Enum.GetName(typeof(TypeAttributeValue), typeAttribute), AttributeClassification.Intrinsics, destinations);
 		}
 
 		/// <summary>
@@ -366,13 +369,13 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			key = TruncateUserProvidedValue(key);
 			value = TruncateUserProvidedValue(value);
-			return new Attribute(key, value, true, AttributeClassification.UserAttributes, AttributeDestinations.All);
+			return new Attribute(key, value, AttributeClassification.UserAttributes, AttributeDestinations.All);
 		}
 
 		[NotNull]
 		public static Attribute BuildErrorDotMessageAttribute([NotNull] String errorMessage)
 		{
-			return new Attribute("error.message", errorMessage, true, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
+			return new Attribute("error.message", errorMessage, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
 		}
 
 		#endregion

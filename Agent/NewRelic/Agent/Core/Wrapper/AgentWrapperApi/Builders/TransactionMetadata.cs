@@ -34,7 +34,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		string LatestCrossApplicationPathHash { get; }
 		void SetUri([NotNull] String uri);
 		void SetOriginalUri([NotNull] string uri);
-		void SetPath([NotNull] string path);
 		void SetReferrerUri([NotNull] string uri);
 		void SetQueueTime(TimeSpan queueTime);
 		void AddRequestParameter([NotNull] string key, [NotNull] string value);
@@ -108,8 +107,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[NotNull]
 		private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
 
-		[CanBeNull]
-		private volatile string _path;
 		private volatile int _httpResponseSubStatusCode = Int32.MinValue;
 		private volatile bool _hasResponseCatHeaders;
 
@@ -119,7 +116,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				.Except(new[] { _latestCrossApplicationPathHash })
 				.Take(PathHashMaker.AlternatePathHashMaxSize);
 
-			return new ImmutableTransactionMetadata(_uri, _originalUri, _path, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders);
+			return new ImmutableTransactionMetadata(_uri, _originalUri, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders);
 		}
 
 		public bool IsSynthetics
@@ -139,11 +136,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public void SetOriginalUri(string uri)
 		{
 			_originalUri = uri;
-		}
-
-		public void SetPath(string path)
-		{
-			_path = path;
 		}
 
 		public void SetReferrerUri(string uri)

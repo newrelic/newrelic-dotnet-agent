@@ -24,10 +24,11 @@
     <ExtensionCsPath>NewRelic.Agent.Core.Extension\Extension.cs</ExtensionCsPath>
   </PropertyGroup>
 
-  <Target Name="GenerateCode" BeforeTargets="CreateGitVersion" Condition="!Exists('$(ConfigurationCsPath)') Or !Exists('$(ExtensionCsPath)')">
+  <Target Name="GenerateCode" BeforeTargets="CoreCompile" DependsOnTargets="PrepareForBuild">
     <PropertyGroup>
       <Xsd2CodePath>$(SolutionDir)BuildTools\Xsd2Code.exe</Xsd2CodePath>
     </PropertyGroup>
+ 
     <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\Config\Configuration.xsd&quot; NewRelic.Agent.Core.Config Configuration.cs /cl /ap /sc /xa" /> -->
     <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd&quot; NewRelic.Agent.Core.Extension Extension.cs /cl /ap /sc /xa" /> -->
   </Target>

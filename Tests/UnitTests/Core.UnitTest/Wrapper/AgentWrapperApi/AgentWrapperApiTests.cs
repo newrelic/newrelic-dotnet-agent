@@ -108,7 +108,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_browserMonitoringScriptMaker = Mock.Create<IBrowserMonitoringScriptMaker>();
 			_configurationService = Mock.Create<IConfigurationService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-			
 			_agentWrapperApi = new AgentWrapperApi(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter);
 		}
 
@@ -276,14 +275,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agentWrapperApi.CurrentTransaction.SetOriginalUri("foo");
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetOriginalUri("foo"));
-		}
-
-		[Test]
-		public void SetTransactionPath_SetsTransactionPath()
-		{
-			_agentWrapperApi.CurrentTransaction.SetPath("foo");
-
-			Mock.Assert(() => _transaction.TransactionMetadata.SetPath("foo"));
 		}
 
 		[Test]

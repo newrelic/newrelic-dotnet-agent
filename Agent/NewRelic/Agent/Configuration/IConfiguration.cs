@@ -25,7 +25,14 @@ namespace NewRelic.Agent.Configuration
 		String BrowserMonitoringKey { get; }
 		Boolean BrowserMonitoringUseSsl { get; }
 
-		Boolean CaptureAttributes { get; }
+		string SecurityPoliciesToken { get; }
+		bool SecurityPoliciesTokenExists { get; }
+
+		bool CaptureAttributes { get; }
+		
+		bool CanUseAttributesIncludes { get; }
+		string CanUseAttributesIncludesSource { get; }
+
 		[NotNull]
 		IEnumerable<String> CaptureAttributesIncludes { get; }
 		[NotNull]
@@ -57,7 +64,9 @@ namespace NewRelic.Agent.Configuration
 		[NotNull]
 		IEnumerable<String> CaptureBrowserMonitoringAttributesExcludes { get; }
 
-		Boolean CaptureCustomParameters { get; }
+		bool CaptureCustomParameters { get; }
+		string CaptureCustomParametersSource { get; }
+
 		Boolean CaptureRequestParameters { get; }
 
 		[NotNull]
@@ -87,8 +96,13 @@ namespace NewRelic.Agent.Configuration
 		IEnumerable<String> ExceptionsToIgnore { get; }
 		String EncodingKey { get; }
 		Boolean HighSecurityModeEnabled { get; }
-		Boolean LiveInstrumentationEnabled { get; }
-		Boolean StripExceptionMessages { get; }
+
+		bool CustomInstrumentationEditorEnabled { get; }
+		string CustomInstrumentationEditorEnabledSource { get; }
+
+		bool StripExceptionMessages { get; }
+		string StripExceptionMessagesSource { get; }
+
 		Boolean InstanceReportingEnabled { get; }
 		Int32 InstrumentationLevel { get; }
 		Boolean InstrumentationLoggingEnabled { get; }
@@ -121,7 +135,10 @@ namespace NewRelic.Agent.Configuration
 		IEnumerable<String> HttpStatusCodesToIgnore { get; }
 		[NotNull]
 		IEnumerable<String> ThreadProfilingIgnoreMethods { get; }
-		Boolean CustomEventsEnabled { get; }
+
+		bool CustomEventsEnabled { get; }
+		string CustomEventsEnabledSource { get; }
+
 		UInt32 CustomEventsMaxSamplesStored { get; }
 		Boolean DisableSamplers { get; }
 		Boolean ThreadProfilingEnabled { get; }
@@ -138,7 +155,10 @@ namespace NewRelic.Agent.Configuration
 		TimeSpan TransactionTraceThreshold { get; }
 		Boolean TransactionTracerEnabled { get; }
 		Int32 TransactionTracerMaxSegments { get; }
-		String TransactionTracerRecordSql { get; }
+
+		string TransactionTracerRecordSql { get; }
+		string TransactionTracerRecordSqlSource { get; }
+
 		TimeSpan TransactionTracerStackThreshold { get; }
 		Int32 TransactionTracerMaxStackTraces { get; }
 		[NotNull]

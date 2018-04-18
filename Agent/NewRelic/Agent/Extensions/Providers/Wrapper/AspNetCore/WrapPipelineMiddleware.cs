@@ -115,7 +115,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, path);
 
 			transaction.SetUri(request.Path);
-			transaction.SetPath(request.Path);
 
 			if (request.QueryString.HasValue)
 			{

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>NewRelic.Azure.WebSites.Extension</id>
+    <version>REPLACE_WITH_VERSION</version>
+    <title>New Relic</title>
+    <authors>New Relic</authors>
+    <licenseUrl>http://newrelic.com/terms</licenseUrl>
+    <projectUrl>https://docs.newrelic.com/docs/agents/net-agent/azure-installation/azure-web-sites</projectUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>This extension adds the New Relic .NET Agent to your Azure WebSite.</description>
+    <iconUrl>http://newrelicdeploystorage.blob.core.windows.net/media/NewRelic-logo-square-50px.png</iconUrl>
+    <copyright>New Relic, Inc., 2018</copyright>
+    <tags>AzureSiteExtension</tags>
+    <packageTypes>
+      <packageType name="AzureSiteExtension" />
+    </packageTypes>
+  </metadata>
+  <files>
+    <file src="content\**\*.*" target="content" />
+  </files>
+</package>

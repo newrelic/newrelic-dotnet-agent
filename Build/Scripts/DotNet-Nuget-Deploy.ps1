@@ -10,7 +10,10 @@ function DeployNuGetPackage($packageName, $nugetPackageSource)
     Set-Location $env:WORKSPACE
     [Xml]$xml = Get-Content $nuspecPath
     $version = $xml.package.metadata.version
-    #Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version"
+    #Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version" -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
+    #if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+    #    $null
+    #}
 
     # Push the package to NuGet
     . C:\nuget.exe setApiKey $env:NuGetAPIKey

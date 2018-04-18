@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilization;
 using Newtonsoft.Json;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Configuration;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -61,7 +63,11 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("environment", NullValueHandling = NullValueHandling.Ignore)]
 		public readonly Environment Environment;
 
-		public ConnectModel(Int32 processId, [NotNull] String language, [NotNull] String hostName, [NotNull] IEnumerable<String> appNames, [NotNull] String agentVersion, [NotNull] SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, [NotNull] String identifier, [NotNull] IEnumerable<Label> labels, [NotNull] JavascriptAgentSettingsModel javascriptAgentSettings, [NotNull] UtilizationSettingsModel utilizationSettings, [CanBeNull] Environment environment)
+		[CanBeNull]
+		[JsonProperty("security_policies", NullValueHandling = NullValueHandling.Ignore)]
+		public readonly SecurityPoliciesSettingsModel SecurityPoliciesSettings;
+
+		public ConnectModel(Int32 processId, [NotNull] String language, [NotNull] String hostName, [NotNull] IEnumerable<String> appNames, [NotNull] String agentVersion, [NotNull] SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, [NotNull] String identifier, [NotNull] IEnumerable<Label> labels, [NotNull] JavascriptAgentSettingsModel javascriptAgentSettings, [NotNull] UtilizationSettingsModel utilizationSettings, [CanBeNull] Environment environment, [CanBeNull] SecurityPoliciesSettingsModel securityPoliciesSettings)
 		{
 			ProcessId = processId;
 			Language = language;
@@ -75,6 +81,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			JavascriptAgentSettings = javascriptAgentSettings;
 			UtilizationSettings = utilizationSettings;
 			Environment = environment;
+			SecurityPoliciesSettings = securityPoliciesSettings;
 		}
 	}
 
@@ -116,6 +123,42 @@ namespace NewRelic.Agent.Core.DataTransport
 		{
 			LoaderDebug = loaderDebug;
 			Loader = loader;
+		}
+	}
+
+	public class SecurityPoliciesSettingsModel
+	{
+		[JsonProperty("record_sql")]
+		public readonly Dictionary<string, bool> RecordSql;
+
+		[JsonProperty("attributes_include")]
+		public readonly Dictionary<string, bool> AttributesInclude;
+
+		[JsonProperty("allow_raw_exception_messages")]
+		public readonly Dictionary<string, bool> AllowRawExceptionMessages;
+
+		[JsonProperty("custom_events")]
+		public readonly Dictionary<string, bool> CustomEvents;
+
+		[JsonProperty("custom_parameters")]
+		public readonly Dictionary<string, bool> CustomParameters;
+
+		[JsonProperty("custom_instrumentation_editor")]
+		public readonly Dictionary<string, bool> CustomInstrumentationEditor;
+
+		public SecurityPoliciesSettingsModel(IConfiguration configuration)
+		{
+			if (configuration.TransactionTracerRecordSql == DefaultConfiguration.RawStringValue)
+			{
+				throw new ArgumentException($"{DefaultConfiguration.RawStringValue} is not a valid record_sql setting for security policies.");
+			}
+
+			RecordSql = new Dictionary<string, bool>() { { "enabled", configuration.TransactionTracerRecordSql == DefaultConfiguration.ObfuscatedStringValue} };
+			AttributesInclude = new Dictionary<string, bool>() { { "enabled", configuration.CanUseAttributesIncludes } };
+			AllowRawExceptionMessages = new Dictionary<string, bool>() { { "enabled", !configuration.StripExceptionMessages } };
+			CustomEvents = new Dictionary<string, bool>() { { "enabled", configuration.CustomEventsEnabled } };
+			CustomParameters = new Dictionary<string, bool>() { { "enabled", configuration.CaptureCustomParameters } };
+			CustomInstrumentationEditor = new Dictionary<string, bool>() { { "enabled", configuration.CustomInstrumentationEditorEnabled } };
 		}
 	}
 }

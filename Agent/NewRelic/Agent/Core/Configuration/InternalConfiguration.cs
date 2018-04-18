@@ -9,8 +9,8 @@ namespace NewRelic.Agent.Core.Configuration
 	/// </summary>
 	internal class InternalConfiguration : DefaultConfiguration
 	{
-		public InternalConfiguration([NotNull] IEnvironment environment, Config.configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic) :
-			base(environment, localConfiguration, serverConfiguration, runTimeConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic)
+		public InternalConfiguration([NotNull] IEnvironment environment, Config.configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic) :
+			base(environment, localConfiguration, serverConfiguration, runTimeConfiguration, securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic)
 		{}
 	}
 }

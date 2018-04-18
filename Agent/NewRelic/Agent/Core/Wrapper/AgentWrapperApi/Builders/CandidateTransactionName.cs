@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		private bool ChangeName(Int32 newPriority)
 		{
-			return !_isFrozen && (newPriority > _highestPriority || _currentTransactionName == null);
+			return !_isFrozen && (newPriority == AgentApi.UserTransactionNamePriority || newPriority > _highestPriority || _currentTransactionName == null);
 		}
 
 		public void Freeze()

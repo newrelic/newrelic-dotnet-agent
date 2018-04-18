@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var userErrorAttributes = new ConcurrentDictionary<String, Object>();
 			userErrorAttributes.Add("CustomErrorAttrKey", "CustomErrorAttrValue");
 
-			var metadata = new ImmutableTransactionMetadata("uri", "originalUri", "path", "referrerUri",
+			var metadata = new ImmutableTransactionMetadata("uri", "originalUri", "referrerUri",
 			new TimeSpan(1), new ConcurrentDictionary<String, String>(),
 			new ConcurrentDictionary<String, Object>(),
 			userErrorAttributes, 200,

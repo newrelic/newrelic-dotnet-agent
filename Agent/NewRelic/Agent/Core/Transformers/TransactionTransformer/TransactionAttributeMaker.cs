@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.SystemExtensions.Collections.Generic;
 using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -82,6 +80,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			{
 				attributes.TryAdd(Attribute.BuildErrorClassAttribute, errorData.ErrorTypeName);
 				attributes.TryAdd(Attribute.BuildErrorTypeAttribute, errorData.ErrorTypeName);
+
 				attributes.TryAdd(Attribute.BuildErrorMessageAttribute, errorData.ErrorMessage);
 				attributes.TryAdd(Attribute.BuildErrorDotMessageAttribute, errorData.ErrorMessage);
 			}
@@ -175,15 +174,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			return (immutableTransaction.TransactionMetadata.SyntheticsResourceId != null && immutableTransaction.TransactionMetadata.SyntheticsJobId != null && immutableTransaction.TransactionMetadata.SyntheticsMonitorId != null);
 
-		}
-
-		[NotNull]
-		private static IEnumerable<ImmutableSegmentTreeNode> GetNodesOfType<T>([NotNull] IEnumerable<ImmutableSegmentTreeNode> roots)
-		{
-			return roots
-				.SelectMany(root => root.Flatten(node => node.Children))
-				.Where(node => node != null)
-				.Where(node => node.Segment.GetType() == typeof (T));
 		}
 	}
 }

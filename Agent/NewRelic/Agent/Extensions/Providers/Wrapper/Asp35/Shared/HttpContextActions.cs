@@ -88,10 +88,6 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			var transaction = agentWrapperApi.CurrentTransaction;
 
 			var requestPath = RequestPathRetriever.TryGetRequestPath(httpContext.Request);
-			if (requestPath != null)
-			{
-				transaction.SetPath(requestPath);
-			}
 
 			var requestUrl = RequestUrlRetriever.TryGetRequestUrl(httpContext.Request, () => requestPath);
 			if (requestUrl != null)

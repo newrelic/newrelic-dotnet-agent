@@ -1,6 +1,6 @@
 Write-Host "Finding files for NUnit tests"
-$fileNames = (Get-ChildItem -Recurse -Path 'Tests\' -Include @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll') | Where { !$_.FullName.Contains('obj\Release') -and !$_.FullName.Contains('NewRelicStatusMonitor') } | Select Name -Unique)
-$files = (Get-ChildItem -Recurse -Path 'Tests\' -Include @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll') | Where { !$_.FullName.Contains('obj\Release') -and !$_.FullName.Contains('NewRelicStatusMonitor') })
+$fileNames = (Get-ChildItem -Recurse -Path 'Tests\UnitTests\' -Include @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll') | Where { !$_.FullName.Contains('obj\Release')} | Select Name -Unique)
+$files = (Get-ChildItem -Recurse -Path 'Tests\UnitTests\' -Include @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll') | Where { !$_.FullName.Contains('obj\Release')})
 
 Write-Host "Building file list for NUnit tests"
 $unitTestPaths = @()

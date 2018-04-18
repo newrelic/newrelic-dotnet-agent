@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var timestamp = errorData.NoticedAt;
 			const string path = "NewRelic.Api.Agent.NoticeError API Call";
-			var message = GetStrippedErrorMessage(errorData.ErrorMessage);
+			var message = errorData.ErrorMessage;
 			var exceptionClassName = errorData.ErrorTypeName;
 			var errorAttributesWireModel = GetErrorTraceAttributes(uri, customAttributes, stackTrace);
 			const string guid = null;
@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var timestamp = errorData.NoticedAt;
 			var path = transactionMetricName.PrefixedName;
-			var message = GetStrippedErrorMessage(errorData.ErrorMessage);
+			var message = errorData.ErrorMessage;
 			var exceptionClassName = errorData.ErrorTypeName;
 			var errorAttributesWireModel = GetErrorTraceAttributes(uri ?? string.Empty, transactionAttributes, stackTrace);
 			var guid = immutableTransaction.Guid;
@@ -104,16 +104,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var stackTrace = StackTraces.ScrubAndTruncate(errorData.StackTrace, _configurationService.Configuration.StackTraceMaximumFrames);
 			return stackTrace;
-		}
-
-		private string GetStrippedErrorMessage(string errorMessage)
-		{
-			if (_configurationService.Configuration.StripExceptionMessages)
-			{
-				return null;
-			}
-
-			return errorMessage;
 		}
 
 		[NotNull]

@@ -53,28 +53,40 @@ function CheckIfAppIs35
 	}
 }
 
+#Loading helper assemblies.
+[Reflection.Assembly]::LoadFile((Get-ChildItem NuGet.Core.dll).FullName)
+[Reflection.Assembly]::LoadFile((Get-ChildItem NewRelic.NuGetHelper.dll).FullName)
+[Reflection.Assembly]::LoadFile((Get-ChildItem Microsoft.Web.XmlTransform.dll).FullName)
 
+$nugetSource = "https://www.nuget.org/api/v2/"
 
-#set agent version to default value
-$agentVersion = "newest" 
+$packageName = "NewRelic.Azure.WebSites"
 
-$is35App = CheckIfAppIs35
-
-$LATEST_6X_AGENT = "6.999.999"
-
-if ($is35App -eq $TRUE){
-	$agentVersion = $LATEST_6X_AGENT
+if ($env:PROCESSOR_ARCHITECTURE -ne "x86"){
+	$packageName = "NewRelic.Azure.WebSites.x64"
 }
 
-if ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null){
-	try{
+$is35App = CheckIfAppIs35
+$agentVersion = ""
+
+if ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null) {
+	try {
 		$version = [System.Version]$env:NEWRELIC_AGENT_VERSION_OVERRIDE.ToString()
 		$agentVersion = $version.ToString()
 	}
-	catch{
+	catch {
 		exit "NEWRELIC_AGENT_VERSION_OVERRIDE environment variable has an incorrect Agent version number. Failed to install."
 	}
+}
+elseif ($is35App -eq $TRUE) {
+	$MAX_6X_AGENT_VERSION = "6.999.999"
+	$latest6XPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($packageName, $MAX_6X_AGENT_VERSION, $nugetSource)
+	$agentVersion = $latest6XPackage.Version
 } 
+else {
+	$latestPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($packageName,[NullString]::Value, $nugetSource)
+	$agentVersion = $latestPackage.Version
+}
 
 
 if ($env:NEWRELIC_LICENSEKEY -eq $null) {
@@ -83,7 +95,7 @@ if ($env:NEWRELIC_LICENSEKEY -eq $null) {
 
 try {
 	if (Test-Path -Path "NewRelicPackage") {
-		Remove-Item -Recurse NewRelicPackage
+		Remove-Item -Recurse NewRelicPackage -ErrorAction Stop
 	}
 }
 catch {
@@ -94,23 +106,8 @@ New-Item NewRelicPackage -ItemType directory
 cd NewRelicPackage
 New-Item logs -ItemType directory
 
-$nugetSource = "https://www.nuget.org/api/v2/"
+nuget install $packageName -Version $agentVersion -Source $nugetSource 
 
-$packageName = "NewRelic.Azure.WebSites"
-
-if ($env:PROCESSOR_ARCHITECTURE -ne "x86"){
-	$packageName = "NewRelic.Azure.WebSites.x64"
-}
-
-if($agentVersion -eq "newest"){
-	Install-Package -Name $packageName -Source $nugetSource -Provider NuGet -Force -Destination .
-}
-elseif ($agentVersion -eq $LATEST_6X_AGENT){
-	Install-Package -Name $packageName -MaximumVersion $agentVersion -Source $nugetSource -Provider NuGet -Force -Destination .
-}
-else{
-	Install-Package -Name $packageName -RequiredVersion $agentVersion -Source $nugetSource -Provider NuGet -Force -Destination .
-}
 
 $NEW_RELIC_FOLDER=$env:WEBROOT_PATH  + "\newrelic"
 $NEW_RELIC_CONFIG_FILE = $NEW_RELIC_FOLDER + "\newrelic.config"

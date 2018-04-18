@@ -25,6 +25,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[NotNull]
 		private ErrorTraceMaker _errorTraceMaker;
 
+		private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -126,9 +128,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsExceptionWithoutMessage_IfStripExceptionMessageEnabled()
 		{
-			Mock.Arrange(() => _configurationService.Configuration.StripExceptionMessages).Returns(true);
-
-			var errorData = ErrorData.FromParts("This message should be stripped.", "My type name", DateTime.UtcNow, false);
+			var errorData = ErrorData.FromParts("This message should be stripped.", "My type name", DateTime.UtcNow, true);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
 			var attributes = new Attributes();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -139,7 +139,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Assert.NotNull(errorTrace);
 			NrAssert.Multiple(
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
-				() => Assert.AreEqual(null, errorTrace.Message),
+				() => Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
 				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)

@@ -4,7 +4,10 @@ $ErrorActionPreference = "SilentlyContinue"
 [Xml]$xml = Get-Content .\NewRelicAzureCloudCI\NewRelicAzureCloudCI\packages.config
 $version = $xml.packages.SelectSingleNode("//package[@id='NewRelicWindowsAzure']").version
 $authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
-Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version" -Method POST -Headers @{'Authorization'=$authorization}
+Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version" -Method POST -Headers @{'Authorization'=$authorization} -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
+if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+    $null
+}
 
 # Deploy the cloud service to Azure
 $appPublishDir = '.\NewRelicAzureCloudCI\NewRelicAzureCloudCI.Azure\bin\Release\app.publish'

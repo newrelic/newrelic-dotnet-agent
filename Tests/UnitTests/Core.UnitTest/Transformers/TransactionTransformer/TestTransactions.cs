@@ -107,7 +107,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode);
 
 			metadata.SetOriginalUri("originalUri");
-			metadata.SetPath("path");
 			metadata.SetReferrerUri("referrerUri");
 			metadata.SetCrossApplicationPathHash("crossApplicationPathHash");
 			metadata.SetCrossApplicationReferrerContentLength(10000);

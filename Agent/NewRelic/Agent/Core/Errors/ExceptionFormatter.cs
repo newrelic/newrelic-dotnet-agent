@@ -7,11 +7,11 @@ namespace NewRelic.Agent.Core.Errors
 		public static string FormatStackTrace(Exception exception, bool stripErrorMessage)
 		{
 			var type = exception.GetType().FullName;
-			var message = stripErrorMessage ? null : $": {exception.Message}";
+			var message = stripErrorMessage ? ErrorData.StripExceptionMessagesMessage : exception.Message;
 			var formattedInnerException = FormatInnerStackTrace(exception.InnerException, stripErrorMessage);
 			var formattedStackTrace = exception.StackTrace != null ? System.Environment.NewLine + exception.StackTrace : null;
 
-			var result = $"{type}{message}{formattedInnerException}{formattedStackTrace}";
+			var result = $"{type}: {message}{formattedInnerException}{formattedStackTrace}";
 
 			return result;
 		}

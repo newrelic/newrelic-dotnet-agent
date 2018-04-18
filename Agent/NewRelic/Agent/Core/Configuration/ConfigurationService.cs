@@ -25,6 +25,9 @@ namespace NewRelic.Agent.Core.Configuration
 		private ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
 
 		[NotNull]
+		private SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+
+		[NotNull]
 		private RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
 
 		[NotNull]
@@ -46,12 +49,19 @@ namespace NewRelic.Agent.Core.Configuration
 			_httpRuntimeStatic = httpRuntimeStatic;
 			_configurationManagerStatic = configurationManagerStatic;
 
-			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
 
 			_subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
 			_subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
 			_subscriptions.Add<AppNameUpdateEvent>(OnAppNameUpdate);
 			_subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
+			_subscriptions.Add<SecurityPoliciesConfigurationUpdatedEvent>(OnSecurityPoliciesUpdated);
+		}
+
+		private void OnSecurityPoliciesUpdated([NotNull] SecurityPoliciesConfigurationUpdatedEvent securityPoliciesConfigurationUpdatedEvent)
+		{
+			_securityPoliciesConfiguration = securityPoliciesConfigurationUpdatedEvent.Configuration;
+			UpdateAndPublishConfiguration(ConfigurationUpdateSource.SecurityPolicies);
 		}
 
 		private void OnConfigurationDeserialized([NotNull] ConfigurationDeserializedEvent configurationDeserializedEvent)
@@ -99,7 +109,7 @@ namespace NewRelic.Agent.Core.Configuration
 
 		private void UpdateAndPublishConfiguration(ConfigurationUpdateSource configurationUpdateSource)
 		{
-			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
 
 			var configurationUpdatedEvent = new ConfigurationUpdatedEvent(Configuration, configurationUpdateSource);
 			EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);

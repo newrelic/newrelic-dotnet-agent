@@ -55,7 +55,7 @@ namespace NewRelic.Agent.Core.Transformers
 			var errorEventAttributes = new Attributes();
 			var errorTraceAttributes = new Attributes();
 
-			if (customAttributes != null)
+			if (customAttributes != null && _configurationService.Configuration.CaptureCustomParameters)
 			{
 				foreach(var customAttr in customAttributes)
 				{

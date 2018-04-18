@@ -25,6 +25,15 @@ namespace NewRelic.Agent.Core.Configuration
 	{
 		private const int DefaultSslPort = 443;
 
+		public static readonly string RawStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.raw);
+		public static readonly string ObfuscatedStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
+		public static readonly string OffStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.off);
+
+		private const string HighSecurityConfigSource = "High Security Mode";
+		private const string SecurityPolicyConfigSource = "Security Policy";
+		private const string LocalConfigSource = "Local Configuration";
+		private const string ServerConfigSource = "Server Configuration";
+
 		private static Int64 _currentConfigurationVersion;
 
 		[NotNull]
@@ -50,7 +59,8 @@ namespace NewRelic.Agent.Core.Configuration
 		private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
 		[NotNull]
 		private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
-
+		[NotNull]
+		private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
 		/// <summary>
 		/// _localConfiguration.AppSettings will be loaded into this field
 		/// </summary>
@@ -65,7 +75,7 @@ namespace NewRelic.Agent.Core.Configuration
 			ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
 		}
 
-		protected DefaultConfiguration([NotNull] IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
+		protected DefaultConfiguration([NotNull] IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
 			: this()
 		{
 			_environment = environment;
@@ -74,11 +84,21 @@ namespace NewRelic.Agent.Core.Configuration
 			_configurationManagerStatic = configurationManagerStatic;
 
 			if (localConfiguration != null)
+			{
 				_localConfiguration = localConfiguration;
+			}
 			if (serverConfiguration != null)
+			{
 				_serverConfiguration = serverConfiguration;
+			}
 			if (runTimeConfiguration != null)
+			{
 				_runTimeConfiguration = runTimeConfiguration;
+			}
+			if (securityPoliciesConfiguration != null)
+			{
+				_securityPoliciesConfiguration = securityPoliciesConfiguration;
+			}
 
 			LogDeprecationWarnings();
 
@@ -112,7 +132,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private Int32 TryGetAppSettingAsIntWithDefault([NotNull] String key, Int32 defaultValue)
 		{
 			var value = _appSettings.GetValueOrDefault(key);
-
+			 
 			Int32 parsedInt;
 			var parsedSuccessfully = Int32.TryParse(value, out parsedInt);
 			if (!parsedSuccessfully)
@@ -121,7 +141,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return parsedInt;
 		}
 
-		// ReSharper disable PossibleNullReferenceException
+		public bool SecurityPoliciesTokenExists => !String.IsNullOrEmpty(SecurityPoliciesToken);
 
 		#region IConfiguration Properties
 
@@ -188,15 +208,13 @@ namespace NewRelic.Agent.Core.Configuration
 
 			throw new Exception("An application name must be provided");
 		}
-		
+
 		public Boolean AutoStartAgent { get { return _localConfiguration.service.autoStart; } }
 
 		public Int32 WrapperExceptionLimit { get { return TryGetAppSettingAsIntWithDefault("WrapperExceptionLimit", 5); } }
 
-		
-
 		#region Browser Monitoring
-		
+
 		public virtual String BrowserMonitoringApplicationId { get { return _serverConfiguration.RumSettingsApplicationId ?? String.Empty; } }
 		public virtual Boolean BrowserMonitoringAutoInstrument { get { return _localConfiguration.browserMonitoring.autoInstrument; } }
 		public virtual String BrowserMonitoringBeaconAddress { get { return _serverConfiguration.RumSettingsBeacon ?? String.Empty; } }
@@ -209,18 +227,89 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion
 
-		#region Attributes
-
-		public virtual Boolean CaptureAttributes { get { return _localConfiguration.attributes.enabled; } }
-
-		public virtual IEnumerable<String> CaptureAttributesIncludes
+		private string _securityPoliciesToken;
+		[NotNull]
+		public virtual string SecurityPoliciesToken
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureAttributesIncludes, () => new HashSet<String>(_localConfiguration.attributes.include));
+				if (_securityPoliciesToken != null)
+				{
+					return _securityPoliciesToken;
+				}
+
+				_securityPoliciesToken = EnvironmentOverrides(_localConfiguration.securityPoliciesToken ?? string.Empty,
+						"NEW_RELIC_SECURITY_POLICIES_TOKEN")
+					.Trim();
+
+				return _securityPoliciesToken;
 			}
 		}
-		private IEnumerable<String> _captureAttributesIncludes;
+
+		#region Attributes
+
+		public virtual bool CaptureAttributes => _localConfiguration.attributes.enabled;
+
+		private BoolConfigurationItem _canUseAttributesIncludes;
+
+		public string CanUseAttributesIncludesSource
+		{
+			get
+			{
+				if (_canUseAttributesIncludes == null)
+				{
+					_canUseAttributesIncludes = GetCanUseAttributesIncludesConfiguration();
+				}
+
+				return _canUseAttributesIncludes.Source;
+			}
+		}
+
+		public virtual bool CanUseAttributesIncludes
+		{
+			get
+			{
+				if (_canUseAttributesIncludes == null)
+				{
+					_canUseAttributesIncludes = GetCanUseAttributesIncludesConfiguration();
+				}
+
+				return _canUseAttributesIncludes.Value;
+			}
+		}
+
+		private BoolConfigurationItem GetCanUseAttributesIncludesConfiguration()
+		{
+			if (HighSecurityModeEnabled)
+			{
+				return new BoolConfigurationItem(false, HighSecurityConfigSource);
+			}
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName)
+				&& (_securityPoliciesConfiguration.AttributesInclude.Enabled == false))
+			{
+				return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
+			}
+
+			return new BoolConfigurationItem(CaptureAttributes, LocalConfigSource);
+		}
+
+		private IEnumerable<string> _captureAttributesIncludes;
+
+		public virtual IEnumerable<string> CaptureAttributesIncludes
+		{
+			get
+			{
+				if (CanUseAttributesIncludes)
+				{
+					return Memoizer.Memoize(ref _captureAttributesIncludes, () => new HashSet<string>(_localConfiguration.attributes.include));
+				}
+
+				return Memoizer.Memoize(ref _captureAttributesIncludes, () => new List<string>());
+			}
+		}
+
+		private IEnumerable<String> _captureAttributesExcludes;
 
 		public virtual IEnumerable<String> CaptureAttributesExcludes
 		{
@@ -239,44 +328,67 @@ namespace NewRelic.Agent.Core.Configuration
 				});
 			}
 		}
-		private IEnumerable<String> _captureAttributesExcludes;
+
+		private IEnumerable<String> _captureAttributesDefaultExcludes;
 
 		public virtual IEnumerable<String> CaptureAttributesDefaultExcludes
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureAttributesDefaultExcludes, () => new HashSet<String> {"identity.*"});
+				return Memoizer.Memoize(ref _captureAttributesDefaultExcludes, () => new HashSet<String> { "identity.*" });
 			}
 		}
-		private IEnumerable<String> _captureAttributesDefaultExcludes;
+		
+		public virtual bool CaptureTransactionEventsAttributes => ShouldCaptureTransactionEventAttributes();
 
-		public virtual Boolean CaptureTransactionEventsAttributes
+		public bool ShouldCaptureTransactionEventAttributes()
+		{
+			if (_localConfiguration.attributes.enabled == false)
+			{
+				return false;
+			}
+
+			if (_localConfiguration.transactionEvents.attributes.enabledSpecified)
+			{
+				return _localConfiguration.transactionEvents.attributes.enabled;
+			}
+
+			if (_localConfiguration.analyticsEvents.captureAttributesSpecified)
+			{
+				return _localConfiguration.analyticsEvents.captureAttributes;
+			}
+
+			return CaptureTransactionEventsAttributesDefault;
+		}
+
+		private IEnumerable<string> _captureTransactionEventAttributesIncludes;
+
+		public virtual IEnumerable<string> CaptureTransactionEventAttributesIncludes
 		{
 			get
 			{
-				if (_localConfiguration.transactionEvents.attributes.enabledSpecified)
+				if (ShouldCaptureTransactionEventAttributesIncludes())
 				{
-					return _localConfiguration.transactionEvents.attributes.enabled;
+					return Memoizer.Memoize(ref _captureTransactionEventAttributesIncludes, () => new HashSet<string>(_localConfiguration.transactionEvents.attributes.include));
 				}
-				else if (_localConfiguration.analyticsEvents.captureAttributesSpecified)
-				{
-					return _localConfiguration.analyticsEvents.captureAttributes;
-				}
-				else
-				{
-					return CaptureTransactionEventsAttributesDefault;
-				}
+
+				return Memoizer.Memoize(ref _captureTransactionEventAttributesIncludes, () => new List<string>());
 			}
 		}
 
-		public virtual IEnumerable<String> CaptureTransactionEventAttributesIncludes
+		private bool ShouldCaptureTransactionEventAttributesIncludes()
 		{
-			get
+			var shouldCapture = !HighSecurityModeEnabled && CaptureTransactionEventsAttributes;
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
 			{
-				return Memoizer.Memoize(ref _captureTransactionEventAttributesIncludes, () => new HashSet<String>(_localConfiguration.transactionEvents.attributes.include));
+				shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
 			}
+
+			return shouldCapture;
 		}
-		private IEnumerable<String> _captureTransactionEventAttributesIncludes;
+
+		private IEnumerable<String> _captureTransactionEventAttributesExcludes;
 
 		public virtual IEnumerable<String> CaptureTransactionEventAttributesExcludes
 		{
@@ -285,43 +397,70 @@ namespace NewRelic.Agent.Core.Configuration
 				return Memoizer.Memoize(ref _captureTransactionEventAttributesExcludes, () => new HashSet<String>(_localConfiguration.transactionEvents.attributes.exclude));
 			}
 		}
-		private IEnumerable<String> _captureTransactionEventAttributesExcludes;
 
-		public virtual Boolean CaptureTransactionTraceAttributes
+		public virtual bool CaptureTransactionTraceAttributes => ShouldCaptureTransactionTraceAttributes();
+
+		private bool ShouldCaptureTransactionTraceAttributes()
+		{
+			if (_localConfiguration.attributes.enabled == false)
+			{
+				return false;
+			}
+
+			if (_localConfiguration.transactionTracer.attributes.enabledSpecified)
+			{
+				return _localConfiguration.transactionTracer.attributes.enabled;
+			}
+
+			if (_localConfiguration.transactionTracer.captureAttributesSpecified)
+			{
+				return _localConfiguration.transactionTracer.captureAttributes;
+			}
+
+			return CaptureTransactionTraceAttributesDefault;
+		}
+
+		private IEnumerable<string> _captureTransactionTraceAttributesIncludes;
+
+		public virtual IEnumerable<string> CaptureTransactionTraceAttributesIncludes
 		{
 			get
 			{
-				if (_localConfiguration.transactionTracer.attributes.enabledSpecified)
+				if (ShouldCaptureTransactionTraceAttributesIncludes())
 				{
-					return _localConfiguration.transactionTracer.attributes.enabled;
+					return Memoizer.Memoize(ref _captureTransactionTraceAttributesIncludes, () =>
+					{
+						var includes = new HashSet<string>(_localConfiguration.transactionTracer.attributes.include);
+
+						if (CaptureRequestParameters)
+						{
+							includes.Add("request.parameters.*");
+						}
+
+						if (DeprecatedCaptureIdentityParameters)
+						{
+							includes.Add("identity.*");
+						}
+
+						return includes;
+					});
 				}
-				else if (_localConfiguration.transactionTracer.captureAttributesSpecified)
-				{
-					return _localConfiguration.transactionTracer.captureAttributes;
-				}
-				else
-				{
-					return CaptureTransactionTraceAttributesDefault;
-				}
+
+				return Memoizer.Memoize(ref _captureTransactionTraceAttributesIncludes, () => new List<string>());
 			}
 		}
 
-		public virtual IEnumerable<String> CaptureTransactionTraceAttributesIncludes
+		private bool ShouldCaptureTransactionTraceAttributesIncludes()
 		{
-			get
+			var shouldCapture = !HighSecurityModeEnabled && CaptureTransactionTraceAttributes;
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
 			{
-				return Memoizer.Memoize(ref _captureTransactionTraceAttributesIncludes, () =>
-				{
-					var includes = new HashSet<String>(_localConfiguration.transactionTracer.attributes.include);
-					if (CaptureRequestParameters)
-						includes.Add("request.parameters.*");
-					if (DeprecatedCaptureIdentityParameters)
-						includes.Add("identity.*");
-					return includes;
-				});
+				shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
 			}
+
+			return shouldCapture;
 		}
-		private IEnumerable<String> _captureTransactionTraceAttributesIncludes;
 
 		public virtual IEnumerable<String> CaptureTransactionTraceAttributesExcludes
 		{
@@ -332,41 +471,73 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 		private IEnumerable<String> _captureTransactionTraceAttributesExcludes;
 
-		public virtual Boolean CaptureErrorCollectorAttributes
+
+		public virtual bool CaptureErrorCollectorAttributes => ShouldCaptureErrorCollectorAttributes();
+
+		private bool ShouldCaptureErrorCollectorAttributes()
+		{
+			if (_localConfiguration.attributes.enabled == false)
+			{
+				return false;
+			}
+
+			if (_localConfiguration.errorCollector.attributes.enabledSpecified)
+			{
+				return _localConfiguration.errorCollector.attributes.enabled;
+			}
+
+			if (_localConfiguration.errorCollector.captureAttributesSpecified)
+			{
+				return _localConfiguration.errorCollector.captureAttributes;
+			}
+
+			return CaptureErrorCollectorAttributesDefault;
+		}
+
+
+		private IEnumerable<string> _captureErrorCollectorAttributesIncludes;
+
+		public virtual IEnumerable<string> CaptureErrorCollectorAttributesIncludes
 		{
 			get
 			{
-				if (_localConfiguration.errorCollector.attributes.enabledSpecified)
+				if (ShouldCaptureErrorCollectorAttributesIncludes())
 				{
-					return _localConfiguration.errorCollector.attributes.enabled;
+					return Memoizer.Memoize(ref _captureErrorCollectorAttributesIncludes, () =>
+					{
+						var includes = new HashSet<string>(_localConfiguration.errorCollector.attributes.include);
+
+						if (CaptureRequestParameters)
+						{
+							includes.Add("request.parameters.*");
+						}
+
+						if (DeprecatedCaptureIdentityParameters)
+						{
+							includes.Add("identity.*");
+						}
+							
+						return includes;
+					});
 				}
-				else if (_localConfiguration.errorCollector.captureAttributesSpecified)
-				{
-					return _localConfiguration.errorCollector.captureAttributes;
-				}
-				else
-				{
-					return CaptureErrorCollectorAttributesDefault;
-				}
+
+				return Memoizer.Memoize(ref _captureErrorCollectorAttributesExcludes, () => new List<string>());
 			}
 		}
 
-		public virtual IEnumerable<String> CaptureErrorCollectorAttributesIncludes
+		private bool ShouldCaptureErrorCollectorAttributesIncludes()
 		{
-			get
+			var shouldCapture = !HighSecurityModeEnabled && CaptureErrorCollectorAttributes;
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
 			{
-				return Memoizer.Memoize(ref _captureErrorCollectorAttributesIncludes, () =>
-				{
-					var includes = new HashSet<String>(_localConfiguration.errorCollector.attributes.include);
-					if (CaptureRequestParameters)
-						includes.Add("request.parameters.*");
-					if (DeprecatedCaptureIdentityParameters)
-						includes.Add("identity.*");
-					return includes;
-				});
+				shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
 			}
+
+			return shouldCapture;
 		}
-		private IEnumerable<String> _captureErrorCollectorAttributesIncludes;
+
+		private IEnumerable<String> _captureErrorCollectorAttributesExcludes;
 
 		public virtual IEnumerable<String> CaptureErrorCollectorAttributesExcludes
 		{
@@ -375,35 +546,55 @@ namespace NewRelic.Agent.Core.Configuration
 				return Memoizer.Memoize(ref _captureErrorCollectorAttributesExcludes, () => new HashSet<String>(_localConfiguration.errorCollector.attributes.exclude));
 			}
 		}
-		private IEnumerable<String> _captureErrorCollectorAttributesExcludes;
 
-		public virtual Boolean CaptureBrowserMonitoringAttributes
+		public virtual bool CaptureBrowserMonitoringAttributes => ShouldCaptureBrowserMonitorAttributes();
+
+		private bool ShouldCaptureBrowserMonitorAttributes()
+		{
+			if (_localConfiguration.attributes.enabled == false)
+			{
+				return false;
+			}
+
+			if (_localConfiguration.browserMonitoring.attributes.enabledSpecified)
+			{
+				return _localConfiguration.browserMonitoring.attributes.enabled;
+			}
+
+			if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
+			{
+				return _localConfiguration.browserMonitoring.captureAttributes;
+			}
+
+			return CaptureBrowserMonitoringAttributesDefault;
+		}
+
+		private IEnumerable<string> _captureBrowserMonitoringAttributesIncludes;
+
+		public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesIncludes
 		{
 			get
 			{
-				if (_localConfiguration.browserMonitoring.attributes.enabledSpecified)
+				if (ShouldCaptureBrowserMonitoringAttributesIncludes())
 				{
-					return _localConfiguration.browserMonitoring.attributes.enabled;
+					return Memoizer.Memoize(ref _captureBrowserMonitoringAttributesIncludes, () => new HashSet<string>(_localConfiguration.browserMonitoring.attributes.include));
 				}
-				else if (_localConfiguration.browserMonitoring.captureAttributesSpecified)
-				{
-					return _localConfiguration.browserMonitoring.captureAttributes;
-				}
-				else
-				{
-					return CaptureBrowserMonitoringAttributesDefault;
-				}
+
+				return Memoizer.Memoize(ref _captureBrowserMonitoringAttributesIncludes, () => new List<string>());
 			}
 		}
 
-		public virtual IEnumerable<String> CaptureBrowserMonitoringAttributesIncludes
+		private bool ShouldCaptureBrowserMonitoringAttributesIncludes()
 		{
-			get
+			var shouldCapture = !HighSecurityModeEnabled && CaptureBrowserMonitoringAttributes;
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
 			{
-				return Memoizer.Memoize(ref _captureBrowserMonitoringAttributesIncludes, () => new HashSet<String>(_localConfiguration.browserMonitoring.attributes.include));
+				shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
 			}
+
+			return shouldCapture;
 		}
-		private IEnumerable<String> _captureBrowserMonitoringAttributesIncludes;
 
 		public virtual IEnumerable<String> CaptureBrowserMonitoringAttributesExcludes
 		{
@@ -414,19 +605,81 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 		private IEnumerable<String> _captureBrowserMonitoringAttributesExcludes;
 
-		// Deprecated: This configuration property should be replaced by Attribute Include/Exclude functionality.  However, because the attribute
-		// keys for custom parameters are not prefixed with something, ("user.*") there's currently no way to deprecate the property in the config file.
-		public virtual Boolean CaptureCustomParameters
+
+		private BoolConfigurationItem _shouldCaptureCustomParameters;
+
+		public string CaptureCustomParametersSource
 		{
 			get
 			{
-				if (_localConfiguration.parameterGroups != null && _localConfiguration.parameterGroups.customParameters != null &&
-					!_localConfiguration.parameterGroups.customParameters.enabledSpecified)
+				if (_shouldCaptureCustomParameters == null)
 				{
-					return HighSecurityModeOverrides(false, DeprecatedCustomParametersEnabledDefault);
+					_shouldCaptureCustomParameters = GetShouldCaptureCustomParametersConfiguration();
 				}
-				return HighSecurityModeOverrides(false, _localConfiguration.parameterGroups.customParameters.enabled);
+
+				return _shouldCaptureCustomParameters.Source;
 			}
+		}
+
+		public virtual bool CaptureCustomParameters
+		{
+			get
+			{
+				if (_shouldCaptureCustomParameters == null)
+				{
+					_shouldCaptureCustomParameters = GetShouldCaptureCustomParametersConfiguration();
+				}
+
+				return _shouldCaptureCustomParameters.Value;
+			}
+		}
+
+		private BoolConfigurationItem GetShouldCaptureCustomParametersConfiguration()
+		{
+			if (HighSecurityModeEnabled)
+			{
+				return new BoolConfigurationItem(false, HighSecurityConfigSource);
+			}
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.CustomParametersPolicyName)
+				&& (_securityPoliciesConfiguration.CustomParameters.Enabled == false))
+			{
+				return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
+			}
+
+			var localConfigValue = GetLocalShouldCaptureCustomParameters();
+
+			return new BoolConfigurationItem(localConfigValue, LocalConfigSource);
+		}
+
+		/// This method combines logic for the deprecated parameterGroups.customParameters and the 
+		/// newer customParameters added for implementation of Language Agent Security Policies (LASP). 
+		/// parameterGroups.customParameters will be removed with a future major version release, but customParameters 
+		/// must remain in order maintain the requirements of LASP and High Security Mode (HSM).  
+		private bool GetLocalShouldCaptureCustomParameters()
+		{
+			var deprecatedSpecified = _localConfiguration.parameterGroups.customParameters.enabledSpecified;
+
+			if ((_localConfiguration.customParameters.enabledSpecified == false)
+			    && (deprecatedSpecified == false))
+			{
+				return CaptureCustomParametersAttributesDefault;
+			}
+
+			var localConfigValue = true;
+			if (_localConfiguration.customParameters.enabledSpecified)
+			{
+				localConfigValue = _localConfiguration.customParameters.enabled;
+			}
+
+			if (_localConfiguration.parameterGroups.customParameters.enabledSpecified)
+			{
+				//TODO: Can we get logging out of the configuration class?
+				LogDeprecatedPropertyUse("parameterGroups.customParameters", "customParameters");
+				localConfigValue = localConfigValue && _localConfiguration.parameterGroups.customParameters.enabled;
+			}
+
+			return localConfigValue;
 		}
 
 		public virtual Boolean CaptureRequestParameters
@@ -533,9 +786,99 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public virtual String EncodingKey { get { return _serverConfiguration.EncodingKey; } }
 
-		public virtual Boolean HighSecurityModeEnabled { get { return _localConfiguration.highSecurity.enabled; } }
-		public virtual Boolean LiveInstrumentationEnabled { get { return HighSecurityModeOverrides(false, _localConfiguration.liveInstrumentation.enabled); } }
-		public virtual Boolean StripExceptionMessages { get { return HighSecurityModeOverrides(true, _localConfiguration.stripExceptionMessages.enabled); } }
+		public virtual bool HighSecurityModeEnabled => _localConfiguration.highSecurity.enabled;
+
+
+		private BoolConfigurationItem _customInstrumentationEditorIsEnabled;
+
+		public string CustomInstrumentationEditorEnabledSource
+		{
+			get
+			{
+				if (_customInstrumentationEditorIsEnabled == null)
+				{
+					_customInstrumentationEditorIsEnabled = GetCustomInstrumentationEditorConfiguration();
+				}
+
+				return _customInstrumentationEditorIsEnabled.Source;
+			}
+		}
+
+		public virtual bool CustomInstrumentationEditorEnabled
+		{
+			get
+			{
+				if (_customInstrumentationEditorIsEnabled == null)
+				{
+					_customInstrumentationEditorIsEnabled = GetCustomInstrumentationEditorConfiguration();
+				}
+
+				return _customInstrumentationEditorIsEnabled.Value;
+			}
+		}
+
+		private BoolConfigurationItem GetCustomInstrumentationEditorConfiguration()
+		{
+			if (HighSecurityModeEnabled)
+			{
+				return new BoolConfigurationItem(false, HighSecurityConfigSource);
+			}
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.CustomInstrumentationEditorPolicyName)
+			    && (_securityPoliciesConfiguration.CustomInstrumentationEditor.Enabled == false))
+			{
+				return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
+			}
+
+			return new BoolConfigurationItem(_localConfiguration.customInstrumentationEditor.enabled, LocalConfigSource);
+		}
+
+		private BoolConfigurationItem _shouldStripExceptionMessages;
+
+		public string StripExceptionMessagesSource
+		{
+			get
+			{
+				if (_shouldStripExceptionMessages == null)
+				{
+					_shouldStripExceptionMessages = GetShouldStripExceptionMessagesConfiguration();
+				}
+
+				return _shouldStripExceptionMessages.Source;
+			}
+		}
+
+		public virtual bool StripExceptionMessages
+		{
+			get
+			{
+				if (_shouldStripExceptionMessages == null)
+				{
+					_shouldStripExceptionMessages = GetShouldStripExceptionMessagesConfiguration();
+				}
+
+				return _shouldStripExceptionMessages.Value;
+			}
+		}
+
+		private BoolConfigurationItem GetShouldStripExceptionMessagesConfiguration()
+		{
+			// true is the more secure state, which will remove raw exception messages
+
+			if (HighSecurityModeEnabled)
+			{
+				return new BoolConfigurationItem(true, HighSecurityConfigSource);
+			}
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AllowRawExceptionMessagePolicyName)
+			    && (_securityPoliciesConfiguration.AllowRawExceptionMessage.Enabled == false))
+			{
+				return new BoolConfigurationItem(true, SecurityPolicyConfigSource);
+			}
+
+			return new BoolConfigurationItem(_localConfiguration.stripExceptionMessages.enabled, LocalConfigSource);
+		}
+
 		public virtual Int32 InstrumentationLevel { get { return ServerOverrides(_serverConfiguration.RpmConfig.InstrumentationLevel, 3); } }
 		public virtual Boolean InstrumentationLoggingEnabled { get { return _localConfiguration.instrumentation.log; } }
 
@@ -578,7 +921,7 @@ namespace NewRelic.Agent.Core.Configuration
 		#region DatastoreTracer
 		public Boolean InstanceReportingEnabled { get { return _localConfiguration.datastoreTracer.instanceReporting.enabled; } }
 
-		public Boolean DatabaseNameReportingEnabled { get { return _localConfiguration.datastoreTracer.databaseNameReporting.enabled;} }
+		public Boolean DatabaseNameReportingEnabled { get { return _localConfiguration.datastoreTracer.databaseNameReporting.enabled; } }
 
 		#endregion
 
@@ -632,15 +975,55 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#region Custom Events
 
-		public virtual Boolean CustomEventsEnabled 
-		{ 
+
+		private BoolConfigurationItem _customEventsAreEnabled;
+
+		public string CustomEventsEnabledSource
+		{
 			get
 			{
-				if (HighSecurityModeEnabled)
-					return false;
+				if (_customEventsAreEnabled == null)
+				{
+					_customEventsAreEnabled = GetCustomEventsAreEnabledConfiguration();
+				}
 
-				return ServerCanDisable(_serverConfiguration.CustomEventCollectionEnabled, _localConfiguration.customEvents.enabled);
-			} 
+				return _customEventsAreEnabled.Source;
+			}
+		}
+
+		public virtual bool CustomEventsEnabled
+		{
+			get
+			{
+				if (_customEventsAreEnabled == null)
+				{
+					_customEventsAreEnabled = GetCustomEventsAreEnabledConfiguration();
+				}
+
+				return _customEventsAreEnabled.Value;
+			}
+		}
+
+		private BoolConfigurationItem GetCustomEventsAreEnabledConfiguration()
+		{
+			if (HighSecurityModeEnabled)
+			{
+				return new BoolConfigurationItem(false, HighSecurityConfigSource);
+			}
+
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.CustomEventsPolicyName)
+				&& (_securityPoliciesConfiguration.CustomEvents.Enabled == false))
+			{
+				return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
+			}
+
+			if (_serverConfiguration.CustomEventCollectionEnabled.HasValue 
+				&& (_serverConfiguration.CustomEventCollectionEnabled.Value == false))
+			{
+				return new BoolConfigurationItem(false, ServerConfigSource);
+			}
+
+			return new BoolConfigurationItem(_localConfiguration.customEvents.enabled, LocalConfigSource);
 		}
 
 		public virtual UInt32 CustomEventsMaxSamplesStored { get { return 10000; } }
@@ -747,21 +1130,74 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 		public virtual Int32 TransactionTracerMaxSegments { get { return _localConfiguration.transactionTracer.maxSegments; } }
 
-		public virtual String TransactionTracerRecordSql
+		private RecordSqlConfigurationItem _recordSqlConfiguration;
+
+		public string TransactionTracerRecordSqlSource
 		{
 			get
 			{
-				var highSecurityValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
-				var localAttributeValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), _localConfiguration.transactionTracer.recordSql);
-				var serverAttributeValue = _serverConfiguration.RpmConfig.TransactionTracerRecordSql;
-				var serverOrLocalAttributeValue = ServerOverrides(serverAttributeValue, localAttributeValue);
+				if (_recordSqlConfiguration == null)
+				{
+					_recordSqlConfiguration = GetRecordSqlConfiguration();
+				}
 
-				// don't let high security mode override "off" with "obfuscated".
-				if (serverOrLocalAttributeValue.Equals("off", StringComparison.InvariantCultureIgnoreCase))
-					highSecurityValue = "off";
-				
-				return HighSecurityModeOverrides(highSecurityValue, serverOrLocalAttributeValue);
+				return _recordSqlConfiguration.Source;
 			}
+		}
+
+		public virtual string TransactionTracerRecordSql
+		{
+			get
+			{
+				if (_recordSqlConfiguration == null)
+				{
+					_recordSqlConfiguration = GetRecordSqlConfiguration();
+				}
+
+				return _recordSqlConfiguration.Value;
+			}
+		}
+
+		private RecordSqlConfigurationItem GetRecordSqlConfiguration()
+		{
+			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.RecordSqlPolicyName))
+			{
+				var localRecordSql = _localConfiguration.transactionTracer.recordSql;
+				var serverConfigRecordSql = _serverConfiguration.RpmConfig.TransactionTracerRecordSql;
+
+				// "raw" is never allowed with security policies
+				var policyValue = _securityPoliciesConfiguration.RecordSql.Enabled ? ObfuscatedStringValue : OffStringValue;
+
+				var mostRestrictiveConfiguration = new RecordSqlConfigurationItem(policyValue, SecurityPolicyConfigSource)
+					.ApplyIfMoreRestrictive(serverConfigRecordSql, ServerConfigSource)
+					.ApplyIfMoreRestrictive(localRecordSql, LocalConfigSource);
+				
+				return mostRestrictiveConfiguration;
+			}
+
+			var serverOrLocalConfiguration = GetServerOverrideOrLocalRecordSqlConfiguration();
+
+			if (HighSecurityModeEnabled)
+			{
+				// "raw" is never allowed with high security
+				var hsmConfiguration = new RecordSqlConfigurationItem(ObfuscatedStringValue, HighSecurityConfigSource)
+					.ApplyIfMoreRestrictive(serverOrLocalConfiguration);
+
+				return hsmConfiguration;
+			}
+
+			return serverOrLocalConfiguration;
+		}
+
+		private RecordSqlConfigurationItem GetServerOverrideOrLocalRecordSqlConfiguration()
+		{
+			if (string.IsNullOrWhiteSpace(_serverConfiguration.RpmConfig.TransactionTracerRecordSql) == false)
+			{
+				return new RecordSqlConfigurationItem(_serverConfiguration.RpmConfig.TransactionTracerRecordSql, ServerConfigSource);
+			}
+			
+			var localRecordSqlString = Enum.GetName(typeof(configurationTransactionTracerRecordSql), _localConfiguration.transactionTracer.recordSql);
+			return new RecordSqlConfigurationItem(localRecordSqlString, LocalConfigSource);
 		}
 
 		public virtual TimeSpan TransactionTracerStackThreshold { get { return ServerOverrides((TimeSpanExtensions.FromSeconds(_serverConfiguration.RpmConfig.TransactionTracerStackThreshold)), TimeSpan.FromMilliseconds(_localConfiguration.transactionTracer.stackTraceThreshold)); } }
@@ -1264,11 +1700,12 @@ namespace NewRelic.Agent.Core.Configuration
 		private const Boolean CaptureTransactionTraceAttributesDefault = true;
 		private const Boolean CaptureErrorCollectorAttributesDefault = true;
 		private const Boolean CaptureBrowserMonitoringAttributesDefault = false;
+		private const Boolean CaptureCustomParametersAttributesDefault = true;
 
 		private const Boolean TransactionEventsEnabledDefault = true;
 		private const Boolean TransactionEventsTransactionsEnabledDefault = true;
 		private const UInt32 TransactionEventsMaxSamplesPerMinuteDefault = 10000;
 		private const UInt32 TransactionEventsMaxSamplesStoredDefault = 10000;
-
 	}
 }
+

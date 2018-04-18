@@ -1,11 +1,18 @@
 #!/bin/bash
 
+PACKAGE_NAME='newrelic-netcore20-agent'
 if [ -z "$AGENT_VERSION" ]; then
-    echo "AGENT_VERSION is not set"
-    exit -1
+    # try to parse the version from the last built Windows core stuff
+    windows_core_zipfile=$(ls -1 /release/${PACKAGE_NAME}-win_*_x64.zip | tail -n 1)
+    if [[ "$windows_core_zipfile" =~ win_(.+?)_x64\.zip ]]; then
+        AGENT_VERSION=${BASH_REMATCH[1]}
+    else
+        echo "AGENT_VERSION is not set"
+        exit -1
+    fi
 fi
 
-PACKAGE_NAME='newrelic-netcore20-agent'
+echo "AGENT_VERSION=${AGENT_VERSION}"
 INSTALL_ROOT=/tmp/${PACKAGE_NAME}
 ARCH='amd64'
 PACKAGE_FILE_BASENAME="${PACKAGE_NAME}_${AGENT_VERSION}_$ARCH"

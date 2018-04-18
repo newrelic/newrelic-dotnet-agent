@@ -55,34 +55,33 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			var segment = agentWrapperApi.CurrentTransaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
 
 			return Delegates.GetDelegateFor<Task<HttpResponseMessage>>(
-				onFailure: ex =>
+				onFailure: segment.End, 
+				onSuccess: OnSuccess
+			);
+
+			void OnSuccess(Task<HttpResponseMessage> task)
+			{
+				segment.RemoveSegmentFromCallStack();
+
+				if (task == null)
 				{
+					return;
+				}
+
+				//Since this finishes on a background thread, it is possible it will race the end of
+				//the transaction. This line of code prevents the transaction from ending early. 
+				transaction.Hold();
+
+				//Do not want to post to the sync context as this library is commonly used with the
+				//blocking TPL pattern of .Result or .Wait(). Posting to the sync context will result
+				//in recording time waiting for the current unit of work on the sync context to finish.
+				task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
+				{
+					TryProcessResponse(agentWrapperApi, responseTask, transaction, segment);
 					segment.End();
-				}, onSuccess: task =>
-				{
-					segment.RemoveSegmentFromCallStack();
-
-					if (task == null)
-						return;
-
-					var context = SynchronizationContext.Current;
-					if (context != null)
-					{
-						task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
-						{
-							TryProcessResponse(agentWrapperApi, responseTask, transaction, segment);
-							segment.End();
-						}), TaskScheduler.FromCurrentSynchronizationContext());
-					}
-					else
-					{
-						task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
-						{
-							TryProcessResponse(agentWrapperApi, responseTask, transaction, segment);
-							segment.End();
-						}), TaskContinuationOptions.ExecuteSynchronously);
-					}
-				});
+					transaction.Release();
+				}));
+			}
 		}
 
 		[CanBeNull]

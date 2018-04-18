@@ -195,6 +195,14 @@
 					</xs:complexType>
 				</xs:element>
 
+                <xs:element name="securityPoliciesToken" minOccurs="0" maxOccurs="1" type="xs:string">
+                    <xs:annotation>
+                        <xs:documentation>
+                            Optional security policies token.
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+
 				<xs:element name="log" minOccurs="0" maxOccurs="1">
 					<xs:complexType>
 						<xs:annotation>
@@ -486,7 +494,7 @@
 							<xs:element name="ignore" type="xs:string">
 								<xs:annotation>
 									<xs:documentation>
-										The name of a specific request parameter to not capture.
+										Deprecated: The name of a specific request parameter to not capture.
 									</xs:documentation>
 								</xs:annotation>
 							</xs:element>
@@ -502,6 +510,24 @@
 
 					</xs:complexType>
 				</xs:element>
+
+        <xs:element name="customParameters" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              The customParameters element enables user attribute capturing.
+            </xs:documentation>
+          </xs:annotation>
+
+          <xs:complexType>
+            <xs:attribute name="enabled" type="xs:boolean" use="optional">
+              <xs:annotation>
+                <xs:documentation>
+                  Turns on/off custom parameter (user attribute) capturing.	Default is true, but disabled in High Security Mode.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
 				
 				<xs:element name="analyticsEvents" minOccurs="0" maxOccurs="1">
 					<xs:annotation>
@@ -907,7 +933,7 @@
 					</xs:complexType>
 				</xs:element>
 
-				<xs:element name="liveInstrumentation" minOccurs="0" maxOccurs="1">
+				<xs:element name="customInstrumentationEditor" minOccurs="0" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>
 							Turns on/off allowing live/remote instrumentation from the server.

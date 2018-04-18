@@ -43,6 +43,7 @@ namespace NewRelic.Agent.Core.Transformers
 			var configurationService = Mock.Create<IConfigurationService>();
 			_configuration = Mock.Create<IConfiguration>();
 			Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
+			Mock.Arrange(() => _configuration.CaptureCustomParameters).Returns(true);
 			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
 			_attributeService = Mock.Create<IAttributeService>();

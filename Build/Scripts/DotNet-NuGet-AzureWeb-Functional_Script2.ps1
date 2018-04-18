@@ -8,7 +8,10 @@ Get-AzureWebsite -Name $websiteName | Select-Object State
 [Xml]$xml = Get-Content "NewRelicAzureWebCI\NewRelicAzureWebCI\packages.config"
 $version = $xml.packages.SelectSingleNode("//package[@id='NewRelic.Azure.WebSites']").version
 $authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
-Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version" -Method POST -Headers @{'Authorization'=$authorization}
+Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version" -Method POST -Headers @{'Authorization'=$authorization} -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
+if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+    $null
+}
 
 $install = Get-ChildItem $env:WORKSPACE\Agent\_build\x86-Release\Installer\NewRelicAgent_x86_*.msi -Name
 $version = $install.TrimStart('NewRelicAgent_x').TrimStart('{64,86}').TrimStart('_').TrimEnd('.msi')

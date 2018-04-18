@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.WireModels
 		/// The error message.
 		/// </summary>
 		[JsonArrayIndex(Index = 2)]
-		public virtual String Message { get; }
+		[NotNull] public virtual String Message { get; }
 
 		/// <summary>
 		/// The class name of the exception thrown.

@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.Config
 		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
 		{
 			// This implementation only exists to satisfy the derivation from ConfigurationBasedService, which exists for access to
-			// to the liveInstrumentation configuration option, which is influenced by the highSecurity configuration.
+			// to the customInstrumentationEditor configuration option, which is influenced by the highSecurity configuration.
 		}
 
 		private void OnServerConfigurationUpdated([NotNull] ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.Config
 
 			if (instrumentation != null && !instrumentation.IsEmpty())
 			{
-				if (_configuration.LiveInstrumentationEnabled)
+				if (_configuration.CustomInstrumentationEditorEnabled)
 				{
 					try
 					{
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Config
 							_nativeMethods.AddCustomInstrumentation(instrumentationSet.Name, instrumentationSet.Config);
 						}
 
-						Log.InfoFormat("Applying live instrumentation");
+						Log.InfoFormat("Applying live instrumentation from Custom Instrumentation Editor.");
 
 						// We want to apply custom instrumentation regardless of whether or not any was received on
 						// this connect because we may have received instrumentation on a previous connect.
@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Config
 				}
 				else
 				{
-					Log.WarnFormat("Live instrumentation received from server not applied due to configuration.");
+					Log.WarnFormat("Live instrumentation received from server Custom Instrumentation Editor not applied due to configuration.");
 				}
 			}
 		}

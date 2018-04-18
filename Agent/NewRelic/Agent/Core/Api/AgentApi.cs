@@ -36,6 +36,7 @@ namespace NewRelic.Agent.Core
 		private static IAgentApi _agentApiImplementation;
 
 		public const Int32 CustomTransactionNamePriority = 8;
+		public const Int32 UserTransactionNamePriority = Int32.MaxValue;
 
 		public static void SetAgentApiImplementation([CanBeNull] IAgentApi agentApiImplementation)
 		{

@@ -35,7 +35,6 @@ namespace NewRelic.Agent.Core.Transactions
 			var filteredAttributes = new Attributes();
 
 			var filteredAgentAttrs = attributes.GetAgentAttributes()
-				.Where(ShouldIncludeInHighSecurity)
 				.FilterAttributes(_attributeFilter, attributeDestination);
 			
 			foreach(var agentAttr in filteredAgentAttrs)
@@ -44,9 +43,7 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 
 			var filteredUserAttrs = attributes.GetUserAttributes()
-				.Where(_ => _configuration.CaptureCustomParameters)
 				.Take(CUSTOM_ATTRIBUTE_CLAMP)
-				.Where(ShouldIncludeInHighSecurity)
 				.FilterAttributes(_attributeFilter, attributeDestination);
 
 			foreach(var userAttr in filteredUserAttrs)
@@ -55,7 +52,6 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 
 			var filteredIntrinsicAttrs = attributes.GetIntrinsics()
-				.Where(ShouldIncludeInHighSecurity)
 				.FilterAttributes(_attributeFilter, attributeDestination);
 
 			foreach(var intrinsic in filteredIntrinsicAttrs)
@@ -70,17 +66,6 @@ namespace NewRelic.Agent.Core.Transactions
 		#endregion
 
 		#region Private Helpers
-
-		private Boolean ShouldIncludeInHighSecurity(Attribute attribute)
-		{
-			if (!_configuration.HighSecurityModeEnabled)
-				return true;
-
-			if (attribute.ExcludeForHighSecurity)
-				return false;
-			else
-				return true;
-		}
 
 		private IAttributeFilter<Attribute> CreateAttributeFilter()
 		{

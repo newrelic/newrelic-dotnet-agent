@@ -71,8 +71,8 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 					return;
 				}
 
-				//It is very likely that the response from the external call will come back after the 
-				//transaction ends. This line of code prevents the transaction from ending early. 
+				//Since this finishes on a background thread, it is possible it will race the end of
+				//the transaction. This line of code prevents the transaction from ending early. 
 				transaction.Hold();
 
 				//Do not want to post to the sync context as this library is commonly used with the

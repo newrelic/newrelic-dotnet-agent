@@ -107,6 +107,7 @@ namespace CompositeTests
 			{
 				new ExpectedAttribute {Key = "nr.apdexPerfZone", Value = "F"}
 			};
+
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 			TransactionEventAssertions.HasAttributes(expectedEventAttributes, AttributeClassification.Intrinsics, transactionEvent);
 		}

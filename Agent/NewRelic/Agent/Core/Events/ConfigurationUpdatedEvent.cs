@@ -21,6 +21,7 @@ namespace NewRelic.Agent.Core.Events
 		Unknown,
 		Server,
 		Local,
-		RunTime
+		RunTime,
+		SecurityPolicies
 	}
 }

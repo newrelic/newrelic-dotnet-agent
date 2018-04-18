@@ -22,6 +22,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationApplication applicationField;
         
+        private string securityPoliciesTokenField;
+        
         private configurationLog logField;
         
         private configurationInstrumentation instrumentationField;
@@ -31,6 +33,8 @@ namespace NewRelic.Agent.Core.Config
         private configurationParameterGroups parameterGroupsField;
         
         private configurationRequestParameters requestParametersField;
+        
+        private configurationCustomParameters customParametersField;
         
         private configurationAnalyticsEvents analyticsEventsField;
         
@@ -48,7 +52,7 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationHighSecurity highSecurityField;
         
-        private configurationLiveInstrumentation liveInstrumentationField;
+        private configurationCustomInstrumentationEditor customInstrumentationEditorField;
         
         private configurationStripExceptionMessages stripExceptionMessagesField;
         
@@ -92,7 +96,7 @@ namespace NewRelic.Agent.Core.Config
             this.errorCollectorField = new configurationErrorCollector();
             this.slowSqlField = new configurationSlowSql();
             this.stripExceptionMessagesField = new configurationStripExceptionMessages();
-            this.liveInstrumentationField = new configurationLiveInstrumentation();
+            this.customInstrumentationEditorField = new configurationCustomInstrumentationEditor();
             this.highSecurityField = new configurationHighSecurity();
             this.crossApplicationTracerField = new configurationCrossApplicationTracer();
             this.datastoreTracerField = new configurationDatastoreTracer();
@@ -101,6 +105,7 @@ namespace NewRelic.Agent.Core.Config
             this.transactionEventsField = new configurationTransactionEvents();
             this.customEventsField = new configurationCustomEvents();
             this.analyticsEventsField = new configurationAnalyticsEvents();
+            this.customParametersField = new configurationCustomParameters();
             this.requestParametersField = new configurationRequestParameters();
             this.parameterGroupsField = new configurationParameterGroups();
             this.attributesField = new configurationAttributes();
@@ -138,6 +143,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.applicationField = value;
+            }
+        }
+        
+        public string securityPoliciesToken
+        {
+            get
+            {
+                return this.securityPoliciesTokenField;
+            }
+            set
+            {
+                this.securityPoliciesTokenField = value;
             }
         }
         
@@ -198,6 +215,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.requestParametersField = value;
+            }
+        }
+        
+        public configurationCustomParameters customParameters
+        {
+            get
+            {
+                return this.customParametersField;
+            }
+            set
+            {
+                this.customParametersField = value;
             }
         }
         
@@ -297,15 +326,15 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public configurationLiveInstrumentation liveInstrumentation
+        public configurationCustomInstrumentationEditor customInstrumentationEditor
         {
             get
             {
-                return this.liveInstrumentationField;
+                return this.customInstrumentationEditorField;
             }
             set
             {
-                this.liveInstrumentationField = value;
+                this.customInstrumentationEditorField = value;
             }
         }
         
@@ -1476,6 +1505,47 @@ namespace NewRelic.Agent.Core.Config
         }
     }
     
+    public partial class configurationCustomParameters
+    {
+        
+        private System.Nullable<bool> enabledField;
+        
+        public bool enabled
+        {
+            get
+            {
+                if (this.enabledField.HasValue)
+                {
+                    return this.enabledField.Value;
+                }
+                else
+                {
+                    return default(bool);
+                }
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool enabledSpecified
+        {
+            get
+            {
+                return this.enabledField.HasValue;
+            }
+            set
+            {
+                if (value==false)
+                {
+                    this.enabledField = null;
+                }
+            }
+        }
+    }
+    
     public partial class configurationAnalyticsEvents
     {
         
@@ -2453,12 +2523,12 @@ namespace NewRelic.Agent.Core.Config
         }
     }
     
-    public partial class configurationLiveInstrumentation
+    public partial class configurationCustomInstrumentationEditor
     {
         
         private bool enabledField;
         
-        public configurationLiveInstrumentation()
+        public configurationCustomInstrumentationEditor()
         {
             this.enabledField = true;
         }

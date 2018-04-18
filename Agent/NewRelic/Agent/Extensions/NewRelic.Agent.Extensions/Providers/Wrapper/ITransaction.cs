@@ -204,13 +204,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		void SetOriginalUri([NotNull] string uri);
 
 		/// <summary>
-		/// Set the path for the current transaction (if there is one).
-		/// </summary>
-		/// <param name="path">The path for this transaction. Must not be null.</param>
-		/// <exception cref="System.ArgumentNullException"></exception>
-		void SetPath([NotNull] string path);
-
-		/// <summary>
 		/// Set the referrer URL for the current transaction (if there is one).
 		/// </summary>
 		/// <param name="uri">The referrer URL for this transaction. Must not be null.</param>

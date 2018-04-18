@@ -21,8 +21,6 @@ namespace NewRelic.Agent.Core.Utilization
 		private const string PcfInstanceIp = @"CF_INSTANCE_IP";
 		private const string PcfMemoryLimit = @"MEMORY_LIMIT";
 
-		private string _result;
-
 		[SetUp]
 		public void Setup()
 		{

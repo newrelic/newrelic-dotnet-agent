@@ -42,6 +42,7 @@ namespace NewRelic.Agent.Core.DataTransport
 					new[] {new Label("type1", "value1")},
 					new JavascriptAgentSettingsModel(true, "full"),
 					new UtilizationSettingsModel(2, 3, "myHost2", null, vendors, utilitizationConfig),
+					null,
 					null
 					);
 

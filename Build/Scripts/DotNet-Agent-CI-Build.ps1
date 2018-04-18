@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 # NuGet Restore #
 ###############
 
-$applicationsFull = @("Agent\FullAgent.sln", "FunctionalTests\FunctionalTests.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln")
+$applicationsFull = @("Agent\FullAgent.sln", "FunctionalTests\FunctionalTests.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln", "Tests\PlatformTests\PlatformTests.sln")
 
 Write-Host "Restoring NuGet packages"
 foreach ($application in $applicationsFull) {
@@ -20,7 +20,8 @@ $msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\M
 $applicationsFull = [Ordered]@{"Agent\FullAgent.sln" = "Configuration=Release;Platform=x86;AllowUnsafeBlocks=true";
     "FunctionalTests\FunctionalTests.sln"            = "Configuration=Release";
     "IntegrationTests\IntegrationTests.sln"          = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
-    "IntegrationTests\UnboundedIntegrationTests.sln" = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy"
+    "IntegrationTests\UnboundedIntegrationTests.sln" = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
+	"Tests\PlatformTests\PlatformTests.sln"          = "Configuration=Release";
 }
 
 Write-Host "Building for full build"
@@ -43,23 +44,15 @@ foreach ($applicationFull in $applicationsFull.Keys) {
     }
 }
 
+##########################
+# Create Build Artifacts #
+##########################
+
 pushd "Build"
-
-Invoke-Expression "& .\package.ps1 NugetAzureWebsites -configuration Release -platform x64 -pushNugetPackage"
+Invoke-Expression "& .\package.ps1 -configuration Release"
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }
-
-Invoke-Expression "& .\package.ps1 NugetAzureWebsites -configuration Release -platform x86 -pushNugetPackage"
-if ($LastExitCode -ne 0) {
-    exit $LastExitCode
-}
-
-Invoke-Expression "& .\package.ps1 AzureSiteExtension -version 1.0.0"
-if ($LastExitCode -ne 0) {
-    exit $LastExitCode
-}
-
 popd
 
 $agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\Agent\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").Version.ToString()
@@ -88,13 +81,19 @@ if ($LastExitCode -ne 0) {
 
 $Commit = $env:GIT_COMMIT.Substring(0, 10)
 $authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
-Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit" -Headers @{'Authorization' = $authorization} -Method POST
+Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit" -Headers @{'Authorization' = $authorization} -Method POST -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
+if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+    $null
+}
 
 if (!$env:sha1 -and $env:BUILD_CAUSE_UPSTREAMTRIGGER) {
     Write-Host "Updating description in UPSTREAM Job - URI: $env:UPSTREAM_BUILD_URL"
     Write-Host "AUTH: $authorization"
     Write-Host "URI:    $($env:UPSTREAM_BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit"
-    Invoke-RestMethod -Uri "$($env:UPSTREAM_BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit" -Headers @{'Authorization' = $authorization}  -Method POST
+    Invoke-RestMethod -Uri "$($env:UPSTREAM_BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit" -Headers @{'Authorization' = $authorization}  -Method POST -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
+    if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+        $null
+    }
 }
 
 if ($LastExitCode -ne 0) {

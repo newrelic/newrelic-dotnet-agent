@@ -1,10 +1,10 @@
-params (
-    [string] $RootDirectory,
-    [string] $DeployingPackage
+Param(
+	[string] $rootDirectory,
+	[string] $deployingPackage
 )
 
 $ErrorActionPreference = "Stop"
-. $env:WORKSPACE\agent-build-scripts\chatRoomAPI.ps1
+. $rootDirectory\Build\Scripts\chatRoomAPI.ps1
 
 function Deploy($packagePath, $source, $apiKey)
 {
@@ -37,33 +37,49 @@ function Deploy($packagePath, $source, $apiKey)
 	}
 }
 
+$chatMessage = ""
 
-# Update the Chat room
-function ChatAboutNuGetPackage($packageName)
+if($deployingPackage -eq "NewRelic.Azure.WebSites.x64")
 {
-    $link = "http://www.nuget.org/packages/$packageName/"
-    $chatMessage = "NuGet package '$packageName' has been updated with agent version $version.  See $link for more information."
-    PostMessageToChatRoom "dotnet-agent" $chatMessage "html" 1 "green"
-}
-
-
-
-if($DeployingPackage -eq "NewRelic.Azure.WebSites.x64")
-{
-	$packageName = Get-ChildItem $RootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.*.nupkg -Name
-	$packagePath = Convert-Path $RootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x64\$packageName
+	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x64\NewRelic.Azure.WebSites.*.nupkg -Name
+	$packagePath = Convert-Path $rootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x64\$packageName
 	$version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('{64,86}').TrimStart('.').TrimEnd('.nupkg')
+	$chatMessage = "NuGet package '$packageName' has been updated with agent version $version."
 
 }
-elseif(DeployingPackage -eq "NewRelic.Azure.WebSites")
+elseif($deployingPackage -eq "NewRelic.Azure.WebSites")
 {
-	$packageName = Get-ChildItem $RootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x86\NewRelic.Azure.WebSites.*.nupkg -Name
-	$packagePath = Convert-Path $RootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x86\$packageName
+	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x86\NewRelic.Azure.WebSites.*.nupkg -Name
+	$packagePath = Convert-Path $rootDirectory\Build\BuildArtifacts\NugetAzureWebSites-x86\$packageName
 	$version = $packageName.TrimStart('NewRelic.Azure.WebSites.x').TrimStart('{64,86}').TrimStart('.').TrimEnd('.nupkg')
+	$chatMessage = "NuGet package '$packageName' has been updated with agent version $version."
+
+}
+elseif($deployingPackage -eq "NewRelic.Agent.Api")
+{
+	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name
+	$packagePath = Convert-Path $rootDirectory\Build\BuildArtifacts\NugetAgentApi\$packageName
+	$version = $packageName.TrimStart('NewRelic.Agent.Api').TrimStart('.').TrimEnd('.nupkg')
+	$chatMessage = "NuGet package '$packageName' has been updated with agent version $version."
+}
+elseif($deployingPackage -eq "NewRelicWindowsAzure")
+{
+	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\NugetAzureCloudServices\NewRelicWindowsAzure.*.nupkg -Name
+	$packagePath = Convert-Path $rootDirectory\Build\BuildArtifacts\NugetAzureCloudServices\$packageName
+	$version = $packageName.TrimStart('NewRelicWindowsAzure').TrimStart('.').TrimEnd('.nupkg')
+	$chatMessage = "NuGet package '$packageName' has been updated with agent version $version."
+}
+elseif($deployingPackage -eq "NewRelic.Azure.WebSites.Extension")
+{
+	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\AzureSiteExtension\NewRelic.Azure.WebSites.Extension.*.nupkg -Name
+	$packagePath = Convert-Path $rootDirectory\Build\BuildArtifacts\AzureSiteExtension\$packageName
+	$version = $packageName.TrimStart('NewRelic.Azure.WebSites.Extension').TrimStart('.').TrimEnd('.nupkg')
+	$chatMessage = "NuGet package '$packageName' has been updated with version $version."
+
 }
 else
 {
-	Write-Host "Input value for DeployingPackage parameter not recognized."
+	Write-Host "Input value for deployingPackage parameter not recognized."
 	Exit 1
 }
 
@@ -79,7 +95,8 @@ $apiKey = $env:NuGetAPIKey
 
 Deploy $packagePath $source $apiKey
 
-ChatAboutNuGetPackage $packageName.TrimEnd('.nupkg')
+# Update the Chat room
+PostMessageToChatRoom "dotnet-agent" $chatMessage "html" 1 "green"
 
 
 

@@ -1,37 +1,23 @@
 Param(
-  [Parameter(Mandatory=$True,Position=1)]
-  [string]$package,
-  [Parameter(Mandatory=$False)]
-  [string]$configuration,
-  [Parameter(Mandatory=$False)]
-  [string]$platform,
-  [Parameter(Mandatory=$False)]
-  [string]$version,
-  [Parameter(Mandatory=$False)]
-  [switch]$pushNugetPackage
+  [Parameter(Mandatory=$True)]
+  [string]$configuration
 )
-$artifactBuilderProject = "ArtifactBuilder\ArtifactBuilder.csproj"
 
-if ($package.ToLower() -eq "nugetazurewebsites")
-{
-    if ($pushNugetPackage)
-    {
-        dotnet run --project $artifactBuilderProject $package $configuration $platform -pushNugetPackage
+$packagesToBuild = @(
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj AzureSiteExtension 1.2.0",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureWebSites $configuration x64 -pushNugetPackage",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureWebSites $configuration x86 -pushNugetPackage",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAgentApi $configuration",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureCloudServices $configuration",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureServiceFabric $configuration",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj ZipArchives $configuration",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj CoreInstaller $configuration",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj ScriptableInstaller $configuration"
+)
+
+foreach ($pkg in $packagesToBuild) {
+    Invoke-Expression $pkg
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
     }
-    else
-    {
-        dotnet run --project $artifactBuilderProject $package $configuration $platform
-    }
 }
-
-elseif ($package.ToLower() -eq "azuresiteextension")
-{
-    dotnet run --project $artifactBuilderProject $package $version
-}
-
-else
-{
-    Throw "Invalid package"
-}
-
-exit $LastExitCode

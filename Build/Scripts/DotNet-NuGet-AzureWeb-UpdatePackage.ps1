@@ -5,7 +5,10 @@ $agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\Copie
 
 $annotation = "$env:Repository - $agentVersion"
 $authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
-Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$annotation" -Method POST -Headers @{'Authorization'=$authorization}
+Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$annotation" -Method POST -Headers @{'Authorization'=$authorization} -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
+if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+    $null
+}
 
 # Purge the contents of 'content\newrelic'
 Remove-Item -Path content\newrelic\* -Force -Recurse

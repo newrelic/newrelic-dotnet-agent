@@ -242,12 +242,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RestSharp", "NewRelic\Agent
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Core.Tests", "..\Tests\UnitTests\NewRelic.Core.Tests\NewRelic.Core.Tests.csproj", "{6DC9A481-9A72-4D35-B312-43E02E36C241}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreInstaller", "CoreInstaller", "{50FE074A-0573-46A5-8B68-837041225182}"
-	ProjectSection(SolutionItems) = preProject
-		NewRelic\CoreInstaller\installAgent.ps1 = NewRelic\CoreInstaller\installAgent.ps1
-		NewRelic\CoreInstaller\installAgentUsage.txt = NewRelic\CoreInstaller\installAgentUsage.txt
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Storage", "Storage", "{2D194040-0192-4A87-A076-2B640C7FA82F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CallContext", "NewRelic\Agent\Extensions\Providers\Storage\CallContext\CallContext.csproj", "{8D2B52DD-D45C-481D-92F0-28990F168820}"
@@ -259,6 +253,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpContext", "NewRelic\Agent\Extensions\Providers\Storage\HttpContext\HttpContext.csproj", "{614988AD-7C73-4E71-8F95-520D5F485984}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OperationContext", "NewRelic\Agent\Extensions\Providers\Storage\OperationContext\OperationContext.csproj", "{4F5D77F3-B41A-44A7-AF10-2D5462CE0162}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.NuGetHelper", "..\Build\NewRelic.NuGetHelper\NewRelic.NuGetHelper.csproj", "{94BF8D27-2122-4573-AA79-90B977B40EF3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -732,6 +728,14 @@ Global
 		{4F5D77F3-B41A-44A7-AF10-2D5462CE0162}.Release|x64.Build.0 = Release|Any CPU
 		{4F5D77F3-B41A-44A7-AF10-2D5462CE0162}.Release|x86.ActiveCfg = Release|Any CPU
 		{4F5D77F3-B41A-44A7-AF10-2D5462CE0162}.Release|x86.Build.0 = Release|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Debug|x64.Build.0 = Debug|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Debug|x86.Build.0 = Debug|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Release|x64.ActiveCfg = Release|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Release|x64.Build.0 = Release|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Release|x86.ActiveCfg = Release|Any CPU
+		{94BF8D27-2122-4573-AA79-90B977B40EF3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -801,6 +805,7 @@ Global
 		{56CF536E-2136-4E13-B987-2A76304BEC08} = {592C9958-32E6-4834-ACEB-D32CBDB57310}
 		{614988AD-7C73-4E71-8F95-520D5F485984} = {2D194040-0192-4A87-A076-2B640C7FA82F}
 		{4F5D77F3-B41A-44A7-AF10-2D5462CE0162} = {2D194040-0192-4A87-A076-2B640C7FA82F}
+		{94BF8D27-2122-4573-AA79-90B977B40EF3} = {C0BB7A5D-6820-4058-AC47-0111ECC34015}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35

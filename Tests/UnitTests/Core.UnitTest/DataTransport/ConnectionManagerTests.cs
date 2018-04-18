@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		[NotNull]
 		private IConnectionHandler _connectionHandler;
-		
+
 		[NotNull]
 		private IScheduler _scheduler;
 
@@ -82,11 +82,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
 
 		[Test]
-		[TestCase ("ForceRestartException")]
-		[TestCase ("ConnectionException")]
-		[TestCase ("ServiceUnavailableException")]
-		[TestCase ("SocketException")]
-		[TestCase ("IOException")]
+		[TestCase("ForceRestartException")]
+		[TestCase("ConnectionException")]
+		[TestCase("ServiceUnavailableException")]
+		[TestCase("SocketException")]
+		[TestCase("IOException")]
 		public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs([NotNull] string execeptionType)
 		{
 			Exception ex = null;
@@ -107,7 +107,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				case "IOException":
 					ex = new IOException();
 					break;
-			}	
+			}
 
 
 			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				Mock.Assert(() => _connectionHandler.Connect(), Occurs.Exactly(2));
 			}
 		}
-		
+
 		[Test]
 		public void Constructor_PublishesShutdownAgentEvent_IfAnyOtherExceptionOccurs()
 		{

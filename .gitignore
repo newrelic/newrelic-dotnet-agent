@@ -9,6 +9,7 @@
 *.userprefs
 *.vsmdi
 *.csproj.user
+*.sfproj.user
 .vs/
 
 # VS Code
@@ -117,3 +118,9 @@ IntegrationTests/UnboundedApplications/*/Deploy/
 IntegrationTests/.vs/config/applicationhost.config
 .DS_Store
 Agent/UpgradeLog*.htm
+
+#PlatformTests
+Tests/PlatformTests/packages/
+Tests/PlatformTests/Applications/ServiceFabricApplication/packages/
+Tests/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
+

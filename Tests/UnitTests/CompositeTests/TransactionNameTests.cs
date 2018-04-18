@@ -198,5 +198,88 @@ namespace CompositeTests
 		}
 
 		#endregion
+
+		#region naming priorites
+
+		[Test]
+		[Description("Verifies that web transaction names are overridden by a higher priority name")]
+		public void SetWebTransactionName_OverriddenByHigherPriorityName()
+		{
+			// ARRANGE
+			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
+
+			// ACT
+			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority0", 0);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority1", 1);
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var actualMetrics = _compositeTestAgent.Metrics;
+			var expectedMetrics = new []
+			{
+				new ExpectedTimeMetric {Name = "WebTransaction/Action/priority1", CallCount = 1}
+			};
+
+			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+		}
+
+		[Test]
+		[Description("Verifies that web transaction names are not overridden by a name with the same priority")]
+		public void SetWebTransactionName_NotOverriddenBySamePriorityName()
+		{
+			// ARRANGE
+			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
+
+			// ACT
+			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority1", 1);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority1again", 1);
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var actualMetrics = _compositeTestAgent.Metrics;
+			var expectedMetrics = new[]
+			{
+				new ExpectedTimeMetric {Name = "WebTransaction/Action/priority1", CallCount = 1}
+			};
+
+			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+		}
+
+		[Test]
+		[Description("Verifies that web transaction names are not overridden by a lower priority name")]
+		public void SetWebTransactionName_NotOverriddenByLowerPriorityName()
+		{
+			// ARRANGE
+			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
+
+			// ACT
+			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority1", 1);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority0", 0);
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var actualMetrics = _compositeTestAgent.Metrics;
+			var expectedMetrics = new[]
+			{
+				new ExpectedTimeMetric {Name = "WebTransaction/Action/priority1", CallCount = 1}
+			};
+
+			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+		}
+
+
+		#endregion
 	}
 }

@@ -73,7 +73,6 @@ namespace Benchmarking
 			transaction.SetUri(Guid.NewGuid().ToString());
 			transaction.SetHttpResponseStatusCode(200);
 			transaction.SetOriginalUri(Guid.NewGuid().ToString());
-			transaction.SetPath(Guid.NewGuid().ToString());
 			transaction.SetQueueTime(TimeSpan.FromMilliseconds(20));
 			transaction.SetReferrerUri(Guid.NewGuid().ToString());
 

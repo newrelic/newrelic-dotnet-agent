@@ -23,6 +23,8 @@ namespace NewRelic.Agent.Core.Errors
 
 		public readonly bool IsAnError;
 
+		internal static readonly string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
+
 		private ErrorData([NotNull] string errorMessage, [CanBeNull] string errorTypeName, [CanBeNull] string stackTrace, DateTime noticedAt)
 		{
 			NoticedAt = noticedAt;
@@ -34,13 +36,13 @@ namespace NewRelic.Agent.Core.Errors
 
 		public static ErrorData FromParts([NotNull] string errorMessage, [CanBeNull] string errorTypeName, DateTime noticedAt, bool stripErrorMessage)
 		{
-			var message = stripErrorMessage ? string.Empty : errorMessage;
+			var message = stripErrorMessage ? StripExceptionMessagesMessage : errorMessage;
 			return new ErrorData(message, errorTypeName, null, noticedAt);
 		}
 
 		public static ErrorData FromException([NotNull] Exception exception, bool stripErrorMessage)
 		{
-			var message = stripErrorMessage ? string.Empty : exception.GetBaseException().Message;
+			var message = stripErrorMessage ? StripExceptionMessagesMessage : exception.GetBaseException().Message;
 			var exceptionTypeName = exception.GetType().FullName;
 			var stackTrace = ExceptionFormatter.FormatStackTrace(exception, stripErrorMessage);
 			var noticedAt = DateTime.UtcNow;

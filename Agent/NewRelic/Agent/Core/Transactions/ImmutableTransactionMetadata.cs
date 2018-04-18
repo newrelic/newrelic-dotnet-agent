@@ -41,7 +41,6 @@ namespace NewRelic.Agent.Core.Transactions
 
 		[CanBeNull]
 		public string CrossApplicationPathHash { get; }
-		public string Path { get; }
 
 		public string CrossApplicationReferrerProcessId { get; }
 		public string CrossApplicationReferrerTripId { get; }
@@ -53,7 +52,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public bool IsSynthetics { get; }
 		public bool HasCatResponseHeaders { get; }
 
-		public ImmutableTransactionMetadata(string uri, string originalUri, string path, string referrerUri,
+		public ImmutableTransactionMetadata(string uri, string originalUri, string referrerUri,
 			TimeSpan? queueTime, [NotNull] IEnumerable<KeyValuePair<string, string>> requestParameters,
 			[NotNull] IEnumerable<KeyValuePair<string, Object>> userAttributes,
 			[NotNull] IEnumerable<KeyValuePair<string, Object>> userErrorAttributes, int? httpResponseStatusCode,
@@ -65,7 +64,6 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			Uri = uri;
 			OriginalUri = originalUri;
-			Path = path;
 			ReferrerUri = referrerUri;
 			QueueTime = queueTime;
 			RequestParameters = requestParameters.ToList();

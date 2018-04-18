@@ -19,6 +19,8 @@ namespace CompositeTests
 		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
+		private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -257,11 +259,13 @@ namespace CompositeTests
 		}
 
 		[Test]
-		[Description("Verifies a reported error with an Exception when in a transaction without error message in high security mode.")]
-		public void Test_NoticeError_WithException_HighSecurity()
+		[Description("Verifies a reported error with an Exception when in a transaction with stripErrorMessagesEnabled.")]
+		public void Test_NoticeError_WithException_StripErrorMessages()
 		{
 			// ACT
-			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
@@ -273,7 +277,33 @@ namespace CompositeTests
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, null);
+			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+		}
+
+		[Test]
+		[Description("Verifies a reported error with an Exception when in a transaction without error message in high security mode.")]
+		public void Test_NoticeError_WithException_HighSecurity()
+		{
+			// ACT
+			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			AgentApi.NoticeError(new Exception("This is a new exception."));
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+
+			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
 			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
@@ -299,13 +329,14 @@ namespace CompositeTests
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 		}
 
-
 		[Test]
-		[Description("Verifies a reported error with an Exception when outside of a transaction without error message in high security mode.")]
-		public void Test_NoticeErrorOutsideTransaction_WithException_HighSecurity()
+		[Description("Verifies a reported error with an Exception when outside of a transaction with StripExceptionMessages enabled.")]
+		public void Test_NoticeErrorOutsideTransaction_WithException_StripExceptionMessages()
 		{
 			// ACT
-			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
 			AgentApi.NoticeError(new Exception("This is a new exception."));
 			_compositeTestAgent.Harvest();
 
@@ -313,7 +344,30 @@ namespace CompositeTests
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, null);
+			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.AreEqual(errorTrace.Path, "NewRelic.Api.Agent.NoticeError API Call");
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+		}
+
+
+		[Test]
+		[Description("Verifies a reported error with an Exception when outside of a transaction without error message in high security mode.")]
+		public void Test_NoticeErrorOutsideTransaction_WithException_HighSecurity()
+		{
+			// ACT
+			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			AgentApi.NoticeError(new Exception("This is a new exception."));
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+
+			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.AreEqual(errorTrace.Path, "NewRelic.Api.Agent.NoticeError API Call");
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
@@ -355,11 +409,50 @@ namespace CompositeTests
 		}
 
 		[Test]
+		[Description("Verifies a reported error with an Exception and a dictionary of custom parameters when in a transaction with StripExceptionMessages enabled.")]
+		public void Test_NoticeError_WithExceptionAndCustomParams_StripExceptionMessages()
+		{
+			// ACT
+			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			_compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment").End();
+			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String> { { "attribute1", "value1" } });
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var expectedErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
+			};
+			var unexpectedNonErrorAttributes = new List<String>
+			{
+				"attribute1"
+			};
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
+
+			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.UserAttributes, errorTrace);
+			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
+			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+		}
+
+		[Test]
 		[Description("Verifies a reported error with an Exception and a dictionary of custom parameters but without an error message when in a transaction in high security.")]
 		public void Test_NoticeError_WithExceptionAndCustomParams_HighSecurity()
 		{
 			// ACT
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			_compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment").End();
 			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String> { { "attribute1", "value1" } });
@@ -381,7 +474,7 @@ namespace CompositeTests
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, null);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -413,11 +506,39 @@ namespace CompositeTests
 		}
 
 		[Test]
+		[Description("Verifies a reported error with an Exception and a dictionary of custom parameters when outside of a transaction with StripExceptionMessages.")]
+		public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams_StripExceptionMessages()
+		{
+			// ACT
+			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var expectedAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
+			};
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+
+			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+		}
+
+		[Test]
 		[Description("Verifies a reported error with an Exception and a dictionary of custom parameters when outside of a transaction without error message in high security.")]
 		public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams_HighSecurity()
 		{
 			// ACT
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
 			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
@@ -430,7 +551,7 @@ namespace CompositeTests
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, null);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -472,11 +593,51 @@ namespace CompositeTests
 		}
 
 		[Test]
+		[Description("Verifies a reported error with a string and a dictionary of custom parameters when in a transaction with StripExceptionMessages enabled.")]
+		public void Test_NoticeError_WithMessageAndCustomParams_StripExceptionMessages()
+		{
+			// ACT
+			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var expectedAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
+			};
+			var unexpectedNonErrorAttributes = new List<String>
+			{
+				"attribute1"
+			};
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
+
+			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
+			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
+			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+		}
+
+		[Test]
 		[Description("Verifies a reported error without an error message or custom parameters when in a transaction in high security.")]
 		public void Test_NoticeError_WithMessageAndCustomParams_HighSecurity()
 		{
 			// ACT
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
@@ -499,7 +660,7 @@ namespace CompositeTests
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
 			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
-			Assert.AreEqual(errorTrace.Message, null);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -531,11 +692,39 @@ namespace CompositeTests
 		}
 
 		[Test]
+		[Description("Verifies a reported error with a string and a dictionary of custom parameters when in a transaction when outside of a transaction with StripExceptionMessagesEnabled.")]
+		public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams_StripExceptionMessages()
+		{
+			// ACT
+			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+		_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var expectedAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
+			};
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+
+			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
+			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+		}
+
+		[Test]
 		[Description("Verifies a reported error without an error message or custom parameters when in a transaction when outside of a transaction in high security.")]
 		public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams_HighSecurity()
 		{
 			// ACT
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
 			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
@@ -548,7 +737,7 @@ namespace CompositeTests
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
 			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
-			Assert.AreEqual(errorTrace.Message, null);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
@@ -804,7 +993,7 @@ namespace CompositeTests
 		#region SetTransactionName
 
 		[Test]
-		[Description("Verifies a custom transaction name creates suppoortability and web transaction metrics.")]
+		[Description("Verifies a custom transaction name creates supportability and web transaction metrics.")]
 		public void Test_SetTransactionName()
 		{
 			// ARRANGE
@@ -862,8 +1051,8 @@ namespace CompositeTests
 		}
 
 		[Test]
-		[Description("Verifies that the agent API is overridden by other higher priority names.")]
-		public void Test_SetTransactionName_OverriddenByHigherPriorityName()
+		[Description("Verifies that the agent API overrides other name with same priority that was set first.")]
+		public void Test_SetTransactionName_OverridesSamePriorityName_ThatWasSetFirst()
 		{
 			// ARRANGE
 			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
@@ -872,7 +1061,7 @@ namespace CompositeTests
 			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			transaction.SetWebTransactionName(WebTransactionType.Action, "priority9", 9);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "UserPriority", AgentApi.UserTransactionNamePriority);
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
 			transaction.End();
 			_compositeTestAgent.Harvest();
@@ -881,41 +1070,15 @@ namespace CompositeTests
 			var actualMetrics = _compositeTestAgent.Metrics;
 			var expectedMetrics = new List<ExpectedTimeMetric>
 			{
-				new ExpectedTimeMetric {Name = "WebTransaction/Action/priority9", CallCount = 1}
+				new ExpectedTimeMetric {Name = "WebTransaction/MyCategory/MyTransaction", CallCount = 1}
 			};
 
 			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
 		}
 
 		[Test]
-		[Description("Verifies that the agent API is overridden by other name with same priority that was set first.")]
-		public void Test_SetTransactionName_OverriddenBySamePriorityName_ThatWasSetFirst()
-		{
-			// ARRANGE
-			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
-
-			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
-			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
-			segment.End();
-			transaction.SetWebTransactionName(WebTransactionType.Action, "priority8", 8);
-			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
-			transaction.End();
-			_compositeTestAgent.Harvest();
-
-			// ASSERT
-			var actualMetrics = _compositeTestAgent.Metrics;
-			var expectedMetrics = new List<ExpectedTimeMetric>
-			{
-				new ExpectedTimeMetric {Name = "WebTransaction/Action/priority8", CallCount = 1}
-			};
-
-			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
-		}
-
-		[Test]
-		[Description("Verifies that the agent API is not overridden by other name with same priority that was set last.")]
-		public void Test_SetTransactionName_NotOverriddenBySamePriorityName_ThatWasSetLast()
+		[Description("Verifies that the agent API is overridden by other name with same priority that was set last.")]
+		public void Test_SetTransactionName_OverriddenBySamePriorityName_ThatWasSetLast()
 		{
 			// ARRANGE
 			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
@@ -925,7 +1088,7 @@ namespace CompositeTests
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
-			transaction.SetWebTransactionName(WebTransactionType.Action, "priority8", 8);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "UserPriority", AgentApi.UserTransactionNamePriority);
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -934,7 +1097,34 @@ namespace CompositeTests
 			var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
 			var expectedMetrics = new List<ExpectedTimeMetric>
 			{
-				new ExpectedTimeMetric {Name = "WebTransaction/MyCategory/MyTransaction", CallCount = 1}
+				new ExpectedTimeMetric {Name = "WebTransaction/Action/UserPriority", CallCount = 1}
+			};
+
+			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+		}
+
+		[Test]
+		[Description("Verifies that, with multiple SetTransactionName calls, the last call takes effect.")]
+		public void Test_SetTransactionName_MultipleCalls_LastCallWins()
+		{
+			// ARRANGE
+			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
+
+			// ACT
+			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
+			AgentApi.SetTransactionName("MyCategory", "MyTransaction2");
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var actualMetrics = _compositeTestAgent.Metrics;
+			var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
+			var expectedMetrics = new List<ExpectedTimeMetric>
+			{
+				new ExpectedTimeMetric {Name = "WebTransaction/MyCategory/MyTransaction2", CallCount = 1}
 			};
 
 			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
@@ -977,6 +1167,46 @@ namespace CompositeTests
 			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
 			TransactionEventAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionEvent);
 			TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
+		}
+
+		[Test]
+		[Description("Verifies user parameters set via the 'SetUserParameters' API method.")]
+		public void Test_SetUserParameters_WithHighSecurity()
+		{
+			// ARRANGE
+			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
+
+			// ACT
+			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			AgentApi.SetUserParameters("MyUserName", "MyAccountName", "MyAppName");
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var actualMetrics = _compositeTestAgent.Metrics;
+			var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
+			var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
+			var expectedMetrics = new List<ExpectedTimeMetric>
+			{
+				new ExpectedTimeMetric {Name = "Supportability/ApiInvocation/SetUserParameters"}
+			};
+			var unexpectedAttributes = new List<string>
+			{
+				"user",
+				"account",
+				"product"
+			};
+
+			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes,
+				transactionEvent);
+			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes,
+				transactionTrace);
 		}
 
 		#endregion

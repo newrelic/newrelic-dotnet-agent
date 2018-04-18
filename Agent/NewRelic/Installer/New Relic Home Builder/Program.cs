@@ -450,9 +450,11 @@ namespace NewRelic.Installer
 				allDirectoriesForConfiguration.AddRange(frameworkSubDirectories);
 			}
 
+			var netstandardProjectsToIncludeInBothAgents = new[] {"AspNetCore"};
+
 			var directories = allDirectoriesForConfiguration.ToList()
 				.Where(directoryPath => directoryPath != null)
-				.Where(directoryPath => directoryPath.Contains("netstandard") == _isCoreClr)
+				.Where(directoryPath => directoryPath.Contains("netstandard") == _isCoreClr || netstandardProjectsToIncludeInBothAgents.Any(directoryPath.Contains))
 				.Select(directoryPath => new DirectoryInfo(directoryPath))
 				.Where(directoryInfo => directoryInfo.Parent != null)
 				.Where(directoryInfo => directoryInfo.Parent.Name == "bin" || directoryInfo.Parent.Name == Configuration);
@@ -549,126 +551,16 @@ namespace NewRelic.Installer
 		{
 			var program = new Program();
 			program.ParseCommandLineArguments(args);
-
-			var op = args[0];
-			switch (op)
-			{
-				case "buildCoreArtifactsForS3Deploy":
-					program.BuildCoreArtifactsForS3Deploy();
-					break;
-				default:
-					program.RealMain();
-					break;
-			}
+			program.RealMain();
 		}
 
-		private void ParseCommandLineArguments(String[] commandLineArguments)
+		private void ParseCommandLineArguments(string[] commandLineArguments)
 		{
 			var defaultParser = CommandLine.Parser.Default;
 			if (defaultParser == null)
 				throw new NullReferenceException("defaultParser");
 
 			defaultParser.ParseArgumentsStrict(commandLineArguments, this);
-		}
-
-		private string CoreArtifactRootDirectory => Path.Combine(BuildOutputPath, "CoreArtifacts");
-
-		private void BuildCoreArtifactsForS3Deploy()
-		{
-			// _isCoreClr needs to be set accordingly in order to utilizize existing code paths as part of the
-			// creation of the core installer.
-			_isCoreClr = true;
-
-			PrepareWorkspace();
-			CreateCoreClrArchives();
-			BuildCoreInstaller();
-			CopyCoreReadme();
-		}
-
-		private void PrepareWorkspace()
-		{
-			if (Directory.Exists(CoreArtifactRootDirectory))
-			{
-				Directory.Delete(CoreArtifactRootDirectory, true);
-			}
-
-			if (Directory.Exists(CoreInstallerOutputPath))
-			{
-				Directory.Delete(CoreInstallerOutputPath, true);
-			}
-
-			Directory.CreateDirectory(CoreArtifactRootDirectory);
-			Directory.CreateDirectory(CoreInstallerOutputPath);
-		}
-
-		private void CopyCoreReadme()
-		{
-			var dstReadme = Path.Combine(CoreArtifactRootDirectory, Core20ReadmeFileName);
-			File.Copy(ReadmeFilePath, dstReadme, true);
-			File.Move(dstReadme, Path.Combine(CoreArtifactRootDirectory, "README.md"));
-		}
-
-		private void CreateCoreClrArchives()
-		{
-			CreateCoreClrArchive("x86");
-			CreateCoreClrArchive("x64");
-		}
-
-		private void CreateCoreClrArchive(string bitness)
-		{
-			Bitness = bitness;
-
-			if (!Directory.Exists(DestinationHomeDirectoryPath))
-			{
-				throw new Exception($"Home directory does not exist [{DestinationHomeDirectoryPath}]. Build it first.");
-			}
-
-			var zipFileName = $"newrelic-netcore20-agent-win_{AgentVersion}_{Bitness}.zip";
-			var zipFilePath = Path.Combine(CoreArtifactRootDirectory, zipFileName);
-
-			Console.WriteLine($"[HomeBuilder]: Zipping contents of {DestinationHomeDirectoryPath}");
-			Console.WriteLine($"[HomeBuilder]: Saving zipped contents to {zipFilePath}");
-
-			System.IO.Compression.ZipFile.CreateFromDirectory(DestinationHomeDirectoryPath, zipFilePath);
-		}
-
-		public void BuildCoreInstaller()
-		{
-			var bitnesses = new List<string>() { "x64", "x86" };
-
-			var scriptPath = Path.Combine(CoreInstallerSourcePath, "installAgent.ps1");
-			var usageTextPath = Path.Combine(CoreInstallerSourcePath, "installAgentUsage.txt");
-
-			var installerZipFile = $"newrelic-netcore20-agent-win-installer_{AgentVersion}.zip";
-			var installerZipPath = Path.Combine(CoreArtifactRootDirectory, installerZipFile);
-
-			Console.WriteLine($"[HomeBuilder]: Copying core installer files to  {CoreInstallerOutputPath}");
-			CopyToDirectory(scriptPath, CoreInstallerOutputPath);
-			CopyToDirectory(usageTextPath, CoreInstallerOutputPath);
-
-			foreach (var bitness in bitnesses)
-			{
-				var zipFileName = $"newrelic-netcore20-agent-win_{AgentVersion}_{bitness}.zip";
-				var zipFilePath = Path.Combine(CoreArtifactRootDirectory, zipFileName);
-				var unzipPath = Path.Combine(CoreInstallerOutputPath, bitness);
-				Console.WriteLine($"[HomeBuilder]: Copying {bitness} core zip files to  {CoreInstallerOutputPath}");
-
-				System.IO.Compression.ZipFile.ExtractToDirectory(zipFilePath, unzipPath);
-
-				var linuxProfilerPath = Path.Combine(unzipPath, ProfilerSoFileName);
-				if (File.Exists(linuxProfilerPath))
-				{
-					File.Delete(linuxProfilerPath);
-				}
-			}
-
-			Console.WriteLine($"[HomeBuilder]: Compressing core installer files to  {installerZipPath}");
-
-			System.IO.Compression.ZipFile.CreateFromDirectory(CoreInstallerOutputPath, installerZipPath);
-
-			Console.WriteLine($"[HomeBuilder]: Removing core installer files from working directory  {CoreInstallerOutputPath}");
-
-			Directory.Delete(CoreInstallerOutputPath, true);
 		}
 	}
 }

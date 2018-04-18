@@ -1,10 +1,8 @@
 ﻿using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
@@ -28,9 +26,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		[NotNull]
 		private ISegmentTreeMaker _segmentTreeMaker;
-
-		[NotNull]
-		private IMetricBuilder _metricBuilder;
 
 		[NotNull]
 		private IMetricNameService _metricNameService;
@@ -106,7 +101,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			// Non-Mocks
 			_segmentTreeMaker = new SegmentTreeMaker();
 
-			_metricBuilder = GetSimpleMetricBuilder();
+			_metricNameService = Mock.Create<IMetricNameService>();
+			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
 
 			var dataTransportService = Mock.Create<DataTransport.IDataTransportService>();
 			var scheduler = Mock.Create<Time.IScheduler>();
@@ -116,19 +112,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			_transactionAttributeMaker = new TransactionAttributeMaker();
 
-			var databaseService = Mock.Create<Database.IDatabaseService>();
 			_sqlTraceMaker = new SqlTraceMaker(_configurationService);
 
 			// create TransactionTransformer
 			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker);
-		}
-
-		[NotNull]
-		public IMetricBuilder GetSimpleMetricBuilder()
-		{
-			_metricNameService = Mock.Create<IMetricNameService>();
-			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
-			return new MetricWireModel.MetricBuilder(_metricNameService);
 		}
 
 		[Test]

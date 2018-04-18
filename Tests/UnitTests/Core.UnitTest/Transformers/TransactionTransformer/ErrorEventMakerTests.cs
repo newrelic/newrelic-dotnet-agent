@@ -5,11 +5,9 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
@@ -27,22 +25,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private IConfiguration _configuration;
 		private IConfigurationService _configurationService;
 		private IErrorEventMaker _errorEventMaker;
-		private IErrorTraceMaker _errorTraceMaker;
-		private ITransactionTransformer _transactionTransformer;
 		private ITransactionMetricNameMaker _transactionMetricNameMaker;
 		private ISegmentTreeMaker _segmentTreeMaker;
-		private IMetricBuilder _metricBuilder;
-		private IMetricNameService _metricNameService;
-		private IMetricAggregator _metricAggregator;
-		private ITransactionTraceAggregator _transactionTraceAggregator;
-		private ITransactionTraceMaker _transactionTraceMaker;
-		private ITransactionEventAggregator _transactionEventAggregator;
-		private ITransactionEventMaker _transactionEventMaker;
 		private ITransactionAttributeMaker _transactionAttributeMaker;
-		private IErrorTraceAggregator _errorTraceAggregator;
-		private IErrorEventAggregator _errorEventAggregator;
-		private ISqlTraceAggregator _sqlTraceAggregator;
-		private ISqlTraceMaker _sqlTraceMaker;
 		private static ITimerFactory _timerFactory;
 
 		[SetUp]
@@ -65,31 +50,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				.Returns(new[] { BuildNode() });
 
 			var attributeService = new AttributeService();
-			_errorTraceMaker = new ErrorTraceMaker(_configurationService, attributeService);
 			_errorEventMaker = new ErrorEventMaker(attributeService);
 
 			_timerFactory = new TimerFactory();
 
-			_metricBuilder = Mock.Create<IMetricBuilder>();
-			_metricNameService = Mock.Create<IMetricNameService>();
-			_metricAggregator = Mock.Create<IMetricAggregator>();
-			_transactionTraceAggregator = Mock.Create<ITransactionTraceAggregator>();
-			_transactionTraceMaker = Mock.Create<ITransactionTraceMaker>();
-			_transactionEventAggregator = Mock.Create<ITransactionEventAggregator>();
-			_transactionEventMaker = Mock.Create<ITransactionEventMaker>();
 			_transactionAttributeMaker = new TransactionAttributeMaker();
-			_errorTraceAggregator = Mock.Create<IErrorTraceAggregator>();
-			_errorTraceMaker = Mock.Create<IErrorTraceMaker>();
-			_errorEventAggregator = Mock.Create<IErrorEventAggregator>();
-			_sqlTraceAggregator = Mock.Create<ISqlTraceAggregator>();
-			_sqlTraceMaker = Mock.Create<ISqlTraceMaker>();
-
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, 
-				_segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService,
-				_transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker,
-				_transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker,
-				_sqlTraceAggregator, _sqlTraceMaker);
-
 		}
 
 		[Test]
@@ -325,7 +290,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				
 			metadata.SetQueueTime(TimeSpan.FromSeconds(10));
 			metadata.SetOriginalUri("originalUri");
-			metadata.SetPath("path");
 			metadata.SetCrossApplicationPathHash("crossApplicationPathHash");
 			metadata.SetCrossApplicationReferrerContentLength(10000);
 			metadata.SetCrossApplicationReferrerPathHash("crossApplicationReferrerPathHash");

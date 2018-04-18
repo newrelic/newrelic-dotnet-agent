@@ -772,16 +772,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				transaction.TransactionMetadata.SetOriginalUri(cleanUri);
 			}
 
-			public void SetPath(string path)
-			{
-				if (path == null)
-				{ 
-					throw new ArgumentNullException(nameof(path));
-				}
-
-				transaction.TransactionMetadata.SetPath(path);
-			}
-
 			public void SetReferrerUri(string uri)
 			{
 				if (uri == null)
