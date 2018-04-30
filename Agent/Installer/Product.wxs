@@ -33,6 +33,7 @@
 			<ComponentRef Id="LogsFolderComponent"/>
 			<ComponentGroupRef Id="ProductComponents"/>
 			<ComponentGroupRef Id="NewRelic.Agent.Extensions"/>
+			<ComponentGroupRef Id="NewRelic.Agent.NetstandardExtensions"/>
 			<ComponentGroupRef Id="NewRelic.Agent.Extensions.Instrumentation"/>
 			<?ifdef IsWin64?>
 			<ComponentGroupRef Id="Product32Components"/>
@@ -141,7 +142,9 @@
 					<Directory Id="NETAGENTFOLDER" Name=".NET Agent">
 						<Directory Id="NewRelic.Agent.Core"/> <!-- Alias name for NETAGENTFOLDER -->
 						<Directory Id="ToolsFolder" Name="Tools" />
-						<Directory Id="ProgramFilesExtensionsFolder" Name="Extensions"/>
+						<Directory Id="ProgramFilesExtensionsFolder" Name="Extensions">
+							<Directory Id="ProgramFilesNetstandardExtensionsFolder" Name="netstandard2.0" />
+						</Directory>
 					</Directory>
 				</Directory>
 			</Directory>
@@ -264,9 +267,6 @@
 			<Component Id="Asp35WrapperComponent" Guid="{E80B97F6-1FC0-4432-B9BF-8833F0C6D62D}">
 				<File Id="Asp35WrapperFile" Name="NewRelic.Providers.Wrapper.Asp35.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Asp35.dll"/>
 			</Component>
-			<Component Id="AspNetCoreWrapperComponent" Guid="{383038F5-CC7D-4A78-8B10-0F489FEFEBE1}">
-				<File Id="AspNetCoreWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll"/>
-			</Component>
 			<Component Id="Mvc3WrapperComponent" Guid="{71F61B42-0543-442F-A925-79D95A16591C}">
 				<File Id="Mvc3WrapperFile" Name="NewRelic.Providers.Wrapper.Mvc3.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Mvc3.dll"/>
 			</Component>
@@ -354,7 +354,16 @@
 				<File Id="NewRelicParsingReferenceFile" Name="NewRelic.Parsing.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Parsing.dll"/>
 			</Component>
 		</ComponentGroup>
-		
+
+		<ComponentGroup Id="NewRelic.Agent.NetstandardExtensions" Directory="ProgramFilesNetstandardExtensionsFolder">
+			<Component Id="NetstandardNewRelicCoreReferenceComponent" Guid="{C67B8942-1A9F-4244-85A4-348523447C57}">
+				<File Id="NetstandardNewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\netstandard2.0\NewRelic.Core.dll"/>
+			</Component>
+			<Component Id="AspNetCoreWrapperComponent" Guid="{383038F5-CC7D-4A78-8B10-0F489FEFEBE1}">
+				<File Id="AspNetCoreWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll"/>
+			</Component>
+		</ComponentGroup>
+
 		<!-- Wrapper Instrumentation Files-->
 		<ComponentGroup Id="NewRelic.Agent.Extensions.Instrumentation" Directory="AppDataExtensionsFolder">
 			<Component Id="Asp35InstrumentationComponent" Guid="{7DF74F2A-701D-4E6B-BF6B-E63D6AEBF35B}">

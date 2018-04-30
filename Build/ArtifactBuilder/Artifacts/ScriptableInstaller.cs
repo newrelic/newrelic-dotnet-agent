@@ -46,6 +46,7 @@ namespace ArtifactBuilder.Artifacts
 			FileHelpers.CopyFile(components.RootInstallDirectoryComponents, stagingDir);
 			FileHelpers.CopyFile(components.RootInstallDirectoryComponents.Where(x => !x.Contains("newrelic.config") && !x.Contains("newrelic.xsd")), $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent");
 			FileHelpers.CopyFile(components.ExtensionDirectoryComponents.Where(x => x.Contains(".dll")), $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent\Extensions");
+			FileHelpers.CopyFile(components.NetstandardExtensionDirectoryComponents, $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent\Extensions\netstandard2.0");
 			FileHelpers.CopyFile(x86Components.RootInstallDirectoryComponents.Where(x => x.Contains("NewRelic.Profiler.dll")), $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent\x86");
 			FileHelpers.CopyFile(components.WrapperXmlFiles, $@"{stagingDir}\ProgramData\NewRelic\NetAgent\Extensions");
 			FileHelpers.CopyFile(components.ExtensionXsd, $@"{stagingDir}\ProgramData\NewRelic\NetAgent\Extensions");

@@ -11,29 +11,29 @@ namespace ArtifactBuilder
 		{
 			var agentDllsForExtensionDirectory = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Agent.AttributeFilter.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Agent.Configuration.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Agent.Core.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Agent.LabelsService.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Core.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Parsing.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Trie.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.AttributeFilter.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.Configuration.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.Core.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.LabelsService.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Core.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Parsing.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Trie.dll",
 			};
 
 			var storageProviders = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Storage.AsyncLocal.dll",
 			};
 
 			var wrapperProviders = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.HttpClient.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.Sql.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.SqlAsync.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.WrapperUtilities.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.HttpClient.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.Sql.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.SqlAsync.dll",
+				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.WrapperUtilities.dll",
 			};
 
 			var wrapperXmls = new List<string>()
@@ -63,10 +63,12 @@ namespace ArtifactBuilder
 			};
 
 			ExtensionDirectoryComponents = new List<string>();
-			ExtensionDirectoryComponents.AddRange(agentDllsForExtensionDirectory);
-			ExtensionDirectoryComponents.AddRange(storageProviders);
-			ExtensionDirectoryComponents.AddRange(wrapperProviders);
 			ExtensionDirectoryComponents.Add(ExtensionXsd);
+
+			NetstandardExtensionDirectoryComponents = new List<string>();
+			NetstandardExtensionDirectoryComponents.AddRange(agentDllsForExtensionDirectory);
+			NetstandardExtensionDirectoryComponents.AddRange(storageProviders);
+			NetstandardExtensionDirectoryComponents.AddRange(wrapperProviders);
 
 			WrapperXmlFiles = new List<string>();
 			WrapperXmlFiles.AddRange(wrapperXmls);

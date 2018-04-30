@@ -38,6 +38,7 @@ namespace ArtifactBuilder
 		public string Platform { get; }
 		public string SourcePath { get; }
 		public List<string> ExtensionDirectoryComponents { get; set; }
+		public List<string> NetstandardExtensionDirectoryComponents { get; set; }
 		public List<string> WrapperXmlFiles { get; set; }
 		public List<string> RootInstallDirectoryComponents { get; set; }
 		public string AgentApiDll;
@@ -67,6 +68,7 @@ namespace ArtifactBuilder
 		{
 			FileHelpers.CopyFile(RootInstallDirectoryComponents, destinationDirectory);
 			FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions");
+			FileHelpers.CopyFile(NetstandardExtensionDirectoryComponents, $@"{destinationDirectory}\extensions\netstandard2.0");
 			FileHelpers.CopyFile(WrapperXmlFiles, $@"{destinationDirectory}\extensions");
 		}
 
@@ -111,6 +113,11 @@ namespace ArtifactBuilder
 			}
 
 			foreach (var item in ExtensionDirectoryComponents)
+			{
+				if (!File.Exists(item)) missingComponents.Add(item);
+			}
+
+			foreach (var item in NetstandardExtensionDirectoryComponents)
 			{
 				if (!File.Exists(item)) missingComponents.Add(item);
 			}

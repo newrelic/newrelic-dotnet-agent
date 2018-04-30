@@ -116,15 +116,27 @@ namespace NewRelic.TypeInstantiation
 			return new GetTypesResult(types, exceptions);
 		}
 
-		[NotNull]
-		public static TypeInstantiatorResult<T> ExportedInstancesFromDirectory<T>(String directoryPath, Boolean recursive = false)
+		public static TypeInstantiatorResult<T> ExportedInstancesFromDirectory<T>(params string[] paths)
 		{
-			if (directoryPath == null)
+			if (paths == null)
+			{
 				return new TypeInstantiatorResult<T>();
-			if (!Directory.Exists(directoryPath))
-				return new TypeInstantiatorResult<T>();
+			}
 
-			var assemblyPaths = Directory.GetFiles(directoryPath, "*.dll", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+			var assemblyPaths = new string[]{};
+			foreach (var path in paths)
+			{
+				if (Directory.Exists(path))
+				{
+					assemblyPaths = assemblyPaths.Concat(Directory.GetFiles(path, "*.dll", SearchOption.TopDirectoryOnly)).ToArray();
+				}
+			}
+
+			if (assemblyPaths.Length == 0)
+			{
+				return new TypeInstantiatorResult<T>();
+			}
+
 			var assemblies = assemblyPaths.Select(AssemblyFromPath);
 			return ExportedInstancesFromAssemblies<T>(assemblies);
 		}

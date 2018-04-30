@@ -390,44 +390,5 @@ public class Bar : IInterface {}"),
 			Assert.AreEqual(1, result.Instances.Count());
 			Assert.AreEqual(0, result.Exceptions.Count());
 		}
-		
-		[Test]
-		public void when_nested_directories()
-		{
-			var directory = MakeTempDirForTest();
-			var innerDirectory = Directory.CreateDirectory(Path.Combine(directory.FullName, "Nested Folder"));
-			Action<String, String> testMethod = (directoryPath, innerDirectoryPath) =>
-			{
-				var filePath1 = Path.Combine(directoryPath, "foo.dll");
-				var filePath2 = Path.Combine(innerDirectoryPath, "bar.dll");
-				GenerateAssembly(@"public class Foo : IInterface {}", filePath1);
-				GenerateAssembly(@"public class Bar : IInterface {}", filePath2);
-				var result = TypeInstantiator.ExportedInstancesFromDirectory<IInterface>(directoryPath, true);
-				Assert.AreEqual(2, result.Instances.Count());
-				Assert.AreEqual(0, result.Exceptions.Count());
-			};
-			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, AssemblyResolverHolder.AssemblyResolver, directory.FullName, innerDirectory.FullName);
-			directory.Delete(true);
-		}
-
-		[Test]
-		public void when_nested_directories_and_not_recursive()
-		{
-			var directory = MakeTempDirForTest();
-			var innerDirectory = Directory.CreateDirectory(Path.Combine(directory.FullName, "Nested Folder"));
-			Action<String, String> testMethod = (directoryPath, innerDirectoryPath) =>
-			{
-				var filePath1 = Path.Combine(directoryPath, "foo.dll");
-				var filePath2 = Path.Combine(innerDirectoryPath, "bar.dll");
-				GenerateAssembly(@"public class Foo : IInterface {}", filePath1);
-				GenerateAssembly(@"public class Bar : IInterface {}", filePath2);
-				var result = TypeInstantiator.ExportedInstancesFromDirectory<IInterface>(directoryPath, false);
-				Assert.AreEqual(1, result.Instances.Count());
-				Assert.AreEqual(0, result.Exceptions.Count());
-			};
-			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, AssemblyResolverHolder.AssemblyResolver, directory.FullName, innerDirectory.FullName);
-			directory.Delete(true);
-		}
-
 	}
 }

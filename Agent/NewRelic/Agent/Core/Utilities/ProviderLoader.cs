@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -17,7 +14,13 @@ namespace NewRelic.Agent.Core.Utilities
 		[NotNull]
 		public static IEnumerable<T> LoadExtensions<T>()
 		{
-			var result = TypeInstantiator.ExportedInstancesFromDirectory<T>(AgentInstallConfiguration.InstallPathExtensionsDirectory, true);
+			var loadPaths = AgentInstallConfiguration.IsNetstandardPresent
+				? new[] { AgentInstallConfiguration.InstallPathExtensionsDirectory, AgentInstallConfiguration.InstallPathNetstandardExtensionsDirectory }
+				: new[] { AgentInstallConfiguration.InstallPathExtensionsDirectory };
+
+			Log.Info($"Loading extensions of type {typeof(T)} from: {string.Join(", ", loadPaths)}");
+
+			var result = TypeInstantiator.ExportedInstancesFromDirectory<T>(loadPaths);
 
 			foreach(var ex in result.Exceptions)
 			{

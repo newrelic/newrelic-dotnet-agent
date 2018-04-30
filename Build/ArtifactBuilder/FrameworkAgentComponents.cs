@@ -28,10 +28,15 @@ namespace ArtifactBuilder
 				$@"{SourcePath}\New Relic Home {Platform}\Extensions\NewRelic.Providers.Storage.OperationContext.dll"
 			};
 
+			var netstandardExtensions = new List<string>()
+			{
+				$@"{SourcePath}\New Relic Home {Platform}\Extensions\netstandard2.0\NewRelic.Core.dll",
+				$@"{SourcePath}\New Relic Home {Platform}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll",
+			};
+
 			var wrapperProviders = new List<string>()
 			{
 				$@"{SourcePath}\New Relic Home {Platform}\Extensions\NewRelic.Providers.Wrapper.Asp35.dll",
-				$@"{SourcePath}\New Relic Home {Platform}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
 				$@"{SourcePath}\New Relic Home {Platform}\Extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.dll",
 				$@"{SourcePath}\New Relic Home {Platform}\Extensions\NewRelic.Providers.Wrapper.Couchbase.dll",
 				$@"{SourcePath}\New Relic Home {Platform}\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
@@ -110,6 +115,9 @@ namespace ArtifactBuilder
 			ExtensionDirectoryComponents.AddRange(storageProviders);
 			ExtensionDirectoryComponents.AddRange(wrapperProviders);
 			ExtensionDirectoryComponents.Add(ExtensionXsd);
+
+			NetstandardExtensionDirectoryComponents = new List<string>();
+			NetstandardExtensionDirectoryComponents.AddRange(netstandardExtensions);
 
 			WrapperXmlFiles = new List<string>();
 			WrapperXmlFiles.AddRange(wrapperXmls);

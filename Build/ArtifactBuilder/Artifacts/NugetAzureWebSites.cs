@@ -52,6 +52,7 @@ namespace ArtifactBuilder.Artifacts
 		{
 			FileHelpers.CopyFile(AgentComponents.RootInstallDirectoryComponents, RootDirectory);
 			FileHelpers.CopyFile(AgentComponents.ExtensionDirectoryComponents, ExtensionsDirectory);
+			FileHelpers.CopyFile(AgentComponents.NetstandardExtensionDirectoryComponents, $@"{ExtensionsDirectory}\netstandard2.0");
 			FileHelpers.CopyFile(AgentComponents.WrapperXmlFiles, ExtensionsDirectory);
 			FileHelpers.CopyFile(AgentComponents.AgentApiDll, LibDirectory);
 			FileHelpers.CopyFile($@"{PackageDirectory}\tools\install.ps1", ToolsDirectory);

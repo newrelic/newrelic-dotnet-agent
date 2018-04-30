@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 #if NET45
 using Microsoft.Win32;
 #endif
@@ -16,10 +18,12 @@ namespace NewRelic.Agent.Core
 #endif
 
 		public static bool IsWindows { get; }
+		public static bool IsNetstandardPresent { get; }
 		public static string NewRelicHome { get; }
 		public static string NewRelicInstallPath { get; }
 		public static string HomeExtensionsDirectory { get; }
 		public static string InstallPathExtensionsDirectory { get; }
+		public static string InstallPathNetstandardExtensionsDirectory { get; }
 
 		static AgentInstallConfiguration()
 		{
@@ -32,6 +36,15 @@ namespace NewRelic.Agent.Core
 			NewRelicInstallPath = GetNewRelicInstallPath();
 			HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
+			InstallPathNetstandardExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions", "netstandard2.0") : null;
+			IsNetstandardPresent = GetIsNetstandardPresent();
+		}
+
+		private static bool GetIsNetstandardPresent()
+		{
+			var netstandard20Version = new Version(2, 0, 0, 0);
+			var netstandardAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "netstandard");
+			return netstandardAssembly != null && netstandardAssembly.GetName().Version >= netstandard20Version;
 		}
 
 		private static string GetNewRelicHome()
