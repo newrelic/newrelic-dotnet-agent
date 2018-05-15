@@ -12,32 +12,32 @@ if ($env:Version) {
     exit 1
 }
 
-if ($env:RELEASE_ACTION) {
-    switch($env:RELEASE_ACTION) {
-        "release-2-fake-production" {
+if ($env:S3_BUCKET) {
+    switch($env:S3_BUCKET) {
+        "s3://test-repo-production" {
             $APT_REPO_URL='http://test-repo-production.s3.amazonaws.com/debian'
             $YUM_REPO_URL='http://test-repo-production.s3.amazonaws.com/pub/newrelic/el7'                        
         }
-        "release-2-fake-testing" {
-            $APT_REPO_URL='http://test-repo-testing.s3.amazonaws.com/75abcxx/debian'
+        "s3://test-repo-testing/75abcxxx/" {
+            $APT_REPO_URL='http://test-repo-testing.s3.amazonaws.com/75abcxxx/debian'
             $YUM_REPO_URL='http://test-repo-testing.s3.amazonaws.com/75abcxxx/pub/newrelic-testing/el7'                                    
         }
-        "release-2-production" {
+        "s3://nr-downloads-main" {
             $APT_REPO_URL='http://apt.newrelic.com/debian'
             $YUM_REPO_URL='http://yum.newrelic.com/pub/newrelic/el7'                        
         }
-        "release-2-testing" {
+        "s3://nr-downloads-private/75ac22b116/" {
             $APT_REPO_URL='https://nr-downloads-private.s3-us-east-1.amazonaws.com/75ac22b116/debian'
             $YUM_REPO_URL='https://nr-downloads-private.s3-us-east-1.amazonaws.com/75ac22b116/pub/newrelic-testing/el7'                                    
         }
-        default { Write-Host "Unrecognized value $env:RELEASE_ACTION set for RELEASE_ACTION"}
+        default { Write-Host "Unrecognized value $env:S3_BUCKET set for S3_BUCKET"}
     }
 } else {
-    Write-Host "env:RELEASE_ACTION must be set, exiting"
+    Write-Host "S3_BUCKET must be set, exiting"
     exit 1
 }
 
-Write-Host "RELEASE_ACTION=$env:RELEASE_ACTION"
+Write-Host "S3_BUCKET=$env:S3_BUCKET"
 Write-Host "APT_REPO_URL=$APT_REPO_URL"
 Write-Host "YUM_REPO_URL=$YUM_REPO_URL"
 

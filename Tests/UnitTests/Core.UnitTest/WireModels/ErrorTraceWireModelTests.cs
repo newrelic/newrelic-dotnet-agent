@@ -30,7 +30,6 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[NotNull] private Core.UnitTest.Fixtures.Logging _logging;
 			[NotNull] private Attributes _attributes;
 
-			[NotNull] String _requestUri = "http://localhost/post.aspx";
 			[NotNull] private IList<String> _stackTrace;
 			private DateTime _timestamp;
 			[NotNull] private String _path;
@@ -116,7 +115,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void when_default_fixture_values_are_used_then_serializes_correctly()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
@@ -131,8 +130,8 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 					"[\"System.Exception: Inner Exception\",\"at WebApplication.Contact.Baz() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 50\",\"at WebApplication.Contact.Foo() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 40\",\"--- End of inner exception stack trace ---\",\"at WebApplication.Contact.Foo() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 46\",\"at WebApplication.Contact.Bar() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 28\",\"--- End of inner exception stack trace ---\",\"at WebApplication.Contact.Bar() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 34\",\"at WebApplication.Contact.Page_Load(Object sender, EventArgs e) in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 22\",\"at System.Web.UI.Control.LoadRecursive()\",\"at System.Web.UI.Page.ProcessRequestMain(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.HandleError(Exception e)\",\"at System.Web.UI.Page.ProcessRequestMain(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest()\",\"at System.Web.UI.Page.ProcessRequest(HttpContext context)\",\"at ASP.contact_aspx.ProcessRequest(HttpContext context) in c:\\\\Windows\\\\Microsoft.NET\\\\Framework64\\\\v4.0.30319\\\\Temporary ASP.NET Files\\\\webapplication1\\\\734e4ee5\\\\213b041b\\\\App_Web_lag4whrl.2.cs:line 0\",\"at System.Web.HttpApplication.CallHandlerExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute()\",\"at System.Web.HttpApplication.CallHandlerExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute()\",\"at System.Web.HttpApplication.ExecuteStep(IExecutionStep step, Boolean& completedSynchronously)}\"],"
 					+ "\"" + AttributeService.AgentAttributesKey + "\":{},"
 					+ "\"" + AttributeService.UserAttributesKey + "\":{},"
-					+ "\"" + AttributeService.IntrinsicsKey + "\":{},"
-					+ "\"request_uri\":\"" + _requestUri + "\"},\"123\"]";
+					+ "\"" + AttributeService.IntrinsicsKey + "\":{}},"
+					+ "\"123\"]";
 
 				var actualResult = JsonConvert.SerializeObject(errorTraceData);
 				Assert.AreEqual(expectedResult, actualResult);
@@ -141,7 +140,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void eror_trace_attributes_when_default_fixture_values_are_used_then_serializes_correctly()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 
 				var expectedResult =
@@ -150,8 +149,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 					"[\"System.Exception: Inner Exception\",\"at WebApplication.Contact.Baz() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 50\",\"at WebApplication.Contact.Foo() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 40\",\"--- End of inner exception stack trace ---\",\"at WebApplication.Contact.Foo() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 46\",\"at WebApplication.Contact.Bar() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 28\",\"--- End of inner exception stack trace ---\",\"at WebApplication.Contact.Bar() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 34\",\"at WebApplication.Contact.Page_Load(Object sender, EventArgs e) in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 22\",\"at System.Web.UI.Control.LoadRecursive()\",\"at System.Web.UI.Page.ProcessRequestMain(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.HandleError(Exception e)\",\"at System.Web.UI.Page.ProcessRequestMain(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest()\",\"at System.Web.UI.Page.ProcessRequest(HttpContext context)\",\"at ASP.contact_aspx.ProcessRequest(HttpContext context) in c:\\\\Windows\\\\Microsoft.NET\\\\Framework64\\\\v4.0.30319\\\\Temporary ASP.NET Files\\\\webapplication1\\\\734e4ee5\\\\213b041b\\\\App_Web_lag4whrl.2.cs:line 0\",\"at System.Web.HttpApplication.CallHandlerExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute()\",\"at System.Web.HttpApplication.CallHandlerExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute()\",\"at System.Web.HttpApplication.ExecuteStep(IExecutionStep step, Boolean& completedSynchronously)}\"],"
 					+ "\"" + AttributeService.AgentAttributesKey + "\":{},"
 					+ "\"" + AttributeService.UserAttributesKey + "\":{},"
-					+ "\"" + AttributeService.IntrinsicsKey + "\":{},"
-					+ "\"request_uri\":\"" + _requestUri + "\"}";
+					+ "\"" + AttributeService.IntrinsicsKey + "\":{}}";
 
 				var actualResult = JsonConvert.SerializeObject(attributes);
 				Assert.AreEqual(expectedResult, actualResult);
@@ -161,7 +159,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			public void
 				eror_trace_attributes_when_default_fixture_values_are_used_then_serializes_correctly_with_legacy_serializer()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 
 				var expectedResult =
@@ -170,8 +168,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 					"[\"System.Exception: Inner Exception\",\"at WebApplication.Contact.Baz() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 50\",\"at WebApplication.Contact.Foo() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 40\",\"--- End of inner exception stack trace ---\",\"at WebApplication.Contact.Foo() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 46\",\"at WebApplication.Contact.Bar() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 28\",\"--- End of inner exception stack trace ---\",\"at WebApplication.Contact.Bar() in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 34\",\"at WebApplication.Contact.Page_Load(Object sender, EventArgs e) in c:\\\\code\\\\dotnet_agent\\\\Agent\\\\NewRelic\\\\Profiler\\\\WebApplication1\\\\Contact.aspx.cs:line 22\",\"at System.Web.UI.Control.LoadRecursive()\",\"at System.Web.UI.Page.ProcessRequestMain(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.HandleError(Exception e)\",\"at System.Web.UI.Page.ProcessRequestMain(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint)\",\"at System.Web.UI.Page.ProcessRequest()\",\"at System.Web.UI.Page.ProcessRequest(HttpContext context)\",\"at ASP.contact_aspx.ProcessRequest(HttpContext context) in c:\\\\Windows\\\\Microsoft.NET\\\\Framework64\\\\v4.0.30319\\\\Temporary ASP.NET Files\\\\webapplication1\\\\734e4ee5\\\\213b041b\\\\App_Web_lag4whrl.2.cs:line 0\",\"at System.Web.HttpApplication.CallHandlerExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute()\",\"at System.Web.HttpApplication.CallHandlerExecutionStep.System.Web.HttpApplication.IExecutionStep.Execute()\",\"at System.Web.HttpApplication.ExecuteStep(IExecutionStep step, Boolean& completedSynchronously)}\"],"
 					+ "\"" + AttributeService.AgentAttributesKey + "\":{},"
 					+ "\"" + AttributeService.UserAttributesKey + "\":{},"
-					+ "\"" + AttributeService.IntrinsicsKey + "\":{},"
-					+ "\"request_uri\":\"" + _requestUri + "\"}";
+					+ "\"" + AttributeService.IntrinsicsKey + "\":{}}";
 
 				var actualResult = JsonConvert.SerializeObject(attributes);
 				Assert.AreEqual(expectedResult, actualResult);
@@ -180,7 +177,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void when_construtor_used_timestamp_property_is_set()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
@@ -190,7 +187,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void when_construtor_used_path_property_is_set()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
@@ -200,7 +197,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void when_construtor_used_message_property_is_set()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
@@ -210,7 +207,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void when_construtor_used_exceptionClassName_property_is_set()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
@@ -220,7 +217,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void when_construtor_used_parameters_property_is_set()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
@@ -230,7 +227,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			[Test]
 			public void when_construtor_used_guid_property_is_set()
 			{
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 
@@ -244,7 +241,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 				var agentAttributes = new Dictionary<String, Object> {{"Foo", "Bar"}};
 
 				// ACT
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, agentAttributes, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(agentAttributes, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 				var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
@@ -260,7 +257,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 				var agentAttributes = new Dictionary<String, Object> {{"Foo", "Bar"}};
 
 				// ACT
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, agentAttributes,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, agentAttributes,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 				var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
@@ -276,7 +273,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 				var userAttributes = new Dictionary<String, Object> {{"Foo", "Bar"}};
 
 				// ACT
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					userAttributes, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 				var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
@@ -289,7 +286,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			public void when_attributes_are_empty_then_it_does_not_show_up()
 			{
 				// ACT
-				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
+				var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 					EmptyDictionary, _stackTrace);
 				var errorTraceData = new ErrorTraceWireModel(_timestamp, _path, _message, _exceptionClassName, attributes, _guid);
 				var errorTraceDataJson = JsonConvert.SerializeObject(errorTraceData);
@@ -306,7 +303,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 				// ACT
 				Assert.DoesNotThrow(
 					() =>
-						new ErrorTraceWireModel.ErrorTraceAttributesWireModel(String.Empty, EmptyDictionary, EmptyDictionary,
+						new ErrorTraceWireModel.ErrorTraceAttributesWireModel(EmptyDictionary, EmptyDictionary,
 							EmptyDictionary, null));
 			}
 		}

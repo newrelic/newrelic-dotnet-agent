@@ -53,14 +53,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <returns></returns>
 		public ErrorTraceWireModel GetErrorTrace([NotNull] Attributes customAttributes, [NotNull] ErrorData errorData)
 		{
-			var uri = string.Empty;
 			var stackTrace = GetFormattedStackTrace(errorData);
 
 			var timestamp = errorData.NoticedAt;
 			const string path = "NewRelic.Api.Agent.NoticeError API Call";
 			var message = errorData.ErrorMessage;
 			var exceptionClassName = errorData.ErrorTypeName;
-			var errorAttributesWireModel = GetErrorTraceAttributes(uri, customAttributes, stackTrace);
+			var errorAttributesWireModel = GetErrorTraceAttributes(customAttributes, stackTrace);
 			const string guid = null;
 
 			return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
@@ -82,14 +81,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <returns></returns>
 		public ErrorTraceWireModel GetErrorTrace([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes transactionAttributes, [NotNull] TransactionMetricName transactionMetricName, [NotNull] ErrorData errorData)
 		{
-			var uri = immutableTransaction.TransactionMetadata.Uri?.TrimAfter("?");
 			var stackTrace = GetFormattedStackTrace(errorData);
 
 			var timestamp = errorData.NoticedAt;
 			var path = transactionMetricName.PrefixedName;
 			var message = errorData.ErrorMessage;
 			var exceptionClassName = errorData.ErrorTypeName;
-			var errorAttributesWireModel = GetErrorTraceAttributes(uri ?? string.Empty, transactionAttributes, stackTrace);
+			var errorAttributesWireModel = GetErrorTraceAttributes(transactionAttributes, stackTrace);
 			var guid = immutableTransaction.Guid;
 
 			return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
@@ -107,14 +105,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		[NotNull]
-		private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes([NotNull] String uri, [NotNull] Attributes attributes, IEnumerable<String> stackTrace)
+		private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes([NotNull] Attributes attributes, IEnumerable<String> stackTrace)
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(attributes, AttributeDestinations.ErrorTrace);
 			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();
 			var intrinsicAttributes = filteredAttributes.GetIntrinsicsDictionary();
 			var userAttributes = filteredAttributes.GetUserAttributesDictionary();
 
-			return new ErrorTraceWireModel.ErrorTraceAttributesWireModel(uri, agentAttributes, intrinsicAttributes, userAttributes, stackTrace);
+			return new ErrorTraceWireModel.ErrorTraceAttributesWireModel(agentAttributes, intrinsicAttributes, userAttributes, stackTrace);
 		}
 	}
 }

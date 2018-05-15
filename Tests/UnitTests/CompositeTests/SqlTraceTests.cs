@@ -56,6 +56,49 @@ namespace CompositeTests
 		}
 
 		[Test]
+		public void CreatesTransactionAndSqlTrace_RequestUriGloballyExcluded()
+		{
+
+			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
+			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string>{"request.uri"};
+			_compositeTestAgent.PushConfiguration();
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				tx.SetUri("myuri");
+				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var sqlTrace = _compositeTestAgent.SqlTraces.First();
+			Assert.AreEqual("<unknown>", sqlTrace.Uri);
+		}
+
+		[Test]
+		public void CreatesTransactionAndSqlTrace_RequestUriLocallyExcluded()
+		{
+
+			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
+			_compositeTestAgent.LocalConfiguration.transactionTracer.attributes.exclude = new List<string> { "request.uri" };
+			_compositeTestAgent.LocalConfiguration.transactionEvents.attributes.exclude = new List<string> { "request.uri" };
+			_compositeTestAgent.LocalConfiguration.errorCollector.attributes.exclude = new List<string> { "request.uri" };
+
+			_compositeTestAgent.PushConfiguration();
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				tx.SetUri("myuri");
+				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var sqlTrace = _compositeTestAgent.SqlTraces.First();
+			Assert.AreEqual("myuri", sqlTrace.Uri);
+		}
+
+		[Test]
 		public void SimpleTransaction_CreatesNoSqlTraceOnFastQuery()
 		{
 			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))

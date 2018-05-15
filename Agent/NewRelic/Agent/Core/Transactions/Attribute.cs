@@ -98,8 +98,8 @@ namespace NewRelic.Agent.Core.Transactions
 		[NotNull]
 		public static Attribute BuildRequestUriAttribute([NotNull] string value)
 		{
-			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("request_uri", value, AttributeClassification.AgentAttributes, destinations);
+			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace;
+			return new Attribute("request.uri", value, AttributeClassification.AgentAttributes, destinations);
 		}
 
 		[NotNull]

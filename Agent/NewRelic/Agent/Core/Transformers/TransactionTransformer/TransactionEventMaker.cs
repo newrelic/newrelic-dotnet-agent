@@ -27,9 +27,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var intrinsicAttributes = filteredAttributes.GetIntrinsicsDictionary();
 			var userAttributes = filteredAttributes.GetUserAttributesDictionary();
 
-			var isSynthetics = immutableTransaction.TransactionMetadata.IsSynthetics;
+			var transactionMetadata = immutableTransaction.TransactionMetadata;
+			var isSynthetics = transactionMetadata.IsSynthetics;
+			var priority = transactionMetadata.Priority;
 
-			return new TransactionEventWireModel(userAttributes, agentAttributes, intrinsicAttributes, isSynthetics);
+			return new TransactionEventWireModel(userAttributes, agentAttributes, intrinsicAttributes, isSynthetics, priority);
 		}
 	}
 }

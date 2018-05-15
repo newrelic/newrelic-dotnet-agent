@@ -74,6 +74,18 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
+					float priority;
+					var transaction = TryGetCurrentInternalTransaction();
+					if (transaction != null)
+					{
+						var transactionMetadata = transaction.TransactionMetadata;
+						priority = transaction.TransactionMetadata.Priority;
+					}
+					else
+					{
+						priority = (float)new Random().NextDouble();
+					}
+
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(RecordCustomEvent));
 
 					if (eventType == null)
@@ -81,7 +93,7 @@ namespace NewRelic.Agent.Core.Api
 					if (attributes == null)
 						throw new ArgumentNullException(nameof(attributes));
 					
-					_customEventTransformer.Transform(eventType, attributes);
+					_customEventTransformer.Transform(eventType, attributes, priority);
 				}
 			}
 			catch (Exception ex)
@@ -249,7 +261,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 			else
 			{
-				_customErrorDataTransformer.Transform(errorData, customAttributes);
+				_customErrorDataTransformer.Transform(errorData, customAttributes, (float)new Random().NextDouble());
 			}
 		}
 

@@ -1,12 +1,12 @@
-﻿namespace NewRelic.Agent.Core.ThreadProfiling
+﻿using JetBrains.Annotations;
+
+namespace NewRelic.Agent.Core.ThreadProfiling
 {
 	public interface IThreadProfilingSampler
 	{
-		int NumberSamplesInSession { get; set; }
+		bool Start(uint frequencyInMsec, uint durationInMsec, [NotNull]ISampleSink sampleSink, [NotNull] INativeMethods nativeMethods);
 
-		bool Start(uint frequencyInMsec, uint durationInMsec);
-
-		void Stop(bool reportData);
+		void Stop();
 	}
 }
 

@@ -59,6 +59,8 @@ namespace NewRelic.Agent
 					if (!_settings.ErrorEventsEnabled)
 						return Enumerable.Empty<T>();
 					break;
+				case AttributeDestinations.SqlTrace:
+					break;
 				default:
 					throw new ArgumentOutOfRangeException("destination", "Unexpected destination: " + destination);
 			}

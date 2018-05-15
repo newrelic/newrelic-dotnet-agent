@@ -73,16 +73,11 @@ namespace NewRelic.Agent.Core.WireModels
 			[JsonProperty("intrinsics")]
 			[NotNull] public virtual IEnumerable<KeyValuePair<String, Object>> Intrinsics { get; }
 
-			[JsonProperty("request_uri")]
-			[NotNull] public virtual String RequestUri { get; }
-
-			public ErrorTraceAttributesWireModel([NotNull] String requestUri, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [CanBeNull] IEnumerable<String> stackTrace = null)
+			public ErrorTraceAttributesWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [CanBeNull] IEnumerable<String> stackTrace = null)
 			{
 				AgentAttributes = agentAttributes.ToReadOnlyDictionary();
 				Intrinsics = intrinsicAttributes.ToReadOnlyDictionary();
 				UserAttributes = userAttributes.ToReadOnlyDictionary();
-
-				RequestUri = requestUri;
 
 				if (stackTrace != null)
 					StackTrace = new ReadOnlyCollection<String>(new List<String>(stackTrace));

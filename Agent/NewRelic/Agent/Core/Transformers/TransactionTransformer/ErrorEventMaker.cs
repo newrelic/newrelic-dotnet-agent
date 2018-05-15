@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			[NotNull] Attributes transactionAttributes);
 
 		[NotNull]
-		ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes);
+		ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes, float priority);
 	}
 
 	public class ErrorEventMaker : IErrorEventMaker
@@ -42,11 +42,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			// sensitive data that we will just drop on the floor.
 			var typeAttribute = Attribute.BuildTypeAttribute(TypeAttributeValue.TransactionError);
 			filteredAttributes.Add(typeAttribute);
-
+			
 			return CreateErrorEvent(immutableTransaction, filteredAttributes);
 		}
 
-		public ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes)
+		public ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes, float priority)
 		{
 			// These attributes are for an ErrorEvent outside of a transaction
 
@@ -65,8 +65,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var timestampAttribute = Attribute.BuildTimeStampAttribute(errorData.NoticedAt);
 			customAttributes.Add(timestampAttribute);
 
-		
-			return CreateErrorEvent(customAttributes);
+			return CreateErrorEvent(customAttributes, priority);
 		}
 
 		#region Private Helpers
@@ -78,19 +77,21 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var intrinsicAttributes = filteredAttributes.GetIntrinsicsDictionary();
 			var userAttributes = filteredAttributes.GetUserAttributesDictionary();
 
-			var isSynthetics = immutableTransaction.TransactionMetadata.IsSynthetics;
+			var transactionMetadata = immutableTransaction.TransactionMetadata;
+			var isSynthetics = transactionMetadata.IsSynthetics;
+			var priority = transactionMetadata.Priority;
 
-			return new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, isSynthetics);
+			return new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, isSynthetics, priority);
 		}
 
-		private ErrorEventWireModel CreateErrorEvent([NotNull] Attributes customAttributes)
+		private ErrorEventWireModel CreateErrorEvent([NotNull] Attributes customAttributes, float  priority)
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(customAttributes, AttributeDestinations.ErrorEvent);
 			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();
 			var intrinsicAttributes = filteredAttributes.GetIntrinsicsDictionary();
 			var userAttributes = filteredAttributes.GetUserAttributesDictionary();
 
-			return new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, false);
+			return new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, false, priority);
 		}
 
 

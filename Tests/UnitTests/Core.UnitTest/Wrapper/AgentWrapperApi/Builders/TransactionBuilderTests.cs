@@ -37,7 +37,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var configurationService = Mock.Create<IConfigurationService>();
 			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
-			_builder = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			_builder = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			_publishedEvent = null;
 			_eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
 		}
@@ -112,7 +113,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			var transactionName = new WebTransactionName("WebTransaction", "Test");
 
-			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 
 			for (int i = 0; i < segmentCount; i++)
 			{

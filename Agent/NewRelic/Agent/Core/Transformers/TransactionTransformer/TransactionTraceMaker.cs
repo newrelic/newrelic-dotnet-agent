@@ -49,6 +49,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var startTime = immutableTransaction.StartTime;
 			var duration = immutableTransaction.Duration;
 			var uri = immutableTransaction.TransactionMetadata.Uri?.TrimAfter("?") ?? "/Unknown";
+
+			if (!_attributeService.AllowRequestUri(AttributeDestinations.TransactionTrace))
+			{
+				uri = null;
+			}
+
 			var guid = immutableTransaction.Guid;
 			var xraySessionId = null as UInt64?; // The .NET agent does not support xray sessions
 

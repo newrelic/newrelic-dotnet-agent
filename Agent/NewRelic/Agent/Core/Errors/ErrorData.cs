@@ -49,36 +49,35 @@ namespace NewRelic.Agent.Core.Errors
 			return new ErrorData(message, exceptionTypeName, stackTrace, noticedAt);
 		}
 
+		/// <summary>
+		/// Gets a <see cref="NewRelic.Agent.Core.Errors.ErrorData"/> based on precedence order of
+		/// 1. custom error; 2. transaction exception; 3. http status code error.
+		/// </summary>
+		/// <param name="immutableTransaction"></param>
+		/// <param name="configurationService"></param>
+		/// <returns>A single errorData, empty if no unignored errors exist.</returns>
 		public static ErrorData TryGetErrorData([NotNull] ImmutableTransaction immutableTransaction, [NotNull] IConfigurationService configurationService)
 		{
-			// *Any* ignored custom error noticed by the agent should result in no error trace
 			var customErrors = immutableTransaction.TransactionMetadata.CustomErrorDatas.ToList();
-			if (ShouldIgnoreAnyError(customErrors, configurationService))
-				return new ErrorData();
-
-			// Custom errors are more valuable than exception errors or status code errors
-			if (customErrors.Any())
+			if (customErrors.Any() && !ShouldIgnoreAnyError(customErrors, configurationService))
 			{
 				return customErrors.First();
 			}
 
-			// An ignored status code should result in no error trace
-			var formattedStatusCode = TryGetFormattedStatusCode(immutableTransaction);
-			if (ShouldIgnoreError(formattedStatusCode, configurationService))
-				return new ErrorData();
-
-			// *Any* ignored exception noticed by the agent should result in no error trace (unless there is a custom error)
 			var transactionExceptions = immutableTransaction.TransactionMetadata.TransactionExceptionDatas.ToList();
-			if (ShouldIgnoreAnyError(transactionExceptions, configurationService))
-				return new ErrorData();
-
-			// Exception errors are more valuable than status code errors
-			if (transactionExceptions.Any())
+			if (transactionExceptions.Any() && !ShouldIgnoreAnyError(transactionExceptions, configurationService))
 			{
 				return transactionExceptions.First();
 			}
 
-			return TryCreateHttpErrorData(immutableTransaction);
+			var formattedStatusCode = TryGetFormattedStatusCode(immutableTransaction);
+			if (formattedStatusCode != null && !ShouldIgnoreError(formattedStatusCode, configurationService))
+			{
+				return TryCreateHttpErrorData(immutableTransaction);
+			}
+
+			// if no unignored errors, return empty ErrorData
+			return new ErrorData();
 		}
 
 		private static Boolean ShouldIgnoreAnyError([NotNull] IEnumerable<ErrorData> errorData, [NotNull] IConfigurationService configurationService)

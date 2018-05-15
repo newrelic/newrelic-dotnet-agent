@@ -127,6 +127,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetTransactionTrace_CreatesTraceWithCorrectUri()
 		{
+			Mock.Arrange(() => _attributeService.AllowRequestUri(AttributeDestinations.TransactionTrace))
+				.Returns(true);
+
 			const String inputUrl = "http://www.google.com/test?param=value";
 			var transaction = BuildTestTransaction(uri: inputUrl);
 			var segments = new[] {BuildNode()};

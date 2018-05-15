@@ -6,14 +6,17 @@ namespace ArtifactBuilder.Artifacts
 		{
 			SourceDirectory = sourceDirectory;
 			Name = name;
+			StagingDirectory = $@"{SourceDirectory}\Build\_staging\{Name}";
+			PackageDirectory = $@"{SourceDirectory}\Build\Packaging\{Name}";
+			OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}";
 		}
 
 		public string SourceDirectory { get; }
 		public string Name { get; }
 
-		protected string StagingDirectory => $@"{SourceDirectory}\Build\_staging\{Name}";
-		protected string PackageDirectory => $@"{SourceDirectory}\Build\Packaging\{Name}";
-		protected string OutputDirectory => $@"{SourceDirectory}\Build\BuildArtifacts\{Name}";
+		protected string StagingDirectory;
+		protected string PackageDirectory;
+		protected string OutputDirectory;
 
 		public void Build()
 		{

@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		public readonly ProfileNode Root = new ProfileNode(
 			// Set the id to IntPtr.Zero so that we don't request it from the unmanaged profiler - 
 			// such a request makes it unhappy.
-			IntPtr.Zero, 
+			UIntPtr.Zero, 
 			0, 0);
 	}
 
@@ -84,11 +84,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
 		public uint NonRunnableCount;
 
-		public IntPtr FunctionId { get; set; }
+		public UIntPtr FunctionId { get; set; }
 		public uint Depth { get; set; }
 		public bool IgnoreForReporting { get; set; }
 
-		public ProfileNode(IntPtr functionId, uint runnableCount, uint depth)
+		public ProfileNode(UIntPtr functionId, uint runnableCount, uint depth)
 		{
 			FunctionId = functionId;
 			RunnableCount = runnableCount;

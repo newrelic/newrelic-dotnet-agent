@@ -51,7 +51,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 			
 			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(1), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
-			var internalTransaction = new Transaction(GetDefaultConfiguration(), immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var internalTransaction = new Transaction(GetDefaultConfiguration(), immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			if (segments.Any())
 			{
 				foreach (var segment in segments)

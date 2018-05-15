@@ -11,6 +11,7 @@ namespace NewRelic.Agent
 		ErrorTrace = 1 << 2,
 		JavaScriptAgent = 1 << 3,
 		ErrorEvent = 1 << 4,
+		SqlTrace = 1 << 5,
 		All = 0xFF,
 	}
 }

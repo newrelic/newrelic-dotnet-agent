@@ -60,8 +60,8 @@
     <Compile Include="NewRelic.Collections\ConcurrentDictionary.cs" />
     <Compile Include="NewRelic.Collections\ConcurrentHashSet.cs" />
     <Compile Include="NewRelic.Collections\ConcurrentList.cs" />
+    <Compile Include="NewRelic.Collections\ConcurrentPriorityQueueTests.cs" />
     <Compile Include="NewRelic.Collections\ConcurrentQueueTests.cs" />
-    <Compile Include="NewRelic.Collections\ConcurrentReservoir.cs" />
     <Compile Include="NewRelic.Collections\DisposableCollection.cs" />
     <Compile Include="NewRelic.Dispatchers\EventBus.cs" />
     <Compile Include="NewRelic.Dispatchers\EventSubscription.cs" />
@@ -84,6 +84,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Core\Core.csproj">
+      <Project>{d6e22195-ee69-4320-b08b-e68229fb69ab}</Project>
+      <Name>Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj">
       <Project>{9784eaea-c32f-4dc4-bd84-4075bba541ab}</Project>
       <Name>NewRelic.Core</Name>

@@ -64,11 +64,12 @@ namespace NewRelic.Agent.Core.WireModels
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 			var databaseService = new DatabaseService();
 			var configurationService = Mock.Create<ConfigurationService>();
+			var attributeService = Mock.Create<IAttributeService>();
 			String[] queries = {Sql, "Select * from someTable", "Insert x into anotherTable", "another random string",
 				"1234567890!@#$%^&*()", "fjdksalfjdkla;fjdla;", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 				"NNNNNNNNNNNUUUUUUUUUUUUUUUUTTTTTTTTTTTTTTTHHHHHHHHHHHHHIIIIIIIIIIIIIIIIIIIINNNNNNNNNNNNNNNNNNNN",
 				Double.MaxValue.ToString()};
-			var sqlTraceMaker = new SqlTraceMaker(configurationService);
+			var sqlTraceMaker = new SqlTraceMaker(configurationService, attributeService);
 			var traceDatas = new List<SqlTraceWireModel>();
 			
 			foreach (String query in queries)

@@ -149,19 +149,6 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		}
 		
 		[Test]
-		public void TryGetErrorData_ReturnsNull_IfStatusCodeIsIgnoredByConfig_EvenIfExceptionIsNoticed()
-		{
-			Mock.Arrange(() => _configuration.HttpStatusCodesToIgnore).Returns(new[] { "404" });
-			
-			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
-			var transaction = BuildTestTransaction(statusCode: 404, transactionExceptionDatas: new[] { errorDataIn });
-			
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
-
-			Assert.IsNull(errorDataOut.ErrorTypeName);
-		}
-		
-		[Test]
 		public void TryGetErrorData_ReturnsNull_IfAnyExceptionIsIgnored()
 		{
 			Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new[] { "My type name2" });
@@ -169,20 +156,6 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(transactionExceptionDatas: new[] { errorData1, errorData2 });
-
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
-
-			Assert.IsNull(errorDataOut.ErrorTypeName);
-		}
-		
-		[Test]
-		public void TryGetErrorTrace_ReturnsNull_IfAnyExceptionIsIgnored_EvenIfStatusCodeIs404()
-		{
-			Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new[] { "My type name2" });
-
-			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
-			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
-			var transaction = BuildTestTransaction(statusCode: 404, transactionExceptionDatas: new[] { errorData1, errorData2 });
 
 			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
 

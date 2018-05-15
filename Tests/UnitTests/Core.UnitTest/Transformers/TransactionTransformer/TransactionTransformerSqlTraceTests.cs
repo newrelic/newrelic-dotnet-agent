@@ -9,6 +9,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Telerik.JustMock;
 
@@ -72,6 +73,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[NotNull]
 		private ISqlTraceMaker _sqlTraceMaker;
 
+		private IAttributeService _attributeService;
+
 		// TransactionTransformerSqlTraceTests is modelled after TransactionTransformerTests, but more real (non-mock) objects are required so that appropriate segment trees get generated.
 		[SetUp]
 		public void SetUp()
@@ -97,6 +100,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_errorTraceMaker = Mock.Create<IErrorTraceMaker>();
 			_errorEventAggregator = Mock.Create<IErrorEventAggregator>();
 			_errorEventMaker = Mock.Create<IErrorEventMaker>();
+			_attributeService = Mock.Create<IAttributeService>();
+
 
 			// Non-Mocks
 			_segmentTreeMaker = new SegmentTreeMaker();
@@ -112,7 +117,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			_transactionAttributeMaker = new TransactionAttributeMaker();
 
-			_sqlTraceMaker = new SqlTraceMaker(_configurationService);
+			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService);
 
 			// create TransactionTransformer
 			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker);

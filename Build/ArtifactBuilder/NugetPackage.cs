@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -5,16 +7,15 @@ namespace ArtifactBuilder
 {
 	public class NugetPackage
 	{
-		public NugetPackage(string stagingDirectory, string outputDirectory, NugetPushInfo nugetPushInfo)
+		public NugetPackage(string stagingDirectory, string outputDirectory)
 		{
 			StagingDirectory = stagingDirectory;
 			OutputDirectory = outputDirectory;
-			NugetPushInfo = nugetPushInfo;
 		}
 
 		public string StagingDirectory { get; }
 		public string OutputDirectory { get; }
-		public NugetPushInfo NugetPushInfo { get; }
+		public string ContentDirectory => $@"{StagingDirectory}\content";
 
 		private string NuspecFilePath => Directory.GetFiles(StagingDirectory, "*.nuspec").First();
 
@@ -30,19 +31,54 @@ namespace ArtifactBuilder
 			xml.Save(NuspecFilePath);
 		}
 
-		public void CopyAll(string sourceDirectory)
+		public void CopyAll(string sourceDirectory, string subDirectory = null)
 		{
-			FileHelpers.CopyAll(sourceDirectory, StagingDirectory);
+			FileHelpers.CopyAll(sourceDirectory, $@"{StagingDirectory}\{subDirectory}");
 		}
 
-		public void CopyToContent(string filePath)
+		public void CopyToContent(string filePath, string subDirectory = null)
 		{
-			FileHelpers.CopyFile(filePath, $@"{StagingDirectory}\content");
+			FileHelpers.CopyFile(filePath, $@"{StagingDirectory}\content\{subDirectory}");
 		}
 
-		public void CopyToLib(string filePath, string targetFrameworkMoniker)
+		public void CopyToContent(IEnumerable<string> filePaths, string subDirectory = null)
+		{
+			FileHelpers.CopyFile(filePaths, $@"{StagingDirectory}\content\{subDirectory}");
+		}
+
+		public string GetContentFilesDirectory(string language, string targetFrameworkMoniker)
+		{
+			return $@"{StagingDirectory}\contentFiles\{language}\{targetFrameworkMoniker}";
+		}
+
+		public void CopyToLib(string filePath, string targetFrameworkMoniker = null)
 		{
 			FileHelpers.CopyFile(filePath, $@"{StagingDirectory}\lib\{targetFrameworkMoniker}");
+		}
+
+		public void CopyToLib(IEnumerable<string> filePaths, string targetFrameworkMoniker)
+		{
+			FileHelpers.CopyFile(filePaths, $@"{StagingDirectory}\lib\{targetFrameworkMoniker}");
+		}
+
+		public void CopyToContentFiles(string filePath, string subDirectory = null)
+		{
+			FileHelpers.CopyFile(filePath, $@"{StagingDirectory}\contentFiles\{subDirectory}");
+		}
+
+		public void CopyToContentFiles(IEnumerable<string> filePaths, string subDirectory = null)
+		{
+			FileHelpers.CopyFile(filePaths, $@"{StagingDirectory}\contentFiles\{subDirectory}");
+		}
+
+		public void CopyToTools(string filePath, string subDirectory = null)
+		{
+			FileHelpers.CopyFile(filePath, $@"{StagingDirectory}\tools\{subDirectory}");
+		}
+
+		public void CopyToTools(IEnumerable<string> filePaths, string subDirectory = null)
+		{
+			FileHelpers.CopyFile(filePaths, $@"{StagingDirectory}\tools\{subDirectory}");
 		}
 
 		public void Pack()
@@ -50,9 +86,9 @@ namespace ArtifactBuilder
 			NuGetHelpers.Pack(NuspecFilePath, OutputDirectory);
 		}
 
-		public void Push()
+		public void PushToProGet()
 		{
-			NuGetHelpers.Push(NugetPushInfo, OutputDirectory);
+			NuGetHelpers.PushToProGet(OutputDirectory);
 		}
 	}
 }

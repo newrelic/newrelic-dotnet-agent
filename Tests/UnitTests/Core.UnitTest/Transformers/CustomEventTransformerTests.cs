@@ -51,7 +51,8 @@ namespace NewRelic.Agent.Core.Transformers
 				{"key2", "key2"}
 			};
 
-			_customEventTransformer.Transform(expectedEventType, expectedAttributes);
+			var priority = 0.5f;
+			_customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
 			Assert.NotNull(_lastPublishedCustomEvent);
 
@@ -81,7 +82,8 @@ namespace NewRelic.Agent.Core.Transformers
 				{"key5", 2u}
 			};
 
-			_customEventTransformer.Transform(expectedEventType, expectedAttributes);
+			var priority = 0.5f;
+			_customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
 			Assert.NotNull(_lastPublishedCustomEvent);
 			
@@ -106,7 +108,8 @@ namespace NewRelic.Agent.Core.Transformers
 				{"key2", "key2"}
 			};
 
-			_customEventTransformer.Transform(expectedEventType, expectedAttributes);
+			var priority = 0.5f;
+			_customEventTransformer.Transform(expectedEventType, expectedAttributes, priority);
 
 			Assert.IsNull(_lastPublishedCustomEvent);
 		}
@@ -120,8 +123,8 @@ namespace NewRelic.Agent.Core.Transformers
 				{"key1", "value1"},
 				{"key2", "key2"}
 			};
-
-			Assert.Throws<Exception>(() => _customEventTransformer.Transform(expectedEventType, expectedAttributes));
+			var priority = 0.5f;
+			Assert.Throws<Exception>(() => _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority));
 		}
 
 		[Test]
@@ -134,7 +137,8 @@ namespace NewRelic.Agent.Core.Transformers
 				{"key2", "key2"}
 			};
 
-			Assert.Throws<Exception>(() => _customEventTransformer.Transform(expectedEventType, expectedAttributes));
+			var priority = 0.5f;
+			Assert.Throws<Exception>(() => _customEventTransformer.Transform(expectedEventType, expectedAttributes, priority));
 		}
 	}
 }

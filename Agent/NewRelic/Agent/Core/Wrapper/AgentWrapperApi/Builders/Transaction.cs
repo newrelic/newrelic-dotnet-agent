@@ -107,8 +107,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		string Guid { get; }
 		// Used for RUM and CAT to get the duration until this point in time
 		TimeSpan GetDurationUntilNow();
-		ITransactionSegmentState TransactionSegmentState { get; }
 
+		ITransactionSegmentState GetTransactionSegmentState();
 		object GetOrSetValueFromCache(string key, Func<object> func);
 		ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql);
 	}
@@ -154,11 +154,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private readonly SqlObfuscator _sqlObfuscator;
 		
 		public Transaction([NotNull] IConfiguration configuration, [NotNull] ITransactionName initialTransactionName,
-			[NotNull] ITimer timer, [NotNull] DateTime startTime, [NotNull] ICallStackManager callStackManager, SqlObfuscator sqlObfuscator)
+			[NotNull] ITimer timer, [NotNull] DateTime startTime, [NotNull] ICallStackManager callStackManager, SqlObfuscator sqlObfuscator, float priority)
 		{
 			CandidateTransactionName = new CandidateTransactionName(initialTransactionName);
 			TransactionMetadata = new TransactionMetadata();
-
+			TransactionMetadata.Priority = priority;
 			CallStackManager = callStackManager;
 			_transactionTracerMaxSegments = configuration.TransactionTracerMaxSegments;
 			_startTime = startTime;
@@ -227,7 +227,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public bool Ignored => _ignored;
 		public string Guid => _guid;
 
-		public ITransactionSegmentState TransactionSegmentState => this;
+		/// <summary>
+		/// This is a method instead of property to prevent StackOverflowException when our 
+		/// Transaction is serialized. Sometimes 3rd party tools serialize our stuff even when 
+		/// we don't want. We still want to do no harm, when possible.
+		/// 
+		/// Ideally, we don't return the instance in this way but putting in a quick fix for now.
+		/// </summary>
+		/// <returns></returns>
+		public ITransactionSegmentState GetTransactionSegmentState()
+		{
+			return this;
+		}
 
 		private ConcurrentDictionary<string, object> _transactionCache;
 

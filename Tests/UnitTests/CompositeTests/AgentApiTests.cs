@@ -249,12 +249,18 @@ namespace CompositeTests
 
 			// ASSERT
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
-
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
 			Assert.AreEqual(errorTrace.Message, "This is a new exception.");
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
 			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+
+			var expectedErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
+			};
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
+
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
 		}
 
@@ -280,7 +286,14 @@ namespace CompositeTests
 			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
 			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+
+			var expectedErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
+			};
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
+
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
 		}
 
@@ -306,7 +319,14 @@ namespace CompositeTests
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
 			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+
+			var expectedErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
+			};
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
+
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
 		}
 
@@ -386,13 +406,19 @@ namespace CompositeTests
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
-			var expectedErrorAttributes = new List<ExpectedAttribute>
+			var expectedErrorUserAttributes = new List<ExpectedAttribute>
 			{
 				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
 			};
+
 			var unexpectedNonErrorAttributes = new List<String>
 			{
 				"attribute1"
+			};
+
+			var expectedErrorAgentAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
 			};
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
@@ -402,8 +428,9 @@ namespace CompositeTests
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
 			Assert.AreEqual(errorTrace.Message, "This is a new exception.");
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 		}
@@ -423,13 +450,19 @@ namespace CompositeTests
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
-			var expectedErrorAttributes = new List<ExpectedAttribute>
+			var expectedErrorUserAttributes = new List<ExpectedAttribute>
 			{
 				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
 			};
+
 			var unexpectedNonErrorAttributes = new List<String>
 			{
 				"attribute1"
+			};
+
+			var expectedErrorAgentAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
 			};
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
@@ -439,8 +472,9 @@ namespace CompositeTests
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
 			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 		}
@@ -460,13 +494,19 @@ namespace CompositeTests
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
-			var unexpectedErrorAttributes = new List<String>
+			var unexpectedErrorUserAttributes = new List<String>
 			{
 				"attribute1"
 			};
+
 			var unexpectedNonErrorAttributes = new List<String>
 			{
 				"attribute1"
+			};
+
+			var expectedErrorAgentAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
 			};
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
@@ -476,8 +516,9 @@ namespace CompositeTests
 			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
+			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 		}
@@ -570,13 +611,19 @@ namespace CompositeTests
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
-			var expectedAttributes = new List<ExpectedAttribute>
+			var expectedUserAttributes = new List<ExpectedAttribute>
 			{
 				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
 			};
+
 			var unexpectedNonErrorAttributes = new List<String>
 			{
 				"attribute1"
+			};
+
+			var expectedErrorAgentAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
 			};
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
@@ -586,8 +633,9 @@ namespace CompositeTests
 			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
 			Assert.AreEqual(errorTrace.Message, "This is an exception string.");
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 		}
@@ -608,10 +656,16 @@ namespace CompositeTests
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
-			var expectedAttributes = new List<ExpectedAttribute>
+			var expectedUserAttributes = new List<ExpectedAttribute>
 			{
 				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
 			};
+
+			var expectedErrorAgentAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
+			};
+
 			var unexpectedNonErrorAttributes = new List<String>
 			{
 				"attribute1"
@@ -624,8 +678,9 @@ namespace CompositeTests
 			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
 			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
-			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
 		}
@@ -650,9 +705,15 @@ namespace CompositeTests
 			{
 				"attribute1"
 			};
+
 			var unexpectedNonErrorAttributes = new List<String>
 			{
 				"attribute1"
+			};
+
+			var expectedErrorAgentAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
 			};
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
@@ -662,7 +723,8 @@ namespace CompositeTests
 			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
@@ -700,7 +762,7 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
-		_compositeTestAgent.Harvest();
+			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var expectedAttributes = new List<ExpectedAttribute>
@@ -794,9 +856,7 @@ namespace CompositeTests
 				new ExpectedAttribute {Key = "type", Value = "Transaction"},
 				new ExpectedAttribute {Key = "name", Value = "WebTransaction/ASP/TransactionName"}
 			};
-
-			Assert.IsEmpty(transactionEvent.AgentAttributes);
-			Assert.IsEmpty(transactionEvent.UserAttributes);
+			
 			TransactionEventAssertions.HasAttributes(expectedAttributes, AttributeClassification.Intrinsics, transactionEvent);
 		}
 

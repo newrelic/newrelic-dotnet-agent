@@ -56,7 +56,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("Not Found", errorTrace.Message),
 				() => Assert.AreEqual("404", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri),
 				() => Assert.AreEqual(null, errorTrace.Attributes.StackTrace)
 				);
 		}
@@ -77,8 +76,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual("My message", errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
-				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
 
@@ -99,8 +97,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual("My message", errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
-				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
 
@@ -120,8 +117,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual("My message", errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
-				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
 
@@ -141,8 +137,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message),
 				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
-				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid),
-				() => Assert.AreEqual("http://www.newrelic.com/test", errorTrace.Attributes.RequestUri)
+				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
 

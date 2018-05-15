@@ -209,7 +209,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			ITimer timer = Mock.Create<ITimer>();
 			Mock.Arrange(() => timer.Duration).Returns(time);
 
-			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 
 			if (queueTime != null)
 				tx.TransactionMetadata.SetQueueTime(queueTime.Value);

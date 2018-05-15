@@ -653,7 +653,7 @@ Function RestoreAgentFilesFromBackup {
 	LogEntry "INFO: Restoring agent files from backup [$global:BackupDirName] to [$restoreToPath]." $True
 	try{
 		# Restore installation directory (e.g. Program Files)
-		Copy-Item -path "$global:BackupDirName\InstallDir" -Exclude @("x86") -Destination $InstallDir -Force -Recurse -ErrorAction Continue
+		Copy-Item -path "$global:BackupDirName\InstallDir\*" -Exclude @("x86") -Destination $InstallDir -Force -Recurse -ErrorAction Continue
 	}
 	catch{
 		LogEntry "ERROR: Failed to restore [$global:BackupDirName\InstallDir] to installation directory [$InstallDir]." $True $_.Exception.Message
@@ -665,7 +665,7 @@ Function RestoreAgentFilesFromBackup {
 		if ($Is32Bit -ne $True) {
 			if ([String]::IsNullOrEmpty($installPath) -eq $True) {
 				# Default Path
-				Copy-Item -path "$global:BackupDirName\ProgramFilesX86" -Destination $ProgramFilesX86Dir -Force -Recurse -ErrorAction Continue
+				Copy-Item -path "$global:BackupDirName\ProgramFilesX86\*" -Destination $ProgramFilesX86Dir -Force -Recurse -ErrorAction Continue
 			}
 		}
 	}
@@ -676,7 +676,7 @@ Function RestoreAgentFilesFromBackup {
 
 	try{
 		# Restore ProgramData
-		Copy-Item -path "$global:BackupDirName\ProgramData" -Destination $ProgramDataDir -Force -Recurse -ErrorAction Continue
+		Copy-Item -path "$global:BackupDirName\ProgramData\*" -Destination $ProgramDataDir -Force -Recurse -ErrorAction Continue
 	}
 	catch{
 		LogEntry "ERROR: Failed to restore [$global:BackupDirName\ProgramData] to program data directory [$ProgramDataDir]." $True $_.Exception.Message

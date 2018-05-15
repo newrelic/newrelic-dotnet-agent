@@ -147,10 +147,10 @@ namespace NewRelic.Agent.Core
 		{
 			AgentInitializer.OnExit += ProcessExit;
 
-			var nativeMethods = AgentInstallConfiguration.IsWindows ? (INativeMethods) new WindowsNativeMethods() : new NativeMethods();
+			var nativeMethods = AgentInstallConfiguration.IsWindows ? (INativeMethods) new WindowsNativeMethods() : new LinuxNativeMethods();
 
 			// TODO: remove IAgent dependency from these services so they can be DI'd
-			ThreadProfilingService = new ThreadProfilingService(this, _container.Resolve<IDataTransportService>(), _container.Resolve<IScheduler>(), nativeMethods);
+			ThreadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
 
 			// TODO: DI these commands (need to make them all DI'able first)
 			var commandService = _container.Resolve<CommandService>();
@@ -186,13 +186,13 @@ namespace NewRelic.Agent.Core
 
 		private void StartServices()
 		{
-			ThreadProfilingService.Start(this);
+			ThreadProfilingService.Start();
 			InstrumentationWatcher.Start();
 		}
 
 		private void StopServices()
 		{
-			ThreadProfilingService.Stop(this);
+			ThreadProfilingService.Stop();
 		}
 
 		/// <summary>

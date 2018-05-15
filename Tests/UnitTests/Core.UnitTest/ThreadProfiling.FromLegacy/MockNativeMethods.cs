@@ -13,6 +13,21 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		{
 		}
 
+		public void ShutdownNativeThreadProfiler()
+		{
+		}
+
+		public FidTypeMethodName[] GetFunctionInfo(UIntPtr[] functionIDs)
+		{
+			return new FidTypeMethodName[0];
+		}
+
+		public ThreadSnapshot[] GetProfileWithRelease(out Int32 hr)
+		{
+			hr = 0;
+			return new ThreadSnapshot[0];
+		}
+
 		public int InstrumentationRefresh()
 		{
 			return 0;

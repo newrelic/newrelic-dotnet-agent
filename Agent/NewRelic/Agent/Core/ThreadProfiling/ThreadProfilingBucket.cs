@@ -39,11 +39,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			}
 		}
 
-		public void UpdateTree(IStackInfo stackInfo, UInt32 depth)
+		public void UpdateTree(UIntPtr[] fids)
 		{
-			if (stackInfo == null)
+			if (fids == null)
 			{
-				Log.DebugFormat("StackInfo passed to UpdateTree is null. Depth was {0}", depth);
+				Log.DebugFormat("fids passed to UpdateTree is null.");
 				return;
 			}
 
@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			{
 				try
 				{
-					UpdateTree(Tree.Root, stackInfo, depth);
+					UpdateTree(Tree.Root, fids, fids.Length-1, 0);
 				}
 				catch (Exception e)
 				{
@@ -60,14 +60,15 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			}
 		}
 
-		private void UpdateTree([NotNull] ProfileNode parent, [NotNull] IStackInfo stackInfo, UInt32 depth)
+		private void UpdateTree([NotNull] ProfileNode parent, [NotNull] UIntPtr[] fids, int fidIndex, UInt32 depth)
 		{
-			if (stackInfo.CurrentIndex < 0)
+			if (fidIndex < 0)
 				return;
 
+			var fid = fids[fidIndex];
 			var child = parent.Children
 				.Where(node => node != null)
-				.Where(node => node.FunctionId == stackInfo.FunctionId)
+				.Where(node => node.FunctionId == fid)
 				.FirstOrDefault();
 
 			if (child != null)
@@ -77,7 +78,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			else
 			{
 				// If no matching child found, create a new one to recurse into
-				child = new ProfileNode(stackInfo.FunctionId, 1, depth);
+				child = new ProfileNode(fid, 1, depth);
 				parent.AddChild(child);
 
 				// If we just added this node's only child, add it to the pruning list
@@ -85,8 +86,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 					_service.AddNodeToPruningList(child);
 			}
 
-			stackInfo.CurrentIndex--;
-			UpdateTree(child, stackInfo, ++depth);
+			UpdateTree(child, fids, fidIndex-1, ++depth);
 		}
 
 		public Int32 GetNodeCount()
@@ -120,23 +120,16 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 				.Max();
 		}
 
-		internal HashSet<ulong> GetFunctionIds()
+		internal IEnumerable<UIntPtr> GetFunctionIds()
 		{
-			var nodes = Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
-				.Where(node => node != null);
+			return Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
+				.Where(node => node != null && node.FunctionId != UIntPtr.Zero)
+				.Select(node => node.FunctionId)
+				.Distinct();
 
-			HashSet<ulong> functionIds = new HashSet<ulong>();
-			foreach (var node in nodes)
-			{
-				if (node.FunctionId != IntPtr.Zero)
-				{
-					functionIds.Add((ulong)node.FunctionId.ToInt64());
-				}
-			}
-			return functionIds;
 		}
 
-		public void PopulateNames([NotNull] IDictionary<ulong, ClassMethodNames> namesSource)
+		public void PopulateNames([NotNull] IDictionary<UIntPtr, ClassMethodNames> namesSource)
 		{
 			var nodes = Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
 				.Where(node => node != null);
@@ -147,16 +140,16 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			}
 		}
 
-		private void PopulateNames([NotNull] ProfileNode node, [NotNull] IDictionary<ulong, ClassMethodNames> namesSource)
+		private void PopulateNames([NotNull] ProfileNode node, [NotNull] IDictionary<UIntPtr, ClassMethodNames> namesSource)
 		{
-			if (node.FunctionId == IntPtr.Zero)
+			if (node.FunctionId == UIntPtr.Zero)
 			{
 				node.Details.ClassName = NativeClassDescriptiveName;
 				node.Details.MethodName = NativeFunctionDescriptiveName;
 			}
 			else
 			{
-				var id = (ulong)node.FunctionId.ToInt64();
+				var id = node.FunctionId;
 				if (namesSource.ContainsKey(id) && namesSource[id] != null)
 				{
 					node.Details.ClassName = namesSource[id].Class;

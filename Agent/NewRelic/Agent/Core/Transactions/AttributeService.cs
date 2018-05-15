@@ -14,6 +14,8 @@ namespace NewRelic.Agent.Core.Transactions
 	{
 		[NotNull]
 		Attributes FilterAttributes([NotNull] Attributes attributes, AttributeDestinations attributeDestination);
+
+		bool AllowRequestUri(AttributeDestinations attributeDestination);
 	}
 
 	public class AttributeService : ConfigurationBasedService, IAttributeService
@@ -62,6 +64,14 @@ namespace NewRelic.Agent.Core.Transactions
 			return filteredAttributes;
 		}
 
+		public bool AllowRequestUri(AttributeDestinations attributeDestination)
+		{
+			var attributes = new List<Attribute> {Attribute.BuildRequestUriAttribute(string.Empty)};
+
+			var filteredAttrs = attributes.FilterAttributes(_attributeFilter, attributeDestination);
+
+			return filteredAttrs.Any();
+		}
 
 		#endregion
 

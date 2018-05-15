@@ -51,6 +51,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public string SyntheticsMonitorId { get; }
 		public bool IsSynthetics { get; }
 		public bool HasCatResponseHeaders { get; }
+		public float Priority { get; }
 
 		public ImmutableTransactionMetadata(string uri, string originalUri, string referrerUri,
 			TimeSpan? queueTime, [NotNull] IEnumerable<KeyValuePair<string, string>> requestParameters,
@@ -60,7 +61,7 @@ namespace NewRelic.Agent.Core.Transactions
 			[NotNull] IEnumerable<ErrorData> customErrorDatas, string crossApplicationReferrerPathHash, string crossApplicationPathHash,
 			[NotNull] IEnumerable<string> crossApplicationPathHashes, string crossApplicationReferrerTransactionGuid,
 			string crossApplicationReferrerProcessId, string crossApplicationReferrerTripId, string syntheticsResourceId,
-			string syntheticsJobId, string syntheticsMonitorId, bool isSynthetics, bool hasCatResponseHeaders)
+			string syntheticsJobId, string syntheticsMonitorId, bool isSynthetics, bool hasCatResponseHeaders, float priority)
 		{
 			Uri = uri;
 			OriginalUri = originalUri;
@@ -84,6 +85,7 @@ namespace NewRelic.Agent.Core.Transactions
 			SyntheticsMonitorId = syntheticsMonitorId;
 			IsSynthetics = isSynthetics;
 			HasCatResponseHeaders = hasCatResponseHeaders;
+			Priority = priority;
 		}
 	}
 }

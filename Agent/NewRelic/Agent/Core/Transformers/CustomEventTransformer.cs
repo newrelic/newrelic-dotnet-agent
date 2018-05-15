@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Transformers
 {
 	public interface ICustomEventTransformer
 	{
-		void Transform([NotNull] String eventType, [NotNull] IEnumerable<KeyValuePair<String, Object>> attributes);
+		void Transform([NotNull] String eventType, [NotNull] IEnumerable<KeyValuePair<String, Object>> attributes, float priority);
 	}
 
 	public class CustomEventTransformer : ICustomEventTransformer
@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Transformers
 			_customEventAggregator = customEventAggregator;
 		}
 
-		public void Transform(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
+		public void Transform(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes, float priority)
 		{
 			if (!_configurationService.Configuration.CustomEventsEnabled)
 				return;
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Transformers
 				.Where(attribute => attribute.Value is String || attribute.Value is Single)
 				.Where(attribute => attribute.Value?.ToString().Length < CustomAttributeLengthLimit);
 
-			var customEvent = new CustomEventWireModel(eventType, DateTime.UtcNow, filteredUserAttributes);
+			var customEvent = new CustomEventWireModel(eventType, DateTime.UtcNow, filteredUserAttributes, priority);
 			_customEventAggregator.Collect(customEvent);
 		}
 

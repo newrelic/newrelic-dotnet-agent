@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -25,8 +25,71 @@ namespace NewRelic.Agent.Core.WireModels
 
 		private readonly bool _isSynthetics;
 
-		public TransactionEventWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, bool isSynthetics)
+		private const string ItemTypeName = "Transaction Event";
+		private const string TimeStampKey = "timestamp";
+		private const float PriorityMin = 0.0f;
+		private const float PriorityMax = 1.0f;
+		private static readonly string _missingTimestampMessage = $"{ItemTypeName} does not contain '{TimeStampKey}'";
+		private float _priority;
+
+		public float Priority
 		{
+			get { return _priority; }
+			set
+			{
+				if (value > PriorityMax || value < PriorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
+				{
+					throw new ArgumentException($"{ItemTypeName} requires a valid priority value ({PriorityMin} - {PriorityMax}), value used: {value}");
+				}
+				_priority = value;
+			}
+		}
+
+		//Compares on Priority (descending 1.0 -> 0.0), if priority is equal, compares timestamp values (ascending double values)
+		//if priorities are equal the event that has the earliest timestamp will sort higher.
+		public class PriorityTimestampComparer : Comparer<TransactionEventWireModel>
+		{
+			public override int Compare(TransactionEventWireModel x, TransactionEventWireModel y)
+			{
+				//null cases: null < something, something > null, null == null
+				if (x == null)
+				{
+					return (y == null) ? 0 : -1;
+				}
+				if (y == null)
+				{
+					return 1;
+				}
+
+				//descending by Priority, if equal resort to timestamp(ascending) to break the tie.
+				//larger priority values are sorted to be first
+				var priorityComparison = x.Priority.CompareTo(y.Priority);
+				if (0 != priorityComparison)
+				{
+					//negate to achieve descending...
+					return -priorityComparison;
+				}
+
+				//priorities are equal, fetch the timestamps;
+				if (!x.IntrinsicAttributes.ToDictionary().TryGetValue(TimeStampKey, out object xTimestampValue))
+				{
+					throw new ArgumentException(_missingTimestampMessage, nameof(x));
+				}
+
+				if (!y.IntrinsicAttributes.ToDictionary().TryGetValue(TimeStampKey, out object yTimestampValue))
+				{
+					throw new ArgumentException(_missingTimestampMessage, nameof(y));
+				}
+
+				var xTimestamp = (double)xTimestampValue;
+				var yTimestamp = (double)yTimestampValue;
+				return xTimestamp.CompareTo(yTimestamp);
+			}
+		}
+
+		public TransactionEventWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, bool isSynthetics, float priority)
+		{
+			Priority = priority;
 			IntrinsicAttributes = new ReadOnlyDictionary<String, Object>(intrinsicAttributes.ToDictionary<String, Object>());
 			UserAttributes = new ReadOnlyDictionary<String, Object>(userAttributes.ToDictionary<String, Object>());
 			AgentAttributes = new ReadOnlyDictionary<String, Object>(agentAttributes.ToDictionary<String, Object>());

@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Transformers
 {
 	public interface ICustomErrorDataTransformer
 	{
-		void Transform(ErrorData errorData, [CanBeNull] IEnumerable<KeyValuePair<String, String>> customAttributes = null);
+		void Transform(ErrorData errorData, [CanBeNull] IEnumerable<KeyValuePair<String, String>> customAttributes, float priority);
 	}
 
 	public class CustomErrorDataTransformer : ICustomErrorDataTransformer
@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.Transformers
 			_errorEventAggregator = errorEventAggregator;
 		}
 
-		public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<String, String>> customAttributes = null)
+		public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<String, String>> customAttributes, float priority)
 		{
 			if (!_configurationService.Configuration.ErrorCollectorEnabled)
 				return;
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.Transformers
 			errorTraceAttributes = _attributeService.FilterAttributes(errorTraceAttributes, AttributeDestinations.ErrorTrace);
 
 			var errorTrace = _errorTraceMaker.GetErrorTrace(errorTraceAttributes, errorData);
-			var errorEvent = _errorEventMaker.GetErrorEvent(errorData, errorEventAttributes);
+			var errorEvent = _errorEventMaker.GetErrorEvent(errorData, errorEventAttributes, priority);
 
 			_errorTraceAggregator.Collect(errorTrace);
 			_errorEventAggregator.Collect(errorEvent);

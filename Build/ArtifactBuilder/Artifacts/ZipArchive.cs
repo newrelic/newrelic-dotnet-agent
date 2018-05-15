@@ -6,33 +6,25 @@ using System.Linq;
 namespace ArtifactBuilder.Artifacts
 {
 
-	public class ZipArchive
+	public class ZipArchive : Artifact
 	{
-		public ZipArchive(AgentType agentType, string platform, string configuration, string sourceDirectory)
+		public ZipArchive(AgentType agentType, string platform, string configuration, string sourceDirectory) : base(sourceDirectory, nameof(ZipArchive) + agentType)
 		{
 			AgentType = agentType;
 			Platform = platform;
 			Configuration = configuration;
-			SourceDirectory = sourceDirectory;
+			StagingDirectory = $@"{SourceDirectory}\Build\_staging\{Name}-{Platform}";
+			OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}-{Platform}";
 		}
 
 		public AgentType AgentType { get; }
 		public string Configuration { get; }
 		public string Platform { get; }
-		public string SourceDirectory { get; }
-		public string Name => $"ZipArchive{AgentType.ToString()}";
 
-		public string StagingDirectory => $@"{SourceDirectory}\Build\_staging\{Name}-{Platform}";
-		private string RootDirectory => $@"{StagingDirectory}";
-		private string ExtensionsDirectory => $@"{StagingDirectory}\extensions";
-
-		private string OutputDirectory => $@"{SourceDirectory}\Build\BuildArtifacts\{Name}-{Platform}";
-
-		public void Build()
+		protected override void InternalBuild()
 		{
 			var agentComponents = AgentComponents.GetAgentComponents(AgentType, Configuration, Platform, SourceDirectory);
 			agentComponents.ValidateComponents();
-			FileHelpers.DeleteDirectories(StagingDirectory, OutputDirectory);
 			agentComponents.CopyComponents(StagingDirectory);
 
 			var zipFilePath = AgentType == AgentType.Framework
@@ -40,7 +32,7 @@ namespace ArtifactBuilder.Artifacts
 				: $@"{OutputDirectory}\newrelic-netcore20-agent-win_{agentComponents.Version}_{Platform}.zip";
 			Directory.CreateDirectory(OutputDirectory);
 			System.IO.Compression.ZipFile.CreateFromDirectory(StagingDirectory, zipFilePath);
-			File.WriteAllText($@"{OutputDirectory}\SHA256.txt", FileHelpers.GetSha256Checksum(zipFilePath));
+			File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(zipFilePath));
 
 			// For now, the DotNet-Core20-Agent-DeployToS3 job expects core agent artifacts to be in the following directory
 			// At some point we should change the job to pull from the new location under the Build\BuildArtifacts directory

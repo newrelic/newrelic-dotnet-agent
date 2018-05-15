@@ -32,6 +32,7 @@ namespace ArtifactBuilder.Artifacts
 			var zipFilePath = $@"{OutputDirectory}\NewRelic.Agent.Installer.{x64Components.Version}.zip";
 			Directory.CreateDirectory(OutputDirectory);
 			System.IO.Compression.ZipFile.CreateFromDirectory(StagingDirectory, zipFilePath);
+			File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(zipFilePath));
 		}
 
 		private void CreateNugetPackage(AgentComponents components, AgentComponents x86Components, string nuspecPath)
@@ -40,21 +41,25 @@ namespace ArtifactBuilder.Artifacts
 			var stagingDir = $@"{rootDir}\content\newrelic";
 			FileHelpers.CopyFile(nuspecPath, rootDir);
 
-			var package = new NugetPackage(rootDir, $@"{StagingDirectory}", null);
+			var package = new NugetPackage(rootDir, $@"{StagingDirectory}");
 			package.SetVersion(components.Version);
 			var configFilePath = $@"{rootDir}\content\newrelic\newrelic.config";
-			FileHelpers.CopyFile(components.RootInstallDirectoryComponents, stagingDir);
-			FileHelpers.CopyFile(components.RootInstallDirectoryComponents.Where(x => !x.Contains("newrelic.config") && !x.Contains("newrelic.xsd")), $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent");
-			FileHelpers.CopyFile(components.ExtensionDirectoryComponents.Where(x => x.Contains(".dll")), $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent\Extensions");
-			FileHelpers.CopyFile(components.NetstandardExtensionDirectoryComponents, $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent\Extensions\netstandard2.0");
-			FileHelpers.CopyFile(x86Components.RootInstallDirectoryComponents.Where(x => x.Contains("NewRelic.Profiler.dll")), $@"{stagingDir}\ProgramFiles\NewRelic\NetAgent\x86");
-			FileHelpers.CopyFile(components.WrapperXmlFiles, $@"{stagingDir}\ProgramData\NewRelic\NetAgent\Extensions");
-			FileHelpers.CopyFile(components.ExtensionXsd, $@"{stagingDir}\ProgramData\NewRelic\NetAgent\Extensions");
-			FileHelpers.CopyFile(components.NewRelicXsd, $@"{stagingDir}\ProgramData\NewRelic\NetAgent");
-			FileHelpers.CopyFile(configFilePath, $@"{stagingDir}\ProgramData\NewRelic\NetAgent");
+
+			package.CopyToContent(components.RootInstallDirectoryComponents, @"newrelic");
+			package.CopyToContent(components.RootInstallDirectoryComponents.Where(x => !x.Contains("newrelic.config") && !x.Contains("newrelic.xsd")), @"newrelic\ProgramFiles\NewRelic\NetAgent");
+			package.CopyToContent(components.ExtensionDirectoryComponents.Where(x => x.Contains(".dll")), @"newrelic\ProgramFiles\NewRelic\NetAgent\Extensions");
+			package.CopyToContent(components.NetstandardExtensionDirectoryComponents, @"newrelic\ProgramFiles\NewRelic\NetAgent\Extensions\netstandard2.0");
+			package.CopyToContent(x86Components.RootInstallDirectoryComponents.Where(x => x.Contains("NewRelic.Profiler.dll")), @"newrelic\ProgramFiles\NewRelic\NetAgent\x86");
+			package.CopyToContent(components.WrapperXmlFiles, $@"newrelic\ProgramData\NewRelic\NetAgent\Extensions");
+			package.CopyToContent(components.ExtensionXsd, $@"newrelic\ProgramData\NewRelic\NetAgent\Extensions");
+			package.CopyToContent(components.NewRelicXsd, $@"newrelic\ProgramData\NewRelic\NetAgent");
+			package.CopyToContent(configFilePath, $@"newrelic\ProgramData\NewRelic\NetAgent");
+			
+			//not sure why we create these folders
 			Directory.CreateDirectory($@"{stagingDir}\Extensions");
 			Directory.CreateDirectory($@"{stagingDir}\ProgramData\NewRelic\NetAgent\NewRelic\NetAgent\Extensions");
 			Directory.CreateDirectory($@"{stagingDir}\ProgramData\NewRelic\NetAgent\NewRelic\NetAgent\Logs");
+
 			File.Delete(configFilePath);
 			package.Pack();
 			Directory.Delete(rootDir, true);

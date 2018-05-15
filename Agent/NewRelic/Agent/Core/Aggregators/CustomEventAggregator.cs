@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		// Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
 		[NotNull]
-		private IResizableCappedCollection<CustomEventWireModel> _customEvents = new ConcurrentReservoir<CustomEventWireModel>(0);
+		private IResizableCappedCollection<CustomEventWireModel> _customEvents = new ConcurrentPriorityQueue<CustomEventWireModel>(0, new CustomEventWireModel.PriorityTimestampComparer());
 
 		public CustomEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(UInt32 customEventCollectionCapacity)
 		{
-			_customEvents = new ConcurrentReservoir<CustomEventWireModel>(customEventCollectionCapacity);
+			_customEvents = new ConcurrentPriorityQueue<CustomEventWireModel>(customEventCollectionCapacity, new CustomEventWireModel.PriorityTimestampComparer());
 		}
 
 		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<CustomEventWireModel> customEvents)
@@ -84,7 +84,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(customEvents);
 					break;
 				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((UInt32)(customEvents.Count() * ReservoirReductionSizeMultiplier));
+					var newSize = (uint)(customEvents.Count() * ReservoirReductionSizeMultiplier);
+					ReduceReservoirSize(newSize);
 					RetainEvents(customEvents);
 					break;
 				case DataTransportResponseStatus.OtherError:

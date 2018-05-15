@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 				new DateTime(2),
 				new DateTime(3),
 				4,
-				new Dictionary<String, Object> { { "OTHER", new ProfileNode(new IntPtr(5), 6, 7) } },
+				new Dictionary<String, Object> { { "OTHER", new ProfileNode(new UIntPtr(5), 6, 7) } },
 				10,
 				11
 				);

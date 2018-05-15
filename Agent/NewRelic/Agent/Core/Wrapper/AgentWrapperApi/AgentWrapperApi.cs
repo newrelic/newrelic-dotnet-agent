@@ -547,7 +547,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 				//TODO: Since the CustomSegmentBuilder is the only thing that separates this from the
 				//other segments, there is an opportunity to refactor here.
-				return new TypedSegment<CustomSegmentData>(transaction.TransactionSegmentState, methodCallData, new CustomSegmentData(segmentName));
+				return new TypedSegment<CustomSegmentData>(transaction.GetTransactionSegmentState(), methodCallData, new CustomSegmentData(segmentName));
 			}
 
 			public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
@@ -560,7 +560,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				var action = AgentWrapperApi.AgentWrapperApiEnumToMetricNamesEnum(operation);
 				var destType = AgentWrapperApi.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 				var methodCallData = GetMethodCallData(methodCall);
-				return new TypedSegment<MessageBrokerSegmentData>(transaction.TransactionSegmentState, methodCallData,
+				return new TypedSegment<MessageBrokerSegmentData>(transaction.GetTransactionSegmentState(), methodCallData,
 					new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action));
 			}
 
@@ -576,7 +576,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				}
 
 				var data = new DatastoreSegmentData(parsedSqlStatement, commandText, connectionInfo);
-				var segment = new TypedSegment<DatastoreSegmentData>(transaction.TransactionSegmentState, GetMethodCallData(methodCall), data);
+				var segment = new TypedSegment<DatastoreSegmentData>(transaction.GetTransactionSegmentState(), GetMethodCallData(methodCall), data);
 
 				return segment;
 			}
@@ -593,7 +593,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentException($"Must use an absolute URI, not a relative URI", nameof(destinationUri));
 				
 				var methodCallData = GetMethodCallData(methodCall);
-				return new TypedSegment<ExternalSegmentData>(transaction.TransactionSegmentState, methodCallData,
+				return new TypedSegment<ExternalSegmentData>(transaction.GetTransactionSegmentState(), methodCallData,
 					new ExternalSegmentData(destinationUri, method));
 
 				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
@@ -609,7 +609,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentNullException(nameof(methodName));
 				
 				var methodCallData = GetMethodCallData(methodCall);
-				return new TypedSegment<MethodSegmentData>(transaction.TransactionSegmentState, methodCallData, new MethodSegmentData(typeName, methodName));
+				return new TypedSegment<MethodSegmentData>(transaction.GetTransactionSegmentState(), methodCallData, new MethodSegmentData(typeName, methodName));
 
 				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}
@@ -622,7 +622,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentNullException("segmentDisplayName");
 
 				var methodCallData = GetMethodCallData(methodCall);
-				return new TypedSegment<SimpleSegmentData>(transaction.TransactionSegmentState, methodCallData, new SimpleSegmentData(segmentDisplayName));
+				return new TypedSegment<SimpleSegmentData>(transaction.GetTransactionSegmentState(), methodCallData, new SimpleSegmentData(segmentDisplayName));
 
 				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}

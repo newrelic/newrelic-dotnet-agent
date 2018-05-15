@@ -56,7 +56,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
-			var internalTransaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var internalTransaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			var immutableTransaction = internalTransaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -75,14 +76,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(9, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-				() => Assert.NotNull(transactionAttributes["nr.tripId"])
+				() => Assert.NotNull(transactionAttributes["nr.tripId"]),
+				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
 			);
 		}
 
@@ -95,7 +97,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -114,7 +117,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -125,7 +128,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.NotNull(transactionAttributes["databaseDuration"]),
 				() => Assert.AreEqual(5, transactionAttributes["databaseDuration"]),
 				() => Assert.NotNull(transactionAttributes["databaseCallCount"]),
-				() => Assert.AreEqual(1, transactionAttributes["databaseCallCount"])
+				() => Assert.AreEqual(1, transactionAttributes["databaseCallCount"]),
+				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
 			);
 		}
 
@@ -138,7 +142,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -160,7 +165,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -171,7 +176,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.NotNull(transactionAttributes["databaseDuration"]),
 				() => Assert.AreEqual(11, transactionAttributes["databaseDuration"]),
 				() => Assert.NotNull(transactionAttributes["databaseCallCount"]),
-				() => Assert.AreEqual(3, transactionAttributes["databaseCallCount"])
+				() => Assert.AreEqual(3, transactionAttributes["databaseCallCount"]),
+				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
 			);
 		}
 
@@ -184,7 +190,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -203,7 +211,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -214,7 +222,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.NotNull(transactionAttributes["externalDuration"]),
 				() => Assert.AreEqual(5, transactionAttributes["externalDuration"]),
 				() => Assert.NotNull(transactionAttributes["externalCallCount"]),
-				() => Assert.AreEqual(1, transactionAttributes["externalCallCount"])
+				() => Assert.AreEqual(1, transactionAttributes["externalCallCount"]),
+				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
 			);
 		}
 
@@ -227,7 +236,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -249,7 +259,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -260,7 +270,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.NotNull(transactionAttributes["externalDuration"]),
 				() => Assert.AreEqual(11, transactionAttributes["externalDuration"]),
 				() => Assert.NotNull(transactionAttributes["externalCallCount"]),
-				() => Assert.AreEqual(3, transactionAttributes["externalCallCount"])
+				() => Assert.AreEqual(3, transactionAttributes["externalCallCount"]),
+				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
 			);
 		}
 
@@ -274,7 +285,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.SetHttpResponseStatusCode(400, null);
@@ -321,7 +334,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.True(transactionAttributes.ContainsKey("externalCallCount")),
 				() => Assert.True(transactionAttributes.ContainsKey("nr.apdexPerfZone")),
 				() => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
-				() => Assert.AreEqual("uri", transactionAttributes["request_uri"]),
+				() => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
 				() => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
 				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
@@ -353,7 +366,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.SetHttpResponseStatusCode(400, null);
@@ -397,7 +412,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.True(transactionAttributes.ContainsKey("externalCallCount")),
 				() => Assert.True(transactionAttributes.ContainsKey("nr.apdexPerfZone")),
 				() => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
-				() => Assert.AreEqual("uri", transactionAttributes["request_uri"]),
+				() => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
 				() => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
 				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
@@ -426,7 +441,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.SetOriginalUri("SameUri");
 			transaction.TransactionMetadata.SetUri("SameUri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -458,7 +474,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -512,7 +529,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["nr.referringTransactionGuid"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.alternatePathHashes"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["request_uri"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace, transactionAttributes["request.uri"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["response.status"]),
@@ -537,7 +554,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -584,7 +602,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["externalCallCount"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.apdexPerfZone"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request_uri"]),
+				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.uri"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["response.status"]),
@@ -617,7 +635,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -692,8 +711,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public void GetAttributes_DoesNotReturnWebDurationAttribute_IfNonWebTransaction()
 		{
 			// ARRANGE
-
-			var tranasctionBuilder = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var tranasctionBuilder = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			var transaction = tranasctionBuilder.ConvertToImmutableTransaction();
 
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -726,7 +745,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -762,7 +782,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(8, builderAttributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("originalUri", txBuilderAttributes["original_url"]),
-				() => Assert.AreEqual("uri", transactionAttributes["request_uri"]),
+				() => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
 				() => Assert.AreEqual("referrerUri", txBuilderAttributes["request.referer"]),
 				() => Assert.AreEqual("1000", txBuilderAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", txBuilderAttributes["response.status"]),
@@ -773,7 +793,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
-				() => Assert.AreEqual("uri", transactionAttributes["request_uri"]),
+				() => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
 				() => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
 				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
@@ -792,7 +812,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.SetOriginalUri("SameUri");
 			transaction.TransactionMetadata.SetUri("SameUri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -825,7 +846,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -860,7 +883,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(8, builderAttributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, txBuilderAttributes["request_uri"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace, txBuilderAttributes["request.uri"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, txBuilderAttributes["response.status"]),
@@ -871,7 +894,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, txBuilderAttributes["request_uri"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace, txBuilderAttributes["request.uri"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["response.status"]),
@@ -889,7 +912,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var expectedDuration = TimeSpan.FromMilliseconds(500);
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -924,7 +949,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(8, builderAttributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["request_uri"]),
+				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["request.uri"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, txBuilderAttributes["response.status"]),
@@ -935,7 +960,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request_uri"]),
+				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.uri"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.referer"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["queue_wait_time_ms"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["response.status"]),

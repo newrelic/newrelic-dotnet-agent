@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using System.Collections;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
@@ -7,7 +7,6 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 	{
 		[NotNull]
 		ArrayList PruningList { get; }
-		void UpdateTree(StackInfo stackInfo, uint depth);
 		void AddNodeToPruningList(ProfileNode node);
 		void ResetCache();
 		void SortPruningTree();

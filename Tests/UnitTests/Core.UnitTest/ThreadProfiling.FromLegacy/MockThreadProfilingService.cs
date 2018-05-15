@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
@@ -49,7 +50,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			return result;
 		}
 
-		public void UpdateTree(StackInfo stackInfo, uint depth)
+		public void UpdateTree(UIntPtr threadId,UIntPtr[] fids)
 		{
 		}
 

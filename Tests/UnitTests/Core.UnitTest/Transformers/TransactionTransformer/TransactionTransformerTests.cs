@@ -134,8 +134,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void TransformerTransaction_DoesNotGenerateData_IfTransactionIsIgnored()
 		{
-
-			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(),priority);
 			transaction.Ignore();
 
 			_transactionTransformer.Transform(transaction);
@@ -388,7 +388,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
 			AddDummySegment(transaction);
 
@@ -617,7 +618,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>()))
 				.Returns(expectedTransactionMetricName);
 
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			AddDummySegment(transaction);
 
 			// ACT
@@ -659,7 +661,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<ErrorData>(), Arg.IsAny<TransactionMetricStatsCollection>()))
 				.Returns(expectedAttributes);
 
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			AddDummySegment(transaction);
 
 			// ACT
@@ -769,7 +772,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			// ARRANGE
 			Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
 
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			AddDummySegment(transaction);
 
 			// ACT
@@ -894,7 +898,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			var attributes = new List<KeyValuePair<String, Object>>();
 			var stackTrace = new List<String>();
-			var errorTraceAttributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel("requestUri", attributes, attributes, attributes, stackTrace);
+			var errorTraceAttributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, attributes, attributes, stackTrace);
 			return new ErrorTraceWireModel(DateTime.Now, "path", "message", "exceptionClassName", errorTraceAttributes, "guid");
 		}
 		

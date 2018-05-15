@@ -29,6 +29,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[NotNull]
 		private SqlTraceMaker _sqlTraceMaker;
 
+		private IAttributeService _attributeService;
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -37,12 +39,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_configurationService = Mock.Create<IConfigurationService>();
 			Mock.Arrange(() => _configurationService.Configuration.InstanceReportingEnabled).Returns(true);
 			Mock.Arrange(() => _configurationService.Configuration.DatabaseNameReportingEnabled).Returns(true);
-			_sqlTraceMaker = new SqlTraceMaker(_configurationService);
+			_attributeService = Mock.Create<IAttributeService>();
+			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService);
 		}
 
 		[Test]
 		public void TryGetSqlTrace_ReturnsTrace()
 		{
+			Mock.Arrange(() => _attributeService.AllowRequestUri(AttributeDestinations.SqlTrace)).Returns(true);
+
 			var uri = "sqlTrace/Uri";
 			var commandText = "Select * from Table1";
 			var duration = TimeSpan.FromMilliseconds(500);
@@ -65,6 +70,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void TryGetSqlTrace_ReturnsNullWhenDurationIsNull()
 		{
+			Mock.Arrange(() => _attributeService.AllowRequestUri(AttributeDestinations.SqlTrace)).Returns(true);
 
 			var uri = "sqlTrace/Uri";
 			var commandText = "Select * from Table1";
@@ -74,6 +80,39 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var sqlTrace = _sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
 			Assert.IsNull(sqlTrace);
+		}
+
+		[Test]
+		public void SqlTrace_WithoutUri()
+		{
+			Mock.Arrange(() => _attributeService.AllowRequestUri(AttributeDestinations.SqlTrace)).Returns(true);
+
+			var commandText = "Select * from Table1";
+			var duration = TimeSpan.FromMilliseconds(500);
+			var transaction = BuildTestTransaction();
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
+			var datastoreSegment = BuildSegment(DatastoreVendor.MSSQL, "Table1", commandText, new TimeSpan(), duration, null, null, null, "myhost", "myport", "mydatabase");
+
+			var sqlTrace = _sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
+			Assert.IsNotNull(sqlTrace);
+			Assert.AreEqual("<unknown>", sqlTrace.Uri);
+		}
+
+		[Test]
+		public void SqlTrace_WithtUriExcluded()
+		{
+			Mock.Arrange(() => _attributeService.AllowRequestUri(AttributeDestinations.SqlTrace)).Returns(false);
+
+			var uri = "sqlTrace/Uri";
+			var commandText = "Select * from Table1";
+			var duration = TimeSpan.FromMilliseconds(500);
+			var transaction = BuildTestTransaction(uri);
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
+			var datastoreSegment = BuildSegment(DatastoreVendor.MSSQL, "Table1", commandText, new TimeSpan(), duration, null, null, null, "myhost", "myport", "mydatabase");
+
+			var sqlTrace = _sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
+			Assert.IsNotNull(sqlTrace);
+			Assert.AreEqual("<unknown>", sqlTrace.Uri);
 		}
 
 		[NotNull]

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using NewRelic.Agent.Core;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -28,6 +31,223 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.Dispose();
 		}
+
+		#region Transaction Events Tests
+		[Test]
+		public void UnknownRequestUriInTransactionEvent()
+		{
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
+			Assert.AreEqual("/Unknown", transactionEvent.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]);
+		}
+
+		[Test]
+		public void RequestUriInTransactionEvent()
+		{
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				tx.SetUri("myuri");
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
+			Assert.AreEqual("myuri", transactionEvent.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]);
+		}
+
+		[Test]
+		public void NoRequestUriInTransactionEvent()
+		{
+			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
+			_compositeTestAgent.PushConfiguration();
+
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
+			Assert.IsFalse(transactionEvent.GetAttributes(AttributeClassification.AgentAttributes).ContainsKey("request.uri"));
+		}
+		#endregion
+
+		#region Transaction Traces Tests
+		[Test]
+		public void UnknownRequestUriInTransactionTrace()
+		{
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+			NrAssert.Multiple(
+				() => Assert.AreEqual("/Unknown", transactionTrace.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]),
+				() => Assert.AreEqual("/Unknown", transactionTrace.Uri)
+			);
+		}
+
+		[Test]
+		public void RequestUriInTransactionTrace()
+		{
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				tx.SetUri("myuri");
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+			NrAssert.Multiple(
+				() => Assert.AreEqual("myuri", transactionTrace.GetAttributes(AttributeClassification.AgentAttributes)["request.uri"]),
+				() => Assert.AreEqual("myuri", transactionTrace.Uri)
+			);
+		}
+
+		[Test]
+		public void NoRequestUriInTransactionTrace()
+		{
+			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
+			_compositeTestAgent.PushConfiguration();
+
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				tx.SetUri("myuri");
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
+			NrAssert.Multiple(
+				() => Assert.IsFalse(transactionTrace.GetAttributes(AttributeClassification.AgentAttributes).ContainsKey("request.uri")),
+				() => Assert.AreEqual(null, transactionTrace.Uri)
+			);
+		}
+		#endregion
+
+
+		#region Error Events Test
+		// We always exclude the request.uri attribute when there is no transaction, regardless of the attribute inclusion/exclusion logic
+		[Test]
+		public void NoRequestUriAttributeInErrorEventWithoutTransaction()
+		{
+			AgentApi.NoticeError(new Exception("oh no"));
+
+			_compositeTestAgent.Harvest();
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.IsFalse(errorEvent.AgentAttributes.ContainsKey("request.uri"));
+		}
+
+		[Test]
+		public void UnknownRequestUriInErrorEventWithTransaction()
+		{
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				tx.NoticeError(new Exception("test exception"));
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual("/Unknown", errorEvent.AgentAttributes["request.uri"]);
+		}
+
+		[Test]
+		public void RequestUriInErrorEventWithTransaction()
+		{
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				tx.SetUri("myuri");
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				tx.NoticeError(new Exception("test exception"));
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual("myuri", errorEvent.AgentAttributes["request.uri"]);
+		}
+
+		[Test]
+		public void NoRequestUriInErrorEventWithTransaction()
+		{
+			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
+			_compositeTestAgent.PushConfiguration();
+
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				tx.NoticeError(new Exception("test exception"));
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.IsFalse(errorEvent.AgentAttributes.ContainsKey("request.uri"));
+		}
+		#endregion
+
+		#region Error Traces Tests
+		[Test]
+		public void RequestUriInErrorTrace()
+		{
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				tx.SetUri("myuri");
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				tx.NoticeError(new Exception("test exception"));
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+			Assert.IsTrue(errorTrace.Attributes.AgentAttributes.Any(kv => kv.Key == "request.uri" && (string)kv.Value == "myuri"));
+		}
+
+		[Test]
+		public void NoRequestUriInErrorTrace()
+		{
+			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
+			_compositeTestAgent.PushConfiguration();
+
+			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+				tx.NoticeError(new Exception("test exception"));
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+			Assert.IsFalse(errorTrace.Attributes.AgentAttributes.Any(kv => kv.Key == "request.uri"));
+		}
+		#endregion
 
 		[Test]
 		public void SimpleTransaction_CreatesTransactionTraceAndEvent()

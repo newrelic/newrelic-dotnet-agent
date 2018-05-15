@@ -32,14 +32,23 @@ namespace ArtifactBuilder
 					case "azuresiteextension":
 						BuildAzureSiteExtension(sourceDirectory, args);
 						break;
-					case "nugetazureservicefabric":
-						BuildNugetAzureServiceFabric(sourceDirectory, args);
+					case "nugetagent":
+						BuildNugetAgent(sourceDirectory, args);
 						break;
 					case "nugetagentapi":
 						BuildNugetAgentApi(sourceDirectory, args);
 						break;
 					case "nugetazurecloudservices":
 						BuildNugetAzureCloudServices(sourceDirectory, args);
+						break;
+					case "msiinstaller":
+						BuildMsiInstaller(sourceDirectory, args);
+						break;
+					case "downloadsite":
+						BuildDownloadSite(sourceDirectory, args);
+						break;
+					case "linuxpackages":
+						BuildLinuxPackages(sourceDirectory);
 						break;
 					default:
 						throw new Exception($"Unknown package type: {args[0]}");
@@ -59,14 +68,32 @@ namespace ArtifactBuilder
 			return 0;
 		}
 
-		private static void BuildNugetAzureServiceFabric(string sourceDirectory, string[] args)
+		private static void BuildLinuxPackages(string sourceDirectory)
 		{
-			var configuration = args[1];
-			var c = new NugetAzureServiceFabric(configuration, sourceDirectory);
-			c.Build();
+			new LinuxPackage(sourceDirectory, "LinuxDeb", "_amd64", "deb").Build();
+			new LinuxPackage(sourceDirectory, "LinuxRpm", ".x86_64", "rpm").Build();
+			new LinuxPackage(sourceDirectory, "LinuxTar", "_amd64", "tar.gz").Build();
 		}
 
-		private static NugetPushInfo NugetPushInfo = new NugetPushInfo("http://win-nuget-repository.pdx.vm.datanerd.us:81/nuget/Default", "C7B30E3332814310896ADB3DEC35F491");
+		private static void BuildDownloadSite(string sourceDirectory, string[] args)
+		{
+			var configuration = args[1];
+			new DowloadSiteArtifact(sourceDirectory, configuration).Build();
+		}
+
+		private static void BuildMsiInstaller(string sourceDirectory, string[] args)
+		{
+			var configuration = args[1];
+			new MsiInstaller(sourceDirectory, "x86", configuration).Build();
+			new MsiInstaller(sourceDirectory, "x64", configuration).Build();
+		}
+
+		private static void BuildNugetAgent(string sourceDirectory, string[] args)
+		{
+			var configuration = args[1];
+			var c = new NugetAgent(configuration, sourceDirectory);
+			c.Build();
+		}
 
 		private static string GetSourceDirectory()
 		{
@@ -78,22 +105,21 @@ namespace ArtifactBuilder
 		{
 			var configuration = args[1];
 			var platform = args[2];
-			var pushNugetPackage = args.Length == 4;
-			var c = new NugetAzureWebSites(platform, configuration, sourceDirectory, pushNugetPackage ? NugetPushInfo : null);
+			var c = new NugetAzureWebSites(platform, configuration, sourceDirectory);
 			c.Build();
 		}
 
 		private static void BuildNugetAgentApi(string sourceDirectory, string[] args)
 		{
 			var configuration = args[1];
-			var c = new NugetAgentApi(configuration, sourceDirectory, NugetPushInfo);
+			var c = new NugetAgentApi(configuration, sourceDirectory);
 			c.Build();
 		}
 
 		private static void BuildNugetAzureCloudServices(string sourceDirectory, string[] args)
 		{
 			var configuration = args[1];
-			var c = new NugetAzureCloudServices(configuration, sourceDirectory, NugetPushInfo);
+			var c = new NugetAzureCloudServices(configuration, sourceDirectory);
 			c.Build();
 		}
 

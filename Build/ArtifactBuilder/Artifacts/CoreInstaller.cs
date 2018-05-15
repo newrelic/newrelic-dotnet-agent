@@ -5,20 +5,17 @@ using System.Linq;
 
 namespace ArtifactBuilder.Artifacts
 {
-	public class CoreInstaller
+	public class CoreInstaller : Artifact
 	{
-		public CoreInstaller(string configuration, string sourceDirectory)
+		
+		public CoreInstaller(string configuration, string sourceDirectory) : base(sourceDirectory, "ZipArchiveCoreInstaller")
 		{
 			Configuration = configuration;
-			SourceDirectory = sourceDirectory;
 		}
 
 		public string Configuration { get; }
-		public string SourceDirectory { get; }
-		public string StagingDirectory => $@"{SourceDirectory}\Build\_staging\ZipArchiveCoreInstaller";
-		private string OutputDirectory => $@"{SourceDirectory}\Build\BuildArtifacts\ZipArchiveCoreInstaller";
 
-		public void Build()
+		protected override void InternalBuild()
 		{
 			var x64Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", SourceDirectory);
 			var x86Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x86", SourceDirectory);
@@ -35,7 +32,7 @@ namespace ArtifactBuilder.Artifacts
 			var zipFilePath = $@"{OutputDirectory}\newrelic-netcore20-agent-win-installer_{x64Components.Version}.zip";
 			Directory.CreateDirectory(OutputDirectory);
 			System.IO.Compression.ZipFile.CreateFromDirectory(StagingDirectory, zipFilePath);
-			File.WriteAllText($@"{OutputDirectory}\SHA256.txt", FileHelpers.GetSha256Checksum(zipFilePath));
+			File.WriteAllText($@"{OutputDirectory}\checksum.sha256", FileHelpers.GetSha256Checksum(zipFilePath));
 
 			// For now, the DotNet-Core20-Agent-DeployToS3 job expects core agent artifacts to be in the following directory
 			// At some point we should change the job to pull from the new location under the Build\BuildArtifacts directory

@@ -1,203 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Runtime.InteropServices;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
-using NewRelic.SystemExtensions.Collections.Generic;
+using System;
+using System.Diagnostics;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
-	#region Delegates for PInvoke calls to unmanaged thread profiler
-	
-	/// <summary>
-	/// Delegate for a callback with an unmanaged stack snapshot payload.
-	/// </summary>
-	/// <param name="pArrayOfInt">Array of function identifiers for <paramref name="threadId"/>.</param>
-	/// <param name="threadId">Thread Id for this stack snapshot.</param>
-	/// <param name="length">Number of function identifies in <paramref name="pArrayOfInt"/>.</param>
-	public delegate void StackSnapshotSuccessCallback(IntPtr pArrayOfInt, UIntPtr threadId, Int32 length);
-	public delegate void StackSnapshotFailedCallback(UIntPtr threadId, UInt32 errorCode);
-	public delegate void StackSnapshotCompleteCallback();
-	#endregion
-
 	/// <summary>
 	/// Performs polling of the unmanaged thread profiler for samples of stack snapshots.
 	/// </summary>
 	public class ThreadProfilingSampler : IThreadProfilingSampler
 	{
-		#region PInvoke Targets and Delegate Instances
+		#region Background Sampling Worker Thread
 
-		static IntPtr _successProfileDelegateFunction = IntPtr.Zero;
-		static IntPtr _failureProfileDelegateFunction = IntPtr.Zero;
-		static IntPtr _completeDelegateFunction = IntPtr.Zero;
+		/// <summary>
+		/// Tracks the state of the background sampling worker.  1: worker has been scheduled/is running.  0: no worker has been scheduled.
+		/// </summary>
+		private Int32 _workerRunning = 0;
 
-		StackSnapshotSuccessCallback _callbackDelegateProfiledThread;
-		StackSnapshotFailedCallback _failedProfileCallbackDelegate;
-		StackSnapshotCompleteCallback _completeCallbackDelegate;
+		/// <summary>
+		/// Used to signal the background thread to terminate and stop sampling
+		/// </summary>
+		[NotNull]
+		private ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
+
+		private Thread _samplingWorker = null;
 		#endregion
 
-		[NotNull]
-		private readonly IAgent _agent;
-		[NotNull]
-		private IScheduler _scheduler;
-		private readonly INativeMethods _nativeMethods;
-
-		#region Polling Variables
-		
-		// This will enable the thread to pause and
-		// also enable the thread to terminate
-		[NotNull]
-		private ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
-
-		// Maintains if the polling thread is already active
-		private Boolean _isPollingActivated;
-
-		// Thread Synchronisation instance
-		[NotNull]
-		private readonly Object _syncObj = new Object();
-		[NotNull]
-		private readonly Object _syncProfiledThread = new Object();
-
-		public Int32 NumberSamplesInSession { get; set; }
-
-		#endregion
-
-		#region Duration Handling
-
-		private DateTime _startOfDuration;
-
-		public bool SamplingInSession { get { return _isPollingActivated && !DurationElapsed(); } }
-
-		#endregion
-
-		// i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
-		[NotNull]
-		public readonly Dictionary<UIntPtr, Int32> ManagedThreadsFromProfiler;
-
-		private UInt32 _frequencyMsec;
-		private UInt32 _durationMsec;
-
-		public ThreadProfilingSampler([NotNull] IAgent agent, IScheduler scheduler, [NotNull] INativeMethods nativeMethods)
+		public ThreadProfilingSampler()
 		{
-			_agent = agent;
-			_scheduler = scheduler;
-			_nativeMethods = nativeMethods;
-
-			ManagedThreadsFromProfiler = new Dictionary<UIntPtr, Int32>();
-
-			InitializeUnmanagedConnection();
 		}
 
-		private void InitializeUnmanagedConnection()
+		public bool Start(UInt32 frequencyInMsec, UInt32 durationInMsec, [NotNull]ISampleSink sampleSink, [NotNull] INativeMethods nativeMethods)
 		{
-			try
+			_shutdownEvent.Reset();
+
+			//atomic compare and set - if _workerRunning was a zero, it's now a 1 and create worker will be true
+			bool createWorker = 0 == Interlocked.CompareExchange(ref _workerRunning, 1, 0);
+			if (createWorker)
 			{
-				_callbackDelegateProfiledThread  = ProfiledThreadDataCallback;
-				_successProfileDelegateFunction = Marshal.GetFunctionPointerForDelegate(_callbackDelegateProfiledThread);
-
-				_failedProfileCallbackDelegate = FailedProfileThreadDataCallback;
-				_failureProfileDelegateFunction = Marshal.GetFunctionPointerForDelegate(_failedProfileCallbackDelegate);
-
-				_completeCallbackDelegate = CompleteCallback;
-				_completeDelegateFunction = Marshal.GetFunctionPointerForDelegate(_completeCallbackDelegate);
-			}
-			catch (Exception e)
-			{
-				Log.ErrorFormat("Exception inintializing unmanaged connection from Thread Profiling Sampler: {0}", e);
-				throw;
-			}
-		}
-
-		public bool Start(UInt32 frequencyInMsec, UInt32 durationInMsec)
-		{
-			_frequencyMsec = frequencyInMsec;
-			_durationMsec = durationInMsec;
-			NumberSamplesInSession = 0;
-
-			_shutdownEvent.Close();
-			_shutdownEvent = new ManualResetEvent(false);
-
-			var startedNewSession = false;
-			lock (_syncObj)
-			{
-				if (!_isPollingActivated)
+				_samplingWorker = new Thread( () => InternalPolling_WaitCallback(frequencyInMsec, durationInMsec, sampleSink, nativeMethods) )
 				{
-					_scheduler.ExecuteOnce(InternalPolling_WaitCallback, TimeSpan.Zero);
-					_isPollingActivated = true;
-					_startOfDuration = DateTime.UtcNow;
-					startedNewSession = true;
-				}
+					IsBackground = true
+				};
+				_samplingWorker.Start();
 			}
 
-			return startedNewSession;
+			//return whether or not we created a session
+			return createWorker; 
 		}
 
-		public void Stop(Boolean reportData = true)
+		public void Stop()
 		{
-			lock (_syncObj)
+			//if we have already asked for termination or the background thread is not operational, we are done here.
+			if (_shutdownEvent.Wait(0) || 1 == _workerRunning)
+				return;
+
+			//signal sampling worker to terminate
+			_shutdownEvent.Set();
+
+			//wait for the sampling worker to terminate
+			if (_samplingWorker != null)
 			{
-				if (!_isPollingActivated)
-					return;
-
-				_shutdownEvent.Set();
-				_isPollingActivated = false;
-
-				if (reportData)
-				{
-					_agent.ThreadProfilingService.PerformAggregation();
-				}
-			}
-		}
-
-		public void FailedProfileThreadDataCallback(UIntPtr threadId, UInt32 errorCode)
-		{
-			try
-			{
-				if (errorCode == 1)
-					_agent.ThreadProfilingService.AddLargeStackOverflowProfile(threadId);
-				else
-					_agent.ThreadProfilingService.AddFailedThreadProfile(threadId, errorCode);
-			}
-			catch (Exception e)
-			{
-				var msg = new StringBuilder(e.Message);
-				if (e.InnerException != null)
-					msg.Append(string.Format("FailedProfileThreadDataCallback EXCEPTION : {0}", e.InnerException.Message));
-
-				Log.Debug(msg.ToString());
-			}
-		}
-
-		public void CompleteCallback()
-		{
-		}
-
-		public void ProfiledThreadDataCallback(IntPtr data, UIntPtr threadId, Int32 length)
-		{
-			lock (_syncProfiledThread)
-			{
-				try
-				{
-					if (length <= 0 || data == IntPtr.Zero)
-						return;
-
-					var stackInfo = new StackInfo();
-					stackInfo.StoreFunctionIds(data, length);
-
-					ManagedThreadsFromProfiler[threadId] = ManagedThreadsFromProfiler.GetValueOrDefault(threadId) + length;
-					_agent.ThreadProfilingService.UpdateTree(stackInfo, 0);
-				}
-				catch (Exception e)
-				{
-					var msg = new StringBuilder(e.Message);
-					if (e.InnerException != null)
-						msg.Append(string.Format("ProfiledThreadDataCallback EXCEPTION : {0}", e.InnerException.Message));
-
-					Log.Debug(msg.ToString());
-				}
+				_samplingWorker.Join();
+				_samplingWorker = null;
 			}
 		}
 
@@ -206,33 +73,77 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		/// <summary>
 		/// Polls for profiled threads.
 		/// </summary>
-		private void InternalPolling_WaitCallback()
+		private void InternalPolling_WaitCallback(UInt32 frequencyInMsec, UInt32 durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
 		{
-			while (!_shutdownEvent.WaitOne((Int32)_frequencyMsec, true))
-			{
-				if (DurationElapsed())
-				{
-					Log.Debug("InternalPolling_WaitCallback: Duration Elapsed -- Stopping Sampler");
-					Stop();
-				}
+			Stopwatch sw = Stopwatch.StartNew();
 
-				try
+			//drift calculation support
+			int intervalMilliseconds = (int)frequencyInMsec;
+			//if the time used to profile and update tree was more than this percentage of the sampling freq, count it in samplesExceedingThreshold
+			const double ReportDriftThreshold = 0.1;  
+			int reportingThresholdMilliseconds = (int)Math.Truncate(intervalMilliseconds * ReportDriftThreshold);
+
+			int samplesExceedingThreshold = 0;
+			int samples = 0;
+
+			var lastTickOfSamplingPeriod = DateTime.UtcNow.AddMilliseconds(durationInMsec).Ticks;
+			try
+			{
+				// Accounting for drift
+				int elapsedMilliseconds = 0;
+				while (!_shutdownEvent.Wait(intervalMilliseconds - elapsedMilliseconds))
 				{
-					_nativeMethods.RequestProfile(_successProfileDelegateFunction, _failureProfileDelegateFunction, _completeDelegateFunction);
+					long startTick = sw.ElapsedTicks;
+
+					if (DateTime.UtcNow.Ticks > lastTickOfSamplingPeriod)
+					{
+						_shutdownEvent.Set();
+						Log.Debug("InternalPolling_WaitCallback: Duration Elapsed -- Stopping Sampler");
+						break;
+					}
+
+					try
+					{
+						var threadSnapshots = nativeMethods.GetProfileWithRelease(out int result);
+						if (result >= 0)
+						{
+							++samples;
+							sampleSink.SampleAcquired(threadSnapshots);
+						}
+						else
+						{
+							Log.Error($"Thread Profile sampling failed. ({result:X})");
+						}
+
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex);
+					}
+
+					//drift
+					var ticksUsed = sw.ElapsedTicks - startTick;
+					elapsedMilliseconds = Math.Min((int)(ticksUsed / TimeSpan.TicksPerMillisecond), intervalMilliseconds);
+					if (elapsedMilliseconds >= reportingThresholdMilliseconds)
+					{
+						++samplesExceedingThreshold;
+					}
 				}
-				catch (Exception ex)
-				{
-					Log.Error(ex);
-				}
-				NumberSamplesInSession++;
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
+			finally
+			{
+				Log.Info($"samples ({samples}) exceeding threshold: {samplesExceedingThreshold}");
+
+				sampleSink.SamplingComplete();
+
+				nativeMethods.ShutdownNativeThreadProfiler();
+				_workerRunning = 0;
 			}
 		}
-
-		private bool DurationElapsed()
-		{
-			return ((DateTime.UtcNow - _startOfDuration).TotalMilliseconds >= _durationMsec);
-		}
-
-#endregion
+		#endregion
 	}
 }

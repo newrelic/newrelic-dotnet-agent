@@ -44,17 +44,6 @@ foreach ($applicationFull in $applicationsFull.Keys) {
     }
 }
 
-##########################
-# Create Build Artifacts #
-##########################
-
-pushd "Build"
-Invoke-Expression "& .\package.ps1 -configuration Release"
-if ($LastExitCode -ne 0) {
-    exit $LastExitCode
-}
-popd
-
 $agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\Agent\_build\AnyCPU-Release\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").Version.ToString()
 
 ###############
@@ -74,6 +63,17 @@ Write-Host "===================================="
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }
+
+##########################
+# Create Build Artifacts #
+##########################
+
+Push-Location "Build"
+Invoke-Expression "& .\package.ps1 -configuration Release -IncludeDownloadSite"
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+Pop-Location
 
 ###############
 # Annotate the build and the parent CI job #

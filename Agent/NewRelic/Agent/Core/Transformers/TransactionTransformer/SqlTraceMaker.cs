@@ -17,10 +17,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 	public class SqlTraceMaker : ISqlTraceMaker
 	{
 		[NotNull] private readonly IConfigurationService _configurationService;
-		
-		public SqlTraceMaker(IConfigurationService configurationService)
+		[NotNull] private readonly IAttributeService _attributeService;
+
+		public SqlTraceMaker(IConfigurationService configurationService, IAttributeService attributeService)
 		{
 			_configurationService = configurationService;
+			_attributeService = attributeService;
 		}
 
 		[CanBeNull]
@@ -32,6 +34,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var segmentData = segment.TypedData;
 			var transactionName = transactionMetricName.PrefixedName;
 			var uri = immutableTransaction.TransactionMetadata.Uri ?? "<unknown>";
+
+			if (!_attributeService.AllowRequestUri(AttributeDestinations.SqlTrace))
+			{
+				uri = "<unknown>";
+			}
+
 			var sql = immutableTransaction.GetSqlObfuscatedAccordingToConfig(segmentData.CommandText);
 			var sqlId = immutableTransaction.GetSqlId(segmentData.CommandText);
 

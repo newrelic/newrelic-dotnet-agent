@@ -28,13 +28,13 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		// Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
 		[NotNull]
-		private IResizableCappedCollection<TransactionEventWireModel> _transactionEvents = new ConcurrentReservoir<TransactionEventWireModel>(0);
+		private IResizableCappedCollection<TransactionEventWireModel> _transactionEvents = new ConcurrentPriorityQueue<TransactionEventWireModel>(0, new TransactionEventWireModel.PriorityTimestampComparer());
 
 		[NotNull]
 		private ConcurrentList<TransactionEventWireModel> _syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
 
 		[NotNull]
-		private const Double _reservoirReductionSizeMultiplier = 0.5;
+		private const Double ReservoirReductionSizeMultiplier = 0.5;
 
 		public TransactionEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(uint transactionEventCollectionCapacity)
 		{
-			_transactionEvents = new ConcurrentReservoir<TransactionEventWireModel>(transactionEventCollectionCapacity);
+			_transactionEvents = new ConcurrentPriorityQueue<TransactionEventWireModel>(transactionEventCollectionCapacity, new TransactionEventWireModel.PriorityTimestampComparer());
 			_syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
 		}
 
@@ -99,7 +99,7 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(transactionEvents);
 					break;
 				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((UInt32)(transactionEvents.Count() * _reservoirReductionSizeMultiplier));
+					ReduceReservoirSize((UInt32)(transactionEvents.Count() * ReservoirReductionSizeMultiplier));
 					RetainEvents(transactionEvents);
 					break;
 				case DataTransportResponseStatus.OtherError:

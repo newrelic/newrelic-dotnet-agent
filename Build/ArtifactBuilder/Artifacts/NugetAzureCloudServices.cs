@@ -8,14 +8,12 @@ namespace ArtifactBuilder.Artifacts
 {
 	public class NugetAzureCloudServices : Artifact
 	{
-		public NugetAzureCloudServices(string configuration, string sourceDirectory, NugetPushInfo nugetPushInfo)
+		public NugetAzureCloudServices(string configuration, string sourceDirectory)
 			: base(sourceDirectory, nameof(NugetAzureCloudServices))
 		{
 			Configuration = configuration;
-			NugetPushInfo = nugetPushInfo;
 		}
 
-		public NugetPushInfo NugetPushInfo { get; }
 		public string Configuration { get; }
 
 		protected override void InternalBuild()
@@ -23,15 +21,15 @@ namespace ArtifactBuilder.Artifacts
 			var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", SourceDirectory);
 			frameworkAgentComponents.ValidateComponents();
 
-			var package = new NugetPackage(StagingDirectory, OutputDirectory, NugetPushInfo);
+			var package = new NugetPackage(StagingDirectory, OutputDirectory);
 			package.CopyAll(PackageDirectory);
 			var serverMonitorFileName = DownloadServerMonitorMsi();
 			DoInstallerReplacements($"NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi", serverMonitorFileName);
-			package.CopyToLib(frameworkAgentComponents.AgentApiDll, string.Empty);
+			package.CopyToLib(frameworkAgentComponents.AgentApiDll);
 			package.CopyToContent($@"{SourceDirectory}\Agent\_build\x64-{Configuration}\Installer\NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
 			package.SetVersion(frameworkAgentComponents.Version);
 			package.Pack();
-			package.Push();
+			package.PushToProGet();
 		}
 
 		private string DownloadServerMonitorMsi()

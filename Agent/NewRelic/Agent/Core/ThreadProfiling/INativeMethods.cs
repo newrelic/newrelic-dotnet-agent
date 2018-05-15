@@ -4,10 +4,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 {
 	public interface INativeMethods
 	{
-		// Client interface for requesting a function name by id
-		void RequestFunctionNames(ulong[] functionIds, IntPtr callback);
+		void ShutdownNativeThreadProfiler();
 
-		void RequestProfile(IntPtr successCallback, IntPtr failureCallback, IntPtr completeCallback);
+		FidTypeMethodName[] GetFunctionInfo(UIntPtr[] functionIDs);
+
+		ThreadSnapshot[] GetProfileWithRelease(out Int32 hr);
 
 		int InstrumentationRefresh();
 

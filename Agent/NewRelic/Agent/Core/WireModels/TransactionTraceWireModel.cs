@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.WireModels
 		public virtual String TransactionMetricName { get; }
 
 		[JsonArrayIndex(Index = 3)]
-		[NotNull]
+		[CanBeNull]
 		public virtual String Uri { get; }
 
 		[JsonArrayIndex(Index = 4)]
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.WireModels
 		[JsonIgnore]
 		public Boolean IsSynthetics { get; }
 
-		public TransactionTraceWireModel(DateTime startTime, TimeSpan duration, [NotNull] String transactionMetricName, [NotNull] String uri, [NotNull] TransactionTraceData transactionTraceData, [NotNull] String guid, [CanBeNull] UInt64? xraySessionId, [CanBeNull] String syntheticsResourceId, Boolean isSynthetics)
+		public TransactionTraceWireModel(DateTime startTime, TimeSpan duration, [NotNull] String transactionMetricName, [CanBeNull] String uri, [NotNull] TransactionTraceData transactionTraceData, [NotNull] String guid, [CanBeNull] UInt64? xraySessionId, [CanBeNull] String syntheticsResourceId, Boolean isSynthetics)
 		{
 			StartTime = startTime;
 			Duration = duration;

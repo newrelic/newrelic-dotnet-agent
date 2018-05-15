@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_transaction = Mock.Create<ITransaction>();
 			var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
 			Mock.Arrange(() => _transaction.CallStackManager).Returns(_callStackManager);
-			Mock.Arrange(() => _transaction.TransactionSegmentState).Returns(transactionSegmentState);
+			Mock.Arrange(() => _transaction.GetTransactionSegmentState()).Returns(transactionSegmentState);
 
 			// grr.  mocking is stupid
 			Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>()))

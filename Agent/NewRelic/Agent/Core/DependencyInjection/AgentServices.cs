@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			}
 			else
 			{
-				container.Register<INativeMethods, NativeMethods>();
+				container.Register<INativeMethods, LinuxNativeMethods>();
 			}
 
 			container.Build();

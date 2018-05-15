@@ -329,7 +329,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			ITimer timer = Mock.Create<ITimer>();
 			Mock.Arrange(() => timer.Duration).Returns(duration);
 
-			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var priority = 0.5f;
+			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
 			tx.TransactionMetadata.SetCrossApplicationPathHash(pathHash);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid(referrerGuid);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTripId(referrerTripId);

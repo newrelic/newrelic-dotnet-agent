@@ -5,59 +5,37 @@ using System.Linq;
 
 namespace ArtifactBuilder.Artifacts
 {
-	public class NugetAzureWebSites
+	public class NugetAzureWebSites:Artifact
 	{
-		public NugetAzureWebSites(string platform, string configuration, string sourceDirectory, NugetPushInfo nugetPushInfo)
+		public NugetAzureWebSites(string platform, string configuration, string sourceDirectory)
+			: base(sourceDirectory, nameof(NugetAzureWebSites) + "-" + platform)
 		{
 			Platform = platform;
 			Configuration = configuration;
-			SourceDirectory = sourceDirectory;
-			NugetPushInfo = nugetPushInfo;
+			StagingDirectory = $@"{SourceDirectory}\Build\_staging\{Name}";
+			PackageDirectory = $@"{SourceDirectory}\Build\Packaging\{Name}";
+			OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}";
 		}
 
-		public NugetPushInfo NugetPushInfo { get; }
 		public string Configuration { get; }
 		public string Platform { get; }
-		public string SourceDirectory { get; }
-		public string Version { get; set; }
-		private AgentComponents AgentComponents;
-		public string Name => "NugetAzureWebSites";
+		private AgentComponents _agentComponents;
 
-		public string StagingDirectory => $@"{SourceDirectory}\Build\_staging\{Name}-{Platform}";
-		public string PackageDirectory => $@"{SourceDirectory}\Build\Packaging\{Name}";
 		private string RootDirectory => $@"{StagingDirectory}\content\newrelic";
-		private string ExtensionsDirectory => $@"{StagingDirectory}\content\newrelic\Extensions";
-		private string LibDirectory => $@"{StagingDirectory}\lib";
-		private string ToolsDirectory => $@"{StagingDirectory}\tools";
 
-		private string NuspecFileName => Platform == "x64" ? "NewRelic.Azure.WebSites.x64.nuspec" : "NewRelic.Azure.WebSites.nuspec";
-		private string NuspecFile => $@"{PackageDirectory}\{NuspecFileName}";
-
-		private string OutputDirectory => $@"{SourceDirectory}\Build\BuildArtifacts\{Name}-{Platform}";
-
-		public void Build()
+		protected override void InternalBuild()
 		{
-			AgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, SourceDirectory);
-			AgentComponents.ValidateComponents();
-			Version = AgentComponents.Version;
-			FileHelpers.DeleteDirectories(StagingDirectory, OutputDirectory);
-			CopyComponents();
+			_agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, SourceDirectory);
+			_agentComponents.ValidateComponents();
+
+			var package = new NugetPackage(StagingDirectory, OutputDirectory);
+			_agentComponents.CopyComponents($@"{package.ContentDirectory}\newrelic");
+			package.CopyToLib(_agentComponents.AgentApiDll);
+			package.CopyAll(PackageDirectory);
 			TransformNewRelicConfig();
-			TransformNuspecFile();
-			NuGetHelpers.Pack($@"{StagingDirectory}\{NuspecFileName}", $"{OutputDirectory}");
-			if (NugetPushInfo != null) NuGetHelpers.Push(NugetPushInfo, $"{OutputDirectory}");
-		}
-
-		private void CopyComponents()
-		{
-			FileHelpers.CopyFile(AgentComponents.RootInstallDirectoryComponents, RootDirectory);
-			FileHelpers.CopyFile(AgentComponents.ExtensionDirectoryComponents, ExtensionsDirectory);
-			FileHelpers.CopyFile(AgentComponents.NetstandardExtensionDirectoryComponents, $@"{ExtensionsDirectory}\netstandard2.0");
-			FileHelpers.CopyFile(AgentComponents.WrapperXmlFiles, ExtensionsDirectory);
-			FileHelpers.CopyFile(AgentComponents.AgentApiDll, LibDirectory);
-			FileHelpers.CopyFile($@"{PackageDirectory}\tools\install.ps1", ToolsDirectory);
-			FileHelpers.CopyFile($@"{PackageDirectory}\tools\uninstall.ps1", ToolsDirectory);
-			FileHelpers.CopyFile(NuspecFile, StagingDirectory);
+			package.SetVersion(_agentComponents.Version);
+			package.Pack();
+			package.PushToProGet();
 		}
 
 		private void TransformNewRelicConfig()
@@ -81,20 +59,6 @@ namespace ArtifactBuilder.Artifacts
 
 			// Set the 'directory' attribute
 			nodeLog.SetAttribute("directory", @"c:\Home\LogFiles\NewRelic");
-			xml.Save(path);
-		}
-
-		private void TransformNuspecFile()
-		{
-			var path = $@"{StagingDirectory}\{NuspecFileName}";
-			var xml = new System.Xml.XmlDocument();
-			xml.Load(path);
-
-			var ns = new System.Xml.XmlNamespaceManager(xml.NameTable);
-			ns.AddNamespace("x", "http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd");
-
-			var nodeVersion = (System.Xml.XmlElement) xml.SelectSingleNode("//x:package/x:metadata/x:version", ns);
-			nodeVersion.InnerText = Version;
 			xml.Save(path);
 		}
 	}

@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
 		[NotNull]
-		private IResizableCappedCollection<ErrorEventWireModel> _errorEvents = new ConcurrentReservoir<ErrorEventWireModel>(0);
+		private IResizableCappedCollection<ErrorEventWireModel> _errorEvents = new ConcurrentPriorityQueue<ErrorEventWireModel>(0, new ErrorEventWireModel.PriorityTimestampComparer());
 
 		// Note that Synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they
 		// are never pushed out by non-Synthetics events.
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		private ConcurrentList<ErrorEventWireModel> _syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
 
 		[NotNull]
-		private const Double _reservoirReductionSizeMultiplier = 0.5;
+		private const Double ReservoirReductionSizeMultiplier = 0.5;
 
 		public ErrorEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(uint errorEventCollectionCapacity)
 		{
-			_errorEvents = new ConcurrentReservoir<ErrorEventWireModel>(errorEventCollectionCapacity);
+			_errorEvents = new ConcurrentPriorityQueue<ErrorEventWireModel>(errorEventCollectionCapacity, new ErrorEventWireModel.PriorityTimestampComparer());
 			_syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
 
 		}
@@ -131,7 +131,7 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(errorEvents);
 					break;
 				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((UInt32)(errorEvents.Count() * _reservoirReductionSizeMultiplier));
+					ReduceReservoirSize((UInt32)(errorEvents.Count() * ReservoirReductionSizeMultiplier));
 					RetainEvents(errorEvents);
 					break;
 				case DataTransportResponseStatus.OtherError:

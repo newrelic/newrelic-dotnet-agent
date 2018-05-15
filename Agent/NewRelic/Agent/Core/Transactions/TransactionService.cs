@@ -145,8 +145,8 @@ namespace NewRelic.Agent.Core.Transactions
 				Log.Error("Unable to locate a valid TransactionContext.");
 				return null;
 			}
-			
-			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService.SqlObfuscator);
+			var priority = (float)new Random().NextDouble();
+			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService.SqlObfuscator, priority);
 
 			try
 			{

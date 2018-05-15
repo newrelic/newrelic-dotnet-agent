@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			var attributes = new Attributes();
 
-			attributes.TryAdd(Attribute.BuildRequestUriAttribute, metadata.Uri);
+			attributes.TryAdd(Attribute.BuildRequestUriAttribute, metadata.Uri ?? "/Unknown");
 
 			// original_url should only be generated if it is distinct from the current URI
 			if (metadata.OriginalUri != metadata.Uri)

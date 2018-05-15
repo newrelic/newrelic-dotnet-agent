@@ -43,7 +43,7 @@ namespace PlatformTests.Applications
 
 		public String[] NugetSources { get; } =
 		{
-			Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..\..\Build\BuildArtifacts\NugetAzureServiceFabric\")),
+			Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..\..\Build\BuildArtifacts\NugetAgent\")),
 			"http://win-nuget-repository.pdx.vm.datanerd.us:81/NuGet/Default",
 			"https://api.nuget.org/v3/index.json"
 		};
@@ -71,10 +71,10 @@ namespace PlatformTests.Applications
 
 		public override void InstallAgent()
 		{
-			var packageName = "NewRelic.Azure.ServiceFabric";
+			var packageName = "NewRelic.Agent";
 
 			var version = SearchForNewestNugetVersion(Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),
-				@"..\..\..\..\..\Build\BuildArtifacts\NugetAzureServiceFabric\")));
+				@"..\..\..\..\..\Build\BuildArtifacts\NugetAgent\")));
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] Installing {packageName} version {version} .");
 

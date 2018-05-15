@@ -5,9 +5,32 @@ using NewRelic.Agent.Core.UnitTest;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
+
+
 	[TestFixture]
 	public class ThreadProfilingBucketTest
 	{
+		static public UIntPtr[] GenerateStackSnapshot(uint numFunctions, uint start, uint increment, bool randomize = false)
+		{
+			var functionIds = new UIntPtr[numFunctions];
+
+			for (uint i = 0; i < numFunctions; i++)
+			{
+				if (randomize)
+				{
+					Random rand = new Random(DateTime.UtcNow.Millisecond);
+					uint multiplier = (uint)rand.Next(2, 300);
+					functionIds[i] = new UIntPtr(start + (i * multiplier));
+				}
+				else
+				{
+					functionIds[i] = new UIntPtr(start + (i * increment));
+				}
+			}
+
+			return functionIds;
+		}
+
 		[Test]
 		public void verify_root_node_created_on_construction()
 		{
@@ -35,8 +58,8 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			using (var logging = new UnitTest.Fixtures.Logging())
 			{
 				ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-				bucket.UpdateTree(null, 0);
-				Assert.IsTrue(logging.HasMessageBeginingWith("StackInfo passed to UpdateTree is null"));
+				bucket.UpdateTree(null);
+				Assert.IsTrue(logging.HasMessageBeginingWith("fids passed to UpdateTree is null"));
 			}
 		}
 
@@ -86,31 +109,28 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		public void verify_NodeCount_is_one_for_tree_with_single_node()
 		{
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-			IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(1, 200, 50);
-			IStackInfo stackInfoIn = new MockStackInfo(functionIds);
-			bucket.UpdateTree(stackInfoIn, 0);
+			var fids = GenerateStackSnapshot(1, 200, 50);
+			bucket.UpdateTree(fids);
 			Assert.AreEqual(1, bucket.GetNodeCount());
 		}
 
 		[Test]
 		public void verify_NodeCount_for_tree_with_two_nodes()
 		{
-			int numNodes = 2;
+			uint numNodes = 2;
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-			IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(numNodes, 200, 50);
-			IStackInfo stackInfoIn = new MockStackInfo(functionIds);
-			bucket.UpdateTree(stackInfoIn, 0);
+			var fids = GenerateStackSnapshot(numNodes, 200, 50);
+			bucket.UpdateTree(fids);
 			Assert.AreEqual(numNodes, bucket.GetNodeCount());
 		}
 
 		[Test]
 		public void verify_NodeCount_for_tree_with_twenty_nodes()
 		{
-			int numNodes = 20;
+			uint numNodes = 20;
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-			IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(numNodes, 200, 50);
-			IStackInfo stackInfoIn = new MockStackInfo(functionIds);
-			bucket.UpdateTree(stackInfoIn, 0);
+			var fids = GenerateStackSnapshot(numNodes, 200, 50);
+			bucket.UpdateTree(fids);
 			Assert.AreEqual(numNodes, bucket.GetNodeCount());
 		}
 
@@ -118,13 +138,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		public void verify_NodeCount_is_two_for_tree_with_two_single_node_stacks()
 		{
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-			IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(1, 200, 50);
-			IStackInfo stackInfoIn = new MockStackInfo(functionIds);
-			bucket.UpdateTree(stackInfoIn, 0);
+			var fids = GenerateStackSnapshot(1, 200, 50);
+			bucket.UpdateTree(fids);
 
-			IntPtr[] functionIds2 = MockStackInfo.GenerateStackSnapshot(1, 125, 25);
-			IStackInfo stackInfoIn2 = new MockStackInfo(functionIds2);
-			bucket.UpdateTree(stackInfoIn2, 0);
+			var fids2 = GenerateStackSnapshot(1, 125, 25);
+			bucket.UpdateTree(fids2);
 			Assert.AreEqual(2, bucket.GetNodeCount());
 		}
 
@@ -134,43 +152,26 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		{
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
 
-			for (int i = 5; i < 30; i = i+5)
+			for (uint i = 5; i < 30; i += 5)
 			{
-				IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(i, 200, 50, true);
-				IStackInfo stackInfoIn = new MockStackInfo(functionIds);
-				bucket.UpdateTree(stackInfoIn, 0);
+				var fids = GenerateStackSnapshot(i, 200, 50, true);
+				bucket.UpdateTree(fids);
 			}
 
 			// Total node count should be equal to 5 + 10 + 15 + 20 + 25 = 75
 			Assert.AreEqual(75, bucket.GetNodeCount());
 		}
 
-		[Test]
-		public void verify_NodeCount_for_tree_with_several_multiple_node_stacks_of_diff_depths_entered_at_various_depths()
-		{
-			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-
-			for (uint i = 5; i < 30; i = i + 5)
-			{
-				IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot((int)i, 200, 50, true);
-				IStackInfo stackInfoIn = new MockStackInfo(functionIds);
-				bucket.UpdateTree(stackInfoIn, i);
-			}
-
-			// Total node count should be equal to 5 + 10 + 15 + 20 + 25 = 75
-			Assert.AreEqual(75, bucket.GetNodeCount());
-		}
 		#endregion
 
 		#region Private Helpers
 
-		private void verify_depth_after_calling_UpdateTree(int numFunctionIds)
+		private void verify_depth_after_calling_UpdateTree(uint numFunctionIds)
 		{
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-			IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(numFunctionIds, 200, 50);
-			IStackInfo stackInfoIn = new MockStackInfo(functionIds);
-			bucket.UpdateTree(stackInfoIn, 0);
-			Assert.AreEqual(functionIds.Count(), bucket.GetDepth());
+			var fids = GenerateStackSnapshot(numFunctionIds, 200, 50);
+			bucket.UpdateTree(fids);
+			Assert.AreEqual(fids.Count(), bucket.GetDepth());
 
 		}
 
@@ -179,24 +180,22 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			// This function verifies that the depth hasn't been changed when identical stacks are added to the tree.
 
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-			IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(10, 200, 50);
-			IStackInfo stackInfoIn = new MockStackInfo(functionIds);
+			var fids = GenerateStackSnapshot(10, 200, 50);
 
 			// Use the exact same stack information to update tree multiple times.
 			// This should result in the tree's depth not changing after the first call.
 			for (int i = 0; i < numCalls; i++)
 			{
-				bucket.UpdateTree(stackInfoIn, 0);
+				bucket.UpdateTree(fids);
 			}
 
-			Assert.AreEqual(functionIds.Count(), bucket.GetDepth());
+			Assert.AreEqual(fids.Count(), bucket.GetDepth());
 		}
 
 		private void verify_CallCount_after_multiple_calls_to_UpdateTree(int numCalls, int numFunctionIds)
 		{
 			ThreadProfilingBucket bucket = new ThreadProfilingBucket(new MockThreadProfilingService());
-			IntPtr[] functionIds = MockStackInfo.GenerateStackSnapshot(10, 200, 50);
-			IStackInfo stackInfoIn = new MockStackInfo(functionIds);
+			var fids = GenerateStackSnapshot(10, 200, 50);
 			
 			// Use the exact same stack information to update tree multiple times.
 			// This should result in each function's call count being equal to the number
@@ -205,8 +204,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			{
 				// Don't normally reuse a StackInfo but if we do then we need to reset the CurrentIndex
 				// since it is decremented by UpdateTree. Good candidate for a refactor.
-				stackInfoIn.CurrentIndex = numFunctionIds - 1;
-				bucket.UpdateTree(stackInfoIn, 0);
+				bucket.UpdateTree(fids.Take(numFunctionIds - 1).ToArray());
 			}
 
 			verify_all_function_CallCounts_match_a_value(bucket, numCalls);

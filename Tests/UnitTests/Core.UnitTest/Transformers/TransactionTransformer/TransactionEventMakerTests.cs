@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 				() => Assert.AreEqual("Transaction", transactionEvent.IntrinsicAttributes["type"]),
 				() => Assert.AreEqual(2, transactionEvent.AgentAttributes.Count),
 				() => Assert.AreEqual("status", transactionEvent.AgentAttributes["response.status"]),
-				() => Assert.AreEqual("http://foo.com", transactionEvent.AgentAttributes["request_uri"]),
+				() => Assert.AreEqual("http://foo.com", transactionEvent.AgentAttributes["request.uri"]),
 				() => Assert.AreEqual(2, transactionEvent.UserAttributes.Count),
 				() => Assert.AreEqual("bar", transactionEvent.UserAttributes["foo"]),
 				() => Assert.AreEqual("baz", transactionEvent.UserAttributes["fiz"])
@@ -93,6 +93,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var userErrorAttributes = new ConcurrentDictionary<String, Object>();
 			userErrorAttributes.Add("CustomErrorAttrKey", "CustomErrorAttrValue");
 
+			float priority = 0.5f;
 			var metadata = new ImmutableTransactionMetadata("uri", "originalUri", "referrerUri",
 			new TimeSpan(1), new ConcurrentDictionary<String, String>(),
 			new ConcurrentDictionary<String, Object>(),
@@ -102,7 +103,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			"crossApplicationPathHash",
 			new List<String>(), "crossApplicationReferrerTransactionGuid",
 			"crossApplicationReferrerProcessId", "crossApplicationReferrerTripId", "syntheticsResourceId",
-			"syntheticsJobId", "syntheticsMonitorId", isSynthetics, hasCatResponseHeaders);
+			"syntheticsJobId", "syntheticsMonitorId", isSynthetics, hasCatResponseHeaders, priority);
 
 			var guid = Guid.NewGuid().ToString();
 

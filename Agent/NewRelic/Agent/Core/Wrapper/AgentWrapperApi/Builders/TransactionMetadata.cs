@@ -56,6 +56,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		long GetCrossApplicationReferrerContentLength();
 
 		bool IsSynthetics { get; }
+
+		float Priority { get; set; }
 	}
 
 	/// <summary>
@@ -116,8 +118,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				.Except(new[] { _latestCrossApplicationPathHash })
 				.Take(PathHashMaker.AlternatePathHashMaxSize);
 
-			return new ImmutableTransactionMetadata(_uri, _originalUri, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders);
+			return new ImmutableTransactionMetadata(_uri, _originalUri, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders, Priority);
 		}
+
+		public float Priority { get; set; }
 
 		public bool IsSynthetics
 		{
