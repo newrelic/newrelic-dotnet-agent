@@ -50,6 +50,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public int UniqueId { get; }
 		public int? ParentUniqueId { get; }
 
+		public bool IsLeaf { get; set; }
+
 		[NotNull]
 		protected readonly MethodCallData _methodCallData;
 		public MethodCallData MethodCallData => _methodCallData;
@@ -141,6 +143,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_methodCallData = methodCallData;
 			Data = segmentData;
 			Combinable = combinable;
+			IsLeaf = false;
 		}
 
 		protected Segment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<String, Object>> parameters)
@@ -154,6 +157,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_methodCallData = segment.MethodCallData;
 			_parameters = parameters;
 			Combinable = segment.Combinable;
+			IsLeaf = false;
 			if (duration.HasValue)
 			{
 				RelativeEndTime = relativeStartTime.Add(duration.Value);

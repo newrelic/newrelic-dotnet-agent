@@ -100,9 +100,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			var trace1 = Mock.Create<TransactionTraceWireModel>();
 			var trace2 = Mock.Create<TransactionTraceWireModel>();
-			Mock.Arrange(() => _transactionCollector1.GetAndClearCollectedSamples()).Returns(new[] {
+			Mock.Arrange(() => _transactionCollector1.GetCollectedSamples()).Returns(new[] {
 				new TransactionTraceWireModelComponents(new TransactionMetricName(), new TimeSpan(), false, () => trace1) });
-			Mock.Arrange(() => _transactionCollector2.GetAndClearCollectedSamples()).Returns(new[] {
+			Mock.Arrange(() => _transactionCollector2.GetCollectedSamples()).Returns(new[] {
 				new TransactionTraceWireModelComponents(new TransactionMetricName(), new TimeSpan(), false, () => trace2) });
 
 			_harvestAction();
@@ -115,10 +115,40 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
+		public void RetainTransactionTraces_IfServerErrorException()
+		{
+			var transactionCollector = new SlowestTransactionCollector();
+			var transactionCollectors = new[] { transactionCollector };
+
+			var scheduler = Mock.Create<IScheduler>();
+			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
+			_transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, scheduler, _processStatic, transactionCollectors);
+
+			var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
+				.Returns<IEnumerable<TransactionTraceWireModel>>(traces =>
+				{
+					sentTraces = traces;
+					return DataTransportResponseStatus.ServerError;
+				});
+
+			var trace = new TransactionTraceWireModelComponents(new TransactionMetricName(), TimeSpan.FromSeconds(5), false, () => Mock.Create<TransactionTraceWireModel>());
+
+			_transactionTraceAggregator.Collect(trace);
+
+			_harvestAction();
+			sentTraces = Enumerable.Empty<TransactionTraceWireModel>(); //reset
+			_harvestAction();
+
+			Assert.AreEqual(1, sentTraces.Count());
+		}
+
+		[Test]
 		public void PreCleanShutdownEvent_TriggersHarvest()
 		{
 			var trace = Mock.Create<TransactionTraceWireModel>();
-			Mock.Arrange(() => _transactionCollector1.GetAndClearCollectedSamples()).Returns(new[] {
+			Mock.Arrange(() => _transactionCollector1.GetCollectedSamples()).Returns(new[] {
 				new TransactionTraceWireModelComponents(new TransactionMetricName(), new TimeSpan(), false, () => trace) });
 
 			EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());

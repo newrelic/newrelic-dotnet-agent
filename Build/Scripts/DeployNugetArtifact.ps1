@@ -55,6 +55,13 @@ elseif($deployingPackage -eq "NewRelic.Azure.WebSites")
 	$chatMessage = "NuGet package '$packageName' has been updated with agent version $version."
 
 }
+elseif($deployingPackage -eq "NewRelic.Agent")
+{
+	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\NugetAgent\NewRelic.Agent.*.nupkg -Name
+	$packagePath = Convert-Path $rootDirectory\Build\BuildArtifacts\NugetAgent\$packageName
+	$version = $packageName.TrimStart('NewRelic.Agent').TrimStart('.').TrimEnd('.nupkg')
+	$chatMessage = "NuGet package '$packageName' has been updated with agent version $version."
+}
 elseif($deployingPackage -eq "NewRelic.Agent.Api")
 {
 	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\NugetAgentApi\NewRelic.Agent.Api.*.nupkg -Name

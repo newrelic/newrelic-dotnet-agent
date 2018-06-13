@@ -263,9 +263,23 @@ namespace NewRelic.Reflection
 			return dynamicMethod;
 		}
 
-#endregion
+		#endregion
 
-#region Property Access
+		#region Property Access
+
+		[NotNull]
+		public Func<object, TResult> GeneratePropertyAccessor<TResult>([NotNull]Type ownerType, [NotNull] String propertyName)
+		{
+			if (ownerType == null)
+				throw new ArgumentNullException("ownerType");
+			if (propertyName == null)
+				throw new ArgumentNullException("propertyName");
+
+			var resultType = typeof(TResult);
+
+			var propertyGetter = GeneratePropertyAccessorInternal(ownerType, resultType, propertyName);
+			return owner => (TResult)propertyGetter(owner);
+		}
 
 		[NotNull]
 		public Func<TOwner, TResult> GeneratePropertyAccessor<TOwner, TResult>([NotNull] String propertyName)

@@ -22,9 +22,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			var method = methodInfo.Method;
 			if (method.MatchesAny(assemblyName: "System.Net.Http", typeName: InstrumentedTypeName, methodName: "SendAsync"))
 			{
-				return NewRelic.Providers.Wrapper.WrapperUtilities.WrapperUtils.LegacyAspPipelineIsPresent()
-					? new CanWrapResponse(false, NewRelic.Providers.Wrapper.WrapperUtilities.WrapperUtils.LegacyAspPipelineNotSupportedMessage("System.Net.Http", "System.Net.Http.HttpClient", method.MethodName))
-					: new CanWrapResponse(true);
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("System.Net.Http", "System.Net.Http.HttpClient", method.MethodName);
 			}
 			else
 			{

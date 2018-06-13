@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using ArtifactBuilder.Artifacts;
 
@@ -39,6 +40,7 @@ namespace ArtifactBuilder
 		public string SourcePath { get; }
 		public List<string> ExtensionDirectoryComponents { get; set; }
 		public List<string> NetstandardExtensionDirectoryComponents { get; set; }
+		public List<string> Net46ExtensionDirectoryComponents { get; set; }
 		public List<string> WrapperXmlFiles { get; set; }
 		public List<string> RootInstallDirectoryComponents { get; set; }
 		public string AgentApiDll;
@@ -46,6 +48,27 @@ namespace ArtifactBuilder
 		public string ExtensionXsd;
 		public string NewRelicXsd;
 		public string NewRelicConfig;
+
+		private List<string> AllComponents
+		{
+			get
+			{
+				var list = RootInstallDirectoryComponents
+					.Concat(ExtensionDirectoryComponents)
+					.Concat(Net46ExtensionDirectoryComponents)
+					.Concat(NetstandardExtensionDirectoryComponents)
+					.Concat(WrapperXmlFiles)
+					.Append(ExtensionXsd)
+					.Append(AgentApiDll);
+
+				if (!string.IsNullOrEmpty(LinuxProfiler))
+				{
+					list = list.Append(LinuxProfiler);
+				}
+
+				return list.ToList();
+			}
+		}
 		
 		public string Version
 		{
@@ -62,6 +85,8 @@ namespace ArtifactBuilder
 			}
 		}
 
+		protected abstract string SourceHomeBuilderPath { get; }
+		protected abstract List<string> IgnoredHomeBuilderFiles { get; }
 		protected abstract void CreateAgentComponents();
 
 		public void CopyComponents(string destinationDirectory)
@@ -69,33 +94,25 @@ namespace ArtifactBuilder
 			FileHelpers.CopyFile(RootInstallDirectoryComponents, destinationDirectory);
 			FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions");
 			FileHelpers.CopyFile(NetstandardExtensionDirectoryComponents, $@"{destinationDirectory}\extensions\netstandard2.0");
+			FileHelpers.CopyFile(Net46ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions\net46");
 			FileHelpers.CopyFile(WrapperXmlFiles, $@"{destinationDirectory}\extensions");
 		}
 
 		public void ValidateComponents()
 		{
-			var missingComponents = GetMissingComponents();
+			CheckForMissingComponents();
+			CheckForXmlFilesThatAreNotUtf8();
+			CheckForMissingFilesInHomeBuilderDirectory();
+		}
 
-			if (missingComponents.Count > 0)
+		private void LogAndThrow(string msg, IList<string> files)
+		{
+			if (files.Count > 0)
 			{
 				var sb = new System.Text.StringBuilder();
-				sb.AppendLine($@"Missing components - make sure you have built the agent for {Platform}-{Configuration}");
+				sb.AppendLine(msg);
 				sb.AppendLine();
-				foreach (var item in missingComponents)
-				{
-					sb.AppendLine(item);
-				}
-				throw new PackagingException(sb.ToString());
-			}
-
-			var xmlFilesNotUtf8 = GetXmlFilesThatAreNotUtf8();
-
-			if (xmlFilesNotUtf8.Count > 0)
-			{
-				var sb = new System.Text.StringBuilder();
-				sb.AppendLine($@"xml/xsd files that ship with the agent must be UTF-8 (no BOM) - the following files are either not UTF-8 or contain a BOM");
-				sb.AppendLine();
-				foreach (var item in xmlFilesNotUtf8)
+				foreach (var item in files)
 				{
 					sb.AppendLine(item);
 				}
@@ -103,38 +120,19 @@ namespace ArtifactBuilder
 			}
 		}
 
-		private List<string> GetMissingComponents()
+		private void CheckForMissingComponents()
 		{
 			var missingComponents = new List<string>();
 
-			foreach (var item in RootInstallDirectoryComponents)
+			foreach (var item in AllComponents)
 			{
 				if (!File.Exists(item)) missingComponents.Add(item);
 			}
 
-			foreach (var item in ExtensionDirectoryComponents)
-			{
-				if (!File.Exists(item)) missingComponents.Add(item);
-			}
-
-			foreach (var item in NetstandardExtensionDirectoryComponents)
-			{
-				if (!File.Exists(item)) missingComponents.Add(item);
-			}
-
-			foreach (var item in WrapperXmlFiles)
-			{
-				if (!File.Exists(item)) missingComponents.Add(item);
-			}
-
-			if (!File.Exists(AgentApiDll)) missingComponents.Add(AgentApiDll);
-			if (!File.Exists(ExtensionXsd)) missingComponents.Add(ExtensionXsd);
-			if (!string.IsNullOrEmpty(LinuxProfiler) && !File.Exists(LinuxProfiler)) missingComponents.Add(LinuxProfiler);
-
-			return missingComponents;
+			LogAndThrow($@"Missing components - make sure you have built the agent for {Platform}-{Configuration}", missingComponents);
 		}
 
-		private List<string> GetXmlFilesThatAreNotUtf8()
+		private void CheckForXmlFilesThatAreNotUtf8()
 		{
 			var utf8NoBom = new UTF8Encoding(false);
 
@@ -157,7 +155,24 @@ namespace ArtifactBuilder
 				}
 			}
 
-			return nonUtf8Files;
+			LogAndThrow("xml/xsd files that ship with the agent must be UTF-8 (no BOM) - the following files are either not UTF-8 or contain a BOM", nonUtf8Files);
+		}
+
+		private void CheckForMissingFilesInHomeBuilderDirectory()
+		{
+			var missingComponents = new List<string>();
+			var homeBuilderFiles = Directory.EnumerateFiles(SourceHomeBuilderPath, "*.*", SearchOption.AllDirectories);
+			homeBuilderFiles = homeBuilderFiles.Where(x => !x.Contains(@"\Logs\"));
+
+			foreach (var file in homeBuilderFiles)
+			{
+				if (!AllComponents.Contains(file) && !IgnoredHomeBuilderFiles.Contains(file))
+				{
+					missingComponents.Add(file);
+				}
+			}
+
+			LogAndThrow("Additional Files in Home Builder directory that are missing", missingComponents);
 		}
 	}
 }

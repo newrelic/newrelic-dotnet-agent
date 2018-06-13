@@ -8,6 +8,9 @@ if([string]::IsNullOrWhiteSpace($env:TestServers)){
 # take existing var and reassign to a better name while keeping jenkins unchanged.
 $testServer = $env:TestServers
 
+# get value of old server for CAT tests
+$oldServerForCAT = $env:OldServerForCAT
+
 # Prep key variables for later use
 . .\windows\agent\powershell\agentInstallActions.ps1
 $install = Get-ChildItem $env:WORKSPACE\Agent\_build\x86-Release\Installer\NewRelicAgent_x86_*.msi -Name
@@ -19,6 +22,7 @@ $appConfigPath = "$env:WORKSPACE\FunctionalTests\bin\Release\FunctionalTests.dll
 [Xml]$appConfig = Get-Content $appConfigPath
 $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='Environment']").Value = "Remote"
 $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='RemoteServers']").Value = $testServer
+$appConfig.SelectSingleNode("/configuration/appSettings/add[@key='OldServerForCAT']").Value = $oldServerForCAT
 $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='AgentVersion']").Value = $version
 $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='TestApplicationsPath']").Value = "C:\TestApplications"
 $appConfig.SelectSingleNode("/configuration/system.serviceModel/client/endpoint/@address").Value = "http://$($testServer)/DotNet-Functional-4_5-WCF-IIS-Hosted/DotNetFunctionalWcfIisHosted.svc"

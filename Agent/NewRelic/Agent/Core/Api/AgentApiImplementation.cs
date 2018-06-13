@@ -613,5 +613,14 @@ namespace NewRelic.Agent.Core.Api
 			return _agentWrapperApi.CurrentTransaction.GetResponseMetadata();
 		}
 
+		public void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<String, String>> header)
+		{
+			_agentWrapperApi.CurrentTransaction.AcceptDistributedTracePayload(header);
+		}
+
+		public IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload()
+		{
+			return _agentWrapperApi.CurrentTransaction.CreateDistributedTracePayload();
+		}
 	}
 }

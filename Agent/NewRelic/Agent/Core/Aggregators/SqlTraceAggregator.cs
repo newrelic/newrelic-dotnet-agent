@@ -69,7 +69,9 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			switch (responseStatus)
 			{
-				case DataTransportResponseStatus.ServiceUnavailableError:
+				case DataTransportResponseStatus.CommunicationError:
+				case DataTransportResponseStatus.RequestTimeout:
+				case DataTransportResponseStatus.ServerError:
 				case DataTransportResponseStatus.ConnectionError:
 					Retain(traces);
 					break;

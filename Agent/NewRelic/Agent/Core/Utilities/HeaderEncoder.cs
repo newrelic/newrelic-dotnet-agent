@@ -1,7 +1,9 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utils;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilities
@@ -49,6 +51,30 @@ namespace NewRelic.Agent.Core.Utilities
 			try
 			{
 				return JsonConvert.DeserializeObject<T>(decodedString);
+			}
+			catch
+			{
+				Log.Debug($"Could not deserialize JSON into {typeof(T).FullName}.");
+				return null;
+			}
+		}
+
+		// TODO: put this in dtheaderhandler? parameterize existing trydecodeanddeserialize to work for cat or dt? leave as separate method?
+		public static T TryDecodeAndDeserializeDistributedTracePayload<T>([CanBeNull] String encodedString, [CanBeNull] String encodingKey) where T : class
+		{
+			if (encodedString == null)
+				return null;
+
+			var decodedString = Strings.TryBase64Decode(encodedString, encodingKey);
+			if (decodedString == null)
+			{
+				Log.Debug("Could not decode encoded string.");
+				return null;
+			}
+
+			try
+			{
+				return JsonConvert.DeserializeObject<T>(decodedString, new DistributedTracePayloadJsonConverter());
 			}
 			catch
 			{

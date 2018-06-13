@@ -3,16 +3,16 @@
 namespace NewRelic.Providers.Storage.OperationContext
 {
 	/// <summary>
-	/// ITransactionContext implementation for version 3 of WCF.
+	/// WCF 3 context backed by OperationContext.
 	/// </summary>
-	public class OperationContext<T> : IContextStorage<T>
+	public class OperationContextStorage<T> : IContextStorage<T>
 	{
 		private readonly string _key;
 
 		/// <summary>
 		/// 
 		/// </summary>
-		public OperationContext(string key)
+		public OperationContextStorage(string key)
 		{
 			_key = key;
 		}

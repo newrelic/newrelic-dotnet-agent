@@ -19,6 +19,11 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		bool IsValid { get; }
 
 		/// <summary>
+		/// The parent segment from the segment call stack.
+		/// </summary>
+		ISegment ParentSegment { get; }
+
+		/// <summary>
 		/// End this transaction.
 		/// </summary>
 		void End();
@@ -30,7 +35,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="commandText">The text representation of the operation being performed.  Not required, though when provided it's used for generating traces.</param>
 		/// <exception cref="System.ArgumentNullException">Is thrown if <paramref name="operation"/> is null.</exception>
 		/// <returns>An opaque object that will be needed when you want to end the segment.</returns>
-		ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo = null, [CanBeNull] String commandText = null);
+		ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo = null, [CanBeNull] String commandText = null, bool isLeaf = false);
 
 		/// <summary>
 		/// Creates a segment for an external request operation.
@@ -97,6 +102,19 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <returns>Collection of key value pairs representing the response metadata</returns>
 		IEnumerable<KeyValuePair<String, String>> GetResponseMetadata();
 
+		/// <summary>
+		/// Processes incoming distributed trace request.
+		/// </summary>
+		/// <param name="payload">Collection of key value pairs representing the incoming request.</param>
+		void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<String, String>> payload);
+
+		/// <summary>
+		/// Returns metadata that the agent wants to be attached to outbound distributed tracing requests.
+		/// </summary>
+		/// <returns>Collection of key value pairs representing an outgoing request.</returns>
+		[NotNull]
+		IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload();
+		
 		/// <summary>
 		/// Tell the agent about an error that just occurred in the instrumented application.  If there is a transaction running the transaction will be flagged as an error transaction.
 		/// </summary>

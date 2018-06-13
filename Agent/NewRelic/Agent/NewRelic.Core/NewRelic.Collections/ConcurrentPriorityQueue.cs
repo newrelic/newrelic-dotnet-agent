@@ -77,7 +77,6 @@ namespace NewRelic.Collections
 			return duplicate.GetEnumerator();
 		}
 
-		//TODO: Amortize the pruning... E.g. allow the set to grow beyond Size by nnn nodes and then prune...
 		private void RemoveItemsFromBottomOfSortedSet()
 		{
 			if (Size == 0)

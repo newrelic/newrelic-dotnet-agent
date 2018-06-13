@@ -38,16 +38,8 @@ namespace NewRelic.Agent.Core.Wrapper
 				.Where(wrapper => wrapper != null)
 				.Where(wrapper => !(wrapper is IDefaultWrapper) && !(wrapper is INoOpWrapper));
 
-			var defaultWrappers = new List<IDefaultWrapper> {defaultWrapper};
+			var defaultWrappers = new List<IDefaultWrapper> {defaultWrapper, new DefaultWrapperAsync()};
 
-			var otherDefaultWrappers = wrappers
-				.OfType<IDefaultWrapper>()
-				.Where(wrapper => !(wrapper is DefaultWrapper));
-
-			foreach (var wrapper in otherDefaultWrappers)
-			{
-				defaultWrappers.Add(wrapper);
-			}
 			_defaultWrappers = defaultWrappers;
 
 			_noOpTrackedWrapper = new TrackedWrapper(noOpWrapper);

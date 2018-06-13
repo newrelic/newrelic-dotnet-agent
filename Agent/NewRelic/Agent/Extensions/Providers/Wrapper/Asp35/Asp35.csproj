@@ -35,7 +35,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Core\Core.csproj" />
     <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>

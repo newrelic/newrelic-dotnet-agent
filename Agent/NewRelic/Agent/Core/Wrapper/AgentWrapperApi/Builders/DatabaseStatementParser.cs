@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Data;
 using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Collections;
 using NewRelic.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Threading;
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 					return SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql);
 				default:
 					var sqlToStatement = GetOrCreateSqlCache(datastoreVendor);
-					var cachedStatement = sqlToStatement.GetOrSetValue(sql, () => SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql));
+					var cachedStatement = sqlToStatement.GetOrAdd(sql, key => SqlParser.GetParsedDatabaseStatement(datastoreVendor, commandType, sql));
 					return cachedStatement;
 			}
 		}

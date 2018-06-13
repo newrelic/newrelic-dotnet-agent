@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using JetBrains.Annotations;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -25,11 +27,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		private DateTime _lastMetricSendTime;
 
-		public DataTransportService([NotNull] IConnectionManager connectionManager, [NotNull] IDateTimeStatic dateTimeStatic)
+		private readonly IAgentHealthReporter _agentHealthReporter;
+
+		public DataTransportService([NotNull] IConnectionManager connectionManager, [NotNull] IDateTimeStatic dateTimeStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
 		{
 			_connectionManager = connectionManager;
 			_dateTimeStatic = dateTimeStatic;
 			_lastMetricSendTime = _dateTimeStatic.UtcNow;
+			_agentHealthReporter = agentHealthReporter;
 		}
 
 		#region Public API
@@ -124,6 +129,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		private DataTransportResponse<T> TrySendDataRequest<T>([NotNull] String method, [NotNull] params Object[] data)
 		{
+			var startTime = DateTime.UtcNow;
 			try
 			{
 				var returnValue = _connectionManager.SendDataRequest<T>(method, data);
@@ -143,19 +149,35 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 			catch (ConnectionException ex)
 			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.ConnectionError);
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.ConnectionError, method, startTime);
 			}
 			catch (PostTooBigException ex)
 			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.PostTooBigError);
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.PostTooBigError, method, startTime);
 			}
-			catch (ServiceUnavailableException ex)
+			catch (PostTooLargeException ex)
 			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.ServiceUnavailableError);
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.PostTooBigError, method, startTime, ex.StatusCode);
+			}
+			catch (RequestTimeoutException ex)
+			{
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.RequestTimeout, method, startTime, ex.StatusCode);
+			}
+			catch (ServerErrorException ex)
+			{
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.ServerError, method, startTime, ex.StatusCode);
+			}
+			catch (SocketException ex)
+			{
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.CommunicationError, method, startTime);
+			}
+			catch (WebException ex)
+			{
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.CommunicationError, method, startTime);
 			}
 			catch (Exception ex)
 			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.OtherError);
+				return GetErrorResponse<T>(ex, DataTransportResponseStatus.OtherError, method, startTime);
 			}
 		}
 
@@ -172,8 +194,10 @@ namespace NewRelic.Agent.Core.DataTransport
 			return new DataTransportResponse<T>(DataTransportResponseStatus.OtherError);
 		}
 
-		private static DataTransportResponse<T> GetErrorResponse<T>([NotNull] Exception exception, DataTransportResponseStatus errorStatus)
+		private DataTransportResponse<T> GetErrorResponse<T>([NotNull] Exception exception, DataTransportResponseStatus errorStatus, string method, DateTime startTime, HttpStatusCode? httpStatusCode = null)
 		{
+			var endTime = DateTime.UtcNow;
+			_agentHealthReporter.ReportSupportabilityCollectorErrorException(method, endTime - startTime, httpStatusCode);
 			Log.Error(exception);
 			return new DataTransportResponse<T>(errorStatus);
 		}

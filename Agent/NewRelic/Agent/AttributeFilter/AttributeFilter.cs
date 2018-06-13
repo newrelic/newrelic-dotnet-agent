@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Trie;
-using NewRelic.Collections;
 
 namespace NewRelic.Agent
 {
@@ -21,7 +21,7 @@ namespace NewRelic.Agent
 		private readonly Settings _settings;
 
 		[NotNull]
-		private readonly IDictionary<String, Boolean> _cachedClusions = new ConcurrentDictionary<String, Boolean>();
+		private readonly ConcurrentDictionary<string, bool> _cachedClusions = new ConcurrentDictionary<string, bool>();
 
 		public AttributeFilter([NotNull] Settings settings)
 		{

@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core
 		[Test]
 		public static void TestGenericHttpError()
 		{
-			Exception ex = ExceptionFactories.NewException(HttpStatusCode.HttpVersionNotSupported, "Dude");
+			Exception ex = ExceptionFactories.NewException(HttpStatusCode.BadRequest, "Dude");
 			Assert.That(ex is HttpException);
 		}
 

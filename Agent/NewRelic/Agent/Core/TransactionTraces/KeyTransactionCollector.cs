@@ -36,12 +36,16 @@ namespace NewRelic.Agent.Core.TransactionTraces
 			_score = score;
 		}
 
-		public IEnumerable<TransactionTraceWireModelComponents> GetAndClearCollectedSamples()
+		public IEnumerable<TransactionTraceWireModelComponents> GetCollectedSamples()
 		{
 			var slowTransaction = _slowTransaction;
-			_slowTransaction = null;
 			return slowTransaction == null ? Enumerable.Empty<TransactionTraceWireModelComponents>() :
 				new TransactionTraceWireModelComponents[] { slowTransaction };
+		}
+
+		public void ClearCollectedSamples()
+		{
+			_slowTransaction = null;
 		}
 
 		public void Dispose()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
@@ -84,7 +85,13 @@ namespace NewRelic.Agent.Core.DataTransport
 		[Test]
 		[TestCase("ForceRestartException")]
 		[TestCase("ConnectionException")]
-		[TestCase("ServiceUnavailableException")]
+		[TestCase("RuntimeException")]
+		[TestCase("UnknownRPMException")]
+		[TestCase("ServerErrorException")]
+		[TestCase("PostTooLargeException")]
+		[TestCase("SerializationException")]
+		[TestCase("RequestTimeoutException")]
+		[TestCase("HttpException")]
 		[TestCase("SocketException")]
 		[TestCase("IOException")]
 		public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs([NotNull] string execeptionType)
@@ -98,8 +105,26 @@ namespace NewRelic.Agent.Core.DataTransport
 				case "ConnectionException":
 					ex = new ConnectionException(null);
 					break;
-				case "ServiceUnavailableException":
-					ex = new ServiceUnavailableException(null);
+				case "RuntimeException":
+					ex = new RuntimeException(null);
+					break;
+				case "UnknownRPMException":
+					ex = new ExceptionFactories.UnknownRPMException(null);
+					break;
+				case "ServerErrorException":
+					ex = new ServerErrorException(null, HttpStatusCode.InternalServerError);
+					break;
+				case "PostTooLargeException":
+					ex = new PostTooLargeException(null);
+					break;
+				case "SerializationException":
+					ex = new SerializationException(null);
+					break;
+				case "RequestTimeoutException":
+					ex = new RequestTimeoutException(null);
+					break;
+				case "HttpException":
+					ex = new HttpException(HttpStatusCode.MethodNotAllowed, null);
 					break;
 				case "SocketException":
 					ex = new SocketException();
@@ -153,7 +178,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
 			Mock.Arrange(() => _connectionHandler.Connect())
-				.Throws(new ServiceUnavailableException(null));
+				.Throws(new ServerErrorException(null, HttpStatusCode.InternalServerError));
 
 			Action scheduledAction = null;
 			var scheduledTime = new TimeSpan();

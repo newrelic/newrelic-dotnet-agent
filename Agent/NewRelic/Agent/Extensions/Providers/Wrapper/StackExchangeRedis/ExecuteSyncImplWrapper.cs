@@ -40,11 +40,11 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 		{
 			var method = methodInfo.Method;
 			var canWrap = method.MatchesAny(
-				assemblyNames: AssemblyNames, 
-				typeNames: new[] { "StackExchange.Redis.ConnectionMultiplexer" }, 
+				assemblyNames: AssemblyNames,
+				typeNames: new[] { "StackExchange.Redis.ConnectionMultiplexer" },
 				methodNames: new[] { "ExecuteSyncImpl" }
 			);
-			
+
 			return new CanWrapResponse(canWrap);
 		}
 
@@ -55,7 +55,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			var message = methodCall.MethodArguments[0];
 			if (message == null)
 				throw new NullReferenceException("message");
-			
+
 			var getCommand = Common.GetMessageCommandAccessor(methodCall.Method.Type.Assembly);
 
 			var command = getCommand(message);
@@ -70,7 +70,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			AssignFullName(instrumentedMethodCall);
 			var connectionOptions = TryGetPropertyName(PropertyConfiguration, instrumentedMethodCall.MethodCall.InvocationTarget);
 			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(DatastoreVendor.Redis, connectionOptions);
-			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(connectionOptions, GetConnectionInfo);
+			var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(connectionOptions, GetConnectionInfo);
 
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 			return Delegates.GetDelegateFor(segment);
@@ -82,7 +82,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			if (propertyName == PropertyConfiguration)
 				return Statics.GetPropertyConfiguration(contextObject);
 
-				throw new Exception("Unexpected instrumented property in wrapper: " + contextObject + "." + propertyName);
+			throw new Exception("Unexpected instrumented property in wrapper: " + contextObject + "." + propertyName);
 		}
 
 		private static String AssignFullName(InstrumentedMethodCall instrumentedMethodCall)

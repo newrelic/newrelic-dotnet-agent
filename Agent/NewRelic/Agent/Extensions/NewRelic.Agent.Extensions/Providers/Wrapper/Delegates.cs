@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
@@ -63,6 +65,33 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 				if (onComplete != null)
 					onComplete();
 			};
+		}
+
+		public static AfterWrappedMethodDelegate GetAsyncDelegateFor(IAgentWrapperApi agentWrapperApi, ISegment segment)
+		{
+			return GetDelegateFor<Task>(
+				onFailure: segment.End,
+				onSuccess: task =>
+				{
+					segment.RemoveSegmentFromCallStack();
+
+					if (task == null)
+					{
+						return;
+					}
+
+					var context = SynchronizationContext.Current;
+					if (context != null)
+					{
+						task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(segment.End), 
+							TaskScheduler.FromCurrentSynchronizationContext());
+					}
+					else
+					{
+						task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(segment.End), 
+							TaskContinuationOptions.ExecuteSynchronously);
+					}
+				});
 		}
 
 		/// <summary>

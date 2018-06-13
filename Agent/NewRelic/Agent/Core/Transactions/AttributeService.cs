@@ -20,8 +20,6 @@ namespace NewRelic.Agent.Core.Transactions
 
 	public class AttributeService : ConfigurationBasedService, IAttributeService
 	{
-		private const int CUSTOM_ATTRIBUTE_CLAMP = 64;
-
 		public const string AgentAttributesKey = "agentAttributes";
 		public const string UserAttributesKey = "userAttributes";
 		public const string IntrinsicsKey = "intrinsics";
@@ -45,7 +43,7 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 
 			var filteredUserAttrs = attributes.GetUserAttributes()
-				.Take(CUSTOM_ATTRIBUTE_CLAMP)
+				.Take(Attributes.UserAttributeClamp)
 				.FilterAttributes(_attributeFilter, attributeDestination);
 
 			foreach(var userAttr in filteredUserAttrs)

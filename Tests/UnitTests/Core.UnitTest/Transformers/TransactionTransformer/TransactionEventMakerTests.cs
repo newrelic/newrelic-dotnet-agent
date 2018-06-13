@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -7,7 +8,6 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Collections;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		public void GetTransactionEvent_ReturnsCorrectAttributes()
 		{
 			// ARRANGE
-			var immutableTransaction = BuildTestTransaction(true);
+			var immutableTransaction = BuildTestTransaction(false);
 			var attributes = new Attributes();
 			attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.Transaction));
 			attributes.Add(Attribute.BuildResponseStatusAttribute("status"));
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		public void GetTransactionEvent_DoesNotReturnsSyntheticEvent()
 		{
 			// ARRANGE
-			var immutableTransaction = BuildTestTransaction();
+			var immutableTransaction = BuildTestTransaction(false);
 			var attributes = Mock.Create<Attributes>();
 
 			// ACT
@@ -86,24 +86,42 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			Assert.IsFalse(transactionEvent.IsSynthetics());
 		}
 
-		private static ImmutableTransaction BuildTestTransaction(Boolean isSynthetics = false, Boolean hasCatResponseHeaders = false)
+		private static ImmutableTransaction BuildTestTransaction(bool isSynthetics)
 		{
 			var name = new WebTransactionName("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
-			var userErrorAttributes = new ConcurrentDictionary<String, Object>();
-			userErrorAttributes.Add("CustomErrorAttrKey", "CustomErrorAttrValue");
+			var userErrorAttributes = new ConcurrentDictionary<string, object>();
+			userErrorAttributes.TryAdd("CustomErrorAttrKey", "CustomErrorAttrValue");
 
-			float priority = 0.5f;
-			var metadata = new ImmutableTransactionMetadata("uri", "originalUri", "referrerUri",
-			new TimeSpan(1), new ConcurrentDictionary<String, String>(),
-			new ConcurrentDictionary<String, Object>(),
-			userErrorAttributes, 200,
-			201, new List<ErrorData>(),
-			new List<ErrorData>(), "crossApplicationReferrerPathHash",
-			"crossApplicationPathHash",
-			new List<String>(), "crossApplicationReferrerTransactionGuid",
-			"crossApplicationReferrerProcessId", "crossApplicationReferrerTripId", "syntheticsResourceId",
-			"syntheticsJobId", "syntheticsMonitorId", isSynthetics, hasCatResponseHeaders, priority);
+			var priority = 0.5f;
+			var metadata = new ImmutableTransactionMetadata(
+				"uri",
+				"originalUri",
+				"referrerUri",
+				new TimeSpan(1),
+				new ConcurrentDictionary<string, string>(),
+				new ConcurrentDictionary<string, object>(),
+				userErrorAttributes,
+				200,
+				201,
+				new List<ErrorData>(),
+				new List<ErrorData>(),
+				"crossApplicationReferrerPathHash",
+				"crossApplicationPathHash",
+				new List<string>(),
+				"crossApplicationReferrerTransactionGuid",
+				"crossApplicationReferrerProcessId",
+				"crossApplicationReferrerTripId",
+				"distributedTraceParentType",
+				"distributedTraceParentId",
+				"distributedTraceTraceId",
+				false,  // DistributedTraceSampled
+				"syntheticsResourceId",
+				"syntheticsJobId",
+				"syntheticsMonitorId",
+				isSynthetics,
+				false,
+				priority);
 
 			var guid = Guid.NewGuid().ToString();
 

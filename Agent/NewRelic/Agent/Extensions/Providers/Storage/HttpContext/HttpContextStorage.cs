@@ -5,16 +5,17 @@ using NewRelic.Agent.Extensions.Providers;
 namespace NewRelic.Providers.Storage.HttpContext
 {
 	/// <summary>
-	/// ASP.NET transaction context backed by HttpContext.  Will correctly follow web requests across threads and deal with mid-thread interuption.
+	/// ASP.NET transaction context backed by HttpContext.  Will correctly follow web requests 
+	/// across threads and deal with mid-thread interuption.
 	/// </summary>
-	public class HttpContext<T> : IContextStorage<T>
+	public class HttpContextStorage<T> : IContextStorage<T>
 	{
 		private readonly String _key;
 
 		/// <summary>
 		/// Dude.
 		/// </summary>
-		public HttpContext(String key)
+		public HttpContextStorage(String key)
 		{
 			_key = key;
 		}

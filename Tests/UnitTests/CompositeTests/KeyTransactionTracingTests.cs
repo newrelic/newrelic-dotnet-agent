@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 
 namespace CompositeTests
 {
-    internal class KeyTransactionTracingTests
+	internal class KeyTransactionTracingTests
     {
 	    [NotNull] private static CompositeTestAgent _compositeTestAgent;
 
@@ -36,7 +29,7 @@ namespace CompositeTests
 	    public void keytransaction_trace_not_created_when_not_configured()
 	    {
 			// ARRANGE
-			var keyTransactions = new ConcurrentDictionary<string, double>
+			var keyTransactions = new Dictionary<string, double>
 			{
 				{ "WebTransaction/Action/other", 0.1 }
 			};
@@ -63,7 +56,7 @@ namespace CompositeTests
 	    public void keytransaction_trace_not_created_when_configured_and_not_above_apdexT()
 	    {
 		    // ARRANGE
-		    var keyTransactions = new ConcurrentDictionary<string, double>
+		    var keyTransactions = new Dictionary<string, double>
 		    {
 			    { "WebTransaction/Action/name", 10.0 }
 		    };
@@ -90,7 +83,7 @@ namespace CompositeTests
 	    public void keytransaction_trace_created_when_configured_and_above_apdexT()
 	    {
 		    // ARRANGE
-		    var keyTransactions = new ConcurrentDictionary<string, double>
+		    var keyTransactions = new Dictionary<string, double>
 		    {
 			    { "WebTransaction/Action/name", 0.00001 }
 		    };
@@ -119,7 +112,7 @@ namespace CompositeTests
 	    public void keytransaction_worst_trace_collected()
 	    {
 		    // ARRANGE
-		    var keyTransactions = new ConcurrentDictionary<string, double>
+		    var keyTransactions = new Dictionary<string, double>
 		    {
 			    { "WebTransaction/Action/name", 0.001 },
 			    { "WebTransaction/Action/name2", 0.0000001 } // will generate a higher "score"

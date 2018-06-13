@@ -13,7 +13,6 @@ using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -56,6 +55,13 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		[NotNull]
 		private ConfigurationAutoResponder _configurationAutoResponder;
+
+		private static readonly DataTransportResponseStatus[] ResponsesThatShouldRetainData =
+		{
+			DataTransportResponseStatus.RequestTimeout,
+			DataTransportResponseStatus.ServerError,
+			DataTransportResponseStatus.CommunicationError
+		};
 
 		[SetUp]
 		public void SetUp()
@@ -352,6 +358,30 @@ namespace NewRelic.Agent.Core.Aggregators
 			EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
 
 			Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()), Occurs.Once());
+		}
+
+		[Test, TestCaseSource(nameof(ResponsesThatShouldRetainData))]
+		public void Metrics_are_retained_after_harvest_if_response_equals_service_unavailable_error(DataTransportResponseStatus responseStatus)
+		{
+			// Arrange
+			IEnumerable<MetricWireModel> unsentMetrics = null;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()))
+				.Returns<IEnumerable<MetricWireModel>>((metrics) =>
+				{
+					unsentMetrics = metrics;
+					return responseStatus;
+				});
+
+			_metricAggregator.Collect(BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
+			_harvestAction();
+			_metricAggregator.Collect(BuildMetric(_metricNameService, "DotNet/metric2", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(3, unsentMetrics.Count()); // include "DotNet/metric1", "DotNet/metric2" and "Supportability/MetricHarvest/transmit" metrics
+			Assert.IsTrue(unsentMetrics.Any(_=> _.MetricName.Name == "DotNet/metric1" && _.Data.Value0 == 1));
+			Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "DotNet/metric2" && _.Data.Value0 == 1));
+			Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "Supportability/MetricHarvest/transmit" && _.Data.Value0 == 2));
 		}
 	}
 }

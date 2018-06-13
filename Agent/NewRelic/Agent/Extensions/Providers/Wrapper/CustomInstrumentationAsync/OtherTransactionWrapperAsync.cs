@@ -27,10 +27,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 				return new CanWrapResponse(false);
 			}
 
-			//LegacyPipeline is only a concern w/ .NET Framework
-			return WrapperUtilities.WrapperUtils.LegacyAspPipelineIsPresent() ?
-					new CanWrapResponse(false, WrapperUtilities.WrapperUtils.LegacyAspPipelineNotSupportedMessage("custom", "custom", instrumentedMethodInfo.Method.MethodName)) :
-					new CanWrapResponse(true);
+			return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("custom", "custom", instrumentedMethodInfo.Method.MethodName);
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)

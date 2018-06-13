@@ -9,38 +9,40 @@ namespace NewRelic.Agent.Core
 
 	public class ExceptionFactories
 	{
-		private readonly static IDictionary<String, IExceptionFactory> rubyClassToType;
-		private readonly static IDictionary<HttpStatusCode, IExceptionFactory> statusCodeToType;
+		private static readonly IDictionary<String, IExceptionFactory> RubyClassToType;
+		private static readonly IDictionary<HttpStatusCode, IExceptionFactory> StatusCodeToType;
+		private static readonly ServerErrorExceptionFactory Status5xxErrorExceptionFactory;
 
 		static ExceptionFactories()
 		{
-			rubyClassToType = new Dictionary<String, IExceptionFactory>();
-			statusCodeToType = new Dictionary<HttpStatusCode, IExceptionFactory>();
+			RubyClassToType = new Dictionary<String, IExceptionFactory>();
+			StatusCodeToType = new Dictionary<HttpStatusCode, IExceptionFactory>();
+			Status5xxErrorExceptionFactory = new ServerErrorExceptionFactory();
 
-			rubyClassToType.Add("NewRelic::Agent::ForceDisconnectException",
+			RubyClassToType.Add("NewRelic::Agent::ForceDisconnectException",
 			                    new ForceDisconnectExceptionFactory());
-			rubyClassToType.Add("NewRelic::Agent::ForceRestartException",
+			RubyClassToType.Add("NewRelic::Agent::ForceRestartException",
 			                    new ForceRestartExceptionFactory());	
-			rubyClassToType.Add("NewRelic::Agent::PostTooBigException",
+			RubyClassToType.Add("NewRelic::Agent::PostTooBigException",
 			                    new PostTooBigExceptionFactory());
-			rubyClassToType.Add("NewRelic::Agent::RuntimeError",
+			RubyClassToType.Add("NewRelic::Agent::RuntimeError",
 								new RuntimeExceptionFactory());
 
-		    rubyClassToType.Add("NewRelic::Agent::LicenseException",
+		    RubyClassToType.Add("NewRelic::Agent::LicenseException",
 		                        new LicenseExceptionFactory());
 
-			rubyClassToType.Add("ForceDisconnectException",
+			RubyClassToType.Add("ForceDisconnectException",
 								new ForceDisconnectExceptionFactory());
-			rubyClassToType.Add("ForceRestartException",
+			RubyClassToType.Add("ForceRestartException",
 								new ForceRestartExceptionFactory());
-			rubyClassToType.Add("PostTooBigException",
+			RubyClassToType.Add("PostTooBigException",
 								new PostTooBigExceptionFactory());
-			rubyClassToType.Add("RuntimeError",
+			RubyClassToType.Add("RuntimeError",
 								new RuntimeExceptionFactory());
 
-			statusCodeToType.Add(HttpStatusCode.UnsupportedMediaType, new SerializationExceptionFactory());
-			statusCodeToType.Add(HttpStatusCode.RequestEntityTooLarge, new PostTooLargeExceptionFactory());
-			statusCodeToType.Add(HttpStatusCode.ServiceUnavailable, new ServiceUnavailableExceptionFactory());
+			StatusCodeToType.Add(HttpStatusCode.RequestTimeout, new RequestTimeoutExceptionFactory());
+			StatusCodeToType.Add(HttpStatusCode.UnsupportedMediaType, new SerializationExceptionFactory());
+			StatusCodeToType.Add(HttpStatusCode.RequestEntityTooLarge, new PostTooLargeExceptionFactory());
 		}
 
 		private ExceptionFactories ()
@@ -51,10 +53,16 @@ namespace NewRelic.Agent.Core
 		public static Exception NewException(HttpStatusCode statusCode, String statusDescription)
 		{
 			IExceptionFactory factory;
-			if (statusCodeToType.TryGetValue(statusCode, out factory))
+			if (StatusCodeToType.TryGetValue(statusCode, out factory))
 			{
 				return factory.CreateException(statusDescription);
 			}
+
+			if (statusCode >= (HttpStatusCode)500 && statusCode < (HttpStatusCode)600)
+			{
+				return Status5xxErrorExceptionFactory.CreateException(statusDescription, statusCode);
+			}
+
 			return new HttpException(statusCode, statusDescription);
 		}
 		
@@ -67,7 +75,7 @@ namespace NewRelic.Agent.Core
 		[NotNull]
 		public static Exception NewException(String type, String message) {
 			IExceptionFactory factory;
-			if (rubyClassToType.TryGetValue(type, out factory))
+			if (RubyClassToType.TryGetValue(type, out factory))
 			{
 				return factory.CreateException(message);
 			}
@@ -98,11 +106,19 @@ namespace NewRelic.Agent.Core
 			}
 		}
 
-		private class ServiceUnavailableExceptionFactory : IExceptionFactory
+		private class RequestTimeoutExceptionFactory : IExceptionFactory
 		{
 			public Exception CreateException(string message)
 			{
-				return new ServiceUnavailableException(message);
+				return new RequestTimeoutException(message);
+			}
+		}
+
+		private class ServerErrorExceptionFactory
+		{
+			public Exception CreateException(string message, HttpStatusCode statusCode)
+			{
+				return new ServerErrorException(message, statusCode);
 			}
 		}
 
@@ -141,7 +157,7 @@ namespace NewRelic.Agent.Core
 				return new PostTooBigException(message);
 			}
 		}
-		
+
 		private interface IExceptionFactory {
 			[NotNull]
 			Exception CreateException(String message);

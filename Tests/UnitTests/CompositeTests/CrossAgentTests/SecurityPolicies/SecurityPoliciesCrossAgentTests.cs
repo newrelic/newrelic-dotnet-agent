@@ -174,7 +174,7 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
 			var securityPoliciesSentToConnectApi = JArray.Parse(_connectRawData)[0]["security_policies"];
 			Assert.NotNull(securityPoliciesSentToConnectApi);
 
-			ValidatePoliciesNotInConnect(testData.ExcludedConnectPolicies.Keys, securityPoliciesSentToConnectApi);
+			ValidatePoliciesNotInConnect(testData.PoliciesToValidateNotSentToConnect, securityPoliciesSentToConnectApi);
 
 			ValidateExpectedConnectPolicies(testData.ExpectedConnectPolicies, securityPoliciesSentToConnectApi);
 		}
@@ -277,8 +277,8 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
 			public SecurityPolicies SecurityPolicies { get; set; }
 			[JsonProperty("expected_connect_policies")]
 			public PolicySettings ExpectedConnectPolicies { get; set; }
-			[JsonProperty("excluded_connect_policies")]
-			public IDictionary<string,object> ExcludedConnectPolicies { get; set; }
+			[JsonProperty("validate_policies_not_in_connect")]
+			public string[] PoliciesToValidateNotSentToConnect { get; set; }
 			[JsonProperty("ending_policy_settings")]
 			public PolicySettings EndingPolicySettings { get; set; }
 			[JsonProperty("should_log")]

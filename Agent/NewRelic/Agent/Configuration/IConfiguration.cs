@@ -9,13 +9,13 @@ namespace NewRelic.Agent.Configuration
 	{
 		[CanBeNull]
 		Object AgentRunId { get; }
-		Boolean AgentEnabled { get; }
+		bool AgentEnabled { get; }
 		String AgentLicenseKey { get; }
 		[NotNull]
 		IEnumerable<String> ApplicationNames { get; }
-		Boolean AutoStartAgent { get; }
+		bool AutoStartAgent { get; }
 		String BrowserMonitoringApplicationId { get; }
-		Boolean BrowserMonitoringAutoInstrument { get; }
+		bool BrowserMonitoringAutoInstrument { get; }
 		String BrowserMonitoringBeaconAddress { get; }
 		String BrowserMonitoringErrorBeaconAddress { get; }
 		String BrowserMonitoringJavaScriptAgent { get; }
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Configuration
 		[NotNull]
 		String BrowserMonitoringJavaScriptAgentLoaderType { get; }
 		String BrowserMonitoringKey { get; }
-		Boolean BrowserMonitoringUseSsl { get; }
+		bool BrowserMonitoringUseSsl { get; }
 
 		string SecurityPoliciesToken { get; }
 		bool SecurityPoliciesTokenExists { get; }
@@ -40,25 +40,25 @@ namespace NewRelic.Agent.Configuration
 		[NotNull]
 		IEnumerable<String> CaptureAttributesDefaultExcludes { get; }
 
-		Boolean CaptureTransactionEventsAttributes { get; }
+		bool CaptureTransactionEventsAttributes { get; }
 		[NotNull]
 		IEnumerable<String> CaptureTransactionEventAttributesIncludes { get; }
 		[NotNull]
 		IEnumerable<String> CaptureTransactionEventAttributesExcludes { get; }
 
-		Boolean CaptureTransactionTraceAttributes { get; }
+		bool CaptureTransactionTraceAttributes { get; }
 		[NotNull]
 		IEnumerable<String> CaptureTransactionTraceAttributesIncludes { get; }
 		[NotNull]
 		IEnumerable<String> CaptureTransactionTraceAttributesExcludes { get; }
 
-		Boolean CaptureErrorCollectorAttributes { get; }
+		bool CaptureErrorCollectorAttributes { get; }
 		[NotNull]
 		IEnumerable<String> CaptureErrorCollectorAttributesIncludes { get; }
 		[NotNull]
 		IEnumerable<String> CaptureErrorCollectorAttributesExcludes { get; }
 
-		Boolean CaptureBrowserMonitoringAttributes { get; }
+		bool CaptureBrowserMonitoringAttributes { get; }
 		[NotNull]
 		IEnumerable<String> CaptureBrowserMonitoringAttributesIncludes { get; }
 		[NotNull]
@@ -67,35 +67,36 @@ namespace NewRelic.Agent.Configuration
 		bool CaptureCustomParameters { get; }
 		string CaptureCustomParametersSource { get; }
 
-		Boolean CaptureRequestParameters { get; }
+		bool CaptureRequestParameters { get; }
 
 		[NotNull]
 		String CollectorHost { get; }
 		[NotNull]
 		UInt32 CollectorPort { get; }
-		Boolean CollectorSendDataOnExit { get; }
+		bool CollectorSendDataOnExit { get; }
 		Single CollectorSendDataOnExitThreshold { get; }
-		Boolean CollectorSendEnvironmentInfo { get; }
-		Boolean CollectorSyncStartup { get; }
+		bool CollectorSendEnvironmentInfo { get; }
+		bool CollectorSyncStartup { get; }
 		UInt32 CollectorTimeout { get; }
 
-		Boolean CompleteTransactionsOnThread { get; }
+		bool CompleteTransactionsOnThread { get; }
 
 		String CompressedContentEncoding { get; }
 
 		Int64 ConfigurationVersion { get; }
 
 		String CrossApplicationTracingCrossProcessId { get; }
-		Boolean CrossApplicationTracingEnabled { get; }
-		Boolean DatabaseNameReportingEnabled { get; }
-		Boolean ErrorCollectorEnabled { get; }
-		Boolean ErrorCollectorCaptureEvents { get; }
+		bool CrossApplicationTracingEnabled { get; }
+		bool DistributedTracingEnabled { get; }
+		bool DatabaseNameReportingEnabled { get; }
+		bool ErrorCollectorEnabled { get; }
+		bool ErrorCollectorCaptureEvents { get; }
 		UInt32 ErrorCollectorMaxEventSamplesStored { get; }
 		UInt32 ErrorsMaximumPerPeriod { get; }
 		[NotNull]
 		IEnumerable<String> ExceptionsToIgnore { get; }
 		String EncodingKey { get; }
-		Boolean HighSecurityModeEnabled { get; }
+		bool HighSecurityModeEnabled { get; }
 
 		bool CustomInstrumentationEditorEnabled { get; }
 		string CustomInstrumentationEditorEnabledSource { get; }
@@ -103,9 +104,9 @@ namespace NewRelic.Agent.Configuration
 		bool StripExceptionMessages { get; }
 		string StripExceptionMessagesSource { get; }
 
-		Boolean InstanceReportingEnabled { get; }
+		bool InstanceReportingEnabled { get; }
 		Int32 InstrumentationLevel { get; }
-		Boolean InstrumentationLoggingEnabled { get; }
+		bool InstrumentationLoggingEnabled { get; }
 
 		String Labels { get; }
 
@@ -122,11 +123,11 @@ namespace NewRelic.Agent.Configuration
 		[NotNull]
 		String ProxyDomain { get; }
 
-		Boolean PutForDataSend { get; }
+		bool PutForDataSend { get; }
 
-		Boolean SlowSqlEnabled { get; }
+		bool SlowSqlEnabled { get; }
 		TimeSpan SqlExplainPlanThreshold { get; }
-		Boolean SqlExplainPlansEnabled { get; }
+		bool SqlExplainPlansEnabled { get; }
 		Int32 SqlExplainPlansMax { get; }
 		UInt32 SqlStatementsPerTransaction { get; }
 		Int32 SqlTracesPerPeriod { get; }
@@ -140,12 +141,12 @@ namespace NewRelic.Agent.Configuration
 		string CustomEventsEnabledSource { get; }
 
 		UInt32 CustomEventsMaxSamplesStored { get; }
-		Boolean DisableSamplers { get; }
-		Boolean ThreadProfilingEnabled { get; }
-		Boolean TransactionEventsEnabled { get; }
+		bool DisableSamplers { get; }
+		bool ThreadProfilingEnabled { get; }
+		bool TransactionEventsEnabled { get; }
 		UInt32 TransactionEventsMaxSamplesPerMinute { get; }
 		UInt32 TransactionEventsMaxSamplesStored { get; }
-		Boolean TransactionEventsTransactionsEnabled { get; }
+		bool TransactionEventsTransactionsEnabled { get; }
 		[NotNull]
 		IEnumerable<RegexRule> TransactionNameRegexRules { get; }
 		[NotNull]
@@ -153,7 +154,7 @@ namespace NewRelic.Agent.Configuration
 		TimeSpan TransactionTraceApdexF { get; }
 		TimeSpan TransactionTraceApdexT { get; }
 		TimeSpan TransactionTraceThreshold { get; }
-		Boolean TransactionTracerEnabled { get; }
+		bool TransactionTracerEnabled { get; }
 		Int32 TransactionTracerMaxSegments { get; }
 
 		string TransactionTracerRecordSql { get; }
@@ -163,7 +164,7 @@ namespace NewRelic.Agent.Configuration
 		Int32 TransactionTracerMaxStackTraces { get; }
 		[NotNull]
 		IEnumerable<long> TrustedAccountIds { get; }
-		Boolean UsingServerSideConfig { get; }
+		bool UsingServerSideConfig { get; }
 		[NotNull]
 		IEnumerable<RegexRule> UrlRegexRules { get; }
 		[NotNull]

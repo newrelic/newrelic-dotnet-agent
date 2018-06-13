@@ -27,12 +27,15 @@ namespace NewRelic.Agent.Core.TransactionTraces
 			_collectedSamples.Add(transactionTraceWireModelComponents);
 		}
 
-		public IEnumerable<TransactionTraceWireModelComponents> GetAndClearCollectedSamples()
+		public IEnumerable<TransactionTraceWireModelComponents> GetCollectedSamples()
 		{
 			var oldCollectedSamples = _collectedSamples;
-			_collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
-
 			return oldCollectedSamples;
+		}
+
+		public void ClearCollectedSamples()
+		{
+			_collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
 		}
 
 		public void Dispose()

@@ -11,15 +11,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	/// </summary>
 	public interface ITransactionAttributeMetadata
 	{
-
-		[NotNull]
-		IEnumerable<KeyValuePair<string, string>> RequestParameters { get; }
-
-		[NotNull]
-		IEnumerable<KeyValuePair<string, Object>> UserAttributes { get; }
-
-		[NotNull]
-		IEnumerable<KeyValuePair<string, Object>> UserErrorAttributes { get; }
+		KeyValuePair<string, string>[] RequestParameters { get; }
+		KeyValuePair<string, object>[] UserAttributes { get; }
+		KeyValuePair<string, object>[] UserErrorAttributes { get; }
 
 		string Uri { get; }
 		[CanBeNull]

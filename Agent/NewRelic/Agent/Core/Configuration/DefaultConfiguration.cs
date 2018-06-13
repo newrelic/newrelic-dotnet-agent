@@ -117,16 +117,16 @@ namespace NewRelic.Agent.Core.Configuration
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
-		private Boolean TryGetAppSettingAsBooleanWithDefault([NotNull] String key, Boolean defaultValue)
+		private bool TryGetAppSettingAsboolWithDefault([NotNull] String key, bool defaultValue)
 		{
 			var value = _appSettings.GetValueOrDefault(key);
 
-			Boolean parsedBoolean;
-			var parsedSuccessfully = Boolean.TryParse(value, out parsedBoolean);
+			bool parsedBool;
+			var parsedSuccessfully = bool.TryParse(value, out parsedBool);
 			if (!parsedSuccessfully)
 				return defaultValue;
 
-			return parsedBoolean;
+			return parsedBool;
 		}
 
 		private Int32 TryGetAppSettingAsIntWithDefault([NotNull] String key, Int32 defaultValue)
@@ -147,14 +147,14 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public Object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
-		public virtual Boolean AgentEnabled
+		public virtual bool AgentEnabled
 		{
 			get
 			{
 				var agentEnabledAsString = _configurationManagerStatic.GetAppSetting("NewRelic.AgentEnabled");
 
-				Boolean agentEnabled;
-				if (!Boolean.TryParse(agentEnabledAsString, out agentEnabled))
+				bool agentEnabled;
+				if (!bool.TryParse(agentEnabledAsString, out agentEnabled))
 					return _localConfiguration.agentEnabled;
 
 				return agentEnabled;
@@ -209,21 +209,21 @@ namespace NewRelic.Agent.Core.Configuration
 			throw new Exception("An application name must be provided");
 		}
 
-		public Boolean AutoStartAgent { get { return _localConfiguration.service.autoStart; } }
+		public bool AutoStartAgent { get { return _localConfiguration.service.autoStart; } }
 
 		public Int32 WrapperExceptionLimit { get { return TryGetAppSettingAsIntWithDefault("WrapperExceptionLimit", 5); } }
 
 		#region Browser Monitoring
 
 		public virtual String BrowserMonitoringApplicationId { get { return _serverConfiguration.RumSettingsApplicationId ?? String.Empty; } }
-		public virtual Boolean BrowserMonitoringAutoInstrument { get { return _localConfiguration.browserMonitoring.autoInstrument; } }
+		public virtual bool BrowserMonitoringAutoInstrument { get { return _localConfiguration.browserMonitoring.autoInstrument; } }
 		public virtual String BrowserMonitoringBeaconAddress { get { return _serverConfiguration.RumSettingsBeacon ?? String.Empty; } }
 		public virtual String BrowserMonitoringErrorBeaconAddress { get { return _serverConfiguration.RumSettingsErrorBeacon ?? String.Empty; } }
 		public virtual String BrowserMonitoringJavaScriptAgent { get { return _serverConfiguration.RumSettingsJavaScriptAgentLoader ?? String.Empty; } }
 		public virtual String BrowserMonitoringJavaScriptAgentFile { get { return _serverConfiguration.RumSettingsJavaScriptAgentFile ?? String.Empty; } }
 		public virtual String BrowserMonitoringJavaScriptAgentLoaderType { get { return ServerOverrides(_serverConfiguration.RumSettingsBrowserMonitoringLoader, _localConfiguration.browserMonitoring.loader); } }
 		public virtual String BrowserMonitoringKey { get { return _serverConfiguration.RumSettingsBrowserKey ?? String.Empty; } }
-		public virtual Boolean BrowserMonitoringUseSsl { get { return HighSecurityModeOverrides(true, _localConfiguration.browserMonitoring.sslForHttp); } }
+		public virtual bool BrowserMonitoringUseSsl { get { return HighSecurityModeOverrides(true, _localConfiguration.browserMonitoring.sslForHttp); } }
 
 		#endregion
 
@@ -682,7 +682,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return localConfigValue;
 		}
 
-		public virtual Boolean CaptureRequestParameters
+		public virtual bool CaptureRequestParameters
 		{
 			get
 			{
@@ -703,15 +703,15 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public virtual String CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
 		public virtual uint CollectorPort => (uint)(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : DefaultSslPort);
-		public virtual Boolean CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
+		public virtual bool CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
 		public virtual Single CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
-		public virtual Boolean CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
-		public virtual Boolean CollectorSyncStartup { get { return _localConfiguration.service.syncStartup; } }
+		public virtual bool CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
+		public virtual bool CollectorSyncStartup { get { return _localConfiguration.service.syncStartup; } }
 		public virtual UInt32 CollectorTimeout { get { return (_localConfiguration.service.requestTimeout > 0) ? (UInt32)_localConfiguration.service.requestTimeout : CollectorSendDataOnExit ? 2000u : 60 * 2 * 1000; } }
 
 		#endregion
 
-		public virtual Boolean CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread; } }
+		public virtual bool CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread; } }
 
 		public Int64 ConfigurationVersion { get; private set; }
 
@@ -719,10 +719,10 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public virtual String CrossApplicationTracingCrossProcessId { get { return _serverConfiguration.CatId; } }
 
-		private Boolean? _crossApplicationTracingEnabled;
-		public virtual Boolean CrossApplicationTracingEnabled => _crossApplicationTracingEnabled ?? (_crossApplicationTracingEnabled = IsCatEnabled()).Value;
+		private bool? _crossApplicationTracingEnabled;
+		public virtual bool CrossApplicationTracingEnabled => _crossApplicationTracingEnabled ?? (_crossApplicationTracingEnabled = IsCatEnabled()).Value;
 
-		private Boolean IsCatEnabled()
+		private bool IsCatEnabled()
 		{
 			var localenabled = _localConfiguration.crossApplicationTracingEnabled;
 			//If config.crossApplicationTracingEnabled is true or default then we want to check the
@@ -743,11 +743,31 @@ namespace NewRelic.Agent.Core.Configuration
 			return enabled;
 		}
 
-		#endregion
+		#endregion Cross Application Tracing
+
+		#region Distributed Tracing
+
+		private bool? _distributedTracingEnabled;
+		public virtual bool DistributedTracingEnabled => _distributedTracingEnabled ?? (_distributedTracingEnabled = IsDistributedTracingEnabled()).Value;
+
+		private bool IsDistributedTracingEnabled()
+		{
+			var enabled = _localConfiguration.distributedTracing.enabled;
+
+			if (enabled && CrossApplicationTracingCrossProcessId == null)
+			{
+				Log.Warn("Distributed Tracing is enabled but CrossProcessID is null. Disabling Distributed Tracing.");
+				enabled = false;
+			}
+
+			return enabled;
+		}
+
+		#endregion Distributed Tracing
 
 		#region Errors
 
-		public virtual Boolean ErrorCollectorEnabled
+		public virtual bool ErrorCollectorEnabled
 		{
 			get
 			{
@@ -756,7 +776,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual Boolean ErrorCollectorCaptureEvents
+		public virtual bool ErrorCollectorCaptureEvents
 		{
 			get
 			{
@@ -880,7 +900,7 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 
 		public virtual Int32 InstrumentationLevel { get { return ServerOverrides(_serverConfiguration.RpmConfig.InstrumentationLevel, 3); } }
-		public virtual Boolean InstrumentationLoggingEnabled { get { return _localConfiguration.instrumentation.log; } }
+		public virtual bool InstrumentationLoggingEnabled { get { return _localConfiguration.instrumentation.log; } }
 
 		#region Labels
 
@@ -906,7 +926,7 @@ namespace NewRelic.Agent.Core.Configuration
 		#endregion
 
 		#region DataTransmission
-		public Boolean PutForDataSend { get { return _localConfiguration.dataTransmission.putForDataSend; } }
+		public bool PutForDataSend { get { return _localConfiguration.dataTransmission.putForDataSend; } }
 
 		public String CompressedContentEncoding
 		{
@@ -919,15 +939,15 @@ namespace NewRelic.Agent.Core.Configuration
 		#endregion
 
 		#region DatastoreTracer
-		public Boolean InstanceReportingEnabled { get { return _localConfiguration.datastoreTracer.instanceReporting.enabled; } }
+		public bool InstanceReportingEnabled { get { return _localConfiguration.datastoreTracer.instanceReporting.enabled; } }
 
-		public Boolean DatabaseNameReportingEnabled { get { return _localConfiguration.datastoreTracer.databaseNameReporting.enabled; } }
+		public bool DatabaseNameReportingEnabled { get { return _localConfiguration.datastoreTracer.databaseNameReporting.enabled; } }
 
 		#endregion
 
 		#region Sql
 
-		public Boolean SlowSqlEnabled {
+		public bool SlowSqlEnabled {
 			get { return ServerOverrides(_serverConfiguration.RpmConfig.SlowSqlEnabled, _localConfiguration.slowSql.enabled); }
 		}
 
@@ -943,7 +963,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual Boolean SqlExplainPlansEnabled
+		public virtual bool SqlExplainPlansEnabled
 		{
 			get
 			{
@@ -1032,11 +1052,11 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public bool DisableSamplers { get { return _localConfiguration.application.disableSamplers; } }
 
-		public Boolean ThreadProfilingEnabled { get { return _localConfiguration.threadProfilingEnabled; } }
+		public bool ThreadProfilingEnabled { get { return _localConfiguration.threadProfilingEnabled; } }
 
 		#region Transaction Events
 
-		public virtual Boolean TransactionEventsEnabled
+		public virtual bool TransactionEventsEnabled
 		{
 			get
 			{
@@ -1085,7 +1105,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual Boolean TransactionEventsTransactionsEnabled
+		public virtual bool TransactionEventsTransactionsEnabled
 		{
 			get
 			{
@@ -1120,7 +1140,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual Boolean TransactionTracerEnabled
+		public virtual bool TransactionTracerEnabled
 		{
 			get
 			{
@@ -1352,7 +1372,7 @@ namespace NewRelic.Agent.Core.Configuration
 				: TransactionTraceApdexF;
 		}
 
-		private static Boolean ServerCanDisable(Boolean? server, Boolean local)
+		private static bool ServerCanDisable(bool? server, bool local)
 		{
 			if (server == null) return local;
 			return server.Value && local;
@@ -1592,7 +1612,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return disabledProperties;
 		}
 
-		private Boolean DeprecatedCaptureIdentityParameters
+		private bool DeprecatedCaptureIdentityParameters
 		{
 			get
 			{
@@ -1690,20 +1710,20 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion
 
-		private const Boolean DeprecatedCaptureIdentityParametersDefault = true;
-		private const Boolean DeprecatedResponseHeaderParametersEnabledDefault = true;
-		private const Boolean DeprecatedCustomParametersEnabledDefault = true;
-		private const Boolean DeprecatedRequestHeaderParametersEnabledDefault = true;
-		private const Boolean DeprecatedRequestParametersEnabledDefault = false;
+		private const bool DeprecatedCaptureIdentityParametersDefault = true;
+		private const bool DeprecatedResponseHeaderParametersEnabledDefault = true;
+		private const bool DeprecatedCustomParametersEnabledDefault = true;
+		private const bool DeprecatedRequestHeaderParametersEnabledDefault = true;
+		private const bool DeprecatedRequestParametersEnabledDefault = false;
 
-		private const Boolean CaptureTransactionEventsAttributesDefault = true;
-		private const Boolean CaptureTransactionTraceAttributesDefault = true;
-		private const Boolean CaptureErrorCollectorAttributesDefault = true;
-		private const Boolean CaptureBrowserMonitoringAttributesDefault = false;
-		private const Boolean CaptureCustomParametersAttributesDefault = true;
+		private const bool CaptureTransactionEventsAttributesDefault = true;
+		private const bool CaptureTransactionTraceAttributesDefault = true;
+		private const bool CaptureErrorCollectorAttributesDefault = true;
+		private const bool CaptureBrowserMonitoringAttributesDefault = false;
+		private const bool CaptureCustomParametersAttributesDefault = true;
 
-		private const Boolean TransactionEventsEnabledDefault = true;
-		private const Boolean TransactionEventsTransactionsEnabledDefault = true;
+		private const bool TransactionEventsEnabledDefault = true;
+		private const bool TransactionEventsTransactionsEnabledDefault = true;
 		private const UInt32 TransactionEventsMaxSamplesPerMinuteDefault = 10000;
 		private const UInt32 TransactionEventsMaxSamplesStoredDefault = 10000;
 	}

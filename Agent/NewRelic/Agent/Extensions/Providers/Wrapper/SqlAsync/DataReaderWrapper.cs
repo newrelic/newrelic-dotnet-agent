@@ -1,5 +1,4 @@
 ﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.WrapperUtilities;
 
 namespace NewRelic.Providers.Wrapper.SqlAsync
 {
@@ -32,9 +31,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 
 			if (canWrap)
 			{
-				return WrapperUtils.LegacyAspPipelineIsPresent()
-					? new CanWrapResponse(false, WrapperUtils.LegacyAspPipelineNotSupportedMessage("System.Data", "System.Data.SqlClient.SqlDataReader", method.MethodName))
-					: new CanWrapResponse(true);
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("System.Data", "System.Data.SqlClient.SqlDataReader", method.MethodName);
 
 			}
 
@@ -51,7 +48,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "DatabaseResult/Iterate");
 			segment.MakeCombinable();
 
-			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
+			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}
 	}
 }

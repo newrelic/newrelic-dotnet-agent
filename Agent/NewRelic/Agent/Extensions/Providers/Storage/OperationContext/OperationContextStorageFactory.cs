@@ -4,10 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace NewRelic.Providers.Storage.OperationContext
 {
-	/// <summary>
-	/// ITransactionContextFactory implementation for version 3 of WCF.
-	/// </summary>
-	public class OperationContextFactory : IContextStorageFactory
+	public class OperationContextStorageFactory : IContextStorageFactory
 	{
 		public bool IsAsyncStorage => false;
 
@@ -32,7 +29,7 @@ namespace NewRelic.Providers.Storage.OperationContext
 
 		IContextStorage<T> IContextStorageFactory.CreateContext<T>(String key)
 		{
-			return new OperationContext<T>(key);
+			return new OperationContextStorage<T>(key);
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]

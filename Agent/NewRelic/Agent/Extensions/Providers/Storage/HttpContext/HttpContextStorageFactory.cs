@@ -4,10 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace NewRelic.Providers.Storage.HttpContext
 {
-	/// <summary>
-	/// Factory for creating a HttpContext, used for Asp transactions.
-	/// </summary>
-	public class HttpContextFactory : IContextStorageFactory
+	public class HttpContextStorageFactory : IContextStorageFactory
 	{
 		public bool IsAsyncStorage => false;
 
@@ -32,7 +29,7 @@ namespace NewRelic.Providers.Storage.HttpContext
 
 		IContextStorage<T> IContextStorageFactory.CreateContext<T>(String key)
 		{
-			return new HttpContext<T>(key);
+			return new HttpContextStorage<T>(key);
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]

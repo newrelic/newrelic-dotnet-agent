@@ -2,7 +2,6 @@
 using System.Collections;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.Parsing;
 
@@ -43,9 +42,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 
 			if (canWrap)
 			{
-				return WrapperUtils.LegacyAspPipelineIsPresent()
-					? new CanWrapResponse(false, WrapperUtils.LegacyAspPipelineNotSupportedMessage("Couchbase.NetClient", "Couchbase.CouchbaseBucket", methodInfo.Method.MethodName))
-					: new CanWrapResponse(true);
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("Couchbase.NetClient", "Couchbase.CouchbaseBucket", methodInfo.Method.MethodName);
 			}
 
 			return new CanWrapResponse(false);
@@ -77,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 				instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation));
 
-			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
+			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}
 
 	}

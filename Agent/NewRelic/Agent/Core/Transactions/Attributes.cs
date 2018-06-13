@@ -8,6 +8,8 @@ namespace NewRelic.Agent.Core.Transactions
 {
 	public class Attributes
 	{
+		public const int UserAttributeClamp = 64;
+
 		[NotNull]
 		private readonly IList<Attribute> _agentAttributes = new List<Attribute>();
 		[NotNull]

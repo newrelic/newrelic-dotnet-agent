@@ -5,7 +5,6 @@ using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
 using NewRelic.SystemExtensions;
 using NUnit.Framework;
 
@@ -122,7 +121,7 @@ namespace CompositeTests
 
 			// key transaction apdexT
 			var keyTransactionApdexT = TimeSpan.FromMilliseconds(1);
-			_compositeTestAgent.ServerConfiguration.WebTransactionsApdex = new ConcurrentDictionary<string, double> {{ "WebTransaction/Action/name", keyTransactionApdexT.TotalSeconds}};
+			_compositeTestAgent.ServerConfiguration.WebTransactionsApdex = new Dictionary<string, double> {{ "WebTransaction/Action/name", keyTransactionApdexT.TotalSeconds}};
 
 			// push the config
 			_compositeTestAgent.PushConfiguration();

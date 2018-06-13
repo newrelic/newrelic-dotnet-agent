@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
-using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.SqlAsync
@@ -36,9 +35,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 
 			if (canWrap)
 			{
-				return WrapperUtils.LegacyAspPipelineIsPresent()
-					? new CanWrapResponse(false, WrapperUtils.LegacyAspPipelineNotSupportedMessage("Npgsql", "Npgsql.NpgsqlCommand", method.MethodName))
-					: new CanWrapResponse(true);
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("Npgsql", "Npgsql.NpgsqlCommand", method.MethodName);
 
 			}
 
@@ -68,7 +65,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				parsedStatement, connectionInfo, sql);
 
-			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
+			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}
 	}
 }

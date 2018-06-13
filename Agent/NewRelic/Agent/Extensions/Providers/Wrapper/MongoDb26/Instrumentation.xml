@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory>
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionImpl`1">
+				<exactMethodMatcher methodName="AggregateAsync"/>
+				<exactMethodMatcher methodName="BulkWriteAsync"/>
+				<exactMethodMatcher methodName="CountAsync"/>
+				<exactMethodMatcher methodName="DistinctAsync"/>
+				<exactMethodMatcher methodName="FindAsync"/>
+				<exactMethodMatcher methodName="FindOneAndDeleteAsync"/>
+				<exactMethodMatcher methodName="FindOneAndReplaceAsync"/>
+				<exactMethodMatcher methodName="FindOneAndUpdateAsync"/>
+				<exactMethodMatcher methodName="MapReduceAsync"/>
+				<exactMethodMatcher methodName="WatchAsync"/>
+			
+				<exactMethodMatcher methodName="Aggregate"/>
+				<exactMethodMatcher methodName="BulkWrite"/>
+				<exactMethodMatcher methodName="Count"/>
+				<exactMethodMatcher methodName="Distinct"/>
+				<exactMethodMatcher methodName="FindSync"/>
+				<exactMethodMatcher methodName="FindOneAndDelete"/>
+				<exactMethodMatcher methodName="FindOneAndReplace"/>
+				<exactMethodMatcher methodName="FindOneAndUpdate"/>
+				<exactMethodMatcher methodName="MapReduce"/>
+				<exactMethodMatcher methodName="Watch"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionBase`1">
+				<exactMethodMatcher methodName="DeleteMany"/>
+				<exactMethodMatcher methodName="DeleteOne"/>
+				<exactMethodMatcher methodName="InsertOne"/>
+				<exactMethodMatcher methodName="InsertMany"/>
+				<exactMethodMatcher methodName="ReplaceOne"/>
+				<exactMethodMatcher methodName="UpdateMany"/>
+				<exactMethodMatcher methodName="UpdateOne"/>
+
+				<exactMethodMatcher methodName="DeleteManyAsync"/>
+				<exactMethodMatcher methodName="DeleteOneAsync"/>
+				<exactMethodMatcher methodName="InsertOneAsync"/>
+				<exactMethodMatcher methodName="InsertManyAsync"/>
+				<exactMethodMatcher methodName="ReplaceOneAsync"/>
+				<exactMethodMatcher methodName="UpdateManyAsync"/>
+				<exactMethodMatcher methodName="UpdateOneAsync"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoCollectionImpl`1+MongoIndexManager">
+				<exactMethodMatcher methodName="CreateMany"/>
+				<exactMethodMatcher methodName="DropAll"/>
+				<exactMethodMatcher methodName="DropOne"/>
+				<exactMethodMatcher methodName="List"/>
+
+				<exactMethodMatcher methodName="CreateManyAsync"/>
+				<exactMethodMatcher methodName="DropAllAsync"/>
+				<exactMethodMatcher methodName="DropOneAsync"/>
+				<exactMethodMatcher methodName="ListAsync"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoIndexManagerBase`1">
+				<exactMethodMatcher methodName="CreateOne"/>
+				<exactMethodMatcher methodName="CreateOneAsync"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.Linq.MongoQueryProviderImpl`1">
+				<exactMethodMatcher methodName="ExecuteModel"/>
+				<exactMethodMatcher methodName="ExecuteModelAsync"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver" className="MongoDB.Driver.MongoDatabaseImpl">
+				<exactMethodMatcher methodName="CreateCollection"/>
+				<exactMethodMatcher methodName="CreateView"/>
+				<exactMethodMatcher methodName="DropCollection"/>
+				<exactMethodMatcher methodName="ListCollections"/>
+				<exactMethodMatcher methodName="RenameCollection"/>
+				<exactMethodMatcher methodName="RunCommand"/>
+				
+				<exactMethodMatcher methodName="CreateCollectionAsync"/>
+				<exactMethodMatcher methodName="CreateViewAsync"/>
+				<exactMethodMatcher methodName="DropCollectionAsync"/>
+				<exactMethodMatcher methodName="ListCollectionsAsync"/>
+				<exactMethodMatcher methodName="RenameCollectionAsync"/>
+				<exactMethodMatcher methodName="RunCommandAsync"/>
+			</match>
+
+			<match assemblyName="MongoDB.Driver.Core" className="MongoDB.Driver.Core.Operations.AsyncCursor`1">
+				<exactMethodMatcher methodName="GetNextBatch"/>
+				<exactMethodMatcher methodName="GetNextBatchAsync"/>
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>

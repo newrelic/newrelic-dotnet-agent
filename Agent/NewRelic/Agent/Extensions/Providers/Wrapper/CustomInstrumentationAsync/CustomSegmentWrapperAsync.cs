@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.WrapperUtilities;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 {
@@ -23,10 +18,8 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 		{
 			if (PossibleWrapperNames.Contains(instrumentedMethodInfo.RequestedWrapperName))
 			{
-				//LegacyPipeline is only a concern w/ .NET Framework
-				return WrapperUtilities.WrapperUtils.LegacyAspPipelineIsPresent()
-					? new CanWrapResponse(false, WrapperUtilities.WrapperUtils.LegacyAspPipelineNotSupportedMessage("custom", "custom", instrumentedMethodInfo.Method.MethodName))
-					: new CanWrapResponse(true);
+
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("custom", "custom", instrumentedMethodInfo.Method.MethodName);
 			}
 			else
 			{
@@ -59,7 +52,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 
 			var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, segmentName);
 
-			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
+			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}
 	}
 }

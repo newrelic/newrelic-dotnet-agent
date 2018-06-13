@@ -5,11 +5,10 @@ namespace NewRelic.Providers.Storage.AsyncLocal
 {
 	/// <summary>
 	/// Multiple instances of this class will share state per type T because we use a
-	/// static AsyncLocal instance.  AsyncLocal doesn't behave very well unless it's defined
-	/// as a static variable.
+	/// static AsyncLocal instance.  AsyncLocal instantiation can be very expensive.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public class AsyncTransactionContext<T> : IContextStorage<T>
+	public class AsyncLocalStorage<T> : IContextStorage<T>
 	{
 		private static readonly AsyncLocal<T> _context = new AsyncLocal<T>();
 

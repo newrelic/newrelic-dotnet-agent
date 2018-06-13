@@ -245,6 +245,78 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
+		public void Events_are_retained_after_harvest_if_response_equals_server_error()
+		{
+			// Arrange
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+				.Returns<IEnumerable<CustomEventWireModel>>(events =>
+				{
+					sentEventCount = events.Count();
+					return DataTransportResponseStatus.ServerError;
+				});
+			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
+			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
+			_harvestAction();
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(2, sentEventCount);
+			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(2));
+		}
+
+		[Test]
+		public void Events_are_retained_after_harvest_if_response_equals_communication_error()
+		{
+			// Arrange
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+				.Returns<IEnumerable<CustomEventWireModel>>(events =>
+				{
+					sentEventCount = events.Count();
+					return DataTransportResponseStatus.CommunicationError;
+				});
+			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
+			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
+			_harvestAction();
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(2, sentEventCount);
+			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(2));
+		}
+
+		[Test]
+		public void Events_are_retained_after_harvest_if_response_equals_request_timeout_error()
+		{
+			// Arrange
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+				.Returns<IEnumerable<CustomEventWireModel>>(events =>
+				{
+					sentEventCount = events.Count();
+					return DataTransportResponseStatus.RequestTimeout;
+				});
+			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
+			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
+			_harvestAction();
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(2, sentEventCount);
+			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(2));
+		}
+
+		[Test]
 		public void Events_are_retained_after_harvest_if_response_equals_service_unavailable_error()
 		{
 			// Arrange
@@ -253,7 +325,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<CustomEventWireModel>>(events =>
 				{
 					sentEventCount = events.Count();
-					return DataTransportResponseStatus.ServiceUnavailableError;
+					return DataTransportResponseStatus.ServerError;
 				});
 			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
 			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));

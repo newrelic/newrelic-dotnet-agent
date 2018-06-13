@@ -240,5 +240,37 @@ namespace NewRelic.Agent.Core.Wrapper
 			var afterWrappedMethod2 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
 			Assert.DoesNotThrow(() => afterWrappedMethod2(null, null));
 		}
+
+		[Test]
+		public void BeforeWrappedMethod_UsesNoOpWrapper_IfTheParentSegmentIsLeaf()
+		{
+			string result = null;
+			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
+			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(false));
+
+			var transaction = Mock.Create<ITransaction>();
+			var segment = Mock.Create<ISegment>();
+
+			Mock.Arrange(() => transaction.IsValid).Returns(true);
+			Mock.Arrange(() => transaction.ParentSegment).Returns(segment);
+			Mock.Arrange(() => segment.IsLeaf).Returns(true);
+			Mock.Arrange(() => _agentWrapperApi.CurrentTransaction).Returns(transaction);
+			
+
+			var type = typeof(Class_WrapperService);
+			const String methodName = "MyMethod";
+			const String tracerFactoryName = "MyTracer";
+			var target = new Object();
+			var arguments = new Object[0];
+
+			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+
+			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+
+			action(null, null);
+
+			Assert.AreEqual("foo", result);
+		}
 	}
 }

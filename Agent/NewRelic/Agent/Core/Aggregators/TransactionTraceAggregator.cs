@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			var traces = _transactionCollectors
 				.Where(t => t != null)
-				.SelectMany(t => t.GetAndClearCollectedSamples())
+				.SelectMany(t => t.GetCollectedSamples())
 				.Distinct()
 				.Select(t => t.CreateWireModel())
 				.ToList();
@@ -61,12 +61,24 @@ namespace NewRelic.Agent.Core.Aggregators
 			switch (responseStatus)
 			{
 				case DataTransportResponseStatus.RequestSuccessful:
-				case DataTransportResponseStatus.ServiceUnavailableError:
+					ClearTransactionTraces(); // Only clear traces after successfully sending data
+					break;
+				case DataTransportResponseStatus.ServerError:
 				case DataTransportResponseStatus.ConnectionError:
+				case DataTransportResponseStatus.CommunicationError:
+				case DataTransportResponseStatus.RequestTimeout:
 				case DataTransportResponseStatus.PostTooBigError:
 				case DataTransportResponseStatus.OtherError:
 				default:
 					break;
+			}
+		}
+
+		private void ClearTransactionTraces()
+		{
+			foreach (var transactionCollector in _transactionCollectors)
+			{
+				transactionCollector?.ClearCollectedSamples();
 			}
 		}
 
@@ -77,7 +89,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			foreach(var transactionCollector in _transactionCollectors)
 			{
-				transactionCollector?.GetAndClearCollectedSamples();
+				transactionCollector?.GetCollectedSamples();
 			}
 		}
 

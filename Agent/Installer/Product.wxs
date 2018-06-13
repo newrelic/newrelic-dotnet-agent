@@ -34,6 +34,7 @@
 			<ComponentGroupRef Id="ProductComponents"/>
 			<ComponentGroupRef Id="NewRelic.Agent.Extensions"/>
 			<ComponentGroupRef Id="NewRelic.Agent.NetstandardExtensions"/>
+			<ComponentGroupRef Id="NewRelic.Agent.Net46Extensions"/>
 			<ComponentGroupRef Id="NewRelic.Agent.Extensions.Instrumentation"/>
 			<?ifdef IsWin64?>
 			<ComponentGroupRef Id="Product32Components"/>
@@ -144,6 +145,7 @@
 						<Directory Id="ToolsFolder" Name="Tools" />
 						<Directory Id="ProgramFilesExtensionsFolder" Name="Extensions">
 							<Directory Id="ProgramFilesNetstandardExtensionsFolder" Name="netstandard2.0" />
+							<Directory Id="ProgramFilesNet46ExtensionsFolder" Name="net46" />
 						</Directory>
 					</Directory>
 				</Directory>
@@ -250,12 +252,10 @@
 				<File Id="JetBrainsAnnotationsFile" Name="JetBrains.Annotations.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\JetBrains.Annotations.dll"/>
 			</Component>
 			
-			<!-- Call stack trackers -->
-			<Component Id="AsyncLocalCallStackTrackerComponent" Guid="{2C25F20D-113E-4314-940F-9B54469F184D}">
-				<File Id="AsyncLocalCallStackTrackerFile" Name="NewRelic.Providers.Storage.CallContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.CallContext.dll"/>
+			<!-- Storage providers -->
+			<Component Id="CallContextProviderComponent" Guid="{2C25F20D-113E-4314-940F-9B54469F184D}">
+				<File Id="CallContextProviderFile" Name="NewRelic.Providers.Storage.CallContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.CallContext.dll"/>
 			</Component>
-			
-			<!-- Context providers -->
 			<Component Id="HttpContextProviderComponent" Guid="{D02A537E-3221-4DEB-BC77-E15DEFF15E81}">
 				<File Id="HttpContextProviderFile" Name="NewRelic.Providers.Storage.HttpContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.HttpContext.dll"/>
 			</Component>
@@ -284,6 +284,9 @@
 			</Component>
 			<Component Id="MongoDBWrapperComponent" Guid="{58055D09-D82F-4918-AE3D-51BBC4607543}">
 				<File Id="MongoDBWrapperFile" Name="NewRelic.Providers.Wrapper.MongoDB.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.MongoDB.dll"/>
+			</Component>
+			<Component Id="MongoDB26WrapperComponent" Guid="{8535B01C-B2C2-4E34-90A8-921271E768D5}">
+				<File Id="MongoDB26WrapperFile" Name="NewRelic.Providers.Wrapper.MongoDB26.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.MongoDB26.dll"/>
 			</Component>
 			<Component Id="ServiceStackRedisWrapperComponent" Guid="{C64F8B6A-FB4C-476D-A484-2D2CB8D2BBD0}">
 				<File Id="ServiceStackRedisWrapperFile" Name="NewRelic.Providers.Wrapper.ServiceStackRedis.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.dll"/>
@@ -339,9 +342,6 @@
 			<Component Id="OpenRastaWrapperComponent" Guid="{59A6C862-3D09-44AF-B69E-38B464D041FA}">
 				<File Id="OpenRastaWrapperFile" Name="NewRelic.Providers.Wrapper.OpenRasta.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.OpenRasta.dll"/>
 			</Component>
-			<Component Id="WrapperUtilitiesComponent" Guid="{27424907-CB78-4328-90FE-49C84B0250A8}">
-				<File Id="WrapperUtilitiesFile" Name="NewRelic.Providers.Wrapper.WrapperUtilities.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WrapperUtilities.dll"/>
-			</Component>
 			<Component Id="CouchbaseWrapperComponent" Guid="{21A0A03D-4799-4D8B-B6DB-553DD66C7020}">
 				<File Id="CouchbaseWrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Couchbase.dll"/>
 			</Component>
@@ -361,6 +361,12 @@
 			</Component>
 			<Component Id="AspNetCoreWrapperComponent" Guid="{383038F5-CC7D-4A78-8B10-0F489FEFEBE1}">
 				<File Id="AspNetCoreWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll"/>
+			</Component>
+		</ComponentGroup>
+
+		<ComponentGroup Id="NewRelic.Agent.Net46Extensions" Directory="ProgramFilesNet46ExtensionsFolder">
+			<Component Id="AsyncLocalProviderComponent" Guid="{CDF55B52-A5DE-4D54-BF3D-5B90F205383C}">
+				<File Id="AsyncLocalProviderFile" Name="NewRelic.Providers.Storage.AsyncLocal.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\net46\NewRelic.Providers.Storage.AsyncLocal.dll"/>
 			</Component>
 		</ComponentGroup>
 
@@ -389,6 +395,9 @@
 			</Component>
 			<Component Id="MongoDBInstrumentationComponent" Guid="{182B3631-3565-43A2-A4D2-FE6374105562}">
 				<File Id="MongoDBInstrumentationFile" Name="NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml"/>
+			</Component>
+			<Component Id="MongoDB26InstrumentationComponent" Guid="{1DCC3A1A-667F-40BD-B555-226C61329A31}">
+				<File Id="MongoDB26InstrumentationFile" Name="NewRelic.Providers.Wrapper.MongoDB26.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.MongoDB26.Instrumentation.xml"/>
 			</Component>
 			<Component Id="ServiceStackRedisInstrumentationComponent" Guid="{41DE67E5-2D10-4461-86A6-9071D0D6BA98}">
 				<File Id="ServiceStackRedisInstrumentationFile" Name="NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml"/>

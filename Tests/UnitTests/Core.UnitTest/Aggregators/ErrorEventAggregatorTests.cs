@@ -236,7 +236,53 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<ErrorEventAdditions, IEnumerable<ErrorEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
-					return DataTransportResponseStatus.ServiceUnavailableError;
+					return DataTransportResponseStatus.ServerError;
+				});
+			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
+			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
+			_harvestAction();
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(2, sentEventCount);
+		}
+
+		[Test]
+		public void Events_are_retained_after_harvest_if_response_equals_communication_error()
+		{
+			// Arrange
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<ErrorEventAdditions>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+				.Returns<ErrorEventAdditions, IEnumerable<ErrorEventWireModel>>((_, events) =>
+				{
+					sentEventCount = events.Count();
+					return DataTransportResponseStatus.CommunicationError;
+				});
+			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
+			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
+			_harvestAction();
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(2, sentEventCount);
+		}
+
+		[Test]
+		public void Events_are_retained_after_harvest_if_response_equals_request_timeout_error()
+		{
+			// Arrange
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<ErrorEventAdditions>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+				.Returns<ErrorEventAdditions, IEnumerable<ErrorEventWireModel>>((_, events) =>
+				{
+					sentEventCount = events.Count();
+					return DataTransportResponseStatus.RequestTimeout;
 				});
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));

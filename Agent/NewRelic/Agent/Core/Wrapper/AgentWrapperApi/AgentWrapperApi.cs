@@ -27,6 +27,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions.Collections.Generic;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 using System.Data;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing;
 using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
@@ -57,6 +58,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private readonly ICatHeaderHandler _catHeaderHandler;
 
 		[NotNull]
+		private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
+
+		[NotNull]
 		private readonly ISyntheticsHeaderHandler _syntheticsHeaderHandler;
 
 		[NotNull]
@@ -79,7 +83,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[NotNull]
 		private static readonly ISegment _noOpSegment = new NoTransactionImpl();
 
-		public AgentWrapperApi([NotNull] ITransactionService transactionService, [NotNull] ITimerFactory timerFactory, [NotNull] ITransactionTransformer transactionTransformer, [NotNull] IThreadPoolStatic threadPoolStatic, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] IPathHashMaker pathHashMaker, [NotNull] ICatHeaderHandler catHeaderHandler, [NotNull] ISyntheticsHeaderHandler syntheticsHeaderHandler, [NotNull] ITransactionFinalizer transactionFinalizer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, [NotNull] IAgentHealthReporter agentHealthReporter)
+		public AgentWrapperApi([NotNull] ITransactionService transactionService, [NotNull] ITimerFactory timerFactory, [NotNull] ITransactionTransformer transactionTransformer, [NotNull] IThreadPoolStatic threadPoolStatic, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] IPathHashMaker pathHashMaker, [NotNull] ICatHeaderHandler catHeaderHandler, [NotNull] IDistributedTracePayloadHandler distributedTracePayloadHandler, [NotNull] ISyntheticsHeaderHandler syntheticsHeaderHandler, [NotNull] ITransactionFinalizer transactionFinalizer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, [NotNull] IAgentHealthReporter agentHealthReporter)
 		{
 			_transactionService = transactionService;
 			_timerFactory = timerFactory;
@@ -88,6 +92,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_transactionMetricNameMaker = transactionMetricNameMaker;
 			_pathHashMaker = pathHashMaker;
 			_catHeaderHandler = catHeaderHandler;
+			_distributedTracePayloadHandler = distributedTracePayloadHandler;
 			_syntheticsHeaderHandler = syntheticsHeaderHandler;
 			_transactionFinalizer = transactionFinalizer;
 			_browserMonitoringPrereqChecker = browserMonitoringPrereqChecker;
@@ -277,19 +282,22 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		public void ProcessInboundRequest(IEnumerable<KeyValuePair<String, String>> headers, long? contentLength)
 		{
-			if (headers == null)
-				throw new ArgumentNullException(nameof(headers));
-
 			var transaction = _transactionService.GetCurrentInternalTransaction();
 			if (transaction == null)
 				return;
 
-			// NOTE: the key for this dictionary should NOT be case sensitive since HTTP headers are not case sensitive.
-			// See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-			var headerDictionary = headers.ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			TryProcessCatRequestData(transaction, headerDictionary, contentLength);
-			TryProcessSyntheticsData(transaction, headerDictionary);
-
+			if (_configurationService.Configuration.DistributedTracingEnabled)
+			{
+				CurrentTransaction.AcceptDistributedTracePayload(headers);
+			}
+			else
+			{
+				// NOTE: the key for this dictionary should NOT be case sensitive since HTTP headers are not case sensitive.
+				// See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+				var headerDictionary = headers.ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
+				TryProcessCatRequestData(transaction, headerDictionary, contentLength);
+				TryProcessSyntheticsData(transaction, headerDictionary);
+			}
 		}
 
 		private void TryProcessCatRequestData([NotNull] ITransaction transaction, [NotNull] IDictionary<String, String> headers, long? contentLength)
@@ -342,7 +350,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		#endregion inbound CAT request, outboud CAT response
 
 		#region Error handling
-		
+
 		public void HandleWrapperException(Exception exception)
 		{
 			// This method should never throw
@@ -508,6 +516,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public bool IsValid => true;
 
+			public ISegment ParentSegment
+			{
+				get
+				{
+					var parentSegmentIndex = transaction.CallStackManager.TryPeek();
+					if (!parentSegmentIndex.HasValue)
+					{
+						return _noOpSegment;
+					}
+
+					return transaction.Segments[parentSegmentIndex.Value];
+				}
+			}
+
 			public Transaction(AgentWrapperApi agentWrapperApi, ITransaction transaction)
 			{
 				this.agentWrapperApi = agentWrapperApi;
@@ -564,7 +586,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action));
 			}
 
-			public ISegment StartDatastoreSegment(MethodCall methodCall, [NotNull] ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo, [CanBeNull] String commandText)
+			public ISegment StartDatastoreSegment(MethodCall methodCall, [NotNull] ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo, [CanBeNull] String commandText, bool isLeaf = false)
 			{
 				if (transaction.Ignored)
 					return _noOpSegment;
@@ -577,7 +599,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 				var data = new DatastoreSegmentData(parsedSqlStatement, commandText, connectionInfo);
 				var segment = new TypedSegment<DatastoreSegmentData>(transaction.GetTransactionSegmentState(), GetMethodCallData(methodCall), data);
-
+				segment.IsLeaf = isLeaf;
 				return segment;
 			}
 
@@ -629,6 +651,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
 			{
+				if (agentWrapperApi._configurationService.Configuration.DistributedTracingEnabled)
+				{
+					return CreateDistributedTracePayload();
+				}
+
 				return agentWrapperApi.GetOutboundRequestHeaders(transaction);
 			}
 
@@ -636,6 +663,33 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 				return agentWrapperApi.GetOutboundResponseHeaders(transaction);
 			}
+
+			public void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<string, string>> headers)
+			{
+				var headerDictionary = headers.ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
+				TryProcessDistributedTraceRequestData(headerDictionary);
+			}
+
+			public IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload()
+			{
+				// TODO: do the stuff
+				return Enumerable.Empty<KeyValuePair<String, String>>();
+			}
+
+			private void TryProcessDistributedTraceRequestData([NotNull] IDictionary<String, String> headers)
+			{
+				var distributedTracePayload = agentWrapperApi._distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+				if (distributedTracePayload == null)
+					return;
+
+				UpdateTransactionMetadata(distributedTracePayload);
+			}
+
+			private void UpdateTransactionMetadata([NotNull] DistributedTracePayload distributedTracePayload)
+			{
+
+			}
+
 			public void NoticeError(Exception exception)
 			{
 				Log.Debug($"Noticed application error: {exception}");
@@ -840,6 +894,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			public bool IsValid => false;
 
+			public ISegment ParentSegment => _noOpSegment;
+
+			public bool IsLeaf => false;
+
 			public void End()
 			{
 			}
@@ -860,7 +918,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				return this;
 			}
 
-			public ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo, [CanBeNull] string commandText)
+			public ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo, [CanBeNull] string commandText, bool isLeaf = false)
 			{
 #if DEBUG
 				Log.Finest("Skipping StartDatastoreSegment outside of a transaction");
@@ -918,6 +976,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
 			{
 				Log.Debug("Tried to retrieve CAT request metadata, but there was no transaction");
+
+				return Enumerable.Empty<KeyValuePair<string, string>>();
+			}
+
+			public void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<string, string>> payload)
+			{
+				Log.Debug("Tried to accept distributed trace payload, but there was no transaction");
+			}
+
+			public IEnumerable<KeyValuePair<string, string>> CreateDistributedTracePayload()
+			{
+				Log.Debug("Tried to create distributed trace payload, but there was no transaction");
 
 				return Enumerable.Empty<KeyValuePair<string, string>>();
 			}

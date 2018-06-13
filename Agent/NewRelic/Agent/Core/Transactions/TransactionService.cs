@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Transactions
 				.Where(transactionContext => transactionContext != null)
 				.ToList(); //ToList() is important to force evaluation only once
 
-			list.Add(new ThreadLocalTransactionContext<ITransaction>("NewRelic.Transaction", new ThreadLocalContainer<ITransaction>()));
+			list.Add(new ThreadLocalStorage<ITransaction>("NewRelic.Transaction"));
 
 			return list
 				.OrderByDescending(transactionContext => transactionContext.Priority).ToList();

@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-		<RootNamespace>NewRelic.Providers.Wrapper.WrapperUtilities</RootNamespace>
-		<AssemblyName>NewRelic.Providers.Wrapper.WrapperUtilities</AssemblyName>
-		<Description>Provides generic utility functions used by Wrapper Providers for New Relic .NET Agent</Description>
+		<AssemblyName>NewRelic.Providers.Wrapper.MongoDb26</AssemblyName>
+		<RootNamespace>NewRelic.Providers.Wrapper.MongoDb26</RootNamespace>
+		<Description>MongoDb 2.6 Wrapper Provider for New Relic .NET Agent</Description>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
-	
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DebugType>full</DebugType>
 		<DebugSymbols>True</DebugSymbols>
@@ -15,23 +14,27 @@
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<DebugType>pdbonly</DebugType>
 	</PropertyGroup>
-
+	<ItemGroup>
+	  <Content Include="Instrumentation.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
+	  <ProjectReference Include="..\..\..\..\Parsing\Parsing.csproj" />
+	  <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
 		<Reference Include="System" />
-		<Reference Include="System.Configuration" />
 		<Reference Include="System.Core" />
-		<Reference Include="System.Web" />
 		<Reference Include="System.Xml.Linq" />
 		<Reference Include="System.Data.DataSetExtensions" />
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Data" />
 		<Reference Include="System.Xml" />
-	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
 	</ItemGroup>
 	<Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
 </Project>

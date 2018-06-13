@@ -206,7 +206,51 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
 				{
 					sentErrorsCount = errors.Count();
-					return DataTransportResponseStatus.ServiceUnavailableError;
+					return DataTransportResponseStatus.ServerError;
+				});
+			_errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
+
+			// Act
+			_harvestAction();
+			sentErrorsCount = int.MinValue; // reset
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(1, sentErrorsCount);
+		}
+
+		[Test]
+		public void error_traces_are_retained_after_harvest_if_response_equals_communication_error()
+		{
+			// Arrange
+			var sentErrorsCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+				.Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
+				{
+					sentErrorsCount = errors.Count();
+					return DataTransportResponseStatus.CommunicationError;
+				});
+			_errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
+
+			// Act
+			_harvestAction();
+			sentErrorsCount = int.MinValue; // reset
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(1, sentErrorsCount);
+		}
+
+		[Test]
+		public void error_traces_are_retained_after_harvest_if_response_equals_request_timeout_error()
+		{
+			// Arrange
+			var sentErrorsCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
+				.Returns<IEnumerable<ErrorTraceWireModel>>(errors =>
+				{
+					sentErrorsCount = errors.Count();
+					return DataTransportResponseStatus.RequestTimeout;
 				});
 			_errorTraceAggregator.Collect(Mock.Create<ErrorTraceWireModel>());
 

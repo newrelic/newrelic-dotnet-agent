@@ -472,6 +472,7 @@ Function ValidateRequiredTargetFolderFilesExist([string] $targetFullPath)
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Storage.OperationContext.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Asp35.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB.dll"))) -or
+		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB26.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Mvc3.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.NServiceBus.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Wcf3.dll"))) -or
@@ -510,6 +511,7 @@ Function ValidateRequiredProgramDataFilesExist
 	If ((!(CheckFileExists("Extensions\extension.xsd"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml"))) -or
+        (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB26.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml"))) -or

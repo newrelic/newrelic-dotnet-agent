@@ -3,7 +3,6 @@ using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
-using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.SqlAsync
@@ -40,10 +39,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 
 			if (canWrap)
 			{
-				return WrapperUtils.LegacyAspPipelineIsPresent()
-					? new CanWrapResponse(false, WrapperUtils.LegacyAspPipelineNotSupportedMessage("System.Data", "System.Data.SqlClient.SqlCommand", method.MethodName))
-					: new CanWrapResponse(true);
-
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("System.Data", "System.Data.SqlClient.SqlCommand", method.MethodName);
 			}
 
 			return new CanWrapResponse(false);
@@ -83,7 +79,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 				}
 			}
 
-			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
+			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}
 	}
 }

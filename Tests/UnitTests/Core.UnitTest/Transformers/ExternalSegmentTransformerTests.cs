@@ -1,7 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
@@ -9,8 +8,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
-using NewRelic.Collections;
-using NewRelic.Agent.Core.Utils;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -329,8 +326,6 @@ namespace NewRelic.Agent.Core.Transformers
 		private static TypedSegment<ExternalSegmentData> GetSegment([NotNull] String uri, [NotNull] String method, double duration, [CanBeNull] CrossApplicationResponseData catResponseData = null)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
-			var parameters = (new ConcurrentDictionary<String, Object>());
-			var myUri = new Uri(uri);
 
 			var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
 

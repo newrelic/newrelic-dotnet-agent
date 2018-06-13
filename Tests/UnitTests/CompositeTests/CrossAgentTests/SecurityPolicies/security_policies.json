@@ -50,7 +50,7 @@
     "expected_connect_policies": {
       "record_sql": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "record_sql": { "enabled": false }
     },
@@ -108,7 +108,7 @@
     "expected_connect_policies": {
       "attributes_include": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "attributes_include": { "enabled": false }
     },
@@ -166,7 +166,7 @@
     "expected_connect_policies": {
       "allow_raw_exception_messages": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "allow_raw_exception_messages": { "enabled": false }
     },
@@ -224,7 +224,7 @@
     "expected_connect_policies": {
       "custom_events": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "custom_events": { "enabled": false }
     },
@@ -282,7 +282,7 @@
     "expected_connect_policies": {
       "custom_parameters": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "custom_parameters": { "enabled": false }
     },
@@ -340,7 +340,7 @@
     "expected_connect_policies": {
       "custom_instrumentation_editor": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "custom_instrumentation_editor": { "enabled": false }
     },
@@ -398,7 +398,7 @@
     "expected_connect_policies": {
       "message_parameters": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "message_parameters": { "enabled": false }
     },
@@ -456,12 +456,27 @@
     "expected_connect_policies": {
       "job_arguments": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "job_arguments": { "enabled": false }
     },
     "should_log": false,
     "should_shutdown": false
+  },
+  {
+    "name": "should fail because the agent knows about a policy the server does not",
+    "required_features": [ "record_sql" ],
+    "starting_policy_settings": {
+      "record_sql": { "enabled": true }
+    },
+    "security_policies": {},
+    "expected_connect_policies": {},
+    "validate_policies_not_in_connect": [],
+    "ending_policy_settings": {
+      "record_sql": { "enabled": true }
+    },
+    "should_log": true,
+    "should_shutdown": true
   },
   {
     "name": "should not respond with unknown policies",
@@ -476,37 +491,37 @@
         "position": 0
       },
       "attributes_include": {
-        "enabled": false,
+        "enabled": true,
         "required": false,
         "position": 1
       },
       "allow_raw_exception_messages": {
-        "enabled": false,
+        "enabled": true,
         "required": false,
         "position": 2
       },
       "custom_events": {
-        "enabled": false,
+        "enabled": true,
         "required": false,
         "position": 3
       },
       "custom_parameters": {
-        "enabled": false,
+        "enabled": true,
         "required": false,
         "position": 4
       },
       "custom_instrumentation_editor": {
-        "enabled": false,
+        "enabled": true,
         "required": false,
         "position": 5
       },
       "message_parameters": {
-        "enabled": false,
+        "enabled": true,
         "required": false,
         "position": 6
       },
       "job_arguments": {
-        "enabled": false,
+        "enabled": true,
         "required": false,
         "position": 7
       },
@@ -519,9 +534,9 @@
     "expected_connect_policies": {
       "record_sql": { "enabled": false }
     },
-    "excluded_connect_policies": {
-      "some_new_feature": { "enabled": false }
-    },
+    "validate_policies_not_in_connect": [
+      "some_new_feature"
+    ],
     "ending_policy_settings": {
       "record_sql": { "enabled": false }
     },
@@ -534,57 +549,57 @@
     "starting_policy_settings": {
       "record_sql": { "enabled": true }
     },
-      "security_policies": {
-        "record_sql": {
-          "enabled": false,
-          "required": false,
-          "position": 0
-        },
-        "attributes_include": {
-          "enabled": false,
-          "required": false,
-          "position": 1
-        },
-        "allow_raw_exception_messages": {
-          "enabled": false,
-          "required": false,
-          "position": 2
-        },
-        "custom_events": {
-          "enabled": false,
-          "required": false,
-          "position": 3
-        },
-        "custom_parameters": {
-          "enabled": false,
-          "required": false,
-          "position": 4
-        },
-        "custom_instrumentation_editor": {
-          "enabled": false,
-          "required": false,
-          "position": 5
-        },
-        "message_parameters": {
-          "enabled": false,
-          "required": false,
-          "position": 6
-        },
-        "job_arguments": {
-          "enabled": false,
-          "required": false,
-          "position": 7
-        },
-        "some_new_policy": {
-          "enabled": false,
-          "required": true,
-          "position": 7
-        }
+    "security_policies": {
+      "record_sql": {
+        "enabled": false,
+        "required": false,
+        "position": 0
       },
+      "attributes_include": {
+        "enabled": true,
+        "required": false,
+        "position": 1
+      },
+      "allow_raw_exception_messages": {
+        "enabled": true,
+        "required": false,
+        "position": 2
+      },
+      "custom_events": {
+        "enabled": true,
+        "required": false,
+        "position": 3
+      },
+      "custom_parameters": {
+        "enabled": true,
+        "required": false,
+        "position": 4
+      },
+      "custom_instrumentation_editor": {
+        "enabled": true,
+        "required": false,
+        "position": 5
+      },
+      "message_parameters": {
+        "enabled": true,
+        "required": false,
+        "position": 6
+      },
+      "job_arguments": {
+        "enabled": true,
+        "required": false,
+        "position": 7
+      },
+      "some_new_feature": {
+        "enabled": false,
+        "required": true,
+        "position": 8
+      }
+    },
     "expected_connect_policies": {
       "record_sql": { "enabled": false }
     },
-    "excluded_connect_policies": {},
+    "validate_policies_not_in_connect": [],
     "ending_policy_settings": {
       "record_sql": { "enabled": false }
     },

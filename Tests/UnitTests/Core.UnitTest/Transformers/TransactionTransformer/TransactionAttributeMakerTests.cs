@@ -625,6 +625,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			);
 		}
 
+		[Test]
 		public void GetAttributes_AssignsCorrectClassificationToAttributes_ExternalAndDB()
 		{
 			// ARRANGE
@@ -670,7 +671,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(35, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),

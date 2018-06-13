@@ -256,7 +256,55 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<TransactionEventWireModel>>(events =>
 				{
 					sentEventCount = events.Count();
-					return DataTransportResponseStatus.ServiceUnavailableError;
+					return DataTransportResponseStatus.ServerError;
+				});
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_harvestAction();
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(2, sentEventCount);
+			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(2));
+		}
+
+		[Test]
+		public void Events_are_retained_after_harvest_if_response_equals_communication_error()
+		{
+			// Arrange
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+				.Returns<IEnumerable<TransactionEventWireModel>>(events =>
+				{
+					sentEventCount = events.Count();
+					return DataTransportResponseStatus.CommunicationError;
+				});
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_harvestAction();
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			_harvestAction();
+
+			// Assert
+			Assert.AreEqual(2, sentEventCount);
+			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(2));
+		}
+
+		[Test]
+		public void Events_are_retained_after_harvest_if_response_equals_request_timeout_error()
+		{
+			// Arrange
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+				.Returns<IEnumerable<TransactionEventWireModel>>(events =>
+				{
+					sentEventCount = events.Count();
+					return DataTransportResponseStatus.RequestTimeout;
 				});
 			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
 			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));

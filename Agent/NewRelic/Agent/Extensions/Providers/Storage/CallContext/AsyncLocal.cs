@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace NewRelic.Providers.Storage.CallContext
+﻿namespace NewRelic.Providers.Storage.CallContext
 {
 	/// <summary>
 	/// A simple implementation of AsyncLocal that works in .NET 4.5.
@@ -8,15 +6,13 @@ namespace NewRelic.Providers.Storage.CallContext
 	/// <typeparam name="T"></typeparam>
 	public class AsyncLocal<T>
 	{
-		[NotNull]
 		private readonly string _key;
 
 		public AsyncLocal(string key)
 		{
-			this._key = key;
+			_key = key;
 		}
 
-		[CanBeNull]
 		public T Value
 		{
 			get

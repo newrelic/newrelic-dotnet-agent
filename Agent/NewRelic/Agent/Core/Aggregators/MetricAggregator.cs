@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			var metricsToSend = oldMetrics.ConvertToJsonForSending(_metricNameService);
 
 			var responseStatus = DataTransportService.Send(metricsToSend);
-			HandleResponse(responseStatus);
+			HandleResponse(responseStatus, metricsToSend);
 
 			Log.Debug("Metric harvest finished.");
 		}
@@ -96,17 +96,30 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		#endregion
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus)
+		private void HandleResponse(DataTransportResponseStatus responseStatus, IEnumerable<MetricWireModel> unsuccessfulSendMetrics)
 		{
 			switch (responseStatus)
 			{
 				case DataTransportResponseStatus.RequestSuccessful:
-				case DataTransportResponseStatus.ServiceUnavailableError:
+					break;
+				case DataTransportResponseStatus.CommunicationError:
+				case DataTransportResponseStatus.RequestTimeout:
+				case DataTransportResponseStatus.ServerError:
+					RetainMetricData(unsuccessfulSendMetrics);
+					break;
 				case DataTransportResponseStatus.ConnectionError:
 				case DataTransportResponseStatus.PostTooBigError:
 				case DataTransportResponseStatus.OtherError:
 				default:
 					break;
+			}
+		}
+
+		private void RetainMetricData([NotNull] IEnumerable<MetricWireModel> unsuccessfulSendMetrics)
+		{
+			foreach (var metric in unsuccessfulSendMetrics)
+			{
+				Collect(metric);
 			}
 		}
 

@@ -915,6 +915,23 @@
 					</xs:complexType>
 				</xs:element>
 
+				<xs:element name="distributedTracing" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>
+							Turns on/off Distributed Tracing.
+						</xs:documentation>
+					</xs:annotation>
+
+					<xs:complexType>
+						<xs:attribute name="enabled" type="xs:boolean" default="false">
+							<xs:annotation>
+								<xs:documentation>
+									It is disabled by default. Set this to true to turn it on.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
 				<xs:element name="highSecurity" minOccurs="0" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>

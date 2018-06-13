@@ -1,10 +1,10 @@
 ﻿using JetBrains.Annotations;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Collections;
 using System.Threading;
 
 namespace NewRelic.Agent.Core.CallStack
@@ -57,24 +57,26 @@ namespace NewRelic.Agent.Core.CallStack
 
 		private static ICallStackManagerFactory CreateFactory(IEnumerable<IContextStorageFactory> storageFactories)
 		{
-			foreach (var factory in storageFactories)
+			var listOfFactories = storageFactories.ToList();
+
+			var asyncLocalFactory = listOfFactories.FirstOrDefault(f => f.Type == ContextStorageType.AsyncLocal);
+			if (asyncLocalFactory != null)
 			{
-				if (factory.Type == ContextStorageType.AsyncLocal)
-				{
-					Log.DebugFormat("Using async storage {0} for call stack", factory.GetType().FullName);
-					return new AsyncCallStackManagerFactory(factory);
-				}
-				else if (factory.Type == ContextStorageType.CallContextLogicalData)
-				{
-					Log.DebugFormat("Using async storage {0} for call stack", factory.GetType().FullName);
-					return new AsyncCallStackManagerFactory(factory);
-				}
+				Log.DebugFormat("Using async storage {0} for call stack with AsyncCallStackManagerFactory", asyncLocalFactory.GetType().FullName);
+				return new AsyncCallStackManagerFactory(asyncLocalFactory);
 			}
 
-			var list = storageFactories.ToList();
-			list.Add(GetThreadLocalContextStorageFactory());
+			var callContextLogicalDataFactory = listOfFactories.FirstOrDefault(f => f.Type == ContextStorageType.CallContextLogicalData);
+			if (callContextLogicalDataFactory != null)
+			{
+				Log.DebugFormat("Using async storage {0} for call stack with AsyncCallStackManagerFactory", callContextLogicalDataFactory.GetType().FullName);
+				return new AsyncCallStackManagerFactory(callContextLogicalDataFactory);
+			}
 
-			return new CallStackManagerFactory(list);
+			listOfFactories.Add(GetThreadLocalContextStorageFactory());
+
+			Log.Debug("No specialized async storage found. Using standard factories with CallStackManagerFactory.");
+			return new CallStackManagerFactory(listOfFactories);
 		}
 
 		public ICallStackManager CreateCallStackManager()
@@ -84,47 +86,7 @@ namespace NewRelic.Agent.Core.CallStack
 
 		private static IContextStorageFactory GetThreadLocalContextStorageFactory()
 		{
-			return new ThreadLocalContextStorageFactory(new ThreadLocalFactory());
-		}
-
-		private class ThreadLocalFactory : IThreadLocalFactory
-		{
-			public IThreadLocal<T> Create<T>()
-			{
-				return new ConcurrentDictionaryThreadLocal<T>();
-			}
-		}
-
-		private class ConcurrentDictionaryThreadLocal<T> : IThreadLocal<T>
-		{
-			[NotNull]
-			private readonly IDictionary<int, T> _threadToItem = new ConcurrentDictionary<int, T>();
-
-			public T Value
-			{
-				get
-				{
-					var id = Thread.CurrentThread.ManagedThreadId;
-					if (_threadToItem.TryGetValue(id, out T value))
-					{
-						return value;
-					}
-					return default(T);
-				}
-
-				set
-				{
-					var id = Thread.CurrentThread.ManagedThreadId;
-					if (value == null)
-					{
-						_threadToItem.Remove(id);
-					}
-					else
-					{
-						_threadToItem[id] = value;
-					}
-				}
-			}
+			return new ThreadLocalContextStorageFactory();
 		}
 	}
 

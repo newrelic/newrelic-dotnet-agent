@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Tracer;
-using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			}
 		}
 		
-		[NotNull] private readonly ConcurrentDictionary<UInt64, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
+		[NotNull] private readonly ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
 
 		public WrapperService([NotNull] IConfigurationService configurationService, [NotNull] IWrapperMap wrapperMap,
 			[NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] IAgentHealthReporter agentHealthReporter)
@@ -101,6 +101,11 @@ namespace NewRelic.Agent.Core.Wrapper
 				if (!transaction.IsValid)
 				{
 					Log.FinestFormat("No transaction, skipping method {0}.{1}({2})", type.FullName, methodName, argumentSignature);
+					return Delegates.NoOp;
+				}
+
+				if (transaction.ParentSegment.IsLeaf)
+				{
 					return Delegates.NoOp;
 				}
 			}

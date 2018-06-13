@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
@@ -53,6 +54,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		[NotNull]
 		private ICatHeaderHandler _catHeaderHandler;
+		[NotNull]
+		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
 
 
 		[NotNull] private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
@@ -102,13 +105,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
 			_pathHashMaker = Mock.Create<IPathHashMaker>();
 			_catHeaderHandler = Mock.Create<ICatHeaderHandler>();
+			_distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 			_syntheticsHeaderHandler = Mock.Create<ISyntheticsHeaderHandler>();
 			_transactionFinalizer = Mock.Create<ITransactionFinalizer>();
 			_browserMonitoringPrereqChecker = Mock.Create<IBrowserMonitoringPrereqChecker>();
 			_browserMonitoringScriptMaker = Mock.Create<IBrowserMonitoringScriptMaker>();
 			_configurationService = Mock.Create<IConfigurationService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-			_agentWrapperApi = new AgentWrapperApi(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter);
+			_agentWrapperApi = new AgentWrapperApi(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter);
 		}
 
 		private class CallStackManagerFactory : ICallStackManagerFactory

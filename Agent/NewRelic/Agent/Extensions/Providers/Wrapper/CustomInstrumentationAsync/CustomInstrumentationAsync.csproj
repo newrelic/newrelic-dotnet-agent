@@ -31,8 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-     <ProjectReference Include="..\..\..\..\Core\Core.csproj" />
-     <ProjectReference Include="..\WrapperUtilities\WrapperUtilities.csproj" />
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />

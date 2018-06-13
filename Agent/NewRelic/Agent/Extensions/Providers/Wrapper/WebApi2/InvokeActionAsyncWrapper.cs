@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.WebApi2
@@ -27,10 +26,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
 
 			if (canWrap)
 			{
-				return WrapperUtils.LegacyAspPipelineIsPresent()
-					? new CanWrapResponse(false, WrapperUtils.LegacyAspPipelineNotSupportedMessage("System.Web.Http", "System.Web.Http.Controllers.ApiControllerActionInvoker", method.MethodName))
-					: new CanWrapResponse(true);
-
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("System.Web.Http", "System.Web.Http.Controllers.ApiControllerActionInvoker", method.MethodName);
 			}
 
 			return new CanWrapResponse(false);

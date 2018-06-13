@@ -50,6 +50,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCrossApplicationTracer crossApplicationTracerField;
         
+        private configurationDistributedTracing distributedTracingField;
+        
         private configurationHighSecurity highSecurityField;
         
         private configurationCustomInstrumentationEditor customInstrumentationEditorField;
@@ -98,6 +100,7 @@ namespace NewRelic.Agent.Core.Config
             this.stripExceptionMessagesField = new configurationStripExceptionMessages();
             this.customInstrumentationEditorField = new configurationCustomInstrumentationEditor();
             this.highSecurityField = new configurationHighSecurity();
+            this.distributedTracingField = new configurationDistributedTracing();
             this.crossApplicationTracerField = new configurationCrossApplicationTracer();
             this.datastoreTracerField = new configurationDatastoreTracer();
             this.transactionTracerField = new configurationTransactionTracer();
@@ -311,6 +314,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.crossApplicationTracerField = value;
+            }
+        }
+        
+        public configurationDistributedTracing distributedTracing
+        {
+            get
+            {
+                return this.distributedTracingField;
+            }
+            set
+            {
+                this.distributedTracingField = value;
             }
         }
         
@@ -2486,6 +2501,30 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+    }
+    
+    public partial class configurationDistributedTracing
+    {
+        
+        private bool enabledField;
+        
+        public configurationDistributedTracing()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(false)]
         public bool enabled
         {
             get

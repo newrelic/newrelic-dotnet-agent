@@ -28,6 +28,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -123,6 +124,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IErrorTraceMaker, ErrorTraceMaker>();
 			container.Register<IErrorEventMaker, ErrorEventMaker>();
 			container.Register<ICatHeaderHandler, CatHeaderHandler>();
+			container.Register<IDistributedTracePayloadHandler, DistributedTracePayloadHandler>();
 			container.Register<ISyntheticsHeaderHandler, SyntheticsHeaderHandler>();
 			container.Register<IPathHashMaker, PathHashMaker>();
 			container.Register<ITransactionFinalizer, TransactionFinalizer>();

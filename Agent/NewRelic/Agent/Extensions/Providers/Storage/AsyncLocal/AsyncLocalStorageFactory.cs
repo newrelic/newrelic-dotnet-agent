@@ -3,7 +3,7 @@ using System;
 
 namespace NewRelic.Providers.Storage.AsyncLocal
 {
-	public class AsyncTransactionContextFactory : IContextStorageFactory
+	public class AsyncLocalStorageFactory : IContextStorageFactory
 	{
 		public bool IsAsyncStorage => true;
 
@@ -15,7 +15,7 @@ namespace NewRelic.Providers.Storage.AsyncLocal
 
 		public IContextStorage<T> CreateContext<T>(string key)
 		{
-			return new AsyncTransactionContext<T>();
+			return new AsyncLocalStorage<T>();
 		}
 	}
 }

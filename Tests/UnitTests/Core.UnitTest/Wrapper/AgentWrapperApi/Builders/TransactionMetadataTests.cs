@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Linq;
 using MoreLinq;
-using NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -130,7 +127,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			var transactionMetadata = new TransactionMetadata();
 			Enumerable.Range(0, maxPathHashes + 2).ForEach(number => transactionMetadata.SetCrossApplicationPathHash($"pathHash{number}"));
-            var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
+			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual($"pathHash{PathHashMaker.AlternatePathHashMaxSize + 1}", immutableMetadata.CrossApplicationPathHash),
@@ -140,7 +137,27 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		}
 
 		[Test]
-		public void AddUserAttribute_ShouldIgnoreDuplicateKey()
+		public void AddRequestParameter_LastInWins()
+		{
+			var key = "testKey";
+			var valueA = "valueA";
+			var valueB = "valueB";
+
+			var metadata = new TransactionMetadata();
+			metadata.AddRequestParameter(key, valueA);
+			metadata.AddRequestParameter(key, valueB);
+
+			var immutableTransactionMetadata = metadata.ConvertToImmutableMetadata();
+
+			var requestParameters = immutableTransactionMetadata.RequestParameters.ToDictionary();
+
+			var result = requestParameters[key];
+
+			Assert.AreEqual(result, valueB);
+		}
+
+		[Test]
+		public void AddUserAttribute_LastInWins()
 		{
 			var key = "testKey";
 			var valueA = "valueA";
@@ -156,11 +173,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			var result = userAttributes[key];
 
-			Assert.AreEqual(result, valueA);
+			Assert.AreEqual(result, valueB);
 		}
 
 		[Test]
-		public void AddUserErrorAttribute_ShouldIgnoreDuplicateKey()
+		public void AddUserErrorAttribute_LastInWins()
 		{
 			var key = "testKey";
 			var valueA = "valueA";
@@ -176,7 +193,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			var result = userErrorAttributes[key];
 
-			Assert.AreEqual(result, valueA);
+			Assert.AreEqual(result, valueB);
 		}
 	}
 }

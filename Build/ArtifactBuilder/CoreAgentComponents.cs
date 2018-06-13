@@ -7,59 +7,61 @@ namespace ArtifactBuilder
 		public CoreAgentComponents(string configuration, string platform, string sourcePath)
 			: base(configuration, platform, sourcePath) { }
 
+		protected override string SourceHomeBuilderPath => $@"{SourcePath}\New Relic Home {Platform} CoreClr";
+
+		protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
+			$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Core.Instrumentation.xml",
+			$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Parsing.Instrumentation.xml"
+		};
+
 		protected override void CreateAgentComponents()
 		{
 			var agentDllsForExtensionDirectory = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.AttributeFilter.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.Configuration.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.Core.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Agent.LabelsService.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Core.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Parsing.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Trie.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Core.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Parsing.dll"
 			};
 
 			var storageProviders = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Storage.AsyncLocal.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Storage.AsyncLocal.dll",
 			};
 
 			var wrapperProviders = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.HttpClient.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.Sql.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.SqlAsync.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.WrapperUtilities.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.HttpClient.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.MongoDb26.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.Sql.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.SqlAsync.dll"
 			};
 
 			var wrapperXmls = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.Instrumentation.xml",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml",
 			};
 
-			ExtensionXsd = $@"{SourcePath}\New Relic Home {Platform} CoreClr\Extensions\extension.xsd";
-			NewRelicXsd = $@"{SourcePath}\New Relic Home {Platform} CoreClr\newrelic.xsd";
-			NewRelicConfig = $@"{SourcePath}\New Relic Home {Platform} CoreClr\newrelic.config";
+			ExtensionXsd = $@"{SourceHomeBuilderPath}\Extensions\extension.xsd";
+			NewRelicXsd = $@"{SourceHomeBuilderPath}\newrelic.xsd";
+			NewRelicConfig = $@"{SourceHomeBuilderPath}\newrelic.config";
 
 			var root = new List<string>()
 			{
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\License.txt",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\NewRelic.Agent.Core.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\NewRelic.Agent.Core.pdb",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\NewRelic.Agent.Extensions.dll",
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\NewRelic.Api.Agent.dll",
+				$@"{SourceHomeBuilderPath}\License.txt",
+				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
+				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.pdb",
+				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
+				$@"{SourceHomeBuilderPath}\NewRelic.Api.Agent.dll",
 				NewRelicConfig,
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\NewRelic.Profiler.dll",
+				$@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll",
 				NewRelicXsd,
-				$@"{SourcePath}\New Relic Home {Platform} CoreClr\README.md",
+				$@"{SourceHomeBuilderPath}\README.md",
 			};
 
 			ExtensionDirectoryComponents = new List<string>();
@@ -69,6 +71,9 @@ namespace ArtifactBuilder
 			NetstandardExtensionDirectoryComponents.AddRange(agentDllsForExtensionDirectory);
 			NetstandardExtensionDirectoryComponents.AddRange(storageProviders);
 			NetstandardExtensionDirectoryComponents.AddRange(wrapperProviders);
+ 			
+			// This empty list is necessary to prevent a null reference exception
+			Net46ExtensionDirectoryComponents = new List<string>();
 
 			WrapperXmlFiles = new List<string>();
 			WrapperXmlFiles.AddRange(wrapperXmls);

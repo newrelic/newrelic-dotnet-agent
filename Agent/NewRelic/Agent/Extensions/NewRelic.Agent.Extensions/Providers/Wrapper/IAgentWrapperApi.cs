@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="mustBeRootTransaction">Whether or not the transaction must be root.</param>
 		/// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		ITransaction CreateWebTransaction(WebTransactionType type, [NotNull] String name, Boolean mustBeRootTransaction = true, Action onCreate = null);
+		ITransaction CreateWebTransaction(WebTransactionType type, [NotNull] string name, bool mustBeRootTransaction = true, Action onCreate = null);
 
 		/// <summary>
 		/// Create a new transaction for processing a message received from a message queue.
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="destination">The destination queue of the message being handled. Can be null.</param>
 		/// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, [NotNull] String brokerVendorName, [CanBeNull] String destination = null, Action onCreate = null);
+		ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, [NotNull] string brokerVendorName, [CanBeNull] string destination = null, Action onCreate = null);
 
 		/// <summary>
 		/// Create a new transaction for processing an arbitrary transaction.
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="mustBeRootTransaction">Whether or not the transaction can exist within another transaction</param>
 		/// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		ITransaction CreateOtherTransaction([NotNull] String category, [NotNull] String name, Boolean mustBeRootTransaction = true, Action onCreate = null);
+		ITransaction CreateOtherTransaction([NotNull] string category, [NotNull] string name, bool mustBeRootTransaction = true, Action onCreate = null);
 
 		/// <summary>
 		/// Casts an object as an ISegment instance.  This should be used when casting values retrieved from 
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="segment">An object that should be an instance of ISegment</param>
 		/// <returns>A non-null ISegment instance.</returns>
 		[NotNull]
-		ISegment CastAsSegment(Object segment);
+		ISegment CastAsSegment(object segment);
 
 		/// <summary>
 		/// Sets up the resources necessary to execute an explain plan.
@@ -74,8 +74,8 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="headers">The headers to be processed. Must not be null.</param>
 		/// <param name="contentLength">The length of the content, in bytes, if available.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void ProcessInboundRequest([NotNull] IEnumerable<KeyValuePair<String, String>> headers, long? contentLength = null);
-		
+		void ProcessInboundRequest([NotNull] IEnumerable<KeyValuePair<string, string>> headers, long? contentLength = null);
+
 		/// <summary>
 		/// Tell the agent about an error that just occurred in the wrapper. Normally exceptions should just be thrown so that the agent can handle them directly, but this method is useful in situations where exceptions are happening outside the scope of the agent (for example, on another thread). This method is thread-safe.
 		/// </summary>
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="contentType">The type of content in the stream.</param>
 		/// <param name="requestPath">The path of the request</param>
 		[CanBeNull]
-		Stream TryGetStreamInjector([CanBeNull] Stream stream, [CanBeNull] Encoding encoding, [CanBeNull] String contentType, [CanBeNull] String requestPath);
+		Stream TryGetStreamInjector([CanBeNull] Stream stream, [CanBeNull] Encoding encoding, [CanBeNull] string contentType, [CanBeNull] string requestPath);
 	}
 
 	public enum WebTransactionType
@@ -127,6 +127,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		Purge,
 	}
 
+	///<summary>This enum must be a sequence of values starting with 0 and incrementing by 1. See MetricNames.GetEnumerationFunc</summary>
 	public enum DatastoreVendor
 	{
 //		Cassandra,
@@ -153,6 +154,11 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// </summary>
 		/// <returns></returns>
 		bool IsValid { get; }
+
+		/// <summary>
+		/// Returns true if this is a leaf segment.
+		/// </summary>
+		bool IsLeaf { get; }
 
 		/// <summary>
 		/// Ends this transaction segment.

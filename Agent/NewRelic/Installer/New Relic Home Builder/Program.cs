@@ -171,6 +171,7 @@ namespace NewRelic.Installer
 
 			Directory.CreateDirectory(DestinationExtensionsDirectoryPath);
 			Directory.CreateDirectory(Path.Combine(DestinationExtensionsDirectoryPath, "netstandard2.0"));
+			Directory.CreateDirectory(Path.Combine(DestinationExtensionsDirectoryPath, "net46"));
 
 			CopyProfiler(isLinux);
 
@@ -471,9 +472,16 @@ namespace NewRelic.Installer
 
 			dlls.ForEach(filePath =>
 			{
-				var destination = filePath.Contains("netstandard")
-					? Path.Combine(DestinationExtensionsDirectoryPath, "netstandard2.0")
-					: DestinationExtensionsDirectoryPath;
+				var destination = DestinationExtensionsDirectoryPath;
+
+				if (filePath.Contains("netstandard"))
+				{
+					destination = Path.Combine(destination, "netstandard2.0");
+				}
+				else if (filePath.Contains("net46"))
+				{
+					destination = Path.Combine(destination, "net46");
+				}
 				CopyNewRelicAssemblies(filePath, destination);
 				TryCopyExtensionInstrumentationFile(filePath, DestinationExtensionsDirectoryPath);
 			});

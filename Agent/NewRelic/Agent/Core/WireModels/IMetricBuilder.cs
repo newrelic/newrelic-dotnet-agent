@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Net;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -57,5 +59,41 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildAzureUsabilityError();
 		MetricWireModel TryBuildPcfUsabilityError();
 		MetricWireModel TryBuildGcpUsabilityError();
+
+		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
+		MetricWireModel TryBuildAcceptPayloadSuccess { get; }
+
+		/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
+		MetricWireModel TryBuildAcceptPayloadException { get; }
+
+		/// <summary>Created when AcceptDistributedTracePayload had a parsing exception</summary>
+		MetricWireModel TryBuildAcceptPayloadParseException { get; }
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because CreatePayload had already been called</summary>
+		MetricWireModel TryBuildAcceptPayloadIgnoredCreateBeforeAccept { get; }
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because AcceptPayload had already been called</summary>
+		MetricWireModel TryBuildAcceptPayloadIgnoredMultiple { get; }
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload's major version was greater than the agent's</summary>
+		MetricWireModel TryBuildAcceptPayloadIgnoredMajorVersion { get; }
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was null</summary>
+		MetricWireModel TryBuildAcceptPayloadIgnoredNull { get; }
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
+		MetricWireModel TryBuildAcceptPayloadIgnoredUntrustedAccount { get; }
+
+		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
+		MetricWireModel TryBuildCreatePayloadSuccess { get; }
+
+		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
+		MetricWireModel TryBuildCreatePayloadException { get; }
+
+		MetricWireModel TryBuildSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode);
+
+		MetricWireModel TryBuildSupportabilityEndpointMethodErrorAttempts(string endpointMethod);
+
+		MetricWireModel TryBuildSupportabilityEndpointMethodErrorDuration(string endpointMethod, TimeSpan duration);
 	}
 }

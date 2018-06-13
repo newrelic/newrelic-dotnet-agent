@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -72,6 +73,32 @@ namespace NewRelic.Agent.Core.AgentHealth
 			Assert.AreEqual("Supportability/WrapperShutdown/all", metric0.MetricName.Name);
 			Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/all", metric1.MetricName.Name);
 			Assert.AreEqual("Supportability/WrapperShutdown/Castle.Proxies.IWrapperProxy/String.FooMethod", metric2.MetricName.Name);
+		}
+
+		[Test]
+		public void GenerateExpectedCollectorErrorSupportabilityMetrics()
+		{
+			_agentHealthReporter.ReportSupportabilityCollectorErrorException("test_method_endpoint", TimeSpan.FromMilliseconds(1500), HttpStatusCode.InternalServerError);
+			Assert.AreEqual(2, _publishedMetrics.Count);
+			NrAssert.Multiple(
+				() => Assert.AreEqual("Supportability/Agent/Collector/HTTPError/500", _publishedMetrics[0].MetricName.Name),
+				() => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0),
+				() => Assert.AreEqual("Supportability/Agent/Collector/test_method_endpoint/Duration", _publishedMetrics[1].MetricName.Name),
+				() => Assert.AreEqual(1, _publishedMetrics[1].Data.Value0),
+				() => Assert.AreEqual(1.5, _publishedMetrics[1].Data.Value1)
+			);
+		}
+
+		[Test]
+		public void ShouldNotGenerateHttpErrorCollectorErrorSupportabilityMetric()
+		{
+			_agentHealthReporter.ReportSupportabilityCollectorErrorException("test_method_endpoint", TimeSpan.FromMilliseconds(1500), statusCode: null);
+			Assert.AreEqual(1, _publishedMetrics.Count);
+			NrAssert.Multiple(
+				() => Assert.AreEqual("Supportability/Agent/Collector/test_method_endpoint/Duration", _publishedMetrics[0].MetricName.Name),
+				() => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0),
+				() => Assert.AreEqual(1.5, _publishedMetrics[0].Data.Value1)
+			);
 		}
 	}
 }

@@ -23,7 +23,6 @@ namespace ArtifactBuilder.Artifacts
 			package.CopyToLib(coreAgentComponents.AgentApiDll, "netstandard2.0");
 			package.SetVersion(frameworkAgentComponents.Version);
 			package.Pack();
-			package.PushToProGet();
 		}
 	}
 }

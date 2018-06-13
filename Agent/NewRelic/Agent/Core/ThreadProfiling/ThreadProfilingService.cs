@@ -1,10 +1,8 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Collections;
 using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections;
@@ -34,8 +32,6 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		private readonly INativeMethods _nativeMethods;
 		#endregion
 
-		private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
 		[NotNull]
 		private readonly IDataTransportService _dataTransportService;
 
@@ -46,7 +42,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		private DateTime _stopSessionTime;
 
 		[NotNull]
-		private readonly IDictionary<UIntPtr, ClassMethodNames> _functionNames = new ConcurrentDictionary<UIntPtr, ClassMethodNames>();
+		private readonly Dictionary<UIntPtr, ClassMethodNames> _functionNames = new Dictionary<UIntPtr, ClassMethodNames>();
 		[NotNull]
 		private readonly Object _syncObjFunctionNames = new Object();
 
@@ -522,15 +518,24 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
 		public void ResetCache()
 		{
+			
 			_numberSamplesInSession = 0;
 			_threadProfilingBucket.ClearTree();
-			_functionNames.Clear();
+
+			lock (_syncObjFunctionNames)
+			{
+				_functionNames.Clear();
+			}
+
 			_managedThreadsFromProfiler.Clear();
 			PruningList.Clear();
 
-			_largeStackOverflows.Clear();
-			_failedThreads.Clear();
-			_failedThreadErrorCodes.Clear();
+			lock (_syncObjFailedProfiles)
+			{
+				_largeStackOverflows.Clear();
+				_failedThreads.Clear();
+				_failedThreadErrorCodes.Clear();
+			}
 		}
 
 	}

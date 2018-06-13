@@ -24,7 +24,6 @@
     <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\..\Parsing\Parsing.csproj" />
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    <ProjectReference Include="..\WrapperUtilities\WrapperUtilities.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Instrumentation.xml">

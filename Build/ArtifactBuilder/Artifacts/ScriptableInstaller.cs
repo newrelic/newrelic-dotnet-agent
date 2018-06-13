@@ -49,6 +49,7 @@ namespace ArtifactBuilder.Artifacts
 			package.CopyToContent(components.RootInstallDirectoryComponents.Where(x => !x.Contains("newrelic.config") && !x.Contains("newrelic.xsd")), @"newrelic\ProgramFiles\NewRelic\NetAgent");
 			package.CopyToContent(components.ExtensionDirectoryComponents.Where(x => x.Contains(".dll")), @"newrelic\ProgramFiles\NewRelic\NetAgent\Extensions");
 			package.CopyToContent(components.NetstandardExtensionDirectoryComponents, @"newrelic\ProgramFiles\NewRelic\NetAgent\Extensions\netstandard2.0");
+			package.CopyToContent(components.Net46ExtensionDirectoryComponents, @"newrelic\ProgramFiles\NewRelic\NetAgent\Extensions\net46");
 			package.CopyToContent(x86Components.RootInstallDirectoryComponents.Where(x => x.Contains("NewRelic.Profiler.dll")), @"newrelic\ProgramFiles\NewRelic\NetAgent\x86");
 			package.CopyToContent(components.WrapperXmlFiles, $@"newrelic\ProgramData\NewRelic\NetAgent\Extensions");
 			package.CopyToContent(components.ExtensionXsd, $@"newrelic\ProgramData\NewRelic\NetAgent\Extensions");

@@ -37,7 +37,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    <ProjectReference Include="..\WrapperUtilities\WrapperUtilities.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

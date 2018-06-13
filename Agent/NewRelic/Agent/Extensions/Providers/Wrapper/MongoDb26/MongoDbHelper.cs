@@ -1,0 +1,154 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Net;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Parsing.ConnectionString;
+using NewRelic.Reflection;
+
+namespace NewRelic.Providers.Wrapper.MongoDb26
+{
+	public static class MongoDbHelper
+	{
+		private static readonly ConcurrentDictionary<Type, Func<object, object>> _collectionNamespaceGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
+		private static readonly ConcurrentDictionary<Type, Func<object, object>> _collectionGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
+		private static readonly ConcurrentDictionary<Type, Func<object, object>> _channelSourceGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
+
+		private static Func<object, string> _getCollectionName;
+		private static Func<object, object> _getDatabaseNamespaceFromCollectionNamespace;
+		private static Func<object, object> _getDatabaseNamespaceFromDatabase;
+		private static Func<object, string> _getDatabaseName;
+		private static Func<object, EndPoint> _getEndPoint;
+		private static Func<object, object> _getClient;
+		private static Func<object, object> _getSettings;
+		private static Func<object, IList> _getServers;
+		private static Func<object, string> _getHost;
+		private static Func<object, int> _getPort;
+
+
+		public static string GetCollectionName(object collectionNamespace)
+		{
+			var getter = _getCollectionName ?? (_getCollectionName = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver.Core", "MongoDB.Driver.CollectionNamespace", "CollectionName"));
+			return getter(collectionNamespace);
+		}
+
+		public static string GetDatabaseNameFromCollectionNamespace(object collectionNamespace)
+		{
+			var databaseNamespaceGetter = _getDatabaseNamespaceFromCollectionNamespace ?? (_getDatabaseNamespaceFromCollectionNamespace = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver.Core", "MongoDB.Driver.CollectionNamespace", "DatabaseNamespace"));
+			var databaseNamespace = databaseNamespaceGetter(collectionNamespace);
+
+			return GetDatabaseNameFromDatabaseNamespace(databaseNamespace);
+		}
+
+		public static string GetDatabaseNameFromDatabase(object database)
+		{
+			var databaseNamespaceGetter = _getDatabaseNamespaceFromDatabase ?? (_getDatabaseNamespaceFromDatabase = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabaseImpl", "DatabaseNamespace"));
+			var databaseNamespace = databaseNamespaceGetter(database);
+
+			return GetDatabaseNameFromDatabaseNamespace(databaseNamespace);
+		}
+
+		private static string GetDatabaseNameFromDatabaseNamespace(object databaseNamespace)
+		{
+			var databaseNameGetter = _getDatabaseName ?? (_getDatabaseName = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver.Core", "MongoDB.Driver.DatabaseNamespace", "DatabaseName"));
+			return databaseNameGetter(databaseNamespace);
+		}
+
+		private static EndPoint GetEndPoint(object owner)
+		{
+			var getter = _getEndPoint ?? (_getEndPoint = VisibilityBypasser.Instance.GeneratePropertyAccessor<EndPoint>("MongoDB.Driver.Core", "MongoDB.Driver.Core.Servers.Server", "EndPoint"));
+			return getter(owner);
+		}
+
+		public static object GetCollectionNamespaceFieldFromGeneric(object owner)
+		{
+			var getter = _collectionNamespaceGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldAccessor<object>(t, "_collectionNamespace"));
+			return getter(owner);
+		}
+
+		public static object GetCollectionNamespacePropertyFromGeneric(object owner)
+		{
+			var getter = _collectionNamespaceGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "CollectionNamespace"));
+			return getter(owner);
+		}
+
+		public static object GetCollectionFieldFromGeneric(object owner)
+		{
+			var getter = _collectionGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldAccessor<object>(t, "_collection"));
+			return getter(owner);
+		}
+
+		private static object GetChannelSourceFieldFromGeneric(object owner)
+		{
+			var getter = _channelSourceGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldAccessor<object>(t, "_channelSource"));
+			return getter(owner);
+		}
+
+		public static ConnectionInfo GetConnectionInfoFromCursor(object asyncCursor, object collectionNamespace)
+		{
+			string host = null;
+			string port = null;
+
+			dynamic channelSource = GetChannelSourceFieldFromGeneric(asyncCursor);
+			EndPoint endpoint = GetEndPoint(channelSource.Server);
+
+			var dnsEndpoint = endpoint as DnsEndPoint;
+			var ipEndpoint = endpoint as IPEndPoint;
+
+			if (dnsEndpoint != null)
+			{
+				port = dnsEndpoint.Port.ToString();
+				host = ConnectionStringParserHelper.NormalizeHostname(dnsEndpoint.Host);
+			}
+
+			if (ipEndpoint != null)
+			{
+				port = ipEndpoint.Port.ToString();
+				host = ConnectionStringParserHelper.NormalizeHostname(ipEndpoint.Address.ToString());
+			}
+
+			var databaseName = GetDatabaseNameFromCollectionNamespace(collectionNamespace);
+
+			return new ConnectionInfo(host, port, databaseName);
+		}
+
+		public static ConnectionInfo GetConnectionInfoFromDatabase(object database)
+		{
+			var databaseName = GetDatabaseNameFromDatabase(database);
+			var servers = GetServersFromDatabase(database);
+
+			string port = null;
+			string host = null;
+
+			if (servers.Count == 1)
+			{
+				GetHostAndPortFromServer(servers[0], out var rawHost, out var rawPort);
+				port = rawPort.ToString();
+				host = ConnectionStringParserHelper.NormalizeHostname(rawHost);
+			}
+
+			return new ConnectionInfo(host, port, databaseName);
+		}
+
+		private static IList GetServersFromDatabase(object database)
+		{
+			var clientGetter = _getClient ?? (_getClient = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabaseImpl", "Client"));
+			var settingsGetter = _getSettings ?? (_getSettings = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoClient", "Settings"));
+			var serversGetter = _getServers ?? (_getServers = VisibilityBypasser.Instance.GenerateFieldAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.MongoClientSettings", "_servers"));
+
+			var client = clientGetter(database);
+			var settings = settingsGetter(client);
+			return serversGetter(settings);
+		}
+
+		private static void GetHostAndPortFromServer(object server, out string host, out int port)
+		{
+			var hostGetter = _getHost ?? (_getHost = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Host"));
+			var portGetter = _getPort ?? (_getPort = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>("MongoDB.Driver", "MongoDB.Driver.MongoServerAddress", "Port"));
+
+			host = hostGetter(server);
+			port = portGetter(server);
+		}
+
+	}
+}

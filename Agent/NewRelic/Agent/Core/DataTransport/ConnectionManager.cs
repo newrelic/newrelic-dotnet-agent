@@ -97,8 +97,19 @@ namespace NewRelic.Agent.Core.DataTransport
 			{
 				ScheduleRestart();
 			}
-			//This exception is thrown when the agent receives a service unavailable error
-			catch (ServiceUnavailableException)
+			// This exception is thrown when the collector(APM) returns a RuntimeError
+			catch (RuntimeException)
+			{
+				ScheduleRestart();
+			}
+			// This exception is thrown when the collector(APM) returns an exception that we don't know about
+			catch (ExceptionFactories.UnknownRPMException)
+			{
+				ScheduleRestart();
+			}
+			// This exception is thrown when the agent receives an unexpected HTTP error
+			// This is also the parent type of some of the more specific HTTP errors that we handle
+			catch (HttpException)
 			{
 				ScheduleRestart();
 			}

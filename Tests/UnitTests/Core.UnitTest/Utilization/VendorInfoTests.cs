@@ -30,6 +30,7 @@ namespace NewRelic.Agent.Core.Utilization
 		}
 
 		[Test]
+		[Ignore("Test fails when run on a server in AWS, underlying code needs to be restructured to be more easily mocked", Until = "2018-07-02 00:00:00Z")]
 		public void GetVendors_Returns_Empty_Dictionary_When_Detect_True_And_Data_Unavailable()
 		{
 			Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);

@@ -19,11 +19,13 @@ namespace NewRelic.Agent.Core
 
 		public static bool IsWindows { get; }
 		public static bool IsNetstandardPresent { get; }
+		public static bool IsNet46OrAbovePresent { get; }
 		public static string NewRelicHome { get; }
 		public static string NewRelicInstallPath { get; }
 		public static string HomeExtensionsDirectory { get; }
 		public static string InstallPathExtensionsDirectory { get; }
 		public static string InstallPathNetstandardExtensionsDirectory { get; }
+		public static string InstallPathNet46ExtensionsDirectory { get; }
 
 		static AgentInstallConfiguration()
 		{
@@ -37,7 +39,9 @@ namespace NewRelic.Agent.Core
 			HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
 			InstallPathNetstandardExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions", "netstandard2.0") : null;
+			InstallPathNet46ExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions", "net46") : null;
 			IsNetstandardPresent = GetIsNetstandardPresent();
+			IsNet46OrAbovePresent = GetIsNet46OrAbovePresent();
 		}
 
 		private static bool GetIsNetstandardPresent()
@@ -45,6 +49,15 @@ namespace NewRelic.Agent.Core
 			var netstandard20Version = new Version(2, 0, 0, 0);
 			var netstandardAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "netstandard");
 			return netstandardAssembly != null && netstandardAssembly.GetName().Version >= netstandard20Version;
+		}
+		private static bool GetIsNet46OrAbovePresent()
+		{
+#if NET45
+			var net46Version = new Version(4, 0, 30319, 42000);
+			return System.Environment.Version >= net46Version;
+#else
+			return true;
+#endif
 		}
 
 		private static string GetNewRelicHome()

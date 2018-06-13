@@ -1729,6 +1729,30 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 		#endregion CrossApplicationTracingEnabled
 
+		#region Distributed Tracing
+		[Test]
+		[TestCase(true, "123#456", true)]
+		[TestCase(false, "123#456", false)]
+		[TestCase(true, null, false)]
+		public void DistributedTracingEnabled(bool localConfig, string crossProcessId, bool expectedResult)
+		{
+			_localConfig.distributedTracing.enabled = localConfig;
+			_serverConfig.CatId = crossProcessId;
+
+			Assert.AreEqual(expectedResult, _defaultConfig.DistributedTracingEnabled);
+		}
+
+		[Test]
+		public void DistributedTracingEnabledIsFalseByDefault()
+		{
+			_serverConfig.CatId = "123#456";
+			_defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+
+			Assert.IsFalse(_defaultConfig.DistributedTracingEnabled);
+		}
+
+		#endregion Distributed Tracing
+
 		#region Utilization
 
 		[Test]

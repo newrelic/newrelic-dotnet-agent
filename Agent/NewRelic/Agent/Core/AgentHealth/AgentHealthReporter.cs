@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Events;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -11,38 +7,73 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
+using System;
+using System.Collections.Generic;
+using System.Net;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
 	public interface IAgentHealthReporter
 	{
-		void ReportAgentVersion([NotNull] String agentVersion, [NotNull] String hostName);
-		void ReportTransactionEventReservoirResized(UInt32 newSize);
+		void ReportAgentVersion([NotNull] string agentVersion, [NotNull] string hostName);
+		void ReportTransactionEventReservoirResized(uint newSize);
 		void ReportTransactionEventCollected();
-		void ReportTransactionEventsRecollected(Int32 count);
-		void ReportTransactionEventsSent(Int32 count);
-		void ReportCustomEventReservoirResized(UInt32 newSize);
+		void ReportTransactionEventsRecollected(int count);
+		void ReportTransactionEventsSent(int count);
+		void ReportCustomEventReservoirResized(uint newSize);
 		void ReportCustomEventCollected();
-		void ReportCustomEventsRecollected(Int32 count);
-		void ReportCustomEventsSent(Int32 count);
+		void ReportCustomEventsRecollected(int count);
+		void ReportCustomEventsSent(int count);
 		void ReportErrorTraceCollected();
-		void ReportErrorTracesRecollected(Int32 count);
-		void ReportErrorTracesSent(Int32 count);
+		void ReportErrorTracesRecollected(int count);
+		void ReportErrorTracesSent(int count);
 		void ReportErrorEventSeen();
-		void ReportErrorEventsSent(Int32 count);
-		void ReportSqlTracesRecollected(Int32 count);
-		void ReportSqlTracesSent(Int32 count);
+		void ReportErrorEventsSent(int count);
+		void ReportSqlTracesRecollected(int count);
+		void ReportSqlTracesSent(int count);
 
-		void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, [NotNull] String lastStartedSegmentName, [NotNull] String lastFinishedSegmentName);
+		void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, [NotNull] string lastStartedSegmentName, [NotNull] string lastFinishedSegmentName);
 
 		void ReportWrapperShutdown([NotNull] IWrapper wrapper, [NotNull] Method method);
-		void ReportAgentApiMethodCalled([NotNull] String methodName);
+		void ReportAgentApiMethodCalled([NotNull] string methodName);
 		void ReportIfHostIsLinuxOs();
 		void ReportBootIdError();
 		void ReportAwsUtilizationError();
 		void ReportAzureUtilizationError();
 		void ReportPcfUtilizationError();
 		void ReportGcpUtilizationError();
+
+		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadSuccess();
+
+		/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadException();
+
+		/// <summary>Created when AcceptDistributedTracePayload had a parsing exception</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadParseException();
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because CreatePayload had already been called</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept();
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because AcceptPayload had already been called</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple();
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload's major version was greater than the agent's</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion();
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was null</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredNull();
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
+		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount();
+
+		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
+		void ReportSupportabilityDistributedTraceCreatePayloadSuccess();
+
+		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
+		void ReportSupportabilityDistributedTraceCreatePayloadException();
+
+		void ReportSupportabilityCollectorErrorException(string endpointMethod, TimeSpan responseDuration, HttpStatusCode? statusCode);
 	}
 
 	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
@@ -87,10 +118,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 		{
 			foreach(var data in _recurringLogDatas)
 			{
-				if ( data != null)
-				{
-					data.LogAction(data.Message);
-				}
+				data?.LogAction(data.Message);
 			}
 
 			foreach(var counter in _agentHealthEventCounters)
@@ -104,247 +132,85 @@ namespace NewRelic.Agent.Core.AgentHealth
 			}
 		}
 
-		public void ReportAgentVersion(String agentVersion, String hostName)
+		public void ReportAgentVersion(string agentVersion, string hostName)
 		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildAgentVersionMetric(agentVersion),
-				_metricBuilder.TryBuildAgentVersionByHostMetric(hostName, agentVersion)
-			};
-
-			foreach(var metric in metrics)
-			{
-				TrySend(metric);
-			}
+			TrySend(_metricBuilder.TryBuildAgentVersionMetric(agentVersion));
+			TrySend(_metricBuilder.TryBuildAgentVersionByHostMetric(hostName, agentVersion));
 		}
 
 		#region TransactionEvents
 
-		public void ReportTransactionEventReservoirResized(UInt32 newSize)
+		public void ReportTransactionEventReservoirResized(uint newSize)
 		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildTransactionEventReservoirResizedMetric(),
-			};
-
-			foreach(var metric in metrics)
-			{
-				TrySend(metric);
-			}
+			TrySend(_metricBuilder.TryBuildTransactionEventReservoirResizedMetric());
 
 			Log.Warn("Resizing transaction event reservoir to " + newSize + " events.");
 		}
 
 		public void ReportTransactionEventCollected()
 		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildTransactionEventsCollectedMetric(),
+			TrySend(_metricBuilder.TryBuildTransactionEventsCollectedMetric());
 
-				// Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
-				_metricBuilder.TryBuildTransactionEventsSeenMetric()
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
+			// Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
+			TrySend(_metricBuilder.TryBuildTransactionEventsSeenMetric());
 		}
 
-		public void ReportTransactionEventsRecollected(Int32 count)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildTransactionEventsRecollectedMetric(count)
-			};
+		public void ReportTransactionEventsRecollected(int count) => TrySend(_metricBuilder.TryBuildTransactionEventsRecollectedMetric(count));
 
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
-
-		public void ReportTransactionEventsSent(Int32 count)
-		{
-			var metrics = new[]
-			{
-				// Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
-				_metricBuilder.TryBuildTransactionEventsSentMetric(count),
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
+		public void ReportTransactionEventsSent(int count) => TrySend(_metricBuilder.TryBuildTransactionEventsSentMetric(count));
 
 		#endregion TransactionEvents
 
 		#region CustomEvents
 
-		public void ReportCustomEventReservoirResized(UInt32 newSize)
+		public void ReportCustomEventReservoirResized(uint newSize)
 		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildCustomEventReservoirResizedMetric(),
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
+			TrySend(_metricBuilder.TryBuildCustomEventReservoirResizedMetric());
 
 			Log.Warn("Resizing custom event reservoir to " + newSize + " events.");
 		}
 
 		public void ReportCustomEventCollected()
 		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildCustomEventsCollectedMetric(),
-				
-				// Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
-				_metricBuilder.TryBuildCustomEventsSeenMetric()
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
+			TrySend(_metricBuilder.TryBuildCustomEventsCollectedMetric());
+			// Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
+			TrySend(_metricBuilder.TryBuildCustomEventsSeenMetric());
 		}
 
-		public void ReportCustomEventsRecollected(Int32 count)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildCustomEventsRecollectedMetric(count)
-			};
+		public void ReportCustomEventsRecollected(int count) => TrySend(_metricBuilder.TryBuildCustomEventsRecollectedMetric(count));
 
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
-
-		public void ReportCustomEventsSent(Int32 count)
-		{
-			var metrics = new[]
-			{
-				// Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
-				_metricBuilder.TryBuildCustomEventsSentMetric(count),
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
+		// Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
+		public void ReportCustomEventsSent(int count) => TrySend(_metricBuilder.TryBuildCustomEventsSentMetric(count));
 
 		#endregion CustomEvents
 
 		#region ErrorTraces
 
-		public void ReportErrorTraceCollected()
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildErrorTracesCollectedMetric(),
-			};
+		public void ReportErrorTraceCollected() => TrySend(_metricBuilder.TryBuildErrorTracesCollectedMetric());
 
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
+		public void ReportErrorTracesRecollected(int count) => TrySend(_metricBuilder.TryBuildErrorTracesRecollectedMetric(count));
 
-		public void ReportErrorTracesRecollected(Int32 count)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildErrorTracesRecollectedMetric(count)
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
-
-		public void ReportErrorTracesSent(Int32 count)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildErrorTracesSentMetric(count),
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
+		public void ReportErrorTracesSent(int count) => TrySend(_metricBuilder.TryBuildErrorTracesSentMetric(count));
 
 		#endregion ErrorTraces
 
 		#region ErrorEvents
 
-		public void ReportErrorEventSeen()
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildErrorEventsSeenMetric(),
-			};
+		public void ReportErrorEventSeen() => TrySend(_metricBuilder.TryBuildErrorEventsSeenMetric());
 
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
+		public void ReportErrorEventsSent(int count) => TrySend(_metricBuilder.TryBuildErrorEventsSentMetric(count));
 
-		public void ReportErrorEventsSent(Int32 count)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildErrorEventsSentMetric(count),
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
 		#endregion ErrorEvents
 
 		#region SqlTraces
 
-		public void ReportSqlTracesRecollected(Int32 count)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildSqlTracesRecollectedMetric(count)
-			};
+		public void ReportSqlTracesRecollected(int count) => TrySend(_metricBuilder.TryBuildSqlTracesRecollectedMetric(count));
 
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
-
-		public void ReportSqlTracesSent(Int32 count)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildSqlTracesSentMetric(count),
-			};
-
-			foreach (var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
+		public void ReportSqlTracesSent(int count) => TrySend(_metricBuilder.TryBuildSqlTracesSentMetric(count));
 
 		#endregion ErrorTraces
 
-		public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, String lastStartedSegmentName, String lastFinishedSegmentName)
+		public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
 		{
 			var transactionName = transactionMetricName.PrefixedName;
 			Log.Debug($"Transaction was garbage collected without ever ending.\nTransaction Name: {transactionName}\nLast Started Segment: {lastStartedSegmentName}\nLast Finished Segment: {lastFinishedSegmentName}");
@@ -373,18 +239,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 			_recurringLogDatas.Add(new RecurringLogData(Log.Debug, $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
 		}
 
-		public void ReportAgentApiMethodCalled(String methodName)
-		{
-			var metrics = new[]
-			{
-				_metricBuilder.TryBuildAgentApiMetric(methodName)
-			};
-
-			foreach(var metric in metrics)
-			{
-				TrySend(metric);
-			}
-		}
+		public void ReportAgentApiMethodCalled(string methodName) => TrySend(_metricBuilder.TryBuildAgentApiMetric(methodName));
 
 		public void ReportIfHostIsLinuxOs()
 		{
@@ -397,35 +252,74 @@ namespace NewRelic.Agent.Core.AgentHealth
 #endif
 		}
 
-		public void ReportBootIdError()
+		public void ReportBootIdError() => TrySend(_metricBuilder.TryBuildBootIdError());
+
+		public void ReportAwsUtilizationError() => TrySend(_metricBuilder.TryBuildAwsUsabilityError());
+
+		public void ReportAzureUtilizationError() => TrySend(_metricBuilder.TryBuildAzureUsabilityError());
+
+		public void ReportPcfUtilizationError() => TrySend(_metricBuilder.TryBuildPcfUsabilityError());
+
+		public void ReportGcpUtilizationError() => TrySend(_metricBuilder.TryBuildGcpUsabilityError());
+
+		#region DistributedTrace
+
+		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadSuccess() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadSuccess);
+
+		/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadException() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadException);
+
+		/// <summary>Created when AcceptDistributedTracePayload had a parsing exception</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadParseException() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadParseException);
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because CreatePayload had already been called</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredCreateBeforeAccept);
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because AcceptPayload had already been called</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredMultiple);
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload's major version was greater than the agent's</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredMajorVersion);
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was null</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredNull() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredNull);
+
+		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount() =>
+			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredUntrustedAccount);
+
+		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
+		public void ReportSupportabilityDistributedTraceCreatePayloadSuccess() =>
+			TrySend(_metricBuilder.TryBuildCreatePayloadSuccess);
+
+		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
+		public void ReportSupportabilityDistributedTraceCreatePayloadException() =>
+			TrySend(_metricBuilder.TryBuildCreatePayloadException);
+
+		#endregion DistributedTrace
+
+		#region HttpError
+
+		public void ReportSupportabilityCollectorErrorException(string endpointMethod, TimeSpan responseDuration, HttpStatusCode? statusCode)
 		{
-			var metric = _metricBuilder.TryBuildBootIdError();
-			TrySend(metric);
+			if (statusCode.HasValue)
+			{
+				TrySend(_metricBuilder.TryBuildSupportabilityErrorHttpStatusCodeFromCollector(statusCode.Value));
+			}
+
+			TrySend(_metricBuilder.TryBuildSupportabilityEndpointMethodErrorDuration(endpointMethod, responseDuration));
 		}
 
-		public void ReportAwsUtilizationError()
-		{
-			var metric = _metricBuilder.TryBuildAwsUsabilityError();
-			TrySend(metric);
-		}
-
-		public void ReportAzureUtilizationError()
-		{
-			var metric = _metricBuilder.TryBuildAzureUsabilityError();
-			TrySend(metric);
-		}
-
-		public void ReportPcfUtilizationError()
-		{
-			var metric = _metricBuilder.TryBuildPcfUsabilityError();
-			TrySend(metric);
-		}
-
-		public void ReportGcpUtilizationError()
-		{
-			var metric = _metricBuilder.TryBuildGcpUsabilityError();
-			TrySend(metric);
-		}
+		
+		#endregion
 
 		public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
 		{
@@ -459,12 +353,12 @@ namespace NewRelic.Agent.Core.AgentHealth
 		private class RecurringLogData
 		{
 			[NotNull]
-			public readonly Action<String> LogAction;
+			public readonly Action<string> LogAction;
 
 			[NotNull]
-			public readonly String Message;
+			public readonly string Message;
 
-			public RecurringLogData([NotNull] Action<String> logAction, [NotNull] String message)
+			public RecurringLogData([NotNull] Action<string> logAction, [NotNull] string message)
 			{
 				LogAction = logAction;
 				Message = message;

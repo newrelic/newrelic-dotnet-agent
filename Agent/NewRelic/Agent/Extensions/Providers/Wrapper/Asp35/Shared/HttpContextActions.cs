@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions.Collections;
@@ -152,9 +151,9 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 					httpContext.Response.AddHeader(header.Key, header.Value);
 				}
 			}
-			catch (HttpException e)
+			catch (HttpException)
 			{
-				Log.Warn($"Could not add HTTP response headers, response marked as already sent: {e.ToString()}");
+				// Swallow HttpExceptions that can be thrown if the response has already been sent (e.g. in case of a server redirect)
 			}
 			catch (Exception ex)
 			{

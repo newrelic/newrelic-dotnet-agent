@@ -1,13 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.WrapperUtilities;
 
-namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
+namespace NewRelic.Agent.Core.Wrapper
 {
 	public class DefaultWrapperAsync : IDefaultWrapper
 	{
@@ -32,10 +27,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 				return new CanWrapResponse(false);
 			}
 
-			//LegacyPipeline is only a concern w/ .NET Framework
-			return WrapperUtilities.WrapperUtils.LegacyAspPipelineIsPresent() ?
-						new CanWrapResponse(false, WrapperUtilities.WrapperUtils.LegacyAspPipelineNotSupportedMessage("custom", "custom", instrumentedMethodInfo.Method.MethodName)) :
-						new CanWrapResponse(true);
+			return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("custom", "custom", instrumentedMethodInfo.Method.MethodName);
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, ITransaction transaction)
@@ -57,7 +49,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
 			}
 
-			return WrapperUtils.GetAsyncDelegateFor(agentWrapperApi, segment);
+			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}
 	}
 }

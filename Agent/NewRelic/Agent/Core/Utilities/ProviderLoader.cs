@@ -14,13 +14,21 @@ namespace NewRelic.Agent.Core.Utilities
 		[NotNull]
 		public static IEnumerable<T> LoadExtensions<T>()
 		{
-			var loadPaths = AgentInstallConfiguration.IsNetstandardPresent
-				? new[] { AgentInstallConfiguration.InstallPathExtensionsDirectory, AgentInstallConfiguration.InstallPathNetstandardExtensionsDirectory }
-				: new[] { AgentInstallConfiguration.InstallPathExtensionsDirectory };
+			var loadPaths = new List<string> { AgentInstallConfiguration.InstallPathExtensionsDirectory };
+
+			if (AgentInstallConfiguration.IsNetstandardPresent)
+			{
+				loadPaths.Add(AgentInstallConfiguration.InstallPathNetstandardExtensionsDirectory);
+			}
+
+			if (AgentInstallConfiguration.IsNet46OrAbovePresent)
+			{
+				loadPaths.Add(AgentInstallConfiguration.InstallPathNet46ExtensionsDirectory);
+			}
 
 			Log.Info($"Loading extensions of type {typeof(T)} from: {string.Join(", ", loadPaths)}");
 
-			var result = TypeInstantiator.ExportedInstancesFromDirectory<T>(loadPaths);
+			var result = TypeInstantiator.ExportedInstancesFromDirectory<T>(loadPaths.ToArray());
 
 			foreach(var ex in result.Exceptions)
 			{
