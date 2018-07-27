@@ -9,6 +9,8 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Collections;
 using NewRelic.Agent.Core.Errors;
 using System.Threading;
+using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -26,10 +28,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[CanBeNull]
 		string CrossApplicationReferrerTripId { get; }
 
-		string DistributedTraceParentType { get; set; }
-		string DistributedTraceParentId { get; set; }
+		string DistributedTraceType { get; set; }
+		string DistributedTraceAppId { get; set; }
+		string DistributedTraceAccountId { get; set; }
+		string DistributedTraceTransportType { get; set; }
+		string DistributedTraceGuid { get; set; }
+		TimeSpan DistributedTraceTransportDuration { get; set; }
 		string DistributedTraceTraceId { get; set; }
-		bool DistributedTraceSampled { get; set; }
+		string DistributedTraceTrustKey { get; set; }
+		string DistributedTraceTransactionId { get; set; }
+		bool? DistributedTraceSampled { get; set; }
+		bool HasOutgoingDistributedTracePayload { get; set; }
+		bool HasIncomingDistributedTracePayload { get; set; }
 
 		[CanBeNull]
 		string SyntheticsResourceId { get; }
@@ -62,8 +72,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		long GetCrossApplicationReferrerContentLength();
 
 		bool IsSynthetics { get; }
-
 		float Priority { get; set; }
+
+		void SetSampled(IAdaptiveSampler adaptiveSampler);
 	}
 
 	/// <summary>
@@ -71,6 +82,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	/// </summary>
 	public class TransactionMetadata : ITransactionMetadata
 	{
+		private readonly object _sync = new object();
 
 		// These are all volatile because they can be read before the transaction is completed.
 		// These can be written by one thread and read by another.
@@ -79,10 +91,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[CanBeNull] private volatile string _crossApplicationReferrerTripId;
 		[CanBeNull] private volatile string _crossApplicationReferrerTransactionGuid;
 
-		[CanBeNull] private volatile string _distributedTraceParentType;
-		[CanBeNull] private volatile string _distributedTraceParentId;
+		[CanBeNull] private volatile string _distributedTraceType;
+		[CanBeNull] private volatile string _distributedTraceAppId;
+		[CanBeNull] private volatile string _distributedTraceAccountId;
+		[CanBeNull] private volatile string _distributedTraceTransportType;
+		[CanBeNull] private volatile string _distributedTraceGuid;
+		private TimeSpan _distributedTraceTransportDuration;
 		[CanBeNull] private volatile string _distributedTraceTraceId;
-		private volatile bool _distributedTraceSampled;
+		private volatile string _distributedTraceTrustKey;
+		private volatile string _distributedTraceTransactionId;
 
 		[CanBeNull] private volatile string _syntheticsResourceId;
 		[CanBeNull] private volatile string _syntheticsJobId;
@@ -120,6 +137,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		private volatile int _httpResponseSubStatusCode = Int32.MinValue;
 		private volatile bool _hasResponseCatHeaders;
+		private volatile float _priority;
 
 		public ImmutableTransactionMetadata ConvertToImmutableMetadata()
 		{
@@ -127,19 +145,32 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				.Except(new[] { _latestCrossApplicationPathHash })
 				.Take(PathHashMaker.AlternatePathHashMaxSize);
 
-			return new ImmutableTransactionMetadata(_uri, _originalUri, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _distributedTraceParentType, _distributedTraceParentId, _distributedTraceTraceId, _distributedTraceSampled, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders, Priority);
+			return new ImmutableTransactionMetadata(_uri, _originalUri, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, DistributedTraceType, DistributedTraceAppId, DistributedTraceAccountId, DistributedTraceTransportType, DistributedTraceGuid, DistributedTraceTransportDuration, DistributedTraceTraceId,  DistributedTraceTrustKey, DistributedTraceTransactionId, DistributedTraceSampled, HasOutgoingDistributedTracePayload, HasIncomingDistributedTracePayload, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders, Priority);
 		}
 
-		public float Priority { get; set; }
-
-		public bool IsSynthetics
+		public float Priority
 		{
-			get
+			get => _priority;
+			set => _priority = value;
+		}
+
+		public void SetSampled(IAdaptiveSampler adaptiveSampler)
+		{
+			lock (_sync)
 			{
-				return (!string.IsNullOrEmpty(_syntheticsResourceId) && !string.IsNullOrEmpty(_syntheticsJobId) &&
-				        !string.IsNullOrEmpty(_syntheticsMonitorId));
+				if (!DistributedTraceSampled.HasValue)
+				{
+					var priority = _priority;
+					DistributedTraceSampled = adaptiveSampler.ComputeSampled(ref priority);
+					_priority = priority;
+				}
 			}
 		}
+
+		public bool IsSynthetics => (!string.IsNullOrEmpty(_syntheticsResourceId) && !string.IsNullOrEmpty(_syntheticsJobId) &&
+		                             !string.IsNullOrEmpty(_syntheticsMonitorId));
+
+		public bool IsDistributedTraceParticipant => _distributedTraceGuid != null;
 
 		public void SetUri(string uri)
 		{
@@ -264,26 +295,84 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public string CrossApplicationReferrerTransactionGuid => _crossApplicationReferrerTransactionGuid;
 		public string LatestCrossApplicationPathHash => _latestCrossApplicationPathHash;
 
-		public string DistributedTraceParentType
+		public string DistributedTraceType
 		{
-			get => _distributedTraceParentType;
-			set => _distributedTraceParentType = value;
+			get => _distributedTraceType;
+			set => _distributedTraceType = value;
 		}
-		public string DistributedTraceParentId
+		public string DistributedTraceAppId
 		{
-			get => _distributedTraceParentId;
-			set => _distributedTraceParentId = value;
+			get => _distributedTraceAppId;
+			set => _distributedTraceAppId = value;
+		}
+		public string DistributedTraceAccountId
+		{
+			get => _distributedTraceAccountId;
+			set => _distributedTraceAccountId = value;
+		}
+
+		private const string Unknown = "Unknown";
+
+		private static readonly string[] ValidTransportTypes = {
+			Unknown,
+			"HTTP",
+			"HTTPS",
+			"Kafka",
+			"JMS",
+			"IronMQ",
+			"AMQP",
+			"Queue",
+			"Other",
+		};
+		private static string SanitizeTransportType(string transportType)
+		{
+			if (null != transportType && ValidTransportTypes.Contains(transportType))
+			{
+				return transportType;
+			}
+
+			return Unknown;
+		}
+		public string DistributedTraceTransportType
+		{
+			get => _distributedTraceTransportType;
+			set => _distributedTraceTransportType = SanitizeTransportType(value);
+		}
+
+		public string DistributedTraceGuid
+		{
+			get => _distributedTraceGuid;
+			set => _distributedTraceGuid = value;
+		}
+
+		public string DistributedTraceTransactionId
+		{
+			get => _distributedTraceTransactionId;
+			set => _distributedTraceTransactionId = value;
+		}
+
+		public TimeSpan DistributedTraceTransportDuration
+		{
+			get => _distributedTraceTransportDuration;
+			set => _distributedTraceTransportDuration = value;
 		}
 		public string DistributedTraceTraceId
 		{
 			get => _distributedTraceTraceId;
 			set => _distributedTraceTraceId = value;
 		}
-		public bool DistributedTraceSampled
+
+		public string DistributedTraceTrustKey
 		{
-			get => _distributedTraceSampled;
-			set => _distributedTraceSampled = value;
+			get => _distributedTraceTrustKey;
+			set => _distributedTraceTrustKey = value;
 		}
+
+		public bool? DistributedTraceSampled { get; set; }
+
+		public bool HasOutgoingDistributedTracePayload { get; set; }
+
+		public bool HasIncomingDistributedTracePayload { get; set; }
 
 		public string Uri => _uri;
 		[CanBeNull]
@@ -297,7 +386,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public int? HttpResponseStatusCode => (_httpResponseStatusCode == Int32.MinValue) ? default(Int32?) : _httpResponseStatusCode;
 
-		int? HttpResponseSubStatusCode => (_httpResponseSubStatusCode == Int32.MinValue) ? default(Int32?) : _httpResponseSubStatusCode;
+		private int? HttpResponseSubStatusCode => (_httpResponseSubStatusCode == Int32.MinValue) ? default(Int32?) : _httpResponseSubStatusCode;
 
 		public KeyValuePair<string, string>[] RequestParameters => _requestParameters.ToArray();
 		public KeyValuePair<string, object>[] UserAttributes => _userAttributes.ToArray();

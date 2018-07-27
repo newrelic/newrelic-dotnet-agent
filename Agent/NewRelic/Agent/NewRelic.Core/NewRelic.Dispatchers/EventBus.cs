@@ -2,7 +2,6 @@
 using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Dispatchers.Utilities;
-using NewRelic.WeakActions;
 
 namespace NewRelic.Dispatchers
 {
@@ -29,35 +28,6 @@ namespace NewRelic.Dispatchers
 		}
 
 		/// <summary>
-		/// Subscribes to events on this event bus (events of type T) but does not retain a reference for the purpose of garbage collection.
-		/// </summary>
-		/// <remarks>The weakCallback will be automatically unsubscribed when the subscriber is garbage collected.  You can also call Unsubscribe(IWeakAction) to unsubscribe sooner.</remarks>
-		/// <param name="weakCallback">The method to call when an event on this bus is published.</param>
-		public static void Subscribe([NotNull] IWeakAction<T> weakCallback)
-		{
-			using (WriterLockGuard.Acquire())
-			{
-				Events -= weakCallback.Action;
-				Events += weakCallback.Action;
-			}
-		}
-
-		/// <summary>
-		/// Subscribes to events on this event bus (events of type T) but does not retain a reference for the purpose of garbage collection.
-		/// </summary>
-		/// <remarks>You cannot Unsubscribe a subscription that is setup in this way, it will automatically be unsubscribed when the subscriber is garbage collected.  If you want to be able to unsubscribe a weak subscription, use Subscribe(IWeakAction) overload.</remarks>
-		/// <param name="callback">The method to call when an event on this bus is published.</param>
-		public static void WeakSubscribe([NotNull] Action<T> callback)
-		{
-			var weakCallback = WeakActionUtilities.MakeWeak<T>(callback, action => Events -= action);
-
-			using (WriterLockGuard.Acquire())
-			{
-				Events += weakCallback.Action;
-			}
-		}
-
-		/// <summary>
 		/// Unsubscribes from events on this callback (events of type T). You must unsubscribe at least the same number of times as you subscribe to stop receiving callbacks.
 		/// </summary>
 		/// <param name="callback">The method that should no longer be called back when events on this bus are published.</param>
@@ -66,19 +36,6 @@ namespace NewRelic.Dispatchers
 			using (WriterLockGuard.Acquire())
 			{
 				Events -= callback;
-			}
-		}
-
-		/// <summary>
-		/// Unsubscribes from events on this callback (events of type T). You must unsubscribe at least the same number of times as you subscribe to stop receiving callbacks.
-		/// </summary>
-		/// <remarks>Use this overload when you want to have a subscriber whose subscription lasts either until it is unsubscribed or until the object that the weakCallback points to is garbage collected.</remarks>
-		/// <param name="weakCallback">The method that should no longer be called back when events on this bus are published.</param>
-		public static void Unsubscribe([NotNull] IWeakAction<T> weakCallback)
-		{
-			using (WriterLockGuard.Acquire())
-			{
-				Events -= weakCallback.Action;
 			}
 		}
 

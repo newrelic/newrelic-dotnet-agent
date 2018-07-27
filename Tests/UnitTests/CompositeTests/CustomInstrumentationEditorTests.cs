@@ -1,5 +1,9 @@
-﻿using NewRelic.Agent.Core.Configuration;
+﻿using System.Collections.Generic;
+using NewRelic.Agent.Core.Configuration;
 using JetBrains.Annotations;
+using NewRelic.Agent.Core.Commands;
+using NewRelic.Agent.Core.JsonConverters;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -16,8 +20,14 @@ namespace CompositeTests
 		{
 			_compositeTestAgent = new CompositeTestAgent();
 
-			ServerConfiguration.InstrumentationConfig[] instrumentationConfig = { new ServerConfiguration.InstrumentationConfig() };
-			_compositeTestAgent.ServerConfiguration.Instrumentation = instrumentationConfig;
+			_compositeTestAgent.ServerConfiguration.Instrumentation = new List<ServerConfiguration.InstrumentationConfig>
+			{
+				new ServerConfiguration.InstrumentationConfig
+				{
+					Name = "live_instrumentation",
+					Config = "SomeXml"
+				}
+			};
 		}
 
 		[TearDown]
@@ -50,6 +60,54 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			Mock.Assert(() => _compositeTestAgent.NativeMethods.ApplyCustomInstrumentation(), Occurs.Never());
+		}
+
+		[Test]
+		public void CustomInstrumentationEditor_OnlyLiveInstrumentationRemovedWhenItBecomesDisabled()
+		{
+			_compositeTestAgent.LocalConfiguration.customInstrumentationEditor.enabled = true;
+			_compositeTestAgent.InstrumentationService.LoadRuntimeInstrumentation();
+			_compositeTestAgent.PushConfiguration();
+
+			Mock.Assert(() => _compositeTestAgent.NativeMethods
+				.AddCustomInstrumentation(Arg.Matches<string>(x => x == "live_instrumentation"), Arg.Matches<string>(x => x == "SomeXml")), Occurs.Once());
+			Mock.Assert(() => _compositeTestAgent.NativeMethods
+				.AddCustomInstrumentation(Arg.Matches<string>(x => x == "RuntimeInstrumentation"), Arg.Matches<string>(x => x.Contains("GetInstrumentation"))), Occurs.Once());
+			Mock.Assert(() => _compositeTestAgent.NativeMethods.ApplyCustomInstrumentation(), Occurs.Once());
+
+			_compositeTestAgent.LocalConfiguration.customInstrumentationEditor.enabled = false;
+			_compositeTestAgent.PushConfiguration();
+
+			Mock.Assert(() => _compositeTestAgent.NativeMethods
+				.AddCustomInstrumentation(Arg.Matches<string>(x => x == "live_instrumentation"), Arg.Matches<string>(x => x == string.Empty)), Occurs.Once());
+			Mock.Assert(() => _compositeTestAgent.NativeMethods
+				.AddCustomInstrumentation(Arg.Matches<string>(x => x == "RuntimeInstrumentation"), Arg.Matches<string>(x => x.Contains("GetInstrumentation"))), Occurs.Exactly(2));
+			Mock.Assert(() => _compositeTestAgent.NativeMethods.ApplyCustomInstrumentation(), Occurs.Exactly(2));
+		}
+
+		[Test]
+		public void CustomInstrumentationEditor_WhenLiveInstrumentationEditorIsClearedThenLiveInstrumentationGetsSetToEmpty()
+		{
+			_compositeTestAgent.LocalConfiguration.customInstrumentationEditor.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+
+			Mock.Assert(() => _compositeTestAgent.NativeMethods
+				.AddCustomInstrumentation(Arg.Matches<string>(x => x == "live_instrumentation"), Arg.Matches<string>(x => x == "SomeXml")), Occurs.Once());
+			Mock.Assert(() => _compositeTestAgent.NativeMethods.ApplyCustomInstrumentation(), Occurs.Once());
+
+			ProcessEmptyLiveInstrumentation();
+
+			Mock.Assert(() => _compositeTestAgent.NativeMethods
+				.AddCustomInstrumentation(Arg.Matches<string>(x => x == "live_instrumentation"), Arg.Matches<string>(x => x == string.Empty)), Occurs.Once());
+			Mock.Assert(() => _compositeTestAgent.NativeMethods.ApplyCustomInstrumentation(), Occurs.Exactly(2));
+		}
+
+		private void ProcessEmptyLiveInstrumentation()
+		{
+			var instrumentationUpdateCommand = new InstrumentationUpdateCommand(_compositeTestAgent.InstrumentationService);
+			var serializedUpdateCommandWithBlankLiveInstrumentation = "[123,{\"name\":\"instrumentation_update\",\"arguments\":{\"instrumentation\":{\"config\":\"\"}}}]";
+			var commandModel = JsonConvert.DeserializeObject<CommandModel>(serializedUpdateCommandWithBlankLiveInstrumentation, new JsonArrayConverter());
+			instrumentationUpdateCommand.Process(commandModel.Details.Arguments);
 		}
 	}
 }

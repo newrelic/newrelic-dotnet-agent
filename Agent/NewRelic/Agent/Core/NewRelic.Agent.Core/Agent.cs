@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Web;
 using JetBrains.Annotations;
@@ -11,9 +10,9 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.ThreadProfiling;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
@@ -88,8 +87,6 @@ namespace NewRelic.Agent.Core
 
 		public ThreadProfilingService ThreadProfilingService { get; private set; }
 
-		public InstrumentationWatcher InstrumentationWatcher { get; private set; }
-
 		[NotNull]
 		private readonly IWrapperService _wrapperService;
 
@@ -126,8 +123,6 @@ namespace NewRelic.Agent.Core
 
 			AgentServices.StartServices(_container);
 
-			InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
-
 			AgentApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
 
 			Initialize();
@@ -147,7 +142,10 @@ namespace NewRelic.Agent.Core
 		{
 			AgentInitializer.OnExit += ProcessExit;
 
-			var nativeMethods = AgentInstallConfiguration.IsWindows ? (INativeMethods) new WindowsNativeMethods() : new LinuxNativeMethods();
+			var nativeMethods = _container.Resolve<INativeMethods>();
+			var instrumentationService = _container.Resolve<IInstrumentationService>();
+			instrumentationService.LoadRuntimeInstrumentation();
+			instrumentationService.ApplyInstrumentation();
 
 			// TODO: remove IAgent dependency from these services so they can be DI'd
 			ThreadProfilingService = new ThreadProfilingService(_container.Resolve<IDataTransportService>(), nativeMethods);
@@ -159,8 +157,8 @@ namespace NewRelic.Agent.Core
 				new ShutdownCommand(),
 				new StartThreadProfilerCommand(ThreadProfilingService),
 				new StopThreadProfilerCommand(ThreadProfilingService),
-				new InstrumentationUpdateCommand(nativeMethods)
-				);
+				new InstrumentationUpdateCommand(instrumentationService)
+			);
 
 			StartServices();
 			LogInitialized();
@@ -186,8 +184,8 @@ namespace NewRelic.Agent.Core
 
 		private void StartServices()
 		{
+			_container.Resolve<InstrumentationWatcher>().Start();
 			ThreadProfilingService.Start();
-			InstrumentationWatcher.Start();
 		}
 
 		private void StopServices()

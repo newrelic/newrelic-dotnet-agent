@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
@@ -13,6 +12,8 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Samplers;
@@ -28,7 +29,6 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -40,7 +40,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
 {
 	public static class AgentServices
 	{
-		[NotNull]
 		public static IContainer GetContainer()
 		{
 #if NET45
@@ -54,7 +53,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 		/// Registers all of the services needed for the agent to run.
 		/// </summary>
 		/// <param name="container"></param>
-		public static void RegisterServices([NotNull] IContainer container)
+		public static void RegisterServices(IContainer container)
 		{
 			// we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
 			container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
@@ -96,8 +95,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IErrorTraceAggregator, ErrorTraceAggregator>();
 			container.Register<IErrorEventAggregator, ErrorEventAggregator>();
 			container.Register<ICustomEventAggregator, CustomEventAggregator>();
+			container.Register<ISpanEventAggregator, SpanEventAggregator>();
+			container.Register<ISpanEventMaker, SpanEventMaker>();
 			container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
 			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
+			container.Register<IAgentTimerService, AgentTimerService>();
 #if NET45
 			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
 #endif
@@ -110,6 +112,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
 			container.Register<ITransactionEventMaker, TransactionEventMaker>();
 			container.Register<ICallStackManager, CallStackManager>();
+			container.Register<IAdaptiveSampler, AdaptiveSampler>();
 
 			var transactionCollectors = new List<ITransactionCollector> {
 				new SlowestTransactionCollector(),
@@ -146,7 +149,11 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<CommandService, CommandService>();
 			container.Register<ConfigurationTracker, ConfigurationTracker>();
 			container.Register<IDatabaseService, DatabaseService>();
+
+			container.RegisterFactory<IEnumerable<IRuntimeInstrumentationGenerator>>(ExtensionsLoader.LoadRuntimeInstrumentationGenerators);
+			container.Register<IInstrumentationService, InstrumentationService>();
 			container.Register<InstrumentationWatcher, InstrumentationWatcher>();
+			container.Register<LiveInstrumentationServerConfigurationListener, LiveInstrumentationServerConfigurationListener>();
 
 			if (AgentInstallConfiguration.IsWindows)
 			{
@@ -156,6 +163,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			{
 				container.Register<INativeMethods, LinuxNativeMethods>();
 			}
+			container.Register<ITracePriorityManager, TracePriorityManager>();
 
 			container.Build();
 		}
@@ -163,7 +171,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 		/// <summary>
 		/// Starts all of the services needed by resolving them.
 		/// </summary>
-		public static void StartServices([NotNull] IContainer container)
+		public static void StartServices(IContainer container)
 		{
 			container.Resolve<AssemblyResolutionService>();
 			container.Resolve<ITransactionFinalizer>();
@@ -171,6 +179,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Resolve<CpuSampler>();
 			container.Resolve<MemorySampler>();
 			container.Resolve<ConfigurationTracker>();
+			container.Resolve<LiveInstrumentationServerConfigurationListener>();
 		}
 	}
 }

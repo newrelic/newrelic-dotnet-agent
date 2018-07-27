@@ -41,10 +41,19 @@ namespace NewRelic.Agent.Core.Transactions
 		public string CrossApplicationReferrerProcessId { get; }
 		public string CrossApplicationReferrerTripId { get; }
 
-		public string DistributedTraceParentType { get; set; }
-		public string DistributedTraceParentId { get; set; }
-		public string DistributedTraceTraceId { get; set; }
-		public bool DistributedTraceSampled { get; set; }
+		public string DistributedTraceType { get; }
+		public string DistributedTraceAppId { get; }
+		public string DistributedTraceAccountId { get; }
+		public string DistributedTraceTransportType { get; }
+		public string DistributedTraceTransactionId { get; }
+		public string DistributedTraceGuid { get; }
+		public TimeSpan DistributedTraceTransportDuration { get; }
+		public string DistributedTraceTraceId { get; }
+		public string DistributedTraceTrustKey { get; }
+		public bool? DistributedTraceSampled { get; }
+		public bool HasOutgoingDistributedTracePayload { get; }
+		public bool HasIncomingDistributedTracePayload { get; }
+
 
 		public int? HttpResponseSubStatusCode { get; }
 
@@ -73,10 +82,18 @@ namespace NewRelic.Agent.Core.Transactions
 			string crossApplicationReferrerTransactionGuid,
 			string crossApplicationReferrerProcessId,
 			string crossApplicationReferrerTripId,
-			string distributedTraceParentType,
-			string distributedTraceParentId,
+			string distributedTraceType,
+			string distributedTraceAppId,
+			string distributedTraceAccountId,
+			string distributedTraceTransportType,
+			string distributedTraceGuid,
+			TimeSpan distributedTraceTransportDuration,
 			string distributedTraceTraceId,
-			bool distributedTraceSampled,
+			string distributedTraceTrustKey,
+			string distributedTraceTransactionId,
+			bool? distributedTraceSampled,
+			bool hasOutgoingDistributedTracePayload,
+			bool hasIncomingDistributedTracePayload,
 			string syntheticsResourceId,
 			string syntheticsJobId,
 			string syntheticsMonitorId,
@@ -104,10 +121,18 @@ namespace NewRelic.Agent.Core.Transactions
 			CrossApplicationReferrerTransactionGuid = crossApplicationReferrerTransactionGuid;
 			CrossApplicationReferrerProcessId = crossApplicationReferrerProcessId;
 			CrossApplicationReferrerTripId = crossApplicationReferrerTripId;
-			DistributedTraceParentType = distributedTraceParentType;
-			DistributedTraceParentId = distributedTraceParentId;
+			DistributedTraceType = distributedTraceType;
+			DistributedTraceAppId = distributedTraceAppId;
+			DistributedTraceAccountId = distributedTraceAccountId;
+			DistributedTraceTransportType = distributedTraceTransportType;
+			DistributedTraceGuid = distributedTraceGuid;
+			DistributedTraceTransportDuration = distributedTraceTransportDuration;
 			DistributedTraceTraceId = distributedTraceTraceId;
+			DistributedTraceTrustKey = distributedTraceTrustKey;
+			DistributedTraceTransactionId = distributedTraceTransactionId;
 			DistributedTraceSampled = distributedTraceSampled;
+			HasOutgoingDistributedTracePayload = hasOutgoingDistributedTracePayload;
+			HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
 			SyntheticsResourceId = syntheticsResourceId;
 			SyntheticsJobId = syntheticsJobId;
 			SyntheticsMonitorId = syntheticsMonitorId;

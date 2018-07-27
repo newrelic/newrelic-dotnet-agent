@@ -59,6 +59,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildAzureUsabilityError();
 		MetricWireModel TryBuildPcfUsabilityError();
 		MetricWireModel TryBuildGcpUsabilityError();
+		MetricWireModel TryBuildAgentTimingMetric(string suffix, TimeSpan time);
 
 		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
 		MetricWireModel TryBuildAcceptPayloadSuccess { get; }
@@ -82,7 +83,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildAcceptPayloadIgnoredNull { get; }
 
 		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
-		MetricWireModel TryBuildAcceptPayloadIgnoredUntrustedAccount { get; }
+		MetricWireModel TryBuildAcceptPayloadIgnoredUntrustedAccount();
 
 		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
 		MetricWireModel TryBuildCreatePayloadSuccess { get; }
@@ -95,5 +96,9 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildSupportabilityEndpointMethodErrorAttempts(string endpointMethod);
 
 		MetricWireModel TryBuildSupportabilityEndpointMethodErrorDuration(string endpointMethod, TimeSpan duration);
+
+		MetricWireModel TryBuildSpanEventsSeenMetric(int count);
+
+		MetricWireModel TryBuildSpanEventsSentMetric(int count);
 	}
 }

@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		[NotNull]
-		public static ITransaction CreateDefaultTransaction(Boolean isWebTransaction = true, String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null)
+		public static ITransaction CreateDefaultTransaction(Boolean isWebTransaction = true, String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null, bool sampled = false)
 		{
 			var name = isWebTransaction
 				? new WebTransactionName(transactionCategory, transactionName)
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				internalTransaction.Add(SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, null, Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false));
 			}
 			var transactionMetadata = internalTransaction.TransactionMetadata;
-			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId);
+			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, sampled);
 
 			return internalTransaction;
 		}
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return new TypedSegment<DatastoreSegmentData>(startTime, duration, 
 				new TypedSegment<DatastoreSegmentData>(txSegmentState, methodCallData, data, false));
 		}
-		private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null)
+		private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, bool sampled = false)
 		{
 			if (uri != null)
 				metadata.SetUri(uri);
@@ -116,6 +116,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			metadata.SetSyntheticsResourceId("syntheticsResourceId");
 			metadata.SetSyntheticsJobId("syntheticsJobId");
 			metadata.SetSyntheticsMonitorId("syntheticsMonitorId");
+			metadata.DistributedTraceSampled = sampled;
 		}
 	}
 }

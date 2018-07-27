@@ -74,6 +74,23 @@ namespace NewRelic.Agent.Core.Configuration
 		public String CatId { get; set; }
 
 
+		// DISTRIBUTED TRACE
+		[JsonProperty("primary_application_id")]
+		public string PrimaryApplicationId { get; set; }
+	
+		[JsonProperty("trusted_account_key")]
+		public string TrustedAccountKey { get; set; }
+
+		[JsonProperty("account_id")]
+		public string AccountId { get; set; }
+
+		[JsonProperty("sampling_target")]
+		public int? SamplingTarget {get ; set; }
+
+		[JsonProperty("sampling_target_period_in_seconds")]
+		public int? SamplingTargetPeriodInSeconds { get; set; }
+
+
 		// RUM
 
 		[JsonProperty("application_id")]

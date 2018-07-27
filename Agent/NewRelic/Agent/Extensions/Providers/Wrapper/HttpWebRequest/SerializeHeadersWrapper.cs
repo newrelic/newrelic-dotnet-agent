@@ -29,7 +29,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 				throw new NullReferenceException("request.Headers");
 			}
 
-			var headers = transaction.GetRequestMetadata()
+			var headers = transaction.GetRequestMetadata(transaction.ParentSegment)
 				.Where(header => header.Key != null);
 
 			foreach (var header in headers)

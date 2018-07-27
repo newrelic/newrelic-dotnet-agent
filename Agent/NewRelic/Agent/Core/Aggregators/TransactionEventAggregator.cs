@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -10,12 +7,19 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using NewRelic.Agent.Core.DistributedTracing;
+using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
 	public interface ITransactionEventAggregator
 	{
 		void Collect([NotNull] TransactionEventWireModel transactionEventWireModel);
+		IAdaptiveSampler AdaptiveSampler { get; }
 	}
 
 	/// <summary>
@@ -36,10 +40,14 @@ namespace NewRelic.Agent.Core.Aggregators
 		[NotNull]
 		private const Double ReservoirReductionSizeMultiplier = 0.5;
 
-		public TransactionEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+		[NotNull]
+		public IAdaptiveSampler AdaptiveSampler { get; }
+
+		public TransactionEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter, IAdaptiveSampler adaptiveSampler)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
+			AdaptiveSampler = adaptiveSampler;
 			ResetCollections(_configuration.TransactionEventsMaxSamplesStored);
 		}
 
@@ -65,6 +73,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter.ReportTransactionEventsSent(aggregatedEvents.Count);
 			var responseStatus = DataTransportService.Send(aggregatedEvents);
 
+			AdaptiveSampler.EndOfSamplingInterval();
+
 			HandleResponse(responseStatus, aggregatedEvents);
 		}
 
@@ -82,12 +92,16 @@ namespace NewRelic.Agent.Core.Aggregators
 			_syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
 		}
 
-		private void AddEventToCollection([NotNull] TransactionEventWireModel transactionEvents)
+		private void AddEventToCollection([NotNull] TransactionEventWireModel transactionEvent)
 		{
-			if (transactionEvents.IsSynthetics() && _syntheticsTransactionEvents.Count < SyntheticsHeader.MaxEventCount)
-				_syntheticsTransactionEvents.Add(transactionEvents);
+			if (transactionEvent.IsSynthetics() && _syntheticsTransactionEvents.Count < SyntheticsHeader.MaxEventCount)
+			{
+				_syntheticsTransactionEvents.Add(transactionEvent);
+			}
 			else
-				_transactionEvents.Add(transactionEvents);
+			{
+				_transactionEvents.Add(transactionEvent);
+			}
 		}
 
 		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<TransactionEventWireModel> transactionEvents)

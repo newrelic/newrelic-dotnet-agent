@@ -6,11 +6,6 @@
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="NewFolder\**" />
-    <EmbeddedResource Remove="NewFolder\**" />
-    <None Remove="NewFolder\**" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
     <PackageReference Include="JustMock" Version="2015.2.616.2" />
     <PackageReference Include="log4net" Version="2.0.8" />
@@ -34,7 +29,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\AttributeFilter\AttributeFilter.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Configuration\Configuration.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Core\Core.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj" />

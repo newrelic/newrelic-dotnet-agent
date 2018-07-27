@@ -11,11 +11,11 @@ namespace NewRelic.Agent.Core.Transactions
 		public const int UserAttributeClamp = 64;
 
 		[NotNull]
-		private readonly IList<Attribute> _agentAttributes = new List<Attribute>();
+		private readonly List<Attribute> _agentAttributes = new List<Attribute>();
 		[NotNull]
-		private readonly IList<Attribute> _userAttributes = new List<Attribute>();
+		private readonly List<Attribute> _userAttributes = new List<Attribute>();
 		[NotNull]
-		private readonly IList<Attribute> _intrinsics = new List<Attribute>(); 
+		private readonly List<Attribute> _intrinsics = new List<Attribute>(); 
 
 		public virtual int Count()
 		{
@@ -23,29 +23,29 @@ namespace NewRelic.Agent.Core.Transactions
 		}
 
 		[NotNull]
-		public virtual IDictionary<String, Object> GetAgentAttributesDictionary()
+		public virtual IDictionary<string, object> GetAgentAttributesDictionary()
 		{
 			return _agentAttributes
 				.Where(attribute => attribute != null)
-				.Select(attribute => new KeyValuePair<String, Object>(attribute.Key, attribute.Value))
+				.Select(attribute => new KeyValuePair<string, object>(attribute.Key, attribute.Value))
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
 		[NotNull]
-		public virtual IDictionary<String, Object> GetUserAttributesDictionary()
+		public virtual IDictionary<string, object> GetUserAttributesDictionary()
 		{
 			return _userAttributes
 				.Where(attribute => attribute != null)
-				.Select(attribute => new KeyValuePair<String, Object>(attribute.Key, attribute.Value))
+				.Select(attribute => new KeyValuePair<string, object>(attribute.Key, attribute.Value))
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
 		[NotNull]
-		public virtual IDictionary<String, Object> GetIntrinsicsDictionary()
+		public virtual IDictionary<string, object> GetIntrinsicsDictionary()
 		{
 			return _intrinsics
 				.Where(attribute => attribute != null)
-				.Select(attribute => new KeyValuePair<String, Object>(attribute.Key, attribute.Value))
+				.Select(attribute => new KeyValuePair<string, object>(attribute.Key, attribute.Value))
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
@@ -69,18 +69,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public virtual void Add([NotNull] Attribute attribute)
 		{
-			switch (attribute.Classification)
-			{
-				case AttributeClassification.AgentAttributes:
-					_agentAttributes.Add(attribute);
-					break;
-				case AttributeClassification.UserAttributes:
-					_userAttributes.Add(attribute);
-					break;
-				case AttributeClassification.Intrinsics:
-					_intrinsics.Add(attribute);
-					break;
-			}
+			GetListForAttributeClassification(attribute.Classification).Add(attribute);
 		}
 
 		public virtual void Add([NotNull] IEnumerable<Attribute> attributes)
@@ -124,6 +113,21 @@ namespace NewRelic.Agent.Core.Transactions
 				return;
 			var attribute = attributeBuilder(value.Value);
 			Add(attribute);
+		}
+
+		private List<Attribute> GetListForAttributeClassification([NotNull] AttributeClassification classification)
+		{
+			switch (classification)
+			{
+				case AttributeClassification.AgentAttributes:
+					return _agentAttributes;
+				case AttributeClassification.UserAttributes:
+					return _userAttributes;
+				case AttributeClassification.Intrinsics:
+					return _intrinsics;
+				default:
+					return new List<Attribute>();
+			}
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace NewRelic.Collections
 	{
 		private static object _syncroot = new object();
 
-		private ulong _addCount = 0;
+		private int _addCount = 0;
 
 		private SortedSet<T> _sortedSet;
 
@@ -20,7 +20,7 @@ namespace NewRelic.Collections
 
 		public int Count { get { lock(_syncroot) return _sortedSet.Count; } }
 
-		public bool IsReadOnly { get { return false; } }
+		public bool IsReadOnly => false;
 
 		#region Constructors
 		public ConcurrentPriorityQueue(uint capacity)
@@ -35,6 +35,22 @@ namespace NewRelic.Collections
 			Size = capacity;
 		}
 		#endregion Constructors
+
+		public int Add(IEnumerable<T> items)
+		{
+			var itemsAdded = 0;
+			if (Size > 0)
+			{
+				lock (_syncroot)
+				{
+					itemsAdded = items.Count(item => _sortedSet.Add(item));
+
+					_addCount += itemsAdded;
+					RemoveItemsFromBottomOfSortedSet();
+				}
+			}
+			return itemsAdded;
+		}
 
 		public bool Add(T item)
 		{
@@ -91,12 +107,15 @@ namespace NewRelic.Collections
 					if (setCount > Size)
 					{
 						var numberToRemove = setCount - Size;
-						var reverseEnumerator = _sortedSet.Reverse().GetEnumerator();
-						while (0 != numberToRemove--)
+
+						using (var reverseEnumerator = _sortedSet.Reverse().GetEnumerator())
 						{
-							if (reverseEnumerator.MoveNext())
+							while (0 != numberToRemove--)
 							{
-								_sortedSet.Remove(reverseEnumerator.Current);
+								if (reverseEnumerator.MoveNext())
+								{
+									_sortedSet.Remove(reverseEnumerator.Current);
+								}
 							}
 						}
 					}
@@ -112,7 +131,7 @@ namespace NewRelic.Collections
 
 		public ulong GetAddAttemptsCount()
 		{
-			return Volatile.Read(ref _addCount);
+			return (ulong)Volatile.Read(ref _addCount);
 		}
 
 		public void Clear()
@@ -126,11 +145,9 @@ namespace NewRelic.Collections
 
 		public bool Contains(T item)
 		{
-			var isContained = false; 
 			lock (_syncroot)
 			{
-				isContained = _sortedSet.Contains(item);
-				return isContained;
+				return _sortedSet.Contains(item);
 			}
 		}
 

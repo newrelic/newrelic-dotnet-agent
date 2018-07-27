@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Dispatchers.Utilities;
-using NewRelic.WeakActions;
 
 namespace NewRelic.Dispatchers
 {
@@ -39,29 +38,6 @@ namespace NewRelic.Dispatchers
 			}
 		}
 
-		public static void AddResponder([NotNull] IWeakAction<TRequest, ResponseCallback> requestHandler)
-		{
-			ValidateTResponse();
-
-			using (WriterLockGuard.Acquire())
-			{
-				RequestHandlers.Remove(requestHandler.Action);
-				RequestHandlers.Add(requestHandler.Action);
-			}
-		}
-
-		public static void AddWeakResponder([NotNull] Action<TRequest, ResponseCallback> requestHandler)
-		{
-			ValidateTResponse();
-
-			var weakRequestHandler = WeakActionUtilities.MakeWeak<TRequest, ResponseCallback>(requestHandler, actionToRemove => RequestHandlers.Remove(actionToRemove));
-
-			using (WriterLockGuard.Acquire())
-			{
-				RequestHandlers.Add(weakRequestHandler.Action);
-			}
-		}
-
 		public static void RemoveResponder([NotNull] Action<TRequest, ResponseCallback> requestHandler)
 		{
 			ValidateTResponse();
@@ -71,17 +47,7 @@ namespace NewRelic.Dispatchers
 				RequestHandlers.Remove(requestHandler);
 			}
 		}
-
-		public static void RemoveResponder([NotNull] IWeakAction<TRequest, ResponseCallback> requestHandler)
-		{
-			ValidateTResponse();
-
-			using (WriterLockGuard.Acquire())
-			{
-				RequestHandlers.Remove(requestHandler.Action);
-			}
-		}
-
+		
 		/// <summary>
 		/// Post a request to this bus and receive an enumeration of responses from all available responders.  Enumeration may be empty.
 		/// </summary>

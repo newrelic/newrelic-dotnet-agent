@@ -11,6 +11,7 @@ using Telerik.JustMock;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
@@ -42,7 +43,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 			var factory1 = CreateFactoryForTransactionContext(_highPriorityTransactionContext);
 			var factory2 = CreateFactoryForTransactionContext(_lowPriorityTransactionContext);
 
-			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>());
+			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>() );
 		}
 
 		[TearDown]

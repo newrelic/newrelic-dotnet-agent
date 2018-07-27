@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
@@ -10,6 +7,9 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CompositeTests
 {
@@ -1515,7 +1515,7 @@ namespace CompositeTests
 			// ACT
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
-			_compositeTestAgent.GetAgentWrapperApi().ProcessInboundRequest(AgentApi.GetRequestMetadata()); // we test this elsewhere
+			_compositeTestAgent.GetAgentWrapperApi().ProcessInboundRequest(AgentApi.GetRequestMetadata(), "HTTP"); // we test this elsewhere
 			segment.End();
 			var responseMetadata = AgentApi.GetResponseMetadata().ToDictionary(x => x.Key, x => x.Value);
 			transaction.End();
@@ -1539,6 +1539,5 @@ namespace CompositeTests
 				);
 		}
 		#endregion
-
 	}
 }

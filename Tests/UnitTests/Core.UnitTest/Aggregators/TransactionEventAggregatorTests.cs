@@ -6,16 +6,15 @@ using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -33,6 +32,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		[NotNull]
 		private IProcessStatic _processStatic;
+
+		[NotNull]
+		private IAdaptiveSampler _adaptiveSampler;
 
 		[NotNull]
 		private ConfigurationAutoResponder _configurationAutoResponder;
@@ -55,11 +57,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			_dataTransportService = Mock.Create<IDataTransportService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_processStatic = Mock.Create<IProcessStatic>();
+			_adaptiveSampler = Mock.Create<IAdaptiveSampler>();
 
 			var scheduler = Mock.Create<IScheduler>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_transactionEventAggregator = new TransactionEventAggregator(_dataTransportService, scheduler, _processStatic, _agentHealthReporter);
+			_transactionEventAggregator = new TransactionEventAggregator(_dataTransportService, scheduler, _processStatic, _agentHealthReporter, _adaptiveSampler);
 		}
 
 		[TearDown]
@@ -79,7 +82,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			var sentEvents = null as IEnumerable<TransactionEventWireModel>;
 			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
 				.DoInstead<IEnumerable<TransactionEventWireModel>>(events => sentEvents = events);
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>());
+			var transactionEventWireModel = Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.3f, false, false);
+			_transactionEventAggregator.Collect(transactionEventWireModel);
 
 			// Act
 			EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
@@ -101,9 +105,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			var eventsToSend = new[]
 			{
-				Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.3f),
-				Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f),
-				Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f)
+				Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.3f, false, false),
+				Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false),
+				Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false)
 			};
 			eventsToSend.ForEach(_transactionEventAggregator.Collect);
 
@@ -119,7 +123,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void Event_seen_reported_on_collect()
 		{
 			// Act
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventCollected());
@@ -129,7 +133,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void Events_sent_reported_on_harvest()
 		{
 			// Arrange
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
 
 			// Act
 			_harvestAction();
@@ -143,8 +147,8 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void Reservoir_resized_reported_on_post_too_big_response()
 		{
 			// Arrange
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
 				.Returns<IEnumerable<TransactionEventWireModel>>(events =>
 				{
@@ -188,8 +192,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEvents = events;
 					return DataTransportResponseStatus.RequestSuccessful;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			_harvestAction();
 			sentEvents = null; // reset
 
@@ -211,8 +215,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEvents = events;
 					return DataTransportResponseStatus.OtherError;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			_harvestAction();
 			sentEvents = null; // reset
 
@@ -234,8 +238,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.ConnectionError;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			_harvestAction();
 			sentEventCount = int.MinValue; // reset
 
@@ -258,8 +262,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.ServerError;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			_harvestAction();
 			sentEventCount = int.MinValue; // reset
 
@@ -282,8 +286,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.CommunicationError;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			_harvestAction();
 			sentEventCount = int.MinValue; // reset
 
@@ -306,8 +310,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.RequestTimeout;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			_harvestAction();
 			sentEventCount = int.MinValue; // reset
 
@@ -330,8 +334,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.PostTooBigError;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 			_harvestAction();
 			sentEventCount = int.MinValue; // reset
 
@@ -354,7 +358,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEvents = events;
 					return DataTransportResponseStatus.PostTooBigError;
 				});
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>());
+			var transactionEventWireModel = Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.3f, false, false);
+			_transactionEventAggregator.Collect(transactionEventWireModel);
 			_harvestAction();
 			sentEvents = null; // reset
 
@@ -383,7 +388,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void When_event_is_collected_then_events_seen_is_reported_to_agent_health()
 		{
 			// Act
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventCollected());
@@ -393,9 +398,9 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void When_harvesting_events_then_event_sent_is_reported_to_agent_health()
 		{
 			// Arrange
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f));
-			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.3f));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.2f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.1f, false, false));
+			_transactionEventAggregator.Collect(Mock.Create<TransactionEventWireModel>(_emptyAttributes, _emptyAttributes, _intrinsicAttributes, false, 0.3f, false, false));
 
 			// Act
 			_harvestAction();

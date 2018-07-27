@@ -119,15 +119,45 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		}
 
 		[Test]
-		public void WhenConfigsAreDefaultThenInstanceReportingEnabledIsDisabled()
+		public void WhenConfigsAreDefaultThenInstanceReportingEnabledIsEnabled()
 		{
 			Assert.IsTrue(_defaultConfig.InstanceReportingEnabled);
 		}
 
 		[Test]
-		public void WhenConfigsAreDefaultThenDatabaseNameReportingEnabledIsDisabled()
+		public void WhenConfigsAreDefaultThenDatabaseNameReportingEnabledIsEnabled()
 		{
 			Assert.IsTrue(_defaultConfig.DatabaseNameReportingEnabled);
+		}
+
+		[Test]
+		public void WhenConfigsAreDefaultThenDatastoreTracerQueryParametersEnabledIsDisabled()
+		{
+			Assert.IsFalse(_defaultConfig.DatastoreTracerQueryParametersEnabled);
+		}
+
+		[TestCase(true, false, false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = true)]
+		[TestCase(true, false, false, false, configurationTransactionTracerRecordSql.obfuscated, ExpectedResult = false)]
+		[TestCase(true, false, false, false, configurationTransactionTracerRecordSql.off, ExpectedResult = false)]
+		[TestCase(true, true, false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
+		[TestCase(true, false, true, true, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
+		[TestCase(true, false, true, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
+		[TestCase(false, false, false, false, configurationTransactionTracerRecordSql.raw, ExpectedResult = false)]
+		public bool DatastoreTracerQueryParametersEnabledRespectsHighSecurityModeAndSecurityPolicy(
+			bool queryParametersEnabled,
+			bool highSecurityModeEnabled,
+			bool securityPolicyEnabled,
+			bool recordSqlSecurityPolicyEnabled,
+			configurationTransactionTracerRecordSql recordSqlSetting)
+		{
+			_localConfig.datastoreTracer.queryParameters.enabled = queryParametersEnabled;
+			_localConfig.highSecurity.enabled = highSecurityModeEnabled;
+			_localConfig.transactionTracer.recordSql = recordSqlSetting;
+			if (securityPolicyEnabled)
+			{
+				SetupNewConfigsWithSecurityPolicy("record_sql", recordSqlSecurityPolicyEnabled);
+			}
+			return _defaultConfig.DatastoreTracerQueryParametersEnabled;
 		}
 
 		[Test]
@@ -141,6 +171,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		{
 			_localConfig.transactionEvents.enabled = true;
 			Assert.IsTrue(_defaultConfig.TransactionEventsEnabled);
+		}
+
+		[Test]
+		public void WhenConfigsAreDefaultThenCaptureAgentTimingIsDisabled()
+		{
+			Assert.AreEqual(false, _defaultConfig.DiagnosticsCaptureAgentTiming);
 		}
 
 		[Test]
@@ -265,6 +301,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_localConfig.instrumentation.log = local;
 
 			return _defaultConfig.InstrumentationLoggingEnabled;
+		}
+
+		[TestCase(true, ExpectedResult = true)]
+		[TestCase(false, ExpectedResult = false)]
+		public bool DiagnosticsCaptureAgentTimingSetFromLocal(bool local)
+		{
+			_localConfig.diagnostics.captureAgentTiming = local;
+
+			return _defaultConfig.DiagnosticsCaptureAgentTiming;
 		}
 
 		[TestCase(true, null, null, ExpectedResult = true)]
@@ -1731,27 +1776,99 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 		#region Distributed Tracing
 		[Test]
-		[TestCase(true, "123#456", true)]
-		[TestCase(false, "123#456", false)]
-		[TestCase(true, null, false)]
-		public void DistributedTracingEnabled(bool localConfig, string crossProcessId, bool expectedResult)
+		[TestCase(true, true)]
+		[TestCase(false, false)]
+		[TestCase(null, false)]
+		public void DistributedTracingEnabled(bool localConfig, bool expectedResult)
 		{
 			_localConfig.distributedTracing.enabled = localConfig;
-			_serverConfig.CatId = crossProcessId;
-
 			Assert.AreEqual(expectedResult, _defaultConfig.DistributedTracingEnabled);
 		}
 
 		[Test]
 		public void DistributedTracingEnabledIsFalseByDefault()
 		{
-			_serverConfig.CatId = "123#456";
 			_defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
 
 			Assert.IsFalse(_defaultConfig.DistributedTracingEnabled);
 		}
 
+		[Test]
+		[TestCase(null, null)]
+		[TestCase("ApplicationIdValue", "ApplicationIdValue")]
+		public void PrimaryApplicationIdValue(string server, string expectedResult)
+		{
+			_serverConfig.PrimaryApplicationId = server;
+			
+			Assert.AreEqual(_defaultConfig.PrimaryApplicationId, expectedResult);
+		}
+
+		[Test]
+		[TestCase(null, null)]
+		[TestCase("TrustedAccountKey", "TrustedAccountKey")]
+		public void TrustedAccountKeyValue(string server, string expectedResult)
+		{
+			_serverConfig.TrustedAccountKey = server;
+			
+			Assert.AreEqual(_defaultConfig.TrustedAccountKey, expectedResult);
+		}
+
+		
+		[Test]
+		[TestCase(null, null)]
+		[TestCase("AccountId", "AccountId")]
+		public void AccountIdValue(string server, string expectedResult)
+		{
+			_serverConfig.AccountId = server;
+			
+			Assert.AreEqual(_defaultConfig.AccountId, expectedResult);
+		}
+
+		[Test]
+		[TestCase(null, null)]
+		[TestCase(1234, 1234)]
+		public void SamplingTargetValue(int server, int expectedResult)
+		{
+			_serverConfig.SamplingTarget = server;
+			
+			Assert.AreEqual(_defaultConfig.SamplingTarget, expectedResult);
+		}
+
+		[Test]
+		[TestCase(null, null)]
+		[TestCase(1234, 1234)]
+		public void SamplingTargetPeriodInSecondsValue(int server, int expectedResult)
+		{
+			_serverConfig.SamplingTargetPeriodInSeconds = server;
+			
+			Assert.AreEqual(_defaultConfig.SamplingTargetPeriodInSeconds, expectedResult);
+		}
+
 		#endregion Distributed Tracing
+
+		#region Span Events
+
+		[Test]
+		public void SpanEventsEnabledIsTrueInLocalConfigByDefault()
+		{
+			Assert.IsTrue(_localConfig.spanEvents.enabled);
+		}
+
+		[TestCase(true, true, ExpectedResult = true)]
+		[TestCase(true, false, ExpectedResult = false)]
+		[TestCase(false, true, ExpectedResult = false)]
+		[TestCase(false, false, ExpectedResult = false)]
+		public bool SpanEventsEnabledHasCorrectValue(bool distributedTracingEnabled, bool spanEventsEnabled)
+		{
+			_localConfig.spanEvents.enabled = spanEventsEnabled;
+			_localConfig.distributedTracing.enabled = distributedTracingEnabled;
+
+			_defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+
+			return _defaultConfig.SpanEventsEnabled;
+		}
+
+		#endregion
 
 		#region Utilization
 

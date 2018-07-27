@@ -13,11 +13,7 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-	public struct ErrorEventAdditions
-	{
-		public uint reservoir_size;
-		public uint events_seen;
-	}
+
 
 	public interface IErrorEventAggregator
 	{
@@ -65,7 +61,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			var aggregatedEvents = errorEvents.Union(syntheticErrorEvents).ToList();
 
 			// Retrieve the number of add attempts before resetting the collection.
-			var addAttempts = _errorEvents.GetAddAttemptsCount();
+			var eventHarvestData = new EventHarvestData(_errorEvents.Size, (uint)_errorEvents.GetAddAttemptsCount());
 
 			ResetCollections(GetReservoirSize());
 
@@ -74,12 +70,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				return;
 
 			_agentHealthReporter.ReportErrorEventsSent(aggregatedEvents.Count);
-			 
-			var additions = new ErrorEventAdditions();
-			additions.reservoir_size = GetReservoirSize();
-			additions.events_seen = Convert.ToUInt32(addAttempts);
-
-			var responseStatus = DataTransportService.Send(additions, aggregatedEvents);
+			var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents);
 
 			HandleResponse(responseStatus, aggregatedEvents);
 		}

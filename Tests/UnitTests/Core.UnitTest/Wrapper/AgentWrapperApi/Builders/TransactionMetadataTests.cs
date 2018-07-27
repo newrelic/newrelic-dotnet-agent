@@ -2,7 +2,6 @@
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 
@@ -195,5 +194,106 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			Assert.AreEqual(result, valueB);
 		}
+
+		#region Distributed Trace
+
+		[Test]
+		public void Build_HasEmptyDistributedTracePropertiesIfNeverSet()
+		{
+			var transactionMetadata = new TransactionMetadata();
+			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
+
+			NrAssert.Multiple(
+				() => Assert.That(transactionMetadata.DistributedTraceType, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceType, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceAppId, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceAppId, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceAccountId, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceAccountId, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceType, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceType, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceTrustKey, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceTrustKey, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceTransactionId, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceGuid, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceGuid, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceSampled, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceTraceId, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceTraceId, Is.Null),
+				() => Assert.That(transactionMetadata.DistributedTraceTransportType, Is.Null),
+				() => Assert.That(immutableMetadata.DistributedTraceTransportType, Is.Null)
+			);
+		}
+
+		[Test]
+		public void ConvertToImmutableMetadata_SetsDistributedTraceProperties()
+		{
+			var transactionMetadata = new TransactionMetadata();
+
+			transactionMetadata.DistributedTraceType = "type";
+			transactionMetadata.DistributedTraceAccountId = "acct";
+			transactionMetadata.DistributedTraceAppId = "app";
+			transactionMetadata.DistributedTraceGuid = "id";
+			transactionMetadata.DistributedTraceSampled = false;
+			transactionMetadata.DistributedTraceTraceId = "trace";
+			transactionMetadata.DistributedTraceTrustKey = "12345";
+			transactionMetadata.DistributedTraceTransportType = "transport";
+			transactionMetadata.Priority = 0.6f;
+			transactionMetadata.DistributedTraceTransactionId = "12345";
+
+			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
+
+			NrAssert.Multiple(
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceType, immutableMetadata.DistributedTraceType),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceAccountId, immutableMetadata.DistributedTraceAccountId),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceAppId, immutableMetadata.DistributedTraceAppId),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceAppId, immutableMetadata.DistributedTraceAppId),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceGuid, immutableMetadata.DistributedTraceGuid),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceSampled, immutableMetadata.DistributedTraceSampled),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceTraceId, immutableMetadata.DistributedTraceTraceId),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceTrustKey, immutableMetadata.DistributedTraceTrustKey),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceTransportType, immutableMetadata.DistributedTraceTransportType),
+				() => Assert.AreEqual(transactionMetadata.Priority, immutableMetadata.Priority),
+				() => Assert.AreEqual(transactionMetadata.DistributedTraceTransactionId, immutableMetadata.DistributedTraceTransactionId)
+			);
+		}
+
+		private const string Unknown = "Unknown";
+
+		private static readonly string[] ValidTransportTypes = {
+			Unknown,
+			"HTTP",
+			"HTTPS",
+			"Kafka",
+			"JMS",
+			"IronMQ",
+			"AMQP",
+			"Queue",
+			"Other",
+		};
+		private static string SanitizeTransportType(string transportType)
+		{
+			if (null != transportType && ValidTransportTypes.Contains(transportType))
+			{
+				return transportType;
+			}
+
+			return Unknown;
+		}
+
+		private const string VeryCoolProtocol = "VeryCoolP";
+
+		[Test]
+		public void ConvertToImmutableMetadata_DistributedTraceTransportType([Values("Unknown",
+				"HTTP", "HTTPS", "Kafka", "JMS", "IronMQ", "AMQP", "Queue", "Other", null, VeryCoolProtocol)] string transportType
+			)
+		{
+			var transactionMetadata = new TransactionMetadata {DistributedTraceTransportType = transportType};
+
+			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
+
+			Assert.That(immutableMetadata.DistributedTraceTransportType, Is.EqualTo(SanitizeTransportType(transportType)));
+		}
+		#endregion Distributed Trace
 	}
 }

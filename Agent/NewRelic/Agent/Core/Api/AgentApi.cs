@@ -32,8 +32,7 @@ namespace NewRelic.Agent.Core
 			AgentInitializer.InitializeAgent();
 		}
 
-		[CanBeNull]
-		private static IAgentApi _agentApiImplementation;
+		[CanBeNull] private static IAgentApi _agentApiImplementation;
 
 		public const Int32 CustomTransactionNamePriority = 8;
 		public const Int32 UserTransactionNamePriority = Int32.MaxValue;
@@ -305,16 +304,6 @@ namespace NewRelic.Agent.Core
 		public static IEnumerable<KeyValuePair<String, String>> GetResponseMetadata()
 		{
 			return _agentApiImplementation?.GetResponseMetadata() ?? new Dictionary<String, String>();
-		}
-
-		public static IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload()
-		{
-			return _agentApiImplementation?.CreateDistributedTracePayload() ?? new Dictionary<String, String>();
-		}
-
-		public static void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<String, String>> payload)
-		{
-			_agentApiImplementation?.AcceptDistributedTracePayload(payload);
 		}
 	}
 }

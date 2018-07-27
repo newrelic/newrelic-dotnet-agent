@@ -338,7 +338,6 @@ namespace NewRelic.Agent.Core.WireModels
 				new TestCaseData( "TryBuildAcceptPayloadIgnoredMultiple", "Supportability/DistributedTrace/AcceptPayload/Ignored/Multiple"),
 				new TestCaseData( "TryBuildAcceptPayloadIgnoredMajorVersion", "Supportability/DistributedTrace/AcceptPayload/Ignored/MajorVersion"),
 				new TestCaseData( "TryBuildAcceptPayloadIgnoredNull", "Supportability/DistributedTrace/AcceptPayload/Ignored/Null"),
-				new TestCaseData( "TryBuildAcceptPayloadIgnoredUntrustedAccount", "Supportability/DistributedTrace/AcceptPayload/Ignored/UntrustedAccount"),
 				new TestCaseData( "TryBuildCreatePayloadSuccess", "Supportability/DistributedTrace/CreatePayload/Success"),
 				new TestCaseData( "TryBuildCreatePayloadException", "Supportability/DistributedTrace/CreatePayload/Exception"),
 			};
@@ -346,7 +345,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 		[Test]
 		[TestCaseSource(nameof(GetSupportabilityDistributedTraceTestData))]
-		public void MetricWireModelTests_MetricBuilder_SupportabiltiyDistributedTracing(string propertyName, string name)
+		public void MetricWireModelTests_MetricBuilder_SupportabilityDistributedTracing(string propertyName, string name)
 		{
 			var propertyInfo = _metricBuilder.GetType().GetProperty(propertyName);
 			Assert.That(propertyInfo, Is.Not.Null);
@@ -356,6 +355,23 @@ namespace NewRelic.Agent.Core.WireModels
 			Assert.That(obj, Is.InstanceOf(typeof(MetricWireModel)));
 
 			var wireModel = obj as MetricWireModel;
+			Assert.That(wireModel, Is.Not.Null);
+
+			Assert.That(wireModel.MetricName.Name, Is.EqualTo(name));
+			Assert.That(wireModel.Data.Value0, Is.EqualTo(1));
+			Assert.That(wireModel.Data.Value1, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value2, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value3, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value4, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value5, Is.EqualTo(0));
+		}
+
+		[Test]
+		public void MetricWireModelTests_MetricBuilder_SupportabilityDistributed_TryBuildAcceptPayloadIgnoredUntrustedAccount()
+		{
+			var name = "Supportability/DistributedTrace/AcceptPayload/Ignored/UntrustedAccount";
+
+			var wireModel = _metricBuilder.TryBuildAcceptPayloadIgnoredUntrustedAccount();
 			Assert.That(wireModel, Is.Not.Null);
 
 			Assert.That(wireModel.MetricName.Name, Is.EqualTo(name));

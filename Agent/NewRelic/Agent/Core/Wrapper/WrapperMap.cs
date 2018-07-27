@@ -27,8 +27,8 @@ namespace NewRelic.Agent.Core.Wrapper
 
 	public class WrapperMap : IWrapperMap
 	{
-		private readonly IEnumerable<IDefaultWrapper> _defaultWrappers;
-		private readonly IEnumerable<IWrapper> _nonDefaultWrappers;
+		private readonly List<IDefaultWrapper> _defaultWrappers;
+		private readonly List<IWrapper> _nonDefaultWrappers;
 
 		private readonly TrackedWrapper _noOpTrackedWrapper;
 
@@ -36,7 +36,10 @@ namespace NewRelic.Agent.Core.Wrapper
 		{
 			_nonDefaultWrappers = wrappers
 				.Where(wrapper => wrapper != null)
-				.Where(wrapper => !(wrapper is IDefaultWrapper) && !(wrapper is INoOpWrapper));
+				.Where(wrapper => !(wrapper is IDefaultWrapper) && !(wrapper is INoOpWrapper))
+				.ToList();
+
+			_nonDefaultWrappers.Add(new AttachToAsyncWrapper());
 
 			var defaultWrappers = new List<IDefaultWrapper> {defaultWrapper, new DefaultWrapperAsync()};
 
@@ -69,23 +72,23 @@ namespace NewRelic.Agent.Core.Wrapper
 
 		private TrackedWrapper GetDefaultWrapperOrSetNoOp(InstrumentedMethodInfo instrumentedMethodInfo)
 		{
-			var defaultWrapper = _defaultWrappers.FirstOrDefault(wrapper => wrapper.CanWrap(instrumentedMethodInfo).CanWrap);
-
-			if (defaultWrapper != null)
+			foreach (var wrapper in _defaultWrappers)
 			{
-				return new TrackedWrapper(defaultWrapper);
+				if (CanWrap(instrumentedMethodInfo, wrapper))
+				{
+					return new TrackedWrapper(wrapper);
+				}
 			}
-			else
-			{
-				Log.DebugFormat("No matching wrapper found for {0}.{1}({2}) in assembly [{3}] (requested wrapper name was {4}). This usually indicates misconfigured instrumentation. This method will be ignored.",
-					instrumentedMethodInfo.Method.Type.FullName,
-					instrumentedMethodInfo.Method.MethodName,
-					instrumentedMethodInfo.Method.ParameterTypeNames,
-					instrumentedMethodInfo.Method.Type.Assembly.FullName,
-					instrumentedMethodInfo.RequestedWrapperName);
 
-				return _noOpTrackedWrapper;
-			}
+			Log.DebugFormat(
+				"No matching wrapper found for {0}.{1}({2}) in assembly [{3}] (requested wrapper name was {4}). This usually indicates misconfigured instrumentation. This method will be ignored.",
+				instrumentedMethodInfo.Method.Type.FullName,
+				instrumentedMethodInfo.Method.MethodName,
+				instrumentedMethodInfo.Method.ParameterTypeNames,
+				instrumentedMethodInfo.Method.Type.Assembly.FullName,
+				instrumentedMethodInfo.RequestedWrapperName);
+
+			return _noOpTrackedWrapper;
 		}
 
 		private static bool CanWrap(InstrumentedMethodInfo instrumentedMethodInfo, IWrapper wrapper)

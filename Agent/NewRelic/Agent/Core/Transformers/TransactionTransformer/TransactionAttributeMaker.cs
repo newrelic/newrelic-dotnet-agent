@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using JetBrains.Annotations;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
@@ -21,6 +22,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 	public class TransactionAttributeMaker : ITransactionAttributeMaker
 	{
+		[NotNull] private readonly IConfigurationService _configurationService;
+		public TransactionAttributeMaker([NotNull] IConfigurationService configurationService)
+		{
+			_configurationService = configurationService;
+		}
 		public Attributes GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats)
 		{
 
@@ -83,24 +89,28 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 				attributes.TryAdd(Attribute.BuildErrorMessageAttribute, errorData.ErrorMessage);
 				attributes.TryAdd(Attribute.BuildErrorDotMessageAttribute, errorData.ErrorMessage);
+
+				attributes.TryAdd(Attribute.BuildErrorAttribute, true);
 			}
 
 			var isCatParticipant = IsCatParticipant(immutableTransaction);
 			var isSyntheticsParticipant = IsSyntheticsParticipant(immutableTransaction);
-
-			// Add the GUID attribute if we are dealing with CAT or synthetics
-			if (isCatParticipant || isSyntheticsParticipant)
-			{
-				attributes.TryAdd(Attribute.BuildGuidAttribute, immutableTransaction.Guid);
-			}
+			var isDistributedTraceParticipant = immutableTransaction.TransactionMetadata.HasIncomingDistributedTracePayload;
 
 			// add the tripId attribute unconditionally so it can be used to correlate with this app's PageView events
 			// if CrossApplicationReferrerTripId is null then this transaction started the first external request, so use its guid
 			var tripId = immutableTransaction.TransactionMetadata.CrossApplicationReferrerTripId ?? immutableTransaction.Guid;
-			attributes.TryAddAll(Attribute.BuildCatTripIdAttribute, tripId);
+			attributes.TryAdd(Attribute.BuildTripUnderscoreIdAttribute, tripId);
+			
+			// nr.tripid is set differently if this is a distributed trace transaction
+			if (_configurationService.Configuration.DistributedTracingEnabled == false)
+			{
+				attributes.TryAdd(Attribute.BuildCatNrTripIdAttribute, tripId);
+			}
 
 			if (isCatParticipant)
 			{
+				attributes.TryAdd(Attribute.BuildNrGuidAttribute, immutableTransaction.Guid);
 				attributes.TryAddAll(Attribute.BuildCatReferringPathHash, immutableTransaction.TransactionMetadata.CrossApplicationReferrerPathHash);
 				attributes.TryAddAll(Attribute.BuildCatPathHash, immutableTransaction.TransactionMetadata.CrossApplicationPathHash);
 				attributes.TryAdd(Attribute.BuildClientCrossProcessIdAttribute, immutableTransaction.TransactionMetadata.CrossApplicationReferrerProcessId);
@@ -112,14 +122,34 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 					attributes.TryAddAll(Attribute.BuildCatAlternatePathHashes, hashes);
 				}
 			}
+			else if (isDistributedTraceParticipant)
+			{
+				//Won't be a DT participant if DT not enabled.
+				attributes.TryAdd(Attribute.BuildParentTypeAttribute, immutableTransaction.TransactionMetadata.DistributedTraceType);
+				attributes.TryAdd(Attribute.BuildParentAppAttribute, immutableTransaction.TransactionMetadata.DistributedTraceAppId);
+				attributes.TryAdd(Attribute.BuildParentAccountAttribute, immutableTransaction.TransactionMetadata.DistributedTraceAccountId);
+				attributes.TryAdd(Attribute.BuildParentTransportTypeAttribute, immutableTransaction.TransactionMetadata.DistributedTraceTransportType);
+				attributes.TryAdd(Attribute.BuildParentTransportDurationAttribute, immutableTransaction.TransactionMetadata.DistributedTraceTransportDuration);
+				attributes.TryAdd(Attribute.BuildParentIdAttribute, immutableTransaction.TransactionMetadata.DistributedTraceTransactionId);
+				attributes.TryAdd(Attribute.BuildParentSpanIdAttribute,immutableTransaction.TransactionMetadata.DistributedTraceGuid);
+			}
+
+			if (_configurationService.Configuration.DistributedTracingEnabled)
+			{
+				attributes.TryAdd(Attribute.BuildGuidAttribute, immutableTransaction.Guid);
+				attributes.TryAdd(Attribute.BuildDistributedTraceIdAttributes, immutableTransaction.TransactionMetadata.DistributedTraceTraceId ?? immutableTransaction.Guid);
+				attributes.TryAdd(Attribute.BuildPriorityAttribute, immutableTransaction.TransactionMetadata.Priority);
+				attributes.TryAdd(Attribute.BuildSampledAttribute, immutableTransaction.TransactionMetadata.DistributedTraceSampled);
+			}
 
 			if (isSyntheticsParticipant)
 			{
+				attributes.TryAdd(Attribute.BuildNrGuidAttribute, immutableTransaction.Guid);
 				attributes.TryAddAll(Attribute.BuildSyntheticsResourceIdAttributes, immutableTransaction.TransactionMetadata.SyntheticsResourceId);
 				attributes.TryAddAll(Attribute.BuildSyntheticsJobIdAttributes, immutableTransaction.TransactionMetadata.SyntheticsJobId);
 				attributes.TryAddAll(Attribute.BuildSyntheticsMonitorIdAttributes, immutableTransaction.TransactionMetadata.SyntheticsMonitorId);
 			}
-			
+
 			return attributes;
 		}
 		

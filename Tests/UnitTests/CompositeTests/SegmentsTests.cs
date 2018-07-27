@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
 
 namespace CompositeTests
@@ -14,10 +16,8 @@ namespace CompositeTests
 	[TestFixture]
 	public class SegmentsTests
 	{
-		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
-		[NotNull]
 		private IAgentWrapperApi _agentWrapperApi;
 
 		[SetUp]
@@ -85,9 +85,9 @@ namespace CompositeTests
 			var segment1 = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName1");
 			segment1.End();
 
-			var segment2 = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName2");
+			_agentWrapperApi.StartTransactionSegmentOrThrow("segmentName2");
 
-			// Finish the transaction without ending segment2
+			// Finish the transaction without ending segmentName2
 			tx.End();
 
 			_compositeTestAgent.Harvest();
@@ -567,30 +567,6 @@ namespace CompositeTests
 				() => MetricAssertions.MetricsExist(expectedMetrics, actualMetrics),
 				() => MetricAssertions.MetricsDoNotExist(unexpectedMetrics, actualMetrics)
 				);
-		}
-
-		[Test]
-		public void DatastoreSegment_ShouldNotHaveMetrics_OutsideATransaction()
-		{
-			_compositeTestAgent.LocalConfiguration.datastoreTracer.instanceReporting.enabled = true;
-			_compositeTestAgent.PushConfiguration();
-
-			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
-			{
-				_agentWrapperApi.StartDatastoreRequestSegmentOrThrow("INSERT", DatastoreVendor.MSSQL, "MyAwesomeTable", null, null, "HostName", "1433", "MyDatabase").End();
-			}
-
-			_compositeTestAgent.Harvest();
-
-			var unexpectedMetrics = new[]
-			{
-				new ExpectedMetric {Name = "Datastore/all"},
-				new ExpectedMetric {Name = "Datastore/MSSQL/all"},
-				new ExpectedMetric {Name = "Datastore/statement/MSSQL/MyAwesomeTable/INSERT"},
-				new ExpectedMetric {Name = "Datastore/operation/MSSQL/INSERT"},
-				new ExpectedMetric {Name = "Datastore/instance/MSSQL/HostName/1433"}
-			};
-			var actualMetrics = _compositeTestAgent.Metrics.ToList();
 		}
 
 		[Test]

@@ -25,11 +25,16 @@ using NewRelic.SystemInterfaces;
 using Telerik.JustMock;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Instrumentation;
+using NewRelic.Agent.Core.ThreadProfiling;
 
 namespace CompositeTests
 {
 	/// <summary>
-	/// An agent used for composite tests that spins up almost all of the stack that the normal Agent spins up. Only a few outlying services are mocked (most notably, <see cref="DataTransportService"/>. Using this test agent in combination with the <see cref="AgentWrapperApi"/> allows us to write tests that cover a very broad stroke of the code base with very good performance (e.g. no/minimal disk activity).
+	/// An agent used for composite tests that spins up almost all of the stack that the normal Agent spins up.
+	/// Only a few outlying services are mocked (most notably, DataTransportService.
+	/// Using this test agent in combination with the AgentWrapperApi allows us to write tests that cover a very
+	/// broad stroke of the code base with very good performance (e.g. no/minimal disk activity).
 	/// </summary>
 	public class CompositeTestAgent
 	{
@@ -57,10 +62,12 @@ namespace CompositeTests
 		[NotNull]
 		public List<ErrorTraceWireModel> ErrorTraces { get; } = new List<ErrorTraceWireModel>();
 
-		public ErrorEventAdditions ErrorEventAdditionalInfo { get; } = new ErrorEventAdditions();
+		public EventHarvestData ErrorEventAdditionalInfo { get; } = new EventHarvestData();
 
 		[NotNull]
 		public List<ErrorEventWireModel> ErrorEvents { get; } = new List<ErrorEventWireModel>();
+
+		public List<SpanEventWireModel> SpanEvents { get; } = new List<SpanEventWireModel>();
 
 		[NotNull]
 		public configuration LocalConfiguration { get; }
@@ -70,11 +77,13 @@ namespace CompositeTests
 
 		public IConfiguration CurrentConfiguration { get; private set; }
 
-		public SecurityPoliciesConfiguration SecurityConfiguration { get; private set; }
+		public SecurityPoliciesConfiguration SecurityConfiguration { get; }
 
-		public NewRelic.Agent.Core.ThreadProfiling.INativeMethods NativeMethods { get; private set; }
+		public INativeMethods NativeMethods { get; }
 
-		public InstrumentationWatcher InstrumentationWatcher { get; private set; }
+		public IInstrumentationService InstrumentationService { get; }
+
+		public InstrumentationWatcher InstrumentationWatcher { get; }
 
 		private readonly bool _shouldAllowThreads;
 
@@ -82,11 +91,10 @@ namespace CompositeTests
 
 
 		[NotNull]
-		public List<SqlTraceWireModel> SqlTraces { get; private set; } = new List<SqlTraceWireModel>();
+		public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
 
 		public CompositeTestAgent() : this(shouldAllowThreads: false)
 		{
-			
 		}
 
 		public CompositeTestAgent(bool shouldAllowThreads)
@@ -127,6 +135,12 @@ namespace CompositeTests
 			_container.ReplaceRegistration(dataTransportService);
 			_container.ReplaceRegistration(scheduler);
 			_container.ReplaceRegistration(NativeMethods);
+
+			var generators = new List<IRuntimeInstrumentationGenerator>
+			{
+				new TestRuntimeInstrumentationGenerator()
+			};
+			_container.ReplaceRegistration<IEnumerable<IRuntimeInstrumentationGenerator>>(generators);
 			
 			if (!_shouldAllowThreads)
 			{
@@ -135,6 +149,7 @@ namespace CompositeTests
 
 			_container.ReplaceRegistration(configurationManagerStatic);
 
+			InstrumentationService = _container.Resolve<IInstrumentationService>();
 			InstrumentationWatcher = _container.Resolve<InstrumentationWatcher>();
 			AgentServices.StartServices(_container);
 
@@ -161,8 +176,11 @@ namespace CompositeTests
 				.Returns(SaveDataAndReturnSuccess(ErrorTraces));
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(SqlTraces));
-			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<ErrorEventAdditions>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
+			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(ErrorEventAdditionalInfo, ErrorEvents));
+			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
+				.Returns(SaveDataAndReturnSuccess(ErrorEventAdditionalInfo, SpanEvents));
+
 		}
 
 		/// <summary>
@@ -186,7 +204,7 @@ namespace CompositeTests
 			};
 		}
 
-		private static Func<ErrorEventAdditions, IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(ErrorEventAdditions additions, [NotNull] List<T> dataBucket)
+		private static Func<EventHarvestData, IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(EventHarvestData additions, [NotNull] List<T> dataBucket)
 		{
 			return (_, datas) =>
 			{

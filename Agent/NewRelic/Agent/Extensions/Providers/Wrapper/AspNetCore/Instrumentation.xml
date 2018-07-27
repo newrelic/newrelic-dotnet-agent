@@ -11,10 +11,5 @@
 				<exactMethodMatcher methodName="InvokeActionMethodAsync" />
 			</match>
 		</tracerFactory>
-		<tracerFactory name="NewRelic.Providers.Wrapper.AspNetCore.ExceptionHandlerMiddlewareWrapper">
-			<match assemblyName="Microsoft.AspNetCore.Diagnostics" className="Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware">
-				<exactMethodMatcher methodName="Invoke" />
-			</match>
-		</tracerFactory>
 	</instrumentation>
 </extension>

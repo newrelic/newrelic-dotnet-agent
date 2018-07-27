@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Tracer;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -29,6 +30,8 @@ namespace NewRelic.Agent.Core.Wrapper
 
 		[NotNull] private readonly IAgentHealthReporter _agentHealthReporter;
 
+		private readonly IAgentTimerService _agentTimerService;
+
 		private class InstrumentedMethodInfoWrapper
 		{
 			public readonly InstrumentedMethodInfo instrumentedMethodInfo;
@@ -44,13 +47,14 @@ namespace NewRelic.Agent.Core.Wrapper
 		[NotNull] private readonly ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
 
 		public WrapperService([NotNull] IConfigurationService configurationService, [NotNull] IWrapperMap wrapperMap,
-			[NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] IAgentHealthReporter agentHealthReporter)
+			[NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
 		{
 			_configurationService = configurationService;
 			_maxConsecutiveFailures = configurationService.Configuration.WrapperExceptionLimit;
 			_agentWrapperApi = agentWrapperApi;
 			_wrapperMap = wrapperMap;
 			_agentHealthReporter = agentHealthReporter;
+			_agentTimerService = agentTimerService;
 			_functionIdToWrapper = new ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper>();
 		}
 
@@ -116,21 +120,27 @@ namespace NewRelic.Agent.Core.Wrapper
 			// if the wrapper throws an exception when executing the pre-method code, make sure the wrapper isn't called again in the future
 			try
 			{
-				var afterWrappedMethod = wrapper.BeforeWrappedMethod(instrumentedMethodCall, _agentWrapperApi, transaction);
-				return (result, exception) =>
+				using (_agentTimerService.StartNew("BeforeWrappedMethod", type.FullName, methodName))
 				{
-					// if the wrapper throws an exception when executing the post-method code, make sure the wrapper isn't called again in the future
-					try
+					var afterWrappedMethod = wrapper.BeforeWrappedMethod(instrumentedMethodCall, _agentWrapperApi, transaction);
+					return (result, exception) =>
 					{
-						afterWrappedMethod(result, exception);
-						trackedWrapper.NoticeSuccess();
-					}
-					catch (Exception)
-					{
-						HandleBeforeWrappedMethodException(functionId, trackedWrapper, instrumentedMethodCall, instrumentedMethodInfo);
-						throw;
-					}
-				};
+						using (_agentTimerService.StartNew("AfterWrappedMethod", type.FullName, methodName))
+						{
+							// if the wrapper throws an exception when executing the post-method code, make sure the wrapper isn't called again in the future
+							try
+							{
+								afterWrappedMethod(result, exception);
+								trackedWrapper.NoticeSuccess();
+							}
+							catch (Exception)
+							{
+								HandleBeforeWrappedMethodException(functionId, trackedWrapper, instrumentedMethodCall, instrumentedMethodInfo);
+								throw;
+							}
+						}
+					};
+				}
 			}
 			catch
 			{

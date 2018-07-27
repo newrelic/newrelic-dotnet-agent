@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using NewRelic.Agent.Core.DistributedTracing;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using System;
@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			//expect exactly one, find 2
 			var constraint = new ValidationConstraint<TestSerialization>("v", JTokenType.Array, true, 1, 1,
 				(s, p) => p.Version = s.ToObject<int[]>());
-			Assert.Throws<JsonException>(() => constraint.ParseAndThrowOnFailure(JsonObject, new TestSerialization()));
+			Assert.Throws<DistributedTraceAcceptPayloadParseException>(() => constraint.ParseAndThrowOnFailure(JsonObject, new TestSerialization()));
 		}
 
 		[Test]
@@ -151,7 +151,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			//find two, only except max of 1
 			var constraint = new ValidationConstraint<TestSerialization>("v", JTokenType.Array, true, 2, 1,
 				(s, p) => p.Version = s.ToObject<int[]>());
-			Assert.Throws<JsonException>(() => constraint.ParseAndThrowOnFailure(JsonObject, new TestSerialization()));
+			Assert.Throws<DistributedTraceAcceptPayloadParseException>(() => constraint.ParseAndThrowOnFailure(JsonObject, new TestSerialization()));
 		}
 
 		[Test]
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			//expect 3, find 2
 			var constraint = new ValidationConstraint<TestSerialization>("v", JTokenType.Array, true, 3, 2,
 				(s, p) => p.Version = s.ToObject<int[]>());
-			Assert.Throws<JsonException>(
+			Assert.Throws<DistributedTraceAcceptPayloadParseException>(
 				() => constraint.ParseAndThrowOnFailure(JsonObject, new TestSerialization())
 			);
 		}

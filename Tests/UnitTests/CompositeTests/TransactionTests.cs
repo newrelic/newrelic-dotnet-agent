@@ -342,5 +342,33 @@ namespace CompositeTests
 				() => Assert.AreEqual("Oh no!", errorTrace.Message)
 				);
 		}
+
+		[Test]
+		public void AgentTiming_WhenDisabledThenNoAgentTimingMetrics()
+		{
+			_compositeTestAgent.LocalConfiguration.diagnostics.captureAgentTiming = false;
+			_compositeTestAgent.PushConfiguration();
+			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			segment.End();
+			transaction.End();
+			_compositeTestAgent.Harvest();
+			var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricName.Name.Contains("AgentTiming"));
+			Assert.IsEmpty(metrics);
+		}
+
+		[Test]
+		public void AgentTiming_WhenEnabledThenAgentTimingMetrics()
+		{
+			_compositeTestAgent.LocalConfiguration.diagnostics.captureAgentTiming = true;
+			_compositeTestAgent.PushConfiguration();
+			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			segment.End();
+			transaction.End();
+			_compositeTestAgent.Harvest();
+			var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricName.Name.Contains("AgentTiming"));
+			Assert.IsNotEmpty(metrics);
+		}
 	}
 }

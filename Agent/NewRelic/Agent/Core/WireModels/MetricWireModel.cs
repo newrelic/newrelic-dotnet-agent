@@ -694,6 +694,13 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
+			public MetricWireModel TryBuildAgentTimingMetric(string suffix, TimeSpan time)
+			{
+				var proposedName = MetricNames.GetSupportabilityAgentTimingMetric(suffix);
+				var data = MetricDataWireModel.BuildTimingData(time, time);
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
 			private readonly MetricDataWireModel _callCountOfOne = MetricDataWireModel.BuildCountData();
 
 			private MetricWireModel TryBuildSupportabilityDistributedTraceMetric(string proposedName) =>
@@ -728,7 +735,7 @@ namespace NewRelic.Agent.Core.WireModels
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredNull);
 
 			/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
-			public MetricWireModel TryBuildAcceptPayloadIgnoredUntrustedAccount => 
+			public MetricWireModel TryBuildAcceptPayloadIgnoredUntrustedAccount() =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount);
 
 			/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
@@ -738,6 +745,7 @@ namespace NewRelic.Agent.Core.WireModels
 			/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
 			public MetricWireModel TryBuildCreatePayloadException => 
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceCreatePayloadException);
+
 
 			public MetricWireModel TryBuildSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode)
 			{
@@ -762,6 +770,54 @@ namespace NewRelic.Agent.Core.WireModels
 
 
 			#endregion Supportability builders
+
+			#region Distributed Trace builders
+
+			public static void TryBuildDistributedTraceDurationByCaller([NotNull] string type, [NotNull] string accountId, [NotNull] string app, [NotNull] string transport, bool isWeb, TimeSpan duration, TransactionMetricStatsCollection txStats)
+			{
+				var data = MetricDataWireModel.BuildTimingData(duration, TimeSpan.Zero);
+
+				var (all, webOrOther) = MetricNames.GetDistributedTraceDurationByCaller(type, accountId, app, transport, isWeb);
+				txStats.MergeUnscopedStats(all, data);
+				txStats.MergeUnscopedStats(webOrOther, data);
+			}
+
+			public static void TryBuildDistributedTraceErrorsByCaller([NotNull] string type, [NotNull] string accountId, [NotNull] string app, [NotNull] string transport, bool isWeb, TransactionMetricStatsCollection txStats)
+			{
+				var data = MetricDataWireModel.BuildCountData();
+				var (all, webOrOther) = MetricNames.GetDistributedTraceErrorsByCaller(type, accountId, app, transport, isWeb);
+				txStats.MergeUnscopedStats(all, data);
+				txStats.MergeUnscopedStats(webOrOther, data);
+			}
+
+			public static void TryBuildDistributedTraceTransportDuration([NotNull] string type, [NotNull] string accountId, [NotNull] string app, [NotNull] string transport, bool isWeb, TimeSpan duration, TransactionMetricStatsCollection txStats)
+			{
+				var data = MetricDataWireModel.BuildTimingData(duration, TimeSpan.Zero);
+
+				var (all, webOrOther) = MetricNames.GetDistributedTraceTransportDuration(type, accountId, app, transport, isWeb);
+				txStats.MergeUnscopedStats(all, data);
+				txStats.MergeUnscopedStats(webOrOther, data);
+			}
+
+			#endregion Distributed Trace builders
+
+			#region Span builders
+
+			public MetricWireModel TryBuildSpanEventsSeenMetric(int eventCount)
+			{
+				const string proposedName = MetricNames.SupportabilitySpanEventsSeen;
+				var data = MetricDataWireModel.BuildCountData(eventCount);
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+			public MetricWireModel TryBuildSpanEventsSentMetric(int eventCount)
+			{
+				const string proposedName = MetricNames.SupportabilitySpanEventsSent;
+				var data = MetricDataWireModel.BuildCountData(eventCount);
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+			#endregion Span builders
 		}
 	}
 
@@ -777,14 +833,19 @@ namespace NewRelic.Agent.Core.WireModels
 
 		// We cache the hash code for MetricNameWireModel because it is guaranteed that we will need it at least once
 		private readonly int _hashCode;
+		private static int HashCodeCombiner(int h1, int h2)
+		{
+			var rol5 = ((uint)h1 << 5) | ((uint)h1 >> 27);
+			return ((int)rol5 + h1) ^ h2;
+		}
 
 		public MetricNameWireModel([NotNull] string name, [CanBeNull] string scope)
 		{
 			Name = name;
 			Scope = scope;
 
-			// See: http://stackoverflow.com/a/4630550/786388
-			_hashCode = new { Name, Scope }.GetHashCode();
+			//no heap allocation to compute hash code
+			_hashCode = HashCodeCombiner(Name.GetHashCode(), Scope?.GetHashCode() ?? 0);
 		}
 
 		public override bool Equals(object obj)
@@ -792,7 +853,7 @@ namespace NewRelic.Agent.Core.WireModels
 			if (ReferenceEquals(this, obj))
 				return true;
 
-			return obj is MetricNameWireModel other && (Name == other.Name && Scope == other.Scope);
+			return obj is MetricNameWireModel other && Name == other.Name && Scope == other.Scope;
 		}
 
 		public override int GetHashCode()
@@ -809,6 +870,8 @@ namespace NewRelic.Agent.Core.WireModels
 	[JsonConverter(typeof(JsonArrayConverter))]
 	public class MetricDataWireModel
 	{
+		private const string CannotBeNegative = "Cannot be negative";
+
 		[JsonArrayIndex(Index = 0)]
 		public readonly long Value0;
 
@@ -845,16 +908,21 @@ namespace NewRelic.Agent.Core.WireModels
 		[NotNull]
 		public static MetricDataWireModel BuildAggregateData([NotNull] IEnumerable<MetricDataWireModel> metrics)
 		{
-			metrics = metrics.Where(metric => metric != null).ToList();
+			long value0 = 0;
+			float value1 = 0, value2 = 0, value3 = float.MaxValue, value4 = float.MinValue, value5 = 0;
 
-			// ReSharper disable PossibleNullReferenceException
-			var value0 = metrics.Sum(metric => metric.Value0);
-			var value1 = metrics.Sum(metric => metric.Value1);
-			var value2 = metrics.Sum(metric => metric.Value2);
-			var value3 = metrics.Min(metric => metric.Value3);
-			var value4 = metrics.Max(metric => metric.Value4);
-			var value5 = metrics.Sum(metric => metric.Value5);
-			// ReSharper restore PossibleNullReferenceException
+			foreach (var metric in metrics)
+			{
+				if (metric == null)
+					continue;
+
+				value0 += metric.Value0;
+				value1 += metric.Value1;
+				value2 += metric.Value2;
+				value3 = Math.Min(value3, metric.Value3);
+				value4 = Math.Max(value4, metric.Value4);
+				value5 += metric.Value5;
+			}
 
 			return new MetricDataWireModel(value0, value1, value2, value3, value4, value5);
 		}
@@ -876,8 +944,6 @@ namespace NewRelic.Agent.Core.WireModels
 				   (Math.Max(metric0.Value4, metric1.Value4)),
 					(metric0.Value5 + metric1.Value5));
 		}
-
-		private const string CannotBeNegative = "Cannot be negative";
 
 		[NotNull]
 		public static MetricDataWireModel BuildTimingData(TimeSpan totalTime, TimeSpan totalExclusiveTime)

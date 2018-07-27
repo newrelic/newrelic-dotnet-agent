@@ -5,6 +5,11 @@
 		<tracerFactory>
 			<match assemblyName="System.Web.Http" className="System.Web.Http.Controllers.ApiControllerActionInvoker">
 				<exactMethodMatcher methodName="InvokeActionAsync" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory name="AttachToAsyncWrapper">
+			<match assemblyName="System.Web.Http" className="System.Web.Http.Controllers.ApiControllerActionInvoker">
 				<exactMethodMatcher methodName="InvokeActionAsyncCore" />
 			</match>
 		</tracerFactory>

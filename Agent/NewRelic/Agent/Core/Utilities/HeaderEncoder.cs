@@ -1,14 +1,12 @@
-﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.JsonConverters;
+﻿using JetBrains.Annotations;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utils;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing;
 using Newtonsoft.Json;
+using System;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-	// TODO: It would make unit testing a bit easier if this class were DI'd
 	public static class HeaderEncoder
 	{
 		/// <summary>
@@ -59,28 +57,33 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 		}
 
-		// TODO: put this in dtheaderhandler? parameterize existing trydecodeanddeserialize to work for cat or dt? leave as separate method?
-		public static T TryDecodeAndDeserializeDistributedTracePayload<T>([CanBeNull] String encodedString, [CanBeNull] String encodingKey) where T : class
+		/// <summary>
+		/// Serializes <paramref name="data"/> to JSON and Base64 encodes it with <paramref name="encodingKey"/>
+		/// </summary>
+		/// <param name="data">The data to encode. Must not be null.</param>
+		/// <returns>The serialized and encoded data.</returns>
+		[NotNull, Pure]
+		public static string SerializeAndEncodeDistributedTracePayload([NotNull] DistributedTracePayload data)
 		{
-			if (encodedString == null)
-				return null;
+			var serializedData = DistributedTracePayload.ToJson(data);
+			if (serializedData == null)
+			{
+				throw new NullReferenceException("serializedData");
+			}
 
-			var decodedString = Strings.TryBase64Decode(encodedString, encodingKey);
+			return Strings.Base64Encode(serializedData);
+		}
+
+		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload([NotNull] string encodedString)
+		{
+			var decodedString = Strings.TryBase64Decode(encodedString);
 			if (decodedString == null)
 			{
 				Log.Debug("Could not decode encoded string.");
 				return null;
 			}
 
-			try
-			{
-				return JsonConvert.DeserializeObject<T>(decodedString, new DistributedTracePayloadJsonConverter());
-			}
-			catch
-			{
-				Log.Debug($"Could not deserialize JSON into {typeof(T).FullName}.");
-				return null;
-			}
+			return DistributedTracePayload.FromJson(decodedString);
 		}
 	}
 }

@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 		{
 			var httpWebRequest = (HttpWebRequest) instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-			var headers = transaction.GetRequestMetadata();
+			var headers = transaction.GetRequestMetadata(transaction.ParentSegment);
 
 			foreach (var header in headers)
 			{

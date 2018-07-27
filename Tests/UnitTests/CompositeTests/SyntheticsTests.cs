@@ -57,7 +57,7 @@ namespace CompositeTests
 			// ==== ACT ====
 			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
-				_agentWrapperApi.ProcessInboundRequest(requestHeaders);
+				_agentWrapperApi.ProcessInboundRequest(requestHeaders, "HTTP");
 				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
 				segment.End();
 			}
@@ -111,7 +111,7 @@ namespace CompositeTests
 			// ==== ACT ====
 			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
-				_agentWrapperApi.ProcessInboundRequest(new KeyValuePair<String, String>[0]);
+				_agentWrapperApi.ProcessInboundRequest(new KeyValuePair<String, String>[0], "HTTP");
 				var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
 				segment.End();
 			}
@@ -206,7 +206,7 @@ namespace CompositeTests
 
 			// ==== ACT ====
 			_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
-			_agentWrapperApi.ProcessInboundRequest(requestHeaders);
+			_agentWrapperApi.ProcessInboundRequest(requestHeaders, "HTTP");
 
 			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
 
@@ -238,7 +238,7 @@ namespace CompositeTests
 			
 			// ==== ACT ====
 			_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
-			_agentWrapperApi.ProcessInboundRequest(requestHeaders);
+			_agentWrapperApi.ProcessInboundRequest(requestHeaders, "HTTP");
 
 			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
 

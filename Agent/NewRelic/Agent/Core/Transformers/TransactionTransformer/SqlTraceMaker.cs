@@ -64,6 +64,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				parameterData.Add("database_name", segmentData.DatabaseName);
 			}
 
+			if (segmentData.QueryParameters != null)
+			{
+				parameterData["query_parameters"] = segmentData.QueryParameters;
+			}
+
 			var sqlTraceData = new SqlTraceWireModel(transactionName, uri, sqlId, sql, metricName, count, totalCallTime,
 				totalCallTime, totalCallTime, parameterData);
 			return sqlTraceData;

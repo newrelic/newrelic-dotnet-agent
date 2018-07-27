@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="commandText">The text representation of the operation being performed.  Not required, though when provided it's used for generating traces.</param>
 		/// <exception cref="System.ArgumentNullException">Is thrown if <paramref name="operation"/> is null.</exception>
 		/// <returns>An opaque object that will be needed when you want to end the segment.</returns>
-		ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, [CanBeNull] ConnectionInfo connectionInfo = null, [CanBeNull] String commandText = null, bool isLeaf = false);
+		ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo = null, String commandText = null, IDictionary<string, IConvertible> queryParameters = null, bool isLeaf = false);
 
 		/// <summary>
 		/// Creates a segment for an external request operation.
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// </summary>
 		/// <returns></returns>
 		[NotNull]
-		IEnumerable<KeyValuePair<String, String>> GetRequestMetadata();
+		IEnumerable<KeyValuePair<String, String>> GetRequestMetadata(ISegment segment = null);
 		
 		/// <summary>
 		/// Returns metadata that the agent wants to be attached to outbound responses.
@@ -106,14 +106,14 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// Processes incoming distributed trace request.
 		/// </summary>
 		/// <param name="payload">Collection of key value pairs representing the incoming request.</param>
-		void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<String, String>> payload);
+		void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<String, String>> payload, [CanBeNull] string transportType);
 
 		/// <summary>
 		/// Returns metadata that the agent wants to be attached to outbound distributed tracing requests.
 		/// </summary>
 		/// <returns>Collection of key value pairs representing an outgoing request.</returns>
 		[NotNull]
-		IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload();
+		IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload(ISegment segment = null);
 		
 		/// <summary>
 		/// Tell the agent about an error that just occurred in the instrumented application.  If there is a transaction running the transaction will be flagged as an error transaction.

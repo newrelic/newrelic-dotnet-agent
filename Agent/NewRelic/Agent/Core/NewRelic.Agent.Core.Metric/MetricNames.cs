@@ -139,7 +139,7 @@ namespace NewRelic.Agent.Core.Metric
 	public static class MetricNames
 	{
 		public const string PathSeparator = "/";
-		public static readonly char PathSeparatorChar = Convert.ToChar(PathSeparator);
+		public const char PathSeparatorChar = '/';
 
 		#region Apdex
 
@@ -214,10 +214,14 @@ namespace NewRelic.Agent.Core.Metric
 		private static readonly Func<DatastoreVendor, MetricName> DatabaseVendorAllOther;
 		private static readonly Func<DatastoreVendor, Func<string, MetricName>> DatabaseVendorOperations;
 
-		static MetricNames() {
-			DatabaseVendorAll = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor => MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + All));
-			DatabaseVendorAllWeb = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor => MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + AllWeb));
-			DatabaseVendorAllOther = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor => MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + AllOther));
+		static MetricNames()
+		{
+			DatabaseVendorAll = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
+				MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + All));
+			DatabaseVendorAllWeb = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
+				MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + AllWeb));
+			DatabaseVendorAllOther = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
+				MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + AllOther));
 
 			var operations = new HashSet<string>(SqlParser.Operations);
 			operations.Add(DatastoreUnknownOperationName);
@@ -230,7 +234,10 @@ namespace NewRelic.Agent.Core.Metric
 					{
 						dict[operation] = MetricName.Create(metricNamePrefix + operation);
 					}
-					return operation => (dict.TryGetValue(operation, out var name)) ? name : MetricName.Create(DatastoreOperation, ToString(vendor), operation);
+
+					return operation => (dict.TryGetValue(operation, out var name))
+						? name
+						: MetricName.Create(DatastoreOperation, ToString(vendor), operation);
 				});
 		}
 
@@ -247,10 +254,10 @@ namespace NewRelic.Agent.Core.Metric
 			// we can cast the enum to an int
 			foreach (var key in keys)
 			{
-				array[(int)key] = valueSupplier.Invoke((TEnum)key);
+				array[(int) key] = valueSupplier.Invoke((TEnum) key);
 			}
 
-			return key => array[(int)(object)key];
+			return key => array[(int) (object) key];
 		}
 
 		[NotNull]
@@ -274,7 +281,9 @@ namespace NewRelic.Agent.Core.Metric
 		#region Transactions
 
 		public static readonly MetricName WebTransactionAll = MetricName.Create(WebTransactionPrefix);
-		public static readonly MetricName OtherTransactionAll = MetricName.Create(OtherTransactionPrefix + PathSeparator + All);
+
+		public static readonly MetricName OtherTransactionAll =
+			MetricName.Create(OtherTransactionPrefix + PathSeparator + All);
 
 		public static TransactionMetricName WebTransaction([NotNull] string category, [NotNull] string name)
 		{
@@ -305,7 +314,8 @@ namespace NewRelic.Agent.Core.Metric
 		private const string PsNamedPs = PathSeparator + MessageBrokerNamed + PathSeparator;
 		private const string PsTemp = PathSeparator + MessageBrokerTemp;
 
-		public static TransactionMetricName MessageBrokerTransaction([NotNull] string type, [NotNull] string vendor, [CanBeNull] string name)
+		public static TransactionMetricName MessageBrokerTransaction([NotNull] string type, [NotNull] string vendor,
+			[CanBeNull] string name)
 		{
 			//Message/{vendor}/{type}
 			var unprefixedName = new StringBuilder(MessagePs).Append(vendor).Append(PathSeparator).Append(type);
@@ -319,6 +329,7 @@ namespace NewRelic.Agent.Core.Metric
 				//Message/{vendor}/{type}/Temp
 				unprefixedName.Append(PsTemp);
 			}
+
 			return new TransactionMetricName(OtherTransactionPrefix, unprefixedName.ToString());
 		}
 
@@ -355,7 +366,7 @@ namespace NewRelic.Agent.Core.Metric
 
 		public const string WebTransactionCpuTimeAll = CpuTimePrefix + PathSeparator + WebTransactionPrefix;
 		public const string OtherTransactionCpuTimeAll = CpuTimePrefix + PathSeparator + OtherTransactionPrefix;
-		
+
 		[NotNull]
 		public static string TransactionCpuTime(TransactionMetricName transactionMetricName)
 		{
@@ -376,7 +387,8 @@ namespace NewRelic.Agent.Core.Metric
 		public const string Msmq = "MSMQ";
 
 		[NotNull]
-		public static MetricName GetMessageBroker(MessageBrokerDestinationType type, MessageBrokerAction action, [NotNull] string vendor, [CanBeNull] string queueName)
+		public static MetricName GetMessageBroker(MessageBrokerDestinationType type, MessageBrokerAction action,
+			[NotNull] string vendor, [CanBeNull] string queueName)
 		{
 			var normalizedType = NormalizeMessageBrokerDestinationTypeForMetricName(type);
 			return (queueName != null)
@@ -384,7 +396,8 @@ namespace NewRelic.Agent.Core.Metric
 				: MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerTemp);
 		}
 
-		private static MessageBrokerDestinationType NormalizeMessageBrokerDestinationTypeForMetricName(MessageBrokerDestinationType type)
+		private static MessageBrokerDestinationType NormalizeMessageBrokerDestinationTypeForMetricName(
+			MessageBrokerDestinationType type)
 		{
 			if (type == MessageBrokerDestinationType.TempQueue)
 				return MessageBrokerDestinationType.Queue;
@@ -425,7 +438,7 @@ namespace NewRelic.Agent.Core.Metric
 		[NotNull, Pure]
 		public static string ToString(DatastoreVendor vendor)
 		{
-			return DatabaseVendorNames[(int)vendor];
+			return DatabaseVendorNames[(int) vendor];
 		}
 
 		[NotNull, Pure]
@@ -454,7 +467,8 @@ namespace NewRelic.Agent.Core.Metric
 		}
 
 		[NotNull, Pure]
-		public static MetricName GetDatastoreStatement(DatastoreVendor vendor, [NotNull] string model, string operation = null)
+		public static MetricName GetDatastoreStatement(DatastoreVendor vendor, [NotNull] string model,
+			string operation = null)
 		{
 			operation = operation ?? DatastoreUnknownOperationName;
 			return MetricName.Create(DatastoreStatement, ToString(vendor), model, operation);
@@ -483,7 +497,8 @@ namespace NewRelic.Agent.Core.Metric
 		}
 
 		[NotNull]
-		public static MetricName GetExternalHost([NotNull] string host, [NotNull] string library, [CanBeNull] string operation = null)
+		public static MetricName GetExternalHost([NotNull] string host, [NotNull] string library,
+			[CanBeNull] string operation = null)
 		{
 			return operation != null
 				? MetricName.Create(External, host, library, operation)
@@ -509,7 +524,8 @@ namespace NewRelic.Agent.Core.Metric
 		}
 
 		[NotNull]
-		public static MetricName GetExternalTransaction([NotNull] string host, [NotNull] string crossProcessId, [NotNull] string transactionName)
+		public static MetricName GetExternalTransaction([NotNull] string host, [NotNull] string crossProcessId,
+			[NotNull] string transactionName)
 		{
 			return MetricName.Create("ExternalTransaction", host, crossProcessId, transactionName);
 		}
@@ -547,11 +563,21 @@ namespace NewRelic.Agent.Core.Metric
 		public static string GetSupportabilityLinuxOs() => SupportabilityPs + "OS" + PathSeparator + "Linux";
 
 		private const string SupportabilityUtilizationPs = SupportabilityPs + "utilization" + PathSeparator;
-		private const string SupportabilityUtilizationBootIdError = SupportabilityUtilizationPs + "boot_id" + PathSeparator + "error";
-		private const string SupportabilityUtilizationAwsError = SupportabilityUtilizationPs + "aws" + PathSeparator + "error";
-		private const string SupportabilityUtilizationAzureError = SupportabilityUtilizationPs + "azure" + PathSeparator + "error";
-		private const string SupportabilityUtilizationGcpError = SupportabilityUtilizationPs + "gcp" + PathSeparator + "error";
-		private const string SupportabilityUtilizationPcfError = SupportabilityUtilizationPs + "pcf" + PathSeparator + "error";
+
+		private const string SupportabilityUtilizationBootIdError =
+			SupportabilityUtilizationPs + "boot_id" + PathSeparator + "error";
+
+		private const string SupportabilityUtilizationAwsError =
+			SupportabilityUtilizationPs + "aws" + PathSeparator + "error";
+
+		private const string SupportabilityUtilizationAzureError =
+			SupportabilityUtilizationPs + "azure" + PathSeparator + "error";
+
+		private const string SupportabilityUtilizationGcpError =
+			SupportabilityUtilizationPs + "gcp" + PathSeparator + "error";
+
+		private const string SupportabilityUtilizationPcfError =
+			SupportabilityUtilizationPs + "pcf" + PathSeparator + "error";
 
 		[NotNull]
 		public static string GetSupportabilityBootIdError() => SupportabilityUtilizationBootIdError;
@@ -568,9 +594,15 @@ namespace NewRelic.Agent.Core.Metric
 		[NotNull]
 		public static string GetSupportabilityPcfUsabilityError() => SupportabilityUtilizationPcfError;
 
+		public static string GetSupportabilityAgentTimingMetric(string suffix)
+		{
+			return Supportability + PathSeparator + "AgentTiming" + PathSeparator + suffix;
+		}
+
 		// Metrics
 		// NOTE: This metric is REQUIRED by the collector (it is used as a heartbeat)
-		public const string SupportabilityMetricHarvestTransmit = SupportabilityPs + "MetricHarvest" + PathSeparator + "transmit";
+		public const string SupportabilityMetricHarvestTransmit =
+			SupportabilityPs + "MetricHarvest" + PathSeparator + "transmit";
 
 		// RUM
 		public const string SupportabilityRumHeaderRendered = SupportabilityPs + "RUM/Header";
@@ -587,9 +619,14 @@ namespace NewRelic.Agent.Core.Metric
 		public const string SupportabilityTransactionEventsSent = SupportabilityTransactionEventsPs + "TotalEventsSent";
 		public const string SupportabilityTransactionEventsSeen = SupportabilityTransactionEventsPs + "TotalEventsSeen";
 
-		public const string SupportabilityTransactionEventsCollected = SupportabilityTransactionEventsPs + "TotalEventsCollected";
-		public const string SupportabilityTransactionEventsRecollected = SupportabilityTransactionEventsPs + "TotalEventsRecollected";
-		public const string SupportabilityTransactionEventsReservoirResize = SupportabilityTransactionEventsPs + "TryResizeReservoir";
+		public const string SupportabilityTransactionEventsCollected =
+			SupportabilityTransactionEventsPs + "TotalEventsCollected";
+
+		public const string SupportabilityTransactionEventsRecollected =
+			SupportabilityTransactionEventsPs + "TotalEventsRecollected";
+
+		public const string SupportabilityTransactionEventsReservoirResize =
+			SupportabilityTransactionEventsPs + "TryResizeReservoir";
 
 		// Custom Events
 		private const string SupportabilityEventsPs = SupportabilityPs + "Events" + PathSeparator;
@@ -612,7 +649,10 @@ namespace NewRelic.Agent.Core.Metric
 		// SQL Trace
 		private const string SupportabilitySqlTracesPs = SupportabilityPs + "SqlTraces" + PathSeparator;
 		public const string SupportabilitySqlTracesSent = SupportabilitySqlTracesPs + "TotalSqlTracesSent";
-		[NotNull] public static readonly MetricName SupportabilitySqlTracesCollected = MetricName.Create(SupportabilitySqlTracesPs + "TotalSqlTracesCollected");
+
+		[NotNull] public static readonly MetricName SupportabilitySqlTracesCollected =
+			MetricName.Create(SupportabilitySqlTracesPs + "TotalSqlTracesCollected");
+
 		public const string SupportabilitySqlTracesRecollected = SupportabilitySqlTracesPs + "TotalSqlTracesRecollected";
 
 		// Error Traces
@@ -622,12 +662,16 @@ namespace NewRelic.Agent.Core.Metric
 		public const string SupportabilityErrorTracesRecollected = SupportabilityErrorTracesPs + "TotalErrorsRecollected";
 
 		// Transaction GarbageCollected
-		private const string SupportabilityTransactionBuilderGarbageCollectedPs = SupportabilityPs + "TransactionBuilderGarbageCollected" + PathSeparator;
-		public const string SupportabilityTransactionBuilderGarbageCollectedAll = SupportabilityTransactionBuilderGarbageCollectedPs + All;
+		private const string SupportabilityTransactionBuilderGarbageCollectedPs =
+			SupportabilityPs + "TransactionBuilderGarbageCollected" + PathSeparator;
+
+		public const string SupportabilityTransactionBuilderGarbageCollectedAll =
+			SupportabilityTransactionBuilderGarbageCollectedPs + All;
 
 		// Agent health events
 		[NotNull]
-		public static string GetSupportabilityAgentHealthEvent(AgentHealthEvent agentHealthEvent, [CanBeNull]string additionalData = null)
+		public static string GetSupportabilityAgentHealthEvent(AgentHealthEvent agentHealthEvent,
+			[CanBeNull] string additionalData = null)
 		{
 			var metricName = SupportabilityPs + agentHealthEvent;
 			return (additionalData == null) ? metricName : metricName + PathSeparator + additionalData;
@@ -654,59 +698,202 @@ namespace NewRelic.Agent.Core.Metric
 		///DistributedTracing
 
 		private const string SupportabilityDistributedTracePs = SupportabilityPs + "DistributedTrace" + PathSeparator;
-		private const string SupportabilityDistributedTraceAcceptPayloadPs = SupportabilityDistributedTracePs + "AcceptPayload" + PathSeparator;
-		private const string SupportabilityDistributedTraceCreatePayloadPs = SupportabilityDistributedTracePs + "CreatePayload" + PathSeparator;
-		private const string SupportabilityDistributedTraceAcceptPayloadIgnoredPs = SupportabilityDistributedTraceAcceptPayloadPs + "Ignored" + PathSeparator;
+
+		private const string SupportabilityDistributedTraceAcceptPayloadPs =
+			SupportabilityDistributedTracePs + "AcceptPayload" + PathSeparator;
+
+		private const string SupportabilityDistributedTraceCreatePayloadPs =
+			SupportabilityDistributedTracePs + "CreatePayload" + PathSeparator;
+
+		private const string SupportabilityDistributedTraceAcceptPayloadIgnoredPs =
+			SupportabilityDistributedTraceAcceptPayloadPs + "Ignored" + PathSeparator;
 
 		/// <summary>Created when AcceptPayload was called successfully</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadSuccess = SupportabilityDistributedTraceAcceptPayloadPs + "Success";
+		public const string SupportabilityDistributedTraceAcceptPayloadSuccess =
+			SupportabilityDistributedTraceAcceptPayloadPs + "Success";
 
 		/// <summary>Created when AcceptPayload had a generic exception</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadException = SupportabilityDistributedTraceAcceptPayloadPs + "Exception";
+		public const string SupportabilityDistributedTraceAcceptPayloadException =
+			SupportabilityDistributedTraceAcceptPayloadPs + "Exception";
 
 		/// <summary>Created when AcceptPayload had a parsing exception</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadParseException = SupportabilityDistributedTraceAcceptPayloadPs + "ParseException";
+		public const string SupportabilityDistributedTraceAcceptPayloadParseException =
+			SupportabilityDistributedTraceAcceptPayloadPs + "ParseException";
 
 		/// <summary>Created when AcceptPayload was ignored because CreatePayload had already been called</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept = SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "CreateBeforeAccept";
+		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept =
+			SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "CreateBeforeAccept";
 
 		/// <summary>Created when AcceptPayload was ignored because AcceptPayload had already been called</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredMultiple = SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "Multiple";
+		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredMultiple =
+			SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "Multiple";
 
 		/// <summary>Created when AcceptPayload was ignored because the payload's major version was greater than the agent's</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion = SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "MajorVersion";
+		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion =
+			SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "MajorVersion";
 
 		/// <summary>Created when AcceptPayload was ignored because the payload was null</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredNull = SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "Null";
+		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredNull =
+			SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "Null";
 
 		/// <summary>Created when AcceptPayload was ignored because the payload was untrusted</summary>
-		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount = SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "UntrustedAccount";
+		public const string SupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount =
+			SupportabilityDistributedTraceAcceptPayloadIgnoredPs + "UntrustedAccount";
 
 		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
-		public const string SupportabilityDistributedTraceCreatePayloadSuccess = SupportabilityDistributedTraceCreatePayloadPs + "Success";
+		public const string SupportabilityDistributedTraceCreatePayloadSuccess =
+			SupportabilityDistributedTraceCreatePayloadPs + "Success";
 
 		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
-		public const string SupportabilityDistributedTraceCreatePayloadException = SupportabilityDistributedTraceCreatePayloadPs + "Exception";
+		public const string SupportabilityDistributedTraceCreatePayloadException =
+			SupportabilityDistributedTraceCreatePayloadPs + "Exception";
 
 		[NotNull]
 		public static string GetSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode)
 		{
-			return Supportability + PathSeparator + "Agent/Collector/HTTPError" + PathSeparator + (int)statusCode;
+			return Supportability + PathSeparator + "Agent/Collector/HTTPError" + PathSeparator + (int) statusCode;
 		}
 
 		[NotNull]
 		public static string GetSupportabilityEndpointMethodErrorAttempts(string enpointMethod)
 		{
-			return Supportability + PathSeparator + "Agent/Collector" + PathSeparator + enpointMethod + PathSeparator + "Attempts";
+			return Supportability + PathSeparator + "Agent/Collector" + PathSeparator + enpointMethod + PathSeparator +
+			       "Attempts";
 		}
 
 		[NotNull]
 		public static string GetSupportabilityEndpointMethodErrorDuration(string enpointMethod)
 		{
-			return Supportability + PathSeparator + "Agent/Collector" + PathSeparator + enpointMethod + PathSeparator + "Duration";
+			return Supportability + PathSeparator + "Agent/Collector" + PathSeparator + enpointMethod + PathSeparator +
+			       "Duration";
 		}
 
-
 		#endregion Supportability
+
+		#region Distributed Trace Metrics
+
+		private const string Unknown = "Unknown";
+
+		//DurationByCaller/parent.type/parent.accountId/parent.appId/transport/all
+		private const string DistributedTraceDurationByCallerPs = "DurationByCaller" + PathSeparator;
+
+		//ErrorsByCaller/parent.type/parent.accountId/parent.appId/transport/all
+		private const string DistributedTraceErrorsByCallerPs = "ErrorsByCaller" + PathSeparator;
+
+		//TransportDuration/parent.type/parent.accountId/parent.appId/transport/all
+		private const string DistributedTraceTransportDurationPs = "TransportDuration" + PathSeparator;
+
+	/// <summary>
+		/// Returns the metric name based on metricTag
+		/// </summary>
+		/// <param name="metricTag">e.g. DistributedTraceDurationByCallerPs or DistributedTraceErrorsByCallerPs or DistributedTraceTransportDurationPs</param>
+		/// <param name="type">The type of the parent</param>
+		/// <param name="accountId">The account Id of the parent</param>
+		/// <param name="app">The app value of the parent</param>
+		/// <param name="transport">e.g. http, grpc</param>
+		/// <returns>A metric prefix: e.g. DurationByCaller/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/
+		/// </returns>
+		[NotNull]
+		private static string GetDistributedTraceMetricPrefix(
+			[NotNull] string metricTag,
+			[CanBeNull] string type,
+			[CanBeNull] string accountId,
+			[CanBeNull] string app,
+			[CanBeNull] string transport)
+		{
+			const int reserveCapacity = 100;
+			var sb = new StringBuilder(metricTag, reserveCapacity)
+				.Append(type ?? Unknown).Append(PathSeparatorChar)
+				.Append(accountId ?? Unknown).Append(PathSeparatorChar)
+				.Append(app ?? Unknown).Append(PathSeparatorChar)
+				.Append(transport ?? Unknown).Append(PathSeparatorChar);
+			return sb.ToString();
+		}
+
+		/// <summary>
+		/// Returns the a tuple of two metric names. The first one ends in /all and the second one ends in allWeb
+		/// or allOther depending on the input value of isWeb.
+		/// </summary>
+		/// <param name="type">The type of the parent</param>
+		/// <param name="accountId">The account Id of the parent</param>
+		/// <param name="app">The app value of the parent</param>
+		/// <param name="transport">e.g. http, grpc</param>
+		/// <param name="isWeb">if true, creates the allWeb metric name. if false, creates the allOther metric name</param>
+		/// <returns>A tuple of two strings: 
+		/// <para>DurationByCaller/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/all</para>
+		/// and
+		/// <para>DurationByCaller/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/{allWeb|allOther}</para>
+		/// </returns>
+		public static (MetricName all, MetricName webOrOther) GetDistributedTraceDurationByCaller(
+			[CanBeNull] string type,
+			[CanBeNull] string accountId,
+			[CanBeNull] string app,
+			[CanBeNull] string transport,
+			bool isWeb)
+		{
+			var prefix = GetDistributedTraceMetricPrefix(DistributedTraceDurationByCallerPs, type, accountId, app, transport);
+			return (all: MetricName.Create(prefix + All), webOrOther: MetricName.Create(prefix + (isWeb ? AllWeb : AllOther)));
+		}
+
+		/// <summary>
+		/// Returns the a tuple of two metric names. The first one ends in /all and the second one ends in allWeb
+		/// or allOther depending on the input value of isWeb.
+		/// </summary>
+		/// <param name="type">The type of the parent</param>
+		/// <param name="accountId">The account Id of the parent</param>
+		/// <param name="app">The app value of the parent</param>
+		/// <param name="transport">e.g. http, grpc</param>
+		/// <param name="isWeb">if true, creates the allWeb metric name. if false, creates the allOther metric name</param>
+		/// <returns>A tuple of two strings: 
+		/// <para>ErrorsByCaller/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/all</para>
+		/// and
+		/// <para>ErrorsByCaller/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/{allWeb|allOther}</para>
+		/// </returns>
+		public static (MetricName all, MetricName webOrOther) GetDistributedTraceErrorsByCaller(
+			[CanBeNull] string type,
+			[CanBeNull] string accountId,
+			[CanBeNull] string app,
+			[CanBeNull] string transport,
+			bool isWeb)
+		{
+			var prefix = GetDistributedTraceMetricPrefix(DistributedTraceErrorsByCallerPs, type, accountId, app, transport);
+			return (all: MetricName.Create(prefix + All), webOrOther: MetricName.Create(prefix + (isWeb ? AllWeb : AllOther)));
+		}
+
+		/// <summary>
+		/// Returns the a tuple of two metric names. The first one ends in /all and the second one ends in allWeb
+		/// or allOther depending on the input value of isWeb.
+		/// </summary>
+		/// <param name="type">The type of the parent</param>
+		/// <param name="accountId">The account Id of the parent</param>
+		/// <param name="app">The app value of the parent</param>
+		/// <param name="transport">e.g. http, grpc</param>
+		/// <param name="isWeb">if true, creates the allWeb metric name. if false, creates the allOther metric name</param>
+		/// <returns>A tuple of two strings: 
+		/// <para>TransportDuration/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/all</para>
+		/// and
+		/// <para>TransportDuration/{parent.type}/{parent.accountId}/{parent.appId}/{transport}/{allWeb|allOther}</para>
+		/// </returns>
+		public static (MetricName all, MetricName webOrOther) GetDistributedTraceTransportDuration(
+			[CanBeNull] string type,
+			[CanBeNull] string accountId,
+			[CanBeNull] string app,
+			[CanBeNull] string transport,
+			bool isWeb)
+		{
+			var prefix = GetDistributedTraceMetricPrefix(DistributedTraceTransportDurationPs, type, accountId, app, transport);
+			return (all: MetricName.Create(prefix + All), webOrOther: MetricName.Create(prefix + (isWeb ? AllWeb : AllOther)));
+		}
+
+		#endregion Distributed Trace Metrics
+
+		#region Span Metrics
+
+		private const string SupportabilitySpanEventsPs = SupportabilityPs + "SpanEvent" + PathSeparator;
+		public const string SupportabilitySpanEventsSent = SupportabilitySpanEventsPs + "TotalEventsSent";
+		public const string SupportabilitySpanEventsSeen = SupportabilitySpanEventsPs + "TotalEventsSeen";
+
+		#endregion Span Metrics
+
 	}
 }

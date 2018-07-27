@@ -28,7 +28,6 @@ namespace NewRelic.Agent.Core.WireModels
 		private const string ItemTypeName = "Error Event";
 		private const string TimeStampKey = "timestamp";
 		private const float PriorityMin = 0.0f;
-		private const float PriorityMax = 1.0f;
 		private static readonly string _missingTimestampMessage = $"{ItemTypeName} does not contain '{TimeStampKey}'";
 		private float _priority;
 
@@ -37,9 +36,9 @@ namespace NewRelic.Agent.Core.WireModels
 			get { return _priority; }
 			set
 			{
-				if (value > PriorityMax || value < PriorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
+				if (value < PriorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
 				{
-					throw new ArgumentException($"{ItemTypeName} requires a valid priority value ({PriorityMin} - {PriorityMax}), value used: {value}");
+					throw new ArgumentException($"{ItemTypeName} requires a valid priority value greater than {PriorityMin}, value used: {value}");
 				}
 				_priority = value;
 			}

@@ -64,9 +64,15 @@ namespace NewRelic.Agent.Core.DataTransport
 			return response.Status;
 		}
 
-		public DataTransportResponseStatus Send(ErrorEventAdditions additions, IEnumerable<ErrorEventWireModel> errorEvents)
+		public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents)
 		{
-			var response = TrySendDataRequest("error_event_data", _configuration.AgentRunId, additions, errorEvents);
+			var response = TrySendDataRequest("error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
+			return response.Status;
+		}
+
+		public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<SpanEventWireModel> spanEvents)
+		{
+			var response = TrySendDataRequest("span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
 			return response.Status;
 		}
 

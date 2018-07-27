@@ -63,7 +63,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\AttributeFilter\AttributeFilter.csproj" />
-        <ProjectReference Include="..\Configuration\Configuration.csproj" />
         <ProjectReference Include="..\Dongle\Dongle.csproj" />
         <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
         <ProjectReference Include="..\LabelsService\LabelsService.csproj" />

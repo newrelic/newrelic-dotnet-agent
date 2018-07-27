@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			_timerFactory = new TimerFactory();
 
-			_transactionAttributeMaker = new TransactionAttributeMaker();
+			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 		}
 
 		[Test]

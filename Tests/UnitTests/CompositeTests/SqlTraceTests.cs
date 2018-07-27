@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using JetBrains.Annotations;
+using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
@@ -14,10 +14,8 @@ namespace CompositeTests
 	[TestFixture]
 	public class SqlTraceTests
 	{
-		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
-		[NotNull]
 		private IAgentWrapperApi _agentWrapperApi;
 
 		[SetUp]
@@ -38,7 +36,7 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
 			_compositeTestAgent.PushConfiguration();
-			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			using (_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
 				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1");
 				segment.End();
@@ -46,12 +44,97 @@ namespace CompositeTests
 
 			_compositeTestAgent.Harvest();
 
-			var sqlTrace = _compositeTestAgent.SqlTraces.FirstOrDefault();
+			var sqlTrace = _compositeTestAgent.SqlTraces.First();
 
 			NrAssert.Multiple(
 				() => Assert.IsNotNull(sqlTrace),
 				() => Assert.AreEqual("Datastore/statement/MSSQL/Table1/SELECT", sqlTrace.DatastoreMetricName),
 				() => Assert.AreEqual("SELECT * FROM Table1", sqlTrace.Sql)
+			);
+		}
+
+		[Test]
+		public void SimpleTransaction_CreatesDatastoreTransactionAndSqlTrace_HasQueryParameters()
+		{
+			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
+			_compositeTestAgent.LocalConfiguration.transactionTracer.recordSql = configurationTransactionTracerRecordSql.raw;
+			_compositeTestAgent.LocalConfiguration.datastoreTracer.queryParameters.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+			using (_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var queryParameters = new Dictionary<string, IConvertible>
+				{
+					{"myKey1", "myValue1"},
+					{"myKey2", "myValue2"}
+				};
+
+				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1", queryParameters: queryParameters);
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var sqlTrace = _compositeTestAgent.SqlTraces.First();
+
+			NrAssert.Multiple(
+				() => Assert.IsNotNull(sqlTrace),
+				() => CollectionAssert.AreEquivalent((Dictionary<string, IConvertible>) sqlTrace.ParameterData["query_parameters"],
+					new Dictionary<string, IConvertible>
+					{
+						{"myKey1", "myValue1"},
+						{"myKey2", "myValue2"}
+					})
+			);
+		}
+
+		[Test]
+		public void SimpleTransaction_CreatesDatastoreTransactionAndSqlTrace_HasNoQueryParameters()
+		{
+			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
+			_compositeTestAgent.LocalConfiguration.transactionTracer.recordSql = configurationTransactionTracerRecordSql.raw;
+			_compositeTestAgent.LocalConfiguration.datastoreTracer.queryParameters.enabled = false;
+			_compositeTestAgent.PushConfiguration();
+			using (_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var queryParameters = new Dictionary<string, IConvertible>
+				{
+					{ "myKey1", "myValue1" }
+				};
+
+				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1", queryParameters: queryParameters);
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var sqlTrace = _compositeTestAgent.SqlTraces.First();
+
+			NrAssert.Multiple(
+				() => Assert.IsNotNull(sqlTrace),
+				() => Assert.IsFalse(sqlTrace.ParameterData.ContainsKey("query_parameters"))
+			);
+		}
+
+		[Test]
+		public void SimpleTransaction_CreatesDatastoreTransactionAndSqlTrace_NoQueryParameterInput_HasNoQueryParameters()
+		{
+			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
+			_compositeTestAgent.LocalConfiguration.transactionTracer.recordSql = configurationTransactionTracerRecordSql.raw;
+			_compositeTestAgent.LocalConfiguration.datastoreTracer.queryParameters.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+			using (_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			{
+				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1");
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var sqlTrace = _compositeTestAgent.SqlTraces.First();
+
+			NrAssert.Multiple(
+				() => Assert.IsNotNull(sqlTrace),
+				() => Assert.IsFalse(sqlTrace.ParameterData.ContainsKey("query_parameters"))
 			);
 		}
 
@@ -101,7 +184,7 @@ namespace CompositeTests
 		[Test]
 		public void SimpleTransaction_CreatesNoSqlTraceOnFastQuery()
 		{
-			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			using (_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
 				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1");
 				segment.End();
@@ -126,7 +209,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainEnabled = true;
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
 			_compositeTestAgent.PushConfiguration();
-			using (var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			using (_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
 				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", commandText);
 				_agentWrapperApi.EnableExplainPlans(segment, () => AllocateResources(sqlCommand), GenerateExplainPlan, () => new VendorExplainValidationResult(true));
@@ -162,7 +245,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainEnabled = true;
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0; // Config to run explain plans on queries with any nonzero duration
 			_compositeTestAgent.PushConfiguration();
-			using (var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
+			using (_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
 				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", commandText);
 				_agentWrapperApi.EnableExplainPlans(segment, () => AllocateResources(sqlCommand), GenerateExplainPlan, () => new VendorExplainValidationResult(false));
@@ -192,11 +275,11 @@ namespace CompositeTests
 				return null;
 
 			var dbCommand = (IDbCommand)resources;
-			var explainPlanHeaders = new List<String>(new String[] { "StmtText", "Type" });
+			var explainPlanHeaders = new List<String>(new[] { "StmtText", "Type" });
 			var explainPlanDatas = new List<List<Object>>();
 			var explainPlan = new List<Object>(new Object[] {dbCommand.CommandText, "SELECT"});
 			explainPlanDatas.Add(explainPlan);
-			var obfuscatedHeaders = new List<Int32>(new Int32[] {0, 1});
+			var obfuscatedHeaders = new List<Int32>(new [] {0, 1});
 			return new ExplainPlan(explainPlanHeaders, explainPlanDatas, obfuscatedHeaders);
 		}
 	}

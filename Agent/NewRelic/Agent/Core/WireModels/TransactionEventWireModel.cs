@@ -23,12 +23,14 @@ namespace NewRelic.Agent.Core.WireModels
 		[NotNull]
 		public readonly ReadOnlyDictionary<String, Object> AgentAttributes;
 
+		public bool HasOutgoingDistributedTracePayload { get; set; }
+		public bool HasIncomingDistributedTracePayload { get; set; }
+
 		private readonly bool _isSynthetics;
 
 		private const string ItemTypeName = "Transaction Event";
 		private const string TimeStampKey = "timestamp";
 		private const float PriorityMin = 0.0f;
-		private const float PriorityMax = 1.0f;
 		private static readonly string _missingTimestampMessage = $"{ItemTypeName} does not contain '{TimeStampKey}'";
 		private float _priority;
 
@@ -37,9 +39,9 @@ namespace NewRelic.Agent.Core.WireModels
 			get { return _priority; }
 			set
 			{
-				if (value > PriorityMax || value < PriorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
+				if (value < PriorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
 				{
-					throw new ArgumentException($"{ItemTypeName} requires a valid priority value ({PriorityMin} - {PriorityMax}), value used: {value}");
+					throw new ArgumentException($"{ItemTypeName} requires a valid priority value greater than {PriorityMin}, value used: {value}");
 				}
 				_priority = value;
 			}
@@ -87,9 +89,11 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 		}
 
-		public TransactionEventWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, bool isSynthetics, float priority)
+		public TransactionEventWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, bool isSynthetics, float priority,bool hasOutgoingDistributedTracePayload, bool hasIncomingDistributedTracePayload)
 		{
 			Priority = priority;
+			HasOutgoingDistributedTracePayload = hasOutgoingDistributedTracePayload;
+			HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
 			IntrinsicAttributes = new ReadOnlyDictionary<String, Object>(intrinsicAttributes.ToDictionary<String, Object>());
 			UserAttributes = new ReadOnlyDictionary<String, Object>(userAttributes.ToDictionary<String, Object>());
 			AgentAttributes = new ReadOnlyDictionary<String, Object>(agentAttributes.ToDictionary<String, Object>());

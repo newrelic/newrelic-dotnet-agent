@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
+using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
@@ -12,6 +13,8 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 	/// </summary>
 	public interface IAgentWrapperApi
 	{
+		IConfiguration Configuration { get; }
+
 		/// <summary>
 		/// Returns the current transaction.  This will either return a transaction
 		/// if one has already been started or a dummy instance of a transaction
@@ -74,7 +77,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="headers">The headers to be processed. Must not be null.</param>
 		/// <param name="contentLength">The length of the content, in bytes, if available.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void ProcessInboundRequest([NotNull] IEnumerable<KeyValuePair<string, string>> headers, long? contentLength = null);
+		void ProcessInboundRequest([NotNull] IEnumerable<KeyValuePair<string, string>> headers, [CanBeNull] string transportType, long? contentLength = null);
 
 		/// <summary>
 		/// Tell the agent about an error that just occurred in the wrapper. Normally exceptions should just be thrown so that the agent can handle them directly, but this method is useful in situations where exceptions are happening outside the scope of the agent (for example, on another thread). This method is thread-safe.
@@ -159,6 +162,11 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// Returns true if this is a leaf segment.
 		/// </summary>
 		bool IsLeaf { get; }
+
+		/// <summary>
+		/// Returns the current segment's Span Id.
+		/// </summary>
+		string SpanId { get; }
 
 		/// <summary>
 		/// Ends this transaction segment.

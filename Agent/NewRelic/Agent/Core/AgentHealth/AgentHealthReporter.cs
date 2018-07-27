@@ -42,6 +42,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 		void ReportAzureUtilizationError();
 		void ReportPcfUtilizationError();
 		void ReportGcpUtilizationError();
+		void ReportAgentTimingMetric(string timerName, TimeSpan stopWatchElapsedMilliseconds);
 
 		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
 		void ReportSupportabilityDistributedTraceAcceptPayloadSuccess();
@@ -74,6 +75,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 		void ReportSupportabilityDistributedTraceCreatePayloadException();
 
 		void ReportSupportabilityCollectorErrorException(string endpointMethod, TimeSpan responseDuration, HttpStatusCode? statusCode);
+
+		void ReportSpanEventCollected(int count);
+		void ReportSpanEventsSent(int count);
 	}
 
 	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
@@ -294,7 +298,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
 		public void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount() =>
-			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredUntrustedAccount);
+			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredUntrustedAccount());
 
 		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
 		public void ReportSupportabilityDistributedTraceCreatePayloadSuccess() =>
@@ -305,6 +309,20 @@ namespace NewRelic.Agent.Core.AgentHealth
 			TrySend(_metricBuilder.TryBuildCreatePayloadException);
 
 		#endregion DistributedTrace
+
+		#region Span 
+		
+		public void ReportSpanEventCollected(int count) => TrySend(_metricBuilder.TryBuildSpanEventsSeenMetric(count));
+
+		public void ReportSpanEventsSent(int count) => TrySend(_metricBuilder.TryBuildSpanEventsSentMetric(count));
+
+		#endregion Span 
+
+		public void ReportAgentTimingMetric(string suffix, TimeSpan time)
+		{
+			var metric = _metricBuilder.TryBuildAgentTimingMetric(suffix, time);
+			TrySend(metric);
+		}
 
 		#region HttpError
 
@@ -318,7 +336,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 			TrySend(_metricBuilder.TryBuildSupportabilityEndpointMethodErrorDuration(endpointMethod, responseDuration));
 		}
 
-		
 		#endregion
 
 		public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)

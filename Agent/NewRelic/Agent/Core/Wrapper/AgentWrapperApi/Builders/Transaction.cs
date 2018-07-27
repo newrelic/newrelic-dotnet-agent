@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
@@ -79,9 +78,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		ImmutableTransaction ConvertToImmutableTransaction();
 
 		void Ignore();
-		void NoticeUnitOfWorkBegins();
-		void NoticeUnitOfWorkEnds();
-		void NoticeNestedTransactionAttempt();
+		int NoticeUnitOfWorkBegins();
+		int NoticeUnitOfWorkEnds();
+		int NoticeNestedTransactionAttempt();
 		void IgnoreAutoBrowserMonitoringForThisTx();
 		void IgnoreAllBrowserMonitoringForThisTx();
 		void IgnoreApdex();
@@ -106,6 +105,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		bool IgnoreAllBrowserMonitoring { get; }
 		// This guid is created during the transaction initizialiaztion
 		string Guid { get; }
+		DateTime StartTime { get; }
+
 		// Used for RUM and CAT to get the duration until this point in time
 		TimeSpan GetDurationUntilNow();
 
@@ -117,9 +118,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	public class Transaction : ITransaction, ITransactionSegmentState
 	{
 		private static readonly ITransactionName EmptyTransactionName = new OtherTransactionName("empty", "empty");
-
-		[NotNull]
-		private static readonly RNGCryptoServiceProvider RngCryptoServiceProvider = new RNGCryptoServiceProvider();
 
 		private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
 		[NotNull]
@@ -158,13 +156,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			[NotNull] ITimer timer, [NotNull] DateTime startTime, [NotNull] ICallStackManager callStackManager, SqlObfuscator sqlObfuscator, float priority)
 		{
 			CandidateTransactionName = new CandidateTransactionName(initialTransactionName);
-			TransactionMetadata = new TransactionMetadata();
-			TransactionMetadata.Priority = priority;
+			_guid = GuidGenerator.GenerateNewRelicGuid();
+			TransactionMetadata = new TransactionMetadata
+			{
+				Priority = priority,
+				DistributedTraceTraceId = _guid
+			};
+
 			CallStackManager = callStackManager;
 			_transactionTracerMaxSegments = configuration.TransactionTracerMaxSegments;
 			_startTime = startTime;
 			_timer = timer;
-			_guid = GenerateNewRelicGuid();
 			_unitOfWorkCount = 1;
 			_sqlObfuscator = sqlObfuscator;
 		}
@@ -191,19 +193,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_ignored = true;
 		}
 
-		public void NoticeUnitOfWorkBegins()
+		public int NoticeUnitOfWorkBegins()
 		{
-			Interlocked.Increment(ref _unitOfWorkCount);
+			return Interlocked.Increment(ref _unitOfWorkCount);
 		}
 
-		public void NoticeUnitOfWorkEnds()
+		public int NoticeUnitOfWorkEnds()
 		{
-			Interlocked.Decrement(ref _unitOfWorkCount);
+			return Interlocked.Decrement(ref _unitOfWorkCount);
 		}
 
-		public void NoticeNestedTransactionAttempt()
+		public int NoticeNestedTransactionAttempt()
 		{
-			Interlocked.Increment(ref _totalNestedTransactionAttempts);
+			return Interlocked.Increment(ref _totalNestedTransactionAttempts);
 		}
 
 		public void IgnoreAutoBrowserMonitoringForThisTx()
@@ -227,6 +229,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public bool Ignored => _ignored;
 		public string Guid => _guid;
+		public DateTime StartTime => _startTime;
 
 		/// <summary>
 		/// This is a method instead of property to prevent StackOverflowException when our 
@@ -299,18 +302,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		}
 
 		#endregion TranasctionBuilder finalization logic
-
-		/// <summary>
-		/// Generates a guid according to this spec: https://source.datanerd.us/agents/agent-specs/blob/master/PORTED-0013-Cross-Application-Tracing.md#guid
-		/// </summary>
-		/// <returns>A special New Relic-style guid</returns>
-		[NotNull]
-		private static String GenerateNewRelicGuid()
-		{
-			var rndBytes = new Byte[8];
-			RngCryptoServiceProvider.GetBytes(rndBytes);
-			return $"{BitConverter.ToUInt64(rndBytes, 0):X}";
-		}
 
 		public int CallStackPush(Segment segment)
 		{

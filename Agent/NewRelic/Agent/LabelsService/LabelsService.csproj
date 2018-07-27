@@ -33,7 +33,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="7.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     <ProjectReference Include="..\NewRelic.Core\NewRelic.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

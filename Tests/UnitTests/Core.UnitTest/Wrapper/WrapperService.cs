@@ -8,6 +8,7 @@ using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Tracer;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -37,6 +38,8 @@ namespace NewRelic.Agent.Core.Wrapper
 		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
 
+		private IAgentTimerService _agentTimerService;
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -44,12 +47,13 @@ namespace NewRelic.Agent.Core.Wrapper
 			_agentWrapperApi = Mock.Create<IAgentWrapperApi>();
 			_configurationService = Mock.Create<IConfigurationService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+			_agentTimerService = Mock.Create<IAgentTimerService>();
 
 			Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(10);
 
 			_defaultWrapper = Mock.Create<IDefaultWrapper>();
 			_noOpWrapper = Mock.Create<INoOpWrapper>();
-			_wrapperService = new WrapperService(_configurationService, _wrapperMap, _agentWrapperApi, _agentHealthReporter);
+			_wrapperService = new WrapperService(_configurationService, _wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
 		}
 
 		[Test]
@@ -107,7 +111,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var target = new Object();
 			var arguments = new Object[0];
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
 
 			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 			action(null, null);
@@ -129,7 +133,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var target = new Object();
 			var arguments = new Object[0];
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
 
 			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 			action(null, null);
@@ -181,7 +185,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
 			Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
 
 			Assert.Throws<Exception>(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
 			Assert.DoesNotThrow(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
@@ -232,7 +236,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
 			Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
 
 			var afterWrappedMethod1 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
 			Assert.Throws<Exception>(() => afterWrappedMethod1(null, null));
@@ -264,7 +268,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var target = new Object();
 			var arguments = new Object[0];
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
 
 			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 

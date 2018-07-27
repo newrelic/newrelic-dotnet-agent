@@ -44,6 +44,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[CanBeNull]
 		public Func<Boolean> DoExplainPlanCondition { get; set; }
 
+		public IDictionary<string, IConvertible> QueryParameters { get; set; }
+
 		private Object _explainPlanResources;
 		private ExplainPlan _explainPlan;
 
@@ -52,11 +54,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public ExplainPlan ExplainPlan => _explainPlan;
 
-		public DatastoreSegmentData(ParsedSqlStatement parsedSqlStatement, string commandText = null, ConnectionInfo connectionInfo = null)
+		public DatastoreSegmentData(ParsedSqlStatement parsedSqlStatement, string commandText = null, ConnectionInfo connectionInfo = null, IDictionary<string, IConvertible> queryParameters = null)
 		{
 			this._connectionInfo = connectionInfo ?? EmptyConnectionInfo;
 			this._parsedSqlStatement = parsedSqlStatement;
 			CommandText = commandText;
+			QueryParameters = queryParameters;
 		}
 
 		internal override void AddTransactionTraceParameters(IConfigurationService configurationService, Segment segment, IDictionary<string, object> segmentParameters, ImmutableTransaction immutableTransaction)
@@ -80,6 +83,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			if (configurationService.Configuration.DatabaseNameReportingEnabled)
 			{
 				segmentParameters["database_name"] = DatabaseName;
+			}
+
+			if (QueryParameters != null)
+			{
+				segmentParameters["query_parameters"] = QueryParameters;
 			}
 		}
 

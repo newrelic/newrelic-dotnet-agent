@@ -26,7 +26,5 @@ namespace NewRelic.Agent.Core.Api
 		void SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null);
 		IEnumerable<KeyValuePair<String, String>> GetRequestMetadata();
 		IEnumerable<KeyValuePair<String, String>> GetResponseMetadata();
-		void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<String, String>> distributedTracePayload);
-		IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload();
 	}
 }

@@ -62,9 +62,10 @@
     <Compile Include="NewRelic.Collections\ConcurrentPriorityQueueTests.cs" />
     <Compile Include="NewRelic.Collections\ConcurrentQueueTests.cs" />
     <Compile Include="NewRelic.Collections\DisposableCollection.cs" />
+    <Compile Include="NewRelic.Collections\PrioritizedNodeTests.cs" />
+    <Compile Include="NewRelic.Collections\StaticCounterTests.cs" />
     <Compile Include="NewRelic.Dispatchers\EventBus.cs" />
     <Compile Include="NewRelic.Dispatchers\EventSubscription.cs" />
-    <Compile Include="NewRelic.Dispatchers\WeakEventSubscription.cs" />
     <Compile Include="NewRelic.Memoization\MemozierTests.cs" />
     <Compile Include="NewRelic.Reflection\PerformanceComparison.cs" />
     <Compile Include="NewRelic.Reflection\VisibilityBypasserTests.cs" />
@@ -78,7 +79,6 @@
     <Compile Include="NewRelic.SystemExtensions\TimeSpanExtensionsTests.cs" />
     <Compile Include="NewRelic.TypeInstantiation\AssemblyResolverHolder.cs" />
     <Compile Include="NewRelic.TypeInstantiation\TypeInstantiator.cs" />
-    <Compile Include="NewRelic.WeakActions\WeakActionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />
   </ItemGroup>

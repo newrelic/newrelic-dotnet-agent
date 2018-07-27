@@ -9,6 +9,7 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.BrowserMonitoring;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions;
@@ -25,6 +26,8 @@ namespace NewRelic.Agent.Core.Api
 	public class AgentApiImplementation : IAgentApi
 	{
 		private const String CustomMetricNamePrefixAndSeparator = MetricNames.Custom + MetricNames.PathSeparator;
+		private const string DistributedTracingIsEnabledIgnoringCall = "Distributed tracing is enabled. Ignoring {0} call.";
+	
 		[NotNull]
 		private readonly ITransactionService _transactionService;
 
@@ -54,7 +57,10 @@ namespace NewRelic.Agent.Core.Api
 
 		[NotNull] private readonly IAgentWrapperApi _agentWrapperApi;
 
-		public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi)
+		private readonly ITracePriorityManager _tracePriorityManager;
+
+		public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi,
+			ITracePriorityManager tracePriorityManager)
 		{
 			_transactionService = transactionService;
 			_agentHealthReporter = agentHealthReporter;
@@ -66,6 +72,7 @@ namespace NewRelic.Agent.Core.Api
 			_browserMonitoringScriptMaker = browserMonitoringScriptMaker;
 			_configurationService = configurationService;
 			_agentWrapperApi = agentWrapperApi;
+			_tracePriorityManager = tracePriorityManager;
 		}
 
 		public void RecordCustomEvent(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
@@ -83,7 +90,7 @@ namespace NewRelic.Agent.Core.Api
 					}
 					else
 					{
-						priority = (float)new Random().NextDouble();
+						priority = _tracePriorityManager.Create();
 					}
 
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(RecordCustomEvent));
@@ -261,7 +268,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 			else
 			{
-				_customErrorDataTransformer.Transform(errorData, customAttributes, (float)new Random().NextDouble());
+				_customErrorDataTransformer.Transform(errorData, customAttributes, _tracePriorityManager.Create());
 			}
 		}
 
@@ -603,24 +610,27 @@ namespace NewRelic.Agent.Core.Api
 			return name;
 		}
 
-		public IEnumerable<KeyValuePair<String, String>> GetRequestMetadata()
+		public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
 		{
+			if (_configurationService.Configuration.DistributedTracingEnabled)
+			{
+
+				Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetRequestMetadata));
+				return null;
+			}
+
 			return _agentWrapperApi.CurrentTransaction.GetRequestMetadata();
 		}
 
-		public IEnumerable<KeyValuePair<String, String>> GetResponseMetadata()
+		public IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
 		{
+			if (_configurationService.Configuration.DistributedTracingEnabled)
+			{
+				Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetResponseMetadata));
+				return null;
+			}
+
 			return _agentWrapperApi.CurrentTransaction.GetResponseMetadata();
-		}
-
-		public void AcceptDistributedTracePayload(IEnumerable<KeyValuePair<String, String>> header)
-		{
-			_agentWrapperApi.CurrentTransaction.AcceptDistributedTracePayload(header);
-		}
-
-		public IEnumerable<KeyValuePair<String, String>> CreateDistributedTracePayload()
-		{
-			return _agentWrapperApi.CurrentTransaction.CreateDistributedTracePayload();
 		}
 	}
 }

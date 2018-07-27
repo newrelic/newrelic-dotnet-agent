@@ -19,13 +19,15 @@ namespace NewRelic.Agent.Core.Aggregators
 		[NotNull]
 		private readonly IProcessStatic _processStatic;
 
+		private readonly TimeSpan _harvestCycle = TimeSpan.FromMinutes(1);
+
 		protected AbstractAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic)
 		{
 			DataTransportService = dataTransportService;
 			_scheduler = scheduler;
 			_processStatic = processStatic;
 
-			_scheduler.ExecuteEvery(Harvest, TimeSpan.FromMinutes(1));
+			_scheduler.ExecuteEvery(Harvest, _harvestCycle);
 
 			_subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
 		}

@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 using System.Threading;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -51,6 +46,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public int? ParentUniqueId { get; }
 
 		public bool IsLeaf { get; set; }
+
+		public string SpanId { get; }
 
 		[NotNull]
 		protected readonly MethodCallData _methodCallData;
@@ -144,6 +141,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			Data = segmentData;
 			Combinable = combinable;
 			IsLeaf = false;
+			SpanId = GuidGenerator.GenerateNewRelicGuid();
 		}
 
 		protected Segment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<String, Object>> parameters)
@@ -162,6 +160,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			{
 				RelativeEndTime = relativeStartTime.Add(duration.Value);
 			}
+
+			SpanId = segment.SpanId;
 		}
 
 		private void Finish()

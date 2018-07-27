@@ -9,6 +9,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Telerik.JustMock;
@@ -73,6 +74,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[NotNull]
 		private ISqlTraceMaker _sqlTraceMaker;
 
+		[NotNull]
+		private ISpanEventAggregator _spanEventAggregator;
+
+		[NotNull]
+		private ISpanEventMaker _spanEventMaker;
+
+		private IAgentTimerService _agentTimerService;
+
 		private IAttributeService _attributeService;
 
 		// TransactionTransformerSqlTraceTests is modelled after TransactionTransformerTests, but more real (non-mock) objects are required so that appropriate segment trees get generated.
@@ -100,8 +109,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_errorTraceMaker = Mock.Create<IErrorTraceMaker>();
 			_errorEventAggregator = Mock.Create<IErrorEventAggregator>();
 			_errorEventMaker = Mock.Create<IErrorEventMaker>();
-			_attributeService = Mock.Create<IAttributeService>();
+			_spanEventAggregator = Mock.Create<ISpanEventAggregator>();
+			_spanEventMaker = Mock.Create<ISpanEventMaker>();
+			_agentTimerService = Mock.Create<IAgentTimerService>();
 
+			_attributeService = Mock.Create<IAttributeService>();
 
 			// Non-Mocks
 			_segmentTreeMaker = new SegmentTreeMaker();
@@ -115,12 +127,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var agentHealthReporter = Mock.Create<AgentHealth.IAgentHealthReporter>();
 			_sqlTraceAggregator = new SqlTraceAggregator(dataTransportService, scheduler, processStatic, agentHealthReporter);
 
-			_transactionAttributeMaker = new TransactionAttributeMaker();
+			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 
 			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService);
 
 			// create TransactionTransformer
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker);
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService);
 		}
 
 		[Test]
@@ -133,11 +145,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			segments = segments.Concat(new[] { datastoreSegment });
 
 			var transaction = TestTransactions.CreateTestTransactionWithSegments(segments);
+			var transactionName = _transactionMetricNameMaker.GetTransactionMetricName(transaction.TransactionName);
 			Mock.Arrange(() => _configuration.SlowSqlEnabled).Returns(true);
 			Mock.Arrange(() => _configuration.SqlExplainPlanThreshold).Returns(TimeSpan.FromMilliseconds(100));
 
 			var privateTransactionTransformer = new PrivateAccessor(_transactionTransformer);
-			var args = new object[] { transaction };
+			var args = new object[] { transaction, transactionName };
 			privateTransactionTransformer.CallMethod("Transform", args);
 
 			var privateSqlTraceStatsInAggregator = new PrivateAccessor(_sqlTraceAggregator).GetField("_sqlTraceStats");
@@ -179,9 +192,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			segments.Add(datastoreSegment3);
 
 			var transaction = TestTransactions.CreateTestTransactionWithSegments(segments);
+			var transactionName = _transactionMetricNameMaker.GetTransactionMetricName(transaction.TransactionName);
 
 			var privateTransactionTransformer = new PrivateAccessor(_transactionTransformer);
-			var args = new object[] { transaction };
+			var args = new object[] { transaction, transactionName };
 			privateTransactionTransformer.CallMethod("Transform", args);
 
 			String sqlTracesCollectedMetricName = "Supportability/SqlTraces/TotalSqlTracesCollected";

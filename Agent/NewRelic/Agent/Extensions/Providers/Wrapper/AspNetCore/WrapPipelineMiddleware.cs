@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -71,6 +72,9 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			{
 				var responseStatusCode = context.Response.StatusCode;
 
+				//We only keep 1 error per transaction so we are prioritizing the error that made its way
+				//all the way to our middleware over the error caught by the ExceptionHandlerMiddleware.
+				//It's possible that the 2 errors are the same under certain circumstances.
 				if (appException != null)
 				{
 					transaction.NoticeError(appException);
@@ -78,6 +82,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 					//Looks like we won't accurately notice that a 500 is going to be returned for exception cases,
 					//because that appears to be handled at the  web host level or server (kestrel) level 
 					responseStatusCode = 500;
+				}
+				else
+				{
+					var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+					if (exceptionHandlerFeature != null)
+					{
+						transaction.NoticeError(exceptionHandlerFeature.Error);
+					}
 				}
 
 				if (responseStatusCode >= 400)
@@ -135,7 +147,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			var headers = httpContext.Request.Headers.Select(header => new KeyValuePair<string, string>(header.Key, header.Value));
 			var contentLength = httpContext.Request.ContentLength;
 
-			_agentWrapperApi.ProcessInboundRequest(headers, contentLength);
+			_agentWrapperApi.ProcessInboundRequest(headers, "HTTP", contentLength);
 		}
 
 		private void TryWriteResponseHeaders(HttpContext httpContext, ITransaction transaction)

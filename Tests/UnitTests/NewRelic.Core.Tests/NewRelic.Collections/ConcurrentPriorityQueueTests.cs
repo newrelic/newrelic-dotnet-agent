@@ -336,7 +336,8 @@ namespace NewRelic.Collections.UnitTests
 	// ReSharper disable once InconsistentNaming
 	[TestFixture]
 	[TestOf(typeof(ConcurrentPriorityQueue<TransactionEventWireModel>))]
-	public class ConcurrentPriorityQueueTransactionEventsTests : ConcurrentPriorityQueueTestsBase<TransactionEventWireModel>
+	public class
+		ConcurrentPriorityQueueTransactionEventsTests : ConcurrentPriorityQueueTestsBase<TransactionEventWireModel>
 	{
 		public ConcurrentPriorityQueueTransactionEventsTests()
 		{
@@ -352,8 +353,9 @@ namespace NewRelic.Collections.UnitTests
 		protected override TransactionEventWireModel Create(float priority)
 		{
 			Interlocked.Increment(ref CreateCount);
-			var intrinsicAttributes = new Dictionary<String, Object> { { TimeStampKey, DateTime.UtcNow.ToUnixTime() } };
-			return new TransactionEventWireModel(EmptyAttributes, EmptyAttributes, intrinsicAttributes, false, priority);
+			var intrinsicAttributes = new Dictionary<String, Object> {{TimeStampKey, DateTime.UtcNow.ToUnixTime()}};
+			return new TransactionEventWireModel(EmptyAttributes, EmptyAttributes, intrinsicAttributes, false, priority, false,
+				false);
 		}
 
 		[TestCaseSource("ConstructPQSizes")]
@@ -391,5 +393,65 @@ namespace NewRelic.Collections.UnitTests
 		{
 			IsThreadSafe();
 		}
+	}
+
+	[TestFixture]
+	[TestOf(typeof(ConcurrentPriorityQueue<CustomEventWireModel>))]
+	public class ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests : ConcurrentPriorityQueueTestsBase<PrioritizedNode<SpanEventWireModel>>
+	{
+		public ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests()
+		{
+			Comparer = Comparer<PrioritizedNode<SpanEventWireModel>>.Default;
+		}
+
+		[SetUp]
+		public void Setup()
+		{
+			AllocPriorityQueue();
+		}
+
+		protected override PrioritizedNode<SpanEventWireModel> Create(float priority)
+		{
+			Interlocked.Increment(ref CreateCount);
+			var intrinsicAttributes = new Dictionary<string, object> { { "priority", priority } };
+			return new PrioritizedNode<SpanEventWireModel>(new SpanEventWireModel(intrinsicAttributes));
+		}
+
+		[TestCaseSource("ConstructPQSizes")]
+		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_ConstructPQOfDifferentSizes(uint sizeLimit)
+		{
+			ConstructPQOfDifferentSizes(sizeLimit);
+		}
+
+		[Test]
+		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_FunctionsAsNormalList_ForSingleThreadedAccess()
+		{
+			FunctionsAsNormalList_ForSingleThreadedAccess();
+		}
+
+		[Test]
+		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_ResizeChangesMaximumItemsAllowed()
+		{
+			ResizeChangesMaximumItemsAllowed();
+		}
+
+		[Test]
+		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_GetAddAttemptsCount()
+		{
+			GetAddAttemptsCount();
+		}
+
+		[Test]
+		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_SamplesItemsWhenSizeLimitReached()
+		{
+			SamplesItemsWhenSizeLimitReached();
+		}
+
+		[Test]
+		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_IsThreadSafe()
+		{
+			IsThreadSafe();
+		}
+
 	}
 }

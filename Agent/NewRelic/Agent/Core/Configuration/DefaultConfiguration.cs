@@ -36,6 +36,8 @@ namespace NewRelic.Agent.Core.Configuration
 
 		private static Int64 _currentConfigurationVersion;
 
+		private const uint DefaultSpanEventsMaxSamplesStored = 1000u;
+
 		[NotNull]
 		private readonly IEnvironment _environment = new EnvironmentMock();
 
@@ -745,23 +747,41 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion Cross Application Tracing
 
+		#region Span Events
+
+		private bool? _spanEventsEnabled;
+
+		public virtual bool SpanEventsEnabled => _spanEventsEnabled ?? (_spanEventsEnabled = AreSpanEventsEnabled()).Value;
+
+		private bool AreSpanEventsEnabled()
+		{
+			if (DistributedTracingEnabled && _localConfiguration.spanEvents.enabled )
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		#endregion
+
 		#region Distributed Tracing
 
 		private bool? _distributedTracingEnabled;
 		public virtual bool DistributedTracingEnabled => _distributedTracingEnabled ?? (_distributedTracingEnabled = IsDistributedTracingEnabled()).Value;
 
-		private bool IsDistributedTracingEnabled()
-		{
-			var enabled = _localConfiguration.distributedTracing.enabled;
+		private bool IsDistributedTracingEnabled() => _localConfiguration.distributedTracing.enabled;
 
-			if (enabled && CrossApplicationTracingCrossProcessId == null)
-			{
-				Log.Warn("Distributed Tracing is enabled but CrossProcessID is null. Disabling Distributed Tracing.");
-				enabled = false;
-			}
+		public string PrimaryApplicationId => _serverConfiguration.PrimaryApplicationId;
 
-			return enabled;
-		}
+		public string TrustedAccountKey => _serverConfiguration.TrustedAccountKey;
+
+		public string AccountId => _serverConfiguration.AccountId;
+
+		public int? SamplingTarget => _serverConfiguration.SamplingTarget;
+
+		public uint SpanEventsMaxSamplesStored => DefaultSpanEventsMaxSamplesStored;
+		public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
 		#endregion Distributed Tracing
 
@@ -942,6 +962,8 @@ namespace NewRelic.Agent.Core.Configuration
 		public bool InstanceReportingEnabled { get { return _localConfiguration.datastoreTracer.instanceReporting.enabled; } }
 
 		public bool DatabaseNameReportingEnabled { get { return _localConfiguration.datastoreTracer.databaseNameReporting.enabled; } }
+
+		public bool DatastoreTracerQueryParametersEnabled => _localConfiguration.datastoreTracer.queryParameters.enabled && TransactionTracerRecordSql == RawStringValue;
 
 		#endregion
 
@@ -1355,6 +1377,8 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 
 		#endregion
+
+		public bool DiagnosticsCaptureAgentTiming => _localConfiguration.diagnostics.captureAgentTiming;
 
 		#endregion
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
@@ -10,11 +9,9 @@ using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.CallStack;
@@ -42,7 +39,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_configurationService = Mock.Create<IConfigurationService>();
 			Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
-			_transactionAttributeMaker = new TransactionAttributeMaker();
+			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 		}
 
 		#region GetAttributes
@@ -81,7 +78,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
+				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.NotNull(transactionAttributes["nr.tripId"]),
 				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
@@ -122,7 +119,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
+				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.NotNull(transactionAttributes["nr.tripId"]),
 				() => Assert.NotNull(transactionAttributes["databaseDuration"]),
@@ -170,7 +167,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
+				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.NotNull(transactionAttributes["nr.tripId"]),
 				() => Assert.NotNull(transactionAttributes["databaseDuration"]),
@@ -180,7 +177,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
 			);
 		}
-
 
 		[Test]
 		public void GetAttributes_ReturnsOneExternal()
@@ -216,7 +212,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
+				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.NotNull(transactionAttributes["nr.tripId"]),
 				() => Assert.NotNull(transactionAttributes["externalDuration"]),
@@ -264,7 +260,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
+				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.NotNull(transactionAttributes["nr.tripId"]),
 				() => Assert.NotNull(transactionAttributes["externalDuration"]),
@@ -320,13 +316,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(32, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
+				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["webDuration"]),
 				() => Assert.AreEqual(1, transactionAttributes["queueDuration"]),
@@ -352,9 +348,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("400", transactionAttributes["error.class"]),
 				() => Assert.AreEqual("400", transactionAttributes["errorType"]),
 				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"])
+				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"]),
+				() => Assert.AreEqual(true, transactionAttributes["error"])
 			);
 		}
+
 
 		[Test]
 		public void GetAttributes_ReturnsCatAttsWithoutCrossAppId()
@@ -398,13 +396,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var tripId = immutableTransaction.Guid;
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(28, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(29, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
+				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["webDuration"]),
 				() => Assert.AreEqual(1, transactionAttributes["queueDuration"]),
@@ -426,7 +424,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual("400", transactionAttributes["error.class"]),
 				() => Assert.AreEqual("400", transactionAttributes["errorType"]),
 				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"])
+				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"]),
+				() => Assert.AreEqual(true, transactionAttributes["error"])
 			);
 		}
 
@@ -507,7 +506,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["name"]),
@@ -539,7 +538,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.class"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["errorType"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.message"])
+				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.message"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["error"])
 			);
 		}
 
@@ -588,7 +588,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
@@ -621,7 +621,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.class"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorType"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.message"])
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.message"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error"])
 			);
 		}
 
@@ -671,7 +672,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(35, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(36, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
@@ -704,7 +705,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.alternatePathHashes"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.class"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorType"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorMessage"])
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorMessage"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error"])
 			);
 		}
 
@@ -732,6 +734,323 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			// ASSERT
 			Assert.False(transactionAttributes.ContainsKey("webDuration"));
 		}
+
+		#region Distributed Trace
+
+		private const string IncomingType = "app";
+		private const string IncomingAcctId = "incomingAcctId";
+		private const string IncomingAppId = "incomingAppId";
+		private const string IncomingGuid = "incomingGuid";
+		private const bool Sampled = false;
+		private const string IncomingTraceId = "incomingTraceId";
+		private const string TransportType = "HTTP";
+		private const float Priority = 0.5f;
+		private const string IncomingTransactionId = "transactionId";
+
+		private const string ParentSpanIdAttributeName = "parentSpanId";
+
+		private const AttributeDestinations AllTracesAndEventsDestinations = 
+			AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorTrace |
+			AttributeDestinations.SqlTrace | AttributeDestinations.TransactionEvent | 
+			AttributeDestinations.ErrorEvent;
+
+		[Test]
+		public void GetAttributes_ReturnsDistributedTraceAttrs_IfDistributedTraceEnabledAndReceivedPayload()
+		{
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns("1234");
+			var timer = Mock.Create<ITimer>();
+			var expectedStartTime = DateTime.Now;
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+
+
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+
+			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
+			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
+			transaction.TransactionMetadata.DistributedTraceAppId = IncomingAppId;
+			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
+			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
+			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
+			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
+			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var totalTime = TimeSpan.FromSeconds(1);
+			var apdexT = TimeSpan.FromSeconds(2);
+
+			// ACT
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+
+			// ACQUIRE
+			var transactionAttributes = attributes.GetIntrinsics()
+				.Concat(attributes.GetAgentAttributes())
+				.Concat(attributes.GetUserAttributes())
+				.ToDictionary(attr => attr.Key, attr => attr.Value);
+
+			// ASSERT
+			NrAssert.Multiple(
+				() => Assert.AreEqual(21, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
+				() => Assert.True(transactionAttributes.ContainsKey("timestamp")),
+				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
+				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
+				() => Assert.True(transactionAttributes.ContainsKey("duration")),
+				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
+				() => Assert.True(transactionAttributes.ContainsKey("webDuration")),
+				() => Assert.True(transactionAttributes.ContainsKey("nr.apdexPerfZone")),
+				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
+				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["trip_id"]),
+				() => Assert.AreEqual(IncomingTraceId, transactionAttributes["traceId"]),
+				() => Assert.AreEqual(IncomingType, transactionAttributes["parent.type"]),
+				() => Assert.AreEqual(IncomingAppId, transactionAttributes["parent.app"]),
+				() => Assert.AreEqual(IncomingAcctId, transactionAttributes["parent.account"]),
+				() => Assert.AreEqual(TransportType, transactionAttributes["parent.transportType"]),
+				() => Assert.True(transactionAttributes.ContainsKey("parent.transportDuration")),
+				() => Assert.AreEqual(IncomingTransactionId, transactionAttributes["parentId"]),
+				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["guid"]),
+				() => Assert.AreEqual(Priority, transactionAttributes["priority"]),
+				() => Assert.AreEqual(Sampled, transactionAttributes["sampled"]),
+				() => Assert.AreEqual(IncomingGuid, transactionAttributes["parentSpanId"])
+			);
+		}
+
+		[Test]
+		public void GetAttributes_DoesNotReturnDistributedTraceAttrs_IfDistributedTraceEnabledAndDidNotReceivePayload()
+		{
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			var timer = Mock.Create<ITimer>();
+			var expectedStartTime = DateTime.Now;
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var totalTime = TimeSpan.FromSeconds(1);
+			var apdexT = TimeSpan.FromSeconds(2);
+
+			// ACT
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+
+			// ACQUIRE
+			var transactionAttributes = attributes.GetIntrinsics()
+				.Concat(attributes.GetAgentAttributes())
+				.Concat(attributes.GetUserAttributes())
+				.ToDictionary(attr => attr.Key, attr => attr.Value);
+
+			// ASSERT
+			NrAssert.Multiple(
+				() => Assert.False(transactionAttributes.ContainsKey("parent.type")),
+				() => Assert.False(transactionAttributes.ContainsKey("parent.app")),
+				() => Assert.False(transactionAttributes.ContainsKey("parent.account")),
+				() => Assert.False(transactionAttributes.ContainsKey("parent.transportType")),
+				() => Assert.False(transactionAttributes.ContainsKey("parent.transportDuration")),
+				() => Assert.False(transactionAttributes.ContainsKey("parentId"))
+			);
+		}
+
+		[Test]
+		public void GetAttributes_AssignsAttributesToCorrectDestinations_DistributedTracePayloadReceived()
+		{
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			var timer = Mock.Create<ITimer>();
+			var expectedStartTime = DateTime.Now;
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+
+			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
+			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
+			transaction.TransactionMetadata.DistributedTraceAppId = IncomingAppId;
+			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
+			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
+			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
+			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
+			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var totalTime = TimeSpan.FromSeconds(1);
+			var apdexT = TimeSpan.FromSeconds(2);
+
+			// ACT
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+
+			// ACQUIRE
+			var transactionAttributes = attributes.GetIntrinsics()
+				.Concat(attributes.GetAgentAttributes())
+				.Concat(attributes.GetUserAttributes())
+				.ToDictionary(attr => attr.Key, attr => attr.DefaultDestinations);
+
+			// ASSERT
+			NrAssert.Multiple(
+				() => Assert.AreEqual(21, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["type"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["name"]),
+				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["transactionName"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["duration"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["webDuration"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace, transactionAttributes["totalTime"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.apdexPerfZone"]),
+				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace, transactionAttributes["trip_id"]),
+				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.type"]),
+				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.app"]),
+				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.account"]),
+				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.transportType"]),
+				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.transportDuration"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes[ParentSpanIdAttributeName]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["parentId"]),
+				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["priority"]),
+				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["sampled"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["parentSpanId"]),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace, transactionAttributes["request.uri"])
+			);
+		}
+
+		[Test]
+		public void GetAttributes_AssignsCorrectClassificationToAttributes_DistributedTracePayloadReceived()
+		{
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			var timer = Mock.Create<ITimer>();
+			var expectedStartTime = DateTime.Now;
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+
+			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
+			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
+			transaction.TransactionMetadata.DistributedTraceAppId = IncomingAppId;
+			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
+			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
+			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
+			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
+			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var totalTime = TimeSpan.FromSeconds(1);
+			var apdexT = TimeSpan.FromSeconds(2);
+
+			// ACT
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+
+
+			// ACQUIRE
+			var transactionAttributes = attributes.GetIntrinsics()
+				.Concat(attributes.GetAgentAttributes())
+				.Concat(attributes.GetUserAttributes())
+				.ToDictionary(attr => attr.Key, attr => attr.Classification);
+
+			// ASSERT
+			NrAssert.Multiple(
+				() => Assert.AreEqual(21, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["transactionName"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["duration"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["totalTime"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["webDuration"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.apdexPerfZone"]),
+				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.uri"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["trip_id"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["traceId"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parent.type"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parent.app"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parent.account"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parent.transportType"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parent.transportDuration"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes[ParentSpanIdAttributeName]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["guid"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["priority"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["sampled"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parentId"]),
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parentSpanId"])
+			);
+		}
+
+		[Test]
+		public void ShouldCreateParentSpanIdWhenDistributedTraceGuidInPayload()
+		{
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			var timer = Mock.Create<ITimer>();
+			var expectedStartTime = DateTime.Now;
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+
+			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
+			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var totalTime = TimeSpan.FromSeconds(1);
+			var apdexT = TimeSpan.FromSeconds(2);
+
+			// ACT
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+
+			var transactionAttributes = attributes.GetIntrinsics()
+				.Concat(attributes.GetAgentAttributes())
+				.Concat(attributes.GetUserAttributes())
+				.ToDictionary(attr => attr.Key, attr => attr);
+
+			
+			Assert.True(transactionAttributes.ContainsKey(ParentSpanIdAttributeName), "Failed to find attribute: \"{0}\"", ParentSpanIdAttributeName);
+
+			var parentSpanIdAttribute = transactionAttributes[ParentSpanIdAttributeName];
+
+			NrAssert.Multiple
+			(
+				() => Assert.AreEqual(AttributeClassification.Intrinsics, parentSpanIdAttribute.Classification),
+				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, parentSpanIdAttribute.DefaultDestinations),
+				() => Assert.AreEqual(IncomingGuid, parentSpanIdAttribute.Value)
+			);
+		}
+
+		[Test]
+		public void ShouldNotCreateParentSpanIdWhenDistributedTraceGuidNotInPayload()
+		{
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			var timer = Mock.Create<ITimer>();
+			var expectedStartTime = DateTime.Now;
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+
+			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var totalTime = TimeSpan.FromSeconds(1);
+			var apdexT = TimeSpan.FromSeconds(2);
+
+			// ACT
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+
+			var transactionAttributes = attributes.GetIntrinsics()
+				.Concat(attributes.GetAgentAttributes())
+				.Concat(attributes.GetUserAttributes())
+				.ToDictionary(attr => attr.Key, attr => attr);
+
+			Assert.False(transactionAttributes.ContainsKey(ParentSpanIdAttributeName));
+		}
+
+		#endregion Distributed Trace
 
 		#endregion GetAttributes
 

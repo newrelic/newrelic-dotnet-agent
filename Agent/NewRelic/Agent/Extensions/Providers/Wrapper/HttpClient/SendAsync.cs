@@ -46,11 +46,12 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 				return Delegates.NoOp;
 			}
 			
-			// We cannot rely on SerializeHeadersWrapper to attach the headers because it is called on a thread that does not have access to the transaction
-			TryAttachHeadersToRequest(agentWrapperApi, httpRequestMessage);
-
 			var method = (httpRequestMessage.Method != null ? httpRequestMessage.Method.Method : "<unknown>") ?? "<unknown>";
 			var segment = agentWrapperApi.CurrentTransaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
+
+
+			// We cannot rely on SerializeHeadersWrapper to attach the headers because it is called on a thread that does not have access to the transaction
+			TryAttachHeadersToRequest(agentWrapperApi, httpRequestMessage, segment);
 
 			return Delegates.GetDelegateFor<Task<HttpResponseMessage>>(
 				onFailure: segment.End, 
@@ -101,11 +102,11 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			return null;
 		}
 
-		private static void TryAttachHeadersToRequest([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpRequestMessage httpRequestMessage)
+		private static void TryAttachHeadersToRequest([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpRequestMessage httpRequestMessage, ISegment segment)
 		{
 			try
 			{
-				var headers = agentWrapperApi.CurrentTransaction.GetRequestMetadata()
+				var headers = agentWrapperApi.CurrentTransaction.GetRequestMetadata(segment)
 					.Where(header => header.Key != null);
 
 				foreach (var header in headers)

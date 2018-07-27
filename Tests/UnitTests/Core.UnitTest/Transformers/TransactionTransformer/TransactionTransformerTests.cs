@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Utilities;
 using Telerik.JustMock;
 
 
@@ -24,7 +25,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 	[TestFixture]
 	public class TransactionTransformerTests
 	{
-
 		[NotNull]
 		private TransactionTransformer _transactionTransformer;
 
@@ -61,6 +61,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[NotNull]
 		private ITransactionEventMaker _transactionEventMaker;
 
+		private ISpanEventAggregator _spanEventAggregator;
+
+		private ISpanEventMaker _spanEventMaker;
+
 		[NotNull]
 		private ITransactionAttributeMaker _transactionAttributeMaker;
 
@@ -81,7 +85,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		[NotNull]
 		private ISqlTraceMaker _sqlTraceMaker;
+
 		private ITransactionSegmentState _transactionSegmentState;
+		private IAgentTimerService _agentTimerService;
 
 		[SetUp]
 		public void SetUp()
@@ -117,8 +123,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_errorEventMaker = Mock.Create<IErrorEventMaker>();
 			_sqlTraceAggregator = Mock.Create<ISqlTraceAggregator>();
 			_sqlTraceMaker = Mock.Create<ISqlTraceMaker>();
+			_spanEventAggregator = Mock.Create<ISpanEventAggregator>();
+			_spanEventMaker = Mock.Create<ISpanEventMaker>();
+			_agentTimerService = Mock.Create<IAgentTimerService>();
 
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker);
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService);
 		}
 
 		[NotNull]
@@ -225,7 +234,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void SegmentTransformers_AreGivenCorrectChildDuration()
 		{
-			var baseTime = DateTime.Now;
 			var node1 = GetNodeBuilder("seg1", new TimeSpan(), TimeSpan.FromSeconds(5)); // 0-5
 			var node2 = GetNodeBuilder("seg2", new TimeSpan(), TimeSpan.FromSeconds(1)); // 0-1
 			var node3 = GetNodeBuilder("seg3", TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(999)); // 3-999, but should be capped at 3-5 by parent time
@@ -259,47 +267,117 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Assert.AreEqual(999, oneStat.Value2);
 		}
 
+		public enum TestMode { DTDisabled, DTEnabled , PayloadDisabled, PayloadEnabled, SpanDisabled, SpanEnabled,  CatDisabled, CatEnabled, WebTransaction, OtherTransaction, WithError, NoError };
 		[Test]
-		public void TransactionRollupMetricIsGeneratedWebTransaction()
+		[Combinatorial]
+		public void TransactionRollupMetrics(
+			[Values(TestMode.DTDisabled, TestMode.DTEnabled)]TestMode dtMode, 
+			[Values(TestMode.PayloadDisabled, TestMode.PayloadEnabled)]TestMode payloadMode, 
+			[Values(TestMode.SpanDisabled, TestMode.SpanEnabled)]TestMode spanMode, 
+			[Values(TestMode.CatDisabled, TestMode.CatEnabled)]TestMode catMode, 
+			[Values(TestMode.WebTransaction, TestMode.OtherTransaction)]TestMode webOrOtherMode, 
+			[Values(TestMode.WithError, TestMode.NoError)]TestMode errorMode)
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var distributedTraceEnabled = dtMode == TestMode.DTEnabled;
+			var hasIncomingDistributedTracePayload = payloadMode == TestMode.PayloadEnabled;
+			var spanEventsEnabled = spanMode == TestMode.SpanEnabled;
+			var catEnabled = catMode == TestMode.CatEnabled;
+			var isWebTransaction = webOrOtherMode == TestMode.WebTransaction;
+			var isError = errorMode == TestMode.WithError;
 
-			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+			var actualMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
-			var transaction = TestTransactions.CreateDefaultTransaction();
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(distributedTraceEnabled);
+			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(spanEventsEnabled);
+			Mock.Arrange(() => _configuration.CrossApplicationTracingEnabled).Returns(catEnabled);
+
+			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>()))
+				.DoInstead<TransactionMetricStatsCollection>(txStats => actualMetrics = txStats.GetUnscopedForTesting());
+
+			var transaction = TestTransactions.CreateDefaultTransaction(isWebTransaction, statusCode: (isError)? 503 : 200);
+			if (distributedTraceEnabled)
+			{
+				//make this a distributed trace participant
+				transaction.TransactionMetadata.HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
+			}
+
 			_transactionTransformer.Transform(transaction);
+
+			var transactionType = isWebTransaction ? "Web" : "Other";
 
 			//Because we mock the segment tree builder, that creates a root node with the name MyMockedRootNode.
-			Assert.AreEqual(9, generatedMetrics.Count);
-			String[] unscoped = new String[] { "DotNet/MyMockedRootNode", "WebTransaction", "WebTransaction/TransactionName",
-				"WebTransactionTotalTime", "WebTransactionTotalTime/TransactionName", "HttpDispatcher",
-				"ApdexAll", "Apdex", "Apdex/TransactionName"};
-			foreach (String current in unscoped)
+			var expectedMetrics = new List<string>
 			{
-				Assert.IsTrue(generatedMetrics.ContainsKey(current));
-				var data = generatedMetrics[current];
-				Assert.AreEqual(1, data.Value0);
+				"DotNet/MyMockedRootNode"
+			};
+
+			expectedMetrics.AddRange(new[]
+			{
+				transactionType + "Transaction/TransactionName",
+				transactionType + "TransactionTotalTime",
+				transactionType + "TransactionTotalTime/TransactionName"
+			});
+
+			if (isWebTransaction)
+			{
+				expectedMetrics.AddRange(new[]
+				{
+					"WebTransaction", "HttpDispatcher", "ApdexAll", "Apdex", "Apdex/TransactionName"
+				});
 			}
-		}
-
-		[Test]
-		public void TransactionRollupMetricIsGeneratedOtherTransaction()
-		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
-
-			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-
-			var transaction = TestTransactions.CreateDefaultTransaction(false);
-			_transactionTransformer.Transform(transaction);
-
-			Assert.AreEqual(5, generatedMetrics.Count);
-			String[] unscoped = new String[] { "DotNet/MyMockedRootNode", "OtherTransaction/all", "OtherTransaction/TransactionName",
-				"OtherTransactionTotalTime", "OtherTransactionTotalTime/TransactionName"};
-			foreach (String current in unscoped)
+			else
 			{
-				Assert.IsTrue(generatedMetrics.ContainsKey(current), "Failed on " + current);
-				var data = generatedMetrics[current];
-				Assert.AreEqual(1, data.Value0);
+				expectedMetrics.AddRange(new[]
+				{
+					"OtherTransaction/all"
+				});
+			}
+
+			if (isError)
+			{
+				expectedMetrics.AddRange(new[]
+				{
+					"Errors/all",
+					"Errors/all"+transactionType,
+					"Errors/" + transactionType+ "Transaction/TransactionName",
+				});
+
+				if (distributedTraceEnabled)
+				{
+					expectedMetrics.AddRange(new[]
+					{
+						"ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/all",
+						"ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/all" + transactionType
+					});
+				}
+			}
+
+			if (_configuration.DistributedTracingEnabled)
+			{
+				expectedMetrics.AddRange(new[]
+				{
+					"DurationByCaller/Unknown/Unknown/Unknown/Unknown/all",
+					"DurationByCaller/Unknown/Unknown/Unknown/Unknown/all" +transactionType
+				});
+
+				if (transaction.TransactionMetadata.HasIncomingDistributedTracePayload)
+				{
+					expectedMetrics.AddRange(new[]
+					{
+						"TransportDuration/Unknown/Unknown/Unknown/Unknown/all",
+						"TransportDuration/Unknown/Unknown/Unknown/Unknown/all"+transactionType
+					});
+				}
+			}
+
+			Assert.That(actualMetrics.Keys, Is.EquivalentTo(expectedMetrics));
+			foreach (var actual in actualMetrics)
+			{
+#warning Spec-Check! in the case of a transaction with an error, should the Apdex, ApdexAll, and Apdex/TransactionName metrics have a value of zero
+				if (!isError || !(actual.Key == "ApdexAll" || actual.Key == "Apdex" || actual.Key == "Apdex/TransactionName"))
+				{
+					Assert.That(actual.Value.Value0, Is.EqualTo(1), actual.Key);
+				}
 			}
 		}
 
@@ -337,7 +415,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		[Test]
-		public void TransactionTotalTimeRollupMetricIsGeneratedWeb()
+		public void TransactionTotalTimeRollupMetricIsGeneratedWeb(
+			[Values(true, false)] bool distributedTraceEnabled,
+			[Values(false, true)] bool hasIncomingDistributedTracePayload)
 		{
 			var node1 = GetNodeBuilder(TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(7)); // 0-8
 			var node2 = GetNodeBuilder(TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(3)); // 0-3
@@ -353,20 +433,39 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Assert.AreEqual(3, node2.Segment.ExclusiveDurationOrZero.TotalSeconds);
 			Assert.AreEqual(3, node3.Segment.ExclusiveDurationOrZero.TotalSeconds);
 
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(distributedTraceEnabled);
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
-			var transaction = TestTransactions.CreateDefaultTransaction(isWebTransaction : true, segments : new List<Segment>() { node1.Segment, node2.Segment, node3.Segment });
+			var transaction = TestTransactions.CreateDefaultTransaction(isWebTransaction: true, segments: new List<Segment>() { node1.Segment, node2.Segment, node3.Segment });
+
+			//make this a distributed trace participant
+			if (distributedTraceEnabled)
+			{
+				transaction.TransactionMetadata.HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
+			}
+
 			_transactionTransformer.Transform(transaction);
 
-			Assert.AreEqual(9, generatedMetrics.Count);
+			var expected = 9;
+			if (_configuration.DistributedTracingEnabled)
+			{
+				expected += 2;
+				if (transaction.TransactionMetadata.HasIncomingDistributedTracePayload)
+				{
+					expected += 2;
+				}
+			}
+
+			Assert.AreEqual(expected, generatedMetrics.Count);
 			Assert.IsTrue(generatedMetrics.ContainsKey("DotNet/MyOtherMockedRootNode"));
 			//check the total time metrics
-			String[] unscoped = new String[] {
+			var unscoped = new[] {
 				"WebTransactionTotalTime", "WebTransactionTotalTime/TransactionName"};
 
-			foreach (String current in unscoped)
+			foreach (var current in unscoped)
 			{
 				Assert.IsTrue(generatedMetrics.TryGetValue(current, out MetricDataWireModel data));
 				Assert.AreEqual(1, data.Value0);
@@ -375,10 +474,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		}
 
-		private static Transaction AddDummySegment(Transaction transaction)
+		private static void AddDummySegment(Transaction transaction)
 		{
 			transaction.Add(SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, null, Enumerable.Empty<KeyValuePair<string, object>>(), "", false));
-			return transaction;
 		}
 
 		[Test]
@@ -719,6 +817,58 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		#endregion Transaction Events
 
+		#region Span Events
+
+		[Test]
+		public void TransformSendsCorrectParametersToSpanEventMaker()
+		{
+			// ARRANGE
+			var transactionName = "transactionName";
+			var priority = 0.5f;
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			AddDummySegment(transaction);
+
+			// ACT
+			_transactionTransformer.Transform(transaction);
+
+			// ASSERT
+			Mock.Assert(_spanEventMaker.GetSpanEvents(transaction.ConvertToImmutableTransaction(), transactionName));
+		}
+
+		[Test]
+		public void SpanEventIsSentToAggregator()
+		{
+			// ARRANGE
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
+			var transaction = TestTransactions.CreateDefaultTransaction(sampled: true);
+			var spanEvents = _spanEventMaker.GetSpanEvents(transaction.ConvertToImmutableTransaction(), "transactionName");
+
+			// ACT
+			_transactionTransformer.Transform(transaction);
+
+			// ASSERT
+			Mock.Assert(() => _spanEventAggregator.Collect(spanEvents));
+		}
+
+		[Test]
+		public void SpanEvent_IsNotCreatedOrSentToAggregator_IfSpanEventsEnabledIsFalse()
+		{
+			// ARRANGE
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(false);
+			var transaction = TestTransactions.CreateDefaultTransaction();
+
+			// ACT
+			_transactionTransformer.Transform(transaction);
+
+			// ASSERT
+			Mock.Assert(() => _spanEventAggregator.Collect(Arg.IsAny<List<SpanEventWireModel>>()), Occurs.Never());
+			Mock.Assert(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), "transactionName"), Occurs.Never());
+		}
+
+		#endregion
+
 		#region Error Traces
 
 		[Test]
@@ -883,7 +1033,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		public TypedSegment<SimpleSegmentData> GetSegment([NotNull] String name, double duration, TimeSpan start = new TimeSpan())
 		{
-			var methodCallData = new MethodCallData("foo", "bar", 1);
 			return new TypedSegment<SimpleSegmentData>(start, TimeSpan.FromSeconds(duration), GetSegment(name));
 		}
 
@@ -905,3 +1054,4 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		#endregion Helpers
 	}
 }
+

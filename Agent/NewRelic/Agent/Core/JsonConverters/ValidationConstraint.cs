@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using NewRelic.Agent.Core.DistributedTracing;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			{
 				if (_isRequired)
 				{
-					throw new JsonException($"expected to find {_path} {Enum.GetName(typeof(JTokenType), _type)}.");
+					throw new DistributedTraceAcceptPayloadParseException($"expected to find {_path} {Enum.GetName(typeof(JTokenType), _type)}.");
 				}
 				//field is null and not required, just return.
 				return;
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 
 			if (selection.Type != _type)
 			{
-				throw new JsonException($"expected to find {_path} of type {Enum.GetName(typeof(JTokenType), _type)}. Actual type: {Enum.GetName(typeof(JTokenType), selection.Type)}");
+				throw new DistributedTraceAcceptPayloadParseException($"expected to find {_path} of type {Enum.GetName(typeof(JTokenType), _type)}. Actual type: {Enum.GetName(typeof(JTokenType), selection.Type)}");
 			}
 
 			if (0 < _requiredChildrenMinimum)
@@ -66,12 +66,12 @@ namespace NewRelic.Agent.Core.JsonConverters
 				//test if both min and max child count are the same and produce an exception method without a range
 				if (_requiredChildrenMinimum == _requiredChildrenMaximum && countOfChildren != _requiredChildrenMinimum)
 				{
-					throw new JsonException(
+					throw new DistributedTraceAcceptPayloadParseException(
 						$"expected {_path} {Enum.GetName(typeof(JTokenType), _type)} to contain {_requiredChildrenMinimum} children. Found: {countOfChildren}");
 				}
 				if (countOfChildren < _requiredChildrenMinimum || countOfChildren > _requiredChildrenMaximum)
 				{
-					throw new JsonException(
+					throw new DistributedTraceAcceptPayloadParseException(
 						$"expected {_path} {Enum.GetName(typeof(JTokenType), _type)} to contain {_requiredChildrenMinimum}-{_requiredChildrenMaximum} children. Found: {countOfChildren}");
 				}
 			}

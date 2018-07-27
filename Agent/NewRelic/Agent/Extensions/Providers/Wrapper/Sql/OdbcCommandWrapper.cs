@@ -35,7 +35,10 @@ namespace NewRelic.Providers.Wrapper.Sql
 
 				// TODO - Tracer had a supportability metric here to report timing duration of the parser.
 				var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
-				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, null, sql);
+
+				var queryParameters = SqlWrapperHelper.GetQueryParameters(odbcCommand, agentWrapperApi);
+
+				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, null, sql, queryParameters);
 
 				return Delegates.GetDelegateFor(segment);
 			}

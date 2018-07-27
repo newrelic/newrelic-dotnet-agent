@@ -22,7 +22,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Configuration\Configuration.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
   </ItemGroup>
   <ItemGroup>

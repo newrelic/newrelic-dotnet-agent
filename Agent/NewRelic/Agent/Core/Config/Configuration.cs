@@ -20,6 +20,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationService serviceField;
         
+        private configurationDiagnostics diagnosticsField;
+        
         private configurationApplication applicationField;
         
         private string securityPoliciesTokenField;
@@ -51,6 +53,8 @@ namespace NewRelic.Agent.Core.Config
         private configurationCrossApplicationTracer crossApplicationTracerField;
         
         private configurationDistributedTracing distributedTracingField;
+        
+        private configurationSpanEvents spanEventsField;
         
         private configurationHighSecurity highSecurityField;
         
@@ -100,6 +104,7 @@ namespace NewRelic.Agent.Core.Config
             this.stripExceptionMessagesField = new configurationStripExceptionMessages();
             this.customInstrumentationEditorField = new configurationCustomInstrumentationEditor();
             this.highSecurityField = new configurationHighSecurity();
+            this.spanEventsField = new configurationSpanEvents();
             this.distributedTracingField = new configurationDistributedTracing();
             this.crossApplicationTracerField = new configurationCrossApplicationTracer();
             this.datastoreTracerField = new configurationDatastoreTracer();
@@ -115,6 +120,7 @@ namespace NewRelic.Agent.Core.Config
             this.instrumentationField = new configurationInstrumentation();
             this.logField = new configurationLog();
             this.applicationField = new configurationApplication();
+            this.diagnosticsField = new configurationDiagnostics();
             this.serviceField = new configurationService();
             this.agentEnabledField = true;
             this.rootAgentEnabledField = false;
@@ -134,6 +140,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.serviceField = value;
+            }
+        }
+        
+        public configurationDiagnostics diagnostics
+        {
+            get
+            {
+                return this.diagnosticsField;
+            }
+            set
+            {
+                this.diagnosticsField = value;
             }
         }
         
@@ -326,6 +344,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.distributedTracingField = value;
+            }
+        }
+        
+        public configurationSpanEvents spanEvents
+        {
+            get
+            {
+                return this.spanEventsField;
+            }
+            set
+            {
+                this.spanEventsField = value;
             }
         }
         
@@ -866,6 +896,30 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.domainField = value;
+            }
+        }
+    }
+    
+    public partial class configurationDiagnostics
+    {
+        
+        private bool captureAgentTimingField;
+        
+        public configurationDiagnostics()
+        {
+            this.captureAgentTimingField = false;
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool captureAgentTiming
+        {
+            get
+            {
+                return this.captureAgentTimingField;
+            }
+            set
+            {
+                this.captureAgentTimingField = value;
             }
         }
     }
@@ -2411,8 +2465,11 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationDatastoreTracerDatabaseNameReporting databaseNameReportingField;
         
+        private configurationDatastoreTracerQueryParameters queryParametersField;
+        
         public configurationDatastoreTracer()
         {
+            this.queryParametersField = new configurationDatastoreTracerQueryParameters();
             this.databaseNameReportingField = new configurationDatastoreTracerDatabaseNameReporting();
             this.instanceReportingField = new configurationDatastoreTracerInstanceReporting();
         }
@@ -2438,6 +2495,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.databaseNameReportingField = value;
+            }
+        }
+        
+        public configurationDatastoreTracerQueryParameters queryParameters
+        {
+            get
+            {
+                return this.queryParametersField;
+            }
+            set
+            {
+                this.queryParametersField = value;
             }
         }
     }
@@ -2490,6 +2559,30 @@ namespace NewRelic.Agent.Core.Config
         }
     }
     
+    public partial class configurationDatastoreTracerQueryParameters
+    {
+        
+        private bool enabledField;
+        
+        public configurationDatastoreTracerQueryParameters()
+        {
+            this.enabledField = false;
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+    }
+    
     public partial class configurationCrossApplicationTracer
     {
         
@@ -2525,6 +2618,30 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+    }
+    
+    public partial class configurationSpanEvents
+    {
+        
+        private bool enabledField;
+        
+        public configurationSpanEvents()
+        {
+            this.enabledField = true;
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get

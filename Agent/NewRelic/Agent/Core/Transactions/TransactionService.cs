@@ -11,6 +11,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -64,13 +65,16 @@ namespace NewRelic.Agent.Core.Transactions
 		[NotNull]
 		private readonly IDatabaseService _databaseService;
 
-		public TransactionService([NotNull] IEnumerable<IContextStorageFactory> factories, [NotNull] ITimerFactory timerFactory, [NotNull] ICallStackManagerFactory callStackManagerFactory, [NotNull] IDatabaseService databaseService)
+		private readonly ITracePriorityManager _tracePriorityManager;
+
+		public TransactionService([NotNull] IEnumerable<IContextStorageFactory> factories, [NotNull] ITimerFactory timerFactory, [NotNull] ICallStackManagerFactory callStackManagerFactory, [NotNull] IDatabaseService databaseService, ITracePriorityManager tracePriorityManager)
 		{
 			_sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
 			_asyncContext = GetAsyncTransactionContext(factories);
 			_timerFactory = timerFactory;
 			_callStackManagerFactory = callStackManagerFactory;
 			_databaseService = databaseService;
+			_tracePriorityManager = tracePriorityManager;
 		}
 
 		#region Private Helpers
@@ -145,7 +149,7 @@ namespace NewRelic.Agent.Core.Transactions
 				Log.Error("Unable to locate a valid TransactionContext.");
 				return null;
 			}
-			var priority = (float)new Random().NextDouble();
+			var priority = _tracePriorityManager.Create();
 			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService.SqlObfuscator, priority);
 
 			try
@@ -222,7 +226,7 @@ namespace NewRelic.Agent.Core.Transactions
 				return CreateInternalTransaction(initialTransactionName, onCreate);
 			}
 
-			transaction.NoticeNestedTransactionAttempt();
+			var currentNestedTransactionAttempts = transaction.NoticeNestedTransactionAttempt();
 
 			// If the transaction does not need to be root, then it really is a unit of work inside the current transaction, so increment the work counter to make sure all work is finished before the current transaction ends
 			if (!mustBeRootTransaction)
@@ -231,7 +235,7 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 
 			// We have a limit of 100 because 100 attempts to nest a transaction indicates that something has gone wrong (e.g. a transaction is never ending and is being reused over and over)
-			if (transaction.NestedTransactionAttempts > 100)
+			if (currentNestedTransactionAttempts > 100)
 			{
 				Log.WarnFormat("Releasing the transaction because there were too many nested transaction attempts.");
 				RemoveOutstandingInternalTransactions(true);

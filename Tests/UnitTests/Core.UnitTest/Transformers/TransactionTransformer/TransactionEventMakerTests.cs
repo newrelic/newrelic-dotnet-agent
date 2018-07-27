@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		public void GetTransactionEvent_ReturnsCorrectAttributes()
 		{
 			// ARRANGE
-			var immutableTransaction = BuildTestTransaction(false);
+			var immutableTransaction = BuildTestTransaction(isSynthetics: false);
 			var attributes = new Attributes();
 			attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.Transaction));
 			attributes.Add(Attribute.BuildResponseStatusAttribute("status"));
@@ -86,6 +86,53 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			Assert.IsFalse(transactionEvent.IsSynthetics());
 		}
 
+		[Test]
+		public void GetTransactionEvent_ReturnsCorrectDistributedTraceAttributes()
+		{
+			var account = "273070";
+			var app = "217958";
+			var transportType = "http";
+			var transportDuration = new TimeSpan(0,0,5);
+			var guid = "squid";
+			var parentId = "parentid";
+			var priority = .3f;
+			var sampled = true;
+			var traceId = "traceid";
+			var parentType = "Mobile";
+
+		// ARRANGE
+		var immutableTransaction = BuildTestTransaction(isSynthetics: false);
+			var attributes = new Attributes();
+			attributes.Add(Attribute.BuildParentTypeAttribute(parentType));
+			attributes.Add(Attribute.BuildParentAppAttribute(app));
+			attributes.Add(Attribute.BuildParentAccountAttribute(account));
+			attributes.Add(Attribute.BuildParentTransportTypeAttribute(transportType));
+			attributes.Add(Attribute.BuildParentTransportDurationAttribute(transportDuration));
+			attributes.Add(Attribute.BuildParentIdAttribute(parentId));
+			attributes.Add(Attribute.BuildGuidAttribute(guid));
+			attributes.Add(Attribute.BuildDistributedTraceIdAttributes(traceId));
+			attributes.Add(Attribute.BuildPriorityAttribute(priority));
+			attributes.Add(Attribute.BuildSampledAttribute(sampled));
+
+			// ACT
+			var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
+
+			// ASSERT
+			NrAssert.Multiple(
+				() => Assert.AreEqual(10, transactionEvent.IntrinsicAttributes.Count),
+				() => Assert.AreEqual(parentType, transactionEvent.IntrinsicAttributes["parent.type"]),
+				() => Assert.AreEqual(app, transactionEvent.IntrinsicAttributes["parent.app"]),
+				() => Assert.AreEqual(account, transactionEvent.IntrinsicAttributes["parent.account"]),
+				() => Assert.AreEqual(transportType, transactionEvent.IntrinsicAttributes["parent.transportType"]),
+				() => Assert.AreEqual(transportDuration.TotalSeconds, transactionEvent.IntrinsicAttributes["parent.transportDuration"]),
+				() => Assert.AreEqual(parentId, transactionEvent.IntrinsicAttributes["parentId"]),
+				() => Assert.AreEqual(guid, transactionEvent.IntrinsicAttributes["guid"]),
+				() => Assert.AreEqual(traceId, transactionEvent.IntrinsicAttributes["traceId"]),
+				() => Assert.AreEqual(priority, transactionEvent.IntrinsicAttributes["priority"]),
+				() => Assert.AreEqual(sampled, transactionEvent.IntrinsicAttributes["sampled"])
+			);
+		}
+
 		private static ImmutableTransaction BuildTestTransaction(bool isSynthetics)
 		{
 			var name = new WebTransactionName("foo", "bar");
@@ -112,10 +159,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 				"crossApplicationReferrerTransactionGuid",
 				"crossApplicationReferrerProcessId",
 				"crossApplicationReferrerTripId",
-				"distributedTraceParentType",
-				"distributedTraceParentId",
+				"distributedTraceType",
+				"distributedTraceApp",
+				"distributedTraceAccount",
+				"distributedTraceTransportType",
+				"distributedTraceGuid",
+				TimeSpan.MinValue, // DistributedTraceTransportDuration
 				"distributedTraceTraceId",
-				false,  // DistributedTraceSampled
+				"distributedTransactionId",
+				"distributedTraceTrustKey",
+				false,  // DistributedTraceSampled,
+				false,  // HasOutgoingDistributedTracePayload
+				false,  // HasIncomingDistributedTracePayload
 				"syntheticsResourceId",
 				"syntheticsJobId",
 				"syntheticsMonitorId",

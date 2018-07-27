@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlTypes;
+using System.Globalization;
 #if NET45
 using System.Data.Odbc;
 using System.Data.OleDb;
 #endif
-using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -14,6 +14,8 @@ namespace NewRelic.Parsing
 {
 	public static class SqlWrapperHelper
 	{
+		private const string NullQueryParameterValue = "Null";
+
 		/// <summary>
 		/// Gets the name of the datastore being used by a dbCommand.
 		/// </summary>
@@ -85,6 +87,92 @@ namespace NewRelic.Parsing
 				return DatastoreVendor.IBMDB2;
 
 			return DatastoreVendor.Other;
+		}
+
+		public static IDictionary<string, IConvertible> GetQueryParameters(IDbCommand command, IAgentWrapperApi agentWrapperApi)
+		{
+			if (!agentWrapperApi.Configuration.DatastoreTracerQueryParametersEnabled)
+			{
+				return null;
+			}
+
+			if (command.Parameters.Count == 0)
+			{
+				return null;
+			}
+
+			var result = new Dictionary<string, IConvertible>(command.Parameters.Count);
+
+			foreach (var parameter in command.Parameters)
+			{
+				var dbDataParameter = parameter as IDbDataParameter;
+
+				if (string.IsNullOrEmpty(dbDataParameter?.ParameterName))
+				{
+					continue;
+				}
+
+				var value = GetValue(dbDataParameter);
+
+				if (value != null)
+				{
+					result.Add(dbDataParameter.ParameterName, value);
+				}
+			}
+
+			return result;
+		}
+
+		private static IConvertible GetValue(IDbDataParameter dbDataParameter)
+		{
+			if (dbDataParameter.Value == null)
+			{
+				return NullQueryParameterValue;
+			}
+
+			switch (dbDataParameter.Value)
+			{
+				case Guid v:
+					return v.ToString();
+				case char[] v:
+					return new string(v);
+				case TimeSpan v:
+					return v.ToString("c");
+				case DateTimeOffset v:
+					return v.ToString(CultureInfo.InvariantCulture);
+				case DBNull _:
+					return NullQueryParameterValue;
+				case IConvertible v:
+					return v;
+				case SqlBoolean v:
+					return v.Value;
+				case SqlByte v:
+					return v.Value;
+				case SqlChars v:
+					return new string(v.Value);
+				case SqlDateTime v:
+					return v.Value.ToString(CultureInfo.InvariantCulture);
+				case SqlDecimal v:
+					return v.Value;
+				case SqlDouble v:
+					return v.Value;
+				case SqlGuid v:
+					return v.Value.ToString();
+				case SqlInt16 v:
+					return v.Value;
+				case SqlInt32 v:
+					return v.Value;
+				case SqlInt64 v:
+					return v.Value;
+				case SqlMoney v:
+					return v.Value;
+				case SqlSingle v:
+					return v.Value;
+				case SqlString v:
+					return v.Value;
+				default:
+					return dbDataParameter.Value?.ToString();
+			}
 		}
 	}
 }

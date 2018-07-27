@@ -161,6 +161,24 @@
 					</xs:complexType>
 				</xs:element>
 
+				<xs:element name="diagnostics" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:annotation>
+							<xs:documentation>
+								This section configures the agent to collect diagnostic information.
+							</xs:documentation>
+						</xs:annotation>
+
+						<xs:attribute name="captureAgentTiming" type="xs:boolean" default="false">
+							<xs:annotation>
+								<xs:documentation>
+									Turns on capturing timing for certain agent components.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+
 				<xs:element name="application" minOccurs="1" maxOccurs="1">
 					<xs:complexType>
 						<xs:annotation>
@@ -891,6 +909,19 @@
 									</xs:attribute>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="queryParameters" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:attribute name="enabled" type="xs:boolean" default="false">
+										<xs:annotation>
+											<xs:documentation>
+												WARNING: Enabling this setting has the potential of collecting sensitive data or personally identifiable information within your queries.
+
+												This setting controls whether or not database query parameters are reported for slow SQL queries. The transactionTracer.recordSql setting must be set to 'raw'. This setting is ignored when configurable security policies have been applied or High Security Mode is enabled.
+											</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
+								</xs:complexType>
+							</xs:element>
 
 						</xs:sequence>
 					</xs:complexType>
@@ -918,7 +949,8 @@
 				<xs:element name="distributedTracing" minOccurs="0" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>
-							Turns on/off Distributed Tracing.
+							Distributed tracing lets you see the path that a request takes through your distributed system. Enabling distributed tracing changes the behavior of some New Relic features, so carefully consult the transition guide before you enable this feature: https://docs.newrelic.com/docs/transition-guide-distributed-tracing 
+							Default is false.
 						</xs:documentation>
 					</xs:annotation>
 
@@ -932,6 +964,25 @@
 						</xs:attribute>
 					</xs:complexType>
 				</xs:element>
+
+				<xs:element name="spanEvents" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>
+							Turns on/off Span Events.
+						</xs:documentation>
+					</xs:annotation>
+
+					<xs:complexType>
+						<xs:attribute name="enabled" type="xs:boolean" default="true">
+							<xs:annotation>
+								<xs:documentation>
+									It is enabled by default. Set this to false to turn it off.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+
 				<xs:element name="highSecurity" minOccurs="0" maxOccurs="1">
 					<xs:annotation>
 						<xs:documentation>

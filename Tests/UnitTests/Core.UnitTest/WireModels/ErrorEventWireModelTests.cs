@@ -84,7 +84,9 @@ namespace NewRelic.Agent.Core.WireModels
 			Assert.That(priority == object1.Priority);
 
 			priority = 1.1f;
-			Assert.Throws<ArgumentException>(() => object1.Priority = priority);
+			object1.Priority = priority;
+			Assert.That(priority == object1.Priority);
+
 			priority = -0.00001f;
 			Assert.Throws<ArgumentException>(() => object1.Priority = priority);
 			priority = float.NaN;
@@ -92,8 +94,6 @@ namespace NewRelic.Agent.Core.WireModels
 			priority = float.NegativeInfinity;
 			Assert.Throws<ArgumentException>(() => object1.Priority = priority);
 			priority = float.PositiveInfinity;
-			Assert.Throws<ArgumentException>(() => object1.Priority = priority);
-			priority = float.MaxValue;
 			Assert.Throws<ArgumentException>(() => object1.Priority = priority);
 			priority = float.MinValue;
 			Assert.Throws<ArgumentException>(() => object1.Priority = priority);

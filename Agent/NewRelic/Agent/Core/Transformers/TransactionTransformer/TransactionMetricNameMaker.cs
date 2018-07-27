@@ -34,16 +34,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		private TransactionMetricName GetProposedTransactionMetricName([NotNull] ITransactionName transactionName)
 		{
-			if (transactionName is WebTransactionName)
-				return GetTransactionMetricName(transactionName as WebTransactionName);
-			if (transactionName is UriTransactionName)
-				return GetTransactionMetricName(transactionName as UriTransactionName);
-			if (transactionName is OtherTransactionName)
-				return GetTransactionMetricName(transactionName as OtherTransactionName);
-			if (transactionName is MessageBrokerTransactionName)
-				return GetTransactionMetricName(transactionName as MessageBrokerTransactionName);
-			if (transactionName is CustomTransactionName)
-				return GetTransactionMetricName(transactionName as CustomTransactionName);
+			if (transactionName is WebTransactionName name)
+				return GetTransactionMetricName(name);
+			if (transactionName is UriTransactionName uriTransactionName)
+				return GetTransactionMetricName(uriTransactionName);
+			if (transactionName is OtherTransactionName otherTransactionName)
+				return GetTransactionMetricName(otherTransactionName);
+			if (transactionName is MessageBrokerTransactionName brokerTransactionName)
+				return GetTransactionMetricName(brokerTransactionName);
+			if (transactionName is CustomTransactionName customTransactionName)
+				return GetTransactionMetricName(customTransactionName);
 
 			throw new NotImplementedException("Unsupported ITransactionName type");
 		}

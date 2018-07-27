@@ -133,7 +133,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		{
 			var headers = httpContext.Request.Headers.ToDictionary();
 			var contentLength = httpContext.Request.ContentLength;
-			agentWrapperApi.ProcessInboundRequest(headers, contentLength);
+			agentWrapperApi.ProcessInboundRequest(headers, "HTTP", contentLength);
 		}
 
 		private static void TryWriteResponseHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)

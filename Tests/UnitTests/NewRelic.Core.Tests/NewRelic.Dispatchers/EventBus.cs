@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using JetBrains.Annotations;
-using NewRelic.WeakActions;
 using System;
 using NUnit.Framework;
 
@@ -139,17 +138,6 @@ namespace NewRelic.Dispatchers.UnitTests
 			Assert.True(secondCalled);
 		}
 
-		//[Test]
-		//public void exception_thrown_from_subscriber_writes_error_log_message()
-		//{
-		//	using (var logger = new Core.UnitTest.Fixtures.Logging())
-		//	using (new EventSubscription<Object>(_ => { throw new Exception(); }))
-		//	{
-		//		EventBus<Object>.Publish(new object());
-
-		//		Assert.AreEqual(1, logger.ErrorCount);
-		//	}
-		//}
 
 		[Test]
 		public void when_publishing_asynchronously_then_processing_occurs_on_a_different_thread()
@@ -164,110 +152,5 @@ namespace NewRelic.Dispatchers.UnitTests
 				Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, threadId);
 			}
 		}
-
-		public class Method_WeakSubscribe
-		{
-			private class Foo
-			{
-				public delegate void Action();
-
-				[NotNull] private readonly Action _action;
-
-				public Foo(Action action)
-				{
-					_action = action;
-				}
-
-				public void OnObject(Object @object)
-				{
-					_action();
-				}
-			}
-
-			// a place to put foos that will help guarantee their lifetime, local variables have undefined lifetimes in optimized builds
-			private Foo _foo;
-			private Boolean _fooOnObjectWasCalled;
-
-			public Method_WeakSubscribe()
-			{
-				_foo = new Foo(() => _fooOnObjectWasCalled = true);
-				_fooOnObjectWasCalled = false;
-			}
-
-			[SetUp]
-			public void Setup()
-			{
-				_foo = new Foo(() => _fooOnObjectWasCalled = true);
-				_fooOnObjectWasCalled = false;
-			}
-
-			[Test]
-			public void when_weak_action_is_garbage_collected_then_callback_is_not_called()
-			{
-				// NCrunch ignored due to NCrunch garbage collection bug, see http://stackoverflow.com/questions/16771249/how-to-force-full-garbage-collection-in-net-4-x
-				EventBus<Object>.WeakSubscribe(_foo.OnObject);
-				_foo = null;
-
-				GC.Collect();
-
-				EventBus<Object>.Publish(new Object());
-
-				Assert.False(_fooOnObjectWasCalled);
-			}
-
-			[Test]
-			public void when_weak_action_is_strongly_referenced_then_callback_is_called()
-			{
-				EventBus<Object>.WeakSubscribe(_foo.OnObject);
-
-				GC.Collect();
-
-				EventBus<Object>.Publish(new Object());
-
-				Assert.True(_fooOnObjectWasCalled);
-			}
-
-			[Test]
-			public void when_weak_action_is_subscribed_then_callback_is_called()
-			{
-				EventBus<Object>.Subscribe(WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null));
-
-				GC.Collect();
-
-				EventBus<Object>.Publish(new Object());
-
-				Assert.True(_fooOnObjectWasCalled);
-			}
-
-			[Test]
-			public void when_weak_action_is_subscribed_but_not_strongly_referenced_then_callback_is_not_called()
-			{
-				// NCrunch ignored due to NCrunch garbage collection bug, see http://stackoverflow.com/questions/16771249/how-to-force-full-garbage-collection-in-net-4-x
-				EventBus<Object>.Subscribe(WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null));
-				_foo = null;
-
-				GC.Collect();
-
-				EventBus<Object>.Publish(new Object());
-
-				Assert.False(_fooOnObjectWasCalled);
-			}
-
-			[Test]
-			public void when_weak_action_is_unsubscribed_then_callback_is_not_called()
-			{
-				var weakAction = WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null);
-				EventBus<Object>.Subscribe(weakAction);
-				EventBus<Object>.Unsubscribe(weakAction);
-
-				GC.Collect();
-
-				EventBus<Object>.Publish(new Object());
-
-				Assert.False(_fooOnObjectWasCalled);
-			}
-
-		}
-
 	}
 }
