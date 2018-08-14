@@ -166,19 +166,19 @@ namespace NewRelic.Agent.Core.Utilities
 
 		private DistributedTracePayload GetDistributedTracePayload()
 		{
-			return new DistributedTracePayload
-			{
-				Type = "App",
-				AccountId = "9123",
-				AppId = "51424",
-				Guid = "5f474d64b9cc9b2a",
-				TraceId = "3221bf09aa0bcf0d",
-				TrustKey = "12345",
-				Priority = 0.1234f,
-				Sampled = false,
-				Timestamp = new DateTime(636650209306034197, DateTimeKind.Utc), // UnixTimeInMilliseconds: 1529424130603 // 1482959525577
-				TransactionId = "27856f70d3d314b7"
-			};
+			return DistributedTracePayload.TryBuildOutgoingPayload(
+
+				"App",
+				"9123",
+				"51424",
+				"5f474d64b9cc9b2a",
+				"3221bf09aa0bcf0d",
+				"12345",
+				0.1234f,
+				false,
+				new DateTime(636650209306034197, DateTimeKind.Utc), // UnixTimeInMilliseconds: 1529424130603 // 1482959525577
+				"27856f70d3d314b7"
+			);
 		}
 
 		#endregion Distributed Trace

@@ -38,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 				return Delegates.NoOp;
 
 			var httpHandlerName = httpHandler.GetType().Name;
-			transaction.SetWebTransactionName(WebTransactionType.ASP, httpHandlerName, 3);
+			transaction.SetWebTransactionName(WebTransactionType.ASP, httpHandlerName, TransactionNamePriority.Handler);
 
 			return Delegates.NoOp;
 		}

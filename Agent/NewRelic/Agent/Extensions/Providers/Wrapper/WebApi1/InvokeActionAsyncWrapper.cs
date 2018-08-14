@@ -43,7 +43,7 @@ namespace NewRelic.Providers.Wrapper.WebApi1
 			var actionName = TryGetActionName(httpActionContext) ?? "Unknown Action";
 
 			var transactionName = String.Format("{0}/{1}", controllerName, actionName);
-			transaction.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, 6);
+			transaction.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, TransactionNamePriority.FrameworkHigh);
 			
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 

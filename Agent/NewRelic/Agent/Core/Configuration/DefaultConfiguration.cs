@@ -63,11 +63,11 @@ namespace NewRelic.Agent.Core.Configuration
 		private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
 		[NotNull]
 		private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
-		/// <summary>
-		/// _localConfiguration.AppSettings will be loaded into this field
-		/// </summary>
+
 		[NotNull]
-		private readonly IDictionary<String, String> _appSettings;
+		private IDictionary<string, string> _newRelicAppSettings { get; }
+
+		public bool UseResourceBasedNamingForWCFEnabled { get; }
 
 		/// <summary>
 		/// Default configuration constructor.  It will contain reasonable default values for everything and never anything more.
@@ -104,7 +104,9 @@ namespace NewRelic.Agent.Core.Configuration
 
 			LogDeprecationWarnings();
 
-			_appSettings = TransformAppSettings();
+			_newRelicAppSettings = TransformAppSettings();
+
+			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsboolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 		}
 
 		[NotNull]
@@ -121,7 +123,7 @@ namespace NewRelic.Agent.Core.Configuration
 
 		private bool TryGetAppSettingAsboolWithDefault([NotNull] String key, bool defaultValue)
 		{
-			var value = _appSettings.GetValueOrDefault(key);
+			var value = _newRelicAppSettings.GetValueOrDefault(key);
 
 			bool parsedBool;
 			var parsedSuccessfully = bool.TryParse(value, out parsedBool);
@@ -133,7 +135,7 @@ namespace NewRelic.Agent.Core.Configuration
 
 		private Int32 TryGetAppSettingAsIntWithDefault([NotNull] String key, Int32 defaultValue)
 		{
-			var value = _appSettings.GetValueOrDefault(key);
+			var value = _newRelicAppSettings.GetValueOrDefault(key);
 			 
 			Int32 parsedInt;
 			var parsedSuccessfully = Int32.TryParse(value, out parsedInt);
@@ -755,12 +757,9 @@ namespace NewRelic.Agent.Core.Configuration
 
 		private bool AreSpanEventsEnabled()
 		{
-			if (DistributedTracingEnabled && _localConfiguration.spanEvents.enabled )
-			{
-				return true;
-			}
+			var spanEventsEnabled = EnvironmentOverrides(_localConfiguration.spanEvents.enabled, "NEW_RELIC_SPAN_EVENTS_ENABLED");
 
-			return false;
+			return DistributedTracingEnabled && spanEventsEnabled;
 		}
 
 		#endregion
@@ -770,7 +769,10 @@ namespace NewRelic.Agent.Core.Configuration
 		private bool? _distributedTracingEnabled;
 		public virtual bool DistributedTracingEnabled => _distributedTracingEnabled ?? (_distributedTracingEnabled = IsDistributedTracingEnabled()).Value;
 
-		private bool IsDistributedTracingEnabled() => _localConfiguration.distributedTracing.enabled;
+		private bool IsDistributedTracingEnabled()
+		{
+			return EnvironmentOverrides(_localConfiguration.distributedTracing.enabled, "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED");
+		}
 
 		public string PrimaryApplicationId => _serverConfiguration.PrimaryApplicationId;
 
@@ -784,6 +786,9 @@ namespace NewRelic.Agent.Core.Configuration
 		public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
 		#endregion Distributed Tracing
+
+
+
 
 		#region Errors
 
@@ -1443,6 +1448,16 @@ namespace NewRelic.Agent.Core.Configuration
 				.FirstOrDefault(value => value != null);
 
 			return int.TryParse(env, out int parsedValue) ? parsedValue : local;
+		}
+
+		private bool EnvironmentOverrides(bool local, params string[] environmentVariableNames)
+		{
+			var env = environmentVariableNames
+				.Select(_environment.GetEnvironmentVariable)
+				.FirstOrDefault(value => value != null);
+
+			return bool.TryParse(env, out var parsedValue) ? parsedValue : local;
+
 		}
 
 		private IList<Regex> ReadUrlBlacklist(configuration config)

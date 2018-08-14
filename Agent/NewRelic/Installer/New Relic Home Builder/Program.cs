@@ -35,6 +35,8 @@ namespace NewRelic.Installer
 		[NotNull]
 		public String NuGetPackageDir { get; set; }
 
+		public List<string> NuGetPackageFolders { get; set; }
+
 		private bool _isCoreClr = false;
 		private bool _isLinux = false;
 
@@ -158,6 +160,8 @@ namespace NewRelic.Installer
 			_isCoreClr = isCoreClr;
 			_isLinux = isLinux;
 
+			NuGetPackageFolders = new List<string>(GetNuGetPackageFoldersForNewRelicAgentCoreLibrary());
+
 			var frameworkMsg = _isCoreClr ? "CoreCLR" : ".NETFramework";
 			frameworkMsg += _isLinux ? " Linux" : "";
 			Console.WriteLine($"[HomeBuilder]: Building home for {frameworkMsg} {bitness}");
@@ -193,6 +197,28 @@ namespace NewRelic.Installer
 			{
 				File.WriteAllBytes(customInstrumentationFilePath, customInstrumentationBytes);
 			}
+		}
+
+		private IEnumerable<string> GetNuGetPackageFoldersForNewRelicAgentCoreLibrary()
+		{
+			//The NewRelic.Agent.Core csproj file has a PostBuild event that stores it's NuGetPackageFolders property value
+			//into a text file called NewRelic.Agent.Core.NuGetPackageFolders.txt. This allows the homebuilder to read that
+			//file to determine which folders it should search to find the relevant NuGet packages. The value of the
+			//NuGetPackageFolders property is different for Framework apps and NetStandard apps. As a result, we cannot rely
+			//on the value of this property as defined in the HomeBuilder csproj to find all of the NuGet packages used by
+			//NewRelic.Agent.Core.
+
+			//The file contains a single line with a';' delimited list of folders. Example values include:
+			//%UserDir%\.nuget\packages\ for Framework apps
+			//%UserDir%\.nuget\packages\;C:\Program Files\dotnet\sdk\NuGetFallbackFolder for NetStandard apps
+
+			var nuGetPackageFoldersFilePath = Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Core.NuGetPackageFolders.txt");
+			var nuGetPackageFoldersRawString = File.ReadAllLines(nuGetPackageFoldersFilePath).First();
+			var folderList = nuGetPackageFoldersRawString.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries);
+
+			//Trim any extra whitespace. The folder definitions are not consistent. Some end with a '\' (while some don't)
+			//and some have extra whitespace at the end of the folder name.
+			return folderList.Select(x => x.Trim());
 		}
 
 		private void CopyProfiler(bool isLinux = false)
@@ -282,7 +308,7 @@ namespace NewRelic.Installer
 
 			assemblyPathsToRepack.AddRange(coreAssemblies);
 
-			if(_isCoreClr)
+			if (_isCoreClr)
 			{
 				var netstandardAssemblyPaths = GetNetstandardAssemblyPaths();
 				assemblyPathsToRepack.AddRange(netstandardAssemblyPaths);
@@ -305,8 +331,9 @@ namespace NewRelic.Installer
 
 			Console.WriteLine();
 
+			//We can use NuGetPackageDir for NETStandard.Library because it is directly referenced by this project
 			var netStandardPath = Path.Combine(NuGetPackageDir, "NETStandard.Library", "2.0.0", "build", "netstandard2.0", "ref");
-			var newtonsoftResolvePath = GetNugetPackageDllFolderPath(_coreProjectPath, "Newtonsoft.Json", VersionResolution.Latest, "lib", "netstandard1.3");
+			var newtonsoftResolvePath = GetNugetPackageDllFolderPath(_coreProjectPath, "Newtonsoft.Json", VersionResolution.Latest, "lib", "netstandard2.0");
 
 			Console.WriteLine($"[HomeBuilder]: Adding netstandard path for .NET Standard IL Repack resolution to: {netStandardPath}");
 			Console.WriteLine($"[HomeBuilder]: Adding newtonsoft path for .NET Standard IL Repack resolution to: {newtonsoftResolvePath}");
@@ -370,7 +397,19 @@ namespace NewRelic.Installer
 			var version = GetVersion(versions, versionResolution);
 			var packageFolder = $"{packageName}\\{version}";
 
-			var folderPath = Path.Combine(NuGetPackageDir, packageFolder, subFolderPath) ?? String.Empty;
+			//NuGet packages for NetStandard and NetCore can be found in multiple folders so we need to try each one
+			var folderPath = string.Empty;
+			foreach (var nuGetPackageFolder in NuGetPackageFolders)
+			{
+				var possibleFolder = Path.Combine(nuGetPackageFolder, packageFolder, subFolderPath);
+				Console.WriteLine($"[HomeBuilder]: Looking for directory {possibleFolder}");
+				if (Directory.Exists(possibleFolder))
+				{
+					Console.WriteLine($"[HomeBuilder]: Using {possibleFolder} as NugetPackageDllFolderPath.");
+					folderPath = possibleFolder;
+					break;
+				}
+			}
 
 			return folderPath;
 		}
@@ -409,7 +448,7 @@ namespace NewRelic.Installer
 			var moreLinqDllPath = GetNugetPackageDllPath(_coreProjectPath, "MoreLinq", VersionResolution.Latest, "lib", "netstandard1.0");
 			netstandardAssemblyPaths.Add(moreLinqDllPath);
 
-			var newtonSoftJsonDllPath = GetNugetPackageDllPath(_coreProjectPath, "Newtonsoft.Json", VersionResolution.Latest, "lib", "netstandard1.3");
+			var newtonSoftJsonDllPath = GetNugetPackageDllPath(_coreProjectPath, "Newtonsoft.Json", VersionResolution.Latest, "lib", "netstandard2.0");
 			netstandardAssemblyPaths.Add(newtonSoftJsonDllPath);
 
 			return netstandardAssemblyPaths;

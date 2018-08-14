@@ -148,7 +148,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			private DateTime _timestampAsUnixTime = new DateTime(1212, 12, 12, 12, 12, 12);
 			[JsonArrayIndex(Index = 0)]
-			[DateTimeSerializesAsUnixTime]
+			[DateTimeSerializesAsUnixTimeSeconds]
 			public DateTime TimestampAsUnixTime { get { return _timestampAsUnixTime; } set { _timestampAsUnixTime = value; } }
 
 			private DateTime _timestampAsDateTime = new DateTime(1111, 11, 11, 11, 11, 11);

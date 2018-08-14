@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 				EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(CreateMockConfiguration(),
 					ConfigurationUpdateSource.Unknown));
 
-				_timestamp = new DateTime();
+				_timestamp = new DateTime(2018, 1, 1, 1, 0, 0);
 				_path = "WebTransaction/ASP/post.aspx";
 				_message = "The Error Message";
 				_exceptionClassName = "System.MyErrorClassName";
@@ -121,8 +121,8 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
 				var expectedResult =
 					"["
-					+ _timestamp.ToUnixTime()
-					+ ".0,\"" + _path + "\",\""
+					+ _timestamp.ToUnixTimeMilliseconds()
+					+ ",\"" + _path + "\",\""
 					+ _message + "\",\""
 					+ _exceptionClassName + "\",{"
 					+ "\"stack_trace\":"

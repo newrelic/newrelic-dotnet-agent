@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
 		[NotNull]
-		private IResizableCappedCollection<ErrorEventWireModel> _errorEvents = new ConcurrentPriorityQueue<ErrorEventWireModel>(0, new ErrorEventWireModel.PriorityTimestampComparer());
+		private ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> _errorEvents = new ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>(0);
 
 		// Note that Synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they
 		// are never pushed out by non-Synthetics events.
@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		protected override void Harvest()
 		{
 			// create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
-			var errorEvents = _errorEvents;
+			var errorEvents = _errorEvents.Where(node => node != null).Select(node => node.Data).ToList();
 			var syntheticErrorEvents = _syntheticsErrorEvents;
 			var aggregatedEvents = errorEvents.Union(syntheticErrorEvents).ToList();
 
@@ -87,17 +87,20 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(uint errorEventCollectionCapacity)
 		{
-			_errorEvents = new ConcurrentPriorityQueue<ErrorEventWireModel>(errorEventCollectionCapacity, new ErrorEventWireModel.PriorityTimestampComparer());
+			_errorEvents = new ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>(errorEventCollectionCapacity);
 			_syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
 
 		}
-
-		private void AddEventToCollection([NotNull] ErrorEventWireModel errorEvents)
+		private void AddEventToCollection([NotNull] ErrorEventWireModel errorEvent)
 		{
-			if (errorEvents.IsSynthetics() && _syntheticsErrorEvents.Count < SyntheticsHeader.MaxEventCount)
-				_syntheticsErrorEvents.Add(errorEvents);
+			if (errorEvent.IsSynthetics() && _syntheticsErrorEvents.Count < SyntheticsHeader.MaxEventCount)
+			{
+				_syntheticsErrorEvents.Add(errorEvent);
+			}
 			else
-				_errorEvents.Add(errorEvents);
+			{
+				_errorEvents.Add(new PrioritizedNode<ErrorEventWireModel>(errorEvent));
+			}
 		}
 
 		private UInt32 GetReservoirSize()

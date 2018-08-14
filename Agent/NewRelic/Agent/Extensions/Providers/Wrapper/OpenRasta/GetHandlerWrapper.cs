@@ -33,7 +33,7 @@ namespace NewRelic.Providers.Wrapper.OpenRasta
 			System.Globalization.TextInfo textInfo = new System.Globalization.CultureInfo("en-US", false).TextInfo;
 			actionName = textInfo.ToLower(actionName);
 
-			transaction.SetWebTransactionName(WebTransactionType.OpenRasta, $"{handlerName}/{actionName}", 6);
+			transaction.SetWebTransactionName(WebTransactionType.OpenRasta, $"{handlerName}/{actionName}", TransactionNamePriority.FrameworkHigh);
 
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, handlerName, actionName);
 			return segment == null ? Delegates.NoOp : Delegates.GetDelegateFor(segment.End);

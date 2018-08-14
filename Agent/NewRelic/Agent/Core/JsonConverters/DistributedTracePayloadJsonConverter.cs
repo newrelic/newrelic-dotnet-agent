@@ -104,6 +104,13 @@ namespace NewRelic.Agent.Core.JsonConverters
 			{
 				constraint.ParseAndThrowOnFailure(jObject, parsedPayload);
 			}
+
+			if (string.IsNullOrEmpty(parsedPayload.Guid) && string.IsNullOrEmpty(parsedPayload.TransactionId))
+			{
+				throw new DistributedTraceAcceptPayloadParseException(
+					$"expected either the Guid or the TransactionId to be present. Found: neither");
+			}
+
 			return parsedPayload;
 		}
 

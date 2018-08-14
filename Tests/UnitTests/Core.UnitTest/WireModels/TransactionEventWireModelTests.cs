@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
 			{
 				float priority = 0.5f;
 				var emptyDictionary = new Dictionary<string, object>();
-				var intrinsicAttributes = new Dictionary<String, Object> { { TimeStampKey, DateTime.UtcNow.ToUnixTime() } };
+				var intrinsicAttributes = new Dictionary<String, Object> { { TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds() } };
 				var object1 = new TransactionEventWireModel(emptyDictionary, emptyDictionary, intrinsicAttributes, false, priority, false, false);
 
 				Assert.That(priority == object1.Priority);
@@ -102,43 +102,6 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
 				priority = float.MinValue;
 				Assert.Throws<ArgumentException>(() => object1.Priority = priority);
 			}
-
-			[Test]
-			public void Verify_comparer_operations()
-			{
-				var comparer = new TransactionEventWireModel.PriorityTimestampComparer();
-
-				float priority = 0.5f;
-				var emptyDictionary = new Dictionary<string, object>();
-				var intrinsicAttributes1 = new Dictionary<String, Object> { { TimeStampKey, DateTime.UtcNow.ToUnixTime() } };
-				Thread.Sleep(1);
-				var intrinsicAttributes2 = new Dictionary<String, Object> { { TimeStampKey, DateTime.UtcNow.ToUnixTime() } };
-
-				//same priority, same timestamp
-				var object1 = new TransactionEventWireModel(emptyDictionary, emptyDictionary, intrinsicAttributes1, false, priority, false, false);
-				var object2 = new TransactionEventWireModel(emptyDictionary, emptyDictionary, intrinsicAttributes1, false, priority, false, false);
-				Assert.True(0 == comparer.Compare(object1, object2));
-				//same priority, timestamp later
-				var object3 = new TransactionEventWireModel(emptyDictionary, emptyDictionary, intrinsicAttributes2, false, priority, false, false);
-				//same priority, object1.timestamp < object2.timestamp
-				Assert.True(-1 == comparer.Compare(object1, object3));
-				//same priority, object3.timestamp > object1.timestamp
-				Assert.True(1 == comparer.Compare(object3, object1));
-
-				var object4 = new TransactionEventWireModel(emptyDictionary, emptyDictionary, emptyDictionary, false, priority, false, false);
-				//x param does not have a timestamp
-				var ex = Assert.Throws<ArgumentException>(() => comparer.Compare(object4, object1));
-				Assert.That(ex.ParamName == "x");
-
-				//y param does not have a timestamp
-				ex = Assert.Throws<ArgumentException>(() => comparer.Compare(object1, object4));
-				Assert.That(ex.ParamName == "y");
-
-				Assert.True(1 == comparer.Compare(object1, null));
-				Assert.True(-1 == comparer.Compare(null, object1));
-				Assert.True(0 == comparer.Compare(null, null));
-			}
-
 		}
 	}
 }

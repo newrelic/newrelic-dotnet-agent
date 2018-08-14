@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private const string TimeStampKey = "timestamp";
 		private readonly static Dictionary<string, object> _emptyAttributes = new Dictionary<string, object>();
-		private readonly static Dictionary<string, object> _intrinsicAttributes = new Dictionary<string, object> { { TimeStampKey, DateTime.UtcNow.ToUnixTime() } };
+		private readonly static Dictionary<string, object> _intrinsicAttributes = new Dictionary<string, object> { { TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds() } };
 
 		[SetUp]
 		public void SetUp()

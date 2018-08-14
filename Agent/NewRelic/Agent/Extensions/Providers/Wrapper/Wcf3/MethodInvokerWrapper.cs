@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.ServiceModel;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
+using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {
@@ -51,14 +53,22 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			if (methodInfo == null)
 				throw new NullReferenceException("methodInfo");
 
-			var typeName = GetTypeName(methodInfo);
-			var methodName = GetMethodName(methodInfo);
-
-			var name = String.Format("{0}.{1}", typeName, methodName);
 			var parameters = GetParameters(instrumentedMethodCall.MethodCall, methodInfo, instrumentedMethodCall.MethodCall.MethodArguments, agentWrapperApi);
 
+			var uri = OperationContext.Current?.IncomingMessageHeaders?.To;
+
+			var name = GetTransactionName(agentWrapperApi, uri, methodInfo);
+
 			transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
-			transaction.SetWebTransactionName(WebTransactionType.WCF, name, 6);
+
+			var absoluteUri = uri?.AbsoluteUri;
+
+			if (!string.IsNullOrEmpty(absoluteUri))
+			{
+				transaction.SetUri(absoluteUri);
+			}
+
+			transaction.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);
 			transaction.SetRequestParameters(parameters);
 			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
@@ -72,6 +82,22 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 					segment.End();
 					transaction.End();
 				});
+		}
+
+		private string GetTransactionName(IAgentWrapperApi agentWrapperApi, Uri uri, MethodInfo methodInfo)
+		{
+			if (agentWrapperApi.Configuration.UseResourceBasedNamingForWCFEnabled)
+			{
+				if (uri != null)
+				{
+					return UriHelpers.GetTransactionNameFromPath(uri.AbsolutePath);
+				}
+			}
+
+			var typeName = GetTypeName(methodInfo);
+			var methodName = GetMethodName(methodInfo);
+
+			return $"{typeName}.{methodName}";
 		}
 
 		[CanBeNull]

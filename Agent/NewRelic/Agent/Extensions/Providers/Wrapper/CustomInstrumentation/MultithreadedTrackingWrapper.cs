@@ -38,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 			var hasMetricName = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName);
 			if (hasMetricName)
 			{
-				var priority = instrumentedMethodCall.RequestedTransactionNamePriority ?? 1;
+				var priority = instrumentedMethodCall.RequestedTransactionNamePriority ?? TransactionNamePriority.Uri;
 				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, priority);
 			}
 			

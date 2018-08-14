@@ -1,4 +1,5 @@
 using System;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Tracer
 {
@@ -40,10 +41,10 @@ namespace NewRelic.Agent.Core.Tracer
 		// Returns the transaction naming priority, in the range 0..7.  The default is 0.
 		// This value is sourced from an instrumentation file, such as extensions/CoreInstrumentation.xml
 		// Treat 0 as null (because that's how null ends up being conveyed to us via the profiler)
-		public static int? GetTransactionNamingPriority(uint tracerArguments)
+		public static TransactionNamePriority? GetTransactionNamingPriority(uint tracerArguments)
 		{
 			var priority = (int)(tracerArguments >> 24) & 0x7;
-			var result = (priority == 0) ? default(int?) : priority;
+			var result = (priority == 0) ? default(TransactionNamePriority?) : (TransactionNamePriority)priority;
 
 			return result;
 		}

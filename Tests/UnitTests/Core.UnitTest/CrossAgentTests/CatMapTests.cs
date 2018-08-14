@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			testCase.OutboundRequests?.ForEach(request =>
 			{
 				var transactionName = GetTransactionNameFromString(request.OutboundTxnName);
-				_transaction.CandidateTransactionName.TrySet(transactionName, namePriority++);
+				_transaction.CandidateTransactionName.TrySet(transactionName, (TransactionNamePriority)namePriority++);
 				var outboundHeaders = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
 				var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(outboundHeaders);
 				expectedAndActualOutboundRequestPayloads.Add(request.ExpectedOutboundPayload, actualOutboundPayload);
@@ -121,7 +121,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			});
 
 			// Simulate the transaction ending (this logic is normally performed by AgentWrapperApi.EndTransaction)
-			_transaction.CandidateTransactionName.TrySet(GetTransactionNameFromString(testCase.TransactionName), 9999);
+			_transaction.CandidateTransactionName.TrySet(GetTransactionNameFromString(testCase.TransactionName), (TransactionNamePriority)9999);
 			var currentTransactionName = _transaction.CandidateTransactionName.CurrentTransactionName;
 			var currentTransactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(currentTransactionName);
 			var pathHash = _pathHashMaker.CalculatePathHash(currentTransactionMetricName.PrefixedName, _transaction.TransactionMetadata.CrossApplicationReferrerPathHash);

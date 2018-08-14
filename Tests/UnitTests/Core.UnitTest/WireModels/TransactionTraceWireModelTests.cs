@@ -12,8 +12,8 @@ namespace NewRelic.Agent.Core.WireModels
 		public void TransactionSampleDataSerializesCorrectly()
 		{
 			// Arrange
-			const string expected = @"[-62135596800.0,1000.0,""Transaction Name"",""Transaction URI"",[-62135596800.0,{},{},[0.0,1000.0,""Segment Name"",{},[],""Segment Class Name"",""Segment Method Name""],{""agentAttributes"":{},""userAttributes"":{},""intrinsics"":{}}],""Transaction GUID"",null,false,null,null]";
-			var timestamp = new DateTime();
+			const string expected = @"[1514797200000,1000.0,""Transaction Name"",""Transaction URI"",[1514797200000,{},{},[0.0,1000.0,""Segment Name"",{},[],""Segment Class Name"",""Segment Method Name""],{""agentAttributes"":{},""userAttributes"":{},""intrinsics"":{}}],""Transaction GUID"",null,false,null,null]";
+			var timestamp = new DateTime(2018,1,1,1,0,0);
 			var transactionTraceSegment = new TransactionTraceSegment(TimeSpan.Zero, TimeSpan.FromSeconds(1), "Segment Name", new Dictionary<String, Object>(), new List<TransactionTraceSegment>(), "Segment Class Name", "Segment Method Name");
 			var agentAttributes = new Dictionary<String, Object>();
 			var intrinsicAttributes = new Dictionary<String, Object>();

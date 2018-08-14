@@ -68,7 +68,9 @@ namespace NewRelic.Core.Tests.NewRelic.Collections
 		public void PrioritizedNodeTests_identityOperatorEqual()
 		{
 			var node1 = new PrioritizedNode<Prioritizable>(new Prioritizable(1.21f));
+#pragma warning disable CS1718 // Comparison made to same variable
 			var result = node1 == node1;
+#pragma warning restore CS1718 // Comparison made to same variable
 			Assert.That(result, Is.True);
 		}
 

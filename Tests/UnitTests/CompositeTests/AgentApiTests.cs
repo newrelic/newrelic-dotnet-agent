@@ -1089,14 +1089,14 @@ namespace CompositeTests
 			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			transaction.SetWebTransactionName(WebTransactionType.Action, "priority-1", -1);
-			transaction.SetWebTransactionName(WebTransactionType.Action, "priority0", 0);
-			transaction.SetWebTransactionName(WebTransactionType.Action, "priority6", 7);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority-1", (TransactionNamePriority)(-1));
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority0", (TransactionNamePriority)(0));
+			transaction.SetWebTransactionName(WebTransactionType.Action, "priority6", TransactionNamePriority.FrameworkHigh);
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
-			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority-1", -1);
-			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority0", 0);
-			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority6", 7);
-			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority8", 8);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority-1", (TransactionNamePriority)(-1));
+			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority0", (TransactionNamePriority)(0));
+			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority6", TransactionNamePriority.FrameworkHigh);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "anotherPriority8", (TransactionNamePriority)(8));
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -1121,7 +1121,7 @@ namespace CompositeTests
 			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			transaction.SetWebTransactionName(WebTransactionType.Action, "UserPriority", AgentApi.UserTransactionNamePriority);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "UserPriority", TransactionNamePriority.UserTransactionName);
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
 			transaction.End();
 			_compositeTestAgent.Harvest();
@@ -1148,7 +1148,7 @@ namespace CompositeTests
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
-			transaction.SetWebTransactionName(WebTransactionType.Action, "UserPriority", AgentApi.UserTransactionNamePriority);
+			transaction.SetWebTransactionName(WebTransactionType.Action, "UserPriority", TransactionNamePriority.UserTransactionName);
 			transaction.End();
 			_compositeTestAgent.Harvest();
 

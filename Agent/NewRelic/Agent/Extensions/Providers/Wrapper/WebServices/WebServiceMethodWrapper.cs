@@ -56,7 +56,7 @@ namespace NewRelic.Providers.Wrapper.WebServices
 
 			var transactionName = serviceType + "/" + methodName;
 
-			transaction.SetWebTransactionName(WebTransactionType.WebService, transactionName, 5);
+			transaction.SetWebTransactionName(WebTransactionType.WebService, transactionName, TransactionNamePriority.FrameworkLow);
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall,
 				instrumentedMethodCall.MethodCall.Method.Type.ToString(), instrumentedMethodCall.MethodCall.Method.MethodName);
 			return Delegates.GetDelegateFor(segment);

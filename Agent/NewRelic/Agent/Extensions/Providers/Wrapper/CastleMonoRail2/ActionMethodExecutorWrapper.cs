@@ -59,7 +59,7 @@ namespace NewRelic.Providers.Wrapper.CastleMonoRail2
 			if (actionName == null)
 				throw new NullReferenceException(nameof(actionName));
 
-			transaction.SetWebTransactionName(WebTransactionType.MonoRail, $"{controllerName}.{actionName}", 5);
+			transaction.SetWebTransactionName(WebTransactionType.MonoRail, $"{controllerName}.{actionName}", TransactionNamePriority.FrameworkLow);
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
 			return Delegates.GetDelegateFor(segment);

@@ -64,41 +64,32 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeadersAreValid()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.TransactionId = TransactionId;
+			payload.Guid = null;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.IsNotNull(payload);
+			Assert.IsNotNull(decodedPayload);
 
 			NrAssert.Multiple(
-				() => Assert.AreEqual(IncomingDtType, payload.Type),
-				() => Assert.AreEqual(IncomingAccountId, payload.AccountId),
-				() => Assert.AreEqual(AgentApplicationId, payload.AppId),
-				() => Assert.AreEqual(null, payload.Guid),
-				() => Assert.AreEqual(IncomingTrustKey, payload.TrustKey),
-				() => Assert.AreEqual(IncomingPriority, payload.Priority),
-				() => Assert.AreEqual(false, payload.Sampled),
-				() => Assert.That(payload.Timestamp, Is.LessThan(DateTime.UtcNow)),
-				() => Assert.AreEqual(TransactionId, payload.TransactionId)
+				() => Assert.AreEqual(IncomingDtType, decodedPayload.Type),
+				() => Assert.AreEqual(IncomingAccountId, decodedPayload.AccountId),
+				() => Assert.AreEqual(AgentApplicationId, decodedPayload.AppId),
+				() => Assert.AreEqual(null, decodedPayload.Guid),
+				() => Assert.AreEqual(IncomingTrustKey, decodedPayload.TrustKey),
+				() => Assert.AreEqual(IncomingPriority, decodedPayload.Priority),
+				() => Assert.AreEqual(false, decodedPayload.Sampled),
+				() => Assert.That(decodedPayload.Timestamp, Is.LessThan(DateTime.UtcNow)),
+				() => Assert.AreEqual(TransactionId, decodedPayload.TransactionId)
 			);
 		}
 
@@ -108,60 +99,40 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns("NOPE");
 
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.IsNull(payload);
+			Assert.IsNull(decodedPayload);
 		}
 
 		[Test]
 		public void PayloadShouldBePopulatedWhenTrustKeyTrusted()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.IsNotNull(payload);
+			Assert.IsNotNull(decodedPayload);
 		}
 
 		[Test]
@@ -170,30 +141,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns("NOPE");
 
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = null,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.TrustKey = null;
+			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.IsNull(payload);
+			Assert.IsNull(decodedPayload);
 		}
 
 		[Test]
@@ -202,30 +164,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns(IncomingAccountId);
 
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = null,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.TrustKey = null;
+			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.IsNotNull(payload);
+			Assert.IsNotNull(decodedPayload);
 		}
 
 
@@ -233,173 +186,110 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		public void TryDecodeInboundRequestHeaders_ReturnsNull_IfHigherMajorVersion()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Version = new [] { int.MaxValue, 1 },
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.Version = new[] {int.MaxValue, 1};
+			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.IsNull(payload);
+			Assert.IsNull(decodedPayload);
 		}
 
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeaderNameCamelCase()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.NotNull(payload);
+			Assert.NotNull(decodedPayload);
 		}
 
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeaderNameLowerCase()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName.ToLower(), encodedPayload }
 			};
 			
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.NotNull(payload);
+			Assert.NotNull(decodedPayload);
 		}
 
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeaderNameUpperCase()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				TransactionId = TransactionId
-			};
+			var payload = BuildSampleDistributedTracePayload();
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName.ToUpper(), encodedPayload }
 			};
 			
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.NotNull(payload);
+			Assert.NotNull(decodedPayload);
 		}
 
 		[Test]
 		public void ShouldNotCreatePayloadWhenGuidAndTransactionIdNull()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				Guid = null,
-				TransactionId = null
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.Guid = null;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
 			};
 
 			// Act
-			var payload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
 
 			// Assert
-			Assert.IsNull(payload);
+			Assert.IsNull(decodedPayload);
 		}
 
 		[Test]
 		public void ShouldGenerateParseExceptionMetricWhenGuidAndTransactionIdNull()
 		{
 			// Arrange
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = IncomingDtType,
-				AccountId = IncomingAccountId,
-				AppId = AgentApplicationId,
-				TraceId = IncomingDtTraceId,
-				TrustKey = IncomingTrustKey,
-				Priority = IncomingPriority,
-				Sampled = false,
-				Timestamp = DateTime.UtcNow,
-				Guid = null,
-				TransactionId = null
-			};
+			var payload = BuildSampleDistributedTracePayload();
+			payload.Guid = null;
+			payload.TransactionId = null;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 			var headers = new Dictionary<string, string>
 			{
 				{ DistributedTraceHeaderName, encodedPayload }
@@ -626,11 +516,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
 			Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(false);
-			
+
+			var segment = Mock.Create<Segment>();
+			Mock.Arrange(() => segment.SpanId).Returns("56789");
+
 			var transaction = BuildMockTransaction();
+			transaction.TransactionMetadata.DistributedTraceGuid = "12345";
+			transaction.TransactionMetadata.DistributedTraceSampled = true;
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
+			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
 			var encodedJson = headers[DistributedTraceHeaderName];
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
@@ -808,6 +703,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			}
 
 			return transaction;
+		}
+
+		private static DistributedTracePayload BuildSampleDistributedTracePayload()
+		{
+			return DistributedTracePayload.TryBuildOutgoingPayload(
+				IncomingDtType,
+				IncomingAccountId,
+				AgentApplicationId,
+				IncomingDtGuid,
+				IncomingDtTraceId,
+				IncomingTrustKey,
+				IncomingPriority,
+				false,
+				DateTime.UtcNow,
+				null);				
 		}
 
 		#endregion helpers

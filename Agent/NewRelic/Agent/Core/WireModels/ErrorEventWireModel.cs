@@ -1,34 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
+using NewRelic.Collections;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.WireModels
 {
 	[JsonConverter(typeof(JsonArrayConverter))]
 	[JsonObject(MemberSerialization.OptIn)]
-	public class ErrorEventWireModel
+	public class ErrorEventWireModel : IHasPriority
 	{
 		[JsonArrayIndex(Index = 0)]
-		[NotNull]
-		public readonly ReadOnlyDictionary<String, Object> IntrinsicAttributes;
+		public readonly ReadOnlyDictionary<string, object> IntrinsicAttributes;
 
 		[JsonArrayIndex(Index = 1)]
-		[NotNull]
-		public readonly ReadOnlyDictionary<String, Object> UserAttributes;
+		public readonly ReadOnlyDictionary<string, object> UserAttributes;
 
 		[JsonArrayIndex(Index = 2)]
-		[NotNull]
-		public readonly ReadOnlyDictionary<String, Object> AgentAttributes;
+		public readonly ReadOnlyDictionary<string, object> AgentAttributes;
 
 		private readonly bool _isSynthetics;
 
-		private const string ItemTypeName = "Error Event";
-		private const string TimeStampKey = "timestamp";
-		private const float PriorityMin = 0.0f;
-		private static readonly string _missingTimestampMessage = $"{ItemTypeName} does not contain '{TimeStampKey}'";
 		private float _priority;
 
 		public float Priority
@@ -36,66 +30,25 @@ namespace NewRelic.Agent.Core.WireModels
 			get { return _priority; }
 			set
 			{
-				if (value < PriorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
+				const float priorityMin = 0.0f;
+				if (value < priorityMin || float.IsNaN(value) || float.IsNegativeInfinity(value) || float.IsPositiveInfinity(value))
 				{
-					throw new ArgumentException($"{ItemTypeName} requires a valid priority value greater than {PriorityMin}, value used: {value}");
+					throw new ArgumentException($"Error event requires a valid priority value greater than {priorityMin}, value used: {value}");
 				}
 				_priority = value;
 			}
 		}
 
-		//Compares on Priority (descending 1.0 -> 0.0), if priority is equal, compares timestamp values (ascending double values)
-		//if priorities are equal the event that has the earliest timestamp will sort higher.
-		public class PriorityTimestampComparer : Comparer<ErrorEventWireModel>
-		{
-			public override int Compare(ErrorEventWireModel x, ErrorEventWireModel y)
-			{
-				//null cases: null < something, something > null, null == null
-				if (x == null)
-				{
-					return (y == null) ? 0 : -1;
-				}
-				if (y == null)
-				{
-					return 1;
-				}
-
-				//descending by Priority, if equal resort to timestamp(ascending) to break the tie.
-				//larger priority values are sorted to be first
-				var priorityComparison = x.Priority.CompareTo(y.Priority);
-				if (0 != priorityComparison)
-				{
-					//negate to achieve descending...
-					return -priorityComparison;
-				}
-
-				//priorities are equal, fetch the timestamps;
-				if (!x.IntrinsicAttributes.ToDictionary().TryGetValue(TimeStampKey, out object xTimestampValue))
-				{
-					throw new ArgumentException(_missingTimestampMessage, nameof(x));
-				}
-
-				if (!y.IntrinsicAttributes.ToDictionary().TryGetValue(TimeStampKey, out object yTimestampValue))
-				{
-					throw new ArgumentException(_missingTimestampMessage, nameof(y));
-				}
-
-				var xTimestamp = (double)xTimestampValue;
-				var yTimestamp = (double)yTimestampValue;
-				return xTimestamp.CompareTo(yTimestamp);
-			}
-		}
-
-		public ErrorEventWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, bool isSynthetics, float priority)
+		public ErrorEventWireModel([NotNull] IEnumerable<KeyValuePair<string, object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<string, object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<string, object>> userAttributes, bool isSynthetics, float priority)
 		{
 			Priority = priority;
-			IntrinsicAttributes = new ReadOnlyDictionary<String, Object>(intrinsicAttributes.ToDictionary<String, Object>());
-			UserAttributes = new ReadOnlyDictionary<String, Object>(userAttributes.ToDictionary<String, Object>());
-			AgentAttributes = new ReadOnlyDictionary<String, Object>(agentAttributes.ToDictionary<String, Object>());
+			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes.ToDictionary<string, object>());
+			UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes.ToDictionary<string, object>());
+			AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes.ToDictionary<string, object>());
 			_isSynthetics = isSynthetics;
 		}
 
-		public Boolean IsSynthetics()
+		public bool IsSynthetics()
 		{
 			// An event will always contain either all of the synthetics keys or none of them.
 			// There is no need to check for the presence of each synthetics key.

@@ -229,7 +229,7 @@ namespace NewRelic.Agent.Core.Metric
 				vendor =>
 				{
 					var dict = new Dictionary<string, MetricName>(operations.Count);
-					var metricNamePrefix = DatastoreOperation + PathSeparator + ToString(vendor) + PathSeparator;
+					var metricNamePrefix = DatastoreOperation + PathSeparator + GetCachedVendorNameString(vendor) + PathSeparator;
 					foreach (var operation in operations)
 					{
 						dict[operation] = MetricName.Create(metricNamePrefix + operation);
@@ -237,7 +237,7 @@ namespace NewRelic.Agent.Core.Metric
 
 					return operation => (dict.TryGetValue(operation, out var name))
 						? name
-						: MetricName.Create(DatastoreOperation, ToString(vendor), operation);
+						: MetricName.Create(DatastoreOperation, GetCachedVendorNameString(vendor), operation);
 				});
 		}
 
@@ -436,7 +436,7 @@ namespace NewRelic.Agent.Core.Metric
 		public const string DatastoreUnknownOperationName = "other";
 
 		[NotNull, Pure]
-		public static string ToString(DatastoreVendor vendor)
+		public static string GetCachedVendorNameString(DatastoreVendor vendor)
 		{
 			return DatabaseVendorNames[(int) vendor];
 		}
@@ -471,13 +471,13 @@ namespace NewRelic.Agent.Core.Metric
 			string operation = null)
 		{
 			operation = operation ?? DatastoreUnknownOperationName;
-			return MetricName.Create(DatastoreStatement, ToString(vendor), model, operation);
+			return MetricName.Create(DatastoreStatement, GetCachedVendorNameString(vendor), model, operation);
 		}
 
 		[NotNull, Pure]
 		public static MetricName GetDatastoreInstance(DatastoreVendor vendor, string host, string portPathOrId)
 		{
-			return MetricName.Create(DatastoreInstance, ToString(vendor), host, portPathOrId);
+			return MetricName.Create(DatastoreInstance, GetCachedVendorNameString(vendor), host, portPathOrId);
 		}
 
 

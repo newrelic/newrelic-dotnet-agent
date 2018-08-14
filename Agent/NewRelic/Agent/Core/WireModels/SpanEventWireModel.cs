@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using MoreLinq;
 using NewRelic.Agent.Core.JsonConverters;
+using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 using NewRelic.Collections;
 
@@ -17,20 +17,20 @@ namespace NewRelic.Agent.Core.WireModels
 
 		[JsonIgnore] public float Priority { get; }
 
-		private const string PriorityKey = "priority";
-
 		private static readonly ReadOnlyDictionary<string, object> EmptyDictionary = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
 
 		public SpanEventWireModel(IEnumerable<KeyValuePair<string, object>> intrinsicAttributes)
 		{
-			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes.ToDictionary());
+			const string priorityKey = "priority";
+
+			IntrinsicAttributes = intrinsicAttributes.ToReadOnlyDictionary();
 			UserAttributes = EmptyDictionary;
 			AgentAttributes = EmptyDictionary;
 
 			//extract priority, check type, cache it
-			if (!IntrinsicAttributes.TryGetValue(PriorityKey, out var priorityAsObject) || !(priorityAsObject is float priority))
+			if (!IntrinsicAttributes.TryGetValue(priorityKey, out var priorityAsObject) || !(priorityAsObject is float priority))
 			{
-				throw new ArgumentException("Span Event does not contain 'priority' that is of type 'float'", nameof(intrinsicAttributes));
+				throw new ArgumentException("Span event does not contain 'priority' that is of type 'float'", nameof(intrinsicAttributes));
 			}
 			Priority = priority;
 		}

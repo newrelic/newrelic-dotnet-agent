@@ -1186,6 +1186,35 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.AgentLicenseKey;
 		}
 
+		[TestCase(true, null, ExpectedResult = true)]
+		[TestCase(false, null, ExpectedResult = false)]
+		[TestCase(true, "true", ExpectedResult = true)]
+		[TestCase(true, "false", ExpectedResult = false)]
+		[TestCase(false, "true", ExpectedResult = true)]
+		public bool SpanEventsEnabledEnvironmentOverridesLocal(bool localSpanEvents, string environmentSpanEvents)
+		{
+			_localConfig.spanEvents.enabled = localSpanEvents;
+			_localConfig.distributedTracing.enabled = true;
+
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_SPAN_EVENTS_ENABLED")).Returns(environmentSpanEvents);
+
+			return _defaultConfig.SpanEventsEnabled;
+		}
+
+		[TestCase(true, null, ExpectedResult = true)]
+		[TestCase(false, null, ExpectedResult = false)]
+		[TestCase(true, "true", ExpectedResult = true)]
+		[TestCase(true, "false", ExpectedResult = false)]
+		[TestCase(false, "true", ExpectedResult = true)]
+		public bool DistributedTracingEnabledEnvironmentOverridesLocal(bool localDistributedTracing, string environmentDistributedTracing)
+		{
+			_localConfig.distributedTracing.enabled = localDistributedTracing;
+
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED")).Returns(environmentDistributedTracing);
+
+			return _defaultConfig.SpanEventsEnabled;
+		}
+
 		[Test]
 		public void UrlRegexRulesPullsValueFromServerConfiguration()
 		{
@@ -1689,6 +1718,27 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 			_localConfig.service.autoStart = true;
 			Assert.IsTrue(_defaultConfig.AutoStartAgent);
+		}
+
+		[Test]
+		public void UseResourceBasedNamingIsEnabled()
+		{
+			_localConfig.appSettings.Add(new configurationAdd()
+			{
+				key = "NewRelic.UseResourceBasedNamingForWCF",
+				value = "true"
+			});
+
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+
+			Assert.IsTrue(defaultConfig.UseResourceBasedNamingForWCFEnabled);
+		}
+
+		[Test]
+		public void UseResourceBasedNamingIsDisabledByDefault()
+		{
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+			Assert.IsFalse(defaultConfig.UseResourceBasedNamingForWCFEnabled);
 		}
 
 		#region CrossApplicationTracingEnabled

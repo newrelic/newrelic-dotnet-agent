@@ -29,8 +29,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
 		// Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
-		[NotNull]
-		private IResizableCappedCollection<CustomEventWireModel> _customEvents = new ConcurrentPriorityQueue<CustomEventWireModel>(0, new CustomEventWireModel.PriorityTimestampComparer());
+		private ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> _customEvents = new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(0);
 
 		public CustomEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
@@ -42,13 +41,13 @@ namespace NewRelic.Agent.Core.Aggregators
 		public override void Collect(CustomEventWireModel customEventWireModel)
 		{
 			_agentHealthReporter.ReportCustomEventCollected();
-			_customEvents.Add(customEventWireModel);
+			_customEvents.Add(new PrioritizedNode<CustomEventWireModel>(customEventWireModel));
 		}
 
 		protected override void Harvest()
 		{
 			// create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
-			var customEvents = _customEvents;
+			var customEvents = _customEvents.Where(node => node != null).Select(node => node.Data).ToList();
 
 			ResetCollections(_customEvents.Size);
 
@@ -72,7 +71,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(UInt32 customEventCollectionCapacity)
 		{
-			_customEvents = new ConcurrentPriorityQueue<CustomEventWireModel>(customEventCollectionCapacity, new CustomEventWireModel.PriorityTimestampComparer());
+			_customEvents = new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(customEventCollectionCapacity);
 		}
 
 		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<CustomEventWireModel> customEvents)
@@ -106,7 +105,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			{
 				if ( customEvent != null)
 				{
-					_customEvents.Add(customEvent);
+					_customEvents.Add(new PrioritizedNode<CustomEventWireModel>(customEvent));
 				}
 			}
 		}

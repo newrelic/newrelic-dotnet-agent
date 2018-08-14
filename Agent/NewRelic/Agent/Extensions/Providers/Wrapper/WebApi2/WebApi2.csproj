@@ -19,7 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="7.0.1" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.2" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.2" />
   </ItemGroup>

@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using System;
-using ICSharpCode.SharpZipLib.BZip2;
 using DistributedTraceAcceptPayloadParseException = NewRelic.Agent.Core.DistributedTracing.DistributedTraceAcceptPayloadParseException;
 
 namespace NewRelic.Agent.Core.JsonConverters
@@ -24,10 +23,10 @@ namespace NewRelic.Agent.Core.JsonConverters
 			[Values(new[] { 1970, 1, 1, 0, 0, 1}, new[] { 2018, 12, 31, 23, 59, 59 })] int[] time,
 			[Random(0ul, 0xfffffffffffffffful, 1), Values(ulong.MinValue, ulong.MaxValue)] ulong _transactionId)
 		{
-			var input = new DistributedTracePayload(type, accountId, appId, $"{guid:X8}", $"{traceId:X8}", trustKey, priority, sampled, 
+			var input = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, $"{guid:X8}", $"{traceId:X8}", trustKey, priority, sampled, 
 				new DateTime(time[0], time[1], time[2], time[3], time[4], time[5], DateTimeKind.Utc), $"{_transactionId:X8}");
 			var serialized = DistributedTracePayload.ToJson(input);
-			var deserialized = DistributedTracePayload.FromJson(serialized);
+			var deserialized = DistributedTracePayload.TryBuildIncomingPayloadFromJson(serialized);
 			Assert.That(deserialized.Version, Is.Not.Null);
 			Assert.That(deserialized.Version, Has.Exactly(2).Items);
 			Assert.That(deserialized.Version[0], Is.EqualTo(0));
@@ -61,10 +60,10 @@ namespace NewRelic.Agent.Core.JsonConverters
 			var timestamp = new DateTime(time[0], time[1], time [2], time[3], time[4], time[5], DateTimeKind.Utc);
 			var transactionId = $"{0xfffffffffffffffful:X9}";
 
-			var input = new DistributedTracePayload(type, accountId, appId, $"{guid:X8}", $"{traceId:X8}", trustKey, priority, sampled, timestamp, transactionId);
+			var input = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, $"{guid:X8}", $"{traceId:X8}", trustKey, priority, sampled, timestamp, transactionId);
 			var serialized = DistributedTracePayload.ToJson(input);
 
-			Assert.Throws<DistributedTraceAcceptPayloadParseException>(() => DistributedTracePayload.FromJson(serialized));
+			Assert.Throws<DistributedTraceAcceptPayloadParseException>(() => DistributedTracePayload.TryBuildIncomingPayloadFromJson(serialized));
 		}
 
 		//prefixing a field name with "___" makes the field "missing" (e.g. pa is missing because we've made the field name ___pa)
@@ -352,7 +351,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 		[TestCaseSource(nameof(RequiredOptionalFields))]
 		public void DistributedTracePayload_OptionalAndRequired(string json, IConstraint constraint)
 		{
-			Assert.That(() => DistributedTracePayload.FromJson(json), constraint);
+			Assert.That(() => DistributedTracePayload.TryBuildIncomingPayloadFromJson(json), constraint);
 		}
 	}
 	}

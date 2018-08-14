@@ -90,10 +90,13 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Applications\AzureWebApplication.cs" />
     <Compile Include="Applications\ServiceFabricApplication.cs" />
     <Compile Include="Applications\BaseApplication.cs" />
     <Compile Include="Fixtures\BaseFixture.cs" />
+    <Compile Include="Fixtures\AzureWebApplicationFixture.cs" />
     <Compile Include="Fixtures\ServiceFabricFixture.cs" />
+    <Compile Include="AzureWebApplicationSmokeTest.cs" />
     <Compile Include="ServiceFabricOwinSmokeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

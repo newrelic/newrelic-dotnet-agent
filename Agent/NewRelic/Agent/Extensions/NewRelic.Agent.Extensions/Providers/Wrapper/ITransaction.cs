@@ -69,6 +69,19 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		ISegment StartCustomSegment(MethodCall methodCall, [NotNull] String segmentName);
 
 		/// <summary>
+		/// Creates a segment for sending to or receiving from RabbitMQ.
+		/// </summary>
+		/// <param name="methodCall">The method call that is responsible for starting this segment.</param>
+		/// <param name="destinationType"></param>
+		/// <param name="operation"></param>
+		/// <param name="brokerVendorName">Must not be null.</param>
+		/// <param name="destinationName">Can be null.</param>
+		/// <param name="headers">Can be null.</param>
+		/// <exception cref="System.ArgumentNullException"></exception>
+		/// <returns>an opaque object that will be needed when you want to end the segment.</returns>
+		ISegment StartRabbitMQSegmentAndCreateDistributedTracePayload(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, [NotNull] String brokerVendorName, [CanBeNull] String destinationName = null, Dictionary<string, object> headers = null);
+
+		/// <summary>
 		/// Creates a segment for sending to or receiving from a message brokering system.
 		/// </summary>
 		/// <param name="methodCall">The method call that is responsible for starting this segment.</param>
@@ -170,7 +183,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="name">The name of the transaction. Must not be null.</param>
 		/// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void SetWebTransactionName(WebTransactionType type, [NotNull] string name, int priority = 1);
+		void SetWebTransactionName(WebTransactionType type, [NotNull] string name, TransactionNamePriority priority = TransactionNamePriority.Uri);
 
 		/// <summary>
 		/// Sets the name of the current transaction to a name in the WebTransaction namespace which is derived from a path which will be normalized by the agent. Does nothing if there is no current transaction.
@@ -188,7 +201,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="destination">The destination queue of the message being handled. Can be null.</param>
 		/// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, [NotNull] string brokerVendorName, [CanBeNull] string destination = null, int priority = 1);
+		void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, [NotNull] string brokerVendorName, [CanBeNull] string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri);
 
 		/// <summary>
 		/// Sets the name of the current transaction to a custom name in the OtherTransaction namespace.  Does nothing if there is no current transaction.
@@ -197,7 +210,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="name">The name of the transaction. Must not be null.</param>
 		/// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void SetOtherTransactionName([NotNull] string category, [NotNull] string name, int priority = 1);
+		void SetOtherTransactionName([NotNull] string category, [NotNull] string name, TransactionNamePriority priority = TransactionNamePriority.Uri);
 
 		/// <summary>
 		/// Sets the name of the current transaction to a custom transaction name. The namespace (WebTransaction or OtherTransaction) will be determined based on the current best transaction name's category. Does nothing if there is no current transaction.
@@ -205,7 +218,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="name">The name of the transaction. Must not be null.</param>
 		/// <param name="priority">The priority of the name being set. Higher priority names override lower priority names.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void SetCustomTransactionName([NotNull] string name, int priority = 1);
+		void SetCustomTransactionName([NotNull] string name, TransactionNamePriority priority = TransactionNamePriority.Uri);
 
 		/// <summary>
 		/// Set the URI for the current transaction (if there is one).

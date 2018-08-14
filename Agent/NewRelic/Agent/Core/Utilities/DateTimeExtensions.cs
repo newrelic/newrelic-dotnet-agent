@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.Utilities
 			return new DateTime(unixTimeMilliseconds * TicksPerMillisecond + UnixEpochTicks, DateTimeKind.Utc);
 		}
 
-		public static double ToUnixTime(this DateTime dateTime)
+		public static double ToUnixTimeSeconds(this DateTime dateTime)
 		{
 			return (dateTime - Epoch).TotalSeconds;
 		}

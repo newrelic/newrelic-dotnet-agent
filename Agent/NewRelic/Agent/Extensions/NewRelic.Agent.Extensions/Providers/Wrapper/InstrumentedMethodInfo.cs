@@ -17,10 +17,10 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		[CanBeNull]
 		public readonly string RequestedMetricName;
 		[CanBeNull]
-		public readonly int? RequestedTransactionNamePriority;
+		public readonly TransactionNamePriority? RequestedTransactionNamePriority;
 		public readonly bool StartWebTransaction;
 
-		public InstrumentedMethodInfo(long functionId, Method method, [CanBeNull] String requestedWrapperName, bool isAsync, [CanBeNull] string requestedMetricName, [CanBeNull] int? requestedTransactionNamePriority, bool startWebTransaction)
+		public InstrumentedMethodInfo(long functionId, Method method, [CanBeNull] String requestedWrapperName, bool isAsync, [CanBeNull] string requestedMetricName, TransactionNamePriority? requestedTransactionNamePriority, bool startWebTransaction)
 		{
 			Method = method;
 			RequestedWrapperName = requestedWrapperName;

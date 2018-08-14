@@ -1,6 +1,7 @@
 ﻿using System;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
+using NewRelic.Agent.Core.Logging;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -48,12 +49,12 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		/// <summary>The transaction guid (when applicable)</summary>
 		public string TransactionId { get; set; }
 
-		public DistributedTracePayload() 
+		// This public default constructor is required for our JSON deserialization code.
+		public DistributedTracePayload()
 		{
-
 		}
 
-		public DistributedTracePayload(string type, string accountId, string appId, string guid,
+		private DistributedTracePayload(string type, string accountId, string appId, string guid,
 			string traceId, string trustKey, float? priority, bool? sampled, DateTime timestamp,
 			string transactionId)
 		{
@@ -69,15 +70,35 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			TransactionId = transactionId;
 		}
 
-		/// <summary>
-		/// Serialize a DistributedTracePayload <paramref name="payload"/> to an, optionally pretty, JSON string.
-		/// </summary>
-		/// <param name="payload">The DistributedTracePayload</param>
-		/// <param name="pretty">When true, the JSON string will have extra whitespace/new lines. When false, the JSON will be compact.</param>
-		/// <returns>The serialized JSON string</returns>
-		public static string ToJson(DistributedTracePayload payload, bool pretty = false)
+		public static DistributedTracePayload TryBuildOutgoingPayload(string type, string accountId, string appId, string guid,
+				string traceId, string trustKey, float? priority, bool? sampled, DateTime timestamp,
+				string transactionId)
 		{
-			return JsonConvert.SerializeObject(payload, pretty ? Formatting.Indented: Formatting.None, new DistributedTracePayloadJsonConverter());
+
+			if ( string.IsNullOrEmpty(accountId) || string.IsNullOrEmpty(appId))
+			{ 
+				Log.Finest("Did not generate payload because AccountId or PrimaryApplicationId were not populated. This is normal for requests occurring before round trip with server has completed.");
+				return null;
+			}
+
+			if ( string.IsNullOrEmpty(type) || string.IsNullOrEmpty(traceId))
+			{
+				Log.Finest("Did not generate payload becasue Type or TraceId were not populated.");
+				return null;
+			}
+
+			if (string.IsNullOrEmpty(guid) && string.IsNullOrEmpty(transactionId))
+			{
+				Log.Finest("Did not generate payload because neither guid nor transactionId were populated.");
+				return null;
+			}
+
+			if (accountId == trustKey)
+			{
+				trustKey = null;
+			}
+
+			return new DistributedTracePayload(type, accountId, appId, guid, traceId, trustKey, priority, sampled, timestamp, transactionId);
 		}
 
 		/// <summary>
@@ -85,7 +106,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		/// </summary>
 		/// <param name="json">A JSON string representing a DistributedTracePayload</param>
 		/// <returns>A DistributedTracePayload</returns>
-		public static DistributedTracePayload FromJson(string json)
+		public static DistributedTracePayload TryBuildIncomingPayloadFromJson(string json)
 		{
 			if (string.IsNullOrEmpty(json))
 			{
@@ -101,6 +122,17 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				throw new DistributedTraceAcceptPayloadParseException("trouble parsing json - see inner exception for details",
 					e);
 			}
+		}
+
+		/// <summary>
+		/// Serialize a DistributedTracePayload <paramref name="payload"/> to an, optionally pretty, JSON string.
+		/// </summary>
+		/// <param name="payload">The DistributedTracePayload</param>
+		/// <param name="pretty">When true, the JSON string will have extra whitespace/new lines. When false, the JSON will be compact.</param>
+		/// <returns>The serialized JSON string</returns>
+		public static string ToJson(DistributedTracePayload payload, bool pretty = false)
+		{
+			return JsonConvert.SerializeObject(payload, pretty ? Formatting.Indented: Formatting.None, new DistributedTracePayloadJsonConverter());
 		}
 	}
 }

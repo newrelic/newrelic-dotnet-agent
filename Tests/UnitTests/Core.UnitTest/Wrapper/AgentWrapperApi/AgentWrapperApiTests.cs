@@ -24,7 +24,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 
 
@@ -166,11 +165,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetWebTransactionName_SetsWebTransactionName()
 		{
-			const Int32 priority = 2;
+			const TransactionNamePriority priority = TransactionNamePriority.FrameworkHigh;
 
 			var addedTransactionName = (ITransactionName) null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
-				.DoInstead<ITransactionName, Int32>((name, _) => addedTransactionName = name);
+				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransaction.SetWebTransactionName(WebTransactionType.MVC, "foo", priority);
 
@@ -186,11 +185,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetWebTransactionNameFromPath_SetsUriTransactionName()
 		{
-			const Int32 priority = 1;
+			const TransactionNamePriority priority = TransactionNamePriority.Uri;
 
 			var addedTransactionName = (ITransactionName) null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
-				.DoInstead<ITransactionName, Int32>((name, _) => addedTransactionName = name);
+				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransaction.SetWebTransactionNameFromPath(WebTransactionType.MVC, "some/path");
 
@@ -203,11 +202,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetMessageBrokerTransactionName_SetsMessageBrokerTransactionName()
 		{
-			const Int32 priority = 2;
+			const TransactionNamePriority priority = TransactionNamePriority.FrameworkHigh;
 
 			var addedTransactionName = (ITransactionName) null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
-				.DoInstead<ITransactionName, Int32>((name, _) => addedTransactionName = name);
+				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
 
@@ -224,11 +223,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetOtherTransactionName_SetsOtherTransactionName()
 		{
-			const Int32 priority = 2;
+			const TransactionNamePriority priority = TransactionNamePriority.FrameworkHigh;
 
 			var addedTransactionName = (ITransactionName) null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
-				.DoInstead<ITransactionName, Int32>((name, _) => addedTransactionName = name);
+				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransaction.SetOtherTransactionName("cat", "foo", priority);
 
@@ -244,11 +243,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetCustomTransactionName_SetsCustomTransactionName()
 		{
-			const Int32 priority = 2;
+			const TransactionNamePriority priority = TransactionNamePriority.StatusCode;
 
 			var addedTransactionName = (ITransactionName) null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
-				.DoInstead<ITransactionName, Int32>((name, _) => addedTransactionName = name);
+				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransaction.SetCustomTransactionName("foo", priority);
 
@@ -724,7 +723,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private static readonly string _type  = "typeapp";
 		private static readonly string _transactionId = "transactionId";
 
-		private readonly DistributedTracePayload _distributedTracePayload = new DistributedTracePayload(_type, _acccountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
+		private readonly DistributedTracePayload _distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(_type, _acccountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
 
 		[Test]
 		public void GetRequestMetadata_DoesNotReturnsCatHeaders_IfDistributedTraceEnabled()
@@ -775,14 +774,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			// Arrange
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			var headers = new Dictionary<string, string>() {{"newrelic", "encodedpayload"}};
 
 			var transactionMetadata = new TransactionMetadata();
+			
 			Mock.Arrange(() => _transaction.TransactionMetadata).Returns(transactionMetadata);
 
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<IEnumerable<KeyValuePair<string, string>>>())).Returns(_distributedTracePayload);
 
 			// Act
-			_agentWrapperApi.ProcessInboundRequest(new KeyValuePair<string, string>[]{}, "HTTP");
+			_agentWrapperApi.ProcessInboundRequest(headers, "HTTP");
 
 			// Assert
 			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerProcessId(Arg.IsAny<string>()), Occurs.Never());

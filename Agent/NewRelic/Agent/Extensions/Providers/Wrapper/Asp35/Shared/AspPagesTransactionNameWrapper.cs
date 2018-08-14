@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 			pagePath = pagePath.ToLower();
 
-			transaction.SetWebTransactionName(WebTransactionType.ASP, pagePath, 6);
+			transaction.SetWebTransactionName(WebTransactionType.ASP, pagePath, TransactionNamePriority.FrameworkHigh);
 			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, pagePath);
 
 			return Delegates.GetDelegateFor(segment);

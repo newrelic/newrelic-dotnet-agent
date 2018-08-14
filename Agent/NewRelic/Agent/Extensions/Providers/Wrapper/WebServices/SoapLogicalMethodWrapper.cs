@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.WebServices
 
 			var name = String.Format("{0}.{1}", declaringType.FullName, methodName);
 
-			transaction.SetWebTransactionName(WebTransactionType.WebService, name, 5);
+			transaction.SetWebTransactionName(WebTransactionType.WebService, name, TransactionNamePriority.FrameworkLow);
 			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
 			return Delegates.GetDelegateFor(

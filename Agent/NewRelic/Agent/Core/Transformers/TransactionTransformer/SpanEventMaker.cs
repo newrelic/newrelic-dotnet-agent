@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utils;
@@ -164,7 +165,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			const string keyPeerHostname = "peer.hostname";
 			
 			var data = (DatastoreSegmentData)segment.Data;
-			spanAttributes.Add(KeyComponent, data.DatastoreVendorName.ToString());
+			spanAttributes.Add(KeyComponent, MetricNames.GetCachedVendorNameString(data.DatastoreVendorName));
 			var statement = immutableTransaction.GetSqlObfuscatedAccordingToConfig(data.CommandText);
 			spanAttributes.Add(keyDbStatement, TruncateDatastoreStatement(statement));
 			spanAttributes.Add(keyDbInstance, data.DatabaseName);

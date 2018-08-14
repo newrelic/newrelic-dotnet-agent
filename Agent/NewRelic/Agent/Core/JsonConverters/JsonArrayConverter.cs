@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 {
 	public class JsonArrayConverter : JsonConverter
 	{
-		public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			if (value == null)
 				return;
@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			serializer.Serialize(writer, values);
 		}
 
-		public override Object ReadJson(JsonReader reader, Type type, Object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader, Type type, object existingValue, JsonSerializer serializer)
 		{
 			if (reader == null)
 				return null;
@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			if (info.Index >= jArray.Count)
 				return null;
 
-			var jToken = jArray[(Int32) info.Index];
+			var jToken = jArray[(int) info.Index];
 			if(jToken == null)
 				throw new JsonSerializationException(string.Format("No JToken found at index {0}", info.Index));
 
@@ -116,10 +116,10 @@ namespace NewRelic.Agent.Core.JsonConverters
 			}
 		}
 
-		public override Boolean CanConvert(Type objectType) { throw new NotImplementedException(); }
+		public override bool CanConvert(Type objectType) { throw new NotImplementedException(); }
 
 		[NotNull]
-		private static IList<Object> GetJsonMemberValuesOrderedByIndex([NotNull] Object value, Boolean validateJsonProperties)
+		private static IList<object> GetJsonMemberValuesOrderedByIndex([NotNull] object value, bool validateJsonProperties)
 		{
 			// Find all JsonArrayIndex members in object
 			var postProcessed = GetPostProcessed(value);
@@ -140,7 +140,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 		}
 
 		[NotNull]
-		private static IList<JsonMemberInfo> GetJsonMemberInfosOrderedByIndex([NotNull] Type type, [CanBeNull] Object instance = null)
+		private static IList<JsonMemberInfo> GetJsonMemberInfosOrderedByIndex([NotNull] Type type, [CanBeNull] object instance = null)
 		{
 			var propertyJsonInfo = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
 				.Where(property => property != null)
@@ -163,7 +163,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 		}
 		
 		[NotNull]
-		private static Object GetPostProcessed([NotNull] Object value)
+		private static object GetPostProcessed([NotNull] object value)
 		{
 			var properties = value.GetType().GetProperties();
 			foreach (var property in properties)
@@ -183,71 +183,56 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return value;
 		}
 
-		[CanBeNull]
-		public static Object SwapInDateTimeAsUnixTimeIfNecessary([NotNull] MemberInfo member, [CanBeNull] Object value)
+		public static object SwapInDateTimeAsUnixTimeSeconds(MemberInfo member, object value)
 		{
-			if (!(value is DateTime))
-				return value;
-
-			if (!Attribute.IsDefined(member, typeof(DateTimeSerializesAsUnixTimeAttribute)))
-				return value;
-
 			var dateTime = (DateTime)value;
-			return dateTime.ToUnixTime();
+			return dateTime.ToUnixTimeSeconds();
 		}
 
-		[CanBeNull]
-		public static Object SwapInTimeSpanAsMillisecondsIfNecessary([NotNull] MemberInfo member, [CanBeNull] Object value)
+		public static object SwapInDateTimeAsUnixTimeMilliseconds(MemberInfo member, object value)
 		{
-			if (!(value is TimeSpan))
-				return value;
+			var dateTime = (DateTime)value;
+			return dateTime.ToUnixTimeMilliseconds();
+		}
 
-			if (!Attribute.IsDefined(member, typeof(TimeSpanSerializesAsMillisecondsAttribute)))
-				return value;
-
+		public static object SwapInTimeSpanAsMilliseconds(MemberInfo member, object value)
+		{
 			var timeSpan = (TimeSpan)value;
 			return timeSpan.TotalMilliseconds;
 		}
 
-		[CanBeNull]
-		public static Object SwapInTimeSpanAsSecondsIfNecessary([NotNull] MemberInfo member, [CanBeNull] Object value)
+		public static object SwapInTimeSpanAsSeconds(MemberInfo member, object value)
 		{
-			if (!(value is TimeSpan))
-				return value;
-
-			if (!Attribute.IsDefined(member, typeof(TimeSpanSerializesAsSecondsAttribute)))
-				return value;
-
 			var timeSpan = (TimeSpan)value;
 			return timeSpan.TotalSeconds;
 		}
 
 		[CanBeNull]
-		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] FieldInfo fieldInfo, [CanBeNull] Object instance)
+		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] FieldInfo fieldInfo, [CanBeNull] object instance)
 		{
 			if (fieldInfo == null)
 				return null;
 
-			var valueGetter = instance == null ? (Func<Object>)null : () => fieldInfo.GetValue(instance);
-			Action<Object, Object> valueSetter = fieldInfo.SetValue;
+			var valueGetter = instance == null ? (Func<object>)null : () => fieldInfo.GetValue(instance);
+			Action<object, object> valueSetter = fieldInfo.SetValue;
 
 			return TryGetJsonMemberInfo(fieldInfo, valueGetter, fieldInfo.FieldType, valueSetter);
 		}
 
 		[CanBeNull]
-		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] PropertyInfo propertyInfo, [CanBeNull] Object instance)
+		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] PropertyInfo propertyInfo, [CanBeNull] object instance)
 		{
 			if (propertyInfo == null)
 				return null;
 
-			var valueGetter = instance == null ? (Func<Object>)null : () => propertyInfo.GetValue(instance, null);
-			Action<Object, Object> valueSetter = (targetObject, value) => propertyInfo.SetValue(targetObject, value, null);
+			var valueGetter = instance == null ? (Func<object>)null : () => propertyInfo.GetValue(instance, null);
+			Action<object, object> valueSetter = (targetObject, value) => propertyInfo.SetValue(targetObject, value, null);
 
 			return TryGetJsonMemberInfo(propertyInfo, valueGetter, propertyInfo.PropertyType, valueSetter);
 		}
 
 		[CanBeNull]
-		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] MemberInfo memberInfo, [CanBeNull] Func<Object> getValue, [CanBeNull] Type type, [CanBeNull] Action<Object, Object> valueSetter)
+		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] MemberInfo memberInfo, [CanBeNull] Func<object> getValue, [CanBeNull] Type type, [CanBeNull] Action<object, object> valueSetter)
 		{
 			if (memberInfo == null)
 				return null;
@@ -263,20 +248,39 @@ namespace NewRelic.Agent.Core.JsonConverters
 			if (attributes.Length <= 0)
 				return null;
 
-			var attribute = attributes[0] as JsonArrayIndexAttribute;
-			if (attribute == null)
+			if (!(attributes[0] is JsonArrayIndexAttribute attribute))
 				return null;
 
 			var index = attribute.Index;
 			var existingValue = getValue == null ? null : getValue();
-			existingValue = SwapInDateTimeAsUnixTimeIfNecessary(memberInfo, existingValue);
-			existingValue = SwapInTimeSpanAsMillisecondsIfNecessary(memberInfo, existingValue);
-			existingValue = SwapInTimeSpanAsSecondsIfNecessary(memberInfo, existingValue);
+
+			if (existingValue is DateTime)
+			{
+				if (Attribute.IsDefined(memberInfo, typeof(DateTimeSerializesAsUnixTimeSecondsAttribute)))
+				{
+					existingValue = SwapInDateTimeAsUnixTimeSeconds(memberInfo, existingValue);
+				}
+				else if (Attribute.IsDefined(memberInfo, typeof(DateTimeSerializesAsUnixTimeMillisecondsAttribute)))
+				{
+					existingValue = SwapInDateTimeAsUnixTimeMilliseconds(memberInfo, existingValue);
+				}
+			}
+			else if (existingValue is TimeSpan)
+			{
+				if (Attribute.IsDefined(memberInfo, typeof(TimeSpanSerializesAsMillisecondsAttribute)))
+				{
+					existingValue = SwapInTimeSpanAsMilliseconds(memberInfo, existingValue);
+				}
+				else if (Attribute.IsDefined(memberInfo, typeof(TimeSpanSerializesAsSecondsAttribute)))
+				{
+					existingValue = SwapInTimeSpanAsSeconds(memberInfo, existingValue);
+				}
+			}
 
 			return new JsonMemberInfo(index, existingValue, memberInfo, type, valueSetter);
 		}
 
-		private static void TrySetValue([CanBeNull] object targetObject, [CanBeNull] IEnumerable<JsonMemberInfo> jsonInfos, [CanBeNull] IList<JToken> jTokens, Int32 tokenIndex)
+		private static void TrySetValue([CanBeNull] object targetObject, [CanBeNull] IEnumerable<JsonMemberInfo> jsonInfos, [CanBeNull] IList<JToken> jTokens, int tokenIndex)
 		{
 			if (targetObject == null)
 				return;
@@ -302,19 +306,19 @@ namespace NewRelic.Agent.Core.JsonConverters
 		}
 
 		[CanBeNull]
-		private static Object GetTokenValue([NotNull] MemberInfo memberInfo, [NotNull] Type type, [NotNull] JToken jToken)
+		private static object GetTokenValue([NotNull] MemberInfo memberInfo, [NotNull] Type type, [NotNull] JToken jToken)
 		{
 			// Non-numeric values don't need to be specially transformed
 			if (jToken.Type != JTokenType.Float && jToken.Type != JTokenType.Integer)
 				return jToken.ToObject(type);
 			
 			// Numeric values might have to be specially transformed depending on the serialization attributes in play
-			if(Attribute.IsDefined(memberInfo, typeof (DateTimeSerializesAsUnixTimeAttribute)))
-				return jToken.ToObject<Double>().ToDateTime();
+			if(Attribute.IsDefined(memberInfo, typeof (DateTimeSerializesAsUnixTimeSecondsAttribute)))
+				return jToken.ToObject<double>().ToDateTime();
 			if (Attribute.IsDefined(memberInfo, typeof (TimeSpanSerializesAsMillisecondsAttribute)))
-				return TimeSpan.FromMilliseconds(jToken.ToObject<Double>());
+				return TimeSpan.FromMilliseconds(jToken.ToObject<double>());
 			if(Attribute.IsDefined(memberInfo, typeof (TimeSpanSerializesAsSecondsAttribute)))
-				return TimeSpan.FromSeconds(jToken.ToObject<Double>());
+				return TimeSpan.FromSeconds(jToken.ToObject<double>());
 			
 			// If none of the special serialization attributes were used then we can just return the untransformed value
 			return jToken.ToObject(type);
@@ -322,18 +326,18 @@ namespace NewRelic.Agent.Core.JsonConverters
 
 		private class JsonMemberInfo
 		{
-			public readonly UInt32 Index;
+			public readonly uint Index;
 			[CanBeNull]
-			public readonly Object ExistingValue;
+			public readonly object ExistingValue;
 			[NotNull]
 			public readonly MemberInfo MemberInfo;
 			[NotNull]
 			public readonly Type MemberType;
 
 			[NotNull] 
-			private readonly Action<Object, Object> _valueSetter;
+			private readonly Action<object, object> _valueSetter;
 
-			public JsonMemberInfo(UInt32 index, [CanBeNull] Object existingValue, [NotNull] MemberInfo memberInfo, [NotNull] Type memberType, [NotNull] Action<Object, Object> valueSetter)
+			public JsonMemberInfo(uint index, [CanBeNull] object existingValue, [NotNull] MemberInfo memberInfo, [NotNull] Type memberType, [NotNull] Action<object, object> valueSetter)
 			{
 				Index = index;
 				ExistingValue = existingValue;
@@ -347,7 +351,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			/// </summary>
 			/// <param name="targetObject">The object whose member will have its value set</param>
 			/// <param name="value">The value that will be set</param>
-			public void SetObjectValue(Object targetObject, Object value)
+			public void SetObjectValue(object targetObject, object value)
 			{
 				_valueSetter(targetObject, value);
 			}

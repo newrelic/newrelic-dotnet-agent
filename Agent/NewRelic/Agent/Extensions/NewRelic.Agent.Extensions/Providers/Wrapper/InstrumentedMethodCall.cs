@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		[CanBeNull]
 		public string RequestedMetricName => InstrumentedMethodInfo.RequestedMetricName;
 		[CanBeNull]
-		public int? RequestedTransactionNamePriority => InstrumentedMethodInfo.RequestedTransactionNamePriority;
+		public TransactionNamePriority? RequestedTransactionNamePriority => InstrumentedMethodInfo.RequestedTransactionNamePriority;
 		public bool StartWebTransaction => InstrumentedMethodInfo.StartWebTransaction;
 
 		public InstrumentedMethodCall(MethodCall methodCall, [NotNull] InstrumentedMethodInfo instrumentedMethodInfo)

@@ -1,28 +1,28 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemExtensions;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
 {
 	public class BasicPublishWrapper : IWrapper
 	{
+		private const int BasicPropertiesIndex = 3;
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "RabbitMQ.Client", typeName: "RabbitMQ.Client.Framing.Impl.Model", methodName: "_Private_BasicPublish");
+			var canWrap = method.MatchesAny(assemblyName: RabbitMqHelper.AssemblyName, typeName: RabbitMqHelper.TypeName,
+				methodSignatures: new[]
+				{
+					new MethodSignature("_Private_BasicPublish","System.String,System.String,System.Boolean,RabbitMQ.Client.IBasicProperties,System.Byte[]"), // 3.6.0+ (5.1.0+)
+				});
 			return new CanWrapResponse(canWrap);
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
 		{
-			// (IModel)void BasicPublish(string exchange, string routingKey, bool mandatory, bool immediate, IBasicProperties basicProperties, byte[] body)
-			var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<String>(1);
-			var destType = RabbitMqHelper.GetBrokerDestinationType(routingKey);
-			var destName = RabbitMqHelper.ResolveDestinationName(destType, routingKey);
-
-			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, RabbitMqHelper.VendorName, destName);
+			// 3.6.0+ (5.1.0+) (IModel)void BasicPublish(string exchange, string routingKey, bool mandatory, IBasicProperties basicProperties, byte[] body)
+			var segment = RabbitMqHelper.CreateSegmentForPublishWrappers(instrumentedMethodCall, transaction, BasicPropertiesIndex);
 			return Delegates.GetDelegateFor(segment);
 		}
 	}

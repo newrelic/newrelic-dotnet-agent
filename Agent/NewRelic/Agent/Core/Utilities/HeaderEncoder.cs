@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.Utilities
 				return null;
 			}
 
-			return DistributedTracePayload.FromJson(decodedString);
+			return DistributedTracePayload.TryBuildIncomingPayloadFromJson(decodedString);
 		}
 	}
 }

@@ -45,12 +45,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			var accountId = _configurationService.Configuration.AccountId;
 			var appId = _configurationService.Configuration.PrimaryApplicationId;
 
-			if ((accountId == null) || (appId == null))
-			{ 
-				Log.Finest("Did not generate payload because AccountId or PrimaryApplicationId were not populated. This is normal for requests occuring before round trip with server has completed.");
-				return Enumerable.Empty<KeyValuePair<string, string>>();
-			}
-
 			if (!_configurationService.Configuration.SpanEventsEnabled && !_configurationService.Configuration.TransactionEventsEnabled)
 			{ 
 				Log.Finest("Did not generate payload because Span Events and Transaction Events were both disabled, preventing a traceable payload.");
@@ -58,41 +52,35 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			}
 
 			var transactionMetadata = transaction.TransactionMetadata;
-
 			transactionMetadata.SetSampled(_adaptiveSampler);
-
 			var transactionIsSampled = transactionMetadata.DistributedTraceSampled;
+
 			if (transactionIsSampled.HasValue == false)
 			{
 				Log.Error("Did not generate payload because transaction sampled value was null.");
 				return Enumerable.Empty<KeyValuePair<string, string>>();
 			}
 
-			var distributedTracePayload = new DistributedTracePayload
-			{
-				Type = DistributedTraceTypeDefault,
-				AccountId = accountId,
-				AppId = appId,
-				TraceId = transactionMetadata.DistributedTraceTraceId ?? transaction.Guid,
-				Priority = transactionMetadata.Priority,
-				Sampled = transactionIsSampled,
-				Timestamp = DateTime.UtcNow
-			};
+			var payloadGuid = (_configurationService.Configuration.SpanEventsEnabled && transactionIsSampled.Value) ? segment?.SpanId : null;
+			var trustKey = _configurationService.Configuration.TrustedAccountKey;
+			var transactionId = (_configurationService.Configuration.TransactionEventsEnabled) ? transaction.Guid : null;
+			var traceId = transactionMetadata.DistributedTraceTraceId ?? transaction.Guid;
 
-			if (_configurationService.Configuration.SpanEventsEnabled && transactionIsSampled.Value)
-			{
-				distributedTracePayload.Guid = segment?.SpanId;
-			}
+			var distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(
+				DistributedTraceTypeDefault,
+				accountId,
+				appId,
+				payloadGuid,
+				traceId,
+				trustKey,
+				transactionMetadata.Priority,
+				transactionIsSampled,
+				DateTime.UtcNow,
+				transactionId);
 
-			var trustkey = _configurationService.Configuration.TrustedAccountKey;
-			if (accountId != trustkey)
-			{
-				distributedTracePayload.TrustKey = trustkey;
-			}
-
-			if (_configurationService.Configuration.TransactionEventsEnabled)
-			{
-				distributedTracePayload.TransactionId = transaction.Guid;
+			if (distributedTracePayload == null)
+			{ 
+				return Enumerable.Empty<KeyValuePair<string, string>>();
 			}
 
 			string encodedPayload;

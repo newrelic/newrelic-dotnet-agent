@@ -191,6 +191,8 @@ namespace NewRelic.Agent.Configuration
 
 		bool DiagnosticsCaptureAgentTiming { get; }
 
+		bool UseResourceBasedNamingForWCFEnabled { get; }
+
 		//Priority Sampling... Distributed Tracing...
 		int? SamplingTarget { get; }
 

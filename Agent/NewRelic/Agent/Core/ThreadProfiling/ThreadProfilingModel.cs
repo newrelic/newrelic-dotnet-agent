@@ -12,10 +12,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		[JsonArrayIndex(Index = 0)]
 		public readonly Int32 ProfileSessionId;
 
-		[JsonArrayIndex(Index = 1), DateTimeSerializesAsUnixTime]
+		[JsonArrayIndex(Index = 1), DateTimeSerializesAsUnixTimeSeconds]
 		public readonly DateTime StartTime;
 
-		[JsonArrayIndex(Index = 2), DateTimeSerializesAsUnixTime]
+		[JsonArrayIndex(Index = 2), DateTimeSerializesAsUnixTimeSeconds]
 		public readonly DateTime StopTime;
 
 		[JsonArrayIndex(Index = 3)]

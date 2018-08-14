@@ -11,31 +11,28 @@ using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Collections.UnitTests
 {
-	public abstract class ConcurrentPriorityQueueTestsBase<T>
+	public abstract class ConcurrentPriorityQueueTestsBase<T>  where T : IHasPriority
 	{
-		protected static uint[] ConstructPQSizes = new uint[] { 0u, 1u, 10000u, 20000u };
+		protected static uint[] ConstructPriorityQueueSizes = { 0u, 1u, 10000u, 20000u };
 
-		protected readonly static Dictionary<string, object> EmptyAttributes = new Dictionary<string, object>();
+		protected readonly Dictionary<string, object> EmptyAttributes = new Dictionary<string, object>();
 		protected const string TimeStampKey = "timestamp";
 
-		[NotNull]
-		protected ConcurrentPriorityQueue<T> ConcurrentPriorityQueue;
+		protected ConcurrentPriorityQueue<PrioritizedNode<T>> ConcurrentPriorityQueue;
 
-		protected int CreateCount = 0;
+		protected int CreateCount;
 
-		protected abstract T Create(float priority);
-
-		protected IComparer<T> Comparer { get; set; }
+		protected abstract PrioritizedNode<T> Create(float priority);
 
 		protected void AllocPriorityQueue()
 		{
-			ConcurrentPriorityQueue = new ConcurrentPriorityQueue<T>(20, Comparer);
+			ConcurrentPriorityQueue = new ConcurrentPriorityQueue<PrioritizedNode<T>>(20);
 		}
 
 		public void FunctionsAsNormalList_ForSingleThreadedAccess()
 		{
 			// Because nothing interesting happens when the reservoir's item count is below the size limit, it seems reasonable to just wrap all of the basic list API tests into one test
-			var eventsToAdd = new T[]
+			var eventsToAdd = new[]
 			{
 					Create(0.3f),
 					Create(0.2f),
@@ -44,7 +41,7 @@ namespace NewRelic.Collections.UnitTests
 
 			// Add
 			foreach (var ev in eventsToAdd)
-			{
+			{ 
 				ConcurrentPriorityQueue.Add(ev);
 			}
 
@@ -61,9 +58,9 @@ namespace NewRelic.Collections.UnitTests
 			Assert.AreEqual(ConcurrentPriorityQueue.Count, eventsToAdd.Length);
 
 			// CopyTo
-			var destinationArray = new T[eventsToAdd.Length];
-			ConcurrentPriorityQueue.CopyTo(destinationArray, 0);
-			Assert.True(eventsToAdd.SequenceEqual(destinationArray));
+			var actualEvents = ConcurrentPriorityQueue.Select(node => node.Data).ToArray();
+			var expectedEvents = eventsToAdd.Select(node => node.Data).ToArray();
+			Assert.That(actualEvents, Is.EquivalentTo(expectedEvents));
 
 			// Contains
 			Assert.True(eventsToAdd.All(ConcurrentPriorityQueue.Contains));
@@ -74,9 +71,9 @@ namespace NewRelic.Collections.UnitTests
 			Assert.False(eventsToAdd.Any(ConcurrentPriorityQueue.Contains));
 		}
 
-		public void ConstructPQOfDifferentSizes(uint sizeLimit)
+		public void ConstructPriorityQueueOfDifferentSizes(uint sizeLimit)
 		{
-			var concurrentPriorityQueue = new ConcurrentPriorityQueue<T>(sizeLimit, Comparer);
+			var concurrentPriorityQueue = new ConcurrentPriorityQueue<PrioritizedNode<T>>(sizeLimit);
 			Assert.AreEqual(concurrentPriorityQueue.Size, sizeLimit);
 		}
 
@@ -104,37 +101,37 @@ namespace NewRelic.Collections.UnitTests
 
 		public void SamplesItemsWhenSizeLimitReached()
 		{
-			const int NumberOfItemsToAddInitially = 100;
+			const int numberOfItemsToAddInitially = 100;
 			const int numberOfItemsToAddAfterReservoirLimitReached = 100;
 
 			//Concurrent Priority Queue will only hold NumberOfItemsToAddInitially items.
-			ConcurrentPriorityQueue.Resize(NumberOfItemsToAddInitially);
+			ConcurrentPriorityQueue.Resize(numberOfItemsToAddInitially);
 
-			var ItemsToAddInitially = new T[NumberOfItemsToAddInitially];
-			for (var i = 0; i < NumberOfItemsToAddInitially; ++i)
+			var itemsToAddInitially = new PrioritizedNode<T>[numberOfItemsToAddInitially];
+			for (var i = 0; i < numberOfItemsToAddInitially; ++i)
 			{
-				ItemsToAddInitially[i] = Create(i * 0.001f);
+				itemsToAddInitially[i] = Create(i * 0.001f);
 			}
 
 			//fill the CPQ with values 100-199
-			foreach (var itemToAdd in ItemsToAddInitially)
+			foreach (var itemToAdd in itemsToAddInitially)
 			{
-				Assert.IsTrue(ConcurrentPriorityQueue.Add(itemToAdd), "failed to add initial value", itemToAdd);
+				Assert.IsTrue(ConcurrentPriorityQueue.Add(itemToAdd), "failed to add initial value");
 			}
 
 			//make sure they are all accounted for
-			Assert.AreEqual(ConcurrentPriorityQueue.Count, NumberOfItemsToAddInitially);
+			Assert.AreEqual(ConcurrentPriorityQueue.Count, numberOfItemsToAddInitially);
 
 			//now add more items that will cause the items from above to get removed. these will be valued 0-99 (precisely 100 less than those above)
 			for (var i = 0; i < numberOfItemsToAddAfterReservoirLimitReached; ++i)
 			{
 				var itemToAdd = Create((i + 100) * 0.001f);
-				var itemThatWillGetRemoved = ItemsToAddInitially[i];
+				var itemThatWillGetRemoved = itemsToAddInitially[i];
 
 				//each one we add will cause the corresponding smaller item to get removed.
-				Assert.IsTrue(ConcurrentPriorityQueue.Add(itemToAdd), "failed to add subsequent value", itemToAdd);
-				Assert.IsTrue(ConcurrentPriorityQueue.Contains(itemToAdd), "added value not found", itemToAdd);
-				Assert.IsFalse(ConcurrentPriorityQueue.Contains(itemThatWillGetRemoved), "initial value did not get removed on addition of subsequent value", itemThatWillGetRemoved, itemToAdd);
+				Assert.IsTrue(ConcurrentPriorityQueue.Add(itemToAdd), "failed to add subsequent value");
+				Assert.IsTrue(ConcurrentPriorityQueue.Contains(itemToAdd), "added value not found");
+				Assert.IsFalse(ConcurrentPriorityQueue.Contains(itemThatWillGetRemoved), "initial value did not get removed on addition of subsequent value");
 			}
 		}
 
@@ -143,20 +140,24 @@ namespace NewRelic.Collections.UnitTests
 			// Note: this test does not definitively prove that the collection is thread-safe, but any thread-safety test is better than no thread safety test.
 			var random = new Random();
 
-			float GenPriority() { return (float)random.NextDouble(); };
+			float GenPriority() { return (float)random.NextDouble(); }
 
-			const int CountOfThreads = 100;
-			var tasks = Enumerable.Range(1, CountOfThreads)
+			const int countOfThreads = 100;
+			ConcurrentPriorityQueue.Resize(countOfThreads* 3);
+
+			Assert.That(ConcurrentPriorityQueue.Size, Is.EqualTo(countOfThreads*3));
+
+			var tasks = Enumerable.Range(1, countOfThreads)
 				.Select(_ =>
 				{
-					var eventsToAdd = new T[]
+					var eventsToAdd = new[]
 							{
 							Create(GenPriority()),
 							Create(GenPriority()),
 							Create(GenPriority()),
 							};
-					void testAction() => ExerciseFullApi(ConcurrentPriorityQueue, eventsToAdd, CountOfThreads);
-					return new Task(testAction);
+					void TestAction() => ExerciseFullApi(ConcurrentPriorityQueue, eventsToAdd, countOfThreads);
+					return new Task(TestAction);
 				})
 				.ToList();
 
@@ -164,52 +165,48 @@ namespace NewRelic.Collections.UnitTests
 			tasks.ForEach(task => task.Start());
 			tasks.ForEach(task => task.Wait());
 			// ReSharper restore PossibleNullReferenceException
+
+			Assert.That(ConcurrentPriorityQueue, Has.Exactly(countOfThreads*3).Items);
 		}
 
 		// ReSharper disable RedundantAssignment
-		private static void ExerciseFullApi([NotNull] IResizableCappedCollection<T> concurrentPriorityQueue, [NotNull] T[] eventsToAdd, int countOfThreads)
+		private static void ExerciseFullApi([NotNull] IResizableCappedCollection<PrioritizedNode<T>> concurrentPriorityQueue, [NotNull] PrioritizedNode<T>[] eventsToAdd, int countOfThreads)
 		{
-			// ReSharper disable once NotAccessedVariable
-			dynamic _;
-
-			// Add
+			// Add the new events
 			foreach (var evt in eventsToAdd)
 			{
 				concurrentPriorityQueue.Add(evt);
 			}
 
-			var index = 0;
-			var genericEnumerator = concurrentPriorityQueue.GetEnumerator();
-			while (index < eventsToAdd.Length && genericEnumerator.MoveNext())
+			//make sure each of the new events can be found (tests equality op)
+			foreach (var ev in eventsToAdd)
 			{
-				_ = genericEnumerator.Current;
+				Assert.That(concurrentPriorityQueue, Contains.Item(ev));
 			}
 
-			index = 0;
-			var nongenericEnumerator = ((IEnumerable)concurrentPriorityQueue).GetEnumerator();
-			while (index < eventsToAdd.Length && nongenericEnumerator.MoveNext())
-			{
-				_ = nongenericEnumerator.Current;
-			}
-
-			_ = concurrentPriorityQueue.Count;
-
-			var destinationArray = new T[eventsToAdd.Count() * countOfThreads];
+			//copy the CPQ to an array
+			var destinationArray = new PrioritizedNode<T>[eventsToAdd.Count() * countOfThreads];
 			concurrentPriorityQueue.CopyTo(destinationArray, 0);
-			_ = concurrentPriorityQueue.Contains(eventsToAdd.First());
 
-			try
+			//check that the copied contents contains our events
+			foreach (var ev in eventsToAdd)
 			{
-				concurrentPriorityQueue.Remove(eventsToAdd.First());
-			}
-			catch (NotSupportedException)
-			{
+				Assert.That(destinationArray, Contains.Item(ev));
 			}
 
-			concurrentPriorityQueue.Clear();
+			//count how many are actually in the destinationArray
+			var nonnullCount = 0;
+			while (nonnullCount < destinationArray.Length && null != destinationArray[nonnullCount]) ++nonnullCount;
+
+			//make sure the array is sorted properly
+			for (var index = 1;  index < nonnullCount; ++index)
+			{
+				Assert.That(destinationArray[index - 1].Data.Priority, Is.GreaterThanOrEqualTo(destinationArray[index].Data.Priority));
+			}
+
+			//make sure that remove is not supported
+			Assert.That(() => concurrentPriorityQueue.Remove(eventsToAdd[0]), Throws.TypeOf<NotSupportedException>());
 		}
-		// ReSharper restore RedundantAssignment
-
 	}
 
 	// ReSharper disable once InconsistentNaming
@@ -217,27 +214,22 @@ namespace NewRelic.Collections.UnitTests
 	[TestOf(typeof(ConcurrentPriorityQueue<CustomEventWireModel>))]
 	public class ConcurrentPriorityQueueCustomEventsTests : ConcurrentPriorityQueueTestsBase<CustomEventWireModel>
 	{
-		public ConcurrentPriorityQueueCustomEventsTests()
-		{
-			Comparer = new CustomEventWireModel.PriorityTimestampComparer();
-		}
-
 		[SetUp]
 		public void Setup()
 		{
 			AllocPriorityQueue();
 		}
 
-		protected override CustomEventWireModel Create(float priority)
+		protected override PrioritizedNode<CustomEventWireModel> Create(float priority)
 		{
 			Interlocked.Increment(ref CreateCount);
-			return new CustomEventWireModel("event type" + CreateCount.ToString(), DateTime.UtcNow, EmptyAttributes, priority);
+			return new PrioritizedNode<CustomEventWireModel>( new CustomEventWireModel("event type" + CreateCount.ToString(), DateTime.UtcNow, EmptyAttributes, priority));
 		}
 
-		[TestCaseSource("ConstructPQSizes")]
+		[TestCaseSource("ConstructPriorityQueueSizes")]
 		public void ConcurrentPriorityQueueCustomEventsTests_ConstructPQOfDifferentSizes(uint sizeLimit)
 		{
-			ConstructPQOfDifferentSizes(sizeLimit);
+			ConstructPriorityQueueOfDifferentSizes(sizeLimit);
 		}
 
 		[Test]
@@ -277,28 +269,23 @@ namespace NewRelic.Collections.UnitTests
 	[TestOf(typeof(ConcurrentPriorityQueue<ErrorEventWireModel>))]
 	public class ConcurrentPriorityQueueErrorEventsTests: ConcurrentPriorityQueueTestsBase<ErrorEventWireModel>
 	{
-		public ConcurrentPriorityQueueErrorEventsTests()
-		{
-			Comparer = new ErrorEventWireModel.PriorityTimestampComparer();
-		}
-
 		[SetUp]
 		public void Setup()
 		{
 			AllocPriorityQueue();
 		}
 
-		protected override ErrorEventWireModel Create(float priority)
+		protected override PrioritizedNode<ErrorEventWireModel> Create(float priority)
 		{
 			Interlocked.Increment(ref CreateCount);
-			var intrinsicAttributes = new Dictionary<String, Object> { {TimeStampKey, DateTime.UtcNow.ToUnixTime()} };
-			return new ErrorEventWireModel(EmptyAttributes, intrinsicAttributes, EmptyAttributes, false, priority);
+			var intrinsicAttributes = new Dictionary<string, object> { {TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds()} };
+			return new PrioritizedNode<ErrorEventWireModel> (new ErrorEventWireModel(EmptyAttributes, intrinsicAttributes, EmptyAttributes, false, priority));
 		}
 
-		[TestCaseSource("ConstructPQSizes")]
+		[TestCaseSource(nameof(ConstructPriorityQueueSizes))]
 		public void ConcurrentPriorityQueueErrorEventsTests_ConstructPQOfDifferentSizes(uint sizeLimit)
 		{
-			ConstructPQOfDifferentSizes(sizeLimit);
+			ConstructPriorityQueueOfDifferentSizes(sizeLimit);
 		}
 
 		[Test]
@@ -339,29 +326,23 @@ namespace NewRelic.Collections.UnitTests
 	public class
 		ConcurrentPriorityQueueTransactionEventsTests : ConcurrentPriorityQueueTestsBase<TransactionEventWireModel>
 	{
-		public ConcurrentPriorityQueueTransactionEventsTests()
-		{
-			Comparer = new TransactionEventWireModel.PriorityTimestampComparer();
-		}
-
 		[SetUp]
 		public void Setup()
 		{
 			AllocPriorityQueue();
 		}
 
-		protected override TransactionEventWireModel Create(float priority)
+		protected override PrioritizedNode<TransactionEventWireModel> Create(float priority)
 		{
 			Interlocked.Increment(ref CreateCount);
-			var intrinsicAttributes = new Dictionary<String, Object> {{TimeStampKey, DateTime.UtcNow.ToUnixTime()}};
-			return new TransactionEventWireModel(EmptyAttributes, EmptyAttributes, intrinsicAttributes, false, priority, false,
-				false);
+			var intrinsicAttributes = new Dictionary<string, object> {{TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds()}};
+			return new PrioritizedNode<TransactionEventWireModel> (new TransactionEventWireModel(EmptyAttributes, EmptyAttributes, intrinsicAttributes, false, priority, false, false));
 		}
 
-		[TestCaseSource("ConstructPQSizes")]
+		[TestCaseSource("ConstructPriorityQueueSizes")]
 		public void ConcurrentPriorityQueueTransactionEventsTests_ConstructPQOfDifferentSizes(uint sizeLimit)
 		{
-			ConstructPQOfDifferentSizes(sizeLimit);
+			ConstructPriorityQueueOfDifferentSizes(sizeLimit);
 		}
 
 		[Test]
@@ -396,14 +377,9 @@ namespace NewRelic.Collections.UnitTests
 	}
 
 	[TestFixture]
-	[TestOf(typeof(ConcurrentPriorityQueue<CustomEventWireModel>))]
-	public class ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests : ConcurrentPriorityQueueTestsBase<PrioritizedNode<SpanEventWireModel>>
+	[TestOf(typeof(ConcurrentPriorityQueue<SpanEventWireModel>))]
+	public class ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests : ConcurrentPriorityQueueTestsBase<SpanEventWireModel>
 	{
-		public ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests()
-		{
-			Comparer = Comparer<PrioritizedNode<SpanEventWireModel>>.Default;
-		}
-
 		[SetUp]
 		public void Setup()
 		{
@@ -417,10 +393,10 @@ namespace NewRelic.Collections.UnitTests
 			return new PrioritizedNode<SpanEventWireModel>(new SpanEventWireModel(intrinsicAttributes));
 		}
 
-		[TestCaseSource("ConstructPQSizes")]
+		[TestCaseSource("ConstructPriorityQueueSizes")]
 		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_ConstructPQOfDifferentSizes(uint sizeLimit)
 		{
-			ConstructPQOfDifferentSizes(sizeLimit);
+			ConstructPriorityQueueOfDifferentSizes(sizeLimit);
 		}
 
 		[Test]

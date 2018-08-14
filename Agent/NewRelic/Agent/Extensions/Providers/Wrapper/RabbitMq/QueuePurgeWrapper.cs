@@ -11,14 +11,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "RabbitMQ.Client", typeName: "RabbitMQ.Client.Framing.Impl.Model", methodName: "_Private_QueuePurge");
+			var canWrap = method.MatchesAny(assemblyName: RabbitMqHelper.AssemblyName, typeName: RabbitMqHelper.TypeName, methodName: "_Private_QueuePurge");
 			return new CanWrapResponse(canWrap);
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
 		{
 			// (IModel) uint QueuePurge(string queue)
-			var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<String>(0);
+			var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
 			var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
 			var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 

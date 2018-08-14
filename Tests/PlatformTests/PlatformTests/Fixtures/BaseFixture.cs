@@ -21,9 +21,8 @@ namespace PlatformTests.Fixtures
 			Application.TestLogger = TestLogger;
 
 			Application.InstallAgent();
-			Application.BuildAndPackage();
-			Application.UpdateNewRelicConfig();
-			Application.Deploy();
+
+			Application.BuildAndDeploy();
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] ... Testing");
 
@@ -31,9 +30,7 @@ namespace PlatformTests.Fixtures
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] ... Tesing done");
 
-			Application.Undeploy();
+			Application.StopTestApplicationService();
 		}
-
-
 	}
 }

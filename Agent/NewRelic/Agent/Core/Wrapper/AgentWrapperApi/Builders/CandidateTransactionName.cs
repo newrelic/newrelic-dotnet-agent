@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using Newtonsoft.Json;
 
@@ -12,7 +13,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
 	public interface ICandidateTransactionName
 	{
-		bool TrySet([NotNull] ITransactionName transactionName, Int32 priority);
+		bool TrySet([NotNull] ITransactionName transactionName, TransactionNamePriority priority);
 
 		/// <summary>
 		/// Freeze the transaction name so it can't be changed again.
@@ -35,7 +36,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private volatile ITransactionName _currentTransactionName;
 
 		[NotNull]
-		private Int32 _highestPriority;
+		private TransactionNamePriority _highestPriority;
 			
 		[NotNull]
 		private bool _isFrozen = false;
@@ -46,7 +47,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_highestPriority = 0;
 		}
 
-		public bool TrySet(ITransactionName transactionName, Int32 priority)
+		public bool TrySet(ITransactionName transactionName, TransactionNamePriority priority)
 		{
 			// We could define this lock to be more coarse grained if we added extra variables
 			// to track the before/after stuff for logging, but finest is rarely enabled, and if it is
@@ -77,9 +78,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			return false;
 		}
 
-		private bool ChangeName(Int32 newPriority)
+		private bool ChangeName(TransactionNamePriority newPriority)
 		{
-			return !_isFrozen && (newPriority == AgentApi.UserTransactionNamePriority || newPriority > _highestPriority || _currentTransactionName == null);
+			return !_isFrozen && (newPriority == TransactionNamePriority.UserTransactionName || newPriority > _highestPriority || _currentTransactionName == null);
 		}
 
 		public void Freeze()
@@ -100,9 +101,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public ITransactionName CurrentTransactionName => _currentTransactionName;
 
 		[CanBeNull]
-		private static String FormatTransactionName([NotNull] ITransactionName transactionName, Int32 priority)
+		private static String FormatTransactionName([NotNull] ITransactionName transactionName, TransactionNamePriority priority)
 		{
-			return $"{transactionName.GetType().Name}{JsonConvert.SerializeObject(transactionName)} (priority {priority})";
+			return $"{transactionName.GetType().Name}{JsonConvert.SerializeObject(transactionName)} (priority {(int)priority}, {priority})";
 		}
 	}
 }

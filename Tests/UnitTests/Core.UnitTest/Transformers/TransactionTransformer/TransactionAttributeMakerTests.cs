@@ -75,12 +75,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(9, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
 				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
 				() => Assert.NotNull(transactionAttributes["nr.tripId"]),
+				() => Assert.NotNull(transactionAttributes["trip_id"]),
 				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"])
 			);
 		}
@@ -116,7 +117,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
@@ -164,7 +165,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
@@ -209,7 +210,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
@@ -257,7 +258,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(11, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
@@ -318,7 +319,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),
@@ -398,7 +399,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(29, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),
@@ -754,6 +755,52 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			AttributeDestinations.SqlTrace | AttributeDestinations.TransactionEvent | 
 			AttributeDestinations.ErrorEvent;
 
+
+		[Test]
+		public void ShouldNotIncludeTripIdWhenDistributedTracingEnabled()
+		{
+			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns("1234");
+			var timer = Mock.Create<ITimer>();
+			var expectedStartTime = DateTime.Now;
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+
+
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+
+			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
+			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
+			transaction.TransactionMetadata.DistributedTraceAppId = IncomingAppId;
+			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
+			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
+			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
+			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
+			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var totalTime = TimeSpan.FromSeconds(1);
+			var apdexT = TimeSpan.FromSeconds(2);
+
+			// ACT
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+
+			// ACQUIRE
+			var transactionAttributes = attributes.GetIntrinsics()
+				.Concat(attributes.GetAgentAttributes())
+				.Concat(attributes.GetUserAttributes())
+				.ToDictionary(attr => attr.Key, attr => attr.Value);
+
+			// ASSERT
+			NrAssert.Multiple(
+				() => Assert.False(transactionAttributes.ContainsKey("nr.tripId"), "nr.tripId should not have been included"),
+				() => Assert.False(transactionAttributes.ContainsKey("trip_id"), "trip_id should not have been included")
+			);
+		}
+
+
 		[Test]
 		public void GetAttributes_ReturnsDistributedTraceAttrs_IfDistributedTraceEnabledAndReceivedPayload()
 		{
@@ -793,7 +840,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(21, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(20, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
 				() => Assert.True(transactionAttributes.ContainsKey("timestamp")),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
@@ -803,7 +850,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.True(transactionAttributes.ContainsKey("webDuration")),
 				() => Assert.True(transactionAttributes.ContainsKey("nr.apdexPerfZone")),
 				() => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
-				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["trip_id"]),
 				() => Assert.AreEqual(IncomingTraceId, transactionAttributes["traceId"]),
 				() => Assert.AreEqual(IncomingType, transactionAttributes["parent.type"]),
 				() => Assert.AreEqual(IncomingAppId, transactionAttributes["parent.app"]),
@@ -891,7 +937,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(21, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(20, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["name"]),
@@ -900,7 +946,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["webDuration"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace, transactionAttributes["totalTime"]),
 				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.apdexPerfZone"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace, transactionAttributes["trip_id"]),
 				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.type"]),
 				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.app"]),
 				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.account"]),
@@ -953,7 +998,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(21, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual(20, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
@@ -963,7 +1008,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["webDuration"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.apdexPerfZone"]),
 				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.uri"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["trip_id"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["traceId"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parent.type"]),
 				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["parent.app"]),

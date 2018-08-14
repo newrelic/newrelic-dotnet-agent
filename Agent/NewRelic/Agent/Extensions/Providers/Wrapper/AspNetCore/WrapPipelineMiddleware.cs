@@ -95,7 +95,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 				if (responseStatusCode >= 400)
 				{
 					//Attempt low-priority transaction name to reduce chance of metric grouping issues.
-					transaction.SetWebTransactionName(WebTransactionType.StatusCode, $"{responseStatusCode}", 2);
+					transaction.SetWebTransactionName(WebTransactionType.StatusCode, $"{responseStatusCode}", TransactionNamePriority.StatusCode);
 				}
 
 				segment.End();

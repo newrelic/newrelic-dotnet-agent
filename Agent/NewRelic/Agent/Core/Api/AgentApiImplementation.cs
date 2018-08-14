@@ -358,7 +358,7 @@ namespace NewRelic.Agent.Core.Api
 					var newTransactionName = currentTranasctionName.IsWeb
 						? new WebTransactionName(category, name)
 						: new OtherTransactionName(category, name) as ITransactionName;
-					transaction.CandidateTransactionName.TrySet(newTransactionName, AgentApi.UserTransactionNamePriority);
+					transaction.CandidateTransactionName.TrySet(newTransactionName, TransactionNamePriority.UserTransactionName);
 				}
 			}
 			catch (Exception ex)

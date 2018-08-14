@@ -17,6 +17,7 @@
         <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
         <PackageReference Include="MoreLinq" Version="2.4.0" />
         <PackageReference Include="log4net" Version="2.0.8" />
+        <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     </ItemGroup>
   
   <PropertyGroup>
@@ -24,24 +25,34 @@
     <ExtensionCsPath>NewRelic.Agent.Core.Extension\Extension.cs</ExtensionCsPath>
   </PropertyGroup>
 
-  <Target Name="GenerateCode" BeforeTargets="CoreCompile" DependsOnTargets="PrepareForBuild">
+  <Target Name="GenerateCodeInner">
     <PropertyGroup>
       <Xsd2CodePath>$(SolutionDir)BuildTools\Xsd2Code.exe</Xsd2CodePath>
     </PropertyGroup>
  
+    <Message Importance="high" Text="Running GenerateCodeInner target" />
     <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\Config\Configuration.xsd&quot; NewRelic.Agent.Core.Config Configuration.cs /cl /ap /sc /xa" /> -->
     <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd&quot; NewRelic.Agent.Core.Extension Extension.cs /cl /ap /sc /xa" /> -->
   </Target>
 
+  <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds;CoreCompile">
+    <!--
+      This is a workaround to help with ensuring that we only generate our code once per build. The TargetFramework=once property
+      is just a trick to get the GenerateCodeInner target to run only once, because msbuild will not a execute "task" from same
+      project with same properties twice.
+      See https://github.com/Microsoft/msbuild/issues/2781 for a good explanation of the problem and the basis of this workaround.
+    -->
+    <Message Importance="high" Text="Running GenerateCode target" />
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="GenerateCodeInner" Properties="TargetFramework=once" />
+  </Target>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Autofac" Version="4.5.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
         <PackageReference Include="Castle.Core" Version="3.3.0" />
         <PackageReference Include="Castle.Windsor" Version="3.3.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="7.0.1" />
         <PackageReference Include="JustMock" Version="2015.2.616.2" />
     </ItemGroup>
 
@@ -97,4 +108,7 @@
         </EmbeddedResource>
     </ItemGroup>
     <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="echo $(NuGetPackageFolders) &gt; $(OutDir)NewRelic.Agent.Core.NuGetPackageFolders.txt" />
+    </Target>
 </Project>

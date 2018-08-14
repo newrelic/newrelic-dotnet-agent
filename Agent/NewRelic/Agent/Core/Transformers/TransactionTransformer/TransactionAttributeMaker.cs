@@ -97,14 +97,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var isSyntheticsParticipant = IsSyntheticsParticipant(immutableTransaction);
 			var isDistributedTraceParticipant = immutableTransaction.TransactionMetadata.HasIncomingDistributedTracePayload;
 
-			// add the tripId attribute unconditionally so it can be used to correlate with this app's PageView events
-			// if CrossApplicationReferrerTripId is null then this transaction started the first external request, so use its guid
-			var tripId = immutableTransaction.TransactionMetadata.CrossApplicationReferrerTripId ?? immutableTransaction.Guid;
-			attributes.TryAdd(Attribute.BuildTripUnderscoreIdAttribute, tripId);
-			
-			// nr.tripid is set differently if this is a distributed trace transaction
 			if (_configurationService.Configuration.DistributedTracingEnabled == false)
 			{
+				// add the tripId attribute unconditionally, when DT disabled, so it can be used to correlate with 
+				// this app's PageView events. Initial story for functionality: https://newrelic.atlassian.net/browse/DOTNET-2127
+				// if CrossApplicationReferrerTripId is null then this transaction started the first external request, 
+				// so use its guid.
+				var tripId = immutableTransaction.TransactionMetadata.CrossApplicationReferrerTripId ?? immutableTransaction.Guid;
+				attributes.TryAdd(Attribute.BuildTripUnderscoreIdAttribute, tripId);
+
 				attributes.TryAdd(Attribute.BuildCatNrTripIdAttribute, tripId);
 			}
 

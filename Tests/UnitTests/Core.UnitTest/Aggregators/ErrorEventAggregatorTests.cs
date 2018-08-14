@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private const string TimeStampKey = "timestamp";
 		private readonly static Dictionary<string, object> _emptyAttributes = new Dictionary<string, object>();
-		private readonly static Dictionary<string, object> _intrinsicAttributes = new Dictionary<string, object> { { TimeStampKey, DateTime.UtcNow.ToUnixTime() } };
+		private readonly static Dictionary<string, object> _intrinsicAttributes = new Dictionary<string, object> { { TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds() } };
 
 		[SetUp]
 		public void SetUp()
@@ -389,7 +389,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Access the private collection of events to get the number of add attempts.
 			var privateAccessor = new PrivateAccessor(_errorEventAggregator);
-			var errorEvents = privateAccessor.GetField("_errorEvents") as IResizableCappedCollection<ErrorEventWireModel>;
+			var errorEvents = privateAccessor.GetField("_errorEvents") as ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>;
 			if (errorEvents == null) throw new ArgumentNullException(nameof(errorEvents));
 			var actualAddAttempts = errorEvents.GetAddAttemptsCount();
 
@@ -410,7 +410,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Access the private collection of events to get the number of add attempts.
 			var privateAccessor = new PrivateAccessor(_errorEventAggregator);
-			var errorEvents = privateAccessor.GetField("_errorEvents") as IResizableCappedCollection<ErrorEventWireModel>;
+			var errorEvents = privateAccessor.GetField("_errorEvents") as ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>;
 			if (errorEvents == null) throw new ArgumentNullException(nameof(errorEvents));
 			var actualAddAttempts = errorEvents.GetAddAttemptsCount();
 

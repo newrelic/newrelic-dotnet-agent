@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.WireModels
 	{
 		// See spec for details on these fields: https://source.datanerd.us/agents/agent-specs/blob/master/Transaction-Trace-LEGACY.md
 		[JsonArrayIndex(Index = 0)]
-		[DateTimeSerializesAsUnixTime]
+		[DateTimeSerializesAsUnixTimeMilliseconds]
 		public virtual DateTime StartTime { get; }
 
 		[JsonArrayIndex(Index = 1)]
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.WireModels
 	public class TransactionTraceData
 	{
 		[JsonArrayIndex(Index = 0)]
-		[DateTimeSerializesAsUnixTime]
+		[DateTimeSerializesAsUnixTimeMilliseconds]
 		public virtual DateTime StartTime { get; }
 
 		[JsonArrayIndex(Index = 1)]

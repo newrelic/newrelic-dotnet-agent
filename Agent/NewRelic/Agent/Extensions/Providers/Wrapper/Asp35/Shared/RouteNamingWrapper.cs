@@ -36,7 +36,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 				if (url == null)
 					return;
 
-				transaction.SetWebTransactionName(WebTransactionType.ASP, url, 4);
+				transaction.SetWebTransactionName(WebTransactionType.ASP, url, TransactionNamePriority.Route);
 			});
 		}
 	}

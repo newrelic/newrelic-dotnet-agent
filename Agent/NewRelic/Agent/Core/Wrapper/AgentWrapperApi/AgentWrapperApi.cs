@@ -199,22 +199,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		#endregion Transaction management
 
-		#region Transaction Mutation
-		
-		[NotNull]
-		private static string GetTransactionName([NotNull] string path)
-		{
-			if (path.StartsWith("/"))
-				path = path.Substring(1);
-
-			if (path == string.Empty)
-				path = "Root";
-
-			return path;
-		}
-		
-		#endregion Transaction Mutation
-
 		#region Transaction segment managements
 
 		public ISegment CastAsSegment(object segment)
@@ -303,7 +287,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			if (_configurationService.Configuration.DistributedTracingEnabled)
 			{
-				CurrentTransaction.AcceptDistributedTracePayload(headers, transportType);
+				foreach (var header in headers)
+				{
+					if (header.Key.Equals("newrelic", StringComparison.OrdinalIgnoreCase))
+					{
+						var distributedTraceHeaders = new Dictionary<string, string>();
+						distributedTraceHeaders.Add(header.Key, header.Value);
+
+						CurrentTransaction.AcceptDistributedTracePayload(distributedTraceHeaders, transportType);
+						break;
+					}
+				}
 			}
 			else
 			{
@@ -555,7 +549,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 				if (transaction.CandidateTransactionName.CurrentTransactionName.IsWeb && transaction.TransactionMetadata.HttpResponseStatusCode >= 400)
 				{
-					SetWebTransactionName(WebTransactionType.StatusCode, $"{transaction.TransactionMetadata.HttpResponseStatusCode}", 2);
+					SetWebTransactionName(WebTransactionType.StatusCode, $"{transaction.TransactionMetadata.HttpResponseStatusCode}", TransactionNamePriority.StatusCode);
 				}
 
 				agentWrapperApi.EndTransaction(transaction);
@@ -587,6 +581,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				return new TypedSegment<CustomSegmentData>(transaction.GetTransactionSegmentState(), methodCallData, new CustomSegmentData(segmentName));
 			}
 
+			public ISegment StartRabbitMQSegmentAndCreateDistributedTracePayload(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, Dictionary<string, object> headers)
+			{
+				var segment = StartMessageBrokerSegment(methodCall, destinationType, operation, brokerVendorName, destinationName);
+
+				if (!agentWrapperApi.Configuration.DistributedTracingEnabled)
+				{
+					return segment;
+				}
+
+				var distributedTracePayload = CreateDistributedTracePayload(segment);
+				foreach (var pair in distributedTracePayload)
+				{
+					headers.Add(pair.Key, pair.Value);
+				}
+
+				return segment;
+			}
+
 			public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
 			{
 				if (transaction.Ignored)
@@ -597,6 +609,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				var action = AgentWrapperApi.AgentWrapperApiEnumToMetricNamesEnum(operation);
 				var destType = AgentWrapperApi.AgentWrapperApiEnumToMetricNamesEnum(destinationType);
 				var methodCallData = GetMethodCallData(methodCall);
+
 				return new TypedSegment<MessageBrokerSegmentData>(transaction.GetTransactionSegmentState(), methodCallData,
 					new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action));
 			}
@@ -873,7 +886,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				End();
 			}
 
-			public void SetWebTransactionName(WebTransactionType type, string name, int priority = 1)
+			public void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 				var transactionName = new WebTransactionName(Enum.GetName(typeof(WebTransactionType), type), name);
 				transaction.CandidateTransactionName.TrySet(transactionName, priority);
@@ -881,24 +894,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public void SetWebTransactionNameFromPath(WebTransactionType type, string path)
 			{
-				var cleanedPath = GetTransactionName(path);
+				var cleanedPath = UriHelpers.GetTransactionNameFromPath(path);
 				var transactionName = new UriTransactionName(cleanedPath);
-				transaction.CandidateTransactionName.TrySet(transactionName, 1);
+				transaction.CandidateTransactionName.TrySet(transactionName, TransactionNamePriority.Uri);
 			}
 
-			public void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, int priority = 1)
+			public void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 				var transactionName = new MessageBrokerTransactionName(destinationType.ToString(), brokerVendorName, destination);
 				transaction.CandidateTransactionName.TrySet(transactionName, priority);
 			}
 
-			public void SetOtherTransactionName(string category, string name, int priority = 1)
+			public void SetOtherTransactionName(string category, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 				var transactionName = new OtherTransactionName(category, name);
 				transaction.CandidateTransactionName.TrySet(transactionName, priority);
 			}
 
-			public void SetCustomTransactionName(string name, int priority = 1)
+			public void SetCustomTransactionName(string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 				// Note: In our public docs to tells users that they must prefix their metric names with "Custom/", but there's no mechanism that actually enforces this restriction, so there's no way to know whether it'll be there or not. For consistency, we'll just strip off "Custom/" if there's at all and then we know it's consistently not there.
 				if (name.StartsWith("Custom/"))
@@ -1052,6 +1065,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				return this;
 			}
 
+			public ISegment StartRabbitMQSegmentAndCreateDistributedTracePayload(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName, Dictionary<string, object> headers)
+			{
+#if DEBUG
+				Log.Finest("Skipping StartRabbitMQSegmentAndCreateDistributedTracePayload outside of a transaction");
+#endif
+				return this;
+			}
+
 			public ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName)
 			{
 #if DEBUG
@@ -1147,7 +1168,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			}
 
-			public void SetWebTransactionName(WebTransactionType type, string name, int priority = 1)
+			public void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 
 			}
@@ -1157,17 +1178,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			}
 
-			public void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, int priority = 1)
+			public void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 
 			}
 
-			public void SetOtherTransactionName(string category, string name, int priority = 1)
+			public void SetOtherTransactionName(string category, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 
 			}
 
-			public void SetCustomTransactionName(string name, int priority = 1)
+			public void SetCustomTransactionName(string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
 
 			}

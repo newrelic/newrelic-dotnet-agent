@@ -31,7 +31,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
 			var transactionName = CreateTransactionName(actionDescriptor);
 
-			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, 6);
+			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
 			//Framework uses ControllerType.Action for these metrics & transactions. WebApi is Controller.Action for both
 			//Taking opinioned stance to do ControllerType.MethodName for segments. Controller/Action for transactions

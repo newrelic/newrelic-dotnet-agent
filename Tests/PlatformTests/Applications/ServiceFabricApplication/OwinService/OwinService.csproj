@@ -113,6 +113,12 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\AgentLogHelper\AgentLogHelper.csproj">
+      <Project>{D811FFB5-2B9B-4D1B-B2F6-5C2557BE0A6B}</Project>
+      <Name>AgentLogHelper</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

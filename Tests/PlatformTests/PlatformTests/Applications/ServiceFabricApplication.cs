@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management.Automation;
-using System.Management.Automation.Runspaces;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using NewRelic.Agent.IntegrationTestHelpers;
 
@@ -15,41 +10,6 @@ namespace PlatformTests.Applications
 {
 	public class ServiceFabricApplication : BaseApplication
 	{
-		public String MsbuildPath
-		{
-			get
-			{
-				var path = Environment.GetEnvironmentVariable("MsBuildPath");
-				if (path != null)
-				{
-					return path;
-				}
-
-				if (File.Exists(@"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\msbuild.exe"))
-				{
-					return @"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\msbuild.exe";
-				}
-
-				if (File.Exists(@"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MsBuild.exe"))
-				{
-					return @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MsBuild.exe";
-				}
-				
-				throw new Exception("Can not locate MsBuild.exe .");
-			}
-			
-		}
-			
-
-		public String[] NugetSources { get; } =
-		{
-			Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..\..\Build\BuildArtifacts\NugetAgent\")),
-			"http://win-nuget-repository.pdx.vm.datanerd.us:81/NuGet/Default",
-			"https://api.nuget.org/v3/index.json"
-		};
-
-		public String NugetPath { get; } = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..\..\Build\Tools\nuget.exe")); 
-
 		public String ApplicationRootDirectory { get; }
 		 
 		public String ApplicationPackagePath { get; }
@@ -68,6 +28,13 @@ namespace PlatformTests.Applications
 			ApplicationPackagePath = Path.Combine(ApplicationRootDirectory, $@"{ApplicationName}\pkg\{SolutionConfiguration}");
 		}
 
+		public override string[] NugetSources { get; } =
+		{
+			Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),
+				@"..\..\..\..\..\Build\BuildArtifacts\NugetAgent\")),
+			"http://win-nuget-repository.pdx.vm.datanerd.us:81/NuGet/Default",
+			"https://api.nuget.org/v3/index.json"
+		};
 
 		public override void InstallAgent()
 		{
@@ -87,7 +54,6 @@ namespace PlatformTests.Applications
 
 		private string SearchForNewestNugetVersion(string nugetSource)
 		{
-
 			List<string> packages = new List<string>();
 
 			foreach (var file in Directory.GetFiles(nugetSource))
@@ -100,7 +66,6 @@ namespace PlatformTests.Applications
 
 			return $@"{parts[parts.Length - 3]}.{parts[parts.Length - 2]}.{parts[parts.Length - 1]}";
 		}
-
 
 		private void UpdatePackageReference(string packageName, string version)
 		{
@@ -136,22 +101,15 @@ namespace PlatformTests.Applications
 			{
 				InvokeAnExecutable(NugetPath, arguments, ApplicationRootDirectory);
 			}
-			catch
+			catch (Exception ex)
 			{
-				throw new Exception($@"There were errors while restoring nuget packages for {solutionFile}");
+				throw new Exception($@"There were errors while restoring nuget packages for {solutionFile}: {ex.Message}");
 			}
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] Nuget packages restored.");
-
-
 		}
 
-		public override void Build()
-		{
-			// to be implemented
-		}
-
-		public override void BuildAndPackage()
+		private void BuildAndPackage()
 		{
 			TestLogger?.WriteLine($@"[{DateTime.Now}] Building and packaging the test application.");
 
@@ -167,11 +125,14 @@ namespace PlatformTests.Applications
 			}
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] Finished.");
-
 		}
 
-		public override void Deploy()
+		public override void BuildAndDeploy()
 		{
+			BuildAndPackage();
+
+			UpdateNewRelicConfig();
+
 			TryToInstallCertificate();
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] ... Deploying");
@@ -192,8 +153,7 @@ namespace PlatformTests.Applications
 
 		}
 
-
-		public override void Undeploy()
+		public override void StopTestApplicationService()
 		{
 			TestLogger?.WriteLine($@"[{DateTime.Now}] ... Undeploying");
 
@@ -210,7 +170,6 @@ namespace PlatformTests.Applications
 			}
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] ... Undeployed");
-
 		}
 
 		private void TryToInstallCertificate()
@@ -242,48 +201,7 @@ namespace PlatformTests.Applications
 		
 		}
 
-		private void InvokeAnExecutable(string executablePath, string arguments, string workingDirectory)
-		{
-			var startInfo = new ProcessStartInfo
-			{
-				Arguments = arguments,
-				FileName = executablePath,
-				UseShellExecute = false,
-				WorkingDirectory = workingDirectory,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true
-			};
-
-			Process process = Process.Start(startInfo);
-
-			if (process == null)
-			{
-				throw new Exception($@"[{DateTime.Now}] {executablePath} process failed to start.");
-			}
-
-			LogProcessOutput(process.StandardOutput);
-			LogProcessOutput(process.StandardError);
-
-			process.WaitForExit();
-
-			if (process.HasExited && process.ExitCode != 0)
-			{
-				throw new Exception("App server shutdown unexpectedly.");
-			}
-
-		}
-
-		private async void LogProcessOutput(TextReader reader)
-		{
-			string line;
-
-			while ((line = await reader.ReadLineAsync()) != null)
-			{
-				TestLogger?.WriteLine($@"[{DateTime.Now}] {line}");
-			}
-		}
-
-		public override void UpdateNewRelicConfig()
+		private void UpdateNewRelicConfig()
 		{
 			foreach (var serviceName in ServiceNames)
 			{

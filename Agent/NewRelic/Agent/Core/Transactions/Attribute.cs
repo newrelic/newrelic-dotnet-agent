@@ -56,15 +56,14 @@ namespace NewRelic.Agent.Core.Transactions
 				.ToArray());
 		}
 
-		/// <summary>
-		/// Dirac accepts Strings, Singles, Doubles, and bool.
-		/// </summary>
-		private Boolean CheckAttributeValueForAllowedType([NotNull] String key, [NotNull] Object value)
+		private bool CheckAttributeValueForAllowedType(string key, object value)
 		{
-			if (value is Single || value is Double || value is String || value is bool)
+			var type = value?.GetType();
+			var typeCode = Type.GetTypeCode(type);
+			if (typeCode == TypeCode.String || typeCode >= TypeCode.Boolean && typeCode <= TypeCode.Decimal && typeCode != TypeCode.Char)
 				return true;
 
-			Log.WarnFormat("Attribute at key {0} of type {1} not allowed.  Only String, Single, Double, bool types accepted as attributes.", key, value.GetType());
+			Log.WarnFormat("Attribute at key {0} of type {1} not allowed.  Only String, bool, and floating point and integral types are acceptable as attributes.", key, type?.ToString() ?? "null");
 			return false;
 		}
 
@@ -236,7 +235,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public static Attribute BuildTimeStampAttribute(DateTime startTime)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("timestamp", startTime.ToUnixTime(), AttributeClassification.Intrinsics, destinations);
+			return new Attribute("timestamp", startTime.ToUnixTimeMilliseconds(), AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]

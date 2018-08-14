@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.WireModels
 		/// The UTC timestamp indicating when the error occurred. 
 		/// </summary>
 		[JsonArrayIndex(Index = 0)]
-		[DateTimeSerializesAsUnixTime]
+		[DateTimeSerializesAsUnixTimeMilliseconds]
 		public virtual DateTime TimeStamp { get; }
 
 		/// <summary>

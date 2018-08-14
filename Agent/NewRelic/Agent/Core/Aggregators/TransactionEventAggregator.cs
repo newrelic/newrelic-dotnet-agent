@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		// Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
 		[NotNull]
-		private IResizableCappedCollection<TransactionEventWireModel> _transactionEvents = new ConcurrentPriorityQueue<TransactionEventWireModel>(0, new TransactionEventWireModel.PriorityTimestampComparer());
+		private IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> _transactionEvents = new ConcurrentPriorityQueue<PrioritizedNode< TransactionEventWireModel>>(0);
 
 		[NotNull]
 		private ConcurrentList<TransactionEventWireModel> _syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		protected override void Harvest()
 		{
 			// create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
-			var transactionEvents = _transactionEvents;
+			var transactionEvents = _transactionEvents.Where(node => node != null).Select(node => node.Data).ToList();
 			var syntheticsTransactionEvents = _syntheticsTransactionEvents;
 			var aggregatedEvents = transactionEvents.Union(syntheticsTransactionEvents).ToList();
 
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(uint transactionEventCollectionCapacity)
 		{
-			_transactionEvents = new ConcurrentPriorityQueue<TransactionEventWireModel>(transactionEventCollectionCapacity, new TransactionEventWireModel.PriorityTimestampComparer());
+			_transactionEvents = new ConcurrentPriorityQueue<PrioritizedNode<TransactionEventWireModel>>(transactionEventCollectionCapacity);
 			_syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
 		}
 
@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 			else
 			{
-				_transactionEvents.Add(transactionEvent);
+				_transactionEvents.Add(new PrioritizedNode<TransactionEventWireModel>(transactionEvent));
 			}
 		}
 
