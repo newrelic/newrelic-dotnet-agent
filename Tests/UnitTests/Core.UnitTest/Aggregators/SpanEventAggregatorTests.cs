@@ -208,6 +208,49 @@ namespace NewRelic.Agent.Core.Aggregators
 			Assert.That(sentEventCount, Is.EqualTo(eventCount));
 		}
 
+
+		[Test]
+		public void SpanEventAggregatorTests_MetricsAreCorrectAfterHarvestRetryIfSendResponseEquals(
+			[Values(DataTransportResponseStatus.ConnectionError,
+				DataTransportResponseStatus.ServerError,
+				DataTransportResponseStatus.CommunicationError,
+				DataTransportResponseStatus.RequestTimeout
+			)] DataTransportResponseStatus response)
+		{
+			const int eventCount = 2;
+			// Arrange
+			var firstTime = true;
+			var sentEventCount = int.MinValue;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
+				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
+				{
+					sentEventCount = events.Count();
+					var returnValue = (firstTime) ? response : DataTransportResponseStatus.RequestSuccessful;
+					firstTime = false;
+					return returnValue;
+				});
+
+			CollectSpanEvents(eventCount);
+
+			//this harvest's Send() will fail with the value in response variable
+			_harvestAction(); 
+
+			//EventsSent should not happen due to error
+			Mock.Assert(() => _agentHealthReporter.ReportSpanEventsSent(Arg.IsAny<int>()), Occurs.Never());
+
+			sentEventCount = int.MinValue; // reset
+
+			// Act
+			//this harvest's Send() will succeeed
+			_harvestAction();
+
+			Mock.Assert(() => _agentHealthReporter.ReportSpanEventCollected(eventCount));
+			Mock.Assert(() => _agentHealthReporter.ReportSpanEventsSent(eventCount));
+
+			// Assert
+			Assert.That(sentEventCount, Is.EqualTo(eventCount));
+		}
+
 		[Test]
 		public void SpanEventAggregatorTests_HalfOfTheEventsAreRetainedAfterHarvestIfResponseEqualsPostTooBigError()
 		{

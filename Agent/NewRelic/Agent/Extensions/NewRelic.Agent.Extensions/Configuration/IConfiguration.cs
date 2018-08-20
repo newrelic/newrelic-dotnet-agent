@@ -199,5 +199,7 @@ namespace NewRelic.Agent.Configuration
 		uint SpanEventsMaxSamplesStored { get; }
 
 		int? SamplingTargetPeriodInSeconds { get; }
+
+		bool PayloadSuccessMetricsEnabled { get; }
 	}
 }

@@ -78,6 +78,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		void ReportSpanEventCollected(int count);
 		void ReportSpanEventsSent(int count);
+
+		void CollectDistributedTraceSuccessMetrics();
 	}
 
 	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
@@ -99,6 +101,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 		[NotNull]
 		private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
 
+		private InterlockedCounter payloadCreateSuccessCounter;
+		private InterlockedCounter payloadAcceptSuccessCounter;
+
 		public AgentHealthReporter([NotNull] IMetricBuilder metricBuilder, [NotNull] IScheduler scheduler)
 		{
 			_metricBuilder = metricBuilder;
@@ -110,6 +115,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 			{
 				_agentHealthEventCounters[agentHealthEvent] = new InterlockedCounter();
 			}
+
+			payloadCreateSuccessCounter = new InterlockedCounter();
+			payloadAcceptSuccessCounter = new InterlockedCounter();
 		}
 
 		public override void Dispose()
@@ -126,8 +134,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 			}
 
 			foreach(var counter in _agentHealthEventCounters)
-			{
-				if ( counter.Value != null && counter.Value.Value > 0)
+			{ 
+				if (counter.Value != null && counter.Value.Value > 0)
 				{
 					var agentHealthEvent = counter.Key;
 					var timesOccured = counter.Value.Exchange(0);
@@ -233,7 +241,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 				_metricBuilder.TryBuildAgentHealthEventMetric(AgentHealthEvent.WrapperShutdown, wrapperName, method.Type.Name, method.MethodName)
 			};
 
-			foreach(var metric in metrics)
+			foreach (var metric in metrics)
 			{
 				TrySend(metric);
 			}
@@ -268,10 +276,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		#region DistributedTrace
 
-		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
-		public void ReportSupportabilityDistributedTraceAcceptPayloadSuccess() =>
-			TrySend(_metricBuilder.TryBuildAcceptPayloadSuccess);
-
+		/// <summary>Incremented when AcceptDistributedTracePayload was called successfully</summary>
+		public void ReportSupportabilityDistributedTraceAcceptPayloadSuccess()
+		{
+			payloadAcceptSuccessCounter.Increment();
+		}
 		/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
 		public void ReportSupportabilityDistributedTraceAcceptPayloadException() =>
 			TrySend(_metricBuilder.TryBuildAcceptPayloadException);
@@ -300,13 +309,41 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount() =>
 			TrySend(_metricBuilder.TryBuildAcceptPayloadIgnoredUntrustedAccount());
 
-		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
-		public void ReportSupportabilityDistributedTraceCreatePayloadSuccess() =>
-			TrySend(_metricBuilder.TryBuildCreatePayloadSuccess);
+		/// <summary>Incremented when CreateDistributedTracePayload was called successfully</summary>
+		public void ReportSupportabilityDistributedTraceCreatePayloadSuccess()
+		{ 
+			payloadCreateSuccessCounter.Increment();
+		}
 
 		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
 		public void ReportSupportabilityDistributedTraceCreatePayloadException() =>
 			TrySend(_metricBuilder.TryBuildCreatePayloadException);
+
+		/// <summary>Limits Collect calls to once per harvest per metric.</summary>
+		public void CollectDistributedTraceSuccessMetrics()
+		{
+			if(TryGetCount(payloadCreateSuccessCounter, out var createCount))
+			{
+				TrySend(_metricBuilder.TryBuildCreatePayloadSuccess(createCount));
+			}
+
+			if (TryGetCount(payloadAcceptSuccessCounter, out var acceptCount))
+			{
+				TrySend(_metricBuilder.TryBuildAcceptPayloadSuccess(acceptCount));
+			}
+
+			bool TryGetCount(InterlockedCounter counter, out int metricCount)
+			{
+				metricCount = 0;
+				if (counter.Value > 0)
+				{
+					metricCount = counter.Exchange(0);
+					return true;
+				}
+
+				return false;
+			}
+		}
 
 		#endregion DistributedTrace
 

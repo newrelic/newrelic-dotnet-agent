@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.AgentHealth;
+﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -10,6 +6,9 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -17,7 +16,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 	public interface IErrorEventAggregator
 	{
-		void Collect([NotNull] ErrorEventWireModel errorEventWireModel);
+		void Collect(ErrorEventWireModel errorEventWireModel);
 	}
 
 	/// <summary>
@@ -25,21 +24,17 @@ namespace NewRelic.Agent.Core.Aggregators
 	/// </summary>
 	public class ErrorEventAggregator : AbstractAggregator<ErrorEventWireModel>, IErrorEventAggregator
 	{
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
-		[NotNull]
 		private ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> _errorEvents = new ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>(0);
 
 		// Note that Synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they
 		// are never pushed out by non-Synthetics events.
-		[NotNull]
 		private ConcurrentList<ErrorEventWireModel> _syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
 
-		[NotNull]
-		private const Double ReservoirReductionSizeMultiplier = 0.5;
+		private const double ReservoirReductionSizeMultiplier = 0.5;
 
-		public ErrorEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+		public ErrorEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
@@ -69,7 +64,6 @@ namespace NewRelic.Agent.Core.Aggregators
 			if (aggregatedEvents.Count <= 0)
 				return;
 
-			_agentHealthReporter.ReportErrorEventsSent(aggregatedEvents.Count);
 			var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents);
 
 			HandleResponse(responseStatus, aggregatedEvents);
@@ -91,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
 
 		}
-		private void AddEventToCollection([NotNull] ErrorEventWireModel errorEvent)
+		private void AddEventToCollection(ErrorEventWireModel errorEvent)
 		{
 			if (errorEvent.IsSynthetics() && _syntheticsErrorEvents.Count < SyntheticsHeader.MaxEventCount)
 			{
@@ -103,12 +97,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private UInt32 GetReservoirSize()
+		private uint GetReservoirSize()
 		{
 			return _errorEvents.Size;
 		}
 
-		private void ReduceReservoirSize(UInt32 newSize)
+		private void ReduceReservoirSize(uint newSize)
 		{
 			if (newSize >= GetReservoirSize())
 				return;
@@ -116,7 +110,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_errorEvents.Resize(newSize);
 		}
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
+		private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<ErrorEventWireModel> errorEvents)
 		{
 			switch (responseStatus)
 			{
@@ -127,17 +121,19 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(errorEvents);
 					break;
 				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((UInt32)(errorEvents.Count() * ReservoirReductionSizeMultiplier));
+					ReduceReservoirSize((uint)(errorEvents.Count * ReservoirReductionSizeMultiplier));
 					RetainEvents(errorEvents);
 					break;
-				case DataTransportResponseStatus.OtherError:
 				case DataTransportResponseStatus.RequestSuccessful:
+					_agentHealthReporter.ReportErrorEventsSent(errorEvents.Count);
+					break;
+				case DataTransportResponseStatus.OtherError:
 				default:
 					break;
 			}
 		}
 
-		private void RetainEvents([NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
+		private void RetainEvents(IEnumerable<ErrorEventWireModel> errorEvents)
 		{
 			errorEvents = errorEvents.ToList();
 

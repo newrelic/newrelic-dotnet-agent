@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.AgentHealth;
+﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
 	public interface ICustomEventAggregator
 	{
-		void Collect([NotNull] CustomEventWireModel customEventWireModel);
+		void Collect(CustomEventWireModel customEventWireModel);
 	}
 
 	/// <summary>
@@ -22,16 +21,14 @@ namespace NewRelic.Agent.Core.Aggregators
 	/// </summary>
 	public class CustomEventAggregator : AbstractAggregator<CustomEventWireModel>, ICustomEventAggregator
 	{
-		[NotNull]
-		private const Double ReservoirReductionSizeMultiplier = 0.5;
+		private const double ReservoirReductionSizeMultiplier = 0.5;
 
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
 		// Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
 		private ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> _customEvents = new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(0);
 
-		public CustomEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+		public CustomEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
@@ -55,7 +52,6 @@ namespace NewRelic.Agent.Core.Aggregators
 			if (customEvents.Count <= 0)
 				return;
 
-			_agentHealthReporter.ReportCustomEventsSent(customEvents.Count);
 			var responseStatus = DataTransportService.Send(customEvents);
 
 			HandleResponse(responseStatus, customEvents);
@@ -69,12 +65,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			ResetCollections(_configuration.CustomEventsMaxSamplesStored);
 		}
 
-		private void ResetCollections(UInt32 customEventCollectionCapacity)
+		private void ResetCollections(uint customEventCollectionCapacity)
 		{
 			_customEvents = new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(customEventCollectionCapacity);
 		}
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<CustomEventWireModel> customEvents)
+		private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<CustomEventWireModel> customEvents)
 		{
 			switch (responseStatus)
 			{
@@ -85,18 +81,20 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(customEvents);
 					break;
 				case DataTransportResponseStatus.PostTooBigError:
-					var newSize = (uint)(customEvents.Count() * ReservoirReductionSizeMultiplier);
+					var newSize = (uint)(customEvents.Count * ReservoirReductionSizeMultiplier);
 					ReduceReservoirSize(newSize);
 					RetainEvents(customEvents);
 					break;
-				case DataTransportResponseStatus.OtherError:
 				case DataTransportResponseStatus.RequestSuccessful:
+					_agentHealthReporter.ReportCustomEventsSent(customEvents.Count);
+					break;
+				case DataTransportResponseStatus.OtherError:
 				default:
 					break;
 			}
 		}
 
-		private void RetainEvents([NotNull] IEnumerable<CustomEventWireModel> customEvents)
+		private void RetainEvents(IEnumerable<CustomEventWireModel> customEvents)
 		{
 			customEvents = customEvents.ToList();
 			_agentHealthReporter.ReportCustomEventsRecollected(customEvents.Count());
@@ -110,7 +108,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private void ReduceReservoirSize(UInt32 newSize)
+		private void ReduceReservoirSize(uint newSize)
 		{
 			if (newSize >= _customEvents.Size)
 				return;

@@ -1,33 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.AgentHealth;
+﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
 	public interface IErrorTraceAggregator
 	{
-		void Collect([NotNull] ErrorTraceWireModel errorTraceWireModel);
+		void Collect(ErrorTraceWireModel errorTraceWireModel);
 	}
 
 	public class ErrorTraceAggregator : AbstractAggregator<ErrorTraceWireModel>, IErrorTraceAggregator
 	{
-		[NotNull]
 		private ICollection<ErrorTraceWireModel> _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
 
-		[NotNull]
-		private uint _errorTraceCollectionMaximum = 0;
-		[NotNull]
+		private uint _errorTraceCollectionMaximum;
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
-		public ErrorTraceAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+		public ErrorTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
@@ -48,7 +43,6 @@ namespace NewRelic.Agent.Core.Aggregators
 			if (errorTraceWireModels.Count <= 0)
 				return;
 
-			_agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
 			var responseStatus = DataTransportService.Send(errorTraceWireModels);
 
 			HandleResponse(responseStatus, errorTraceWireModels);
@@ -77,7 +71,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_errorTraceWireModels.Add(errorTraceWireModel);
 		}
 
-		private void Retain([NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
+		private void Retain(IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
 		{
 			errorTraceWireModels = errorTraceWireModels.ToList();
 			_agentHealthReporter.ReportErrorTracesRecollected(errorTraceWireModels.Count());
@@ -104,7 +98,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
+		private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<ErrorTraceWireModel> errorTraceWireModels)
 		{
 			switch (responseStatus)
 			{
@@ -114,9 +108,11 @@ namespace NewRelic.Agent.Core.Aggregators
 				case DataTransportResponseStatus.ConnectionError:
 					Retain(errorTraceWireModels);
 					break;
+				case DataTransportResponseStatus.RequestSuccessful:
+					_agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
+					break;
 				case DataTransportResponseStatus.PostTooBigError:
 				case DataTransportResponseStatus.OtherError:
-				case DataTransportResponseStatus.RequestSuccessful:
 				default:
 					break;
 			}

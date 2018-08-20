@@ -73,7 +73,6 @@ namespace NewRelic.Agent.Core.Aggregators
 			if (wireModels.Count <= 0)
 				return;
 
-			_agentHealthReporter.ReportSpanEventsSent(wireModels.Count);
 			var responseStatus = DataTransportService.Send(eventHarvestData, wireModels);
 
 			HandleResponse(responseStatus, wireModels);
@@ -107,6 +106,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(spanEvents);
 					break;
 				case DataTransportResponseStatus.RequestSuccessful:
+					_agentHealthReporter.ReportSpanEventsSent(spanEvents.Count);
+					break;
 				case DataTransportResponseStatus.OtherError:
 				default:
 					break;

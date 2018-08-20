@@ -213,13 +213,13 @@
 					</xs:complexType>
 				</xs:element>
 
-                <xs:element name="securityPoliciesToken" minOccurs="0" maxOccurs="1" type="xs:string">
-                    <xs:annotation>
-                        <xs:documentation>
-                            Optional security policies token.
-                        </xs:documentation>
-                    </xs:annotation>
-                </xs:element>
+								<xs:element name="securityPoliciesToken" minOccurs="0" maxOccurs="1" type="xs:string">
+										<xs:annotation>
+												<xs:documentation>
+														Optional security policies token.
+												</xs:documentation>
+										</xs:annotation>
+								</xs:element>
 
 				<xs:element name="log" minOccurs="0" maxOccurs="1">
 					<xs:complexType>
@@ -529,23 +529,23 @@
 					</xs:complexType>
 				</xs:element>
 
-        <xs:element name="customParameters" minOccurs="0" maxOccurs="1">
-          <xs:annotation>
-            <xs:documentation>
-              The customParameters element enables user attribute capturing.
-            </xs:documentation>
-          </xs:annotation>
+				<xs:element name="customParameters" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>
+							The customParameters element enables user attribute capturing.
+						</xs:documentation>
+					</xs:annotation>
 
-          <xs:complexType>
-            <xs:attribute name="enabled" type="xs:boolean" use="optional">
-              <xs:annotation>
-                <xs:documentation>
-                  Turns on/off custom parameter (user attribute) capturing.	Default is true, but disabled in High Security Mode.
-                </xs:documentation>
-              </xs:annotation>
-            </xs:attribute>
-          </xs:complexType>
-        </xs:element>
+					<xs:complexType>
+						<xs:attribute name="enabled" type="xs:boolean" use="optional">
+							<xs:annotation>
+								<xs:documentation>
+									Turns on/off custom parameter (user attribute) capturing.	Default is true, but disabled in High Security Mode.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
 				
 				<xs:element name="analyticsEvents" minOccurs="0" maxOccurs="1">
 					<xs:annotation>
@@ -959,6 +959,13 @@
 							<xs:annotation>
 								<xs:documentation>
 									It is disabled by default. Set this to true to turn it on.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="enableSuccessMetrics" type="xs:boolean" default="true">
+							<xs:annotation>
+								<xs:documentation>
+									Set this to false to disable the payload accept/create success supportability metrics. It is enabled by default.
 								</xs:documentation>
 							</xs:annotation>
 						</xs:attribute>
@@ -1385,64 +1392,64 @@
 							<xs:attribute name="detectAws" type="xs:boolean" default="true"  use="optional">
 								<xs:annotation>
 									<xs:documentation>
-                    This attribute controls whether to poll the AWS metadata endpoint (optional). The default is true.
-                  </xs:documentation>
+										This attribute controls whether to poll the AWS metadata endpoint (optional). The default is true.
+									</xs:documentation>
 								</xs:annotation>
 							</xs:attribute>
 							
 							<xs:attribute name="detectAzure" type="xs:boolean" default="true"  use="optional">
 								<xs:annotation>
 									<xs:documentation>
-                    This attribute controls whether to poll the Azure metadata endpoint (optional). The default is true.
-                  </xs:documentation>
-                </xs:annotation>
-              </xs:attribute>
+										This attribute controls whether to poll the Azure metadata endpoint (optional). The default is true.
+									</xs:documentation>
+								</xs:annotation>
+							</xs:attribute>
 
-              <xs:attribute name="detectGcp" type="xs:boolean" default="true"  use="optional">
-                <xs:annotation>
-                  <xs:documentation>
-                    This attribute controls whether to poll the Google Cloud Platform metadata endpoint (optional). The default is true.
-                  </xs:documentation>
+							<xs:attribute name="detectGcp" type="xs:boolean" default="true"  use="optional">
+								<xs:annotation>
+									<xs:documentation>
+										This attribute controls whether to poll the Google Cloud Platform metadata endpoint (optional). The default is true.
+									</xs:documentation>
 								</xs:annotation>
 							</xs:attribute>
 
 							<xs:attribute name="detectPcf" type="xs:boolean" default="true"  use="optional">
 								<xs:annotation>
 									<xs:documentation>
-                    This attribute controls whether to look for Pivotal Cloud Foundry environment variables (optional). The default is true.
-                  </xs:documentation>
+										This attribute controls whether to look for Pivotal Cloud Foundry environment variables (optional). The default is true.
+									</xs:documentation>
 								</xs:annotation>
 							</xs:attribute>
 
 							<xs:attribute name="detectDocker" type="xs:boolean" default="true"  use="optional">
 								<xs:annotation>
 									<xs:documentation>
-                    This attribute controls whether to attempt reading the proc/self/cgroup file for Docker (optional). The default is true.
-                  </xs:documentation>
+										This attribute controls whether to attempt reading the proc/self/cgroup file for Docker (optional). The default is true.
+									</xs:documentation>
 								</xs:annotation>
 							</xs:attribute>
 
 							<xs:attribute name="logicalProcessors" type="xs:int" use="optional">
 								<xs:annotation>
 									<xs:documentation>
-                    The value of this attribute is the total number of hyper-threaded execution contexts available (optional).
-                  </xs:documentation>
+										The value of this attribute is the total number of hyper-threaded execution contexts available (optional).
+									</xs:documentation>
 								</xs:annotation>
 							</xs:attribute>
 
 							<xs:attribute name="totalRamMib" type="xs:int" use="optional">
 								<xs:annotation>
 									<xs:documentation>
-                    The value of this attribute represents the total amount of memory available to the host, not the process, in mebibytes (1024 squared or 1,048,576 bytes)  (optional).
-                  </xs:documentation>
+										The value of this attribute represents the total amount of memory available to the host, not the process, in mebibytes (1024 squared or 1,048,576 bytes)  (optional).
+									</xs:documentation>
 								</xs:annotation>
 							</xs:attribute>
 
 							<xs:attribute name="billingHost" type="xs:string" use="optional">
 								<xs:annotation>
 									<xs:documentation>
-                    The value of this attribute is the server name you have configured (optional).  This may be differnet from the actual server hostname.
-                  </xs:documentation>
+										The value of this attribute is the server name you have configured (optional).  This may be differnet from the actual server hostname.
+									</xs:documentation>
 								</xs:annotation>
 							</xs:attribute>
 						</xs:complexType>

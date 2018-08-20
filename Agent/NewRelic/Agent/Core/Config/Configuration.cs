@@ -2612,9 +2612,12 @@ namespace NewRelic.Agent.Core.Config
         
         private bool enabledField;
         
+        private bool enableSuccessMetricsField;
+        
         public configurationDistributedTracing()
         {
             this.enabledField = false;
+            this.enableSuccessMetricsField = true;
         }
         
         [System.ComponentModel.DefaultValueAttribute(false)]
@@ -2627,6 +2630,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.enabledField = value;
+            }
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enableSuccessMetrics
+        {
+            get
+            {
+                return this.enableSuccessMetricsField;
+            }
+            set
+            {
+                this.enableSuccessMetricsField = value;
             }
         }
     }

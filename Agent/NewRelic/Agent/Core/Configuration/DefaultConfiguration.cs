@@ -785,6 +785,8 @@ namespace NewRelic.Agent.Core.Configuration
 		public uint SpanEventsMaxSamplesStored => DefaultSpanEventsMaxSamplesStored;
 		public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
+		public bool PayloadSuccessMetricsEnabled => _localConfiguration.distributedTracing.enableSuccessMetrics;
+
 		#endregion Distributed Tracing
 
 

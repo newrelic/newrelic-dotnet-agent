@@ -701,14 +701,13 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			private readonly MetricDataWireModel _callCountOfOne = MetricDataWireModel.BuildCountData();
 
-			private MetricWireModel TryBuildSupportabilityDistributedTraceMetric(string proposedName) =>
-				BuildMetric(_metricNameService, proposedName, null, _callCountOfOne);
+			private MetricWireModel TryBuildSupportabilityDistributedTraceMetric(string proposedName, int count = 1) =>
+				BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
 
-			/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
-			public MetricWireModel TryBuildAcceptPayloadSuccess => 
-				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadSuccess);
+			/// <summary>Created during harvest if one or more payloads were accepted.</summary>
+			public MetricWireModel TryBuildAcceptPayloadSuccess(int count) => 
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadSuccess, count);
 
 			/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
 			public MetricWireModel TryBuildAcceptPayloadException => 
@@ -738,9 +737,9 @@ namespace NewRelic.Agent.Core.WireModels
 			public MetricWireModel TryBuildAcceptPayloadIgnoredUntrustedAccount() =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount);
 
-			/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
-			public MetricWireModel TryBuildCreatePayloadSuccess => 
-				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceCreatePayloadSuccess);
+			/// <summary>Created during harvest when one or more payloads are created.</summary>
+			public MetricWireModel TryBuildCreatePayloadSuccess(int count) => 
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceCreatePayloadSuccess, count);
 
 			/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
 			public MetricWireModel TryBuildCreatePayloadException => 

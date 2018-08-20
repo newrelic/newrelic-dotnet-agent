@@ -331,15 +331,22 @@ namespace NewRelic.Agent.Core.WireModels
 			return new List<TestCaseData>()
 			{
 				new TestCaseData( "TryBuildAcceptPayloadException", "Supportability/DistributedTrace/AcceptPayload/Exception" ),
-				new TestCaseData( "TryBuildAcceptPayloadSuccess", "Supportability/DistributedTrace/AcceptPayload/Success"),
 				new TestCaseData( "TryBuildAcceptPayloadException", "Supportability/DistributedTrace/AcceptPayload/Exception"),
 				new TestCaseData( "TryBuildAcceptPayloadParseException", "Supportability/DistributedTrace/AcceptPayload/ParseException"),
 				new TestCaseData( "TryBuildAcceptPayloadIgnoredCreateBeforeAccept", "Supportability/DistributedTrace/AcceptPayload/Ignored/CreateBeforeAccept"),
 				new TestCaseData( "TryBuildAcceptPayloadIgnoredMultiple", "Supportability/DistributedTrace/AcceptPayload/Ignored/Multiple"),
 				new TestCaseData( "TryBuildAcceptPayloadIgnoredMajorVersion", "Supportability/DistributedTrace/AcceptPayload/Ignored/MajorVersion"),
 				new TestCaseData( "TryBuildAcceptPayloadIgnoredNull", "Supportability/DistributedTrace/AcceptPayload/Ignored/Null"),
-				new TestCaseData( "TryBuildCreatePayloadSuccess", "Supportability/DistributedTrace/CreatePayload/Success"),
 				new TestCaseData( "TryBuildCreatePayloadException", "Supportability/DistributedTrace/CreatePayload/Exception"),
+			};
+		}
+
+		private static List<TestCaseData> GetSupportabilityDistributedTraceTestData_SuccessMetric()
+		{
+			return new List<TestCaseData>()
+			{
+				new TestCaseData( "TryBuildAcceptPayloadSuccess", "Supportability/DistributedTrace/AcceptPayload/Success"),
+				new TestCaseData( "TryBuildCreatePayloadSuccess", "Supportability/DistributedTrace/CreatePayload/Success"),
 			};
 		}
 
@@ -365,6 +372,30 @@ namespace NewRelic.Agent.Core.WireModels
 			Assert.That(wireModel.Data.Value4, Is.EqualTo(0));
 			Assert.That(wireModel.Data.Value5, Is.EqualTo(0));
 		}
+
+		[Test]
+		[TestCaseSource(nameof(GetSupportabilityDistributedTraceTestData_SuccessMetric))]
+		public void MetricWireModelTests_MetricBuilder_SupportabilityDistributedTracing_SuccessMetrics(string methodName, string name)
+		{
+			var methodInfo = _metricBuilder.GetType().GetMethod(methodName);
+			Assert.That(methodInfo, Is.Not.Null);
+
+			var obj = methodInfo.Invoke(_metricBuilder, new object[]{ 2 });
+			Assert.That(obj, Is.Not.Null);
+			Assert.That(obj, Is.InstanceOf(typeof(MetricWireModel)));
+
+			var wireModel = obj as MetricWireModel;
+			Assert.That(wireModel, Is.Not.Null);
+
+			Assert.That(wireModel.MetricName.Name, Is.EqualTo(name));
+			Assert.That(wireModel.Data.Value0, Is.EqualTo(2));
+			Assert.That(wireModel.Data.Value1, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value2, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value3, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value4, Is.EqualTo(0));
+			Assert.That(wireModel.Data.Value5, Is.EqualTo(0));
+		}
+
 
 		[Test]
 		public void MetricWireModelTests_MetricBuilder_SupportabilityDistributed_TryBuildAcceptPayloadIgnoredUntrustedAccount()

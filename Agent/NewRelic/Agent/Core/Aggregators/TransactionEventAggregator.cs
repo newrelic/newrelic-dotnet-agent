@@ -1,24 +1,20 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.AgentHealth;
+﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using NewRelic.Agent.Core.DistributedTracing;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
 	public interface ITransactionEventAggregator
 	{
-		void Collect([NotNull] TransactionEventWireModel transactionEventWireModel);
+		void Collect(TransactionEventWireModel transactionEventWireModel);
 		IAdaptiveSampler AdaptiveSampler { get; }
 	}
 
@@ -27,23 +23,18 @@ namespace NewRelic.Agent.Core.Aggregators
 	/// </summary>
 	public class TransactionEventAggregator : AbstractAggregator<TransactionEventWireModel>, ITransactionEventAggregator
 	{
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
-		// Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
-		[NotNull]
+		// Note that synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
 		private IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> _transactionEvents = new ConcurrentPriorityQueue<PrioritizedNode< TransactionEventWireModel>>(0);
 
-		[NotNull]
 		private ConcurrentList<TransactionEventWireModel> _syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
 
-		[NotNull]
-		private const Double ReservoirReductionSizeMultiplier = 0.5;
+		private const double ReservoirReductionSizeMultiplier = 0.5;
 
-		[NotNull]
 		public IAdaptiveSampler AdaptiveSampler { get; }
 
-		public TransactionEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter, IAdaptiveSampler adaptiveSampler)
+		public TransactionEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter, IAdaptiveSampler adaptiveSampler)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
@@ -70,7 +61,6 @@ namespace NewRelic.Agent.Core.Aggregators
 			if (aggregatedEvents.Count <= 0)
 				return;
 
-			_agentHealthReporter.ReportTransactionEventsSent(aggregatedEvents.Count);
 			var responseStatus = DataTransportService.Send(aggregatedEvents);
 
 			AdaptiveSampler.EndOfSamplingInterval();
@@ -92,7 +82,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
 		}
 
-		private void AddEventToCollection([NotNull] TransactionEventWireModel transactionEvent)
+		private void AddEventToCollection(TransactionEventWireModel transactionEvent)
 		{
 			if (transactionEvent.IsSynthetics() && _syntheticsTransactionEvents.Count < SyntheticsHeader.MaxEventCount)
 			{
@@ -104,7 +94,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<TransactionEventWireModel> transactionEvents)
+		private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<TransactionEventWireModel> transactionEvents)
 		{
 			switch (responseStatus)
 			{
@@ -115,17 +105,19 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(transactionEvents);
 					break;
 				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((UInt32)(transactionEvents.Count() * ReservoirReductionSizeMultiplier));
+					ReduceReservoirSize((uint)(transactionEvents.Count * ReservoirReductionSizeMultiplier));
 					RetainEvents(transactionEvents);
 					break;
-				case DataTransportResponseStatus.OtherError:
 				case DataTransportResponseStatus.RequestSuccessful:
+					_agentHealthReporter.ReportTransactionEventsSent(transactionEvents.Count);
+					break;
+				case DataTransportResponseStatus.OtherError:
 				default:
 					break;
 			}
 		}
 
-		private void RetainEvents([NotNull] IEnumerable<TransactionEventWireModel> transactionEvents)
+		private void RetainEvents(IEnumerable<TransactionEventWireModel> transactionEvents)
 		{
 			transactionEvents = transactionEvents.ToList();
 			_agentHealthReporter.ReportTransactionEventsRecollected(transactionEvents.Count());
@@ -139,12 +131,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private UInt32 GetReservoirSize()
+		private uint GetReservoirSize()
 		{
 			return _transactionEvents.Size;
 		}
 
-		private void ReduceReservoirSize(UInt32 newSize)
+		private void ReduceReservoirSize(uint newSize)
 		{
 			if (newSize >= GetReservoirSize())
 				return;

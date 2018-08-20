@@ -98,7 +98,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			transactionMetadata.HasOutgoingDistributedTracePayload = true;
 
-			_agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess();
+			if (_configurationService.Configuration.PayloadSuccessMetricsEnabled)
+			{
+				_agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess();
+			}
 
 			return new Dictionary<string, string>
 			{
@@ -146,7 +149,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				return null;
 			}
 
-			_agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess();
+			if (_configurationService.Configuration.PayloadSuccessMetricsEnabled)
+			{
+				_agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess();
+			}
+
 			return payload;
 		}
 

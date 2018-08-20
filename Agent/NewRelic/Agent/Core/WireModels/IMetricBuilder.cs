@@ -62,7 +62,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildAgentTimingMetric(string suffix, TimeSpan time);
 
 		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
-		MetricWireModel TryBuildAcceptPayloadSuccess { get; }
+		MetricWireModel TryBuildAcceptPayloadSuccess(int count);
 
 		/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
 		MetricWireModel TryBuildAcceptPayloadException { get; }
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildAcceptPayloadIgnoredUntrustedAccount();
 
 		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
-		MetricWireModel TryBuildCreatePayloadSuccess { get; }
+		MetricWireModel TryBuildCreatePayloadSuccess(int count);
 
 		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
 		MetricWireModel TryBuildCreatePayloadException { get; }
