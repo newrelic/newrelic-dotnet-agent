@@ -77,7 +77,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual(false, errorEvent.IsSynthetics()),
-				() => Assert.AreEqual(5, agentAttributes.Length),
+				() => Assert.AreEqual(6, agentAttributes.Length),
 				() => Assert.AreEqual(7, intrinsicAttributes.Length),
 				() => Assert.AreEqual(0, userAttributes.Length),
 
@@ -86,6 +86,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.Contains("original_url", agentAttributes),
 				() => Assert.Contains("request.uri", agentAttributes),
 				() => Assert.Contains("request.referer", agentAttributes),
+				() => Assert.Contains("host.displayName", agentAttributes),
 
 				() => Assert.Contains("duration", intrinsicAttributes),
 				() => Assert.Contains("error.class", intrinsicAttributes),
@@ -120,7 +121,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual(false, errorEvent.IsSynthetics()),
-				() => Assert.AreEqual(5, agentAttributes.Length),
+				() => Assert.AreEqual(6, agentAttributes.Length),
 				() => Assert.AreEqual(7, intrinsicAttributes.Length),
 				() => Assert.AreEqual(0, userAttributes.Length),
 
@@ -129,6 +130,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.Contains("original_url", agentAttributes),
 				() => Assert.Contains("request.uri", agentAttributes),
 				() => Assert.Contains("request.referer", agentAttributes),
+				() => Assert.Contains("host.displayName", agentAttributes),
 
 				() => Assert.Contains("duration", intrinsicAttributes),
 				() => Assert.Contains("error.class", intrinsicAttributes),
@@ -171,7 +173,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(true, errorEvent.IsSynthetics()),
 
-				() => Assert.AreEqual(5, agentAttributes.Length),
+				() => Assert.AreEqual(6, agentAttributes.Length),
 				() => Assert.AreEqual(16, intrinsicAttributes.Length),
 				() => Assert.AreEqual(1, userAttributes.Length),
 
@@ -180,6 +182,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.Contains("original_url", agentAttributes),
 				() => Assert.Contains("request.uri", agentAttributes),
 				() => Assert.Contains("request.referer", agentAttributes),
+				() => Assert.Contains("host.displayName", agentAttributes),
 
 				() => Assert.Contains("duration", intrinsicAttributes),
 				() => Assert.Contains("error.class", intrinsicAttributes),

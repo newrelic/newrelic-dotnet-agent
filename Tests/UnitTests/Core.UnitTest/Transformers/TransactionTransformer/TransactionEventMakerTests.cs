@@ -3,15 +3,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -20,20 +23,44 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 	{
 		[NotNull] private TransactionEventMaker _transactionEventMaker;
 
+		private static ITimerFactory _timerFactory;
+		private IConfiguration _configuration;
+		private IConfigurationService _configurationService;
+		private TransactionAttributeMaker _transactionAttributeMaker;
+		private ITransactionMetricNameMaker _transactionMetricNameMaker;
+
+
 		[SetUp]
 		public void SetUp()
 		{
+			_timerFactory = Mock.Create<ITimerFactory>();
 			var attributeService = Mock.Create<IAttributeService>();
 			Mock.Arrange(() => attributeService.FilterAttributes(Arg.IsAny<Attributes>(), Arg.IsAny<AttributeDestinations>())).Returns<Attributes, AttributeDestinations>((attrs, _) => attrs);
 			_transactionEventMaker = new TransactionEventMaker(attributeService);
+
+			_configuration = Mock.Create<IConfiguration>();
+			_configurationService = Mock.Create<IConfigurationService>();
+			Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
+
+			_transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
+			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>()))
+				.Returns(new TransactionMetricName("WebTransaction", "TransactionName"));
+
+			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
+
 		}
 
 		[Test]
 		public void GetTransactionEvent_ReturnsSyntheticEvent()
 		{
 			// ARRANGE
-			var immutableTransaction = BuildTestTransaction(true);
-			var attributes = Mock.Create<Attributes>();
+			var transaction = BuildTestTransaction(isSynthetics: true);
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
 
 			// ACT
 			var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
@@ -43,28 +70,95 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			Assert.IsTrue(transactionEvent.IsSynthetics());
 		}
 
+		private static ITransaction BuildTestTransaction(Boolean isWebTransaction = true, String uri = null, String referrerUri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, Boolean includeUserAttributes = false)
+		{
+			var name = isWebTransaction
+				? new WebTransactionName(transactionCategory, transactionName)
+				: new OtherTransactionName(transactionCategory, transactionName) as ITransactionName;
+			var segments = Enumerable.Empty<Segment>();
+
+			var placeholderMetadataBuilder = new TransactionMetadata();
+			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
+
+
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+
+			var priority = 0.5f;
+			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transactionMetadata = internalTransaction.TransactionMetadata;
+			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
+
+			return internalTransaction;
+		}
+
+		private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, String referrerUri = null, Boolean includeUserAttributes = false)
+		{
+			if (uri != null)
+				metadata.SetUri(uri);
+			if (statusCode != null)
+				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode);
+			if (referrerCrossProcessId != null)
+				metadata.SetCrossApplicationReferrerProcessId(referrerCrossProcessId);
+			if (statusCode != null)
+				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode);
+			if (exceptionData != null)
+				metadata.AddExceptionData((ErrorData)exceptionData);
+			if (customErrorData != null)
+				metadata.AddCustomErrorData((ErrorData)customErrorData);
+			if (referrerUri != null)
+				metadata.SetReferrerUri(referrerUri);
+			if (isCAT)
+			{
+				metadata.SetCrossApplicationReferrerProcessId("cross application process id");
+				metadata.SetCrossApplicationReferrerTransactionGuid("transaction Guid");
+			}
+
+			metadata.SetQueueTime(TimeSpan.FromSeconds(10));
+			metadata.SetOriginalUri("originalUri");
+			metadata.SetCrossApplicationPathHash("crossApplicationPathHash");
+			metadata.SetCrossApplicationReferrerContentLength(10000);
+			metadata.SetCrossApplicationReferrerPathHash("crossApplicationReferrerPathHash");
+			metadata.SetCrossApplicationReferrerTripId("crossApplicationReferrerTripId");
+
+			if (includeUserAttributes)
+			{
+				metadata.AddUserAttribute("sample.user.attribute", "user attribute string");
+			}
+
+			if (isSynthetics)
+			{
+				metadata.SetSyntheticsResourceId("syntheticsResourceId");
+				metadata.SetSyntheticsJobId("syntheticsJobId");
+				metadata.SetSyntheticsMonitorId("syntheticsMonitorId");
+			}
+		}
+
 		[Test]
 		public void GetTransactionEvent_ReturnsCorrectAttributes()
 		{
 			// ARRANGE
-			var immutableTransaction = BuildTestTransaction(isSynthetics: false);
-			var attributes = new Attributes();
-			attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.Transaction));
-			attributes.Add(Attribute.BuildResponseStatusAttribute("status"));
-			attributes.Add(Attribute.BuildRequestUriAttribute("http://foo.com"));
-			attributes.Add(Attribute.BuildCustomAttribute("foo", "bar"));
-			attributes.Add(Attribute.BuildCustomErrorAttribute("fiz", "baz"));
+			var transaction = BuildTestTransaction(statusCode: 200, uri:"http://foo.com");
+			transaction.TransactionMetadata.AddUserAttribute("foo", "bar");
+			transaction.TransactionMetadata.AddUserErrorAttribute( "fiz", "baz");
+			
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
 
 			// ACT
 			var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
+			var agentAttributes = transactionEvent.AgentAttributes.Keys.ToArray();
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(1, transactionEvent.IntrinsicAttributes.Count),
+				() => Assert.AreEqual(24, transactionEvent.IntrinsicAttributes.Count),
 				() => Assert.AreEqual("Transaction", transactionEvent.IntrinsicAttributes["type"]),
-				() => Assert.AreEqual(2, transactionEvent.AgentAttributes.Count),
-				() => Assert.AreEqual("status", transactionEvent.AgentAttributes["response.status"]),
+				() => Assert.AreEqual(5, transactionEvent.AgentAttributes.Count),
+				() => Assert.AreEqual("200", transactionEvent.AgentAttributes["response.status"]),
 				() => Assert.AreEqual("http://foo.com", transactionEvent.AgentAttributes["request.uri"]),
+				() => Assert.Contains("host.displayName", agentAttributes),
 				() => Assert.AreEqual(2, transactionEvent.UserAttributes.Count),
 				() => Assert.AreEqual("bar", transactionEvent.UserAttributes["foo"]),
 				() => Assert.AreEqual("baz", transactionEvent.UserAttributes["fiz"])
@@ -75,8 +169,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		public void GetTransactionEvent_DoesNotReturnsSyntheticEvent()
 		{
 			// ARRANGE
-			var immutableTransaction = BuildTestTransaction(false);
-			var attributes = Mock.Create<Attributes>();
+			var transaction = BuildTestTransaction(isSynthetics:false);
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
 
 			// ACT
 			var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
@@ -89,98 +188,49 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		[Test]
 		public void GetTransactionEvent_ReturnsCorrectDistributedTraceAttributes()
 		{
-			var account = "273070";
-			var app = "217958";
-			var transportType = "http";
-			var transportDuration = new TimeSpan(0,0,5);
-			var guid = "squid";
-			var parentId = "parentid";
-			var priority = .3f;
-			var sampled = true;
-			var traceId = "traceid";
-			var parentType = "Mobile";
+			// ARRANGE
+			var transaction = BuildTestTransaction(isSynthetics: false, isCAT:false, statusCode: 200, uri: "http://foo.com");
 
-		// ARRANGE
-		var immutableTransaction = BuildTestTransaction(isSynthetics: false);
-			var attributes = new Attributes();
-			attributes.Add(Attribute.BuildParentTypeAttribute(parentType));
-			attributes.Add(Attribute.BuildParentAppAttribute(app));
-			attributes.Add(Attribute.BuildParentAccountAttribute(account));
-			attributes.Add(Attribute.BuildParentTransportTypeAttribute(transportType));
-			attributes.Add(Attribute.BuildParentTransportDurationAttribute(transportDuration));
-			attributes.Add(Attribute.BuildParentIdAttribute(parentId));
-			attributes.Add(Attribute.BuildGuidAttribute(guid));
-			attributes.Add(Attribute.BuildDistributedTraceIdAttributes(traceId));
-			attributes.Add(Attribute.BuildPriorityAttribute(priority));
-			attributes.Add(Attribute.BuildSampledAttribute(sampled));
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+
+			transaction.TransactionMetadata.AddUserAttribute("foo", "bar");
+			transaction.TransactionMetadata.AddUserErrorAttribute("fiz", "baz");
+			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
+			transaction.TransactionMetadata.DistributedTraceAccountId = "273070";
+			transaction.TransactionMetadata.DistributedTraceAppId = "217958";
+			transaction.TransactionMetadata.DistributedTraceTransportType = "http";
+			transaction.TransactionMetadata.DistributedTraceTransportDuration = new TimeSpan(0, 0, 5);
+			transaction.TransactionMetadata.DistributedTraceGuid = "squid";
+			transaction.TransactionMetadata.DistributedTraceTransactionId = "parentid";
+			transaction.TransactionMetadata.Priority = .3f;
+			transaction.TransactionMetadata.DistributedTraceSampled = true;
+			transaction.TransactionMetadata.DistributedTraceTraceId = "traceid";
+			transaction.TransactionMetadata.DistributedTraceType = "Mobile";
+
+			var immutableTransaction = transaction.ConvertToImmutableTransaction();
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
 
 			// ACT
 			var transactionEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, attributes);
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(10, transactionEvent.IntrinsicAttributes.Count),
-				() => Assert.AreEqual(parentType, transactionEvent.IntrinsicAttributes["parent.type"]),
-				() => Assert.AreEqual(app, transactionEvent.IntrinsicAttributes["parent.app"]),
-				() => Assert.AreEqual(account, transactionEvent.IntrinsicAttributes["parent.account"]),
-				() => Assert.AreEqual(transportType, transactionEvent.IntrinsicAttributes["parent.transportType"]),
-				() => Assert.AreEqual(transportDuration.TotalSeconds, transactionEvent.IntrinsicAttributes["parent.transportDuration"]),
-				() => Assert.AreEqual(parentId, transactionEvent.IntrinsicAttributes["parentId"]),
-				() => Assert.AreEqual(guid, transactionEvent.IntrinsicAttributes["guid"]),
-				() => Assert.AreEqual(traceId, transactionEvent.IntrinsicAttributes["traceId"]),
-				() => Assert.AreEqual(priority, transactionEvent.IntrinsicAttributes["priority"]),
-				() => Assert.AreEqual(sampled, transactionEvent.IntrinsicAttributes["sampled"])
+				() => Assert.AreEqual(20, transactionEvent.IntrinsicAttributes.Count),
+				() => Assert.Contains("guid", transactionEvent.IntrinsicAttributes.Keys.ToArray()),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceType, transactionEvent.IntrinsicAttributes["parent.type"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceAppId, transactionEvent.IntrinsicAttributes["parent.app"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceAccountId, transactionEvent.IntrinsicAttributes["parent.account"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceTransportType, transactionEvent.IntrinsicAttributes["parent.transportType"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceTransportDuration.TotalSeconds, transactionEvent.IntrinsicAttributes["parent.transportDuration"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceTransactionId, transactionEvent.IntrinsicAttributes["parentId"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceGuid, transactionEvent.IntrinsicAttributes["parentSpanId"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceTraceId, transactionEvent.IntrinsicAttributes["traceId"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.Priority, transactionEvent.IntrinsicAttributes["priority"]),
+				() => Assert.AreEqual(transaction.TransactionMetadata.DistributedTraceSampled, transactionEvent.IntrinsicAttributes["sampled"])
 			);
-		}
-
-		private static ImmutableTransaction BuildTestTransaction(bool isSynthetics)
-		{
-			var name = new WebTransactionName("foo", "bar");
-			var segments = Enumerable.Empty<Segment>();
-			var userErrorAttributes = new ConcurrentDictionary<string, object>();
-			userErrorAttributes.TryAdd("CustomErrorAttrKey", "CustomErrorAttrValue");
-
-			var priority = 0.5f;
-			var metadata = new ImmutableTransactionMetadata(
-				"uri",
-				"originalUri",
-				"referrerUri",
-				new TimeSpan(1),
-				new ConcurrentDictionary<string, string>(),
-				new ConcurrentDictionary<string, object>(),
-				userErrorAttributes,
-				200,
-				201,
-				new List<ErrorData>(),
-				new List<ErrorData>(),
-				"crossApplicationReferrerPathHash",
-				"crossApplicationPathHash",
-				new List<string>(),
-				"crossApplicationReferrerTransactionGuid",
-				"crossApplicationReferrerProcessId",
-				"crossApplicationReferrerTripId",
-				"distributedTraceType",
-				"distributedTraceApp",
-				"distributedTraceAccount",
-				"distributedTraceTransportType",
-				"distributedTraceGuid",
-				TimeSpan.MinValue, // DistributedTraceTransportDuration
-				"distributedTraceTraceId",
-				"distributedTransactionId",
-				"distributedTraceTrustKey",
-				false,  // DistributedTraceSampled,
-				false,  // HasOutgoingDistributedTracePayload
-				false,  // HasIncomingDistributedTracePayload
-				"syntheticsResourceId",
-				"syntheticsJobId",
-				"syntheticsMonitorId",
-				isSynthetics,
-				false,
-				priority);
-
-			var guid = Guid.NewGuid().ToString();
-
-			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), guid, true, true, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
 		}
 	}
 }

@@ -9,7 +9,7 @@ RUN sh -c 'echo -e "[packages-microsoft-com-prod]\nname=packages-microsoft-com-p
 RUN yum --assumeyes update
 RUN yum --assumeyes install libunwind \
         libicu \
-        dotnet-sdk-2.0.0 \
+        dotnet-sdk-2.1 \
         dos2unix \
         vim \
         wget

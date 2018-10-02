@@ -277,6 +277,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			return new ConnectModel(
 				_processStatic.GetCurrentProcess().Id,
 				"dotnet",
+				_configuration.ProcessHostDisplayName,
 				_dnsStatic.GetHostName(),
 				appNames,
 				AgentVersion.Version,

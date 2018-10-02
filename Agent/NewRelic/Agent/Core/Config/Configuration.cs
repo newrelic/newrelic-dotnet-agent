@@ -78,6 +78,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationUtilization utilizationField;
         
+        private configurationProcessHost processHostField;
+        
         private bool agentEnabledField;
         
         private bool rootAgentEnabledField;
@@ -94,6 +96,7 @@ namespace NewRelic.Agent.Core.Config
         
         public configuration()
         {
+            this.processHostField = new configurationProcessHost();
             this.utilizationField = new configurationUtilization();
             this.appSettingsField = new List<configurationAdd>();
             this.threadProfilingField = new List<string>();
@@ -490,6 +493,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.utilizationField = value;
+            }
+        }
+        
+        public configurationProcessHost processHost
+        {
+            get
+            {
+                return this.processHostField;
+            }
+            set
+            {
+                this.processHostField = value;
             }
         }
         
@@ -3535,6 +3550,24 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.billingHostField = value;
+            }
+        }
+    }
+    
+    public partial class configurationProcessHost
+    {
+        
+        private string displayNameField;
+        
+        public string displayName
+        {
+            get
+            {
+                return this.displayNameField;
+            }
+            set
+            {
+                this.displayNameField = value;
             }
         }
     }

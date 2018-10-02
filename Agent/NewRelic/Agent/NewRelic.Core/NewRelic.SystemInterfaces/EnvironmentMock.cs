@@ -1,19 +1,22 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemInterfaces
 {
 	public class EnvironmentMock : IEnvironment
 	{
-		[NotNull]
-		private readonly Func<String, String> _getEnvironmentVariable;
+		private readonly Func<string, string> _getEnvironmentVariable;
 
-		public EnvironmentMock([CanBeNull] Func<String, String> getEnvironmentVariable = null)
+		public EnvironmentMock(Func<string, string> getEnvironmentVariable = null)
 		{
 			_getEnvironmentVariable = getEnvironmentVariable ?? (variable => null);
 		}
 
-		public String GetEnvironmentVariable(String variable)
+		public string GetEnvironmentVariable(string variable)
+		{
+			return _getEnvironmentVariable(variable);
+		}
+
+		public string GetEnvironmentVariable(string variable, EnvironmentVariableTarget environmentVariableTarget)
 		{
 			return _getEnvironmentVariable(variable);
 		}

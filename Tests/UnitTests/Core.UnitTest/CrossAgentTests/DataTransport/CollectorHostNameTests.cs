@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 {
 	internal class TestDefaultConfiguration : DefaultConfiguration
 	{
-		public TestDefaultConfiguration([NotNull] IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic) { }
+		public TestDefaultConfiguration([NotNull] IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
 	}
 
 	[TestFixture]
@@ -49,6 +49,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 		[NotNull]
 		private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
 
+		private IDnsStatic _dnsStatic;
+
 		public static List<TestCaseData> CollectorHostnameTestData
 		{
 			get { return GetCollectorHostnameTestData(); }
@@ -65,7 +67,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 			_serverConfig = new ServerConfiguration();
 			_runTimeConfig = new RunTimeConfiguration();
 			_securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
-			_defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+			_dnsStatic = Mock.Create<IDnsStatic>();
+			_defaultConfig = new TestDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
 		}
 

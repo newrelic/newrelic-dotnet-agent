@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.0.0-sdk-2.0.2-stretch
+FROM microsoft/dotnet:2.1-sdk
 
 WORKDIR /data
 

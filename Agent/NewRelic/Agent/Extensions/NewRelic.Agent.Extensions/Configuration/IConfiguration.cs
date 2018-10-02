@@ -201,5 +201,7 @@ namespace NewRelic.Agent.Configuration
 		int? SamplingTargetPeriodInSeconds { get; }
 
 		bool PayloadSuccessMetricsEnabled { get; }
+
+		string ProcessHostDisplayName { get; }
 	}
 }

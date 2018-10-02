@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Configuration;
+using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -14,8 +14,9 @@ namespace NewRelic.Agent.Core.Utilization
 	public class VendorInfoTests
 	{
 		private IConfiguration _configuration;
-		private ISystemInfo _systemInfo;
 		private IAgentHealthReporter _agentHealthReporter;
+		private IEnvironment _environment;
+		private VendorHttpApiRequestor _vendorHttpApiRequestor;
 
 		private const string PcfInstanceGuid = @"CF_INSTANCE_GUID";
 		private const string PcfInstanceIp = @"CF_INSTANCE_IP";
@@ -25,12 +26,12 @@ namespace NewRelic.Agent.Core.Utilization
 		public void Setup()
 		{
 			_configuration = Mock.Create<IConfiguration>();
-			_systemInfo = Mock.Create<ISystemInfo>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+			_environment = Mock.Create<IEnvironment>();
+			_vendorHttpApiRequestor = Mock.Create<VendorHttpApiRequestor>();
 		}
 
 		[Test]
-		[Ignore("Test fails when run on a server in AWS, underlying code needs to be restructured to be more easily mocked", Until = "2018-09-02 00:00:00Z")]
 		public void GetVendors_Returns_Empty_Dictionary_When_Detect_True_And_Data_Unavailable()
 		{
 			Mock.Arrange(() => _configuration.UtilizationDetectAws).Returns(true);
@@ -39,7 +40,7 @@ namespace NewRelic.Agent.Core.Utilization
 			Mock.Arrange(() => _configuration.UtilizationDetectPcf).Returns(true);
 			Mock.Arrange(() => _configuration.UtilizationDetectDocker).Returns(true);
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var vendors = vendorInfo.GetVendors();
 			Assert.IsFalse(vendors.Any());
 		}
@@ -47,7 +48,7 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void GetVendors_Returns_Empty_Dictionary_When_Detect_False()
 		{
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var vendors = vendorInfo.GetVendors();
 			Assert.IsFalse(vendors.Any());
 		}
@@ -58,7 +59,7 @@ namespace NewRelic.Agent.Core.Utilization
 		[TestCase("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd260", "zone", "aws", "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")]
 		public void GetVendors_NormalizeAndValidateMetadata(string metadataValue, string metadataField, string vendorName, string expectedResponse)
 		{
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var result = vendorInfo.NormalizeAndValidateMetadata(metadataValue, metadataField, vendorName);
 
 			if (expectedResponse == null)
@@ -80,7 +81,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""instanceType"" : ""t1.micro""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
 			Assert.NotNull(model);
@@ -97,7 +98,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""instanceType"" : ""t1.$micro""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
 			Assert.NotNull(model);
@@ -115,7 +116,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""instanceType"" : ""t1.micro""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = vendorInfo.ParseAwsVendorInfo(json);
 
 			Assert.Null(model);
@@ -131,7 +132,7 @@ namespace NewRelic.Agent.Core.Utilization
 							  ""vmSize"": ""Standard_DS2""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
 			Assert.NotNull(model);
@@ -150,7 +151,7 @@ namespace NewRelic.Agent.Core.Utilization
 							  ""vmId"": ""5c08b38e-4d57-4c23-ac45-aca61037f084""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
 			Assert.NotNull(model);
@@ -171,7 +172,7 @@ namespace NewRelic.Agent.Core.Utilization
 							  ""vmSize"": ""Standard_DS2""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
 			Assert.Null(model);
@@ -187,7 +188,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""zone"": ""projects/492690098729/zones/us-central1-c""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
 			Assert.NotNull(model);
@@ -206,7 +207,7 @@ namespace NewRelic.Agent.Core.Utilization
 							""name"": ""aef-default-20170501t160547-7gh8?""
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
 			Assert.NotNull(model);
@@ -226,7 +227,7 @@ namespace NewRelic.Agent.Core.Utilization
 							I'm not valid json. Deal with it.
 						}";
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
 			Assert.Null(model);
@@ -235,11 +236,11 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void GetVendors_GetPcfVendorInfo_Complete()
 		{
-			System.Environment.SetEnvironmentVariable(PcfInstanceGuid, "b977d090-83db-4bdb-793a-bb77", EnvironmentVariableTarget.Process);
-			System.Environment.SetEnvironmentVariable(PcfInstanceIp, "10.10.147.130", EnvironmentVariableTarget.Process);
-			System.Environment.SetEnvironmentVariable(PcfMemoryLimit, "1024m", EnvironmentVariableTarget.Process);
+			SetEnvironmentVariable(PcfInstanceGuid, "b977d090-83db-4bdb-793a-bb77", EnvironmentVariableTarget.Process);
+			SetEnvironmentVariable(PcfInstanceIp, "10.10.147.130", EnvironmentVariableTarget.Process);
+			SetEnvironmentVariable(PcfMemoryLimit, "1024m", EnvironmentVariableTarget.Process);
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
 			Assert.NotNull(model);
@@ -251,14 +252,19 @@ namespace NewRelic.Agent.Core.Utilization
 		[Test]
 		public void GetVendors_GetPcfVendorInfo_None()
 		{
-			System.Environment.SetEnvironmentVariable(PcfInstanceGuid, null, EnvironmentVariableTarget.Process);
-			System.Environment.SetEnvironmentVariable(PcfInstanceIp, null, EnvironmentVariableTarget.Process);
-			System.Environment.SetEnvironmentVariable(PcfMemoryLimit, null, EnvironmentVariableTarget.Process);
+			SetEnvironmentVariable(PcfInstanceGuid, null, EnvironmentVariableTarget.Process);
+			SetEnvironmentVariable(PcfInstanceIp, null, EnvironmentVariableTarget.Process);
+			SetEnvironmentVariable(PcfMemoryLimit, null, EnvironmentVariableTarget.Process);
 
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (PcfVendorModel)vendorInfo.GetPcfVendorInfo();
 
 			Assert.Null(model);
+		}
+
+		private void SetEnvironmentVariable(string variableName, string value, EnvironmentVariableTarget environmentVariableTarget)
+		{
+			Mock.Arrange(() => _environment.GetEnvironmentVariable(variableName, environmentVariableTarget)).Returns(value);
 		}
 	}
 }

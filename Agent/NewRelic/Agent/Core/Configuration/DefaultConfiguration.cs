@@ -33,38 +33,22 @@ namespace NewRelic.Agent.Core.Configuration
 		private const string SecurityPolicyConfigSource = "Security Policy";
 		private const string LocalConfigSource = "Local Configuration";
 		private const string ServerConfigSource = "Server Configuration";
-
 		private static Int64 _currentConfigurationVersion;
-
 		private const uint DefaultSpanEventsMaxSamplesStored = 1000u;
-
-		[NotNull]
 		private readonly IEnvironment _environment = new EnvironmentMock();
-
-		[NotNull]
 		private readonly IProcessStatic _processStatic = new ProcessStatic();
-
-		[NotNull]
 		private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
-
-		[NotNull]
 		private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
+		private readonly IDnsStatic _dnsStatic;
 
 		/// <summary>
 		/// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
 		/// </summary>
-		[NotNull]
 		public static readonly DefaultConfiguration Instance = new DefaultConfiguration();
-		[NotNull]
 		private readonly configuration _localConfiguration = new configuration();
-		[NotNull]
 		private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
-		[NotNull]
 		private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
-		[NotNull]
 		private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
-
-		[NotNull]
 		private IDictionary<string, string> _newRelicAppSettings { get; }
 
 		public bool UseResourceBasedNamingForWCFEnabled { get; }
@@ -77,13 +61,14 @@ namespace NewRelic.Agent.Core.Configuration
 			ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
 		}
 
-		protected DefaultConfiguration([NotNull] IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
+		protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
 			: this()
 		{
 			_environment = environment;
 			_processStatic = processStatic;
 			_httpRuntimeStatic = httpRuntimeStatic;
 			_configurationManagerStatic = configurationManagerStatic;
+			_dnsStatic = dnsStatic;
 
 			if (localConfiguration != null)
 			{
@@ -247,6 +232,26 @@ namespace NewRelic.Agent.Core.Configuration
 					.Trim();
 
 				return _securityPoliciesToken;
+			}
+		}
+
+		private string _processHostDisplayName;
+
+		public string ProcessHostDisplayName
+		{
+			get
+			{
+				if (_processHostDisplayName != null)
+				{
+					return _processHostDisplayName;
+				}
+
+				_processHostDisplayName = string.IsNullOrWhiteSpace(_localConfiguration.processHost.displayName)
+					? _dnsStatic.GetHostName() : _localConfiguration.processHost.displayName;
+
+				_processHostDisplayName = EnvironmentOverrides(_processHostDisplayName,"NEW_RELIC_PROCESS_HOST_DISPLAY_NAME").Trim();
+
+				return _processHostDisplayName; 
 			}
 		}
 

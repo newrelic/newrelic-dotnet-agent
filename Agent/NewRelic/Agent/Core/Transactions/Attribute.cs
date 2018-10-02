@@ -451,6 +451,11 @@ namespace NewRelic.Agent.Core.Transactions
 			return new Attribute("sampled", value, AttributeClassification.Intrinsics, AllTracesAndEventsDestinations);
 		}
 
+		public static Attribute BuildHostDisplayNameAttribute(string value)
+		{
+			return new Attribute("host.displayName", value, AttributeClassification.AgentAttributes, AttributeDestinations.TransactionTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.ErrorEvent);
+		}
+
 		#endregion "Attribute Builders"
 	}
 

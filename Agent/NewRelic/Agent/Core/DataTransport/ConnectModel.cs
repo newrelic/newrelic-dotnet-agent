@@ -17,6 +17,9 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("language")]
 		public readonly String Language;
 
+		[JsonProperty("display_host", NullValueHandling = NullValueHandling.Ignore)]
+		public readonly string DisplayHost;
+
 		[NotNull]
 		[JsonProperty("host")]
 		public readonly String HostName;
@@ -67,10 +70,11 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("security_policies", NullValueHandling = NullValueHandling.Ignore)]
 		public readonly SecurityPoliciesSettingsModel SecurityPoliciesSettings;
 
-		public ConnectModel(Int32 processId, [NotNull] String language, [NotNull] String hostName, [NotNull] IEnumerable<String> appNames, [NotNull] String agentVersion, [NotNull] SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, [NotNull] String identifier, [NotNull] IEnumerable<Label> labels, [NotNull] JavascriptAgentSettingsModel javascriptAgentSettings, [NotNull] UtilizationSettingsModel utilizationSettings, [CanBeNull] Environment environment, [CanBeNull] SecurityPoliciesSettingsModel securityPoliciesSettings)
+		public ConnectModel(Int32 processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings)
 		{
 			ProcessId = processId;
 			Language = language;
+			DisplayHost = displayHost;
 			HostName = hostName;
 			AppNames = appNames;
 			AgentVersion = agentVersion;

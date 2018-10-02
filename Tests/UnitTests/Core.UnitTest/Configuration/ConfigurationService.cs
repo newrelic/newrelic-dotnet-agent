@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			public void publishes_ConfigurationUpdatedEvent()
 			{
 				var wasCalled = false;
-				using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>()))
+				using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>()))
 				using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
 				{
 					EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(new configuration()));
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			public void publishes_ConfigurationUpdatedEvent()
 			{
 				var wasCalled = false;
-				using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>()))
+				using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>()))
 				using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
 				{
 					EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(new ServerConfiguration
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			public void publishes_AppNameUpdateEvent()
 			{
 				var wasCalled = false;
-				using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>()))
+				using (new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>()))
 				using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
 				{
 					EventBus<AppNameUpdateEvent>.Publish(new AppNameUpdateEvent(new[] { "NewAppName" }));
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			[SetUp]
 			public void SetUp()
 			{
-				_configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>());
+				_configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(), Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
 			}
 
 			[TearDown]

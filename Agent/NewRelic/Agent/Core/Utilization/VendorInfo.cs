@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using System.Text.RegularExpressions;
+using NewRelic.SystemInterfaces;
 using Newtonsoft.Json.Linq;
 
 #if NETSTANDARD2_0
+using System.IO;
 using System.Runtime.InteropServices;
 #endif
 
@@ -19,10 +18,10 @@ namespace NewRelic.Agent.Core.Utilization
 {
 	public class VendorInfo
 	{
-		private const int WebReqeustTimeout = 1000;
-
 		private const string ValidateMetadataRegex = @"^[a-zA-Z0-9-_. /]*$";
+#if NETSTANDARD2_0
 		private const string ContainerIdRegex = @"[0-9a-f]{64}";
+#endif
 
 		private const string AwsName = @"aws";
 		private const string AzureName = @"azure";
@@ -42,35 +41,33 @@ namespace NewRelic.Agent.Core.Utilization
 		private const string PcfInstanceIp = @"CF_INSTANCE_IP";
 		private const string PcfMemoryLimit = @"MEMORY_LIMIT";
 
-		[NotNull]
 		private readonly IConfiguration _configuration;
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
-		[NotNull]
-		private readonly ISystemInfo _systemInfo;
+		private readonly IEnvironment _environment;
+		private readonly VendorHttpApiRequestor _vendorHttpApiRequestor;
 
-		public VendorInfo([NotNull]IConfiguration configuration, [NotNull] ISystemInfo systemInfo, [NotNull]IAgentHealthReporter agentHealthReporter)
+		public VendorInfo(IConfiguration configuration, IAgentHealthReporter agentHealthReporter, IEnvironment environment, VendorHttpApiRequestor vendorHttpApiRequestor)
 		{
 			_configuration = configuration;
 			_agentHealthReporter = agentHealthReporter;
-			_systemInfo = systemInfo;
+			_environment = environment;
+			_vendorHttpApiRequestor = vendorHttpApiRequestor;
 		}
 
-		[NotNull]
 		public IDictionary<string, IVendorModel> GetVendors()
 		{
 
 			var vendors = new Dictionary<string, IVendorModel>();
 
-			var vendorMethods = new List<Func<IVendorModel>>() {};
+			var vendorMethods = new List<Func<IVendorModel>>();
 
-			if (_configuration.UtilizationDetectAws == true)
+			if (_configuration.UtilizationDetectAws)
 				vendorMethods.Add(GetAwsVendorInfo);
-			if (_configuration.UtilizationDetectAzure == true)
+			if (_configuration.UtilizationDetectAzure)
 				vendorMethods.Add(GetAzureVendorInfo);
-			if (_configuration.UtilizationDetectGcp == true)
+			if (_configuration.UtilizationDetectGcp)
 				vendorMethods.Add(GetGcpVendorInfo);
-			if (_configuration.UtilizationDetectPcf == true)
+			if (_configuration.UtilizationDetectPcf)
 				vendorMethods.Add(GetPcfVendorInfo);
 
 			foreach (var vendorMethod in vendorMethods)
@@ -86,7 +83,7 @@ namespace NewRelic.Agent.Core.Utilization
 			}
 
 			// If Docker info is set to be checked, it must be checked for all vendors.
-			if (_configuration.UtilizationDetectDocker == true)
+			if (_configuration.UtilizationDetectDocker)
 			{
 				var dockerVendorInfo = GetDockerVendorInfo();
 				if (dockerVendorInfo != null)
@@ -96,10 +93,9 @@ namespace NewRelic.Agent.Core.Utilization
 			return vendors;
 		}
 
-		[CanBeNull]
 		private IVendorModel GetAwsVendorInfo()
 		{
-			var responseString = GetHttpResponseString(new Uri(AwsUri));
+			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsUri));
 			if (responseString != null)
 			{
 				return ParseAwsVendorInfo(responseString);
@@ -108,8 +104,7 @@ namespace NewRelic.Agent.Core.Utilization
 			return null;
 		}
 
-		[CanBeNull]
-		public IVendorModel ParseAwsVendorInfo([NotNull]string json)
+		public IVendorModel ParseAwsVendorInfo(string json)
 		{
 			try
 			{
@@ -136,10 +131,9 @@ namespace NewRelic.Agent.Core.Utilization
 			}
 		}
 
-		[CanBeNull]
 		private IVendorModel GetAzureVendorInfo()
 		{
-			var responseString = GetHttpResponseString(new Uri(AzureUri), new List<string>() { AzureHeader });
+			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AzureUri), new List<string> { AzureHeader });
 			if (responseString != null)
 			{
 				return ParseAzureVendorInfo(responseString);
@@ -148,8 +142,7 @@ namespace NewRelic.Agent.Core.Utilization
 			return null;
 		}
 
-		[CanBeNull]
-		public IVendorModel ParseAzureVendorInfo([NotNull]string json)
+		public IVendorModel ParseAzureVendorInfo(string json)
 		{
 			try
 			{
@@ -178,11 +171,10 @@ namespace NewRelic.Agent.Core.Utilization
 			}
 		}
 
-		[CanBeNull]
 		private IVendorModel GetGcpVendorInfo()
 		{
-			var responseString = GetHttpResponseString(new Uri(GcpUri), new List<string>() { GcpHeader });
-			if ( responseString != null)
+			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(GcpUri), new List<string> { GcpHeader });
+			if (responseString != null)
 			{
 				return ParseGcpVendorInfo(responseString);
 			}
@@ -190,8 +182,7 @@ namespace NewRelic.Agent.Core.Utilization
 			return null;
 		}
 
-		[CanBeNull]
-		public IVendorModel ParseGcpVendorInfo([NotNull]string json)
+		public IVendorModel ParseGcpVendorInfo(string json)
 		{
 			try
 			{
@@ -225,7 +216,6 @@ namespace NewRelic.Agent.Core.Utilization
 			}
 		}
 
-		[CanBeNull]
 		public IVendorModel GetPcfVendorInfo()
 		{
 			var instanceGuid = NormalizeAndValidateMetadata(GetProcessEnvironmentVariable(PcfInstanceGuid), "cf_instance_guid", PcfName);
@@ -236,18 +226,15 @@ namespace NewRelic.Agent.Core.Utilization
 			{
 				return null;
 			}
-			else
-			{
-				return new PcfVendorModel(instanceGuid, instanceIp, memoryLimit);
-			}
+
+			return new PcfVendorModel(instanceGuid, instanceIp, memoryLimit);
 		}
 
-		[CanBeNull]
-		private string GetProcessEnvironmentVariable([NotNull]string variableName)
+		private string GetProcessEnvironmentVariable(string variableName)
 		{
 			try
 			{
-				var variableValue = System.Environment.GetEnvironmentVariable(variableName, EnvironmentVariableTarget.Process);
+				var variableValue = _environment.GetEnvironmentVariable(variableName, EnvironmentVariableTarget.Process);
 				return variableValue;
 			}
 			catch
@@ -256,7 +243,6 @@ namespace NewRelic.Agent.Core.Utilization
 			}
 		}
 
-		[CanBeNull]
 		private IVendorModel GetDockerVendorInfo()
 		{
 #if NETSTANDARD2_0
@@ -304,45 +290,7 @@ namespace NewRelic.Agent.Core.Utilization
 			return null;
 		}
 
-		[CanBeNull]
-		private string GetHttpResponseString([NotNull] Uri uri, [CanBeNull]IEnumerable<string> headers = null)
-		{
-			try
-			{
-				var request = WebRequest.Create(uri);
-				request.Method = "GET";
-				request.Timeout = WebReqeustTimeout;
-
-				if (headers != null)
-				{
-					foreach (var header in headers)
-					{
-						request.Headers.Add(header);
-					}
-				}
-
-				using (var response = request.GetResponse() as HttpWebResponse)
-				{
-					if (response == null)
-						return null;
-
-					var stream = response.GetResponseStream();
-					if (stream == null)
-						return null;
-
-					var reader = new StreamReader(stream);
-
-					return reader.ReadToEnd();
-				}
-			}
-			catch
-			{
-				return null;
-			}
-		}
-
-		[CanBeNull]
-		public string NormalizeAndValidateMetadata([CanBeNull]string metadataValue, [NotNull]string metadataField, [NotNull]string vendorName)
+		public string NormalizeAndValidateMetadata(string metadataValue, string metadataField, string vendorName)
 		{
 			if (metadataValue == null)
 				return null;
@@ -381,13 +329,11 @@ namespace NewRelic.Agent.Core.Utilization
 			return normalizedValue;
 		}
 
-		[NotNull]
-		private string NormalizeString([NotNull] string data)
+		private string NormalizeString(string data)
 		{
 			return Clamper.ClampLength(data.Trim(), 255);
 		}
 
-		[NotNull]
 		public bool IsValidMetadata(string data)
 		{
 			return Regex.IsMatch(data, ValidateMetadataRegex);

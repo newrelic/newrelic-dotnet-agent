@@ -213,7 +213,7 @@
 					</xs:complexType>
 				</xs:element>
 
-								<xs:element name="securityPoliciesToken" minOccurs="0" maxOccurs="1" type="xs:string">
+				<xs:element name="securityPoliciesToken" minOccurs="0" maxOccurs="1" type="xs:string">
 										<xs:annotation>
 												<xs:documentation>
 														Optional security policies token.
@@ -1382,7 +1382,7 @@
 					</xs:complexType>
 				</xs:element>
 
-					<xs:element name="utilization" minOccurs="0" maxOccurs="1" >
+				<xs:element name="utilization" minOccurs="0" maxOccurs="1" >
 						<xs:annotation>
 							<xs:documentation>
 								Elements under utilization allow you to configure the gathering of utilization and pricing information by agents during connect.
@@ -1454,6 +1454,18 @@
 							</xs:attribute>
 						</xs:complexType>
 					</xs:element>
+
+				<xs:element name="processHost" minOccurs="0" maxOccurs="1">
+					<xs:complexType>
+						<xs:attribute name="displayName" type="xs:string" use="optional">
+							<xs:annotation>
+								<xs:documentation>
+									Sets the hostname to be displayed in the APM UI. If set, this overrides the default hostname that the agent captures automatically.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
 			</xs:all>
 
 			<xs:attribute name="agentEnabled" type="xs:boolean" default="true">

@@ -22,8 +22,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 	public class TransactionAttributeMaker : ITransactionAttributeMaker
 	{
-		[NotNull] private readonly IConfigurationService _configurationService;
-		public TransactionAttributeMaker([NotNull] IConfigurationService configurationService)
+		private readonly IConfigurationService _configurationService;
+
+		public TransactionAttributeMaker(IConfigurationService configurationService)
 		{
 			_configurationService = configurationService;
 		}
@@ -167,8 +168,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			attributes.TryAdd(Attribute.BuildRequestRefererAttribute, metadata.ReferrerUri);
 			attributes.TryAdd(Attribute.BuildQueueWaitTimeAttribute, metadata.QueueTime);
 			attributes.TryAdd(Attribute.BuildResponseStatusAttribute, metadata.HttpResponseStatusCode?.ToString());
+			attributes.TryAdd(Attribute.BuildHostDisplayNameAttribute, _configurationService.Configuration.ProcessHostDisplayName);
 
-			foreach(var reqParam in metadata.RequestParameters)
+			foreach (var reqParam in metadata.RequestParameters)
 			{
 				var rpa = Attribute.BuildRequestParameterAttribute(reqParam.Key, reqParam.Value);
 				attributes.Add(rpa);
@@ -186,7 +188,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				var cea = Attribute.BuildCustomErrorAttribute(errAttr.Key, errAttr.Value);
 				attributes.Add(cea);
 			}
-
+			
 			return attributes;
 		}
 

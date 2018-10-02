@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
@@ -65,8 +61,8 @@ namespace NewRelic.Agent.Core.Utilization
 		[NotNull]
 		public IDictionary<string, IVendorModel> GetVendorSettings()
 		{
-			var vendorInfo = new VendorInfo(_configuration, _systemInfo, _agentHealthReporter);
-			return vendorInfo.GetVendors();	
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SystemInterfaces.Environment(), new VendorHttpApiRequestor());
+			return vendorInfo.GetVendors();
 		}
 
 		[CanBeNull]
@@ -77,7 +73,7 @@ namespace NewRelic.Agent.Core.Utilization
 				return null;
 			}
 
-			if (String.IsNullOrEmpty(_configuration.UtilizationBillingHost)
+			if (string.IsNullOrEmpty(_configuration.UtilizationBillingHost)
 				&& _configuration.UtilizationLogicalProcessors == null
 				&& _configuration.UtilizationTotalRamMib == null)
 			{

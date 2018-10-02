@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Events;
@@ -15,41 +14,28 @@ namespace NewRelic.Agent.Core.Configuration
 {
 	public class ConfigurationService : IConfigurationService, IDisposable
 	{
-		[NotNull]
 		private readonly IEnvironment _environment;
-
-		[NotNull]
 		private configuration _localConfiguration = new configuration();
-
-		[NotNull]
 		private ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
-
-		[NotNull]
 		private SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
-
-		[NotNull]
 		private RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
-
-		[NotNull]
 		private readonly Subscriptions _subscriptions = new Subscriptions();
-		
-		[NotNull]
 		private readonly IProcessStatic _processStatic;
-		[NotNull]
 		private readonly IHttpRuntimeStatic _httpRuntimeStatic;
-		[NotNull]
 		private readonly IConfigurationManagerStatic _configurationManagerStatic;
+		private readonly IDnsStatic _dnsStatic;
 
 		public IConfiguration Configuration { get; private set; }
 
-		public ConfigurationService([NotNull] IEnvironment environment, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
+		public ConfigurationService(IEnvironment environment, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic)
 		{
 			_environment = environment;
 			_processStatic = processStatic;
 			_httpRuntimeStatic = httpRuntimeStatic;
 			_configurationManagerStatic = configurationManagerStatic;
+			_dnsStatic = dnsStatic;
 
-			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, dnsStatic);
 
 			_subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
 			_subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
@@ -58,20 +44,20 @@ namespace NewRelic.Agent.Core.Configuration
 			_subscriptions.Add<SecurityPoliciesConfigurationUpdatedEvent>(OnSecurityPoliciesUpdated);
 		}
 
-		private void OnSecurityPoliciesUpdated([NotNull] SecurityPoliciesConfigurationUpdatedEvent securityPoliciesConfigurationUpdatedEvent)
+		private void OnSecurityPoliciesUpdated(SecurityPoliciesConfigurationUpdatedEvent securityPoliciesConfigurationUpdatedEvent)
 		{
 			_securityPoliciesConfiguration = securityPoliciesConfigurationUpdatedEvent.Configuration;
 			UpdateAndPublishConfiguration(ConfigurationUpdateSource.SecurityPolicies);
 		}
 
-		private void OnConfigurationDeserialized([NotNull] ConfigurationDeserializedEvent configurationDeserializedEvent)
+		private void OnConfigurationDeserialized(ConfigurationDeserializedEvent configurationDeserializedEvent)
 		{
 			_localConfiguration = configurationDeserializedEvent.Configuration;
 			UpdateLogLevel(_localConfiguration);
 			UpdateAndPublishConfiguration(ConfigurationUpdateSource.Local);
 		}
 
-		private static void UpdateLogLevel([NotNull] configuration localConfiguration)
+		private static void UpdateLogLevel(configuration localConfiguration)
 		{
 			var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
 			var logger = hierarchy.Root;
@@ -84,7 +70,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		private void OnServerConfigurationUpdated([NotNull] ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
+		private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
 		{
 			try
 			{
@@ -98,7 +84,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		private void OnAppNameUpdate([NotNull] AppNameUpdateEvent appNameUpdateEvent)
+		private void OnAppNameUpdate(AppNameUpdateEvent appNameUpdateEvent)
 		{
 			if (_runTimeConfiguration.ApplicationNames.SequenceEqual(appNameUpdateEvent.AppNames))
 				return;
@@ -109,13 +95,13 @@ namespace NewRelic.Agent.Core.Configuration
 
 		private void UpdateAndPublishConfiguration(ConfigurationUpdateSource configurationUpdateSource)
 		{
-			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
 			var configurationUpdatedEvent = new ConfigurationUpdatedEvent(Configuration, configurationUpdateSource);
 			EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);
 		}
 
-		private void OnGetCurrentConfiguration([NotNull] GetCurrentConfigurationRequest eventData, [NotNull] RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
+		private void OnGetCurrentConfiguration(GetCurrentConfigurationRequest eventData, RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
 		{
 			callback(Configuration);
 		}

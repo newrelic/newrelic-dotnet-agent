@@ -11,7 +11,7 @@ verify_no_logs
 dos2unix Instrumentation.xml &>/dev/null
 cp Instrumentation.xml $CORECLR_NEWRELIC_HOME/extensions/
 CORECLR_ENABLE_PROFILING=0 dotnet build
-dotnet bin/Debug/netcoreapp2.0/custom_xml.dll
+dotnet bin/Debug/netcoreapp2.1/custom_xml.dll
 
 verify_logs_exist
 
