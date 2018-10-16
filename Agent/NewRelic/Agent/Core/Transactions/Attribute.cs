@@ -232,11 +232,19 @@ namespace NewRelic.Agent.Core.Transactions
 		}
 
 		[NotNull]
-		public static Attribute BuildTimeStampAttribute(DateTime startTime)
+		public static Attribute BuildTransactionTimeStampAttribute(DateTime startTime)
 		{
-			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
+			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent;
 			return new Attribute("timestamp", startTime.ToUnixTimeMilliseconds(), AttributeClassification.Intrinsics, destinations);
 		}
+
+		[NotNull]
+		public static Attribute BuildErrorTimeStampAttribute(DateTime errorTime)
+		{
+			const AttributeDestinations destinations = AttributeDestinations.ErrorEvent;
+			return new Attribute("timestamp", errorTime.ToUnixTimeMilliseconds(), AttributeClassification.Intrinsics, destinations);
+		}
+
 
 		[NotNull]
 		public static IEnumerable<Attribute> BuildTransactionNameAttribute([NotNull] string transactionName)

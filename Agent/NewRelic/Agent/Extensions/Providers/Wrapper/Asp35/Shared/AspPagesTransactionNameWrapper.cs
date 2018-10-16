@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var page = instrumentedMethodCall.MethodCall.InvocationTarget as Page;
 			if (page == null) 
@@ -34,8 +34,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 			pagePath = pagePath.ToLower();
 
-			transaction.SetWebTransactionName(WebTransactionType.ASP, pagePath, TransactionNamePriority.FrameworkHigh);
-			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, pagePath);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.ASP, pagePath, TransactionNamePriority.FrameworkHigh);
+			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, pagePath);
 
 			return Delegates.GetDelegateFor(segment);
 		}

@@ -18,14 +18,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			// (IBasicConsumer) void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
 			var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(4);
 			var destType = RabbitMqHelper.GetBrokerDestinationType(routingKey);
 			var destName = RabbitMqHelper.ResolveDestinationName(destType, routingKey);
 
-			transaction = agentWrapperApi.CreateMessageBrokerTransaction(destType, RabbitMqHelper.VendorName, routingKey);
+			transactionWrapperApi = agentWrapperApi.CreateMessageBrokerTransaction(destType, RabbitMqHelper.VendorName, routingKey);
 
 			// basicProperties is never null (framework supplies it), though the Headers property could be
 			var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<dynamic>(5);
@@ -35,14 +35,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 				agentWrapperApi.ProcessInboundRequest(payload, TransportType);
 			}
 
-			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
+			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
 
 			return Delegates.GetDelegateFor(
-				onFailure: transaction.NoticeError,
+				onFailure: transactionWrapperApi.NoticeError,
 				onComplete: () =>
 				{
 					segment.End();
-					transaction.End();
+					transactionWrapperApi.End();
 				});
 		}
 	}

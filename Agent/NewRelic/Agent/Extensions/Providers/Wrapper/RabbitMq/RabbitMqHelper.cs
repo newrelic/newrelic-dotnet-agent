@@ -60,7 +60,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			return false;
 		}
 
-		public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+		public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransactionWrapperApi transactionWrapperApi, int basicPropertiesIndex)
 		{
 			// ATTENTION: For reasons and data on why we chose dynamic over VisibilityBypasser see Test/Benchmarking/DynamicVsBypasser.cs
 
@@ -74,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			// Check if we are getting a BasicProperties type and if not bail on DT
 			if (basicProperties.GetType().ToString() != BasicPropertiesType)
 			{
-				return transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+				return transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
 			}
 
 			// if null, setup a new dictionary  and replace the null Headers property with it.
@@ -86,7 +86,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 				basicProperties.Headers = headers;
 			}
 
-			return transaction.StartRabbitMQSegmentAndCreateDistributedTracePayload(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName, headers);
+			return transactionWrapperApi.StartRabbitMQSegmentAndCreateDistributedTracePayload(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName, headers);
 
 		}
 	}

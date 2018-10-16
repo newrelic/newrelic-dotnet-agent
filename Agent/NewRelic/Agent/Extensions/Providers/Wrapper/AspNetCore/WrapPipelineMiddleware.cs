@@ -28,16 +28,16 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
 		public async Task Invoke(HttpContext context)
 		{
-			ITransaction transaction = null;
+			ITransactionWrapperApi transactionWrapperApi = null;
 			ISegment segment = null;
 
 			try
 			{
-				transaction = SetupTransaction(context.Request);
-				transaction.AttachToAsync(); //Important that this is called from an Invoke method that has the async keyword.
-				transaction.DetachFromPrimary(); //Remove from thread-local type storage
+				transactionWrapperApi = SetupTransaction(context.Request);
+				transactionWrapperApi.AttachToAsync(); //Important that this is called from an Invoke method that has the async keyword.
+				transactionWrapperApi.DetachFromPrimary(); //Remove from thread-local type storage
 
-				segment = SetupSegment(transaction, context);
+				segment = SetupSegment(transactionWrapperApi, context);
 
 				ProcessHeaders(context);
 
@@ -51,22 +51,22 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			try
 			{
 				await _next(context);
-				EndTransaction(segment, transaction, context, null);
+				EndTransaction(segment, transactionWrapperApi, context, null);
 			}
 			catch (Exception ex)
 			{
-				EndTransaction(segment, transaction, context, ex);
+				EndTransaction(segment, transactionWrapperApi, context, ex);
 				throw; //throw here to maintain call stack. 
 			}
 
 			Task SetOutboundTracingDataAsync()
 			{
-				TryWriteResponseHeaders(context, transaction);
+				TryWriteResponseHeaders(context, transactionWrapperApi);
 				return Task.CompletedTask;
 			}
 		}
 
-		private void EndTransaction(ISegment segment, ITransaction transaction, HttpContext context, Exception appException)
+		private void EndTransaction(ISegment segment, ITransactionWrapperApi transactionWrapperApi, HttpContext context, Exception appException)
 		{
 			try
 			{
@@ -77,7 +77,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 				//It's possible that the 2 errors are the same under certain circumstances.
 				if (appException != null)
 				{
-					transaction.NoticeError(appException);
+					transactionWrapperApi.NoticeError(appException);
 
 					//Looks like we won't accurately notice that a 500 is going to be returned for exception cases,
 					//because that appears to be handled at the  web host level or server (kestrel) level 
@@ -88,20 +88,20 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 					var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
 					if (exceptionHandlerFeature != null)
 					{
-						transaction.NoticeError(exceptionHandlerFeature.Error);
+						transactionWrapperApi.NoticeError(exceptionHandlerFeature.Error);
 					}
 				}
 
 				if (responseStatusCode >= 400)
 				{
 					//Attempt low-priority transaction name to reduce chance of metric grouping issues.
-					transaction.SetWebTransactionName(WebTransactionType.StatusCode, $"{responseStatusCode}", TransactionNamePriority.StatusCode);
+					transactionWrapperApi.SetWebTransactionName(WebTransactionType.StatusCode, $"{responseStatusCode}", TransactionNamePriority.StatusCode);
 				}
 
 				segment.End();
 
-				transaction.SetHttpResponseStatusCode(responseStatusCode);
-				transaction.End();
+				transactionWrapperApi.SetHttpResponseStatusCode(responseStatusCode);
+				transactionWrapperApi.End();
 			}
 			catch (Exception ex)
 			{
@@ -109,17 +109,17 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			}
 		}
 
-		private ISegment SetupSegment(ITransaction transaction, HttpContext context)
+		private ISegment SetupSegment(ITransactionWrapperApi transactionWrapperApi, HttpContext context)
 		{
 			// Seems like it would be cool to not require all of this for a segment??? 
 			var method = new Method(typeof(WrapPipelineMiddleware), nameof(Invoke), nameof(context));
 			var methodCall = new MethodCall(method, this, new object[] { context });
 
-			var segment = transaction.StartTransactionSegment(methodCall, "Middleware Pipeline");
+			var segment = transactionWrapperApi.StartTransactionSegment(methodCall, "Middleware Pipeline");
 			return segment;
 		}
 
-		private ITransaction SetupTransaction(HttpRequest request)
+		private ITransactionWrapperApi SetupTransaction(HttpRequest request)
 		{
 			var path = request.Path.Value;
 			path = "/".Equals(path) ? "ROOT" : path.Substring(1);
@@ -150,11 +150,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			_agentWrapperApi.ProcessInboundRequest(headers, "HTTP", contentLength);
 		}
 
-		private void TryWriteResponseHeaders(HttpContext httpContext, ITransaction transaction)
+		private void TryWriteResponseHeaders(HttpContext httpContext, ITransactionWrapperApi transactionWrapperApi)
 		{
 			try
 			{
-				var headers = transaction.GetResponseMetadata();
+				var headers = transactionWrapperApi.GetResponseMetadata();
 
 				foreach (var header in headers)
 				{

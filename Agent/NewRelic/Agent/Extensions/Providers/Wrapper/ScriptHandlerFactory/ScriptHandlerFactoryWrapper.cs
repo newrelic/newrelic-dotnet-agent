@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.ScriptHandlerFactory
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var handler = instrumentedMethodCall.MethodCall.InvocationTarget;
 
@@ -51,7 +51,7 @@ namespace NewRelic.Providers.Wrapper.ScriptHandlerFactory
 			}
 
 			var typeName = originalHandler.GetType().ToString();
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 			return Delegates.GetDelegateFor(segment);
 		}
 

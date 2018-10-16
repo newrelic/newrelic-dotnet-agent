@@ -27,11 +27,11 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 			}
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transaction.AttachToAsync();
+				transactionWrapperApi.AttachToAsync();
 			}
 
 			//TODO: Consider breaking this out into a separate shared method used by sync and async.
@@ -46,11 +46,11 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 
 			if (segmentName == null)
 			{
-				transaction.NoticeError(new ArgumentException("The CustomSegmentWrapperAsync can only be applied to a method with a String parameter."));
+				transactionWrapperApi.NoticeError(new ArgumentException("The CustomSegmentWrapperAsync can only be applied to a method with a String parameter."));
 				return Delegates.NoOp;
 			}
 
-			var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, segmentName);
+			var segment = transactionWrapperApi.StartCustomSegment(instrumentedMethodCall.MethodCall, segmentName);
 
 			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}

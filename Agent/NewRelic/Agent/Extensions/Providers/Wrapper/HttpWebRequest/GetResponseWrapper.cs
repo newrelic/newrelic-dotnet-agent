@@ -17,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var httpWebRequest = instrumentedMethodCall.MethodCall.InvocationTarget as System.Net.HttpWebRequest;
 			if(httpWebRequest == null)
@@ -28,17 +28,17 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 				return Delegates.NoOp;
 
 			var method = httpWebRequest.Method ?? "<unknown>";
-			var segment = transaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
+			var segment = transactionWrapperApi.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
 			segment.MakeCombinable();
 
 			return Delegates.GetDelegateFor<HttpWebResponse>(
-				onSuccess: response => TryProcessResponse(response, transaction, segment),
-				onFailure: exception => TryProcessResponse((exception as WebException)?.Response, transaction, segment),
+				onSuccess: response => TryProcessResponse(response, transactionWrapperApi, segment),
+				onFailure: exception => TryProcessResponse((exception as WebException)?.Response, transactionWrapperApi, segment),
 				onComplete: segment.End
 				);
 		}
 
-		private static void TryProcessResponse([CanBeNull] WebResponse response, [NotNull] ITransaction transaction, [CanBeNull] ISegment segment)
+		private static void TryProcessResponse([CanBeNull] WebResponse response, [NotNull] ITransactionWrapperApi transactionWrapperApi, [CanBeNull] ISegment segment)
 		{
 			if (segment == null)
 			{
@@ -51,7 +51,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 				return;
 			}
 
-			transaction.ProcessInboundResponse(headers, segment);
+			transactionWrapperApi.ProcessInboundResponse(headers, segment);
 		}
 	}
 }

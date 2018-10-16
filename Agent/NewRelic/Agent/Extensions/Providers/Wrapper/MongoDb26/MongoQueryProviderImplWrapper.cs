@@ -22,7 +22,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransactionWrapperApi transactionWrapperApi)
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 			operation = operation.EndsWith("Async") ? "LinqQueryAsync" : "LinqQuery";
@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
 			var model = MongoDbHelper.GetCollectionName(collection.CollectionNamespace);
 
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);
 
 			return Delegates.GetDelegateFor(segment);

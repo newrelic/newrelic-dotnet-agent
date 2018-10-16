@@ -19,14 +19,14 @@ namespace NewRelic.Providers.Wrapper.Owin
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
-			transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, $"{TypeName}/{MethodName}");
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, TypeName, MethodName);
+			transactionWrapperApi = agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, $"{TypeName}/{MethodName}");
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, TypeName, MethodName);
 
 			return Delegates.GetDelegateFor(() =>
 			{
-				transaction.Detach();
+				transactionWrapperApi.Detach();
 				segment.End();
 			});
 		}

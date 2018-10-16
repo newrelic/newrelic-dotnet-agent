@@ -24,14 +24,14 @@ namespace NewRelic.Providers.Wrapper.Owin3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransactionWrapperApi transactionWrapperApi)
 		{
-			transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, $"{TypeName}/{MethodName}");
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, TypeName, MethodName);
+			transactionWrapperApi = agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, $"{TypeName}/{MethodName}");
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, TypeName, MethodName);
 
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transaction.AttachToAsync();
+				transactionWrapperApi.AttachToAsync();
 			}
 
 			return Delegates.GetDelegateFor<Task>(
@@ -39,15 +39,15 @@ namespace NewRelic.Providers.Wrapper.Owin3
 				{
 					if (ex != null)
 					{
-						transaction.NoticeError(ex);
+						transactionWrapperApi.NoticeError(ex);
 					}
 
 					segment.End();
-					transaction.End();
+					transactionWrapperApi.End();
 				},
 				onSuccess: task =>
 				{
-					transaction.Detach();
+					transactionWrapperApi.Detach();
 
 					segment.RemoveSegmentFromCallStack();
 
@@ -60,11 +60,11 @@ namespace NewRelic.Providers.Wrapper.Owin3
 					{
 						if (responseTask.IsFaulted && (responseTask.Exception != null))
 						{
-							transaction.NoticeError(responseTask.Exception);
+							transactionWrapperApi.NoticeError(responseTask.Exception);
 						}
 
 						segment.End();
-						transaction.End();
+						transactionWrapperApi.End();
 					});
 
 					var context = SynchronizationContext.Current;

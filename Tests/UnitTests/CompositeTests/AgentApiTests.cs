@@ -1539,5 +1539,33 @@ namespace CompositeTests
 				);
 		}
 		#endregion
+
+		#region InitializePublicAgent
+
+		[Test]
+		public void Test_InitializePublicAgent()
+		{
+			// ARRANGE
+			var agent = new DummyAgent();
+
+			//ACT
+			AgentApi.InitializePublicAgent(agent);
+
+			//ASSERT
+			Assert.NotNull(agent.WrappedAgent);
+			Assert.IsInstanceOf<AgentBridgeApi>(agent.WrappedAgent);
+		}
+
+		public class DummyAgent
+		{
+			public object WrappedAgent = null;
+			internal void SetWrappedAgent(object wrappedAgent)
+			{
+				WrappedAgent = wrappedAgent;
+			}
+		}
+
+		#endregion
+
 	}
 }

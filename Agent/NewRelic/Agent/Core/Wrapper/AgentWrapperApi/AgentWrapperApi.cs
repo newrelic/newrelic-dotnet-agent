@@ -82,10 +82,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private readonly IAgentTimerService _agentTimerService;
 
 		[NotNull]
-		private static readonly Extensions.Providers.Wrapper.ITransaction _noOpTransaction = new NoTransactionImpl();
+		private static readonly Extensions.Providers.Wrapper.ITransactionWrapperApi NoOpTransactionWrapperApi = new NoTransactionWrapperApiImpl();
 
 		[NotNull]
-		private static readonly ISegment _noOpSegment = new NoTransactionImpl();
+		private static readonly ISegment _noOpSegment = new NoTransactionWrapperApiImpl();
 
 		public AgentWrapperApi([NotNull] ITransactionService transactionService, [NotNull] ITimerFactory timerFactory, [NotNull] ITransactionTransformer transactionTransformer, [NotNull] IThreadPoolStatic threadPoolStatic, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] IPathHashMaker pathHashMaker, [NotNull] ICatHeaderHandler catHeaderHandler, [NotNull] IDistributedTracePayloadHandler distributedTracePayloadHandler, [NotNull] ISyntheticsHeaderHandler syntheticsHeaderHandler, [NotNull] ITransactionFinalizer transactionFinalizer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
 		{
@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		#region Transaction management
 
-		public Extensions.Providers.Wrapper.ITransaction CreateWebTransaction(WebTransactionType type, string transactionDisplayName, bool mustBeRootTransaction, Action wrapperOnCreate)
+		public Extensions.Providers.Wrapper.ITransactionWrapperApi CreateWebTransaction(WebTransactionType type, string transactionDisplayName, bool mustBeRootTransaction, Action wrapperOnCreate)
 		{
 			if (transactionDisplayName == null)
 				throw new ArgumentNullException("transactionDisplayName");
@@ -121,10 +121,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			};
 
 			var initialTransactionName = new WebTransactionName(Enum.GetName(typeof(WebTransactionType), type), transactionDisplayName);
-			return new Transaction(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, mustBeRootTransaction));
+			return new TransactionWrapperApi(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, mustBeRootTransaction));
 		}
 
-		public Extensions.Providers.Wrapper.ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
+		public Extensions.Providers.Wrapper.ITransactionWrapperApi CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
 		{
 			if (brokerVendorName == null)
 				throw new ArgumentNullException("brokerVendorName");
@@ -135,10 +135,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			};
 
 			var initialTransactionName = new MessageBrokerTransactionName(destinationType.ToString(), brokerVendorName, destination);
-			return new Transaction(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, true));
+			return new TransactionWrapperApi(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, true));
 		}
 
-		public Extensions.Providers.Wrapper.ITransaction CreateOtherTransaction(string category, string name, bool mustBeRootTransaction, Action wrapperOnCreate)
+		public Extensions.Providers.Wrapper.ITransactionWrapperApi CreateOtherTransaction(string category, string name, bool mustBeRootTransaction, Action wrapperOnCreate)
 		{
 			if (category == null)
 				throw new ArgumentNullException("category");
@@ -151,15 +151,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			};
 
 			var initialTransactionName = new OtherTransactionName(category, name);
-			return new Transaction(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, mustBeRootTransaction));
+			return new TransactionWrapperApi(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, mustBeRootTransaction));
 		}
 
-		public Extensions.Providers.Wrapper.ITransaction CurrentTransaction
+		public Extensions.Providers.Wrapper.ITransactionWrapperApi CurrentTransactionWrapperApi
 		{
 			get
 			{
 				var transaction = _transactionService.GetCurrentInternalTransaction();
-				return transaction == null ? _noOpTransaction : new Transaction(this, transaction);
+				return transaction == null ? NoOpTransactionWrapperApi : new TransactionWrapperApi(this, transaction);
 			}
 		}
 
@@ -294,7 +294,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 						var distributedTraceHeaders = new Dictionary<string, string>();
 						distributedTraceHeaders.Add(header.Key, header.Value);
 
-						CurrentTransaction.AcceptDistributedTracePayload(distributedTraceHeaders, transportType);
+						CurrentTransactionWrapperApi.AcceptDistributedTracePayload(distributedTraceHeaders, transportType);
 						break;
 					}
 				}
@@ -518,7 +518,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		/// need for this class by implementing the extension ITransaction interface in the agent's
 		/// transaction implementation.
 		/// </summary>
-		private sealed class Transaction : Extensions.Providers.Wrapper.ITransaction
+		private sealed class TransactionWrapperApi : Extensions.Providers.Wrapper.ITransactionWrapperApi
 		{
 			private readonly AgentWrapperApi agentWrapperApi;
 			private readonly ITransaction transaction;
@@ -539,7 +539,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				}
 			}
 
-			public Transaction(AgentWrapperApi agentWrapperApi, ITransaction transaction)
+			public TransactionWrapperApi(AgentWrapperApi agentWrapperApi, ITransaction transaction)
 			{
 				this.agentWrapperApi = agentWrapperApi;
 				this.transaction = transaction;
@@ -1019,7 +1019,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			}
 		}
 
-		private sealed class NoTransactionImpl : Extensions.Providers.Wrapper.ITransaction, ISegment
+		private sealed class NoTransactionWrapperApiImpl : Extensions.Providers.Wrapper.ITransactionWrapperApi, ISegment
 		{
 			public bool IsValid => false;
 

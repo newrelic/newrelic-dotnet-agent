@@ -48,11 +48,11 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 			return new CanWrapResponse(false);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transaction.AttachToAsync();
+				transactionWrapperApi.AttachToAsync();
 			}
 
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
@@ -70,7 +70,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 
 			var model = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-			var segment = transaction.StartDatastoreSegment(
+			var segment = transactionWrapperApi.StartDatastoreSegment(
 				instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation));
 

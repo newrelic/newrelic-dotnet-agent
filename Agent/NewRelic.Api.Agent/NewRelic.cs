@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 // This file is compiled into a dll which is shipped to the customer,
@@ -29,8 +28,28 @@ namespace NewRelic.Api.Agent
 	/// </summary>
 	public static class NewRelic
 	{
+		//static NewRelic()
+		//{
+		//	InitializePublicAgent(_publicAgent);
+		//}
+
+		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+		private static void InitializePublicAgent(object publicAgent)
+		{
+			System.Diagnostics.Trace.WriteLine($"NewRelic.InitializePublicAgent({publicAgent})");
+		}
+
+		private static readonly IAgent _publicAgent = new Agent();
+
+		/// <summary>
+		/// 
+		/// </summary>
+		//We are not disabling inlining and optimization of this method because our profiler
+		//is not rewriting the implementation of this method.
+		internal static IAgent GetAgent() { return _publicAgent; }
+
 		#region Metric API
-		
+
 		/// <summary>
 		/// Record a metric value for the given name.
 		/// </summary>

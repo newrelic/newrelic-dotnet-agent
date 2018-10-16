@@ -19,7 +19,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
-
+using System.Reflection;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -73,6 +73,21 @@ namespace NewRelic.Agent.Core.Api
 			_configurationService = configurationService;
 			_agentWrapperApi = agentWrapperApi;
 			_tracePriorityManager = tracePriorityManager;
+		}
+
+		public void InitializePublicAgent(object publicAgent)
+		{
+			try
+			{
+				Log.Info("Initializing the Agent API");
+				var method = publicAgent.GetType().GetMethod("SetWrappedAgent", BindingFlags.NonPublic | BindingFlags.Instance);
+				method.Invoke(publicAgent, new[] { new AgentBridgeApi() });
+			}
+			catch (Exception ex)
+			{
+				Log.Error("Failed to initialize the Agent API");
+				Log.Error(ex);
+			}
 		}
 
 		public void RecordCustomEvent(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
@@ -371,7 +386,7 @@ namespace NewRelic.Agent.Core.Api
 		{
 			try
 			{
-				var transaction = _agentWrapperApi.CurrentTransaction;
+				var transaction = _agentWrapperApi.CurrentTransactionWrapperApi;
 				transaction.SetUri(uri.AbsoluteUri);
 				transaction.SetOriginalUri(uri.AbsoluteUri);
 				transaction.SetWebTransactionNameFromPath(WebTransactionType.Custom, uri.AbsolutePath);
@@ -419,7 +434,7 @@ namespace NewRelic.Agent.Core.Api
 				{
 					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(IgnoreTransaction));
 
-					_agentWrapperApi.CurrentTransaction.Ignore();
+					_agentWrapperApi.CurrentTransactionWrapperApi.Ignore();
 				}
 			}
 			catch (Exception ex)
@@ -619,7 +634,7 @@ namespace NewRelic.Agent.Core.Api
 				return null;
 			}
 
-			return _agentWrapperApi.CurrentTransaction.GetRequestMetadata();
+			return _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata();
 		}
 
 		public IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
@@ -630,7 +645,7 @@ namespace NewRelic.Agent.Core.Api
 				return null;
 			}
 
-			return _agentWrapperApi.CurrentTransaction.GetResponseMetadata();
+			return _agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata();
 		}
 	}
 }

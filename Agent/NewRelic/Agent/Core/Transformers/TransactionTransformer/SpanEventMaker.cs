@@ -166,8 +166,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			
 			var data = (DatastoreSegmentData)segment.Data;
 			spanAttributes.Add(KeyComponent, MetricNames.GetCachedVendorNameString(data.DatastoreVendorName));
-			var statement = immutableTransaction.GetSqlObfuscatedAccordingToConfig(data.CommandText);
-			spanAttributes.Add(keyDbStatement, TruncateDatastoreStatement(statement));
+
+			if (!string.IsNullOrWhiteSpace(data.CommandText))
+			{
+				var statement = immutableTransaction.GetSqlObfuscatedAccordingToConfig(data.CommandText);
+				spanAttributes.Add(keyDbStatement, TruncateDatastoreStatement(statement));
+			}
+
 			spanAttributes.Add(keyDbInstance, data.DatabaseName);
 			spanAttributes.Add(keyPeerAddress, $"{data.Host}:{data.PortPathOrId}");
 			spanAttributes.Add(keyPeerHostname, data.Host);

@@ -30,29 +30,29 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 			return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("custom", "custom", instrumentedMethodInfo.Method.MethodName);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "<unknown>";
 			var methodName = instrumentedMethodCall.MethodCall.Method.MethodName;
 			
-			transaction = instrumentedMethodCall.StartWebTransaction ?
+			transactionWrapperApi = instrumentedMethodCall.StartWebTransaction ?
 				agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, "Custom", false) :
 				agentWrapperApi.CreateOtherTransaction("Custom", $"{typeName}/{methodName}", false);
 			
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transaction.AttachToAsync();
+				transactionWrapperApi.AttachToAsync();
 			}
 
 			var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
-				? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
-				: transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
+				? transactionWrapperApi.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
+				: transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 			
 			var hasMetricName = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName);
 			if (hasMetricName)
 			{
 				var priority = instrumentedMethodCall.RequestedTransactionNamePriority ?? TransactionNamePriority.Uri;
-				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, priority);
+				transactionWrapperApi.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, priority);
 			}
 
 			return Delegates.GetDelegateFor<Task>(
@@ -60,15 +60,15 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 				{
 					if (ex != null)
 					{ 
-						transaction.NoticeError(ex);
+						transactionWrapperApi.NoticeError(ex);
 					}
 
 					segment.End();
-					transaction.End();
+					transactionWrapperApi.End();
 				},
 				onSuccess: task =>
 				{
-					transaction.Detach();
+					transactionWrapperApi.Detach();
 
 					segment.RemoveSegmentFromCallStack();
 					
@@ -82,11 +82,11 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 						{
 							if (responseTask != null && responseTask.IsFaulted && responseTask.Exception != null)
 							{
-								transaction.NoticeError(responseTask.Exception);
+								transactionWrapperApi.NoticeError(responseTask.Exception);
 							}
 
 							segment.End();
-							transaction.End();
+							transactionWrapperApi.End();
 						}), TaskScheduler.FromCurrentSynchronizationContext());
 					}
 					else
@@ -95,11 +95,11 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 						{
 							if (responseTask != null && responseTask.IsFaulted && responseTask.Exception != null)
 							{ 
-								transaction.NoticeError(responseTask.Exception);
+								transactionWrapperApi.NoticeError(responseTask.Exception);
 							}
 
 							segment.End();
-							transaction.End();
+							transactionWrapperApi.End();
 						}), TaskContinuationOptions.ExecuteSynchronously);
 					}
 				});

@@ -34,7 +34,7 @@ namespace NewRelic.Providers.Wrapper.WebServices
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall,
-			IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+			IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var methodName = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 			if (methodName == null)
@@ -56,8 +56,8 @@ namespace NewRelic.Providers.Wrapper.WebServices
 
 			var transactionName = serviceType + "/" + methodName;
 
-			transaction.SetWebTransactionName(WebTransactionType.WebService, transactionName, TransactionNamePriority.FrameworkLow);
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall,
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.WebService, transactionName, TransactionNamePriority.FrameworkLow);
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall,
 				instrumentedMethodCall.MethodCall.Method.Type.ToString(), instrumentedMethodCall.MethodCall.Method.MethodName);
 			return Delegates.GetDelegateFor(segment);
 		}

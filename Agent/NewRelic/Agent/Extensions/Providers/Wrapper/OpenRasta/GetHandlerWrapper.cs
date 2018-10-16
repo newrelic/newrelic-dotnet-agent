@@ -18,7 +18,7 @@ namespace NewRelic.Providers.Wrapper.OpenRasta
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			//Handler name - much like the controller name from ASP .NET MVC / Web API
 			var httpContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<System.Web.HttpContext>(0);
@@ -33,9 +33,9 @@ namespace NewRelic.Providers.Wrapper.OpenRasta
 			System.Globalization.TextInfo textInfo = new System.Globalization.CultureInfo("en-US", false).TextInfo;
 			actionName = textInfo.ToLower(actionName);
 
-			transaction.SetWebTransactionName(WebTransactionType.OpenRasta, $"{handlerName}/{actionName}", TransactionNamePriority.FrameworkHigh);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.OpenRasta, $"{handlerName}/{actionName}", TransactionNamePriority.FrameworkHigh);
 
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, handlerName, actionName);
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, handlerName, actionName);
 			return segment == null ? Delegates.NoOp : Delegates.GetDelegateFor(segment.End);
 		}
 	}

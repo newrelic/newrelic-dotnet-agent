@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var result = null as String;
 
 			var wrapper = Mock.Create<IWrapper>();
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Returns((_, __) => result = "foo");
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
 
 			var type = typeof(Class_WrapperService);
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
 
 			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(true));
-			Mock.Arrange(() => _defaultWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+			Mock.Arrange(() => _defaultWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Returns((_, __) => result = "foo");
 
 			var type = typeof(Class_WrapperService);
 			const String methodName = "MyMethod";
@@ -124,7 +124,7 @@ namespace NewRelic.Agent.Core.Wrapper
 		{
 			string result = null;
 			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
-			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Returns((_, __) => result = "foo");
 			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(false));
 
 			var type = typeof(Class_WrapperService);
@@ -146,7 +146,7 @@ namespace NewRelic.Agent.Core.Wrapper
 		{
 			var wrapper = Mock.Create<IWrapper>();
 			var trackedWrapper = new TrackedWrapper(wrapper);
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Throws(new Exception());
+			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Throws(new Exception());
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
 
 			var type = typeof(Class_WrapperService);
@@ -168,9 +168,9 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			var wrapperMap = new WrapperMap(new List<IWrapper> { wrapper }, _defaultWrapper, _noOpWrapper);
 
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Throws(new Exception());
+			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Throws(new Exception());
 			Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(1);
-			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).OccursOnce();
+			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).OccursOnce();
 
 			var type = typeof(System.Web.HttpApplication);
 			const String methodName = "ExecuteStep";
@@ -197,7 +197,7 @@ namespace NewRelic.Agent.Core.Wrapper
 		{
 			var wrapper = Mock.Create<IWrapper>();
 			var trackedWrapper = new TrackedWrapper(wrapper);
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((result, exception) => { throw new Exception(); });
+			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Returns((result, exception) => { throw new Exception(); });
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
 
 			var type = typeof(Class_WrapperService);
@@ -220,7 +220,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			var wrapperMap = new WrapperMap(new List<IWrapper> { wrapper }, _defaultWrapper, _noOpWrapper);
 
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((result, exception) => { throw new Exception(); });
+			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Returns((result, exception) => { throw new Exception(); });
 			Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(1);
 
 			var type = typeof(System.Web.HttpApplication);
@@ -250,16 +250,16 @@ namespace NewRelic.Agent.Core.Wrapper
 		{
 			string result = null;
 			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
-			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Returns((_, __) => result = "foo");
 			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(false));
 
-			var transaction = Mock.Create<ITransaction>();
+			var transaction = Mock.Create<ITransactionWrapperApi>();
 			var segment = Mock.Create<ISegment>();
 
 			Mock.Arrange(() => transaction.IsValid).Returns(true);
 			Mock.Arrange(() => transaction.ParentSegment).Returns(segment);
 			Mock.Arrange(() => segment.IsLeaf).Returns(true);
-			Mock.Arrange(() => _agentWrapperApi.CurrentTransaction).Returns(transaction);
+			Mock.Arrange(() => _agentWrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
 			
 
 			var type = typeof(Class_WrapperService);

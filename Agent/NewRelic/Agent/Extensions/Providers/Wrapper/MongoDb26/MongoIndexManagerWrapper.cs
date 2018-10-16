@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 			dynamic caller = instrumentedMethodCall.MethodCall.InvocationTarget;
@@ -40,7 +40,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			dynamic collection = MongoDbHelper.GetCollectionFieldFromGeneric(caller);
 			ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(collection.Database);
 
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);
 
 			if (!instrumentedMethodCall.IsAsync)
@@ -57,7 +57,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			{
 				segment.RemoveSegmentFromCallStack();
 
-				transaction.Hold();
+				transactionWrapperApi.Hold();
 
 				if (task == null)
 				{
@@ -67,7 +67,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 				task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
 				{
 					segment.End();
-					transaction.Release();
+					transactionWrapperApi.Release();
 				}));
 			}
 		}

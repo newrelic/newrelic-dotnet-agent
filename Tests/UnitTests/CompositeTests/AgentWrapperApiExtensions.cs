@@ -12,7 +12,7 @@ namespace CompositeTests
 		public static ISegment StartTransactionSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String segmentName, MethodCall methodCall = null)
 		{
 			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransaction.StartTransactionSegment(methodCall, segmentName);
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartTransactionSegment(methodCall, segmentName);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 
@@ -23,7 +23,7 @@ namespace CompositeTests
 		public static ISegment StartCustomSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String segmentName, MethodCall methodCall = null)
 		{
 			methodCall = methodCall ?? GetCustomSegmentMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransaction.StartCustomSegment(methodCall, segmentName);
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartCustomSegment(methodCall, segmentName);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 
@@ -34,7 +34,7 @@ namespace CompositeTests
 		public static ISegment StartMethodSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String typeName, [NotNull] String methodName, MethodCall methodCall = null)
 		{
 			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransaction.StartMethodSegment(methodCall, typeName, methodName);
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartMethodSegment(methodCall, typeName, methodName);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 
@@ -45,7 +45,7 @@ namespace CompositeTests
 		public static ISegment StartExternalRequestSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] Uri uri, [NotNull] String httpVerb, MethodCall methodCall = null)
 		{
 			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransaction.StartExternalRequestSegment(methodCall, uri, httpVerb);
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartExternalRequestSegment(methodCall, uri, httpVerb);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 
@@ -56,7 +56,7 @@ namespace CompositeTests
 		public static ISegment StartDatastoreRequestSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, String operation, DatastoreVendor vendor, String model, String commandText = null, MethodCall methodCall = null, String host = null, String portPathOrId = null, String databaseName = null, IDictionary<string,IConvertible> queryParameters = null)
 		{
 			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransaction.StartDatastoreSegment(methodCall, new ParsedSqlStatement(vendor, model, operation), new ConnectionInfo(host, portPathOrId, databaseName), commandText, queryParameters);
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartDatastoreSegment(methodCall, new ParsedSqlStatement(vendor, model, operation), new ConnectionInfo(host, portPathOrId, databaseName), commandText, queryParameters);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 
@@ -66,7 +66,7 @@ namespace CompositeTests
 		public static ISegment StartRabbitMqPayloadCreationSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, String vendor, MessageBrokerDestinationType destinationType, String destination, MessageBrokerAction action, MethodCall methodCall = null, Dictionary<string, object> headers = null)
 		{
 			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransaction.StartRabbitMQSegmentAndCreateDistributedTracePayload(methodCall, destinationType, action, vendor, destination, headers);
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartRabbitMQSegmentAndCreateDistributedTracePayload(methodCall, destinationType, action, vendor, destination, headers);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 
@@ -77,7 +77,7 @@ namespace CompositeTests
 		public static ISegment StartMessageBrokerSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String vendor, MessageBrokerDestinationType destinationType, String destination, MessageBrokerAction action, MethodCall methodCall = null)
 		{
 			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransaction.StartMessageBrokerSegment(methodCall, destinationType, action, vendor, destination);
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartMessageBrokerSegment(methodCall, destinationType, action, vendor, destination);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 

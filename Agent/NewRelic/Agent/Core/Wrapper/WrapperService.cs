@@ -98,17 +98,17 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			var wrapper = trackedWrapper.Wrapper;
 
-			ITransaction transaction = null;
+			ITransactionWrapperApi transactionWrapperApi = null;
 			if (wrapper.IsTransactionRequired)
 			{
-				transaction = _agentWrapperApi.CurrentTransaction;
-				if (!transaction.IsValid)
+				transactionWrapperApi = _agentWrapperApi.CurrentTransactionWrapperApi;
+				if (!transactionWrapperApi.IsValid)
 				{
 					Log.FinestFormat("No transaction, skipping method {0}.{1}({2})", type.FullName, methodName, argumentSignature);
 					return Delegates.NoOp;
 				}
 
-				if (transaction.ParentSegment.IsLeaf)
+				if (transactionWrapperApi.ParentSegment.IsLeaf)
 				{
 					return Delegates.NoOp;
 				}
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			{
 				using (_agentTimerService.StartNew("BeforeWrappedMethod", type.FullName, methodName))
 				{
-					var afterWrappedMethod = wrapper.BeforeWrappedMethod(instrumentedMethodCall, _agentWrapperApi, transaction);
+					var afterWrappedMethod = wrapper.BeforeWrappedMethod(instrumentedMethodCall, _agentWrapperApi, transactionWrapperApi);
 					return (result, exception) =>
 					{
 						using (_agentTimerService.StartNew("AfterWrappedMethod", type.FullName, methodName))

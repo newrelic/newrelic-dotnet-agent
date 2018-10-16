@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Api;
 
 // The AgentApi is the only interface we expose to our customers.
@@ -32,11 +31,16 @@ namespace NewRelic.Agent.Core
 			AgentInitializer.InitializeAgent();
 		}
 
-		[CanBeNull] private static IAgentApi _agentApiImplementation;
+		private static IAgentApi _agentApiImplementation;
 
-		public static void SetAgentApiImplementation([CanBeNull] IAgentApi agentApiImplementation)
+		public static void SetAgentApiImplementation(IAgentApi agentApiImplementation)
 		{
 			_agentApiImplementation = agentApiImplementation;
+		}
+
+		public static void InitializePublicAgent(object publicAgent)
+		{
+			_agentApiImplementation?.InitializePublicAgent(publicAgent);
 		}
 
 		/// <summary>

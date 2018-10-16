@@ -38,14 +38,14 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 			return new CanWrapResponse(false);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transaction.AttachToAsync();
+				transactionWrapperApi.AttachToAsync();
 			}
 
-			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "DatabaseResult/Iterate");
+			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, "DatabaseResult/Iterate");
 			segment.MakeCombinable();
 
 			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);

@@ -33,9 +33,9 @@ namespace NewRelic.Agent.Core.Api
 			//Arrange
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
 
-			var transaction = Mock.Create<ITransaction>();
+			var transaction = Mock.Create<ITransactionWrapperApi>();
 
-			Mock.Arrange(() => _wrapperApi.CurrentTransaction).Returns(transaction);
+			Mock.Arrange(() => _wrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
 			Mock.Arrange(() => transaction.GetRequestMetadata(Arg.IsAny<ISegment>())).Returns(new Dictionary<string, string> { {"X-NewRelic-ID", "Test"} });
 			
 			//Act
@@ -51,9 +51,9 @@ namespace NewRelic.Agent.Core.Api
 			//Arrange
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(false);
 
-			var transaction = Mock.Create<ITransaction>();
+			var transaction = Mock.Create<ITransactionWrapperApi>();
 
-			Mock.Arrange(() => _wrapperApi.CurrentTransaction).Returns(transaction);
+			Mock.Arrange(() => _wrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
 			Mock.Arrange(() => transaction.GetRequestMetadata(Arg.IsAny<ISegment>())).Returns(new Dictionary<string, string> { {"X-NewRelic-ID", "Test"} });
 			
 			//Act
@@ -69,9 +69,9 @@ namespace NewRelic.Agent.Core.Api
 			//Arrange
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
 
-			var transaction = Mock.Create<ITransaction>();
+			var transaction = Mock.Create<ITransactionWrapperApi>();
 
-			Mock.Arrange(() => _wrapperApi.CurrentTransaction).Returns(transaction);
+			Mock.Arrange(() => _wrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
 			Mock.Arrange(() => transaction.GetResponseMetadata()).Returns(new Dictionary<string, string> { {"X-NewRelic-App-Data", "Test"} });
 			
 			//Act
@@ -87,9 +87,9 @@ namespace NewRelic.Agent.Core.Api
 			//Arrange
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(false);
 
-			var transaction = Mock.Create<ITransaction>();
+			var transaction = Mock.Create<ITransactionWrapperApi>();
 
-			Mock.Arrange(() => _wrapperApi.CurrentTransaction).Returns(transaction);
+			Mock.Arrange(() => _wrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
 			Mock.Arrange(() => transaction.GetResponseMetadata()).Returns(new Dictionary<string, string> { {"X-NewRelic-App-Data", "Test"} });
 			
 			//Act

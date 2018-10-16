@@ -91,7 +91,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var httpApplication = (HttpApplication)instrumentedMethodCall.MethodCall.InvocationTarget;
 			if (httpApplication == null)
@@ -120,20 +120,20 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			if (httpContext == null)
 				throw new NullReferenceException("httpApplication.Context");
 
-			ITransaction transaction;
+			ITransactionWrapperApi transactionWrapperApi;
 			if (eventName == "BeginRequest")
 			{
 				Action onCreate = () =>
 				{
 					HttpContextActions.TransactionStartup(agentWrapperApi, httpContext);
 				};
-				transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "Classic Pipeline", true, onCreate);
+				transactionWrapperApi = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "Classic Pipeline", true, onCreate);
 			} else
 			{
-				transaction = agentWrapperApi.CurrentTransaction;
+				transactionWrapperApi = agentWrapperApi.CurrentTransactionWrapperApi;
 			}
 
-			var segment = transaction.StartTransactionSegment(methodCall, eventName);
+			var segment = transactionWrapperApi.StartTransactionSegment(methodCall, eventName);
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = segment;
 		}
 
@@ -153,7 +153,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			if (eventName == "EndRequest")
 			{
 				HttpContextActions.TransactionShutdown(agentWrapperApi, httpContext);
-				agentWrapperApi.CurrentTransaction.End();
+				agentWrapperApi.CurrentTransactionWrapperApi.End();
 			}
 		}
 

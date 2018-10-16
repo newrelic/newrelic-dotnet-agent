@@ -6,7 +6,7 @@ using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
-	public interface ITransaction : IDisposable
+	public interface ITransactionWrapperApi : IDisposable
 	{
 		/// <summary>
 		/// Flags the current transaction as ignored.  The transaction will continue to be built up as normal, but once it is complete it will be dropped rather than being reported to New Relic.  No new segments will be created.

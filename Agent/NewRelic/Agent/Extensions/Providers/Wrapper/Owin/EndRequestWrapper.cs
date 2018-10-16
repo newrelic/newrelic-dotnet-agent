@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.Owin
 			return new CanWrapResponse(canWrap);
 		}
 		
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransactionWrapperApi transactionWrapperApi)
 		{
 			var owinHttpListenerContext = instrumentedMethodCall.MethodCall.MethodArguments[0];
 			var owinTransaction = OwinTransactionContext.ExtractTransactionFromContext(owinHttpListenerContext);

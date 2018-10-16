@@ -32,16 +32,16 @@ namespace NewRelic.Providers.Wrapper.WebApi2
 			return new CanWrapResponse(false);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var httpActionContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpActionContext>(0);
 			var controllerName = TryGetControllerName(httpActionContext) ?? "Unknown Controller";
 			var actionName = TryGetActionName(httpActionContext) ?? "Unknown Action";
 
 			var transactionName = String.Format("{0}/{1}", controllerName, actionName);
-			transaction.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, TransactionNamePriority.FrameworkHigh);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, TransactionNamePriority.FrameworkHigh);
 
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
 			return Delegates.GetDelegateFor<Task<HttpResponseMessage>>(
 				onFailure: segment.End,

@@ -21,6 +21,7 @@ using NewRelic.Agent.Core.Configuration.UnitTest;
 using NewRelic.Agent.Core.Database;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -323,45 +324,47 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionAttributes = attributes.GetIntrinsics()
 				.Concat(attributes.GetAgentAttributes())
 				.Concat(attributes.GetUserAttributes())
-				.ToDictionary(attr => attr.Key, attr => attr.Value);
+				.ToList();
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(34, attributes.Count()),  // Assert that only these attributes are generated
-				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
-				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),
-				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
-				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["webDuration"]),
-				() => Assert.AreEqual(1, transactionAttributes["queueDuration"]),
-				() => Assert.AreEqual(2, transactionAttributes["externalDuration"]),
-				() => Assert.True(transactionAttributes.ContainsKey("externalCallCount")),
-				() => Assert.True(transactionAttributes.ContainsKey("nr.apdexPerfZone")),
-				() => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
-				() => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
-				() => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
-				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
-				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
-				() => Assert.AreEqual("requestParameterValue", transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
-				() => Assert.AreEqual("referrerProcessId", transactionAttributes["client_cross_process_id"]),
-				() => Assert.AreEqual("referrerTripId", transactionAttributes["trip_id"]),
-				() => Assert.AreEqual("referrerTripId", transactionAttributes["nr.tripId"]),
-				() => Assert.AreEqual("pathHash2", transactionAttributes["path_hash"]),
-				() => Assert.AreEqual("pathHash2", transactionAttributes["nr.pathHash"]),
-				() => Assert.AreEqual("referringPathHash", transactionAttributes["nr.referringPathHash"]),
-				() => Assert.AreEqual("referringTransactionGuid", transactionAttributes["referring_transaction_guid"]),
-				() => Assert.AreEqual("referringTransactionGuid", transactionAttributes["nr.referringTransactionGuid"]),
-				() => Assert.AreEqual("pathHash", transactionAttributes["nr.alternatePathHashes"]),
-				() => Assert.AreEqual("400", transactionAttributes["error.class"]),
-				() => Assert.AreEqual("400", transactionAttributes["errorType"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"]),
-				() => Assert.AreEqual(true, transactionAttributes["error"]),
-				() => Assert.Contains("host.displayName", transactionAttributes.Keys)
+				() => Assert.AreEqual(36, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual("Transaction", GetAttributeValue(transactionAttributes, "type", AttributeDestinations.TransactionEvent)),
+				() => Assert.AreEqual("TransactionError", GetAttributeValue(transactionAttributes, "type", AttributeDestinations.ErrorEvent)),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.TransactionEvent)),
+				() => Assert.AreEqual(errorData.NoticedAt.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.ErrorEvent)),
+				() => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "name")),
+				() => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "transactionName")),
+				() => Assert.AreEqual(immutableTransaction.Guid, GetAttributeValue(transactionAttributes, "nr.guid")),
+				() => Assert.AreEqual(0.5f, GetAttributeValue(transactionAttributes, "duration")),
+				() => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "totalTime")),
+				() => Assert.AreEqual(0.5, GetAttributeValue(transactionAttributes, "webDuration")),
+				() => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "queueDuration")),
+				() => Assert.AreEqual(2, GetAttributeValue(transactionAttributes, "externalDuration")),
+				() => Assert.True(DoAttributesContain(transactionAttributes,"externalCallCount")),
+				() => Assert.True(DoAttributesContain(transactionAttributes,"nr.apdexPerfZone")),
+				() => Assert.AreEqual("originalUri", GetAttributeValue(transactionAttributes, "original_url")),
+				() => Assert.AreEqual("uri", GetAttributeValue(transactionAttributes, "request.uri")),
+				() => Assert.AreEqual("referrerUri", GetAttributeValue(transactionAttributes, "request.referer")),
+				() => Assert.AreEqual("1000", GetAttributeValue(transactionAttributes, "queue_wait_time_ms")),
+				() => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "response.status")),
+				() => Assert.AreEqual("requestParameterValue", GetAttributeValue(transactionAttributes, "request.parameters.requestParameterKey")),
+				() => Assert.AreEqual("userAttributeValue", GetAttributeValue(transactionAttributes, "userAttributeKey")),
+				() => Assert.AreEqual("referrerProcessId", GetAttributeValue(transactionAttributes, "client_cross_process_id")),
+				() => Assert.AreEqual("referrerTripId", GetAttributeValue(transactionAttributes, "trip_id")),
+				() => Assert.AreEqual("referrerTripId", GetAttributeValue(transactionAttributes, "nr.tripId")),
+				() => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "path_hash")),
+				() => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "nr.pathHash")),
+				() => Assert.AreEqual("referringPathHash", GetAttributeValue(transactionAttributes, "nr.referringPathHash")),
+				() => Assert.AreEqual("referringTransactionGuid", GetAttributeValue(transactionAttributes, "referring_transaction_guid")),
+				() => Assert.AreEqual("referringTransactionGuid", GetAttributeValue(transactionAttributes, "nr.referringTransactionGuid")),
+				() => Assert.AreEqual("pathHash", GetAttributeValue(transactionAttributes, "nr.alternatePathHashes")),
+				() => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.class")),
+				() => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorType")),
+				() => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "errorMessage")),
+				() => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "error.message")),
+				() => Assert.AreEqual(true, GetAttributeValue(transactionAttributes, "error")),
+				() => Assert.True(DoAttributesContain(transactionAttributes,"host.displayName"))
 			);
 		}
 
@@ -403,42 +406,44 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionAttributes = attributes.GetIntrinsics()
 				.Concat(attributes.GetAgentAttributes())
 				.Concat(attributes.GetUserAttributes())
-				.ToDictionary(attr => attr.Key, attr => attr.Value);
+				.ToList();
 
 			var tripId = immutableTransaction.Guid;
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(30, attributes.Count()),  // Assert that only these attributes are generated
-				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTimeMilliseconds(), transactionAttributes["timestamp"]),
-				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),
-				() => Assert.AreEqual(0.5f, transactionAttributes["duration"]),
-				() => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-				() => Assert.AreEqual(0.5, transactionAttributes["webDuration"]),
-				() => Assert.AreEqual(1, transactionAttributes["queueDuration"]),
-				() => Assert.AreEqual(2, transactionAttributes["externalDuration"]),
-				() => Assert.True(transactionAttributes.ContainsKey("externalCallCount")),
-				() => Assert.True(transactionAttributes.ContainsKey("nr.apdexPerfZone")),
-				() => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
-				() => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
-				() => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
-				() => Assert.AreEqual("1000", transactionAttributes["queue_wait_time_ms"]),
-				() => Assert.AreEqual("400", transactionAttributes["response.status"]),
-				() => Assert.AreEqual("requestParameterValue", transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
-				() => Assert.AreEqual(tripId, transactionAttributes["trip_id"]),
-				() => Assert.AreEqual(tripId, transactionAttributes["nr.tripId"]),
-				() => Assert.AreEqual("pathHash2", transactionAttributes["path_hash"]),
-				() => Assert.AreEqual("pathHash2", transactionAttributes["nr.pathHash"]),
-				() => Assert.AreEqual("pathHash", transactionAttributes["nr.alternatePathHashes"]),
-				() => Assert.AreEqual("400", transactionAttributes["error.class"]),
-				() => Assert.AreEqual("400", transactionAttributes["errorType"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual("Bad Request", transactionAttributes["error.message"]),
-				() => Assert.AreEqual(true, transactionAttributes["error"]),
-				() => Assert.Contains("host.displayName", transactionAttributes.Keys)
+				() => Assert.AreEqual(32, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.AreEqual("Transaction", GetAttributeValue(transactionAttributes, "type", AttributeDestinations.TransactionEvent)),
+				() => Assert.AreEqual("TransactionError", GetAttributeValue(transactionAttributes, "type", AttributeDestinations.ErrorEvent)),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.TransactionEvent)),
+				() => Assert.AreEqual(errorData.NoticedAt.ToUnixTimeMilliseconds(), GetAttributeValue(transactionAttributes, "timestamp", AttributeDestinations.ErrorEvent)),
+				() => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "name")),
+				() => Assert.AreEqual("WebTransaction/TransactionName", GetAttributeValue(transactionAttributes, "transactionName")),
+				() => Assert.AreEqual(immutableTransaction.Guid, GetAttributeValue(transactionAttributes, "nr.guid")),
+				() => Assert.AreEqual(0.5f, GetAttributeValue(transactionAttributes, "duration")),
+				() => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "totalTime")),
+				() => Assert.AreEqual(0.5, GetAttributeValue(transactionAttributes, "webDuration")),
+				() => Assert.AreEqual(1, GetAttributeValue(transactionAttributes, "queueDuration")),
+				() => Assert.AreEqual(2, GetAttributeValue(transactionAttributes, "externalDuration")),
+				() => Assert.True(DoAttributesContain(transactionAttributes,"externalCallCount")),
+				() => Assert.True(DoAttributesContain(transactionAttributes,"nr.apdexPerfZone")),
+				() => Assert.AreEqual("originalUri", GetAttributeValue(transactionAttributes, "original_url")),
+				() => Assert.AreEqual("uri", GetAttributeValue(transactionAttributes, "request.uri")),
+				() => Assert.AreEqual("referrerUri", GetAttributeValue(transactionAttributes, "request.referer")),
+				() => Assert.AreEqual("1000", GetAttributeValue(transactionAttributes, "queue_wait_time_ms")),
+				() => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "response.status")),
+				() => Assert.AreEqual("requestParameterValue", GetAttributeValue(transactionAttributes, "request.parameters.requestParameterKey")),
+				() => Assert.AreEqual("userAttributeValue", GetAttributeValue(transactionAttributes, "userAttributeKey")),
+				() => Assert.AreEqual(tripId, GetAttributeValue(transactionAttributes, "trip_id")),
+				() => Assert.AreEqual(tripId, GetAttributeValue(transactionAttributes, "nr.tripId")),
+				() => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "path_hash")),
+				() => Assert.AreEqual("pathHash2", GetAttributeValue(transactionAttributes, "nr.pathHash")),
+				() => Assert.AreEqual("pathHash", GetAttributeValue(transactionAttributes, "nr.alternatePathHashes")),
+				() => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "error.class")),
+				() => Assert.AreEqual("400", GetAttributeValue(transactionAttributes, "errorType")),
+				() => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "errorMessage")),
+				() => Assert.AreEqual("Bad Request", GetAttributeValue(transactionAttributes, "error.message")),
+				() => Assert.AreEqual(true, GetAttributeValue(transactionAttributes, "error")),
+				() => Assert.True(DoAttributesContain(transactionAttributes,"host.displayName"))
 			);
 		}
 
@@ -469,11 +474,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionAttributes = attributes.GetIntrinsics()
 				.Concat(attributes.GetAgentAttributes())
 				.Concat(attributes.GetUserAttributes())
-				.ToDictionary(attr => attr.Key, attr => attr.Value);
+				.ToList();
+
 
 			// ASSERT
-			Assert.False(transactionAttributes.ContainsKey("originalUri"));
+			Assert.False(DoAttributesContain(transactionAttributes,"originalUri"));
 		}
+
+
+
 
 		[Test]
 		public void GetAttributes_SendsAttributesToCorrectLocations()
@@ -515,45 +524,47 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionAttributes = attributes.GetIntrinsics()
 				.Concat(attributes.GetAgentAttributes())
 				.Concat(attributes.GetUserAttributes())
-				.ToDictionary(attr => attr.Key, attr => attr.DefaultDestinations);
+				.ToList();
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(35, attributes.Count()),  // Assert that only these attributes are generated
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["type"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["timestamp"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["name"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["nr.guid"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["duration"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["webDuration"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace, transactionAttributes["totalTime"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["databaseDuration"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["databaseCallCount"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.apdexPerfZone"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace, transactionAttributes["client_cross_process_id"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace, transactionAttributes["trip_id"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.tripId"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace, transactionAttributes["path_hash"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.pathHash"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.referringPathHash"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace, transactionAttributes["referring_transaction_guid"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["nr.referringTransactionGuid"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.alternatePathHashes"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace, transactionAttributes["request.uri"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["request.referer"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["queue_wait_time_ms"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent, transactionAttributes["response.status"]),
-				() => Assert.AreEqual(AttributeDestinations.None, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeDestinations.All, transactionAttributes["userAttributeKey"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace, transactionAttributes["userErrorAttributeKey"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.class"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["errorType"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["error.message"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["error"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.ErrorEvent, transactionAttributes["host.displayName"])
+				() => Assert.AreEqual(37, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.True(DoAttributesContain(transactionAttributes, "type", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "type", (AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "timestamp", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "timestamp", (AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "name", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "transactionName", (AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.guid", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "duration", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "webDuration", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "totalTime", (AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "databaseDuration", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "databaseCallCount", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "client_cross_process_id", (AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "trip_id", (AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.tripId", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "path_hash", (AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.pathHash", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.referringPathHash", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "referring_transaction_guid", (AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.referringTransactionGuid", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.alternatePathHashes", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "original_url", (AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.uri", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.referer", (AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "queue_wait_time_ms", (AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "response.status", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.parameters.requestParameterKey", (AttributeDestinations.None))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "userAttributeKey", (AttributeDestinations.All))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "userErrorAttributeKey", (AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error.class", (AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "errorType", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "errorMessage", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error.message", (AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName", (AttributeDestinations.TransactionTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.ErrorEvent)))
 			);
 		}
 
@@ -598,47 +609,52 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionAttributes = attributes.GetIntrinsics()
 				.Concat(attributes.GetAgentAttributes())
 				.Concat(attributes.GetUserAttributes())
-				.ToDictionary(attr => attr.Key, attr => attr.Classification);
+				.ToList();
+
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(35, attributes.Count()),  // Assert that only these attributes are generated
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.guid"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["duration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics | AttributeClassification.Intrinsics, transactionAttributes["totalTime"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["webDuration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["queueDuration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["externalDuration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["externalCallCount"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.apdexPerfZone"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.uri"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.referer"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["queue_wait_time_ms"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["response.status"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["host.displayName"]),
-				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userAttributeKey"]),
-				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userErrorAttributeKey"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["client_cross_process_id"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["trip_id"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.tripId"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["path_hash"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.pathHash"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.referringPathHash"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["referring_transaction_guid"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.referringTransactionGuid"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.alternatePathHashes"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.class"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorType"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.message"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error"])
+				() => Assert.AreEqual(37, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.True(DoAttributesContain(transactionAttributes, "type", AttributeDestinations.TransactionEvent, (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "type", AttributeDestinations.ErrorEvent, (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "timestamp", AttributeDestinations.TransactionEvent, (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "timestamp", AttributeDestinations.ErrorEvent, (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "name", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "transactionName", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.guid", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "duration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "totalTime", (AttributeClassification.Intrinsics | AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "webDuration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "queueDuration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "externalDuration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "externalCallCount", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "original_url", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.uri", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.referer", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "queue_wait_time_ms", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "response.status", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.parameters.requestParameterKey", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "userAttributeKey", (AttributeClassification.UserAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "userErrorAttributeKey", (AttributeClassification.UserAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "client_cross_process_id", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "trip_id", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.tripId", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "path_hash", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.pathHash", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.referringPathHash", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "referring_transaction_guid", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.referringTransactionGuid", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.alternatePathHashes", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error.class", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "errorType", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "errorMessage", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error.message", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error", (AttributeClassification.Intrinsics)))
 			);
+
+
 		}
 
 		[Test]
@@ -683,46 +699,48 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionAttributes = attributes.GetIntrinsics()
 				.Concat(attributes.GetAgentAttributes())
 				.Concat(attributes.GetUserAttributes())
-				.ToDictionary(attr => attr.Key, attr => attr.Classification);
+				.ToList();
 
 			// ASSERT
 			NrAssert.Multiple(
-				() => Assert.AreEqual(37, attributes.Count()),  // Assert that only these attributes are generated
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["type"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["timestamp"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["name"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.guid"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["duration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics | AttributeClassification.Intrinsics, transactionAttributes["totalTime"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["webDuration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["queueDuration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["externalDuration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["externalCallCount"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["databaseDuration"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["databaseCallCount"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.apdexPerfZone"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["original_url"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.referer"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["queue_wait_time_ms"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["response.status"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["request.parameters.requestParameterKey"]),
-				() => Assert.AreEqual(AttributeClassification.AgentAttributes, transactionAttributes["host.displayName"]),
-				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userAttributeKey"]),
-				() => Assert.AreEqual(AttributeClassification.UserAttributes, transactionAttributes["userErrorAttributeKey"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["client_cross_process_id"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["trip_id"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.tripId"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["path_hash"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.pathHash"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.referringPathHash"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["referring_transaction_guid"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.referringTransactionGuid"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["nr.alternatePathHashes"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error.class"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorType"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["errorMessage"]),
-				() => Assert.AreEqual(AttributeClassification.Intrinsics, transactionAttributes["error"])
+				() => Assert.AreEqual(39, attributes.Count()),  // Assert that only these attributes are generated
+				() => Assert.True(DoAttributesContain(transactionAttributes, "type", AttributeDestinations.TransactionEvent, (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "type", AttributeDestinations.ErrorEvent, (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "timestamp", AttributeDestinations.TransactionEvent,(AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "timestamp", AttributeDestinations.ErrorEvent, (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "name", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "transactionName", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.guid", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "duration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "totalTime", (AttributeClassification.Intrinsics | AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "webDuration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "queueDuration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "externalDuration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "externalCallCount", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "databaseDuration", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "databaseCallCount", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "original_url", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.referer", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "queue_wait_time_ms", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "response.status", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.parameters.requestParameterKey", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "host.displayName", (AttributeClassification.AgentAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "userAttributeKey", (AttributeClassification.UserAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "userErrorAttributeKey", (AttributeClassification.UserAttributes))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "client_cross_process_id", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "trip_id", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.tripId", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "path_hash", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.pathHash", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.referringPathHash", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "referring_transaction_guid", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.referringTransactionGuid", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.alternatePathHashes", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error.class", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "errorType", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "errorMessage", (AttributeClassification.Intrinsics))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "error", (AttributeClassification.Intrinsics)))
 			);
 		}
 
@@ -949,30 +967,30 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionAttributes = attributes.GetIntrinsics()
 				.Concat(attributes.GetAgentAttributes())
 				.Concat(attributes.GetUserAttributes())
-				.ToDictionary(attr => attr.Key, attr => attr.DefaultDestinations);
+				.ToList();
 
 			// ASSERT
 			NrAssert.Multiple(
 				() => Assert.AreEqual(21, attributes.Count()),  // Assert that only these attributes are generated
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["type"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["timestamp"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["name"]),
-				() => Assert.AreEqual(AttributeDestinations.ErrorEvent, transactionAttributes["transactionName"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent, transactionAttributes["duration"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["webDuration"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace, transactionAttributes["totalTime"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["nr.apdexPerfZone"]),
-				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.type"]),
-				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.app"]),
-				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.account"]),
-				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.transportType"]),
-				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["parent.transportDuration"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes[ParentSpanIdAttributeName]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["parentId"]),
-				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["priority"]),
-				() => Assert.AreEqual(AllTracesAndEventsDestinations, transactionAttributes["sampled"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent, transactionAttributes["parentSpanId"]),
-				() => Assert.AreEqual(AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace, transactionAttributes["request.uri"])
+				() => Assert.True(DoAttributesContain(transactionAttributes, "type", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "timestamp", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "name", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "transactionName", (AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "duration", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "webDuration", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "totalTime", (AttributeDestinations.TransactionEvent | AttributeDestinations.TransactionTrace))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "parent.type", (AllTracesAndEventsDestinations))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "parent.app", (AllTracesAndEventsDestinations))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "parent.account", (AllTracesAndEventsDestinations))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "parent.transportType", (AllTracesAndEventsDestinations))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "parent.transportDuration", (AllTracesAndEventsDestinations))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, ParentSpanIdAttributeName, (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "parentId", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "priority", (AllTracesAndEventsDestinations))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "sampled", (AllTracesAndEventsDestinations))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "parentSpanId", (AttributeDestinations.TransactionEvent))),
+				() => Assert.True(DoAttributesContain(transactionAttributes, "request.uri", (AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace | AttributeDestinations.TransactionTrace | AttributeDestinations.SqlTrace)))
 			);
 		}
 
@@ -1410,5 +1428,57 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		#endregion GetUserAndAgentAttributes
 
+
+
+
+
+		
+
+		private bool DoAttributesContain(IEnumerable<Transactions.Attribute> attributes, string attribName, AttributeDestinations destinations)
+		{
+			return attributes
+				.Where(x => (x.DefaultDestinations | destinations) == destinations)
+				.Any(x => x.Key == attribName);
+
+		}
+
+		private bool DoAttributesContain(IEnumerable<Transactions.Attribute> attributes, string attribName, AttributeDestinations destinations, AttributeClassification classification)
+		{
+			return attributes
+				.Where(x => (x.DefaultDestinations | destinations) == destinations)
+				.Where(x => (x.Classification | classification) == classification)
+				.Any(x => x.Key == attribName);
+
+		}
+
+		private bool DoAttributesContain(IEnumerable<Transactions.Attribute> attributes, string attribName, AttributeClassification classification)
+		{
+			return attributes
+				.Where(x => (x.Classification | classification) == classification)
+				.Any(x => x.Key == attribName);
+
+		}
+
+		private bool DoAttributesContain(IEnumerable<Transactions.Attribute> attributes, string attribName)
+		{
+			return attributes.Any(x => x.Key == attribName);
+		}
+
+		private object GetAttributeValue(IEnumerable<Transactions.Attribute> attributes, string attribName, AttributeDestinations destinations)
+		{
+			return attributes
+				.Where(x => (x.DefaultDestinations | destinations) == destinations)
+				.Where(x => x.Key == attribName)
+				.Select(x => x.Value)
+				.FirstOrDefault();
+		}
+
+		private object GetAttributeValue(IEnumerable<Transactions.Attribute> attributes, string attribName)
+		{
+			return attributes
+				.Where(x => x.Key == attribName)
+				.Select(x => x.Value)
+				.FirstOrDefault();
+		}
 	}
 }

@@ -5,6 +5,7 @@ namespace NewRelic.Agent.Core.Api
 {
 	public interface IAgentApi
 	{
+		void InitializePublicAgent(object publicAgent);
 		void RecordCustomEvent(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes);
 		void RecordMetric(String name, Single value);
 		void RecordResponseTimeMetric(String name, Int64 millis);

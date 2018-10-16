@@ -47,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var methodInfo = TryGetMethodInfo(instrumentedMethodCall.MethodCall.Method.MethodName, instrumentedMethodCall.MethodCall.InvocationTarget);
 			if (methodInfo == null)
@@ -59,28 +59,28 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 			var name = GetTransactionName(agentWrapperApi, uri, methodInfo);
 
-			transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
+			transactionWrapperApi = agentWrapperApi.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
 
 			var absoluteUri = uri?.AbsoluteUri;
 
 			if (!string.IsNullOrEmpty(absoluteUri))
 			{
-				transaction.SetUri(absoluteUri);
+				transactionWrapperApi.SetUri(absoluteUri);
 			}
 
-			transaction.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);
-			transaction.SetRequestParameters(parameters);
-			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);
+			transactionWrapperApi.SetRequestParameters(parameters);
+			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
 			return Delegates.GetDelegateFor(
 				onFailure: exception =>
 				{
-					transaction.NoticeError(exception);
+					transactionWrapperApi.NoticeError(exception);
 				},
 				onComplete: () =>
 				{
 					segment.End();
-					transaction.End();
+					transactionWrapperApi.End();
 				});
 		}
 

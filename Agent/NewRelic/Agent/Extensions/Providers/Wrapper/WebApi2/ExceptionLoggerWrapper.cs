@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var exceptionLoggerContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<ExceptionLoggerContext>(0);
 			if (exceptionLoggerContext == null)
@@ -31,7 +31,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
 			if (exception == null)
 				return Delegates.NoOp;
 
-			transaction.NoticeError(exception);
+			transactionWrapperApi.NoticeError(exception);
 
 			return Delegates.NoOp;
 		}

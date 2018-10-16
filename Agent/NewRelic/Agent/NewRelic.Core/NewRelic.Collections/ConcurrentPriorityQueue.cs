@@ -6,15 +6,14 @@ using System.Threading;
 
 namespace NewRelic.Collections
 {
-
-
 	public class ConcurrentPriorityQueue<T> : IResizableCappedCollection<T>
 	{
-		private static object _syncroot = new object();
+		private readonly object _syncroot = new object();
 
-		private int _addCount = 0;
+		//count of number of item adds that have been attempted since ctor/Clear/Set
+		private int _addsAttempted;
 
-		private SortedSet<T> _sortedSet;
+		private readonly SortedSet<T> _sortedSet;
 
 		public uint Size {  get; private set;  }
 
@@ -43,10 +42,13 @@ namespace NewRelic.Collections
 			{
 				lock (_syncroot)
 				{
-					itemsAdded = items.Count(item => _sortedSet.Add(item));
-
-					_addCount += itemsAdded;
-					RemoveItemsFromBottomOfSortedSet();
+					foreach (var item in items)
+					{
+						if (AddInternal(item))
+						{
+							++itemsAdded;
+						}
+					}
 				}
 			}
 			return itemsAdded;
@@ -54,18 +56,29 @@ namespace NewRelic.Collections
 
 		public bool Add(T item)
 		{
-			bool addSucceeded = false;
 			if (Size > 0)
 			{
 				lock (_syncroot)
 				{
-					++_addCount;
-					addSucceeded = _sortedSet.Add(item);
-					RemoveItemsFromBottomOfSortedSet();
+					return AddInternal(item);
 				}
 			}
-			return addSucceeded;
+			return false;
 		}
+
+		private bool AddInternal(T item)
+		{
+			++_addsAttempted;
+
+			if (_sortedSet.Add(item))
+			{
+				RemoveItemsFromBottomOfSortedSet();
+				return true;
+			}
+
+			return false;
+		}
+
 		void ICollection<T>.Add(T item)
 		{
 			Add(item);
@@ -93,53 +106,48 @@ namespace NewRelic.Collections
 			return duplicate.GetEnumerator();
 		}
 
+		//Assume lock on the _syncroot is held.
+		private void Reset()
+		{
+			_addsAttempted = 0;
+			_sortedSet.Clear();
+		}
+
+		//Assume lock on the _syncroot is held.
 		private void RemoveItemsFromBottomOfSortedSet()
 		{
 			if (Size == 0)
 			{
-				Clear();
+				Reset();
+				return;
 			}
-			if (_sortedSet.Count > Size)
-			{
-				lock (_syncroot)
-				{
-					var setCount = (uint)_sortedSet.Count;
-					if (setCount > Size)
-					{
-						var numberToRemove = setCount - Size;
 
-						using (var reverseEnumerator = _sortedSet.Reverse().GetEnumerator())
-						{
-							while (0 != numberToRemove--)
-							{
-								if (reverseEnumerator.MoveNext())
-								{
-									_sortedSet.Remove(reverseEnumerator.Current);
-								}
-							}
-						}
-					}
-				}
+			while (_sortedSet.Count > Size)
+			{
+				//_sortedSet.Max is the bottom item in the list (lowest priority).
+				_sortedSet.Remove(_sortedSet.Max);
 			}
 		}
 
 		public void Resize(uint newSize)
 		{
-			Size = newSize;
-			RemoveItemsFromBottomOfSortedSet();
+			lock (_syncroot)
+			{
+				Size = newSize;
+				RemoveItemsFromBottomOfSortedSet();
+			}
 		}
 
 		public ulong GetAddAttemptsCount()
 		{
-			return (ulong)Volatile.Read(ref _addCount);
+			return (ulong)Volatile.Read(ref _addsAttempted);
 		}
 
 		public void Clear()
 		{
 			lock (_syncroot)
 			{
-				_addCount = 0;
-				_sortedSet.Clear();
+				Reset();
 			}
 		}
 

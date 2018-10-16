@@ -21,13 +21,13 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var logicalMessage = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<LogicalMessage>(1);
 
 			const string brokerVendorName = "NServiceBus";
 			var queueName = TryGetQueueName(logicalMessage);
-			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, brokerVendorName, queueName);
+			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, brokerVendorName, queueName);
 
 			AttachCatHeaders(agentWrapperApi, logicalMessage, segment);
 
@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 			if (logicalMessage.Headers == null)
 				return;
 
-			var headers = agentWrapperApi.CurrentTransaction
+			var headers = agentWrapperApi.CurrentTransactionWrapperApi
 				.GetRequestMetadata(segment)
 				.Where(header => header.Value != null)
 				.Where(header => header.Key != null);

@@ -17,11 +17,11 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall,
-			IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+			IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var httpWebRequest = (HttpWebRequest) instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-			var headers = transaction.GetRequestMetadata(transaction.ParentSegment);
+			var headers = transactionWrapperApi.GetRequestMetadata(transactionWrapperApi.ParentSegment);
 
 			foreach (var header in headers)
 			{

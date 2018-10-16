@@ -65,10 +65,11 @@ namespace NewRelic.Agent
 					throw new ArgumentOutOfRangeException("destination", "Unexpected destination: " + destination);
 			}
 
+			
 			var filteredAttributes = new List<T>();
-			foreach(var attr in attributes)
+			foreach (var attr in attributes)
 			{
-				if(attr != null && ShouldIncludeAttribute(attr, destination))
+				if (ShouldIncludeAttribute(attr, destination))
 				{
 					filteredAttributes.Add(attr);
 				}
@@ -77,6 +78,7 @@ namespace NewRelic.Agent
 			return filteredAttributes;
 		}
 
+		
 		private Boolean ShouldIncludeAttribute([NotNull] T attribute, AttributeDestinations destination)
 		{
 			var cachedClusion = CheckAttributeClusionCache(attribute, destination);
@@ -89,11 +91,13 @@ namespace NewRelic.Agent
 
 			return result;
 		}
+		
 
 		private Boolean? CheckAttributeClusionCache([NotNull] T attribute, AttributeDestinations destination)
 		{
 			var cacheKey = GetAttributeClusionKey(attribute, destination);
-			if (_cachedClusions.TryGetValue(cacheKey, out Boolean cachedClusion)) {
+			if (_cachedClusions.TryGetValue(cacheKey, out Boolean cachedClusion))
+			{
 				return cachedClusion;
 			}
 
@@ -108,13 +112,17 @@ namespace NewRelic.Agent
 			var cacheKey = GetAttributeClusionKey(attribute, destination);
 			_cachedClusions[cacheKey] = result;
 		}
-
+		
 		[NotNull]
 		private static String GetAttributeClusionKey([NotNull] T attribute, AttributeDestinations destination)
 		{
 			// Enum is cast to INT to avoid enum.ToString which does reflection 
 			// Since its only used as a key converting to INT should be fine.  
-			return attribute.Key + ((int)destination).ToString();
+
+			// The cache key includes both the intended destinations of the attribute (attribute.DefaultDestinations) 
+			// and the destination being tested.  This is because some attributes have the same name (like timestamp)
+			// but different destinations.  Without this cache key, the wrong value will be selected.
+			return attribute.Key + ((int)destination).ToString() + '_' + ((int)attribute.DefaultDestinations).ToString();
 		}
 
 		private Boolean ShouldExcludeAttribute([NotNull] T attribute, AttributeDestinations destination)

@@ -132,7 +132,43 @@ namespace NewRelic.Collections.UnitTests
 				Assert.IsTrue(ConcurrentPriorityQueue.Add(itemToAdd), "failed to add subsequent value");
 				Assert.IsTrue(ConcurrentPriorityQueue.Contains(itemToAdd), "added value not found");
 				Assert.IsFalse(ConcurrentPriorityQueue.Contains(itemThatWillGetRemoved), "initial value did not get removed on addition of subsequent value");
+				Assert.AreEqual(ConcurrentPriorityQueue.Count, numberOfItemsToAddInitially);
 			}
+		}
+
+		public void SamplesItemsWhenSizeLimitReached_AddIEnumerable()
+		{
+			const int reservoirSize = 100;
+			const int lowerPriority = 100;
+			const int higherPriority = 300;
+			const float priorityShift = 0.001f;
+
+			//Concurrent Priority Queue will only hold NumberOfItemsToAddInitially items.
+			ConcurrentPriorityQueue.Resize(reservoirSize);
+
+			var higherPriorityItemsToAdd = new PrioritizedNode<T>[reservoirSize];
+			var itemsToAddInitially = new PrioritizedNode<T>[reservoirSize];
+			for (var i = 0; i < reservoirSize; ++i)
+			{
+				itemsToAddInitially[i] = Create((i + lowerPriority) * priorityShift);
+				higherPriorityItemsToAdd[i] = Create((i + higherPriority) * priorityShift);
+			}
+
+			ConcurrentPriorityQueue.Add(itemsToAddInitially);
+
+			//make sure they are all accounted for
+			Assert.That(ConcurrentPriorityQueue.Count, Is.EqualTo(reservoirSize));
+
+			ConcurrentPriorityQueue.Add(higherPriorityItemsToAdd);
+
+			//make sure the size is not over 
+			Assert.That(ConcurrentPriorityQueue.Count, Is.EqualTo(reservoirSize));
+			
+			foreach (var item in ConcurrentPriorityQueue)
+			{
+				Assert.That(item.Data.Priority, Is.GreaterThanOrEqualTo(higherPriority * priorityShift));
+			}
+			
 		}
 
 		public void IsThreadSafe()
@@ -257,6 +293,12 @@ namespace NewRelic.Collections.UnitTests
 		}
 
 		[Test]
+		public void ConcurrentPriorityQueueCustomEventsTests_SamplesItemsWhenSizeLimitReached_IEnumerable()
+		{
+			SamplesItemsWhenSizeLimitReached_AddIEnumerable();
+		}
+
+		[Test]
 		public void ConcurrentPriorityQueueCustomEventsTests_IsThreadSafe()
 		{
 			IsThreadSafe();
@@ -311,6 +353,12 @@ namespace NewRelic.Collections.UnitTests
 		public void ConcurrentPriorityQueueErrorEventsTests_SamplesItemsWhenSizeLimitReached()
 		{
 			SamplesItemsWhenSizeLimitReached();
+		}
+
+		[Test]
+		public void ConcurrentPriorityQueueErrorEventsTests_SamplesItemsWhenSizeLimitReached_IEnumerable()
+		{
+			SamplesItemsWhenSizeLimitReached_AddIEnumerable();
 		}
 
 		[Test]
@@ -370,6 +418,12 @@ namespace NewRelic.Collections.UnitTests
 		}
 
 		[Test]
+		public void ConcurrentPriorityQueueTransactionEventsTests_SamplesItemsWhenSizeLimitReached_IEnumerable()
+		{
+			SamplesItemsWhenSizeLimitReached_AddIEnumerable();
+		}
+
+		[Test]
 		public void ConcurrentPriorityQueueTransactionEventsTests_IsThreadSafe()
 		{
 			IsThreadSafe();
@@ -421,6 +475,12 @@ namespace NewRelic.Collections.UnitTests
 		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_SamplesItemsWhenSizeLimitReached()
 		{
 			SamplesItemsWhenSizeLimitReached();
+		}
+
+		[Test]
+		public void ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests_SamplesItemsWhenSizeLimitReached_IEnumerable()
+		{
+			SamplesItemsWhenSizeLimitReached_AddIEnumerable();
 		}
 
 		[Test]

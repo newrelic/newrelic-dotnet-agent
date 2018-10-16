@@ -152,7 +152,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			attributes = attributes.Memoize();
 
 			// Must generate errors first so other wire models get attribute updates
-			if (errorData.IsAnError) {
+			if (errorData.IsAnError)
+			{
 				GenerateAndCollectErrorEventTracesAndEvents(immutableTransaction, attributes.Invoke(), transactionMetricName, errorData);
 			}
 

@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
+        <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     </ItemGroup>
     <ItemGroup>
         <Content Include="Documentation.xslt" />
@@ -28,6 +29,7 @@
     <ItemGroup>
         <ProjectReference Include="..\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
+
     <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
     <Target Name="AfterBuild">
         <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.Xml" OutputPaths="$(TargetDir)\AgentApi.html" />

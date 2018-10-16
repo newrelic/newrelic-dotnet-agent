@@ -29,10 +29,10 @@ namespace NewRelic.Providers.Wrapper.Owin
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransactionWrapperApi transactionWrapperApi)
 		{
 			var callEnvironment = instrumentedMethodCall.MethodCall.MethodArguments[0];
-			OwinTransactionContext.SetTransactionOnEnvironment(callEnvironment, transaction);
+			OwinTransactionContext.SetTransactionOnEnvironment(callEnvironment, transactionWrapperApi);
 
 			return Delegates.NoOp;
 		}

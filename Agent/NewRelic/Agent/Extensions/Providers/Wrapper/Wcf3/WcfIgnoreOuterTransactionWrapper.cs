@@ -21,10 +21,10 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			if (ShouldIgnoreTransaction(instrumentedMethodCall.MethodCall))
-				agentWrapperApi.CurrentTransaction.Ignore();
+				agentWrapperApi.CurrentTransactionWrapperApi.Ignore();
 
 			return Delegates.NoOp;
 		}

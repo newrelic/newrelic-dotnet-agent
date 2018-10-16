@@ -29,20 +29,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(transactionAttributes, AttributeDestinations.ErrorEvent);
 
-			
-			// *** DO NOT COPY THIS PATTERN ***
-			// Because of the cached filtering model, this has to be added here to avoid being filtered out due to 
-			// the identically named attribute for Transaction Events.
-			//
-			// This style of attribute adding can result in security issues if not done correctly to filter out
-			// based on HSM logic, etc.
-			//
-			// Most attributes should be added via the TransactionAttributeMaker.
-			// The attribute system needs a large overhaul to help prevent mistakes and also prevent collection of
-			// sensitive data that we will just drop on the floor.
-			var typeAttribute = Attribute.BuildTypeAttribute(TypeAttributeValue.TransactionError);
-			filteredAttributes.Add(typeAttribute);
-			
 			return CreateErrorEvent(immutableTransaction, filteredAttributes);
 		}
 
@@ -62,8 +48,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var errorMessageAttribute = Attribute.BuildErrorDotMessageAttribute(errorData.ErrorMessage);
 			customAttributes.Add(errorMessageAttribute);
 
-			var timestampAttribute = Attribute.BuildTimeStampAttribute(errorData.NoticedAt);
-			customAttributes.Add(timestampAttribute);
+			var errorTimeStampAttribute = Attribute.BuildErrorTimeStampAttribute(errorData.NoticedAt);
+			customAttributes.Add(errorTimeStampAttribute);
 
 			return CreateErrorEvent(customAttributes, priority);
 		}

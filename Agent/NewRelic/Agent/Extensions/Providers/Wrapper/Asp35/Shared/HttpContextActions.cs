@@ -79,12 +79,12 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 			var workerRequestStartTime = GetStartTime(workerRequest);
 			var inQueueTimeSpan = now - workerRequestStartTime;
-			agentWrapperApi.CurrentTransaction.SetQueueTime(inQueueTimeSpan);
+			agentWrapperApi.CurrentTransactionWrapperApi.SetQueueTime(inQueueTimeSpan);
 		}
 
 		private static void StoreUrls([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
 		{
-			var transaction = agentWrapperApi.CurrentTransaction;
+			var transaction = agentWrapperApi.CurrentTransactionWrapperApi;
 
 			var requestPath = RequestPathRetriever.TryGetRequestPath(httpContext.Request);
 
@@ -121,12 +121,12 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		{
 			var parameters = QueryStringRetriever.TryGetQueryStringAsDictionary(httpContext.Request, agentWrapperApi)
 				?? Enumerable.Empty<KeyValuePair<String, String>>();
-			agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters);
+			agentWrapperApi.CurrentTransactionWrapperApi.SetRequestParameters(parameters);
 		}
 
 		private static void NameTransaction([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
 		{
-			agentWrapperApi.CurrentTransaction.SetWebTransactionNameFromPath(WebTransactionType.ASP, httpContext.Request.Path);
+			agentWrapperApi.CurrentTransactionWrapperApi.SetWebTransactionNameFromPath(WebTransactionType.ASP, httpContext.Request.Path);
 		}
 
 		private static void ProcessHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
@@ -138,7 +138,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 		private static void TryWriteResponseHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
 		{
-			var headers = agentWrapperApi.CurrentTransaction.GetResponseMetadata();
+			var headers = agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata();
 
 			try
 			{
@@ -165,7 +165,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		{
 			var statusCode = httpContext.Response.StatusCode;
 			var subStatusCode = TryGetSubStatusCode(httpContext);
-			agentWrapperApi.CurrentTransaction.SetHttpResponseStatusCode(statusCode, subStatusCode);
+			agentWrapperApi.CurrentTransactionWrapperApi.SetHttpResponseStatusCode(statusCode, subStatusCode);
 		}
 
 		[CanBeNull]

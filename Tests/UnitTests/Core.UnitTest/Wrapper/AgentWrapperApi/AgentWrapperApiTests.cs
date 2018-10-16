@@ -129,7 +129,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			Mock.Arrange(() => _transaction.NoticeUnitOfWorkEnds()).Returns(1);
 
-			_agentWrapperApi.CurrentTransaction.End();
+			_agentWrapperApi.CurrentTransactionWrapperApi.End();
 
 			Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<ITransaction>()), Occurs.Never());
 		}
@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void EndTransaction_CallsTransactionTransformer_WithBuiltImmutableTransaction()
 		{
-			_agentWrapperApi.CurrentTransaction.End();
+			_agentWrapperApi.CurrentTransactionWrapperApi.End();
 
 			Mock.Assert(() => _transactionTransformer.Transform(_transaction));
 		}
@@ -145,7 +145,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void EndTransaction_CallsTransactionBuilderFinalizer()
 		{
-			_agentWrapperApi.CurrentTransaction.End();
+			_agentWrapperApi.CurrentTransactionWrapperApi.End();
 
 			Mock.Assert(() => _transactionFinalizer.Finish(_transaction));
 		}
@@ -157,7 +157,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void IgnoreTranasction_IgnoresTranaction()
 		{
-			_agentWrapperApi.CurrentTransaction.Ignore();
+			_agentWrapperApi.CurrentTransactionWrapperApi.Ignore();
 
 			Mock.Assert(() => _transaction.Ignore());
 		}
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
-			_agentWrapperApi.CurrentTransaction.SetWebTransactionName(WebTransactionType.MVC, "foo", priority);
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetWebTransactionName(WebTransactionType.MVC, "foo", priority);
 
 			Assert.NotNull(addedTransactionName);
 			var webTransactionName = addedTransactionName as WebTransactionName;
@@ -191,7 +191,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
-			_agentWrapperApi.CurrentTransaction.SetWebTransactionNameFromPath(WebTransactionType.MVC, "some/path");
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetWebTransactionNameFromPath(WebTransactionType.MVC, "some/path");
 
 			Assert.NotNull(addedTransactionName);
 			var webTransactionName = addedTransactionName as UriTransactionName;
@@ -208,7 +208,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
-			_agentWrapperApi.CurrentTransaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
 
 			Assert.NotNull(addedTransactionName);
 			var webTransactionName = addedTransactionName as MessageBrokerTransactionName;
@@ -229,7 +229,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
-			_agentWrapperApi.CurrentTransaction.SetOtherTransactionName("cat", "foo", priority);
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetOtherTransactionName("cat", "foo", priority);
 
 			Assert.NotNull(addedTransactionName);
 			var webTransactionName = addedTransactionName as OtherTransactionName;
@@ -249,7 +249,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
-			_agentWrapperApi.CurrentTransaction.SetCustomTransactionName("foo", priority);
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetCustomTransactionName("foo", priority);
 
 			Assert.NotNull(addedTransactionName);
 			var webTransactionName = addedTransactionName as CustomTransactionName;
@@ -260,7 +260,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetTransactionUri_SetsTransactionUri()
 		{
-			_agentWrapperApi.CurrentTransaction.SetUri("foo");
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetUri("foo");
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetUri("foo"));
 		}
@@ -268,7 +268,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetTransactionOriginalUri_SetsTransactionOriginalUri()
 		{
-			_agentWrapperApi.CurrentTransaction.SetOriginalUri("foo");
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetOriginalUri("foo");
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetOriginalUri("foo"));
 		}
@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetTransactionReferrerUri_SetsTransactionReferrerUri()
 		{
-			_agentWrapperApi.CurrentTransaction.SetReferrerUri("foo");
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetReferrerUri("foo");
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetReferrerUri("foo"));
 		}
@@ -284,7 +284,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetTransactionQueueTime_SetsTransactionQueueTime()
 		{
-			_agentWrapperApi.CurrentTransaction.SetQueueTime(TimeSpan.FromSeconds(4));
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetQueueTime(TimeSpan.FromSeconds(4));
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(4)));
 		}
@@ -293,7 +293,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public void SetTransactionRequestParameters_SetsTransactionRequestParameters_ForRequestBucket()
 		{
 			var parameters = new Dictionary<string, string> { { "key", "value" } };
-			_agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters);
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetRequestParameters(parameters);
 
 			Mock.Assert(() => _transaction.TransactionMetadata.AddRequestParameter("key", "value"));
 		}
@@ -302,7 +302,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public void SetTransactionRequestParameters_SetMultipleRequestParameters()
 		{
 			var parameters = new Dictionary<string, string> { { "firstName", "Jane" }, { "lastName", "Doe" } };
-			_agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters);
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetRequestParameters(parameters);
 
 			Mock.Assert(() => _transaction.TransactionMetadata.AddRequestParameter("firstName", "Jane"));
 			Mock.Assert(() => _transaction.TransactionMetadata.AddRequestParameter("lastName", "Doe"));
@@ -311,7 +311,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void SetTransactionHttpResponseStatusCode_SetsTransactionHttpResponseStatusCode()
 		{
-			_agentWrapperApi.CurrentTransaction.SetHttpResponseStatusCode(1, 2);
+			_agentWrapperApi.CurrentTransactionWrapperApi.SetHttpResponseStatusCode(1, 2);
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetHttpResponseStatusCode(1, 2));
 		}
@@ -329,7 +329,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var invocationTarget = new Object();
 			var method = new Method(typeof(string), "methodName", "parameterTypeNames");
 			var methodCall = new MethodCall(method, invocationTarget, new Object[0]);
-			var opaqueSegment = _agentWrapperApi.CurrentTransaction.StartTransactionSegment(methodCall, "foo");
+			var opaqueSegment = _agentWrapperApi.CurrentTransactionWrapperApi.StartTransactionSegment(methodCall, "foo");
 			Assert.NotNull(opaqueSegment);
 
 			var segment = opaqueSegment as TypedSegment<SimpleSegmentData>;
@@ -353,7 +353,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _callStackManager.Push(Arg.IsAny<int>()))
 				.DoInstead<Object>(pushed => pushedUniqueId = pushed);
 
-			var opaqueSegment = _agentWrapperApi.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), "foo");
+			var opaqueSegment = _agentWrapperApi.CurrentTransactionWrapperApi.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), "foo");
 			Assert.NotNull(opaqueSegment);
 
 			var segment = opaqueSegment as TypedSegment<SimpleSegmentData>;
@@ -367,7 +367,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public void StartExternalSegment_Throws_IfUriIsNotAbsolute()
 		{
 			var uri = new Uri("/test", UriKind.Relative);
-			NrAssert.Throws<ArgumentException>(() => _agentWrapperApi.CurrentTransaction.StartExternalRequestSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), uri, "GET"));
+			NrAssert.Throws<ArgumentException>(() => _agentWrapperApi.CurrentTransactionWrapperApi.StartExternalRequestSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), uri, "GET"));
 		}
 
 		#endregion Segments
@@ -377,7 +377,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void EndSegment_RemovesSegmentFromCallStack()
 		{
-			var opaqueSegment = _agentWrapperApi.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), "foo");
+			var opaqueSegment = _agentWrapperApi.CurrentTransactionWrapperApi.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), "foo");
 			var segment = opaqueSegment as Segment;
 			var expectedUniqueId = segment.UniqueId;
 			var expectedParentId = segment.ParentUniqueId;
@@ -401,7 +401,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				.DoInstead<ErrorData>(data => actualErrorData = data);
 
 			var exception = NotNewRelic.ExceptionBuilder.BuildException("My message");
-			_agentWrapperApi.CurrentTransaction.NoticeError(exception);
+			_agentWrapperApi.CurrentTransactionWrapperApi.NoticeError(exception);
 
 			Assert.NotNull(actualErrorData);
 			NrAssert.Multiple(
@@ -417,8 +417,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			var exception = NotNewRelic.ExceptionBuilder.BuildException("My message");
 
-			_agentWrapperApi.CurrentTransaction.NoticeError(exception);
-			_agentWrapperApi.CurrentTransaction.NoticeError(exception);
+			_agentWrapperApi.CurrentTransactionWrapperApi.NoticeError(exception);
+			_agentWrapperApi.CurrentTransactionWrapperApi.NoticeError(exception);
 
 			Mock.Assert(() => _transaction.TransactionMetadata.AddExceptionData(Arg.IsAny<ErrorData>()), Occurs.Exactly(2));
 		}
@@ -542,7 +542,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns((ITransaction) null);
 
-			var headers = _agentWrapperApi.CurrentTransaction.GetResponseMetadata();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata();
 
 			Assert.NotNull(headers);
 			Assert.IsEmpty(headers);
@@ -558,7 +558,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
 			Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
 
-			var headers = _agentWrapperApi.CurrentTransaction.GetResponseMetadata();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata();
 
 			Assert.NotNull(headers);
 			Assert.IsEmpty(headers);
@@ -573,7 +573,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
 			Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
 
-			_agentWrapperApi.CurrentTransaction.GetResponseMetadata();
+			_agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata();
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash"));
 		}
@@ -584,7 +584,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var catHeaders = new Dictionary<string, string> {{"key1", "value1"}, {"key2", "value2"}};
 			Mock.Arrange(() => _catHeaderHandler.TryGetOutboundResponseHeaders(Arg.IsAny<ITransaction>(), Arg.IsAny<TransactionMetricName>())).Returns(catHeaders);
 
-			var headers = _agentWrapperApi.CurrentTransaction.GetResponseMetadata().ToDictionary();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata().ToDictionary();
 
 			Assert.NotNull(headers);
 			NrAssert.Multiple(
@@ -606,7 +606,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			var headers = new Dictionary<string, string>();
 			var segmentBuilder = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
-			_agentWrapperApi.CurrentTransaction.ProcessInboundResponse(headers, segmentBuilder);
+			_agentWrapperApi.CurrentTransactionWrapperApi.ProcessInboundResponse(headers, segmentBuilder);
 
 			var builtSegment = segmentBuilder as TypedSegment<ExternalSegmentData>;
 			Assert.AreEqual(builtSegment.TypedData.CrossApplicationResponseData, expectedCatResponseData);
@@ -622,7 +622,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var headers = new Dictionary<string, string>();
 			var segment = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
-			_agentWrapperApi.CurrentTransaction.ProcessInboundResponse(headers, segment);
+			_agentWrapperApi.CurrentTransactionWrapperApi.ProcessInboundResponse(headers, segment);
 
 			Mock.Assert(() => _transaction.TransactionMetadata.MarkHasCatResponseHeaders(), Occurs.Never());
 		}
@@ -636,7 +636,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			var headers = new Dictionary<string, string>();
 			var segmentBuilder = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
-			_agentWrapperApi.CurrentTransaction.ProcessInboundResponse(headers, segmentBuilder);
+			_agentWrapperApi.CurrentTransactionWrapperApi.ProcessInboundResponse(headers, segmentBuilder);
 
 			var builtSegment = segmentBuilder as TypedSegment<ExternalSegmentData>;
 			Assert.AreEqual(builtSegment.TypedData.CrossApplicationResponseData, expectedCatResponseData);
@@ -652,7 +652,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			var headers = new Dictionary<string, string>();
 			var segmentBuilder = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
-			_agentWrapperApi.CurrentTransaction.ProcessInboundResponse(headers, segmentBuilder);
+			_agentWrapperApi.CurrentTransactionWrapperApi.ProcessInboundResponse(headers, segmentBuilder);
 
 			var builtSegment = segmentBuilder as TypedSegment<ExternalSegmentData>;
 			Assert.AreEqual(builtSegment.TypedData.CrossApplicationResponseData, expectedCatResponseData);
@@ -663,7 +663,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public void ProcessInboundResponse_DoesNotThrow_IfSegmentIsNull()
 		{
 			var headers = new Dictionary<string, string>();
-			_agentWrapperApi.CurrentTransaction.ProcessInboundResponse(headers, null);
+			_agentWrapperApi.CurrentTransactionWrapperApi.ProcessInboundResponse(headers, null);
 			Mock.Assert(() => _transaction.TransactionMetadata.MarkHasCatResponseHeaders(), Occurs.Never());
 
 			// Simply not throwing is all this test needs to check for
@@ -674,7 +674,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns((ITransaction) null);
 
-			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata();
 
 			Assert.NotNull(headers);
 			Assert.IsEmpty(headers);
@@ -689,7 +689,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
 			Mock.Arrange(() => _pathHashMaker.CalculatePathHash("c/d", "referrerPathHash")).Returns("pathHash");
 
-			_agentWrapperApi.CurrentTransaction.GetRequestMetadata();
+			_agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata();
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationPathHash("pathHash"));
 		}
@@ -700,7 +700,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var catHeaders = new Dictionary<string, string> {{"key1", "value1"}, {"key2", "value2"}};
 			Mock.Arrange(() => _catHeaderHandler.TryGetOutboundRequestHeaders(Arg.IsAny<ITransaction>())).Returns(catHeaders);
 
-			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata().ToDictionary();
 
 			Assert.NotNull(headers);
 			NrAssert.Multiple(
@@ -735,7 +735,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _catHeaderHandler.TryGetOutboundRequestHeaders(Arg.IsAny<ITransaction>())).Returns(catHeaders);
 
 			// Act
-			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata().ToDictionary();
 
 			// Assert
 			const string NewRelicIdHttpHeader = "X-NewRelic-ID";
@@ -759,7 +759,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(Arg.IsAny<ITransaction>(), Arg.IsAny<ISegment>())).Returns(distributedTraceHeaders);
 
 			// Act
-			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata().ToDictionary();
 
 			// Assert
 			NrAssert.Multiple(
@@ -853,10 +853,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			var payload = new Dictionary<string, string>();
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<IEnumerable<KeyValuePair<string, string>>>())).Returns(_distributedTracePayload);
-			_agentWrapperApi.CurrentTransaction.AcceptDistributedTracePayload(payload, "HTTPS");
+			_agentWrapperApi.CurrentTransactionWrapperApi.AcceptDistributedTracePayload(payload, "HTTPS");
 
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<IEnumerable<KeyValuePair<string, string>>>())).CallOriginal();
-			_agentWrapperApi.CurrentTransaction.AcceptDistributedTracePayload(payload, "HTTPS");
+			_agentWrapperApi.CurrentTransactionWrapperApi.AcceptDistributedTracePayload(payload, "HTTPS");
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple(), Occurs.Once());
 		}

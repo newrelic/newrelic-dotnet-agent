@@ -162,7 +162,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 		{
 			foreach (var payloadSettings in testData.OutboundPayloadsSettings)
 			{
-				var header = _agentWrapperApi.CurrentTransaction.GetRequestMetadata(segment);
+				var header = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata(segment);
 				var distributedTracePayload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(header.First().Value);
 				var serializedPayload = DistributedTracePayload.ToJson(distributedTracePayload);
 

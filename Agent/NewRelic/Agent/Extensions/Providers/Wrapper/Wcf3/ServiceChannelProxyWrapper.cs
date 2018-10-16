@@ -21,11 +21,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var name = GetName(instrumentedMethodCall.MethodCall);
 
-			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
+			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
 			return Delegates.GetDelegateFor(segment);
 		}

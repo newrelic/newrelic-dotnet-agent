@@ -208,7 +208,7 @@ namespace CompositeTests
 			_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
 			_agentWrapperApi.ProcessInboundRequest(requestHeaders, "HTTP");
 
-			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata().ToDictionary();
 
 			Assert.NotNull(headers);
 			Assert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers["X-NewRelic-Synthetics"]);
@@ -240,7 +240,7 @@ namespace CompositeTests
 			_agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
 			_agentWrapperApi.ProcessInboundRequest(requestHeaders, "HTTP");
 
-			var headers = _agentWrapperApi.CurrentTransaction.GetRequestMetadata().ToDictionary();
+			var headers = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata().ToDictionary();
 
 			Assert.NotNull(headers);
 

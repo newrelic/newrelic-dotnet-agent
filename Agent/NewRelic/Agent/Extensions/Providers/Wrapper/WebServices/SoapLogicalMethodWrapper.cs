@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.WebServices
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var logicalMethodInfo = instrumentedMethodCall.MethodCall.InvocationTarget as LogicalMethodInfo;
 			if (logicalMethodInfo == null)
@@ -30,8 +30,8 @@ namespace NewRelic.Providers.Wrapper.WebServices
 
 			var name = String.Format("{0}.{1}", declaringType.FullName, methodName);
 
-			transaction.SetWebTransactionName(WebTransactionType.WebService, name, TransactionNamePriority.FrameworkLow);
-			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.WebService, name, TransactionNamePriority.FrameworkLow);
+			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
 			return Delegates.GetDelegateFor(
 				onFailure: OnFailure,
@@ -47,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.WebServices
 
 				if (ex != null)
 				{
-					transaction.NoticeError(ex);
+					transactionWrapperApi.NoticeError(ex);
 				}
 			}
 		}

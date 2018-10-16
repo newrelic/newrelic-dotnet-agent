@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var controllerContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<ControllerContext>(0);
 			var controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
@@ -30,9 +30,9 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 				throw new NullReferenceException("httpContext");
 
 			var transactionName = String.Format("{0}/{1}", controllerName, actionName);
-			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
 			httpContext.Items[HttpContextSegmentKey] = segment;
 

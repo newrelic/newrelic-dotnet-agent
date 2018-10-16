@@ -15,24 +15,24 @@ namespace NewRelic.Providers.Wrapper.Owin
 		private static Func<object, IDictionary<string, object>> _getContext;
 		private static Func<object, IDictionary<string, object>> GetContext => _getContext ?? (_getContext = VisibilityBypasser.Instance.GenerateFieldAccessor<IDictionary<string, object>>(AssemblyName, TypeName, "_environment"));
 
-		public static void SetTransactionOnEnvironment(object callEnvironment, ITransaction transaction)
+		public static void SetTransactionOnEnvironment(object callEnvironment, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var context = callEnvironment as IDictionary<string, object>;
-			context?.Add(TransactionKey, transaction);
+			context?.Add(TransactionKey, transactionWrapperApi);
 		}
 
-		public static ITransaction ExtractTransactionFromContext(object owinHttpListenerContext)
+		public static ITransactionWrapperApi ExtractTransactionFromContext(object owinHttpListenerContext)
 		{
 			var context = GetContext(owinHttpListenerContext);
 
-			ITransaction transaction = null;
+			ITransactionWrapperApi transactionWrapperApi = null;
 			if ((context != null) && context.ContainsKey(TransactionKey))
 			{
-				transaction = context[TransactionKey] as ITransaction;
+				transactionWrapperApi = context[TransactionKey] as ITransactionWrapperApi;
 				context.Remove(TransactionKey); //cleanup required to prevent OwinHttpListenerContextEnd from ending transaction again.
 			}
 
-			return transaction;
+			return transactionWrapperApi;
 		}
 	}
 }

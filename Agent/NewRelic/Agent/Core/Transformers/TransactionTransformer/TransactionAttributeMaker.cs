@@ -35,16 +35,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// Required transaction attributes
 			attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.Transaction));
+			attributes.Add(Attribute.BuildTransactionTimeStampAttribute(immutableTransaction.StartTime));
 
-			if (errorData.IsAnError)
-			{
-				attributes.Add(Attribute.BuildTimeStampAttribute(errorData.NoticedAt));
-			}
-			else
-			{
-				attributes.Add(Attribute.BuildTimeStampAttribute(immutableTransaction.StartTime));
-			}
-
+			
 			attributes.Add(Attribute.BuildTransactionNameAttribute(transactionMetricName.PrefixedName));
 
 			// Duration (response time) is just EndTime minus StartTime
@@ -85,6 +78,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			if (errorData.IsAnError)
 			{
+
+				attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.TransactionError));
+				attributes.Add(Attribute.BuildErrorTimeStampAttribute(errorData.NoticedAt));
+
 				attributes.TryAdd(Attribute.BuildErrorClassAttribute, errorData.ErrorTypeName);
 				attributes.TryAdd(Attribute.BuildErrorTypeAttribute, errorData.ErrorTypeName);
 

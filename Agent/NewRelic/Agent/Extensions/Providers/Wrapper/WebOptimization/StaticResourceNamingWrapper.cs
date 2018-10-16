@@ -16,13 +16,13 @@ namespace NewRelic.Providers.Wrapper.WebOptimization
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var httpContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpContext>(0);
 			var assetName = httpContext.Request.Path.TrimStart('/');
 
-			transaction.SetWebTransactionName(WebTransactionType.ASP, assetName, TransactionNamePriority.FrameworkHigh);
-			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, assetName);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.ASP, assetName, TransactionNamePriority.FrameworkHigh);
+			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, assetName);
 			
 			if (segment == null)
 				return Delegates.NoOp;

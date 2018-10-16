@@ -19,11 +19,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			return new CanWrapResponse("NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync".Equals(methodInfo.RequestedWrapperName));
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transaction.AttachToAsync();
+				transactionWrapperApi.AttachToAsync();
 			}
 
 			var controllerContext = GetControllerContext(instrumentedMethodCall.MethodCall.InvocationTarget);
@@ -31,14 +31,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
 			var transactionName = CreateTransactionName(actionDescriptor);
 
-			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
+			transactionWrapperApi.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
 			//Framework uses ControllerType.Action for these metrics & transactions. WebApi is Controller.Action for both
 			//Taking opinioned stance to do ControllerType.MethodName for segments. Controller/Action for transactions
 			var controllerTypeName = controllerContext.ActionDescriptor.ControllerTypeInfo.Name;
 			var methodName = controllerContext.ActionDescriptor.MethodInfo.Name;
 
-			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerTypeName, methodName);
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerTypeName, methodName);
 
 			return Delegates.GetDelegateFor<Task>(
 				onFailure: segment.End,

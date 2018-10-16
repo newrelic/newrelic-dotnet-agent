@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Transactions;
@@ -246,6 +247,50 @@ namespace CompositeTests
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 			Assert.IsFalse(errorTrace.Attributes.AgentAttributes.Any(kv => kv.Key == "request.uri"));
+		}
+
+		[Test]
+		public void TransactionEventAndErrorEventUseCorrectTimestampAttributes()
+		{
+			//Tests Fix for DOTNET-3351 - Transaction timestamp shifted when Error is reported
+
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
+			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
+			_compositeTestAgent.PushConfiguration();
+
+			using (var tx = _agentWrapperApi.CreateOtherTransaction("TestCategory", "TestTransaction"))
+			{
+				var segment = _agentWrapperApi.StartCustomSegmentOrThrow("TestSegment");
+
+				//The sleep ensures that the exception occurs after the transaction
+				//start date.  Without this, there is a small chance that the timesetamps 
+				//could be the same which would make it difficult to distinguish. 
+				Thread.Sleep(5);
+
+				tx.NoticeError(new Exception("This is a test exception"));
+
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var txEvents = _compositeTestAgent.TransactionEvents;
+			var exEvents = _compositeTestAgent.ErrorEvents;
+
+			Assert.AreEqual(1, txEvents.Count);
+			Assert.AreEqual(1, exEvents.Count);
+
+			var txEvent = txEvents.First();
+			var exEvent = exEvents.First();
+
+			Assert.IsTrue(txEvent.IntrinsicAttributes.ContainsKey("timestamp"));
+			Assert.IsTrue(exEvent.IntrinsicAttributes.ContainsKey("timestamp"));
+
+			var txEventTimeStamp = (long)txEvent.IntrinsicAttributes["timestamp"];
+			var exEventTimeStamp = (long)exEvent.IntrinsicAttributes["timestamp"];
+
+			Assert.Less(txEventTimeStamp, exEventTimeStamp);
 		}
 		#endregion
 

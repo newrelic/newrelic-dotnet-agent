@@ -62,7 +62,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			return command.ToString();
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var operation = GetRedisCommand(instrumentedMethodCall.MethodCall);
 
@@ -70,9 +70,9 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			AssignFullName(instrumentedMethodCall);
 			var connectionOptions = TryGetPropertyName(PropertyConfiguration, instrumentedMethodCall.MethodCall.InvocationTarget);
 			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(DatastoreVendor.Redis, connectionOptions);
-			var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(connectionOptions, GetConnectionInfo);
+			var connectionInfo = (ConnectionInfo)transactionWrapperApi.GetOrSetValueFromCache(connectionOptions, GetConnectionInfo);
 
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
+			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 			return Delegates.GetDelegateFor(segment);
 		}
 

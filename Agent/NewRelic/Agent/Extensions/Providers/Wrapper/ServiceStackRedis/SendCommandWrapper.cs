@@ -62,7 +62,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 			return System.Text.Encoding.UTF8.GetString(command);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var redisCommandWithArgumentsAsBytes = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<Byte[][]>(0);
 			var redisCommand = redisCommandWithArgumentsAsBytes[0];
@@ -80,7 +80,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 			var databaseName = TryGetPropertyName(PropertyDatabaseName, contextObject);
 			var connectionInfo = new ConnectionInfo(host, portPathOrId, databaseName);
 
-			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
+			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
 
 			return Delegates.GetDelegateFor(segment);
 		}
