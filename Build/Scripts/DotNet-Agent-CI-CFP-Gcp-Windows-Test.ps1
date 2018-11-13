@@ -1,3 +1,4 @@
+$ErrorActionPreference = "Stop"
 $serverName = "$env:SERVER_IP"
 $appName = "DotNet-Functional-4_6_1-MVC5"
 $logFilePath = "C:\ProgramData\New Relic\.NET Agent\Logs"

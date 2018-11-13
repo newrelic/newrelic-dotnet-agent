@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -7,7 +8,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 {
 	public class RabbitMqHelper
 	{
-		private const string HeaderName = "newrelic";
 		private const string TempQueuePrefix = "amq.";
 		private const string BasicPropertiesType = "RabbitMQ.Client.Framing.BasicProperties";
 		
@@ -32,31 +32,16 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 				: queueNameOrRoutingKey;
 		}
 
-		public static bool TryGetPayloadFromHeaders(Dictionary<string, object> messageHeaders,
-			out Dictionary<string, string> payloadHeaders)
+		public static bool TryGetPayloadFromHeaders(Dictionary<string, object> messageHeaders, IAgentWrapperApi agentWrapperApi,
+			out string serializedPayload)
 		{
-			if (messageHeaders == null)
+			if (agentWrapperApi.TryGetDistributedTracePayloadFromHeaders(messageHeaders, out var payload))
 			{
-				payloadHeaders = null;
-				return false;
-			}
-
-			foreach (var pair in messageHeaders)
-			{
-				if (pair.Key.ToLowerInvariant() != HeaderName)
-				{
-					continue;
-				}
-
-				payloadHeaders = new Dictionary<string, string>
-				{
-					{pair.Key, Encoding.UTF8.GetString((byte[]) pair.Value)}
-				};
-
+				serializedPayload = Encoding.UTF8.GetString((byte[])(payload));
 				return true;
 			}
-
-			payloadHeaders = null;
+			 
+			serializedPayload = null;
 			return false;
 		}
 
@@ -71,23 +56,32 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			var destType = GetBrokerDestinationType(routingKey);
 			var destName = ResolveDestinationName(destType, routingKey);
 
-			// Check if we are getting a BasicProperties type and if not bail on DT
+			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+
+			//If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
 			if (basicProperties.GetType().ToString() != BasicPropertiesType)
 			{
-				return transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+				return segment;
 			}
 
-			// if null, setup a new dictionary  and replace the null Headers property with it.
-			var headers = (Dictionary<string, object>) basicProperties.Headers;
+			// We're relying on CreateDistibutedTracePayload to do all the necessary checking realated to whether we return an empty payload or not.
+			var distributedTracePayload = transactionWrapperApi.CreateDistributedTracePayload();
 
-			if (headers == null)
+			if (!distributedTracePayload.IsEmpty())
 			{
-				headers = new Dictionary<string, object>();
-				basicProperties.Headers = headers;
+				// if null, setup a new dictionary  and replace the null Headers property with it.
+				var headers = basicProperties.Headers as Dictionary<string, object>;
+
+				if (headers == null)
+				{
+					headers = new Dictionary<string, object>();
+					basicProperties.Headers = headers;
+				}
+
+				headers[Constants.DistributedTracePayloadKey] = distributedTracePayload.HttpSafe();
 			}
 
-			return transactionWrapperApi.StartRabbitMQSegmentAndCreateDistributedTracePayload(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName, headers);
-
+			return segment;
 		}
 	}
 }

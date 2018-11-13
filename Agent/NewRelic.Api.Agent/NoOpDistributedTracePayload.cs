@@ -2,8 +2,19 @@
 {
 	internal class NoOpDistributedTracePayload : IDistributedTracePayload
 	{
-		public string HttpSafe => string.Empty;
+		public string HttpSafe()
+		{
+			return string.Empty;
+		}
 
-		public string Text => string.Empty;
+		public string Text()
+		{
+			return string.Empty;
+		}
+
+		public bool IsEmpty()
+		{
+			return true;
+		}
 	}
 }

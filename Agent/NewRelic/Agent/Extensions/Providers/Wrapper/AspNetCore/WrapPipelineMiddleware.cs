@@ -147,7 +147,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			var headers = httpContext.Request.Headers.Select(header => new KeyValuePair<string, string>(header.Key, header.Value));
 			var contentLength = httpContext.Request.ContentLength;
 
-			_agentWrapperApi.ProcessInboundRequest(headers, "HTTP", contentLength);
+			_agentWrapperApi.ProcessInboundRequest(headers, TransportType.HTTP, contentLength);
 		}
 
 		private void TryWriteResponseHeaders(HttpContext httpContext, ITransactionWrapperApi transactionWrapperApi)

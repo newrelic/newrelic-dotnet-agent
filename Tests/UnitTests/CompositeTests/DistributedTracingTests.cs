@@ -12,7 +12,6 @@ namespace CompositeTests
 	public class DistributedTracingTests
 	{
 		private const string HeaderName = "newrelic";
-		private const string TransportType = "HTTP";
 
 		private static CompositeTestAgent _compositeTestAgent;
 
@@ -45,7 +44,7 @@ namespace CompositeTests
 
 			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
-				_agentWrapperApi.ProcessInboundRequest(NewRelicHeaders, TransportType);
+				_agentWrapperApi.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
 
 				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow(null, DatastoreVendor.MSSQL, null, null, null,testHostName,testPort,testDBName);
 				segment.End();
@@ -89,7 +88,7 @@ namespace CompositeTests
 
 			using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
 			{
-				_agentWrapperApi.ProcessInboundRequest(NewRelicHeaders, TransportType);
+				_agentWrapperApi.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
 
 				var segment = _agentWrapperApi.StartDatastoreRequestSegmentOrThrow(null, DatastoreVendor.MSSQL, null, testCommand, null, testHostName, testPort, testDBName);
 				segment.End();
@@ -116,6 +115,55 @@ namespace CompositeTests
 			Assert.AreEqual(testHostName, actualSpan.IntrinsicAttributes["peer.hostname"]);
 			Assert.AreEqual($"{testHostName}:{testPort}", actualSpan.IntrinsicAttributes["peer.address"]);
 		}
+
+		[Test]
+		public void MessageBrokerSegmentResultsInSpanEventCategoryOfGeneric()
+		{
+			var vendorName = "RabbitMQ";
+			var routingKey = "queueName"; //TOPIC has a . QUEUE no .
+
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
+			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
+			_compositeTestAgent.PushConfiguration();
+
+			using (_agentWrapperApi.CreateMessageBrokerTransaction(MessageBrokerDestinationType.Queue, vendorName, routingKey))
+			{
+				_agentWrapperApi.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
+				var segment = _agentWrapperApi.StartMessageBrokerSegmentOrThrow(vendorName, MessageBrokerDestinationType.Queue,
+					routingKey, MessageBrokerAction.Consume);
+				segment.End();
+			}
+
+			_compositeTestAgent.Harvest();
+
+			var spanEvents = _compositeTestAgent.SpanEvents;
+
+			Assert.AreEqual(2, spanEvents.Count);
+
+			// The faux span we create to contain the actual spans.
+			var rootSpan = spanEvents.FirstOrDefault(span => span.IntrinsicAttributes.ContainsKey("nr.entryPoint"));
+
+			Assert.NotNull(rootSpan);
+			Assert.AreEqual(Payload.TraceId, (string)rootSpan.IntrinsicAttributes["traceId"]);
+			Assert.AreEqual(Payload.Priority, (float)rootSpan.IntrinsicAttributes["priority"]);
+			Assert.AreEqual(Payload.Sampled, (bool)rootSpan.IntrinsicAttributes["sampled"]);
+			Assert.AreEqual(Payload.Guid, (string)rootSpan.IntrinsicAttributes["parentId"]);
+			Assert.AreEqual("generic", (string)rootSpan.IntrinsicAttributes["category"]);
+			Assert.True((bool)rootSpan.IntrinsicAttributes["nr.entryPoint"]);
+
+			// The span created from the segment at the top of the test.
+			var actualSpan = spanEvents.FirstOrDefault(span => !span.IntrinsicAttributes.ContainsKey("nr.entryPoint"));
+
+			Assert.NotNull(actualSpan);
+			Assert.AreEqual(Payload.TraceId, (string)actualSpan.IntrinsicAttributes["traceId"]);
+			Assert.AreEqual(Payload.Priority, (float)actualSpan.IntrinsicAttributes["priority"]);
+			Assert.AreEqual(Payload.Sampled, (bool)actualSpan.IntrinsicAttributes["sampled"]);
+			Assert.AreEqual((string)rootSpan.IntrinsicAttributes["guid"], (string)actualSpan.IntrinsicAttributes["parentId"]);
+			Assert.AreEqual((string)rootSpan.IntrinsicAttributes["transactionId"], (string)actualSpan.IntrinsicAttributes["transactionId"]);
+			Assert.AreEqual("generic", (string)actualSpan.IntrinsicAttributes["category"]);
+		}
+
 
 
 		private static Dictionary<string, string> NewRelicHeaders

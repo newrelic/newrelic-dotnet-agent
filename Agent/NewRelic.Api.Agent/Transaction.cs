@@ -12,33 +12,18 @@ namespace NewRelic.Api.Agent
 			_wrappedTransaction = wrappedTransaction ?? _noOpTransaction;
 		}
 
-		private static bool _isAcceptDistributedTracePayloadOverload1Available = true;
-		public void AcceptDistributedTracePayload(string payload)
+		private static bool _isAcceptDistributedTracePayloadAvailable = true;
+		public void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown)
 		{
-			if (!_isAcceptDistributedTracePayloadOverload1Available) return;
+			if (!_isAcceptDistributedTracePayloadAvailable) return;
 
 			try
 			{
-				_wrappedTransaction.AcceptDistributedTracePayload(payload);
+				_wrappedTransaction.AcceptDistributedTracePayload(payload, (int)transportType);
 			}
 			catch (RuntimeBinderException)
 			{
-				_isAcceptDistributedTracePayloadOverload1Available = false;
-			}
-		}
-
-		private static bool _isAcceptDistributedTracePayloadOverload2Available = true;
-		public void AcceptDistributedTracePayload(IDistributedTracePayload payload)
-		{
-			if (!_isAcceptDistributedTracePayloadOverload2Available) return;
-
-			try
-			{
-				_wrappedTransaction.AcceptDistributedTracePayload(payload);
-			}
-			catch (RuntimeBinderException)
-			{
-				_isAcceptDistributedTracePayloadOverload2Available = false;
+				_isAcceptDistributedTracePayloadAvailable = false;
 			}
 		}
 
@@ -50,7 +35,10 @@ namespace NewRelic.Api.Agent
 			try
 			{
 				var result = _wrappedTransaction.CreateDistributedTracePayload();
-				return new DistributedTracePayload(result);
+				if (result != null)
+				{
+					return new DistributedTracePayload(result);
+				}
 			}
 			catch (RuntimeBinderException)
 			{

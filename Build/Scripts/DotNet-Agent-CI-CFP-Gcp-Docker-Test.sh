@@ -1,5 +1,4 @@
 #!/bin/bash
-
 serverIP="35.199.160.54"
 appPort="8888"
 testDirectoryName="utilization_tests"

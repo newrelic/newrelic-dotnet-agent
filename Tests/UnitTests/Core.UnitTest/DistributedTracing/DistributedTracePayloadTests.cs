@@ -83,8 +83,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[Test]
 		public void BuildIncomingPayloadFromJson_ReturnsNull_WhenNeitherGuidOrTransactionIdSet()
 		{
-			var encodedPayload = new Dictionary<string ,string>(){ { "newrelic", "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiOTEyMyIsImFwIjoiNTE0MjQiLCJ0ciI6IjMyMjFiZjA5YWEwYmNmMGQiLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNDgyOTU5NTI1NTc3fX0="}};
-			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(encodedPayload);
+			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiOTEyMyIsImFwIjoiNTE0MjQiLCJ0ciI6IjMyMjFiZjA5YWEwYmNmMGQiLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNDgyOTU5NTI1NTc3fX0=";
+			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadParseException(), Occurs.Once());
 			Assert.Null(distributedTracePayload);
@@ -94,8 +94,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		public void BuildIncomingPayloadFromJson_ReturnsNotNull_WithSuccessMetricsEnabled()
 		{
 			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
-			var encodedPayload = new Dictionary<string, string>(){{"newrelic", "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0="}};
-			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(encodedPayload);
+
+			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0=";
+
+			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Once());
 			Assert.NotNull(distributedTracePayload);
@@ -106,8 +108,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		{
 			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(false);
 
-			var encodedPayload = new Dictionary<string, string>() { { "newrelic", "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0=" } };
-			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(encodedPayload);
+			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0=";
+			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Never());
 			Assert.NotNull(distributedTracePayload);
@@ -119,7 +121,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
 
 			var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction);
+			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 			
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess(), Occurs.Once());
@@ -132,7 +134,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(false);
 
 			var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction);
+			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess(), Occurs.Never());

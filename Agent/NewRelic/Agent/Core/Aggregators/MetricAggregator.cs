@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -12,39 +10,38 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Metric;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
 	public interface IMetricAggregator
 	{
-		void Collect([NotNull] IAllMetricStatsCollection metric);
+		void Collect(IAllMetricStatsCollection metric);
 	}
 	public class MetricAggregator : AbstractAggregator<IAllMetricStatsCollection>, IMetricAggregator
 	{
-		[NotNull]
 		private MetricStatsEngineQueue _metricStatsEngineQueue;
 
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
-		[NotNull]
 		private readonly IDnsStatic _dnsStatic;
 
-		[NotNull]
+		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+
 		private readonly IMetricBuilder _metricBuilder;
 
-		[NotNull]
 		private readonly IMetricNameService _metricNameService;
 
 
-		public MetricAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricNameService metricNameService, [NotNull] IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] IDnsStatic dnsStatic, [NotNull] IProcessStatic processStatic, [NotNull] IScheduler scheduler) : base(dataTransportService, scheduler, processStatic)
+		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters) : base(dataTransportService, scheduler, processStatic)
 		{
 			_metricBuilder = metricBuilder;
 			_metricNameService = metricNameService;
 			_agentHealthReporter = agentHealthReporter;
 			_dnsStatic = dnsStatic;
+			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
 
-			foreach(var source in outOfBandMetricSources)
+			foreach (var source in outOfBandMetricSources)
 			{
 				if (source != null)
 				{
@@ -76,6 +73,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter.ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
 
 			_agentHealthReporter.ReportIfHostIsLinuxOs();
+
+			_apiSupportabilityMetricCounters.CollectMetrics();
 
 			var oldMetrics = GetStatsEngineForHarvest();
 
@@ -117,7 +116,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private void RetainMetricData([NotNull] IEnumerable<MetricWireModel> unsuccessfulSendMetrics)
+		private void RetainMetricData(IEnumerable<MetricWireModel> unsuccessfulSendMetrics)
 		{
 			foreach (var metric in unsuccessfulSendMetrics)
 			{

@@ -2,16 +2,27 @@
 {
 	internal class DistributedTracePayload : IDistributedTracePayload
 	{
-		private dynamic _distributedTracePayload;
 		private static IDistributedTracePayload _noOpDistributedTracePayload = new NoOpDistributedTracePayload();
+		private dynamic _wrappedPayload = _noOpDistributedTracePayload;
 
-		internal DistributedTracePayload(dynamic distributedTracePayload)
+		internal DistributedTracePayload(dynamic wrappedPayload)
 		{
-			_distributedTracePayload = distributedTracePayload;
+			_wrappedPayload = wrappedPayload;
 		}
 
-		public string HttpSafe => string.Empty;
+		public string HttpSafe()
+		{
+			return _wrappedPayload.HttpSafe();
+		}
 
-		public string Text => string.Empty;
+		public string Text()
+		{
+			return _wrappedPayload.Text();
+		}
+
+		public bool IsEmpty()
+		{
+			return _wrappedPayload.IsEmpty();
+		}
 	}
 }

@@ -1,15 +1,14 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using Telerik.JustMock;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 
@@ -29,7 +28,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		private const string IncomingDtGuid = "incomingGuid";
 		private const string IncomingDtTraceId = "incomingTraceId";
 		private const string IncomingTrustKey = "12345";
-		private const string DtTransportType = "scirocco";
 		private const float Priority = 0.5f;
 		private const float IncomingPriority = 0.75f;
 		private const string TransactionId = "transactionId";
@@ -61,7 +59,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		#region Accept Incoming Request
 
 		[Test]
-		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeadersAreValid()
+		public void TryDecodeInboundSerializedDistributedTracePayload_ReturnsValidPayload()
 		{
 			// Arrange
 			var payload = BuildSampleDistributedTracePayload();
@@ -69,13 +67,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.Guid = null;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
+			
 			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Assert.IsNotNull(decodedPayload);
@@ -103,13 +97,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TransactionId = TransactionId;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
 
 			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Assert.IsNull(decodedPayload);
@@ -123,13 +113,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TransactionId = TransactionId;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
+			
 			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Assert.IsNotNull(decodedPayload);
@@ -146,13 +132,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TransactionId = TransactionId;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
+			
 			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Assert.IsNull(decodedPayload);
@@ -169,13 +151,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TransactionId = TransactionId;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
+			
 			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Assert.IsNotNull(decodedPayload);
@@ -183,7 +161,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 
 		[Test]
-		public void TryDecodeInboundRequestHeaders_ReturnsNull_IfHigherMajorVersion()
+		public void TryDecodeInboundSerializedDistributedTracePayload_ReturnsNull_IfHigherMajorVersion()
 		{
 			// Arrange
 			var payload = BuildSampleDistributedTracePayload();
@@ -191,74 +169,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TransactionId = TransactionId;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
+			
 			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Assert.IsNull(decodedPayload);
-		}
-
-		[Test]
-		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeaderNameCamelCase()
-		{
-			// Arrange
-			var payload = BuildSampleDistributedTracePayload();
-			payload.TransactionId = TransactionId;
-
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
-			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
-
-			// Assert
-			Assert.NotNull(decodedPayload);
-		}
-
-		[Test]
-		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeaderNameLowerCase()
-		{
-			// Arrange
-			var payload = BuildSampleDistributedTracePayload();
-
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName.ToLower(), encodedPayload }
-			};
-			
-			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
-
-			// Assert
-			Assert.NotNull(decodedPayload);
-		}
-
-		[Test]
-		public void TryDecodeInboundRequestHeaders_ReturnsValidPayload_IfHeaderNameUpperCase()
-		{
-			// Arrange
-			var payload = BuildSampleDistributedTracePayload();
-
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName.ToUpper(), encodedPayload }
-			};
-			
-			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
-
-			// Assert
-			Assert.NotNull(decodedPayload);
 		}
 
 		[Test]
@@ -269,13 +185,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.Guid = null;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
+			
 			// Act
-			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Assert.IsNull(decodedPayload);
@@ -290,13 +202,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TransactionId = null;
 
 			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
-			var headers = new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
-
+			
 			// Act
-			_distributedTracePayloadHandler.TryDecodeInboundRequestHeaders(headers);
+			_distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadParseException(), Occurs.Once());
@@ -308,14 +216,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		#region Create Outbound Request
 
 		[Test]
-		public void TryGetOutboundRequestHeaders_ReturnsCorrectHeaders_IfFirstInChain()
+		public void TryGetOutboundDistributedTraceApiModel_ReturnsCorrectModel_IfFirstInChain()
 		{
 			// Arrange
 			var transaction = BuildMockTransaction(hasIncomingPayload: false);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
+			var encodedJson = model.HttpSafe();
 
 			DistributedTracePayload dtPayload = null;
 			Assert.That(() => dtPayload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson), Is.Not.Null);
@@ -334,15 +242,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		}
 
 		[Test]
-		public void TryGetOutboundRequestHeaders_ReturnsCorrectHeaders_IfNotFirstInChain()
+		public void TryGetOutboundDistributedTraceApiModel_ReturnsCorrectModel_IfNotFirstInChain()
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns(IncomingTrustKey);
 			var transaction = BuildMockTransaction(hasIncomingPayload: true);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
+			var encodedJson = model.HttpSafe();
 
 			DistributedTracePayload dtPayload = null;
 			Assert.That(() => dtPayload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson), Is.Not.Null);
@@ -368,8 +276,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var transaction = BuildMockTransaction(hasIncomingPayload: true);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -386,15 +294,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var transaction = BuildMockTransaction(hasIncomingPayload: true);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.NotNull(payload);
 			Assert.IsNull(payload.TrustKey);
 		}
-		
+
 		[Test]
 		public void PayloadShouldHaveGuidWhenSpansEnabledAndTransactionSampled()
 		{
@@ -409,8 +317,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => segment.SpanId).Returns(expectedGuid);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -431,8 +339,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => segment.SpanId).Returns(expectedGuid);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -453,14 +361,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => segment.SpanId).Returns(expectedGuid);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.IsNull(payload.Guid);
 		}
-		
+
 		[Test]
 		public void ShouldNotCreatePayloadWhenAccountIdNotReceivedFromServer()
 		{
@@ -471,11 +379,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var transaction = BuildMockTransaction(hasIncomingPayload: true);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
+			var payload = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 
 			// Assert
-			var hasHeaderPayload = headers.ContainsKey(DistributedTraceHeaderName);
-			Assert.False(hasHeaderPayload);
+			Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
 		}
 
 		[Test]
@@ -488,11 +395,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var transaction = BuildMockTransaction(hasIncomingPayload: true);
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
+			var payload = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 
 			// Assert
-			var hasHeaderPayload = headers.ContainsKey(DistributedTraceHeaderName);
-			Assert.False(hasHeaderPayload);
+			Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
 		}
 
 		[Test]
@@ -503,11 +409,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			transaction.TransactionMetadata.DistributedTraceSampled = null;
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
+			var payload = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 
 			// Assert
-			var hasHeaderPayload = headers.ContainsKey(DistributedTraceHeaderName);
-			Assert.False(hasHeaderPayload);
+			Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
 		}
 
 		[Test]
@@ -525,8 +430,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			transaction.TransactionMetadata.DistributedTraceSampled = true;
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -538,12 +443,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
-			
+
 			var transaction = BuildMockTransaction();
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -561,11 +466,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var transaction = BuildMockTransaction();
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
+			var payload = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 
 			// Assert
-			var hasHeaderPayload = headers.ContainsKey(DistributedTraceHeaderName);
-			Assert.False(hasHeaderPayload);
+			Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
 		}
 
 		#region TraceId Tests
@@ -580,8 +484,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var segment = Mock.Create<ISegment>();
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -598,8 +502,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var segment = Mock.Create<ISegment>();
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -613,8 +517,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var segment = Mock.Create<ISegment>();
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -631,8 +535,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var expectedTraceIdValue = transaction.Guid;
 
 			// Act
-			var headers = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var encodedJson = headers[DistributedTraceHeaderName];
+			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
+			var encodedJson = model.HttpSafe();
 			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
 
 			// Assert
@@ -649,12 +553,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var segment2 = Mock.Create<ISegment>();
 
 			// Act
-			var firstHeaders = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment1).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var firstEncodedJson = firstHeaders[DistributedTraceHeaderName];
+			var firstHeaders = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment1);
+
+			var firstEncodedJson = firstHeaders.HttpSafe();
 			var payload1 = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(firstEncodedJson);
 
-			var secondHeaders = _distributedTracePayloadHandler.TryGetOutboundRequestHeaders(transaction, segment2).ToDictionary(equalityComparer: StringComparer.OrdinalIgnoreCase);
-			var secondEncodedJson = secondHeaders[DistributedTraceHeaderName];
+			var secondHeaders = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment2);
+			var secondEncodedJson = secondHeaders.HttpSafe();
 			var payload2 = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(secondEncodedJson);
 
 			// Assert
@@ -688,7 +593,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				transaction.TransactionMetadata.DistributedTraceGuid = IncomingDtGuid;
 				transaction.TransactionMetadata.DistributedTraceTraceId = IncomingDtTraceId;
 				transaction.TransactionMetadata.DistributedTraceTrustKey = IncomingTrustKey;
-				transaction.TransactionMetadata.DistributedTraceTransportType = DtTransportType;
 				transaction.TransactionMetadata.Priority = IncomingPriority;
 			}
 			else
@@ -699,7 +603,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				transaction.TransactionMetadata.DistributedTraceGuid = null;
 				transaction.TransactionMetadata.DistributedTraceTraceId = null;
 				transaction.TransactionMetadata.DistributedTraceTrustKey = null;
-				transaction.TransactionMetadata.DistributedTraceTransportType = null;
 			}
 
 			return transaction;

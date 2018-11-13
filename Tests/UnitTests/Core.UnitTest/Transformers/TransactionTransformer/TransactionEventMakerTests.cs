@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -198,7 +199,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
 			transaction.TransactionMetadata.DistributedTraceAccountId = "273070";
 			transaction.TransactionMetadata.DistributedTraceAppId = "217958";
-			transaction.TransactionMetadata.DistributedTraceTransportType = "http";
+			transaction.TransactionMetadata.SetDistributedTraceTransportType(TransportType.HTTP);
 			transaction.TransactionMetadata.DistributedTraceTransportDuration = new TimeSpan(0, 0, 5);
 			transaction.TransactionMetadata.DistributedTraceGuid = "squid";
 			transaction.TransactionMetadata.DistributedTraceTransactionId = "parentid";

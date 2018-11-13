@@ -46,8 +46,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public int? ParentUniqueId { get; }
 
 		public bool IsLeaf { get; set; }
+		public bool IsTerminating { get; set; }
 
-		public string SpanId { get; }
+		private string _spanId;
+		public string SpanId
+		{
+			get
+			{
+				return _spanId ?? (_spanId = GuidGenerator.GenerateNewRelicGuid());
+			}
+			set
+			{
+				_spanId = value;
+			}
+		}
 
 		[NotNull]
 		protected readonly MethodCallData _methodCallData;
@@ -141,7 +153,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			Data = segmentData;
 			Combinable = combinable;
 			IsLeaf = false;
-			SpanId = GuidGenerator.GenerateNewRelicGuid();
 		}
 
 		protected Segment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<String, Object>> parameters)

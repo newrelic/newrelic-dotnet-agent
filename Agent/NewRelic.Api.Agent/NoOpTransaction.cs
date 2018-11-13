@@ -4,11 +4,7 @@
 	{
 		private static IDistributedTracePayload _noOpDistributedTracePayload = new NoOpDistributedTracePayload();
 
-		public void AcceptDistributedTracePayload(string payload)
-		{
-		}
-
-		public void AcceptDistributedTracePayload(IDistributedTracePayload payload)
+		public void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown)
 		{
 		}
 

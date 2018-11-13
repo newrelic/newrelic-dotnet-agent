@@ -29,20 +29,19 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 			var queueName = TryGetQueueName(logicalMessage);
 			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, brokerVendorName, queueName);
 
-			AttachCatHeaders(agentWrapperApi, logicalMessage, segment);
+			AttachCatHeaders(agentWrapperApi, logicalMessage);
 
 			return Delegates.GetDelegateFor(segment);
 		}
 
-		private static void AttachCatHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] LogicalMessage logicalMessage, ISegment segment)
+		private static void AttachCatHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] LogicalMessage logicalMessage)
 		{
 			if (logicalMessage.Headers == null)
 				return;
 
 			var headers = agentWrapperApi.CurrentTransactionWrapperApi
-				.GetRequestMetadata(segment)
-				.Where(header => header.Value != null)
-				.Where(header => header.Key != null);
+				.GetRequestMetadata()
+				.Where(header => header.Value != null && header.Key != null);
 				
 			foreach(var header in headers)
 			{

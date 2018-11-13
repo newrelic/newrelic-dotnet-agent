@@ -14,6 +14,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Instrumentation;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Samplers;
@@ -99,6 +100,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<ISpanEventMaker, SpanEventMaker>();
 			container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
 			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
+			container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
 			container.Register<IAgentTimerService, AgentTimerService>();
 #if NET45
 			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);

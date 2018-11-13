@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<extension xmlns="urn:newrelic-extension">
+  <instrumentation>
+	  <tracerFactory name="TerminatingSegmentWrapper">
+		  <match assemblyName="Serilog.Sinks.PeriodicBatching" className="Serilog.Sinks.PeriodicBatching.PeriodicBatchingSink">
+			  <exactMethodMatcher methodName="OnTick" />
+		  </match>
+	  </tracerFactory>
+	</instrumentation>
+</extension>

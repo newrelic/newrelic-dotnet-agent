@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.Wrapper
 					return Delegates.NoOp;
 				}
 
-				if (transactionWrapperApi.ParentSegment.IsLeaf)
+				if (transactionWrapperApi.CurrentSegment.IsLeaf)
 				{
 					return Delegates.NoOp;
 				}

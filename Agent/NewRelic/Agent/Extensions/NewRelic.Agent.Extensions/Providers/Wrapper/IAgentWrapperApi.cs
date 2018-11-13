@@ -77,7 +77,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="headers">The headers to be processed. Must not be null.</param>
 		/// <param name="contentLength">The length of the content, in bytes, if available.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
-		void ProcessInboundRequest([NotNull] IEnumerable<KeyValuePair<string, string>> headers, [CanBeNull] string transportType, long? contentLength = null);
+		void ProcessInboundRequest([NotNull] IEnumerable<KeyValuePair<string, string>> headers, [CanBeNull] TransportType transportType, long? contentLength = null);
 
 		/// <summary>
 		/// Tell the agent about an error that just occurred in the wrapper. Normally exceptions should just be thrown so that the agent can handle them directly, but this method is useful in situations where exceptions are happening outside the scope of the agent (for example, on another thread). This method is thread-safe.
@@ -98,56 +98,8 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="requestPath">The path of the request</param>
 		[CanBeNull]
 		Stream TryGetStreamInjector([CanBeNull] Stream stream, [CanBeNull] Encoding encoding, [CanBeNull] string contentType, [CanBeNull] string requestPath);
-	}
 
-	public enum WebTransactionType
-	{
-		Action,
-		Custom,
-		ASP,
-		MVC,
-		WCF,
-		WebAPI,
-		WebService,
-		MonoRail,
-		OpenRasta,
-		StatusCode
-	}
-
-	public enum MessageBrokerDestinationType
-	{
-		Queue,
-		Topic,
-		TempQueue,
-		TempTopic,
-	}
-
-	public enum MessageBrokerAction
-	{
-		Produce,
-		Consume,
-		Peek,
-		Purge,
-	}
-
-	///<summary>This enum must be a sequence of values starting with 0 and incrementing by 1. See MetricNames.GetEnumerationFunc</summary>
-	public enum DatastoreVendor
-	{
-//		Cassandra,
-		Couchbase,
-//		Derby,
-//		Firebird,
-		IBMDB2,
-//		Informix,
-		Memcached,
-		MongoDB,
-		MySQL,
-		MSSQL,
-		Oracle,
-		Postgres,
-		Redis,
-//		SQLite,
-		Other
+		bool TryGetDistributedTracePayloadFromHeaders<T>(IEnumerable<KeyValuePair<string, T>> headers, out T payload) where T : class;
 	}
 
 	public interface ISegment {

@@ -1,11 +1,21 @@
-﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System.Collections.Concurrent;
 
 namespace NewRelic.Agent.Extensions.Parsing
 {
+	public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum
+	{
+		private static readonly ConcurrentDictionary<TEnum, string> Cache = new ConcurrentDictionary<TEnum, string>();
+
+		public static string GetName(TEnum enumValue)
+		{
+			return Cache.GetOrAdd(enumValue, (enumVal) => enumVal.ToString());
+		}
+	}
+
 	public class ParsedSqlStatement
 	{
+		private readonly string _asString;
 
 		public DatastoreVendor DatastoreVendor { get; }
 
@@ -38,7 +48,8 @@ namespace NewRelic.Agent.Extensions.Parsing
 			Model = model;
 			Operation = operation ?? "other";
 			DatastoreVendor = datastoreVendor;
-			DatastoreStatementMetricName = String.Join("/", new string[] { "Datastore/statement", datastoreVendor.ToString(), Model, Operation });
+			_asString = $"{Model}/{Operation}";
+			DatastoreStatementMetricName = $"Datastore/statement/{EnumNameCache<DatastoreVendor>.GetName(datastoreVendor)}/{_asString}";
 		}
 
 		public static ParsedSqlStatement FromOperation(DatastoreVendor vendor, string operation)
@@ -48,7 +59,7 @@ namespace NewRelic.Agent.Extensions.Parsing
 
 		public override string ToString()
 		{
-			return Model + '/' + Operation;
+			return _asString;
 		}
 	}
 }

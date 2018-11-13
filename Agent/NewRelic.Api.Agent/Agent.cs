@@ -28,7 +28,10 @@ namespace NewRelic.Api.Agent
 				try
 				{
 					var wrappedTransaction = _wrappedAgent.CurrentTransaction;
-					return new Transaction(wrappedTransaction);
+					if (wrappedTransaction != null)
+					{
+						return new Transaction(wrappedTransaction);
+					}
 				}
 				catch (RuntimeBinderException)
 				{

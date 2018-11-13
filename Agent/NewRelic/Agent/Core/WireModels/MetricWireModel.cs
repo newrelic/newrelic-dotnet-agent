@@ -629,10 +629,11 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			public MetricWireModel TryBuildAgentApiMetric(string methodName)
+
+			public MetricWireModel TryBuildAgentApiMetric(string methodName, int count)
 			{
 				var proposedName = MetricNames.GetSupportabilityAgentApi(methodName);
-				var data = MetricDataWireModel.BuildCountData();
+				var data = MetricDataWireModel.BuildCountData(count);
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 

@@ -81,9 +81,11 @@ namespace NewRelic.Agent.Core.Aggregators
             Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
 
             var scheduler = Mock.Create<IScheduler>();
+			var apiSupportabilityMetricCounters = Mock.Create<IApiSupportabilityMetricCounters>();
+			
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, new[] { _outOfBandMetricSource }, _agentHealthReporter, _dnsStatic, _processStatic, scheduler);
+			_metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, new[] { _outOfBandMetricSource }, _agentHealthReporter, _dnsStatic, _processStatic, scheduler, apiSupportabilityMetricCounters);
 		}
 
 		[TearDown]
@@ -159,11 +161,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			var dnsStatic = Mock.Create<IDnsStatic>();
 			var processStatic = Mock.Create<IProcessStatic>();
+			var apiSupportabilityMetricCounters = Mock.Create<IApiSupportabilityMetricCounters>();
 
 			var scheduler = Mock.Create<IScheduler>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, agentHealthReporter, dnsStatic, processStatic, scheduler);
+			_metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, agentHealthReporter, dnsStatic, processStatic, scheduler, apiSupportabilityMetricCounters);
 
 			var sentMetrics = Enumerable.Empty<MetricWireModel>();
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()))

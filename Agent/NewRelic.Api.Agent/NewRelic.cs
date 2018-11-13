@@ -28,10 +28,10 @@ namespace NewRelic.Api.Agent
 	/// </summary>
 	public static class NewRelic
 	{
-		//static NewRelic()
-		//{
-		//	InitializePublicAgent(_publicAgent);
-		//}
+		static NewRelic()
+		{
+			InitializePublicAgent(_publicAgent);
+		}
 
 		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		private static void InitializePublicAgent(object publicAgent)
@@ -41,12 +41,17 @@ namespace NewRelic.Api.Agent
 
 		private static readonly IAgent _publicAgent = new Agent();
 
+		// We are not disabling inlining and optimization of this method because our profiler
+		// is not rewriting the implementation of this method.
 		/// <summary>
-		/// 
+		/// Get access to the Agent via the IAgent interface.
 		/// </summary>
-		//We are not disabling inlining and optimization of this method because our profiler
-		//is not rewriting the implementation of this method.
-		internal static IAgent GetAgent() { return _publicAgent; }
+		/// <example>
+		/// <code>
+		///   IAgent agent = GetAgent();
+		/// </code>
+		/// </example>
+		public static IAgent GetAgent() { return _publicAgent; }
 
 		#region Metric API
 

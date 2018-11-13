@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
 			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, brokerVendorName, queueName);
 
-			agentWrapperApi.ProcessInboundRequest(headers, "HTTP");
+			agentWrapperApi.ProcessInboundRequest(headers, TransportType.HTTP);
 
 			return Delegates.GetDelegateFor(
 				onFailure: transactionWrapperApi.NoticeError,

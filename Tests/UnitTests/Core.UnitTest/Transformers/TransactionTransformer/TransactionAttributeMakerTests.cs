@@ -22,6 +22,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using System.Collections.Generic;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -777,7 +778,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private const string IncomingGuid = "incomingGuid";
 		private const bool Sampled = false;
 		private const string IncomingTraceId = "incomingTraceId";
-		private const string TransportType = "HTTP";
 		private const float Priority = 0.5f;
 		private const string IncomingTransactionId = "transactionId";
 
@@ -807,7 +807,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
 			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
 			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
-			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.SetDistributedTraceTransportType(TransportType.HTTP);
 			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
 			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
 
@@ -852,7 +852,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
 			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
 			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
-			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.SetDistributedTraceTransportType(TransportType.HTTP);
 			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
 			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
 
@@ -887,7 +887,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(IncomingType, transactionAttributes["parent.type"]),
 				() => Assert.AreEqual(IncomingAppId, transactionAttributes["parent.app"]),
 				() => Assert.AreEqual(IncomingAcctId, transactionAttributes["parent.account"]),
-				() => Assert.AreEqual(TransportType, transactionAttributes["parent.transportType"]),
+				() => Assert.AreEqual("HTTP", transactionAttributes["parent.transportType"]),
 				() => Assert.True(transactionAttributes.ContainsKey("parent.transportDuration")),
 				() => Assert.AreEqual(IncomingTransactionId, transactionAttributes["parentId"]),
 				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["guid"]),
@@ -950,7 +950,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
 			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
 			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
-			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.SetDistributedTraceTransportType(TransportType.HTTP);
 			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
 			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
 
@@ -1010,7 +1010,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
 			transaction.TransactionMetadata.DistributedTraceSampled = Sampled;
 			transaction.TransactionMetadata.DistributedTraceTraceId = IncomingTraceId;
-			transaction.TransactionMetadata.DistributedTraceTransportType = TransportType;
+			transaction.TransactionMetadata.SetDistributedTraceTransportType(TransportType.HTTP);
 			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
 			transaction.TransactionMetadata.DistributedTraceTransactionId = IncomingTransactionId;
 

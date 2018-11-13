@@ -6,7 +6,6 @@ using System.Reflection;
 using Castle.Core.Internal;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Newtonsoft.Json;
@@ -83,7 +82,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 			return testCaseDatas;
 		}
 
-		private static void InitializeSettings(DistributedTracingCrossAgentTests.DistributedTraceTestData testData)
+		private static void InitializeSettings(DistributedTraceTestData testData)
 		{
 			Assert.That(testData.MajorVersionSupported, Is.GreaterThanOrEqualTo(DistributedTracePayload.SupportedMajorVersion));
 			Assert.That(testData.MinorVersionSupported, Is.GreaterThanOrEqualTo(DistributedTracePayload.SupportedMinorVersion));
@@ -120,75 +119,76 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 					transaction.NoticeError(new Exception("This is a new exception."));
 				}
 
-				segment.End();
-
-				if (testData.OutboundPayloadsSettings != null)
+				testData.OutboundPayloadsSettings?.ForEach(payloadSettings =>
 				{
-					ValidateOutboundPayloads(testData, segment);
-				}
+					var payload = _agentWrapperApi.CurrentTransactionWrapperApi.CreateDistributedTracePayload();
+
+					if (testData.OutboundPayloadsSettings != null)
+					{
+						ValidateOutboundPayload(payloadSettings, payload.Text());
+					}
+				});
+				segment.End();
 			}
 		}
 
-		List<KeyValuePair<string, string>> MakeHeaders(DistributedTraceTestData testData)
+		List<string> MakeHeaders(DistributedTraceTestData testData)
 		{
-			List<KeyValuePair<string, string>> testDataInboundPayloads = new List<KeyValuePair<string, string>>();
+			List<string> testDataInboundPayloads = new List<string>();
 
 			if (testData.InboundPayloadSettings == null)
 			{
-				testDataInboundPayloads.Add(new KeyValuePair<string, string>("newrelic", (string)null));
+				testDataInboundPayloads.Add(null);
 			}
 			else
 			{
 				foreach (PayloadSettings payload in testData.InboundPayloadSettings)
 				{
-					testDataInboundPayloads.Add(new KeyValuePair<string, string>("newrelic", Strings.Base64Encode(JsonConvert.SerializeObject(payload))));
+					testDataInboundPayloads.Add(Strings.Base64Encode(JsonConvert.SerializeObject(payload)));
 				}
 			}
 
 			return testDataInboundPayloads;
 		}
 
-		private void AcceptPayloads(List<KeyValuePair<string, string>> testDataInboundPayloads, DistributedTraceTestData testData)
+		private void AcceptPayloads(List<string> testDataInboundPayloads, DistributedTraceTestData testData)
 		{
-			testDataInboundPayloads.ForEach(payloadHeader =>
+			testDataInboundPayloads.ForEach(serializedPayload =>
 			{
-				// process inbound headers
-				var requestHeaders = new[] { payloadHeader };
-				_agentWrapperApi.ProcessInboundRequest(requestHeaders, testData.TransportType);
+				var validEnumValue = Enum.TryParse(testData.TransportType, ignoreCase: false, result: out TransportType transportType);
+				if (!validEnumValue)
+				{
+					transportType = (TransportType) (-1);
+				}
+
+				_agentWrapperApi.CurrentTransactionWrapperApi.AcceptDistributedTracePayload(serializedPayload, transportType);
 			});
 		}
 
-		private void ValidateOutboundPayloads(DistributedTraceTestData testData, ISegment segment)
+		private void ValidateOutboundPayload(OutboundPayloadSettings payloadSettings, string serializedPayload)
 		{
-			foreach (var payloadSettings in testData.OutboundPayloadsSettings)
+			var jObjectActual = JObject.Parse(serializedPayload);
+
+			var expectedFields = payloadSettings.Exact;
+			if (expectedFields != null)
 			{
-				var header = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata(segment);
-				var distributedTracePayload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(header.First().Value);
-				var serializedPayload = DistributedTracePayload.ToJson(distributedTracePayload);
-
-				var jObjectActual = JObject.Parse(serializedPayload);
-
-				var expectedFields = payloadSettings.Exact;
-				if (expectedFields != null)
+				foreach (var key in expectedFields.Keys)
 				{
-					foreach (var key in expectedFields.Keys)
-					{
-						var expectedValue = expectedFields[key];
-						var actualValue = jObjectActual.SelectToken(key);
-						Assert.That(actualValue, Is.EqualTo(expectedValue), $"{key}");
-					}
+					var expectedValue = expectedFields[key];
+					var actualValue = jObjectActual.SelectToken(key);
+					Assert.That(actualValue, Is.EqualTo(expectedValue), $"{key}");
 				}
-
-				payloadSettings.Expected?.ForEach(expected =>
-				{
-					Assert.That(jObjectActual.SelectToken(expected), Is.Not.Null, $"{expected}");
-				});
-
-				payloadSettings.Unexpected?.ForEach(unexpected =>
-				{
-					Assert.That(jObjectActual.SelectToken(unexpected), Is.Null, $"{unexpected}");
-				});
 			}
+
+			payloadSettings.Expected?.ForEach(expected =>
+			{
+				Assert.That(jObjectActual.SelectToken(expected), Is.Not.Null, $"{expected}");
+			});
+
+			payloadSettings.Unexpected?.ForEach(unexpected =>
+			{
+				Assert.That(jObjectActual.SelectToken(unexpected), Is.Null, $"{unexpected}");
+			});
 		}
 
 		private void ValidateIntrinsics(DistributedTraceTestData testData)

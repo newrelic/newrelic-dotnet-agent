@@ -246,7 +246,7 @@ namespace NewRelic.Agent.Core.Wrapper
 		}
 
 		[Test]
-		public void BeforeWrappedMethod_UsesNoOpWrapper_IfTheParentSegmentIsLeaf()
+		public void BeforeWrappedMethod_UsesNoOpWrapper_IfTheCurrentSegmentIsLeaf()
 		{
 			string result = null;
 			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
@@ -257,7 +257,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var segment = Mock.Create<ISegment>();
 
 			Mock.Arrange(() => transaction.IsValid).Returns(true);
-			Mock.Arrange(() => transaction.ParentSegment).Returns(segment);
+			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
 			Mock.Arrange(() => segment.IsLeaf).Returns(true);
 			Mock.Arrange(() => _agentWrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
 			

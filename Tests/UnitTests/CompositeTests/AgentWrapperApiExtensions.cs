@@ -63,16 +63,6 @@ namespace CompositeTests
 			return segment;
 		}
 
-		public static ISegment StartRabbitMqPayloadCreationSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, String vendor, MessageBrokerDestinationType destinationType, String destination, MessageBrokerAction action, MethodCall methodCall = null, Dictionary<string, object> headers = null)
-		{
-			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
-			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartRabbitMQSegmentAndCreateDistributedTracePayload(methodCall, destinationType, action, vendor, destination, headers);
-			if (segment == null)
-				throw new NullReferenceException("segment");
-
-			return segment;
-		}
-
 		[NotNull]
 		public static ISegment StartMessageBrokerSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String vendor, MessageBrokerDestinationType destinationType, String destination, MessageBrokerAction action, MethodCall methodCall = null)
 		{

@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public ImmutableTransaction([NotNull] ITransactionName transactionName, [NotNull] IEnumerable<Segment> segments, [NotNull] ImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, [NotNull] string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, SqlObfuscator sqlObfuscator)
 		{
 			TransactionName = transactionName;
-			Segments = segments.Where(segment => segment != null).ToList();
+			Segments = segments.Where(segment => segment != null && !segment.IsTerminating).ToList();
 			TransactionMetadata = transactionMetadata;
 			StartTime = startTime;
 			Duration = duration;

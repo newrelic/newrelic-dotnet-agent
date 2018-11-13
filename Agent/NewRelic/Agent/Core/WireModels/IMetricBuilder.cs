@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 		MetricWireModel TryBuildFeatureEnabledMetric([NotNull] String featureName);
 
-		MetricWireModel TryBuildAgentApiMetric([NotNull] String methodName);
+		MetricWireModel TryBuildAgentApiMetric(string methodName, int count);
 
 		MetricWireModel TryBuildCustomTimingMetric([NotNull] String suffix, TimeSpan time);
 		MetricWireModel TryBuildCustomCountMetric([NotNull] String suffix, Int32 count = 1);

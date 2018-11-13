@@ -450,6 +450,9 @@
 			<Component Id="CouchbaseInstrumentationComponent" Guid="{03FA7D3A-3368-45B1-92B8-19DA97A659B8}">
 				<File Id="CouchbaseInstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml"/>
 			</Component>
+			<Component Id="MiscInstrumentationComponent" Guid="{EE12546C-A328-49A7-84BE-B9A556ADA0A8}">
+				<File Id="MiscInstrumentationFile" Name="NewRelic.Providers.Wrapper.Misc.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml"/>
+			</Component>
 		</ComponentGroup>
 
 		<!-- Core Instrumentation Files-->

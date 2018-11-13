@@ -35,7 +35,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 		void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, [NotNull] string lastStartedSegmentName, [NotNull] string lastFinishedSegmentName);
 
 		void ReportWrapperShutdown([NotNull] IWrapper wrapper, [NotNull] Method method);
-		void ReportAgentApiMethodCalled([NotNull] string methodName);
 		void ReportIfHostIsLinuxOs();
 		void ReportBootIdError();
 		void ReportAwsUtilizationError();
@@ -250,8 +249,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 			_recurringLogDatas.Add(new RecurringLogData(Log.Debug, $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
 		}
-
-		public void ReportAgentApiMethodCalled(string methodName) => TrySend(_metricBuilder.TryBuildAgentApiMetric(methodName));
 
 		public void ReportIfHostIsLinuxOs()
 		{

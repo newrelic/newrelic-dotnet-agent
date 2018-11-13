@@ -26,6 +26,7 @@ using Telerik.JustMock;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Instrumentation;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.ThreadProfiling;
 
 namespace CompositeTests
@@ -224,6 +225,11 @@ namespace CompositeTests
 		public IAgentWrapperApi GetAgentWrapperApi()
 		{
 			return _container.Resolve<IAgentWrapperApi>();
+		}
+
+		public IAgentApi GetAgentApiImplementation()
+		{
+			return _container.Resolve<IAgentApi>();
 		}
 
 		/// <summary>

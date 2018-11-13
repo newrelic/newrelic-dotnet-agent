@@ -9,8 +9,8 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Collections;
 using NewRelic.Agent.Core.Errors;
 using System.Threading;
-using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		string DistributedTraceType { get; set; }
 		string DistributedTraceAppId { get; set; }
 		string DistributedTraceAccountId { get; set; }
-		string DistributedTraceTransportType { get; set; }
+		string DistributedTraceTransportType { get; }
 		string DistributedTraceGuid { get; set; }
 		TimeSpan DistributedTraceTransportDuration { get; set; }
 		string DistributedTraceTraceId { get; set; }
@@ -64,6 +64,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		void SetCrossApplicationReferrerContentLength(long referrerContentLength);
 		void SetCrossApplicationReferrerTransactionGuid([NotNull] string transactionGuid);
 		void SetCrossApplicationPathHash([NotNull] string pathHash);
+		void SetDistributedTraceTransportType(TransportType transportType);
 		void SetSyntheticsResourceId(string syntheticsResourceId);
 		void SetSyntheticsJobId(string syntheticsJobId);
 		void SetSyntheticsMonitorId(string syntheticsMonitorId);
@@ -83,6 +84,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	public class TransactionMetadata : ITransactionMetadata
 	{
 		private readonly object _sync = new object();
+		//This mapping needs to be kept in-sync with the TransportType enum
+		public static readonly string[] TransportTypeToStringMapping = new[]
+		{
+			"Unknown",
+			"HTTP",
+			"HTTPS",
+			"Kafka",
+			"JMS",
+			"IronMQ",
+			"AMQP",
+			"Queue",
+			"Other"
+		};
 
 		// These are all volatile because they can be read before the transaction is completed.
 		// These can be written by one thread and read by another.
@@ -311,32 +325,25 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			set => _distributedTraceAccountId = value;
 		}
 
-		private const string Unknown = "Unknown";
-
-		private static readonly string[] ValidTransportTypes = {
-			Unknown,
-			"HTTP",
-			"HTTPS",
-			"Kafka",
-			"JMS",
-			"IronMQ",
-			"AMQP",
-			"Queue",
-			"Other",
-		};
-		private static string SanitizeTransportType(string transportType)
+		private static string SanitizeTransportType(TransportType transportType)
 		{
-			if (null != transportType && ValidTransportTypes.Contains(transportType))
+			int transportTypeValue = (int)transportType;
+			if (transportTypeValue >= 0 && transportTypeValue < TransportTypeToStringMapping.Length)
 			{
-				return transportType;
+				return TransportTypeToStringMapping[transportTypeValue];
 			}
 
-			return Unknown;
+			return TransportTypeToStringMapping[0]; //Use "Unknown" if there was no valid mapping defined
 		}
+
 		public string DistributedTraceTransportType
 		{
 			get => _distributedTraceTransportType;
-			set => _distributedTraceTransportType = SanitizeTransportType(value);
+		}
+
+		public void SetDistributedTraceTransportType(TransportType transportType)
+		{
+			_distributedTraceTransportType = SanitizeTransportType(transportType);
 		}
 
 		public string DistributedTraceGuid

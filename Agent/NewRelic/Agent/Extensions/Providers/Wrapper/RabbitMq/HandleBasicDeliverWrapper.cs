@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -7,8 +6,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 {
 	public class HandleBasicDeliverWrapper : IWrapper
 	{
-		private const string TransportType = "AMQP";
-
 		public bool IsTransactionRequired => false;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -30,9 +27,9 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			// basicProperties is never null (framework supplies it), though the Headers property could be
 			var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<dynamic>(5);
 			var headers = (Dictionary<string, object>)basicProperties.Headers;
-			if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, out var payload))
+			if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, agentWrapperApi, out var payload))
 			{
-				agentWrapperApi.ProcessInboundRequest(payload, TransportType);
+				transactionWrapperApi.AcceptDistributedTracePayload(payload, TransportType.AMQP);
 			}
 
 			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);

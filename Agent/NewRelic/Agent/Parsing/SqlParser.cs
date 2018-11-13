@@ -3,7 +3,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace NewRelic.Parsing
@@ -31,9 +30,10 @@ namespace NewRelic.Parsing
 	{
 		private const RegexOptions PatternSwitches = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline;
 		private static readonly ParseStatement _statementParser;
+		private static readonly Dictionary<DatastoreVendor, ParsedSqlStatement> _nullParsedStatementStore = new Dictionary<DatastoreVendor, ParsedSqlStatement>();
 
 		// Regex Phrases
-		private const String SelectPhrase = @"(?=^/\*.*\*/*\s\bset\b.*;\s*\bselect\b|^/\*.*\*/*\s\bselect\b|^\bset\b.*;\s*\bselect\b|^\bselect\b).*?\s+";
+		private const String SelectPhrase = @"(?=^\bset\b.*;\s*\bselect\b|^\bselect\b).*?\s+";
 		private const String InsertPhrase = @"^insert\s+into\s+";
 		private const String UpdatePhrase = @"^update\s+";
 		private const String DeletePhrase = @"^delete\s+";
@@ -44,10 +44,24 @@ namespace NewRelic.Parsing
 		private const String SetPhrase = @"^set\s+@?";
 		private const String DeclarePhrase = @"^declare\s+@?";
 
+		// Regex Shortcut Phrases
+		private const string InsertPhraseShortcut = @"^insert";
+		private const string UpdatePhraseShortcut = @"^update";
+		private const string DeletePhraseShortcut = @"^delete";
+		private const string CreatePhraseShortcut = @"^create";
+		private const string DropPhraseShortcut = @"^drop";
+		private const string AlterPhraseShortcut = @"^alter";
+		private const string CallPhraseShortcut = @"^call";
+		private const string SetPhraseShortcut = @"^set";
+		private const string DeclarePhraseShortcut = @"^declare";
+		private const string ExecuteProcedure1Shortcut = @"^exec";
+		private const string ExecuteProcedure2Shortcut = @"^execute";
+		private const string ExecuteProcedure3Shortcut = @"^sp_";
+
 		// Regex to match only single SQL statements (i.e. no semicolon other than at the end - DOTNET-3029)
 		private const String SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
 
-		private const String CommentPhrase = @"/\*.*?\*/";
+		private const String CommentPhrase = @"/\*.*?\*/"; //The ? makes the searching lazy
 		private const String StartObjectNameSeparator = @"[\s\(\[`\""]*";
 		private const String EndObjectNameSeparator = @"[\s\)\]`\""]*";
 		// TODO: cp - This doesn't catch spaces inside of object names, even if the names are surrounded by separators. [Table Name] would resolve to simply "Table".
@@ -59,10 +73,10 @@ namespace NewRelic.Parsing
 		private const String MetricNamePhrase = @"^[a-z0-9.\$_]*$";
 
 		// Regex Strings
-		private const String SelectString = SelectPhrase + FromPhrase + @"(" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
-		private const String InsertString = InsertPhrase + @"(" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
-		private const String UpdateString = UpdatePhrase + @"(" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
-		private const String DeleteString = DeletePhrase + "(" + FromPhrase + @")?(" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
+		private const string SelectString = SelectPhrase + FromPhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
+		private const String InsertString = InsertPhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
+		private const String UpdateString = UpdatePhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
+		private const String DeleteString = DeletePhrase + "(" + FromPhrase + @")?(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
 		private const String CreateString = CreatePhrase + ObjectTypePhrase;
 		private const String DropString = DropPhrase + ObjectTypePhrase;
 		private const String AlterString = AlterPhrase + ObjectTypePhrase + ".*";
@@ -93,8 +107,9 @@ namespace NewRelic.Parsing
 		/// </summary>
 		/// <returns>A ParsedDatabaseStatement if some heuristic matches; otherwise null</returns>
 		public static ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, String commandText)
-		{			 
-			try {
+		{
+			try
+			{
 				switch (commandType)
 				{
 					case CommandType.TableDirect:
@@ -103,7 +118,7 @@ namespace NewRelic.Parsing
 						return new ParsedSqlStatement(datastoreVendor, StringsHelper.FixDatabaseObjectName(commandText), "ExecuteProcedure");
 				}
 				// Remove comments.
-				var statement = CommentPattern.Replace(commandText, "").TrimStart();
+				var statement = CommentPattern.Replace(commandText, string.Empty).TrimStart();
 
 				if (statement.IndexOf(' ') < 0)
 				{
@@ -111,13 +126,13 @@ namespace NewRelic.Parsing
 				}
 
 				return _statementParser(datastoreVendor, commandType, commandText, statement);
-			} 
+			}
 			catch
 			{
 				return new ParsedSqlStatement(datastoreVendor, null, null);
 			}
 		}
-		
+
 		public static Boolean IsValidName(String name)
 		{
 			return ValidMetricNameMatcher.IsMatch(name);
@@ -128,9 +143,9 @@ namespace NewRelic.Parsing
 			return SingleSqlStatementMatcher.IsMatch(sql);
 		}
 
-		private readonly static HashSet<string> _operations = new HashSet<string>();
+		private static readonly HashSet<string> _operations = new HashSet<string>();
 		public static IEnumerable<string> Operations => _operations;
-		
+
 		static SqlParser()
 		{
 			// as for example
@@ -141,33 +156,33 @@ namespace NewRelic.Parsing
 			// We'll do a linear search through the table to find the appropriate matcher.
 			_statementParser = CreateCompoundStatementParser(
 
-				// selects are tricky with the set crap on the front of the statement..
+				// selects are tricky with the set crap on the front of the statement.. /* fooo */set
 				// leave those out of the dictionary
-				new DefaultStatementParser("select", SelectRegex).ParseStatement,
+				new DefaultStatementParser("select", SelectRegex, string.Empty).ParseStatement,
 
 				CreateStatementParserDictionary(
 					new ShowStatementParser(),
-					new DefaultStatementParser("insert", InsertRegex),
-					new DefaultStatementParser("update", UpdateRegex),
-					new DefaultStatementParser("delete", DeleteRegex),
-				
-					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex1, "exec"),
-					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex2, "execute"),
+					new DefaultStatementParser("insert", InsertRegex, InsertPhraseShortcut),
+					new DefaultStatementParser("update", UpdateRegex, UpdatePhraseShortcut),
+					new DefaultStatementParser("delete", DeleteRegex, DeletePhraseShortcut),
+
+					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex1, "exec", ExecuteProcedure1Shortcut),
+					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex2, "execute", ExecuteProcedure2Shortcut),
 					// Invocation of a conventionally named stored procedure.
-					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex3, "sp_"),
-				
-					new DefaultStatementParser("create", CreateRegex),
-					new DefaultStatementParser("drop", DropRegex),
-					new DefaultStatementParser("alter", AlterRegex),
-					new DefaultStatementParser("call", CallRegex),
+					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex3, "sp_", ExecuteProcedure3Shortcut),
+
+					new DefaultStatementParser("create", CreateRegex, CreatePhraseShortcut),
+					new DefaultStatementParser("drop", DropRegex, DropPhraseShortcut),
+					new DefaultStatementParser("alter", AlterRegex, AlterPhraseShortcut),
+					new DefaultStatementParser("call", CallRegex, CallPhraseShortcut),
 
 					// See http://msdn.microsoft.com/en-us/library/ms189484.aspx
 					// The set statement targets a local identifier whose name may start with @.  We just scan over the @.
-					new DefaultStatementParser("set", SetRegex),
+					new DefaultStatementParser("set", SetRegex, SetPhraseShortcut),
 
 					// See http://msdn.microsoft.com/en-us/library/ms188927.aspx
 					// The declare statement targets a local identifier whose name may start with @.  We just scan over the @.
-					new DefaultStatementParser("declare", DeclareRegex)),
+					new DefaultStatementParser("declare", DeclareRegex, DeclarePhraseShortcut)),
 
 				new SelectVariableStatementParser().ParseStatement,
 
@@ -187,14 +202,21 @@ namespace NewRelic.Parsing
 					var parsedStatement = parser(datastoreVendor, commandType, commandText, statement);
 					if (parsedStatement != null) return parsedStatement;
 				}
-				return new ParsedSqlStatement(datastoreVendor, null, null);
+
+				if (!_nullParsedStatementStore.TryGetValue(datastoreVendor, out ParsedSqlStatement nullSqlStatement))
+				{
+					nullSqlStatement = new ParsedSqlStatement(datastoreVendor, null, null);
+					_nullParsedStatementStore.Add(datastoreVendor, nullSqlStatement);
+				}
+
+				return nullSqlStatement;
 			};
 		}
-		
+
 		private static ParseStatement CreateStatementParserDictionary(params DefaultStatementParser[] parsers)
 		{
-			char[] delimiters = new char[] { ' ', '(', '\r', '\t', '\n' };
-			Dictionary<string, ParseStatement> keywordToParser = new Dictionary<string, ParseStatement>();
+			var delimiters = new[] { ' ', '(', '\r', '\t', '\n' };
+			var keywordToParser = new Dictionary<string, ParseStatement>();
 			foreach (var parser in parsers)
 			{
 				keywordToParser[parser.Keyword] = parser.ParseStatement;
@@ -202,16 +224,7 @@ namespace NewRelic.Parsing
 
 			return (datastoreVendor, commandType, commandText, statement) =>
 			{
-				int splitIndex = statement.Length;
-				foreach (char c in delimiters)
-				{
-					int index = statement.IndexOf(c, 0, splitIndex);
-					if (index > 0)
-					{
-						splitIndex = index;
-					}
-				}
-				string keyword = statement.Substring(0, splitIndex).ToLower();
+				var keyword = statement.Substring(0, statement.IndexOfAny(delimiters)).ToLower();
 				// hack for one of the stored procedure parsers
 				if (keyword.StartsWith("sp_"))
 				{
@@ -227,36 +240,49 @@ namespace NewRelic.Parsing
 			};
 		}
 
-		class DefaultStatementParser
+		public class DefaultStatementParser
 		{
-		    private readonly Regex _pattern;
-		    private readonly string _key;
+			private readonly Regex _pattern;
+			private readonly Regex _shortcutRegex;
+			private readonly string _key;
 			public string Keyword { get; }
 
-			public DefaultStatementParser(String key, Regex pattern) :
-				this(key, pattern, key)
+			public DefaultStatementParser(string key, Regex pattern, string shortcut) :
+				this(key, pattern, key, shortcut)
 			{ }
 
-			public DefaultStatementParser(String key, Regex pattern, string keyword)
+			public DefaultStatementParser(string key, Regex pattern, string keyword, string shortcut)
 			{
 				this._key = key;
 				this._pattern = pattern;
 				this.Keyword = keyword;
+
+				if (!string.IsNullOrEmpty(shortcut))
+				{
+					this._shortcutRegex = new Regex(shortcut, PatternSwitches);
+				}
+
 				SqlParser._operations.Add(key);
 			}
 
 			public virtual ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, String commandText, String statement)
 			{
+				if (_shortcutRegex != null && !_shortcutRegex.IsMatch(statement))
+				{
+					return null;
+				}
+
 				var matcher = _pattern.Match(statement);
-				if (!matcher.Success) 
+				if (!matcher.Success)
 					return null;
 
 				var model = "unknown";
-				foreach (var g in matcher.Groups)
+				foreach (Group g in matcher.Groups)
 				{
-					if (g is Group) {
-						var str = g.ToString();
-						if (!String.IsNullOrEmpty(str)) model = str;
+					var str = g.ToString();
+					if (!String.IsNullOrEmpty(str))
+					{
+						model = str;
 					}
 				}
 
@@ -268,25 +294,26 @@ namespace NewRelic.Parsing
 				{
 					model = StringsHelper.FixDatabaseObjectName(model);
 					if (!IsValidModelName(model))
-						model = "ParseError"; 
+						model = "ParseError";
 				}
 				return CreateParsedDatabaseStatement(vendor, model);
 			}
-			
-			protected virtual Boolean IsValidModelName(String name) {
+
+			protected virtual Boolean IsValidModelName(String name)
+			{
 				return IsValidName(name);
 			}
-			
+
 			protected virtual ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
 			{
 				return new ParsedSqlStatement(vendor, model.ToLower(), _key);
 			}
 		}
-		
+
 		private class SelectVariableStatementParser
 		{
 			private static readonly Regex SelectMatcher = new Regex(@"^select\s+([^\s,]*).*", PatternSwitches);
-			private static readonly Regex FromMatcher   = new Regex(@"\s+from\s+", PatternSwitches);
+			private static readonly Regex FromMatcher = new Regex(@"\s+from\s+", PatternSwitches);
 
 			public ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, String commandText, String statement)
 			{
@@ -297,22 +324,25 @@ namespace NewRelic.Parsing
 				}
 				return null;
 			}
-			
+
 		}
-		
-		private class ShowStatementParser : DefaultStatementParser {
-			public ShowStatementParser() : base("show", new Regex(@"^\s*show\s+(.*)$", PatternSwitches)) {
+
+		private class ShowStatementParser : DefaultStatementParser
+		{
+			public ShowStatementParser() : base("show", new Regex(@"^\s*show\s+(.*)$", PatternSwitches), @"^\s*show")
+			{
 			}
-			
-			protected override Boolean IsValidModelName(String name) {
+
+			protected override Boolean IsValidModelName(String name)
+			{
 				return true;
 			}
-			
+
 			protected override ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
 			{
 				if (model.Length > 50)
 				{
-				    model = model.Substring(0, 50);
+					model = model.Substring(0, 50);
 				}
 				return new ParsedSqlStatement(vendor, model, "show");
 			}
@@ -322,12 +352,15 @@ namespace NewRelic.Parsing
 		/// The Waitfor statement is [probably] only in Transact SQL.  There are multiple variations of the statement.
 		/// See https://docs.microsoft.com/en-us/sql/t-sql/language-elements/waitfor-transact-sql
 		/// </summary>
-		private class WaitforStatementParser : DefaultStatementParser {
-			public WaitforStatementParser() : base("waitfor", new Regex(@"^waitfor\s+(delay|time)\s+([^\s,(;]*).*", PatternSwitches)) {
+		private class WaitforStatementParser : DefaultStatementParser
+		{
+			public WaitforStatementParser() : base("waitfor", new Regex(@"^waitfor\s+(delay|time)\s+([^\s,(;]*).*", PatternSwitches), @"^waitfor")
+			{
 			}
 
 			// All time stamps we match with the Regex are assumed to be valid "names" for our purpose.
-			protected override bool IsValidModelName(String name) {
+			protected override bool IsValidModelName(String name)
+			{
 				return true;
 			}
 
@@ -375,7 +408,7 @@ namespace NewRelic.Parsing
 
 				sql = sql.Replace(dbParam.ParameterName, value.ToString());
 			}
-			
+
 			command.CommandText = sql;
 		}
 
@@ -412,5 +445,4 @@ namespace NewRelic.Parsing
 			return "'" + str.Replace("'", "''") + "'";
 		}
 	}
-
 }

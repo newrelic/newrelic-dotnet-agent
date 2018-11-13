@@ -1,37 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using ProvidersWrapper = NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
 	public interface IDistributedTracePayloadHandler
 	{
-		[NotNull]
-		IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders([NotNull] ITransaction transaction, ProvidersWrapper.ISegment segment);
+		IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(ITransaction transaction, ISegment segment);
 
-		[CanBeNull]
-		DistributedTracePayload TryDecodeInboundRequestHeaders([NotNull] IEnumerable<KeyValuePair<string, string>> headers);
+		DistributedTracePayload TryDecodeInboundSerializedDistributedTracePayload(string serializedPayload);
 	}
 
 	public class DistributedTracePayloadHandler : IDistributedTracePayloadHandler
 	{
-		private const string DistributedTraceHeaderName = "Newrelic";   // betterCAT v0.2
-
 		private const string DistributedTraceTypeDefault = "App";
 
-		[NotNull]
 		private readonly IConfigurationService _configurationService;
 		private readonly IAgentHealthReporter _agentHealthReporter;
 		private readonly IAdaptiveSampler _adaptiveSampler;
 
-		public DistributedTracePayloadHandler([NotNull] IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAdaptiveSampler adaptiveSampler)
+		public DistributedTracePayloadHandler(IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAdaptiveSampler adaptiveSampler)
 		{
 			_configurationService = configurationService;
 			_agentHealthReporter = agentHealthReporter;
@@ -40,7 +33,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		#region Outgoing/Create
 
-		public IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(ITransaction transaction, ProvidersWrapper.ISegment segment = null)
+		public IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(ITransaction transaction, ISegment segment = null)
 		{
 			var accountId = _configurationService.Configuration.AccountId;
 			var appId = _configurationService.Configuration.PrimaryApplicationId;
@@ -48,7 +41,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			if (!_configurationService.Configuration.SpanEventsEnabled && !_configurationService.Configuration.TransactionEventsEnabled)
 			{ 
 				Log.Finest("Did not generate payload because Span Events and Transaction Events were both disabled, preventing a traceable payload.");
-				return Enumerable.Empty<KeyValuePair<string, string>>();
+				return DistributedTraceApiModel.EmptyModel;
 			}
 
 			var transactionMetadata = transaction.TransactionMetadata;
@@ -58,7 +51,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			if (transactionIsSampled.HasValue == false)
 			{
 				Log.Error("Did not generate payload because transaction sampled value was null.");
-				return Enumerable.Empty<KeyValuePair<string, string>>();
+				return DistributedTraceApiModel.EmptyModel;
 			}
 
 			var payloadGuid = (_configurationService.Configuration.SpanEventsEnabled && transactionIsSampled.Value) ? segment?.SpanId : null;
@@ -79,8 +72,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				transactionId);
 
 			if (distributedTracePayload == null)
-			{ 
-				return Enumerable.Empty<KeyValuePair<string, string>>();
+			{
+				return DistributedTraceApiModel.EmptyModel;
 			}
 
 			string encodedPayload;
@@ -93,7 +86,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			{
 				Log.Error($"Failed to get encoded distributed trace headers for outbound request: {ex}");
 				_agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadException();
-				return Enumerable.Empty<KeyValuePair<string, string>>();
+				return DistributedTraceApiModel.EmptyModel;
 			}
 
 			transactionMetadata.HasOutgoingDistributedTracePayload = true;
@@ -103,29 +96,20 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				_agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess();
 			}
 
-			return new Dictionary<string, string>
-			{
-				{ DistributedTraceHeaderName, encodedPayload }
-			};
+			return new DistributedTraceApiModel(encodedPayload);
 		}
 
 		#endregion Outgoing/Create
 
 		#region Incoming/Accept
 
-		public DistributedTracePayload TryDecodeInboundRequestHeaders(IEnumerable<KeyValuePair<string, string>> headers)
+		public DistributedTracePayload TryDecodeInboundSerializedDistributedTracePayload(string serializedPayload)
 		{
 			DistributedTracePayload payload = null;
 
 			try
 			{
-				var distributedTraceHeader = TryGetDistributedTraceHeader(headers);
-				if (distributedTraceHeader == null)
-				{
-					return null;
-				}
-
-				payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(distributedTraceHeader);
+				payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(serializedPayload);
 			}
 			catch (DistributedTraceAcceptPayloadVersionException)
 			{
@@ -155,19 +139,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			}
 
 			return payload;
-		}
-
-		private static string TryGetDistributedTraceHeader(IEnumerable<KeyValuePair<string, string>> headers)
-		{
-			foreach (var keyValuePair in headers)
-			{
-				if (string.Compare(DistributedTraceHeaderName, keyValuePair.Key, StringComparison.OrdinalIgnoreCase) == 0)
-				{
-					return keyValuePair.Value ?? throw new DistributedTraceAcceptPayloadNullException();
-				}
-			}
-
-			return null;
 		}
 
 		private bool IsValidPayload(DistributedTracePayload payload)

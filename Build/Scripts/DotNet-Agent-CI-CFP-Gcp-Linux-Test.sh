@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 serverIP="35.199.160.54"
 testDirectoryName="utilization_tests"
 installerName=$(ls -a *.rpm)

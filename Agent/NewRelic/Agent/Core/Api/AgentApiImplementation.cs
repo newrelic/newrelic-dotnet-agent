@@ -56,11 +56,12 @@ namespace NewRelic.Agent.Core.Api
 		private readonly IConfigurationService _configurationService;
 
 		[NotNull] private readonly IAgentWrapperApi _agentWrapperApi;
+		private readonly AgentBridgeApi _agentBridgeApi;
 
 		private readonly ITracePriorityManager _tracePriorityManager;
+		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
 
-		public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi,
-			ITracePriorityManager tracePriorityManager)
+		public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi, ITracePriorityManager tracePriorityManager, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
 		{
 			_transactionService = transactionService;
 			_agentHealthReporter = agentHealthReporter;
@@ -72,6 +73,8 @@ namespace NewRelic.Agent.Core.Api
 			_browserMonitoringScriptMaker = browserMonitoringScriptMaker;
 			_configurationService = configurationService;
 			_agentWrapperApi = agentWrapperApi;
+			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
+			_agentBridgeApi = new AgentBridgeApi(_agentWrapperApi, _apiSupportabilityMetricCounters);
 			_tracePriorityManager = tracePriorityManager;
 		}
 
@@ -79,14 +82,23 @@ namespace NewRelic.Agent.Core.Api
 		{
 			try
 			{
-				Log.Info("Initializing the Agent API");
-				var method = publicAgent.GetType().GetMethod("SetWrappedAgent", BindingFlags.NonPublic | BindingFlags.Instance);
-				method.Invoke(publicAgent, new[] { new AgentBridgeApi() });
+				using (new IgnoreWork())
+				{
+					Log.Info("Initializing the Agent API");
+					var method = publicAgent.GetType().GetMethod("SetWrappedAgent", BindingFlags.NonPublic | BindingFlags.Instance);
+					method.Invoke(publicAgent, new[] {_agentBridgeApi});
+				}
 			}
 			catch (Exception ex)
 			{
-				Log.Error("Failed to initialize the Agent API");
-				Log.Error(ex);
+				try
+				{
+					Log.ErrorFormat("Failed to initialize the Agent API: {0}", ex);
+				}
+				catch (Exception)
+				{
+					//Swallow the error
+				}
 			}
 		}
 
@@ -108,7 +120,7 @@ namespace NewRelic.Agent.Core.Api
 						priority = _tracePriorityManager.Create();
 					}
 
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(RecordCustomEvent));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.RecordCustomEvent);
 
 					if (eventType == null)
 						throw new ArgumentNullException(nameof(eventType));
@@ -130,7 +142,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(RecordMetric));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.RecordMetric);
 
 					var metricName = GetCustomMetricSuffix(name);
 					var time = TimeSpan.FromSeconds(value);
@@ -152,7 +164,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(RecordResponseTimeMetric));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.RecordResponseTimeMetric);
 
 					var metricName = GetCustomMetricSuffix(name);
 					var time = TimeSpan.FromMilliseconds(millis);
@@ -174,7 +186,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(IncrementCounter));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.IncrementCounter);
 
 					if (name == null)
 						throw new ArgumentNullException(nameof(name));
@@ -200,7 +212,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(NoticeError));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.NoticeError);
 
 					if (exception == null)
 					{ 
@@ -223,7 +235,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(NoticeError));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.NoticeError);
 
 					if (exception == null)
 					{ 
@@ -246,7 +258,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(NoticeError));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.NoticeError);
 
 					if (message == null)
 					{ 
@@ -298,7 +310,7 @@ namespace NewRelic.Agent.Core.Api
 					if (value == null)
 						throw new ArgumentNullException(nameof(value));
 
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(AddCustomParameter));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.AddCustomParameter);
 
 					// Single (32-bit) precision numbers are specially handled and actually stored as floating point numbers. Everything else is stored as a string. This is for historical reasons -- in the past Dirac only stored single-precision numbers, so integers and doubles had to be stored as strings to avoid losing precision. Now Dirac DOES support integers and doubles, but we can't just blindly start passing up integers and doubles where we used to pass strings because it could break customer queries.
 					var normalizedValue = value is Single
@@ -325,7 +337,7 @@ namespace NewRelic.Agent.Core.Api
 					if (value == null)
 						throw new ArgumentNullException(nameof(value));
 
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(AddCustomParameter));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.AddCustomParameter);
 
 					AddUserAttributeToCurrentTransaction(key, value);
 				}
@@ -351,7 +363,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(SetTransactionName));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.SetTransactionName);
 
 					if (name == null)
 						throw new ArgumentNullException(nameof(name));
@@ -403,7 +415,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(SetUserParameters));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.SetUserParameters);
 
 					if (_configurationService.Configuration.CaptureCustomParameters)
 					{
@@ -432,7 +444,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(IgnoreTransaction));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.IgnoreTransaction);
 
 					_agentWrapperApi.CurrentTransactionWrapperApi.Ignore();
 				}
@@ -449,7 +461,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(IgnoreApdex));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.IgnoreApdex);
 
 					var transaction = GetCurrentInternalTransaction();
 					transaction.IgnoreApdex();
@@ -467,7 +479,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(GetBrowserTimingHeader));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.GetBrowserTimingHeader);
 
 					var transaction = TryGetCurrentInternalTransaction();
 					if (transaction == null)
@@ -499,7 +511,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(GetBrowserTimingFooter));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.GetBrowserTimingFooter);
 
 					// This method is deprecated.
 					return String.Empty;
@@ -518,7 +530,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(DisableBrowserMonitoring));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.DisableBrowserMonitoring);
 
 					var transaction = GetCurrentInternalTransaction();
 
@@ -540,7 +552,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				using (new IgnoreWork())
 				{
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(StartAgent));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.StartAgent);
 
 					EventBus<StartAgentEvent>.Publish(new StartAgentEvent());
 				}
@@ -560,7 +572,7 @@ namespace NewRelic.Agent.Core.Api
 					if (applicationName == null && applicationName2 == null && applicationName3 == null)
 						throw new ArgumentNullException(nameof(applicationName));
 
-					_agentHealthReporter.ReportAgentApiMethodCalled(nameof(SetApplicationName));
+					_apiSupportabilityMetricCounters.Record(ApiMethod.SetApplicationName);
 
 					var appNames = new List<String> { applicationName, applicationName2, applicationName3 }
 						.Where(name => name != null);

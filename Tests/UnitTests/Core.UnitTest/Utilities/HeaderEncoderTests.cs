@@ -134,6 +134,31 @@ namespace NewRelic.Agent.Core.Utilities
 		}
 
 		[Test]
+		public void TryDecodeAndDeserializeDistributedTracePayload_UnencodedObject_ReturnsCorrectDeserializedObject()
+		{
+			var payload = DistributedTracePayload.ToJson(GetDistributedTracePayload());
+			var deserializedObject = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(payload);
+			var expectedObject = GetDistributedTracePayload();
+
+			NrAssert.Multiple(
+				() => Assert.NotNull(deserializedObject),
+				() => Assert.AreEqual(typeof(DistributedTracePayload), deserializedObject.GetType()),
+
+				() => Assert.AreEqual(expectedObject.AccountId, deserializedObject.AccountId),
+				() => Assert.AreEqual(expectedObject.AppId, deserializedObject.AppId),
+				() => Assert.AreEqual(expectedObject.Guid, deserializedObject.Guid),
+				() => Assert.AreEqual(expectedObject.Priority, deserializedObject.Priority),
+				() => Assert.AreEqual(expectedObject.Sampled, deserializedObject.Sampled),
+				() => Assert.AreEqual(expectedObject.Timestamp.ToUnixTimeMilliseconds(), deserializedObject.Timestamp.ToUnixTimeMilliseconds()),
+				() => Assert.AreEqual(expectedObject.TraceId, deserializedObject.TraceId),
+				() => Assert.AreEqual(expectedObject.TrustKey, deserializedObject.TrustKey),
+				() => Assert.AreEqual(expectedObject.Type, deserializedObject.Type),
+				() => Assert.AreEqual(expectedObject.Version, deserializedObject.Version),
+				() => Assert.AreEqual(expectedObject.TransactionId, deserializedObject.TransactionId)
+			);
+		}
+
+		[Test]
 		public void TryDecodeAndDeserializeDistributedTracePayload_ReturnsNull_IfInvalidBase64()
 		{
 			var payload = GetDistributedTracePayload();

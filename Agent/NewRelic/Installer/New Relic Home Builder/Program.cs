@@ -103,6 +103,7 @@ namespace NewRelic.Installer
 		private String CoreInstallerSourcePath { get { return Path.Combine(SolutionPath, "NewRelic", "CoreInstaller"); } }
 
 		private string LicenseFilePath => Path.Combine(SolutionPath, "Miscellaneous", "License.txt");
+		private string MiscInstrumentationFilePath => Path.Combine(SolutionPath, "Miscellaneous", "NewRelic.Providers.Wrapper.Misc.Instrumentation.xml");
 
 		private string Core20ReadmeFileName = "netcore20-agent-readme.md";
 		private string ReadmeFilePath => Path.Combine(SolutionPath, "Miscellaneous", Core20ReadmeFileName);
@@ -263,6 +264,8 @@ namespace NewRelic.Installer
 
 		private void CopyOtherDependencies()
 		{
+			CopyToDirectory(MiscInstrumentationFilePath, DestinationExtensionsDirectoryPath);
+
 			if (_isCoreClr)
 			{
 				CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);

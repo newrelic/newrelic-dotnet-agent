@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -7,8 +6,6 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 {
 	public class BasicGetWrapper : IWrapper
 	{
-		private const string TransportType = "AMQP";
-
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -42,9 +39,9 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
 				var basicProperties = result.BasicProperties;
 				var headers = (Dictionary<string, object>)basicProperties.Headers;
-				if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, out var payload))
+				if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, agentWrapperApi, out var payload))
 				{
-					agentWrapperApi.ProcessInboundRequest(payload, TransportType);
+					transactionWrapperApi.AcceptDistributedTracePayload(payload, TransportType.AMQP);
 				}
 
 				segment.End();

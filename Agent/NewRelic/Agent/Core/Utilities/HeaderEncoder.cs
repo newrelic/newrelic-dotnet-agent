@@ -74,16 +74,24 @@ namespace NewRelic.Agent.Core.Utilities
 			return Strings.Base64Encode(serializedData);
 		}
 
-		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload([NotNull] string encodedString)
+		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload(string encodedString)
 		{
-			var decodedString = Strings.TryBase64Decode(encodedString);
-			if (decodedString == null)
+			var stringToConvert = encodedString?.Trim();
+			if (!string.IsNullOrEmpty(stringToConvert))
 			{
-				Log.Debug("Could not decode encoded string.");
-				return null;
+				var firstChar = stringToConvert[0];
+				if (firstChar != '{' && firstChar != '[')
+				{
+					stringToConvert = Strings.TryBase64Decode(stringToConvert);
+					if (stringToConvert == null)
+					{
+						Log.Debug("Could not decode distributed trace payload string: " + encodedString);
+						return null;
+					}
+				}
 			}
 
-			return DistributedTracePayload.TryBuildIncomingPayloadFromJson(decodedString);
+			return DistributedTracePayload.TryBuildIncomingPayloadFromJson(stringToConvert);
 		}
 	}
 }

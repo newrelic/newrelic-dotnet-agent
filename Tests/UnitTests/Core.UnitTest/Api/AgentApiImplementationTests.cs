@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.Api
 
 			_wrapperApi = Mock.Create<IAgentWrapperApi>();
 
-			_agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, null, configurationService, _wrapperApi, null);
+			_agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null);
 		}
 
 
@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Api
 			var transaction = Mock.Create<ITransactionWrapperApi>();
 
 			Mock.Arrange(() => _wrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
-			Mock.Arrange(() => transaction.GetRequestMetadata(Arg.IsAny<ISegment>())).Returns(new Dictionary<string, string> { {"X-NewRelic-ID", "Test"} });
+			Mock.Arrange(() => transaction.GetRequestMetadata()).Returns(new Dictionary<string, string> { {"X-NewRelic-ID", "Test"} });
 			
 			//Act
 			var result = _agentApi.GetRequestMetadata();
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Api
 			var transaction = Mock.Create<ITransactionWrapperApi>();
 
 			Mock.Arrange(() => _wrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
-			Mock.Arrange(() => transaction.GetRequestMetadata(Arg.IsAny<ISegment>())).Returns(new Dictionary<string, string> { {"X-NewRelic-ID", "Test"} });
+			Mock.Arrange(() => transaction.GetRequestMetadata()).Returns(new Dictionary<string, string> { {"X-NewRelic-ID", "Test"} });
 			
 			//Act
 			var result = _agentApi.GetRequestMetadata();

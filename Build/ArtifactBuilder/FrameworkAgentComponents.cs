@@ -101,7 +101,8 @@ namespace ArtifactBuilder
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebApi1.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebApi2.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml"
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
 			};
 
 			ExtensionXsd = $@"{SourceHomeBuilderPath}\Extensions\extension.xsd";

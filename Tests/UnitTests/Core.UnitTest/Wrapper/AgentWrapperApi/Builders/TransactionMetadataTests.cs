@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using MoreLinq;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 
@@ -237,7 +239,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			transactionMetadata.DistributedTraceSampled = false;
 			transactionMetadata.DistributedTraceTraceId = "trace";
 			transactionMetadata.DistributedTraceTrustKey = "12345";
-			transactionMetadata.DistributedTraceTransportType = "transport";
+			transactionMetadata.SetDistributedTraceTransportType((TransportType)(-1));
 			transactionMetadata.Priority = 0.6f;
 			transactionMetadata.DistributedTraceTransactionId = "12345";
 
@@ -258,41 +260,25 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			);
 		}
 
-		private const string Unknown = "Unknown";
-
-		private static readonly string[] ValidTransportTypes = {
-			Unknown,
-			"HTTP",
-			"HTTPS",
-			"Kafka",
-			"JMS",
-			"IronMQ",
-			"AMQP",
-			"Queue",
-			"Other",
-		};
-		private static string SanitizeTransportType(string transportType)
+		[TestCase(TransportType.Unknown, "Unknown")]
+		[TestCase(TransportType.HTTP, "HTTP")]
+		[TestCase(TransportType.HTTPS, "HTTPS")]
+		[TestCase(TransportType.Kafka, "Kafka")]
+		[TestCase(TransportType.JMS, "JMS")]
+		[TestCase(TransportType.IronMQ, "IronMQ")]
+		[TestCase(TransportType.AMQP, "AMQP")]
+		[TestCase(TransportType.Queue, "Queue")]
+		[TestCase(TransportType.Other, "Other")]
+		[TestCase((TransportType)(-1), "Unknown")]
+		[TestCase((TransportType)99999, "Unknown")]
+		public void ConvertToImmutableMetadata_DistributedTraceTransportType(TransportType transportType, string expectedTransportTypeName)
 		{
-			if (null != transportType && ValidTransportTypes.Contains(transportType))
-			{
-				return transportType;
-			}
-
-			return Unknown;
-		}
-
-		private const string VeryCoolProtocol = "VeryCoolP";
-
-		[Test]
-		public void ConvertToImmutableMetadata_DistributedTraceTransportType([Values("Unknown",
-				"HTTP", "HTTPS", "Kafka", "JMS", "IronMQ", "AMQP", "Queue", "Other", null, VeryCoolProtocol)] string transportType
-			)
-		{
-			var transactionMetadata = new TransactionMetadata {DistributedTraceTransportType = transportType};
+			var transactionMetadata = new TransactionMetadata();
+			transactionMetadata.SetDistributedTraceTransportType(transportType);
 
 			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
 
-			Assert.That(immutableMetadata.DistributedTraceTransportType, Is.EqualTo(SanitizeTransportType(transportType)));
+			Assert.AreEqual(expectedTransportTypeName, immutableMetadata.DistributedTraceTransportType);
 		}
 		#endregion Distributed Trace
 	}
