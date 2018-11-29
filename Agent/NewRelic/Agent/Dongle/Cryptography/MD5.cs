@@ -158,11 +158,32 @@ namespace Dongle.Cryptography
 
 		private static byte[] HexStringToByteArray(string hex)
 		{
+			int ToInt(char c)
+			{
+				if (c <= '9' && c >= '0')
+				{
+					return c - '0';
+				}
+
+				if (c >= 'A' && c <= 'F')
+				{
+					return 10 + (c - 'A');
+				}
+
+				if (c >= 'a' && c <= 'f')
+				{
+					return 10 + (c - 'a');
+				}
+
+				throw new ArgumentException($"Invalid Hexadecimal string '{hex}'.","hex");
+			}
+
 			int length = hex.Length;
 			byte[] array = new byte[length / 2];
+
 			for (int i = 0; i < length; i += 2)
 			{
-				array[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+				array[i / 2] = (byte)((ToInt(hex[i]) << 4) + ToInt(hex[i + 1]));
 			}
 			return array;
 		}

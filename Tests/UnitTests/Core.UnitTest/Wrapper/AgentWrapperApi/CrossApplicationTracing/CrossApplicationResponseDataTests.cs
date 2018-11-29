@@ -12,8 +12,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void SerializesCorrectly()
 		{
 			var data = new CrossApplicationResponseData("crossProcessId", "transactionName", 1.1f, 2.2f, 3, "guid");
-
-			var serialized = JsonConvert.SerializeObject(data);
+			var serialized = CrossApplicationResponseData.ToJson(data);
 
 			Assert.AreEqual("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\",false]", serialized);
 		}
@@ -22,7 +21,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void DeserializesCorrectly()
 		{
 			const String json = "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\",false]";
-			var deserialized = JsonConvert.DeserializeObject<CrossApplicationResponseData>(json);
+			var deserialized = CrossApplicationResponseData.TryBuildIncomingDataFromJson(json);
 
 			Assert.NotNull(deserialized);
 			NrAssert.Multiple(
@@ -40,7 +39,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void DeserializesCorrectly_IfOnly6Elements()
 		{
 			const String json = "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\"]";
-			var deserialized = JsonConvert.DeserializeObject<CrossApplicationResponseData>(json);
+			var deserialized = CrossApplicationResponseData.TryBuildIncomingDataFromJson(json);
 
 			Assert.NotNull(deserialized);
 			NrAssert.Multiple(
@@ -58,7 +57,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void DeserializesCorrectly_IfOnly5Elements()
 		{
 			const String json = "[\"crossProcessId\",\"transactionName\",1.1,2.2,3]";
-			var deserialized = JsonConvert.DeserializeObject<CrossApplicationResponseData>(json);
+			var deserialized = CrossApplicationResponseData.TryBuildIncomingDataFromJson(json);
 
 			Assert.NotNull(deserialized);
 			NrAssert.Multiple(
@@ -76,7 +75,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void CannotDeserialize_IfOnly4Elements()
 		{
 			const String json = "[\"crossProcessId\",\"transactionName\",1.1,2.2]";
-			Assert.Throws<JsonSerializationException>(() => JsonConvert.DeserializeObject<CrossApplicationResponseData>(json));
+			Assert.IsNull(CrossApplicationResponseData.TryBuildIncomingDataFromJson(json));
 		}
 	}
 }

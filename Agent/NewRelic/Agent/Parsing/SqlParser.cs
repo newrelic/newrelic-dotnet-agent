@@ -1,6 +1,7 @@
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Text.RegularExpressions;
@@ -30,7 +31,7 @@ namespace NewRelic.Parsing
 	{
 		private const RegexOptions PatternSwitches = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline;
 		private static readonly ParseStatement _statementParser;
-		private static readonly Dictionary<DatastoreVendor, ParsedSqlStatement> _nullParsedStatementStore = new Dictionary<DatastoreVendor, ParsedSqlStatement>();
+		private static readonly ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement> _nullParsedStatementStore = new ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement>();
 
 		// Regex Phrases
 		private const String SelectPhrase = @"(?=^\bset\b.*;\s*\bselect\b|^\bselect\b).*?\s+";
@@ -203,19 +204,17 @@ namespace NewRelic.Parsing
 					if (parsedStatement != null) return parsedStatement;
 				}
 
-				if (!_nullParsedStatementStore.TryGetValue(datastoreVendor, out ParsedSqlStatement nullSqlStatement))
-				{
-					nullSqlStatement = new ParsedSqlStatement(datastoreVendor, null, null);
-					_nullParsedStatementStore.Add(datastoreVendor, nullSqlStatement);
-				}
-
-				return nullSqlStatement;
+				return _nullParsedStatementStore.GetOrAdd(datastoreVendor, x => new ParsedSqlStatement(datastoreVendor, null, null));
 			};
 		}
 
 		private static ParseStatement CreateStatementParserDictionary(params DefaultStatementParser[] parsers)
 		{
 			var delimiters = new[] { ' ', '(', '\r', '\t', '\n' };
+
+			//This is an instance dictionary that is used inside function that can be called by
+			//multiple concurrent threads.  This seems problematic, but since it is populated
+			//via a method called in the static constructor.
 			var keywordToParser = new Dictionary<string, ParseStatement>();
 			foreach (var parser in parsers)
 			{

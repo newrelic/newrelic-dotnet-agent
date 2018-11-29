@@ -1489,7 +1489,8 @@ namespace CompositeTests
 			var crossProcessId = Strings.TryBase64Decode(requestMetadata[NewRelicIdHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
 			Assert.AreEqual(_compositeTestAgent.ServerConfiguration.CatId, crossProcessId);
 
-			var crossApplicationRequestData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(requestMetadata[TransactionDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
+			var crossApplicationRequestData = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(requestMetadata[TransactionDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey));
+
 			Assert.NotNull(crossApplicationRequestData);
 
 			NrAssert.Multiple(
@@ -1527,7 +1528,8 @@ namespace CompositeTests
 			Assert.IsTrue(responseMetadata.Count() == 1);
 			Assert.IsTrue(responseMetadata.ContainsKey(AppDataHttpHeader));
 
-			var crossApplicationResponseData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseMetadata[AppDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
+			var crossApplicationResponseData = CrossApplicationResponseData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(responseMetadata[AppDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey));
+			// var crossApplicationResponseData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseMetadata[AppDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
 			Assert.NotNull(crossApplicationResponseData);
 
 			NrAssert.Multiple(

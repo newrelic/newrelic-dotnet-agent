@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-			var encoded = HeaderEncoder.SerializeAndEncode(data, null);
+			var encoded = HeaderEncoder.EncodeSerializedData(CrossApplicationRequestData.ToJson(data), null);
 
 			Assert.AreEqual("WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==", encoded);
 		}
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-			var encoded = HeaderEncoder.SerializeAndEncode(data, "encodingKey");
+			var encoded = HeaderEncoder.EncodeSerializedData(CrossApplicationRequestData.ToJson(data), "encodingKey");
 
 			Assert.AreEqual("PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==", encoded);
 		}
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			const String encoded = "WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==";
 
-			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, null);
+			var deserialized = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(encoded, null));
 			Assert.NotNull(deserialized);
 
 			NrAssert.Multiple(
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			const String encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
-			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
+			var deserialized = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(encoded, "encodingKey"));
 			Assert.NotNull(deserialized);
 
 			NrAssert.Multiple(
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			const String encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
-			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "wrong!");
+			var deserialized = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(encoded, "wrong!"));
 			Assert.Null(deserialized);
 		}
 
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			const String encoded = "not a valid base64 encoded string";
 
-			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
+			var deserialized = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(encoded, "encodingKey"));
 			Assert.Null(deserialized);
 		}
 

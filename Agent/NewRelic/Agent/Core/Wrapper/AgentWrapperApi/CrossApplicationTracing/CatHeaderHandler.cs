@@ -4,7 +4,6 @@ using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Utilities;
@@ -106,9 +105,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
 			var responseHeader = headers.GetValueOrDefault(AppDataHttpHeader);
 			if (responseHeader == null)
+			{
 				return null;
+			}
 
-			return HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseHeader, _configurationService.Configuration.EncodingKey);
+			try
+			{
+				return CrossApplicationResponseData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(responseHeader, _configurationService.Configuration.EncodingKey));
+			}
+			catch (Newtonsoft.Json.JsonSerializationException)
+			{
+				return null;
+			}
 		}
 
         public String TryDecodeInboundRequestHeadersForCrossProcessId(IDictionary<String, String> headers)
@@ -133,13 +141,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public CrossApplicationRequestData TryDecodeInboundRequestHeaders(IDictionary<String, String> headers)
 		{
 			if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
+			{
 				return null;
+			}
 
 			var encodedTransactionDataHttpHeader = headers.GetValueOrDefault(TransactionDataHttpHeader);
 			if (encodedTransactionDataHttpHeader == null)
+			{
 				return null;
+			}
 
-			return HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encodedTransactionDataHttpHeader, _configurationService.Configuration.EncodingKey);
+			var data = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(encodedTransactionDataHttpHeader, _configurationService.Configuration.EncodingKey));
+
+			return data;
 		}
 
 		private String TryDecodeNewRelicIdHttpHeader([CanBeNull] String encodedNewRelicIdHttpHeader)
@@ -158,7 +172,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			var referrerContentLength = txMetadata.GetCrossApplicationReferrerContentLength();
 			var appData = new CrossApplicationResponseData(crossProcessId, transactionMetricName.PrefixedName, (float) queueTime, (float) transaction.GetDurationUntilNow().TotalSeconds, referrerContentLength, transaction.Guid);
 
-			return HeaderEncoder.SerializeAndEncode(appData, _configurationService.Configuration.EncodingKey);
+			return HeaderEncoder.EncodeSerializedData(CrossApplicationResponseData.ToJson(appData), _configurationService.Configuration.EncodingKey);
 		}
 
 		[NotNull, Pure]
@@ -174,16 +188,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			// If CrossApplicationReferrerTripId is null, then this is the first transaction to make an external request. In this case, use its Guid as the tripId.
 			var tripId = txMetadata.CrossApplicationReferrerTripId ?? transaction.Guid;
             var transactionData = new CrossApplicationRequestData(transaction.Guid, false, tripId, txMetadata.LatestCrossApplicationPathHash);
-			return HeaderEncoder.SerializeAndEncode(transactionData, _configurationService.Configuration.EncodingKey);
+
+			return HeaderEncoder.EncodeSerializedData(CrossApplicationRequestData.ToJson(transactionData), _configurationService.Configuration.EncodingKey);
 		}
 
 		private Boolean IsTrustedCrossProcessAccountId(String accountId, IEnumerable<Int64> trustedAccountIds)
 		{
 			Int64 requestAccountId;
 			if (!Int64.TryParse(accountId.Split('#').FirstOrDefault(), out requestAccountId))
+			{
 				return false;
+			}
+
 			if (!trustedAccountIds.Contains(requestAccountId))
+			{
 				return false;
+			}
+
 			return true;
 		}
 	}

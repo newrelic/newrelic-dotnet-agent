@@ -4,6 +4,10 @@ using System.Data;
 using System.Text;
 using NUnit.Framework;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System.Threading;
+using System.Collections.Concurrent;
+using NewRelic.Agent.Extensions.Parsing;
+using System.Linq;
 
 namespace ParsingTests
 {
@@ -497,6 +501,79 @@ namespace ParsingTests
 					Assert.IsNotNull(parsedDatabaseStatement);
 				}
 			}
+		}
+
+
+		[Test]
+		public void SqlParserTest_NullSqlParserCache_IsThreadSafe()
+		{
+			var results = new ConcurrentBag<ParsedSqlStatement>();
+
+			void work()
+			{
+				for (var c = 0; c < 1000; c++)
+				{
+					DatastoreVendor vendor;
+					switch (c % 10)
+					{
+						case 0:
+							vendor = DatastoreVendor.Couchbase;
+							break;
+						case 1:
+							vendor = DatastoreVendor.IBMDB2;
+							break;
+						case 2:
+							vendor = DatastoreVendor.Memcached;
+							break;
+						case 3:
+							vendor = DatastoreVendor.MongoDB;
+							break;
+						case 4:
+							vendor = DatastoreVendor.MSSQL;
+							break;
+						case 5:
+							vendor = DatastoreVendor.MySQL;
+							break;
+						case 6:
+							vendor = DatastoreVendor.Oracle;
+							break;
+						case 7:
+							vendor = DatastoreVendor.Other;
+							break;
+						case 8:
+							vendor = DatastoreVendor.Postgres;
+							break;
+						default:
+							vendor = DatastoreVendor.Redis;
+							break;
+					}
+
+					var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(vendor, CommandType.Text, "Lorem ipsum dolar sit amet");
+					results.Add(parsedDatabaseStatement);
+				}
+			}
+
+			var threads = new Thread[50];
+
+			ThreadStart threadStart = new ThreadStart(work);
+
+			for (var i = 0; i < threads.Length; i++)
+			{
+				threads[i] = new Thread(threadStart);
+			}
+
+			for (var i = 0; i < threads.Length; i++)
+			{
+				threads[i].Start();
+			}
+
+			for (var i = 0; i < threads.Length; i++)
+			{
+				threads[i].Join();
+			}
+
+			var distinctParsers = results.Distinct().ToList();
+			Assert.IsTrue(distinctParsers.Count() == 10);
 		}
 
 		private readonly Random _rng = new Random();

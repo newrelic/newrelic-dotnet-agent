@@ -3,7 +3,7 @@
 namespace NewRelic.Agent
 {
 	[Flags]
-	public enum AttributeDestinations
+	public enum AttributeDestinations : byte
 	{
 		None = 0,
 		TransactionTrace = 1 << 0,

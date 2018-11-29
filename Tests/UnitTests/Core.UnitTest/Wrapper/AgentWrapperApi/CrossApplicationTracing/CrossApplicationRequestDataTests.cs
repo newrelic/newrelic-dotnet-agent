@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		{
 			var data = new CrossApplicationRequestData("guid", true, "tripId", "pathHash");
 
-			var serialized = JsonConvert.SerializeObject(data);
+			var serialized = CrossApplicationRequestData.ToJson(data);
 
 			Assert.AreEqual("[\"guid\",true,\"tripId\",\"pathHash\"]", serialized);
 		}
@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void DeserializesCorrectly()
 		{
 			var json = "[\"guid\",true,\"tripId\",\"pathHash\"]";
-			var deserialized = JsonConvert.DeserializeObject<CrossApplicationRequestData>(json);
+			var deserialized = CrossApplicationRequestData.TryBuildIncomingDataFromJson(json);
 
 			Assert.NotNull(deserialized);
 			NrAssert.Multiple(

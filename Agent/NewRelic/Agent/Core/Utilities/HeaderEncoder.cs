@@ -15,8 +15,7 @@ namespace NewRelic.Agent.Core.Utilities
 		/// <param name="data">The data to encode. Must not be null.</param>
 		/// <param name="encodingKey">The encoding key. Can be null.</param>
 		/// <returns>The serialized and encoded data.</returns>
-		[NotNull, Pure]
-		public static String SerializeAndEncode([NotNull] Object data, [CanBeNull] String encodingKey)
+		public static String SerializeAndEncode(object data, string encodingKey)
 		{
 			var serializedData = JsonConvert.SerializeObject(data);
 			if (serializedData == null)
@@ -24,7 +23,7 @@ namespace NewRelic.Agent.Core.Utilities
 				throw new NullReferenceException("serializedData");
 			}
 
-			return Strings.Base64Encode(serializedData, encodingKey);
+			return EncodeSerializedData(serializedData, encodingKey);
 		}
 
 		/// <summary>
@@ -33,17 +32,13 @@ namespace NewRelic.Agent.Core.Utilities
 		/// <param name="encodedString">The encoded string to decode. Can be null.</param>
 		/// <param name="encodingKey">The encoding key. Can be null.</param>
 		/// <returns>The decoded and deserialized data if possible, else null.</returns>
-		[CanBeNull, Pure]
-		public static T TryDecodeAndDeserialize<T>([CanBeNull] String encodedString, [CanBeNull] String encodingKey) where T : class
+		public static T TryDecodeAndDeserialize<T>(string encodedString, string encodingKey) where T : class
 		{
-			if (encodedString == null)
-				return null;
+			var decodedString = DecodeSerializedData(encodedString, encodingKey);
 
-			var decodedString = Strings.TryBase64Decode(encodedString, encodingKey);
 			if (decodedString == null)
 			{
-				Log.Debug("Could not decode encoded string.");
-				return null;
+				return null;		//Condition already logged already Logged in DecodeSerialiedData
 			}
 
 			try
@@ -62,8 +57,7 @@ namespace NewRelic.Agent.Core.Utilities
 		/// </summary>
 		/// <param name="data">The data to encode. Must not be null.</param>
 		/// <returns>The serialized and encoded data.</returns>
-		[NotNull, Pure]
-		public static string SerializeAndEncodeDistributedTracePayload([NotNull] DistributedTracePayload data)
+		public static string SerializeAndEncodeDistributedTracePayload(DistributedTracePayload data)
 		{
 			var serializedData = DistributedTracePayload.ToJson(data);
 			if (serializedData == null)
@@ -92,6 +86,28 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 
 			return DistributedTracePayload.TryBuildIncomingPayloadFromJson(stringToConvert);
+		}
+
+		public static string EncodeSerializedData(string serializedData, string encodingKey)
+		{
+			return Strings.Base64Encode(serializedData, encodingKey);
+		}
+
+		public static string DecodeSerializedData(string encodedString, string encodingKey)
+		{
+			if (encodedString == null)
+			{
+				return null;
+			}
+
+			var decodedString = Strings.TryBase64Decode(encodedString, encodingKey);
+			if (decodedString == null)
+			{
+				Log.Debug("Could not decode encoded string.");
+				return null;
+			}
+
+			return decodedString;
 		}
 	}
 }

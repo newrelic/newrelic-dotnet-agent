@@ -116,7 +116,13 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 				_transaction.CandidateTransactionName.TrySet(transactionName, (TransactionNamePriority)namePriority++);
 				var outboundHeaders = _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata().ToDictionary();
 				var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(outboundHeaders);
-				expectedAndActualOutboundRequestPayloads.Add(request.ExpectedOutboundPayload, actualOutboundPayload);
+				var requestData = new CrossApplicationRequestData(
+					(string)request.ExpectedOutboundPayload[0],
+					(bool)request.ExpectedOutboundPayload[1],
+					(string)request.ExpectedOutboundPayload[2],
+					(string)request.ExpectedOutboundPayload[3]
+				);
+				expectedAndActualOutboundRequestPayloads.Add(requestData, actualOutboundPayload);
 				_transaction.TransactionMetadata.MarkHasCatResponseHeaders();
 			});
 
@@ -192,7 +198,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var serialized = JsonConvert.SerializeObject(inboundPayload);
 			try
 			{
-				return JsonConvert.DeserializeObject<CrossApplicationRequestData>(serialized);
+				return CrossApplicationRequestData.TryBuildIncomingDataFromJson(serialized);
 			}
 			catch
 			{
@@ -258,7 +264,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 				public readonly String OutboundTxnName;
 
 				[JsonProperty(PropertyName = "expectedOutboundPayload"), NotNull, UsedImplicitly]
-				public readonly CrossApplicationRequestData ExpectedOutboundPayload;
+				public readonly object[] ExpectedOutboundPayload;
 			}
 
 			public override String ToString()

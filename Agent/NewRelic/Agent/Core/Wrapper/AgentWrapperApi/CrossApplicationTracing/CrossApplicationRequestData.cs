@@ -1,53 +1,92 @@
 ﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.JsonConverters;
+using System.IO;
+using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
 	// Note: this data is referred to as "TransactionData" in the CAT spec.
-	[JsonConverter(typeof(JsonArrayConverter)), UsedImplicitly]
+	[JsonArray]
 	public class CrossApplicationRequestData
 	{
-		[CanBeNull, JsonArrayIndex(Index = 0), UsedImplicitly]
-		public readonly String TransactionGuid;
-		[JsonArrayIndex(Index = 1), UsedImplicitly]
-		public readonly Boolean Unused;
-		[CanBeNull, JsonArrayIndex(Index = 2), UsedImplicitly]
-		public readonly String TripId;
-		[CanBeNull, JsonArrayIndex(Index = 3), UsedImplicitly]
-		public readonly String PathHash;
+		// The required amount for a valid object is 4, but this object should be returned with less.
+		// Checking the validation is handle upstream in CatHeaderHandler.
+		private const int TotalProperties = 4;
+		private const int MinimumProperties = 0;
 
-		// For backwards compatibility we need to support deserializing transactionData that may be missing any number of fields
-		public CrossApplicationRequestData()
-		{
+		private const int TransactionGuidIndex = 0;
+		private const int UnusedIndex = 1;
+		private const int TripIdIndex = 2;
+		private const int PathHashIndex = 3;
 
-		}
-
-		public CrossApplicationRequestData(String transactionGuid)
-		{
-			TransactionGuid = transactionGuid;
-		}
-
-		public CrossApplicationRequestData(String transactionGuid, Boolean unused)
-		{
-			TransactionGuid = transactionGuid;
-			Unused = unused;
-		}
-
-		public CrossApplicationRequestData(String transactionGuid, Boolean unused, String tripId)
-		{
-			TransactionGuid = transactionGuid;
-			Unused = unused;
-			TripId = tripId;
-		}
-
-		public CrossApplicationRequestData(String transactionGuid, Boolean unused, String tripId, String pathHash)
+		public readonly string TransactionGuid;
+		public readonly bool Unused;
+		public readonly string TripId;
+		public readonly string PathHash;
+		
+		public CrossApplicationRequestData(string transactionGuid, bool unused, string tripId, string pathHash) 
 		{
 			TransactionGuid = transactionGuid;
 			Unused = unused;
 			TripId = tripId;
 			PathHash = pathHash;
+		}
+
+		/// <summary>
+		/// Deserialize a JSON string into a CrossApplicationRequestData.
+		/// </summary>
+		/// <param name="json">A JSON string representing a CrossApplicationRequestData</param>
+		/// <returns>A CrossApplicationRequestData</returns>
+		public static CrossApplicationRequestData TryBuildIncomingDataFromJson(string json)
+		{
+			if (string.IsNullOrEmpty(json))
+			{
+				return null;
+			}
+
+			try
+			{
+				var stringArray = JsonArrayHandlers.ConvertJsonToStringArrayForCat(json, MinimumProperties, TotalProperties);
+
+				if(stringArray == null)
+				{
+					return null;
+				}
+
+				return new CrossApplicationRequestData(
+					stringArray[TransactionGuidIndex],
+					bool.Parse(stringArray[UnusedIndex]),
+					stringArray[TripIdIndex],
+					stringArray[PathHashIndex]
+				);
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Serialize a CrossApplicationRequestData <paramref name="data"/> to an JSON string.
+		/// </summary>
+		/// <param name="data">The CrossApplicationRequestData</param>
+		/// <returns>The serialized JSON string</returns>
+		public static string ToJson(CrossApplicationRequestData data)
+		{
+			using (var stringWriter = new StringWriter())
+			{
+				using (var jsonWriter = new JsonTextWriter(stringWriter))
+				{
+					jsonWriter.WriteStartArray();
+					jsonWriter.WriteValue(data.TransactionGuid);
+					jsonWriter.WriteValue(data.Unused);
+					jsonWriter.WriteValue(data.TripId);
+					jsonWriter.WriteValue(data.PathHash);
+					jsonWriter.WriteEndArray();
+				}
+
+				return stringWriter.ToString();
+			}
 		}
 	}
 }

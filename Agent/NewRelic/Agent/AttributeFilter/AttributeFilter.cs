@@ -9,21 +9,17 @@ namespace NewRelic.Agent
 {
 	public class AttributeFilter<T> : IAttributeFilter<T> where T : IAttribute
 	{
-		private const UInt32 MaxCacheSize = 1000;
+		private const uint MaxCacheSize = 1000;
 
-		[NotNull]
 		private readonly TrieNode<AttributeFilterNode> _explicitAttributeTrie;
 
-		[NotNull]
 		private readonly TrieNode<AttributeFilterNode> _implicitAttributeTrie;
 
-		[NotNull]
 		private readonly Settings _settings;
 
-		[NotNull]
 		private readonly ConcurrentDictionary<string, bool> _cachedClusions = new ConcurrentDictionary<string, bool>();
 
-		public AttributeFilter([NotNull] Settings settings)
+		public AttributeFilter(Settings settings)
 		{
 			_settings = settings;
 			var explicitAttributeNodes = CreateExplicitAttributeNodes(settings);
@@ -79,7 +75,7 @@ namespace NewRelic.Agent
 		}
 
 		
-		private Boolean ShouldIncludeAttribute([NotNull] T attribute, AttributeDestinations destination)
+		private bool ShouldIncludeAttribute(T attribute, AttributeDestinations destination)
 		{
 			var cachedClusion = CheckAttributeClusionCache(attribute, destination);
 			if (cachedClusion != null)
@@ -93,10 +89,10 @@ namespace NewRelic.Agent
 		}
 		
 
-		private Boolean? CheckAttributeClusionCache([NotNull] T attribute, AttributeDestinations destination)
+		private bool? CheckAttributeClusionCache(T attribute, AttributeDestinations destination)
 		{
 			var cacheKey = GetAttributeClusionKey(attribute, destination);
-			if (_cachedClusions.TryGetValue(cacheKey, out Boolean cachedClusion))
+			if (_cachedClusions.TryGetValue(cacheKey, out bool cachedClusion))
 			{
 				return cachedClusion;
 			}
@@ -104,7 +100,7 @@ namespace NewRelic.Agent
 			return null;
 		}
 
-		private void AddToAttributeClusionCache([NotNull] T attribute, AttributeDestinations destination, Boolean result)
+		private void AddToAttributeClusionCache(T attribute, AttributeDestinations destination, bool result)
 		{
 			if (_cachedClusions.Count > MaxCacheSize)
 				return;
@@ -113,19 +109,16 @@ namespace NewRelic.Agent
 			_cachedClusions[cacheKey] = result;
 		}
 		
-		[NotNull]
-		private static String GetAttributeClusionKey([NotNull] T attribute, AttributeDestinations destination)
+		private static string GetAttributeClusionKey(T attribute, AttributeDestinations destination)
 		{
-			// Enum is cast to INT to avoid enum.ToString which does reflection 
-			// Since its only used as a key converting to INT should be fine.  
-
+			// Enum is cast to byte to avoid enum.ToString which does reflection 
 			// The cache key includes both the intended destinations of the attribute (attribute.DefaultDestinations) 
 			// and the destination being tested.  This is because some attributes have the same name (like timestamp)
 			// but different destinations.  Without this cache key, the wrong value will be selected.
-			return attribute.Key + ((int)destination).ToString() + '_' + ((int)attribute.DefaultDestinations).ToString();
+			return attribute.Key + (((byte)destination << 8) + (byte)attribute.DefaultDestinations).ToString();
 		}
 
-		private Boolean ShouldExcludeAttribute([NotNull] T attribute, AttributeDestinations destination)
+		private bool ShouldExcludeAttribute(T attribute, AttributeDestinations destination)
 		{
 			var explicitClusion = CheckForExplicitClusion(attribute, destination);
 			if (explicitClusion != Clude.Unknown)
@@ -138,12 +131,12 @@ namespace NewRelic.Agent
 			return false;
 		}
 
-		private Clude CheckForExplicitClusion([NotNull] T attribute, AttributeDestinations destination)
+		private Clude CheckForExplicitClusion(T attribute, AttributeDestinations destination)
 		{
 			return _explicitAttributeTrie.GetClusion(attribute, destination);
 		}
 
-		private Clude CheckForImplicitClusion([NotNull] T attribute, AttributeDestinations destination)
+		private Clude CheckForImplicitClusion(T attribute, AttributeDestinations destination)
 		{
 			if ((attribute.DefaultDestinations & destination) != destination)
 				return Clude.Exclude;
@@ -151,7 +144,7 @@ namespace NewRelic.Agent
 			return _implicitAttributeTrie.GetClusion(attribute, destination);
 		}
 
-		private static Boolean KnownCludeToBoolean(Clude clude)
+		private static bool KnownCludeToBoolean(Clude clude)
 		{
 			switch (clude)
 			{
@@ -166,8 +159,7 @@ namespace NewRelic.Agent
 			}
 		}
 
-		[NotNull]
-		private static TrieNode<AttributeFilterNode> CreateAttributeNodeTrie([NotNull] IEnumerable<AttributeFilterNode> nodes)
+		private static TrieNode<AttributeFilterNode> CreateAttributeNodeTrie(IEnumerable<AttributeFilterNode> nodes)
 		{
 			var trieBuilder = new TrieBuilder<AttributeFilterNode>(
 				rootNodeDataFactory: () => new AttributeFilterNode("*", AttributeDestinations.None, AttributeDestinations.None),
@@ -180,8 +172,7 @@ namespace NewRelic.Agent
 			return trieBuilder.CreateTrie(nodes);
 		}
 
-		[NotNull]
-		private static IEnumerable<AttributeFilterNode> CreateExplicitAttributeNodes([NotNull] Settings settings)
+		private static IEnumerable<AttributeFilterNode> CreateExplicitAttributeNodes(Settings settings)
 		{
 			var globalIncludes = CreateAttributeNodes(settings.Includes, AttributeDestinations.All, true);
 			var globalExcludes = CreateAttributeNodes(settings.Excludes, AttributeDestinations.All, false);
@@ -210,8 +201,7 @@ namespace NewRelic.Agent
 				.Concat(eventErrorExcludes);
 		}
 
-		[NotNull]
-		private static IEnumerable<AttributeFilterNode> CreateImplicitAttributeNodes([NotNull] Settings settings)
+		private static IEnumerable<AttributeFilterNode> CreateImplicitAttributeNodes(Settings settings)
 		{
 			var globalIncludes = CreateAttributeNodes(settings.ImplicitIncludes, AttributeDestinations.All, true);
 			var globalExcludes = CreateAttributeNodes(settings.ImplicitExcludes, AttributeDestinations.All, false);
@@ -219,24 +209,21 @@ namespace NewRelic.Agent
 			return globalIncludes.Concat(globalExcludes);
 		}
 
-		[NotNull]
-		private static IEnumerable<AttributeFilterNode> CreateAttributeNodes([NotNull] IEnumerable<String> keys, AttributeDestinations destinations, Boolean include)
+		private static IEnumerable<AttributeFilterNode> CreateAttributeNodes(IEnumerable<string> keys, AttributeDestinations destinations, bool include)
 		{
 			return keys
 				.Where(key => key != null)
 				.Select(key => CreateAttributeNode(key, destinations, include));
 		}
 
-		[NotNull]
-		private static AttributeFilterNode CreateAttributeNode([NotNull] String key, AttributeDestinations destinations, Boolean include)
+		private static AttributeFilterNode CreateAttributeNode(string key, AttributeDestinations destinations, bool include)
 		{
 			var includes = (include) ? destinations : AttributeDestinations.None;
 			var excludes = (include) ? AttributeDestinations.None : destinations;
 			return new AttributeFilterNode(key, includes, excludes);
 		}
 
-		[NotNull]
-		private static AttributeFilterNode MergeAttributeNodes([NotNull] IEnumerable<AttributeFilterNode> nodeBuilders)
+		private static AttributeFilterNode MergeAttributeNodes(IEnumerable<AttributeFilterNode> nodeBuilders)
 		{
 			var mergedNode = nodeBuilders.Aggregate(MergeAttributeNodes);
 			if (mergedNode == null)
@@ -244,7 +231,7 @@ namespace NewRelic.Agent
 			return mergedNode;
 		}
 
-		private static AttributeFilterNode MergeAttributeNodes([NotNull] AttributeFilterNode left, [NotNull] AttributeFilterNode right)
+		private static AttributeFilterNode MergeAttributeNodes(AttributeFilterNode left, AttributeFilterNode right)
 		{
 			var key = (left.Wildcard) ? left.Key + "*" : left.Key;
 			var includes = left.DestinationIncludes | right.DestinationIncludes;
@@ -252,88 +239,79 @@ namespace NewRelic.Agent
 			return new AttributeFilterNode(key, includes, excludes);
 		}
 
-		private static Int32 CompareAttributeNodes([NotNull] AttributeFilterNode left, [NotNull] AttributeFilterNode right)
+		private static int CompareAttributeNodes(AttributeFilterNode left, AttributeFilterNode right)
 		{
 			// keys are different, just use the key comparison result
 			if (left.Key != right.Key)
-				return String.Compare(left.Key, right.Key, StringComparison.Ordinal);
+			{
+				return string.Compare(left.Key, right.Key, StringComparison.Ordinal);
+			}
 
 			// keys match and wildcard is the same, the attribute nodes are the same (possibly different rules, will need merging)
 			if (left.Wildcard == right.Wildcard)
+			{
 				return 0;
+			}
 
 			// keys match, wildcards differ, the one with the wildcard comes first
-			if (left.Wildcard)
-				return -1;
-			else
-				return 1;
+			return left.Wildcard ? -1 : 1;
 		}
 
-		private static Int32 HashAttributeNode([NotNull] AttributeFilterNode nodeBuilder)
+		private static int HashAttributeNode(AttributeFilterNode nodeBuilder)
 		{
 			var suffix = (nodeBuilder.Wildcard) ? "*" : "";
 			var stringToHash = nodeBuilder.Key + suffix;
 			return stringToHash.GetHashCode();
 		}
 
-		private static Boolean CanParentAcceptChild([NotNull] AttributeFilterNode parent, [NotNull] AttributeFilterNode orphan)
+		private static bool CanParentAcceptChild(AttributeFilterNode parent, AttributeFilterNode orphan)
 		{
 			if (!parent.Wildcard)
+			{
 				return false;
+			}
 
 			if (!orphan.Key.StartsWith(parent.Key))
+			{
 				return false;
+			}
 
 			return true;
 		}
 
-		private static Boolean CanNodeHaveChildren([NotNull] AttributeFilterNode node)
+		private static bool CanNodeHaveChildren(AttributeFilterNode node)
 		{
 			return node.Wildcard;
 		}
 
 		public class Settings
 		{
-			public Boolean AttributesEnabled = true;
-			[NotNull]
-			public IEnumerable<String> Excludes = Enumerable.Empty<String>();
-			[NotNull]
-			public IEnumerable<String> Includes = Enumerable.Empty<String>();
+			public bool AttributesEnabled = true;
+			public IEnumerable<string> Excludes = Enumerable.Empty<string>();
+			public IEnumerable<string> Includes = Enumerable.Empty<string>();
 
-			public Boolean JavaScriptAgentEnabled = true;
-			[NotNull]
-			public IEnumerable<String> JavaScriptAgentExcludes = Enumerable.Empty<String>();
-			[NotNull]
-			public IEnumerable<String> JavaScriptAgentIncludes = Enumerable.Empty<String>();
+			public bool JavaScriptAgentEnabled = true;
+			public IEnumerable<string> JavaScriptAgentExcludes = Enumerable.Empty<string>();
+			public IEnumerable<string> JavaScriptAgentIncludes = Enumerable.Empty<string>();
 
-			public Boolean ErrorTraceEnabled = true;
-			[NotNull]
-			public IEnumerable<String> ErrorTraceExcludes = Enumerable.Empty<String>();
-			[NotNull]
-			public IEnumerable<String> ErrorTraceIncludes = Enumerable.Empty<String>();
+			public bool ErrorTraceEnabled = true;
+			public IEnumerable<string> ErrorTraceExcludes = Enumerable.Empty<string>();
+			public IEnumerable<string> ErrorTraceIncludes = Enumerable.Empty<string>();
 
-			public Boolean TransactionEventEnabled = true;
-			[NotNull]
-			public IEnumerable<String> TransactionEventExcludes = Enumerable.Empty<String>();
-			[NotNull]
-			public IEnumerable<String> TransactionEventIncludes = Enumerable.Empty<String>();
+			public bool TransactionEventEnabled = true;
+			public IEnumerable<string> TransactionEventExcludes = Enumerable.Empty<string>();
+			public IEnumerable<string> TransactionEventIncludes = Enumerable.Empty<string>();
 
-			public Boolean TransactionTraceEnabled = true;
-			[NotNull]
-			public IEnumerable<String> TransactionTraceExcludes = Enumerable.Empty<String>();
-			[NotNull]
-			public IEnumerable<String> TransactionTraceIncludes = Enumerable.Empty<String>();
+			public bool TransactionTraceEnabled = true;
+			public IEnumerable<string> TransactionTraceExcludes = Enumerable.Empty<string>();
+			public IEnumerable<string> TransactionTraceIncludes = Enumerable.Empty<string>();
 
-			[NotNull]
-			public IEnumerable<String> ImplicitExcludes = Enumerable.Empty<String>();
-			[NotNull]
-			public IEnumerable<String> ImplicitIncludes = Enumerable.Empty<String>();
+			public IEnumerable<string> ImplicitExcludes = Enumerable.Empty<string>();
+			public IEnumerable<string> ImplicitIncludes = Enumerable.Empty<string>();
 
-			[NotNull]
-			public IEnumerable<String> ErrorEventExcludes = Enumerable.Empty<String>();
-			[NotNull]
-			public IEnumerable<String> ErrorEventIncludes = Enumerable.Empty<String>();
-			public Boolean ErrorEventsEnabled = true;
+			public IEnumerable<string> ErrorEventExcludes = Enumerable.Empty<string>();
+			public IEnumerable<string> ErrorEventIncludes = Enumerable.Empty<string>();
+			public bool ErrorEventsEnabled = true;
 
 		}
 	}
