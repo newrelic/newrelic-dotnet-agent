@@ -9,6 +9,7 @@ using NewRelic.Agent.Extensions.Providers;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using Telerik.JustMock;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 
@@ -54,7 +55,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _adaptiveSampler);
 
-			_transactionService = new TransactionService(new[] { CreateFactoryForTransactionContext }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>());
+			_transactionService = new TransactionService(new[] { CreateFactoryForTransactionContext }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>());
 		}
 
 		[TestCase(null, _accountId, _appId, _traceId)]

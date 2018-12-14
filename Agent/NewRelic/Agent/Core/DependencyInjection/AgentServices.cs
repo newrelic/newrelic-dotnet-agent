@@ -29,6 +29,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers;
@@ -101,6 +102,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
 			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
 			container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
+			container.Register<ISqlParsingCacheSupportabilityMetricReporter, IOutOfBandMetricSource, SqlParsingCacheSupportabilityMetricReporter>();
 			container.Register<IAgentTimerService, AgentTimerService>();
 #if NET45
 			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
@@ -156,6 +158,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IInstrumentationService, InstrumentationService>();
 			container.Register<InstrumentationWatcher, InstrumentationWatcher>();
 			container.Register<LiveInstrumentationServerConfigurationListener, LiveInstrumentationServerConfigurationListener>();
+
+			container.Register<IDatabaseStatementParser, DatabaseStatementParser>();
 
 			if (AgentInstallConfiguration.IsWindows)
 			{

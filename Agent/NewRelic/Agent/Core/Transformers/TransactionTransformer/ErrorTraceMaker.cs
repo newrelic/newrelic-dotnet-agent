@@ -6,7 +6,6 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.SystemExtensions;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -56,7 +55,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var stackTrace = GetFormattedStackTrace(errorData);
 
 			var timestamp = errorData.NoticedAt;
-			const string path = "NewRelic.Api.Agent.NoticeError API Call";
+			var path = errorData.Path;
 			var message = errorData.ErrorMessage;
 			var exceptionClassName = errorData.ErrorTypeName;
 			var errorAttributesWireModel = GetErrorTraceAttributes(customAttributes, stackTrace);

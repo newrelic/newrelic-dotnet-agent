@@ -7,7 +7,7 @@ namespace NewRelic.Agent.Core.Errors
 		public static string FormatStackTrace(Exception exception, bool stripErrorMessage)
 		{
 			var type = exception.GetType().FullName;
-			var message = stripErrorMessage ? ErrorData.StripExceptionMessagesMessage : exception.Message;
+			var message = stripErrorMessage ? ErrorData._stripExceptionMessagesMessage : exception.Message;
 			var formattedInnerException = FormatInnerStackTrace(exception.InnerException, stripErrorMessage);
 			var formattedStackTrace = exception.StackTrace != null ? System.Environment.NewLine + exception.StackTrace : null;
 

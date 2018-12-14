@@ -67,7 +67,9 @@ namespace NewRelic.Agent.Core.Transactions
 
 		private readonly ITracePriorityManager _tracePriorityManager;
 
-		public TransactionService([NotNull] IEnumerable<IContextStorageFactory> factories, [NotNull] ITimerFactory timerFactory, [NotNull] ICallStackManagerFactory callStackManagerFactory, [NotNull] IDatabaseService databaseService, ITracePriorityManager tracePriorityManager)
+		private IDatabaseStatementParser _databaseStatementParser;
+
+		public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser)
 		{
 			_sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
 			_asyncContext = GetAsyncTransactionContext(factories);
@@ -75,6 +77,7 @@ namespace NewRelic.Agent.Core.Transactions
 			_callStackManagerFactory = callStackManagerFactory;
 			_databaseService = databaseService;
 			_tracePriorityManager = tracePriorityManager;
+			_databaseStatementParser = databaseStatementParser;
 		}
 
 		#region Private Helpers
@@ -150,7 +153,7 @@ namespace NewRelic.Agent.Core.Transactions
 				return null;
 			}
 			var priority = _tracePriorityManager.Create();
-			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService.SqlObfuscator, priority);
+			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService.SqlObfuscator, priority, _databaseStatementParser);
 
 			try
 			{

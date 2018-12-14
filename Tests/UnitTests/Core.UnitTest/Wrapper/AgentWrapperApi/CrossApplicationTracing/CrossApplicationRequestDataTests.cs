@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		{
 			var data = new CrossApplicationRequestData("guid", true, "tripId", "pathHash");
 
-			var serialized = CrossApplicationRequestData.ToJson(data);
+			var serialized = data.ToJson();
 
 			Assert.AreEqual("[\"guid\",true,\"tripId\",\"pathHash\"]", serialized);
 		}

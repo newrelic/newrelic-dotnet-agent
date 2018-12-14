@@ -21,6 +21,8 @@ namespace CompositeTests
 		private static CompositeTestAgent _compositeTestAgent;
 
 		private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
+		private const string NoticeErrorPathOutsideTransaction = "NewRelic.Api.Agent.NoticeError API Call";
+		private const string ExceptionMessage = "This is a new exception.";
 
 		[SetUp]
 		public void SetUp()
@@ -244,16 +246,16 @@ namespace CompositeTests
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError(new Exception("This is a new exception."));
+			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, "This is a new exception.");
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+			Assert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
 
 			var expectedErrorAttributes = new List<ExpectedAttribute>
 			{
@@ -263,6 +265,10 @@ namespace CompositeTests
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
 
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
 		}
 
 		[Test]
@@ -276,17 +282,17 @@ namespace CompositeTests
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError(new Exception("This is a new exception."));
+			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+			Assert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
 
 			var expectedErrorAttributes = new List<ExpectedAttribute>
 			{
@@ -296,6 +302,10 @@ namespace CompositeTests
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
 
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 		}
 
 		[Test]
@@ -309,17 +319,17 @@ namespace CompositeTests
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError(new Exception("This is a new exception."));
+			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
-			Assert.AreEqual(errorTrace.Guid, _compositeTestAgent.TransactionTraces.First().Guid);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
+			Assert.AreEqual(_compositeTestAgent.TransactionTraces.First().Guid, errorTrace.Guid);
 
 			var expectedErrorAttributes = new List<ExpectedAttribute>
 			{
@@ -329,6 +339,10 @@ namespace CompositeTests
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAttributes, AttributeClassification.AgentAttributes, errorTrace);
 
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 		}
 
 		[Test]
@@ -336,18 +350,23 @@ namespace CompositeTests
 		public void Test_NoticeErrorOutsideTransaction_WithException()
 		{
 			// ACT
-			AgentApi.NoticeError(new Exception("This is a new exception."));
+			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, "This is a new exception.");
-			Assert.AreEqual(errorTrace.Path, "NewRelic.Api.Agent.NoticeError API Call");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(errorTrace.Path, errorEvent.IntrinsicAttributes["transactionName"]);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -358,18 +377,22 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError(new Exception("This is a new exception."));
+			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
-			Assert.AreEqual(errorTrace.Path, "NewRelic.Api.Agent.NoticeError API Call");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 
@@ -381,18 +404,23 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError(new Exception("This is a new exception."));
+			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-			Assert.AreEqual(errorTrace.Path, "NewRelic.Api.Agent.NoticeError API Call");
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(errorTrace.Path, errorEvent.IntrinsicAttributes["transactionName"]);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.UserAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -402,7 +430,7 @@ namespace CompositeTests
 			// ACT
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			_compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment").End();
-			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String> { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String> { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -426,14 +454,18 @@ namespace CompositeTests
 			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, "This is a new exception.");
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -446,7 +478,7 @@ namespace CompositeTests
 
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			_compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment").End();
-			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String> { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String> { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -470,14 +502,18 @@ namespace CompositeTests
 			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -490,7 +526,7 @@ namespace CompositeTests
 
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			_compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment").End();
-			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String> { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String> { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -514,14 +550,18 @@ namespace CompositeTests
 			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -529,7 +569,7 @@ namespace CompositeTests
 		public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams()
 		{
 			// ACT
-			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -540,11 +580,16 @@ namespace CompositeTests
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, "This is a new exception.");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -555,7 +600,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -566,11 +611,16 @@ namespace CompositeTests
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
-			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -581,7 +631,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -592,11 +642,16 @@ namespace CompositeTests
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "System.Exception");
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -607,7 +662,7 @@ namespace CompositeTests
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -631,14 +686,18 @@ namespace CompositeTests
 			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
-			Assert.AreEqual(errorTrace.Message, "This is an exception string.");
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -652,7 +711,7 @@ namespace CompositeTests
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -676,14 +735,18 @@ namespace CompositeTests
 			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
-			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedUserAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -697,7 +760,7 @@ namespace CompositeTests
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -721,14 +784,18 @@ namespace CompositeTests
 			var transactionTrace = _compositeTestAgent.TransactionTraces.First();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
+			Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
-			Assert.AreEqual(errorTrace.Path, "WebTransaction/ASP/TransactionName");
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorTrace.Path);
 
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedErrorAgentAttributes, AttributeClassification.AgentAttributes, errorTrace);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedNonErrorAttributes, AttributeClassification.UserAttributes, transactionEvent);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 		}
 
 		[Test]
@@ -736,7 +803,7 @@ namespace CompositeTests
 		public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams()
 		{
 			// ACT
-			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -747,11 +814,16 @@ namespace CompositeTests
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
-			Assert.AreEqual(errorTrace.Message, "This is an exception string.");
+			Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
 		}
 
 		[Test]
@@ -773,11 +845,16 @@ namespace CompositeTests
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
-			Assert.AreEqual(errorTrace.Message, StripExceptionMessagesMessage);
+			Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 		}
 
 		[Test]
@@ -788,7 +865,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -799,11 +876,16 @@ namespace CompositeTests
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
 
-			Assert.AreEqual(errorTrace.ExceptionClassName, "Custom Error");
+			Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message);
 			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
 			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
 			ErrorTraceAssertions.ErrorTraceDoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 		}
 
 		[Test]
@@ -844,7 +926,7 @@ namespace CompositeTests
 			// ACT
 			var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
 			_compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment").End();
-			AgentApi.NoticeError(new Exception("This is a new exception."));
+			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -853,7 +935,7 @@ namespace CompositeTests
 			var expectedAttributes = new List<ExpectedAttribute>
 			{
 				new ExpectedAttribute {Key = "errorType", Value = "System.Exception"},
-				new ExpectedAttribute {Key = "errorMessage", Value = "This is a new exception."},
+				new ExpectedAttribute {Key = "errorMessage", Value = ExceptionMessage},
 				new ExpectedAttribute {Key = "type", Value = "Transaction"},
 				new ExpectedAttribute {Key = "name", Value = "WebTransaction/ASP/TransactionName"}
 			};

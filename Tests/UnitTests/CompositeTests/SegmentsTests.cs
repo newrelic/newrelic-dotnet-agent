@@ -356,7 +356,7 @@ namespace CompositeTests
 			var catResponseData = new CrossApplicationResponseData("123#456", "transactionName", 1.1f, 2.2f, 3, "guid");
 			var responseHeaders = new Dictionary<string, string>
 			{
-				{"X-NewRelic-App-Data", HeaderEncoder.EncodeSerializedData(CrossApplicationResponseData.ToJson(catResponseData), encodingKey)}
+				{"X-NewRelic-App-Data", HeaderEncoder.EncodeSerializedData(catResponseData.ToJson(), encodingKey)}
 			};
 			transaction.ProcessInboundResponse(responseHeaders, segment);
 			segment.End();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -26,8 +26,9 @@ using Telerik.JustMock;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Instrumentation;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.ThreadProfiling;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Providers.Storage.AsyncLocal;
 
 namespace CompositeTests
 {
@@ -90,22 +91,38 @@ namespace CompositeTests
 
 		public IContainer Container => _container;
 
+		public void ResetHarvestData()
+		{
+			Metrics.Clear();
+			CustomEvents.Clear();
+			TransactionTraces.Clear();
+			TransactionEvents.Clear();
+			ErrorTraces.Clear();
+			ErrorEvents.Clear();
+			SpanEvents.Clear();
+		}
 
 		[NotNull]
 		public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
 
-		public CompositeTestAgent() : this(shouldAllowThreads: false)
+		public CompositeTestAgent() : this(shouldAllowThreads: false, includeAsyncLocalStorage: false)
 		{
 		}
 
-		public CompositeTestAgent(bool shouldAllowThreads)
+		public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage)
 		{
 			_shouldAllowThreads = shouldAllowThreads;
 
 			// Create the fake classes necessary to construct services
+
 			var mockFactory = Mock.Create<IContextStorageFactory>();
 			Mock.Arrange(() => mockFactory.CreateContext<ITransaction>(Arg.AnyString)).Returns(new TestTransactionContext<ITransaction>());
-			var transactionContextFactories = new [] { mockFactory };
+			var transactionContextFactories = new List<IContextStorageFactory> { mockFactory };
+			if (includeAsyncLocalStorage)
+			{
+				transactionContextFactories.Add(new AsyncLocalStorageFactory());
+			}
+
 			var wrappers = Enumerable.Empty<IWrapper>();
 			var mockEnvironment = Mock.Create<IEnvironment>();
 			var dataTransportService = Mock.Create<IDataTransportService>();
@@ -199,7 +216,9 @@ namespace CompositeTests
 			return datas =>
 			{
 				if (datas != null)
+				{
 					dataBucket.AddRange(datas);
+				}
 
 				return DataTransportResponseStatus.RequestSuccessful;
 			};
@@ -225,6 +244,11 @@ namespace CompositeTests
 		public IAgentWrapperApi GetAgentWrapperApi()
 		{
 			return _container.Resolve<IAgentWrapperApi>();
+		}
+
+		public IDatabaseStatementParser GetDatabaseStatementParser()
+		{
+			return _container.Resolve<DatabaseStatementParser>();
 		}
 
 		public IAgentApi GetAgentApiImplementation()

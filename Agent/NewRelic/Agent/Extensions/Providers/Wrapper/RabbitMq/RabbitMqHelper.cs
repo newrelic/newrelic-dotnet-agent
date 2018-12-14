@@ -47,8 +47,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
 		public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransactionWrapperApi transactionWrapperApi, int basicPropertiesIndex)
 		{
-			// ATTENTION: For reasons and data on why we chose dynamic over VisibilityBypasser see Test/Benchmarking/DynamicVsBypasser.cs
-
+			// ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
+			// If we implement newer versions of the API or new methods we'll need to re-evaluate.
 			// never null. Headers property can be null.
 			var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<dynamic>(basicPropertiesIndex);
 

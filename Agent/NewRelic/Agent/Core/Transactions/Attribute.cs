@@ -13,12 +13,12 @@ namespace NewRelic.Agent.Core.Transactions
 	{
 		private const int CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP = 256; //bytes
 
-		public String Key { get { return _key; } }
+		public string Key { get { return _key; } }
 		[NotNull]
-		private readonly String _key;
+		private readonly string _key;
 
 		public Object Value { get { return _value; } }
-		[NotNull]
+
 		private readonly Object _value;
 
 		public AttributeDestinations DefaultDestinations { get { return _defaultDestinations; } }
@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public virtual AttributeClassification Classification { get; private set; }
 
-		private Attribute([NotNull] string key, [NotNull] object value, AttributeClassification classification, AttributeDestinations defaultDestinations)
+		private Attribute([NotNull] string key, object value, AttributeClassification classification, AttributeDestinations defaultDestinations)
 		{
 			_key = key;
 			_value = CheckAttributeValueForAllowedType(key, value) ? value : string.Empty;
@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Transactions
 		[NotNull]
 		private static Object TruncateUserProvidedValue([NotNull] Object value)
 		{
-			var valueAsString = value as String;
+			var valueAsString = value as string;
 			if (valueAsString == null)
 				return value;
 
@@ -48,9 +48,9 @@ namespace NewRelic.Agent.Core.Transactions
 		}
 
 		[NotNull]
-		private static String TruncateUserProvidedValue([NotNull] string value)
+		private static string TruncateUserProvidedValue([NotNull] string value)
 		{
-			return new String(value
+			return new string(value
 				.TakeWhile((c, i) =>
 					Encoding.UTF8.GetByteCount(value.Substring(0, i + 1)) <= CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP)
 				.ToArray());
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.Transactions
 			if (typeCode == TypeCode.String || typeCode >= TypeCode.Boolean && typeCode <= TypeCode.Decimal && typeCode != TypeCode.Char)
 				return true;
 
-			Log.WarnFormat("Attribute at key {0} of type {1} not allowed.  Only String, bool, and floating point and integral types are acceptable as attributes.", key, type?.ToString() ?? "null");
+			Log.WarnFormat("Attribute at key {0} of type {1} not allowed.  Only string, bool, and floating point and integral types are acceptable as attributes.", key, type?.ToString() ?? "null");
 			return false;
 		}
 
@@ -245,7 +245,6 @@ namespace NewRelic.Agent.Core.Transactions
 			return new Attribute("timestamp", errorTime.ToUnixTimeMilliseconds(), AttributeClassification.Intrinsics, destinations);
 		}
 
-
 		[NotNull]
 		public static IEnumerable<Attribute> BuildTransactionNameAttribute([NotNull] string transactionName)
 		{
@@ -254,6 +253,11 @@ namespace NewRelic.Agent.Core.Transactions
 				new Attribute("name", transactionName, AttributeClassification.Intrinsics, AttributeDestinations.TransactionEvent),
 				new Attribute("transactionName", transactionName, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent)
 			};
+		}
+
+		public static Attribute BuildTransactionNameAttributeForCustomError(string name)
+		{
+			return new Attribute("transactionName", name, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
 		}
 
 		[NotNull]

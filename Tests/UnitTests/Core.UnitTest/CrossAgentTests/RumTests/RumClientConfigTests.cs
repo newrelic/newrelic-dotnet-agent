@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
 			ITransactionName name = new WebTransactionName(transactionMetricName.Prefix, transactionMetricName.UnPrefixedName);
 			var priority = 0.5f;
-			ITransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			ITransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			tx.TransactionMetadata.SetQueueTime(TimeSpan.FromMilliseconds(testCase.QueueTimeMilliseconds));
 			testCase.UserAttributes.ForEach(attr => tx.TransactionMetadata.AddUserAttribute(attr.Key, attr.Value));
 			tx.TransactionMetadata.SetCrossApplicationReferrerTripId("");

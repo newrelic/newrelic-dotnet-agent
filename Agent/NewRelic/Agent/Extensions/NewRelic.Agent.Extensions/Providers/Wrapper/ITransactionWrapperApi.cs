@@ -18,6 +18,11 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		bool IsValid { get; }
 
 		/// <summary>
+		/// Returns true if this transaction's timer has been stopped
+		/// </summary>
+		bool IsFinished { get; }
+
+		/// <summary>
 		/// The current segment from the segment call stack.
 		/// </summary>
 		ISegment CurrentSegment { get; }

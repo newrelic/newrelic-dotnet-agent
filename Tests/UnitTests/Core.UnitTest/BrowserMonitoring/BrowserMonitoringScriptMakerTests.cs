@@ -210,7 +210,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			Mock.Arrange(() => timer.Duration).Returns(time);
 
 			var priority = 0.5f;
-			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 
 			if (queueTime != null)
 				tx.TransactionMetadata.SetQueueTime(queueTime.Value);

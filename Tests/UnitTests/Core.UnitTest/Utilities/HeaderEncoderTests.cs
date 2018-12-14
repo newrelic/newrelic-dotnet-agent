@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-			var encoded = HeaderEncoder.EncodeSerializedData(CrossApplicationRequestData.ToJson(data), null);
+			var encoded = HeaderEncoder.EncodeSerializedData(data.ToJson(), null);
 
 			Assert.AreEqual("WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==", encoded);
 		}
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			var data = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-			var encoded = HeaderEncoder.EncodeSerializedData(CrossApplicationRequestData.ToJson(data), "encodingKey");
+			var encoded = HeaderEncoder.EncodeSerializedData(data.ToJson(), "encodingKey");
 
 			Assert.AreEqual("PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==", encoded);
 		}

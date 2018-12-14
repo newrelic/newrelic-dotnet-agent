@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
 	// Note: this data is referred to as "AppData" in the CAT spec.
-	public class CrossApplicationResponseData
+	public class CrossApplicationResponseData : IManualSerializable
 	{
 		// This object doesn't need an IsValid due to the contructors always producing a valid object.
 		private const int TotalProperties = 7;
@@ -86,24 +87,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		}
 
 		/// <summary>
-		/// Serialize a CrossApplicationResponseData <paramref name="data"/> to an JSON string.
+		/// Serialize this to an JSON string.
 		/// </summary>
-		/// <param name="data">The CrossApplicationResponseData</param>
 		/// <returns>The serialized JSON string</returns>
-		public static string ToJson(CrossApplicationResponseData data)
+		public string ToJson()
 		{
 			using (var stringWriter = new StringWriter())
 			{
 				using (var jsonWriter = new JsonTextWriter(stringWriter))
 				{
 					jsonWriter.WriteStartArray();
-					jsonWriter.WriteValue(data.CrossProcessId);
-					jsonWriter.WriteValue(data.TransactionName);
-					jsonWriter.WriteValue(data.QueueTimeInSeconds);
-					jsonWriter.WriteValue(data.ResponseTimeInSeconds);
-					jsonWriter.WriteValue(data.ContentLength);
-					jsonWriter.WriteValue(data.TransactionGuid);
-					jsonWriter.WriteValue(data.Unused);
+					jsonWriter.WriteValue(CrossProcessId);
+					jsonWriter.WriteValue(TransactionName);
+					jsonWriter.WriteValue(QueueTimeInSeconds);
+					jsonWriter.WriteValue(ResponseTimeInSeconds);
+					jsonWriter.WriteValue(ContentLength);
+					jsonWriter.WriteValue(TransactionGuid);
+					jsonWriter.WriteValue(Unused);
 					jsonWriter.WriteEndArray();
 				}
 

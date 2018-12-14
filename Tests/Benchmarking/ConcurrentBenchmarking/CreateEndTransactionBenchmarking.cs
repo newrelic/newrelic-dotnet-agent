@@ -19,7 +19,7 @@ namespace ConcurrentBenchmarking
 		public void Setup(BenchmarkContext context)
 		{
 			_counter = context.GetCounter(TransactionCounterName);
-			_compositeTestAgent = new CompositeTestAgent(shouldAllowThreads: true);
+			_compositeTestAgent = new CompositeTestAgent(shouldAllowThreads: true, includeAsyncLocalStorage: false);
 			_agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
 		}
 

@@ -330,7 +330,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			Mock.Arrange(() => timer.Duration).Returns(duration);
 
 			var priority = 0.5f;
-			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			tx.TransactionMetadata.SetCrossApplicationPathHash(pathHash);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid(referrerGuid);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTripId(referrerTripId);

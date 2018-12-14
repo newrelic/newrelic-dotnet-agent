@@ -1,9 +1,9 @@
-﻿using System;
-using System.Net;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using System;
+using System.Net;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -100,5 +100,9 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildSpanEventsSeenMetric(int count);
 
 		MetricWireModel TryBuildSpanEventsSentMetric(int count);
+
+		MetricWireModel TryBuildSqlParsingCacheCountMetric(string name, int count);
+
+		MetricWireModel TryBuildSqlParsingCacheSizeMetric(string name, int size);
 	}
 }

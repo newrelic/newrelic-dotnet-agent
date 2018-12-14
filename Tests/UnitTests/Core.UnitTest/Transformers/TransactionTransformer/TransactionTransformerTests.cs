@@ -144,7 +144,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public void TransformerTransaction_DoesNotGenerateData_IfTransactionIsIgnored()
 		{
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(),priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(),priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.Ignore();
 
 			_transactionTransformer.Transform(transaction);
@@ -487,7 +487,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
 			AddDummySegment(transaction);
 
@@ -717,7 +717,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				.Returns(expectedTransactionMetricName);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			AddDummySegment(transaction);
 
 			// ACT
@@ -760,7 +760,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				.Returns(expectedAttributes);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			AddDummySegment(transaction);
 
 			// ACT
@@ -825,7 +825,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			// ARRANGE
 			var transactionName = "transactionName";
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			AddDummySegment(transaction);
 
 			// ACT
@@ -923,7 +923,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			AddDummySegment(transaction);
 
 			// ACT

@@ -4,7 +4,6 @@
 
 		<tracerFactory>
 			<match assemblyName="System.Web" className="System.Web.UI.Page">
-				<!--<exactMethodMatcher methodName="Render" parameters="System.Web.UI.HtmlTextWriter" />-->
 				<exactMethodMatcher methodName="PerformPreInit" />
 			</match>
 			<match assemblyName="System.Web" className="System.Web.Compilation.AssemblyBuilder">

@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 			var factory1 = CreateFactoryForTransactionContext(_highPriorityTransactionContext);
 			var factory2 = CreateFactoryForTransactionContext(_lowPriorityTransactionContext);
 
-			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>() );
+			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>());
 		}
 
 		[TearDown]

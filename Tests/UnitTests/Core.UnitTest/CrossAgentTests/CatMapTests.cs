@@ -174,7 +174,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var transactionName = GetTransactionNameFromString(testCase.TransactionName);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 
 			SetGuid(transaction, testCase.TransactionGuid);
 

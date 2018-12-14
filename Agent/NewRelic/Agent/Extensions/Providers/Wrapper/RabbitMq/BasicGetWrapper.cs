@@ -24,6 +24,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
 			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
 
+			// ATTENTION: We have validated that the use of dynamic, here and below, is appropriate based on the visibility of the data we're working with.
+			// If we implement newer versions of the API or new methods we'll need to re-evaluate.
 			// new to capture BasicGetResult 
 			return Delegates.GetDelegateFor<dynamic>(
 				onFailure: segment.End,
@@ -32,19 +34,18 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 
 			void AfterWrapped(dynamic result)
 			{
-				segment.RemoveSegmentFromCallStack();
-
-				if (result == null)
-					return;
-
-				var basicProperties = result.BasicProperties;
-				var headers = (Dictionary<string, object>)basicProperties.Headers;
-				if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, agentWrapperApi, out var payload))
-				{
-					transactionWrapperApi.AcceptDistributedTracePayload(payload, TransportType.AMQP);
-				}
-
 				segment.End();
+
+				if (result != null)
+				{
+					var basicProperties = result.BasicProperties;
+					var headers = (Dictionary<string, object>)basicProperties.Headers;
+					if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, agentWrapperApi, out var payload))
+					{
+						transactionWrapperApi.AcceptDistributedTracePayload(payload, TransportType.AMQP);
+					}
+				}
+				
 			}
 		}
 	}

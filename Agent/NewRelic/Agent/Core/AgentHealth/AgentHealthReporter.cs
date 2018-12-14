@@ -146,7 +146,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void ReportAgentVersion(string agentVersion, string hostName)
 		{
 			TrySend(_metricBuilder.TryBuildAgentVersionMetric(agentVersion));
-			TrySend(_metricBuilder.TryBuildAgentVersionByHostMetric(hostName, agentVersion));
+
+			// avoiding call to GetHostName. If this supportability metrics is being used
+			// this can be resurrected. But GetHostName calls can then be cached. 
+			//TrySend(_metricBuilder.TryBuildAgentVersionByHostMetric(hostName, agentVersion));
 		}
 
 		#region TransactionEvents

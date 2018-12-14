@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void SerializesCorrectly()
 		{
 			var data = new CrossApplicationResponseData("crossProcessId", "transactionName", 1.1f, 2.2f, 3, "guid");
-			var serialized = CrossApplicationResponseData.ToJson(data);
+			var serialized = data.ToJson();
 
 			Assert.AreEqual("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\",false]", serialized);
 		}

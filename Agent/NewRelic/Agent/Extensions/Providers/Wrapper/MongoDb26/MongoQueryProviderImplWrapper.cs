@@ -29,10 +29,12 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
 			var caller = instrumentedMethodCall.MethodCall.InvocationTarget;
 
-			dynamic collection = MongoDbHelper.GetCollectionFieldFromGeneric(caller);
-			ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(collection.Database);
+			var collection = MongoDbHelper.GetCollectionFieldFromGeneric(caller);
+			var database = MongoDbHelper.GetDatabaseFromGeneric(collection);
 
-			var model = MongoDbHelper.GetCollectionName(collection.CollectionNamespace);
+			ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(database);
+			var collectionNamespace = MongoDbHelper.GetCollectionNamespacePropertyFromGeneric(caller);
+			var model = MongoDbHelper.GetCollectionName(collectionNamespace);
 
 			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);

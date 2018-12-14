@@ -1757,6 +1757,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			Assert.IsFalse(defaultConfig.UseResourceBasedNamingForWCFEnabled);
 		}
 
+
 		#region CrossApplicationTracingEnabled
 
 		[Test]

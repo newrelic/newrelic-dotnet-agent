@@ -82,10 +82,11 @@ namespace NewRelic.Agent.Core.Aggregators
 
             var scheduler = Mock.Create<IScheduler>();
 			var apiSupportabilityMetricCounters = Mock.Create<IApiSupportabilityMetricCounters>();
+			var sqlParsingCacheSupportabilityMetricReporter = Mock.Create<ISqlParsingCacheSupportabilityMetricReporter>();
 			
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, new[] { _outOfBandMetricSource }, _agentHealthReporter, _dnsStatic, _processStatic, scheduler, apiSupportabilityMetricCounters);
+			_metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, new[] { _outOfBandMetricSource }, _agentHealthReporter, _dnsStatic, _processStatic, scheduler, apiSupportabilityMetricCounters, sqlParsingCacheSupportabilityMetricReporter);
 		}
 
 		[TearDown]
@@ -162,11 +163,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			var dnsStatic = Mock.Create<IDnsStatic>();
 			var processStatic = Mock.Create<IProcessStatic>();
 			var apiSupportabilityMetricCounters = Mock.Create<IApiSupportabilityMetricCounters>();
+			var sqlParsingCacheSupportabilityMetricReporter = Mock.Create<ISqlParsingCacheSupportabilityMetricReporter>();
 
 			var scheduler = Mock.Create<IScheduler>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, agentHealthReporter, dnsStatic, processStatic, scheduler, apiSupportabilityMetricCounters);
+			_metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, agentHealthReporter, dnsStatic, processStatic, scheduler, apiSupportabilityMetricCounters, sqlParsingCacheSupportabilityMetricReporter);
 
 			var sentMetrics = Enumerable.Empty<MetricWireModel>();
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()))

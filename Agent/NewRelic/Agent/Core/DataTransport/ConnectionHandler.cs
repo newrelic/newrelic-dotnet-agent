@@ -14,6 +14,9 @@ using NewRelic.Agent.Core.Utilization;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
 using NewRelic.Agent.Configuration;
+using System.Text;
+using Newtonsoft.Json;
+using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -383,7 +386,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 #endregion Connect helper methods
 
-#region Data transfer helper methods
+		#region Data transfer helper methods
 
 		private T SendNonDataRequest<T>([NotNull] String method, [NotNull] params Object[] data)
 		{
@@ -396,12 +399,14 @@ namespace NewRelic.Agent.Core.DataTransport
 			SendNonDataRequest<Object>(method, data);
 		}
 
-		[CanBeNull]
-		private T SendDataOverWire<T>([NotNull] ICollectorWire wire, [NotNull] String method, [NotNull] params Object[] data)
+		private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
 		{
 			try
 			{
-				var serializedData = _serializer.Serialize(data);
+				var serializedData = method == "metric_data"
+					? ConvertMetricDataToJson(data)
+					: _serializer.Serialize(data);
+
 				var responseBody = wire.SendData(method, _connectionInfo, serializedData);
 				return ParseResponse<T>(responseBody);
 			}
@@ -432,9 +437,55 @@ namespace NewRelic.Agent.Core.DataTransport
 			return responseEnvelope.ReturnValue;
 		}
 
-#endregion Data transfer helper methods
+		/// <summary>
+		/// Builds the metric_data from the provided metric data.
+		/// This method exists to replace the use of JsonArrayConverter (and other Json.Convert types) with manual serialize and deserialize methods.
+		/// This is being done due to the large impact JsonArrayConverter has on the agent.  It CPU, Memory, GC, and Time intensive.
+		/// </summary>
+		/// <param name="metricData">The metric_data items.  In order: Agent Run ID, start time, end time, metrics ienumerable</param>
+		/// <returns>A string representing the serialized metric_data</returns>
+		public string ConvertMetricDataToJson(object[] metricData)
+		{
+			// validate metric_data size
+			if (metricData.Length != 4)
+			{
+				throw new ArgumentOutOfRangeException($"Array size should be 4, but was {metricData.Length}.");
+			}
 
-#region Event handlers
+			// validate metric_data (should be (string, double, double, IEnumerable<MetricWireModel>))
+			if (!(metricData[0] is string) || !(metricData[1] is double) || !(metricData[2] is double) || !(metricData[3] is IEnumerable<MetricWireModel>))
+			{
+				throw new ArgumentException("A member of the array was not of the correct type.");
+			}
+
+			using (var stringWriter = new StringWriter())
+			{
+				using (var jsonWriter = new JsonTextWriter(stringWriter))
+				{
+					jsonWriter.WriteStartArray();
+					jsonWriter.WriteValue((string)metricData[0]); // agent id
+					jsonWriter.WriteValue((double)metricData[1]); // start epoch time
+					jsonWriter.WriteValue((double)metricData[2]); // end epoch time
+
+					jsonWriter.WriteStartArray();
+
+					// loops through the metricwiremodels in the harvest
+					foreach (var model in (IEnumerable<MetricWireModel>)metricData[3]) // Array item 4 is here!
+					{
+						jsonWriter.WriteRawValue(model.ToJson());
+					}
+
+					jsonWriter.WriteEndArray(); // metrics
+					jsonWriter.WriteEndArray(); // whole package
+
+				}
+				return stringWriter.ToString();
+			}
+		}
+
+		#endregion Data transfer helper methods
+
+		#region Event handlers
 
 		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
 		{

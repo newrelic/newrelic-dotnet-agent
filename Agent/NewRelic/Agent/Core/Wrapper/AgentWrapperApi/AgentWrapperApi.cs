@@ -159,7 +159,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			}
 
 			// We want to finish then transaction as fast as possible to get the more accurate possible response time
-			_transactionFinalizer.Finish(transaction);
+			var finishedTransaction = _transactionFinalizer.Finish(transaction);
+
+			if (!finishedTransaction) return;
 
 			// We also want to remove the transaction from the transaction context before returning so that it won't be reused
 			_transactionService.RemoveOutstandingInternalTransactions(true);
@@ -524,6 +526,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public bool IsValid => true;
 
+			public bool IsFinished => transaction.IsFinished;
+
 			public ISegment CurrentSegment
 			{
 				get
@@ -546,6 +550,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public void End()
 			{
+				if (transaction.IsFinished)
+				{
+					Log.DebugFormat("Transaction {0} has already been ended.", transaction.Guid);
+					return;
+				}
+
 				if (transaction.CandidateTransactionName.CurrentTransactionName.IsWeb && transaction.TransactionMetadata.HttpResponseStatusCode >= 400)
 				{
 					SetWebTransactionName(WebTransactionType.StatusCode, $"{transaction.TransactionMetadata.HttpResponseStatusCode}", TransactionNamePriority.StatusCode);
@@ -1035,6 +1045,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private sealed class NoTransactionWrapperApiImpl : ITransactionWrapperApi, ISegment
 		{
 			public bool IsValid => false;
+
+			public bool IsFinished => false;
 
 			public ISegment CurrentSegment => _noOpSegment;
 

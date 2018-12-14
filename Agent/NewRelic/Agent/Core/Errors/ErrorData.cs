@@ -10,46 +10,49 @@ namespace NewRelic.Agent.Core.Errors
 {
 	public struct ErrorData
 	{
-		[NotNull]
 		public readonly string ErrorMessage;
 
-		[CanBeNull]
 		public readonly string ErrorTypeName;
 
-		[CanBeNull]
 		public readonly string StackTrace;
 
 		public readonly DateTime NoticedAt;
 
 		public readonly bool IsAnError;
 
-		internal static readonly string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
+		// used for Custom Error outside a transaction to set value for:
+		// 1. ErrorTraceWireModel.Path
+		// 2. ErrorEvent transactionName attribute
+		public string Path;
 
-		private ErrorData([NotNull] string errorMessage, [CanBeNull] string errorTypeName, [CanBeNull] string stackTrace, DateTime noticedAt)
+		internal static readonly string _stripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
+
+		private ErrorData(string errorMessage, string errorTypeName, string stackTrace, DateTime noticedAt)
 		{
 			NoticedAt = noticedAt;
 			StackTrace = stackTrace;
 			ErrorMessage = errorMessage;
 			ErrorTypeName = GetFriendlyExceptionTypeName(errorTypeName);
 			IsAnError = true;
+			Path = null;
 		}
 
-		public static ErrorData FromParts([NotNull] string errorMessage, [CanBeNull] string errorTypeName, DateTime noticedAt, bool stripErrorMessage)
+		public static ErrorData FromParts(string errorMessage, string errorTypeName, DateTime noticedAt, bool stripErrorMessage)
 		{
-			var message = stripErrorMessage ? StripExceptionMessagesMessage : errorMessage;
+			var message = stripErrorMessage ? _stripExceptionMessagesMessage : errorMessage;
 			return new ErrorData(message, errorTypeName, null, noticedAt);
 		}
 
-		public static ErrorData FromException([NotNull] Exception exception, bool stripErrorMessage)
+		public static ErrorData FromException(Exception exception, bool stripErrorMessage)
 		{
-			var message = stripErrorMessage ? StripExceptionMessagesMessage : exception.GetBaseException().Message;
+			var message = stripErrorMessage ? _stripExceptionMessagesMessage : exception.GetBaseException().Message;
 			var exceptionTypeName = exception.GetType().FullName;
 			var stackTrace = ExceptionFormatter.FormatStackTrace(exception, stripErrorMessage);
 			var noticedAt = DateTime.UtcNow;
 			return new ErrorData(message, exceptionTypeName, stackTrace, noticedAt);
 		}
 
-		public static ErrorData TryGetErrorData([NotNull] ImmutableTransaction immutableTransaction, [NotNull] IConfigurationService configurationService)
+		public static ErrorData TryGetErrorData(ImmutableTransaction immutableTransaction, IConfigurationService configurationService)
 		{
 			// *Any* ignored custom error noticed by the agent should result in no error trace
 			var customErrors = immutableTransaction.TransactionMetadata.CustomErrorDatas.ToList();
@@ -81,18 +84,18 @@ namespace NewRelic.Agent.Core.Errors
 			return TryCreateHttpErrorData(immutableTransaction);
 		}
 
-		private static Boolean ShouldIgnoreAnyError([NotNull] IEnumerable<ErrorData> errorData, [NotNull] IConfigurationService configurationService)
+		private static Boolean ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IConfigurationService configurationService)
 		{
 			var errorTypeNames = errorData.Select(data => data.ErrorTypeName);
 			return ShouldIgnoreAnyError(errorTypeNames, configurationService);
 		}
 
-		private static Boolean ShouldIgnoreError(String errorTypeName, IConfigurationService configurationService)
+		private static Boolean ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
 		{
 			return ShouldIgnoreAnyError(new[] { errorTypeName }, configurationService);
 		}
 
-		private static Boolean ShouldIgnoreAnyError([NotNull] IEnumerable<String> errorTypeNames, IConfigurationService configurationService)
+		private static Boolean ShouldIgnoreAnyError([NotNull] IEnumerable<string> errorTypeNames, IConfigurationService configurationService)
 		{
 			foreach (var errorClassName in errorTypeNames)
 			{
@@ -116,7 +119,7 @@ namespace NewRelic.Agent.Core.Errors
 		}
 
 		[CanBeNull]
-		private static String TryGetFormattedStatusCode([NotNull] ImmutableTransaction immutableTransaction)
+		private static string TryGetFormattedStatusCode(ImmutableTransaction immutableTransaction)
 		{
 			if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
 				return null;
@@ -130,7 +133,7 @@ namespace NewRelic.Agent.Core.Errors
 		}
 
 		[CanBeNull]
-		private static ErrorData TryCreateHttpErrorData([NotNull] ImmutableTransaction immutableTransaction)
+		private static ErrorData TryCreateHttpErrorData(ImmutableTransaction immutableTransaction)
 		{
 			if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
 				return new ErrorData();
@@ -156,9 +159,9 @@ namespace NewRelic.Agent.Core.Errors
 		}
 
 		[NotNull]
-		private static String GetFriendlyExceptionTypeName(String exceptionTypeName)
+		private static string GetFriendlyExceptionTypeName(string exceptionTypeName)
 		{
-			return exceptionTypeName?.Split(new[] { '`' }, 2)[0] ?? String.Empty;
+			return exceptionTypeName?.Split(new[] { '`' }, 2)[0] ?? string.Empty;
 		}
 	}
 }

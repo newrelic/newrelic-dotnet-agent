@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
 			
-			_transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			_transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 			_publishedEvent = null;
 			_eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
 		}
@@ -41,6 +41,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[TearDown]
 		public void TearDown()
 		{
+			_transaction = null;
+
 			_eventSubscription?.Dispose();
 			_eventSubscription = null;
 
@@ -71,7 +73,36 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_transaction.Finish();
 			_transaction = null;
 
+			GC.Collect();
+			GC.WaitForFullGCComplete();
+			GC.WaitForPendingFinalizers();
+
 			Assert.Null(_publishedEvent);
+		}
+
+		[Test]
+		public void TransactionShouldOnlyFinishOnce()
+		{
+			Assert.NotNull(_transaction);
+			Assert.False(_transaction.IsFinished, "The transaction should not be finished yet.");
+
+			var finishedTransaction = _transaction.Finish();
+
+			Assert.True(finishedTransaction, "Transaction was not finished when it should have been finished.");
+			Assert.True(_transaction.IsFinished, "transaction.IsFinished should be true.");
+			Assert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered after the first call to finish.");
+
+			finishedTransaction = _transaction.Finish();
+			var isFinished = _transaction.IsFinished;
+			_transaction = null;
+
+			GC.Collect();
+			GC.WaitForFullGCComplete();
+			GC.WaitForPendingFinalizers();
+
+			Assert.False(finishedTransaction, "Transaction was finished again when it should only be finished once.");
+			Assert.True(isFinished, "transaction.IsFinished should still be true.");
+			Assert.Null(_publishedEvent, "The TransactionFinalizedEvent should not be triggered when the transaction is already finished.");
 		}
 
 		[Test]
@@ -109,7 +140,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var transactionName = new WebTransactionName("WebTransaction", "Test");
 
 
-			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			for (int i = 0; i < segmentCount; i++)
 			{
@@ -130,7 +161,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var timer = Mock.Create<ITimer>();
 			var callStackManager = Mock.Create<ICallStackManager>();
 			var sqlObfuscator = SqlObfuscator.GetObfuscatingSqlObfuscator();
-			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority);
+			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>());
 
 			// Assert
 			Assert.That(tx.TransactionMetadata.DistributedTraceTraceId, Is.Not.Null);
@@ -149,7 +180,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var timer = Mock.Create<ITimer>();
 			var callStackManager = Mock.Create<ICallStackManager>();
 			var sqlObfuscator = SqlObfuscator.GetObfuscatingSqlObfuscator();
-			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority);
+			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>());
 
 			// Assert
 			Assert.That(tx.Guid, Is.Not.Null);

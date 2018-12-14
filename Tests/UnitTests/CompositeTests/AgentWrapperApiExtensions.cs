@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing;
@@ -57,6 +58,18 @@ namespace CompositeTests
 		{
 			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
 			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartDatastoreSegment(methodCall, new ParsedSqlStatement(vendor, model, operation), new ConnectionInfo(host, portPathOrId, databaseName), commandText, queryParameters);
+			if (segment == null)
+				throw new NullReferenceException("segment");
+
+			return segment;
+		}
+
+		public static ISegment StartDatastoreRequestSegmentOrThrow( this IAgentWrapperApi agentWrapperApi, DatastoreVendor vendor, CommandType commandType, String commandText = null, MethodCall methodCall = null, String host = null, String portPathOrId = null, String databaseName = null, IDictionary<string, IConvertible> queryParameters = null)
+		{
+			methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
+			var parsedStatement = agentWrapperApi.CurrentTransactionWrapperApi.GetParsedDatabaseStatement(vendor, commandType, commandText);
+
+			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartDatastoreSegment(methodCall, parsedStatement, new ConnectionInfo(host, portPathOrId, databaseName), commandText, queryParameters);
 			if (segment == null)
 				throw new NullReferenceException("segment");
 

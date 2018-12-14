@@ -9,10 +9,5 @@
 				<exactMethodMatcher methodName="ExecuteSyncImpl" />
 			</match>
     </tracerFactory>
-    <!--<tracerFactory>
-      <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer">
-        <exactMethodMatcher methodName="ExecuteAsyncImpl" />
-      </match>
-    </tracerFactory>-->
   </instrumentation>
 </extension>

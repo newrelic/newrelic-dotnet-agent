@@ -61,6 +61,9 @@ namespace NewRelic.Agent.Core.Api
 		private readonly ITracePriorityManager _tracePriorityManager;
 		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
 
+		// Special case value for Path in ErrorTraceWireModel for errors outside Transactions
+		private const string NoticeErrorPath = "NewRelic.Api.Agent.NoticeError API Call";
+
 		public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi, ITracePriorityManager tracePriorityManager, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
 		{
 			_transactionService = transactionService;
@@ -295,6 +298,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 			else
 			{
+				errorData.Path = NoticeErrorPath;
 				_customErrorDataTransformer.Transform(errorData, customAttributes, _tracePriorityManager.Create());
 			}
 		}

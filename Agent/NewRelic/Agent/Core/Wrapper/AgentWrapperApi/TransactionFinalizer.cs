@@ -20,7 +20,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		/// Performs all the work necessary to cleanly finish an internal transaction. 
 		/// </summary>
 		/// <param name="transaction"></param>
-		void Finish([NotNull] ITransaction transaction);
+		/// <returns>true if the transaction got finalized, and false if it was already finalized.</returns>
+		bool Finish([NotNull] ITransaction transaction);
 	}
 
 	public class TransactionFinalizer : DisposableService, ITransactionFinalizer
@@ -47,10 +48,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_subscriptions.Add<TransactionFinalizedEvent>(OnTransactionFinalized);
 		}
 
-		public void Finish(ITransaction transaction)
+		public bool Finish(ITransaction transaction)
 		{
-			transaction.Finish();
-			UpdatePathHash(transaction);
+
+			if (transaction.Finish())
+			{
+				UpdatePathHash(transaction);
+				return true;
+			}
+
+			return false;
 		}
 
 		private void OnTransactionFinalized([NotNull] TransactionFinalizedEvent eventData)
@@ -58,32 +65,39 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var internalTransaction = eventData.Transaction;
 
 			// When a transaction gets finalized it means it never ended cleanly, so we should try to estimate when it ended based on its last finished segment
-			var finishedTransaction = internalTransaction.ConvertToImmutableTransaction();
-			var lastStartedSegment = TryGetLastStartedSegment(finishedTransaction);
-			var lastFinishedSegment = TryGetLastFinishedSegment(finishedTransaction);
+			var immutableTransaction = internalTransaction.ConvertToImmutableTransaction();
+			var lastStartedSegment = TryGetLastStartedSegment(immutableTransaction);
+			var lastFinishedSegment = TryGetLastFinishedSegment(immutableTransaction);
 			var estimatedDuration = GetEstimatedTransactionDuration(internalTransaction, lastStartedSegment, lastFinishedSegment);
+			bool finishedTransaction = false;
 
 			try
 			{
 				internalTransaction.ForceChangeDuration(estimatedDuration);
 
 				// Then we should mark the transaction as cleanly finished so it won't get finalized again
-				Finish(internalTransaction);
+				finishedTransaction = Finish(internalTransaction);
 
-				// Then we send it off to be transformed as with normal transactions
-				_transactionTransformer.Transform(internalTransaction);
+				if (finishedTransaction)
+				{
+					// Then we send it off to be transformed as with normal transactions
+					_transactionTransformer.Transform(internalTransaction);
+				}
 			}
 			finally
 			{
-				// Finally, we announce the event to our agent health reporter
-				var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(finishedTransaction.TransactionName);
-				var lastFinishedSegmentName = lastFinishedSegment != null
-					? lastFinishedSegment.GetTransactionTraceName()
-					: "<unknown>";
-				var lastStartedSegmentName = lastStartedSegment != null
-					? lastStartedSegment.GetTransactionTraceName()
-					: "<unknown>";
-				_agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, lastStartedSegmentName, lastFinishedSegmentName);
+				if (finishedTransaction)
+				{
+					// Finally, we announce the event to our agent health reporter
+					var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+					var lastFinishedSegmentName = lastFinishedSegment != null
+						? lastFinishedSegment.GetTransactionTraceName()
+						: "<unknown>";
+					var lastStartedSegmentName = lastStartedSegment != null
+						? lastStartedSegment.GetTransactionTraceName()
+						: "<unknown>";
+					_agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, lastStartedSegmentName, lastFinishedSegmentName);
+				}
 			}
 		}
 

@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Providers;
 using System.Data;
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
@@ -85,10 +86,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		void IgnoreAllBrowserMonitoringForThisTx();
 		void IgnoreApdex();
 
+		bool IsFinished { get; }
+
 		/// <summary>
 		/// Marks this builder as cleanly finished.
 		/// </summary>
-		void Finish();
+		/// <returns>true if the transaction actually finished, and false if it was already finished.</returns>
+		bool Finish();
 
 		/// <summary>
 		/// Forces the duration of the builder to a particular value, regardless of how long it has actually run for
@@ -147,13 +151,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	
 		public ICallStackManager CallStackManager { get; }
 
-		private volatile Func<DatastoreVendor, CommandType, string, ParsedSqlStatement> _databaseStatementParser;
-		private Func<DatastoreVendor, CommandType, string, ParsedSqlStatement> DatabaseStatementParser => _databaseStatementParser ?? new DatabaseStatementParser().ParseDatabaseStatement;
-
 		private readonly SqlObfuscator _sqlObfuscator;
-		
-		public Transaction([NotNull] IConfiguration configuration, [NotNull] ITransactionName initialTransactionName,
-			[NotNull] ITimer timer, [NotNull] DateTime startTime, [NotNull] ICallStackManager callStackManager, SqlObfuscator sqlObfuscator, float priority)
+		private readonly IDatabaseStatementParser _databaseStatementParser;
+
+		public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
+			ITimer timer, DateTime startTime, ICallStackManager callStackManager, SqlObfuscator sqlObfuscator, float priority, IDatabaseStatementParser databaseStatementParser)
 		{
 			CandidateTransactionName = new CandidateTransactionName(initialTransactionName);
 			_guid = GuidGenerator.GenerateNewRelicGuid();
@@ -169,6 +171,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_timer = timer;
 			_unitOfWorkCount = 1;
 			_sqlObfuscator = sqlObfuscator;
+			_databaseStatementParser = databaseStatementParser;
 		}
 
 		public int Add(Segment segment)
@@ -252,6 +255,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public object GetOrSetValueFromCache(string key, Func<object> func)
 		{
+			if (key == null)
+			{
+				Log.Debug("GetOrSetValueFromCache(), key is NULL");
+				return null;
+			}
+
 			return TransactionCache.GetOrAdd(key, x => func());
 		}
 
@@ -271,13 +280,26 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		#region TranasctionBuilder finalization logic
 
-		public void Finish()
+		public bool IsFinished { get; private set; } = false;
+
+		private object _finishLock = new object();
+
+		public bool Finish()
 		{
 			_timer.Stop();
-			_databaseStatementParser = null;
-
 			// Prevent the finalizer/destructor from running
 			GC.SuppressFinalize(this);
+
+			if (IsFinished) return false;
+
+			lock (_finishLock)
+			{
+				if (IsFinished) return false;
+
+				//Only the call that successfully sets IsFinished to true should return true so that the transaction can only be finished once.
+				IsFinished = true;
+				return true;
+			}
 		}
 
 		/// <summary>
@@ -346,7 +368,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql)
 		{
-			return DatabaseStatementParser(datastoreVendor, commandType, sql);
+			return _databaseStatementParser.ParseDatabaseStatement(datastoreVendor, commandType, sql);
 		}
 	}
 }

@@ -3,6 +3,10 @@ using System.IO;
 
 namespace NewRelic.Agent.Core.Utilities
 {
+	/// <summary>
+	/// This class exists to replace the use of JsonArrayConverter (and other Json.Convert types) with manual serialize and deserialize methods.
+	/// This is being done due to the large performance impact JsonArrayConverter has on the agent in terms of CPU, Memory, GC, and Time intensive.
+	/// </summary>
 	public class JsonArrayHandlers
 	{
 		/// <summary>
@@ -12,7 +16,7 @@ namespace NewRelic.Agent.Core.Utilities
 		/// <param name="json"></param>
 		/// <param name="minimumTokens">The minimum number of tokens in the array.  If less than this, return null.</param>
 		/// <param name="maximumTokens">The maximum number of array items that can be in the json array.  The returned array is always this size.</param>
-		/// <returns></returns>
+		/// <returns>An array containing the string from the JSON.</returns>
 		public static string[] ConvertJsonToStringArrayForCat(string json, int minimumTokens, int maximumTokens)
 		{
 			using (var reader = new JsonTextReader(new StringReader(json)))

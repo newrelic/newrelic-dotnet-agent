@@ -1,7 +1,5 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.AgentHealth;
+﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -11,24 +9,20 @@ using NewRelic.SystemExtensions;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using NewRelic.Agent.Core.SharedInterfaces;
 using InternalMetricName = NewRelic.Agent.Core.Metric.MetricName;
 
 namespace NewRelic.Agent.Core.WireModels
 {
-	[JsonConverter(typeof (JsonArrayConverter))]
-	public class MetricWireModel: IAllMetricStatsCollection
+	public class MetricWireModel: IAllMetricStatsCollection, IManualSerializable
 	{
-		[NotNull]
-		[JsonArrayIndex(Index = 0)]
 		public readonly MetricNameWireModel MetricName;
-
-		[NotNull]
-		[JsonArrayIndex(Index = 1)]
 		public readonly MetricDataWireModel Data;
 
-		private MetricWireModel([NotNull] MetricNameWireModel metricName, [NotNull] MetricDataWireModel data)
+		private MetricWireModel(MetricNameWireModel metricName, MetricDataWireModel data)
 		{
 			MetricName = metricName;
 			Data = data;
@@ -40,7 +34,6 @@ namespace NewRelic.Agent.Core.WireModels
 		/// <param name="first">The first metric to merge.</param>
 		/// <param name="second">The second metric to merge.</param>
 		/// <returns>An aggregate metric that is the result of merging the given metrics.</returns>
-		[NotNull]
 		public static MetricWireModel Merge(MetricWireModel first, MetricWireModel second)
 		{
 			return Merge(new[] {first, second});
@@ -51,8 +44,7 @@ namespace NewRelic.Agent.Core.WireModels
 		/// </summary>
 		/// <param name="metrics">The metrics to merge.</param>
 		/// <returns>An aggregate metric that is the result of merging the given metrics.</returns>
-		[NotNull]
-		public static MetricWireModel Merge([NotNull] IEnumerable<MetricWireModel> metrics)
+		public static MetricWireModel Merge(IEnumerable<MetricWireModel> metrics)
 		{
 			metrics = metrics.Where(other => other != null).ToList();
 
@@ -73,8 +65,7 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricWireModel(metricName, mergedData);
 		}
 
-		[CanBeNull]
-		public static MetricWireModel BuildMetric([NotNull] IMetricNameService metricNameService, [NotNull] string proposedName, [CanBeNull] string scope, [NotNull] MetricDataWireModel metricData)
+		public static MetricWireModel BuildMetric(IMetricNameService metricNameService, string proposedName, string scope, MetricDataWireModel metricData)
 		{
 			// MetricNameService will return null if the metric needs to be ignored
 			var newName = metricNameService.RenameMetric(proposedName);
@@ -104,11 +95,27 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 		}
 
+		public string ToJson()
+		{
+			using (var stringWriter = new StringWriter())
+			{
+				using (var jsonWriter = new JsonTextWriter(stringWriter))
+				{
+					jsonWriter.WriteStartArray();
+					jsonWriter.WriteRawValue(MetricName.ToJson());
+					jsonWriter.WriteRawValue(Data.ToJson());
+					jsonWriter.WriteEndArray();
+				}
+
+				return stringWriter.ToString();
+			}
+		}
+
 		public class MetricBuilder : IMetricBuilder
 		{
-			[NotNull] private readonly IMetricNameService _metricNameService;
+			private readonly IMetricNameService _metricNameService;
 
-			public MetricBuilder([NotNull] IMetricNameService metricNameService)
+			public MetricBuilder(IMetricNameService metricNameService)
 			{
 				_metricNameService = metricNameService;
 			}
@@ -147,28 +154,24 @@ namespace NewRelic.Agent.Core.WireModels
 				txStats.MergeUnscopedStats(proposedName, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildMemoryPhysicalMetric(double memoryPhysical)
 			{
 				var data = MetricDataWireModel.BuildByteData(memoryPhysical);
 				return BuildMetric(_metricNameService, MetricNames.MemoryPhysical, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCpuUserTimeMetric(TimeSpan cpuTime)
 			{
 				var data = MetricDataWireModel.BuildTimingData(cpuTime, cpuTime);
 				return BuildMetric(_metricNameService, MetricNames.CpuUserTime, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCpuUserUtilizationMetric(float cpuUtilization)
 			{
 				var data = MetricDataWireModel.BuildPercentageData(cpuUtilization);
 				return BuildMetric(_metricNameService, MetricNames.CpuUserUtilization, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCpuTimeRollupMetric(bool isWebTransaction, TimeSpan cpuTime)
 			{
 				var proposedName = isWebTransaction
@@ -178,7 +181,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCpuTimeMetric(TransactionMetricName transactionMetricName, TimeSpan cpuTime)
 			{
 				var proposedName = MetricNames.TransactionCpuTime(transactionMetricName);
@@ -409,7 +411,6 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region Supportability builders
 
-			[CanBeNull]
 			public MetricWireModel TryBuildAgentVersionMetric(string agentVersion)
 			{
 				var proposedName = MetricNames.GetSupportabilityAgentVersion(agentVersion);
@@ -417,7 +418,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildAgentVersionByHostMetric(string hostName, string agentVersion)
 			{
 				var proposedName = MetricNames.GetSupportabilityAgentVersionByHost(hostName, agentVersion);
@@ -425,7 +425,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildMetricHarvestAttemptMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityMetricHarvestTransmit;
@@ -435,7 +434,6 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region TransactionEvents
 
-			[CanBeNull]
 			public MetricWireModel TryBuildTransactionEventReservoirResizedMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityTransactionEventsReservoirResize;
@@ -443,7 +441,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildTransactionEventsCollectedMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityTransactionEventsCollected;
@@ -451,7 +448,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildTransactionEventsRecollectedMetric(int eventsRecollected)
 			{
 				const string proposedName = MetricNames.SupportabilityTransactionEventsRecollected;
@@ -459,7 +455,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildTransactionEventsSentMetric(int eventCount)
 			{
 				// Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
@@ -468,7 +463,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildTransactionEventsSeenMetric()
 			{
 				// Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
@@ -481,7 +475,6 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region CustomEvents
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCustomEventReservoirResizedMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityCustomEventsReservoirResize;
@@ -489,7 +482,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCustomEventsCollectedMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityCustomEventsCollected;
@@ -497,7 +489,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCustomEventsRecollectedMetric(int eventsRecollected)
 			{
 				const string proposedName = MetricNames.SupportabilityCustomEventsRecollected;
@@ -505,7 +496,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCustomEventsSentMetric(int eventCount)
 			{
 				const string proposedName = MetricNames.SupportabilityCustomEventsSent;
@@ -513,7 +503,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildCustomEventsSeenMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityCustomEventsSeen;
@@ -525,7 +514,6 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region ErrorTraces
 
-			[CanBeNull]
 			public MetricWireModel TryBuildErrorTracesCollectedMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityErrorTracesCollected;
@@ -533,7 +521,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildErrorTracesRecollectedMetric(int errorTracesRecollected)
 			{
 				const string proposedName = MetricNames.SupportabilityErrorTracesRecollected;
@@ -541,7 +528,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildErrorTracesSentMetric(int errorTraceCount)
 			{
 				const string proposedName = MetricNames.SupportabilityErrorTracesSent;
@@ -553,7 +539,6 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region ErrorEvents
 
-			[CanBeNull]
 			public MetricWireModel TryBuildErrorEventsSentMetric(int eventCount)
 			{
 				const string proposedName = MetricNames.SupportabilityErrorEventsSent;
@@ -561,7 +546,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildErrorEventsSeenMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityErrorEventsSeen;
@@ -579,7 +563,6 @@ namespace NewRelic.Agent.Core.WireModels
 				txStats.MergeUnscopedStats(MetricNames.SupportabilitySqlTracesCollected, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildSqlTracesRecollectedMetric(int sqlTracesRecollected)
 			{
 				const string proposedName = MetricNames.SupportabilitySqlTracesRecollected;
@@ -587,7 +570,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			[CanBeNull]
 			public MetricWireModel TryBuildSqlTracesSentMetric(int sqlTraceCount)
 			{
 				const string proposedName = MetricNames.SupportabilitySqlTracesSent;
@@ -597,7 +579,6 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#endregion SqlTraces
 
-			[CanBeNull]
 			public MetricWireModel TryBuildTransactionBuilderGarbageCollectedRollupMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityTransactionBuilderGarbageCollectedAll;
@@ -773,7 +754,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region Distributed Trace builders
 
-			public static void TryBuildDistributedTraceDurationByCaller([NotNull] string type, [NotNull] string accountId, [NotNull] string app, [NotNull] string transport, bool isWeb, TimeSpan duration, TransactionMetricStatsCollection txStats)
+			public static void TryBuildDistributedTraceDurationByCaller(string type, string accountId, string app, string transport, bool isWeb, TimeSpan duration, TransactionMetricStatsCollection txStats)
 			{
 				var data = MetricDataWireModel.BuildTimingData(duration, TimeSpan.Zero);
 
@@ -782,7 +763,7 @@ namespace NewRelic.Agent.Core.WireModels
 				txStats.MergeUnscopedStats(webOrOther, data);
 			}
 
-			public static void TryBuildDistributedTraceErrorsByCaller([NotNull] string type, [NotNull] string accountId, [NotNull] string app, [NotNull] string transport, bool isWeb, TransactionMetricStatsCollection txStats)
+			public static void TryBuildDistributedTraceErrorsByCaller(string type, string accountId, string app, string transport, bool isWeb, TransactionMetricStatsCollection txStats)
 			{
 				var data = MetricDataWireModel.BuildCountData();
 				var (all, webOrOther) = MetricNames.GetDistributedTraceErrorsByCaller(type, accountId, app, transport, isWeb);
@@ -790,7 +771,7 @@ namespace NewRelic.Agent.Core.WireModels
 				txStats.MergeUnscopedStats(webOrOther, data);
 			}
 
-			public static void TryBuildDistributedTraceTransportDuration([NotNull] string type, [NotNull] string accountId, [NotNull] string app, [NotNull] string transport, bool isWeb, TimeSpan duration, TransactionMetricStatsCollection txStats)
+			public static void TryBuildDistributedTraceTransportDuration(string type, string accountId, string app, string transport, bool isWeb, TimeSpan duration, TransactionMetricStatsCollection txStats)
 			{
 				var data = MetricDataWireModel.BuildTimingData(duration, TimeSpan.Zero);
 
@@ -817,18 +798,33 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
+			public MetricWireModel TryBuildSqlParsingCacheCountMetric(string name, int count)
+			{
+				var proposedName = MetricNames.SupportabilitySqlParsingCachePrefix + MetricNames.PathSeparator + name;
+				var data = MetricDataWireModel.BuildCountData(count);
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+			public MetricWireModel TryBuildSqlParsingCacheSizeMetric(string name, int size)
+			{
+				var proposedName = MetricNames.SupportabilitySqlParsingCachePrefix + MetricNames.PathSeparator + name;
+				var data = MetricDataWireModel.BuildAverageData(size);
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
 			#endregion Span builders
 		}
 	}
 
-	public class MetricNameWireModel
+	public class MetricNameWireModel : IManualSerializable
 	{
-		[NotNull]
-		[JsonProperty("name")]
+		private const string PropertyName = "name";
+		private const string PropertyScope = "scope";
+
+		// property name: "name"
 		public readonly string Name;
 
-		[CanBeNull]
-		[JsonProperty("scope", NullValueHandling = NullValueHandling.Ignore)]
+		// property name: "scope"
 		public readonly string Scope;
 
 		// We cache the hash code for MetricNameWireModel because it is guaranteed that we will need it at least once
@@ -839,7 +835,7 @@ namespace NewRelic.Agent.Core.WireModels
 			return ((int)rol5 + h1) ^ h2;
 		}
 
-		public MetricNameWireModel([NotNull] string name, [CanBeNull] string scope)
+		public MetricNameWireModel(string name, string scope)
 		{
 			Name = name;
 			Scope = scope;
@@ -865,29 +861,40 @@ namespace NewRelic.Agent.Core.WireModels
 		{
 			return $"{Name} ({Scope})";
 		}
+
+		public string ToJson()
+		{
+			using (var stringWriter = new StringWriter())
+			{
+				using (var jsonWriter = new JsonTextWriter(stringWriter))
+				{
+					jsonWriter.WriteStartObject();
+					jsonWriter.WritePropertyName(PropertyName);
+					jsonWriter.WriteValue(Name);
+
+					if (!string.IsNullOrEmpty(Scope))
+					{
+						jsonWriter.WritePropertyName(PropertyScope);
+						jsonWriter.WriteValue(Scope);
+					}
+
+					jsonWriter.WriteEndObject();
+				}
+
+				return stringWriter.ToString();
+			}
+		}
 	}
 
-	[JsonConverter(typeof(JsonArrayConverter))]
-	public class MetricDataWireModel
+	public class MetricDataWireModel : IManualSerializable
 	{
 		private const string CannotBeNegative = "Cannot be negative";
 
-		[JsonArrayIndex(Index = 0)]
 		public readonly long Value0;
-
-		[JsonArrayIndex(Index = 1)]
 		public readonly float Value1;
-
-		[JsonArrayIndex(Index = 2)]
 		public readonly float Value2;
-
-		[JsonArrayIndex(Index = 3)]
 		public readonly float Value3;
-
-		[JsonArrayIndex(Index = 4)]
 		public readonly float Value4;
-
-		[JsonArrayIndex(Index = 5)]
 		public readonly float Value5;
 
 		private MetricDataWireModel(long value0, double value1, double value2, double value3, double value4, double value5)
@@ -902,11 +909,30 @@ namespace NewRelic.Agent.Core.WireModels
 
 		public override string ToString()
 		{
-			return $"[{Value0},{Value1},{Value2},{Value3},{Value4},{Value5}]";
+			return ToJson();
 		}
 
-		[NotNull]
-		public static MetricDataWireModel BuildAggregateData([NotNull] IEnumerable<MetricDataWireModel> metrics)
+		public string ToJson()
+		{
+			using (var stringWriter = new StringWriter())
+			{
+				using (var jsonWriter = new JsonTextWriter(stringWriter))
+				{
+					jsonWriter.WriteStartArray();
+					jsonWriter.WriteValue(Value0);
+					jsonWriter.WriteValue(Value1);
+					jsonWriter.WriteValue(Value2);
+					jsonWriter.WriteValue(Value3);
+					jsonWriter.WriteValue(Value4);
+					jsonWriter.WriteValue(Value5);
+					jsonWriter.WriteEndArray();
+				}
+
+				return stringWriter.ToString();
+			}
+		}
+
+		public static MetricDataWireModel BuildAggregateData(IEnumerable<MetricDataWireModel> metrics)
 		{
 			long value0 = 0;
 			float value1 = 0, value2 = 0, value3 = float.MaxValue, value4 = float.MinValue, value5 = 0;
@@ -934,8 +960,7 @@ namespace NewRelic.Agent.Core.WireModels
 		/// <param name="metric0">Data to be aggregated.</param>
 		/// <param name="metric1">Data to be aggregated.</param>
 		/// <returns></returns>
-		[NotNull]
-		public static MetricDataWireModel BuildAggregateData([NotNull] MetricDataWireModel metric0, [NotNull] MetricDataWireModel metric1)
+		public static MetricDataWireModel BuildAggregateData(MetricDataWireModel metric0, MetricDataWireModel metric1)
 		{
 			return new MetricDataWireModel((metric0.Value0 + metric1.Value0),
 				(metric0.Value1 + metric1.Value1),
@@ -945,7 +970,6 @@ namespace NewRelic.Agent.Core.WireModels
 					(metric0.Value5 + metric1.Value5));
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildTimingData(TimeSpan totalTime, TimeSpan totalExclusiveTime)
 		{
 			if (totalTime.TotalSeconds < 0)
@@ -961,7 +985,6 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(1, totalTime.TotalSeconds, totalExclusiveTime.TotalSeconds, totalTime.TotalSeconds, totalTime.TotalSeconds, totalTime.TotalSeconds * totalTime.TotalSeconds);
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildCountData(int callCount = 1)
 		{
 			if (callCount < 0)
@@ -972,7 +995,6 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(callCount, 0, 0, 0, 0, 0);
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildByteData(double totalBytes, double? exclusiveBytes = null)
 		{
 			exclusiveBytes = exclusiveBytes ?? totalBytes;
@@ -994,7 +1016,6 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(1, totalMegabytes, totalExclusiveMegabytes, totalMegabytes, totalMegabytes, totalMegabytes * totalMegabytes);
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildPercentageData(float percentage)
 		{
 			if (percentage < 0)
@@ -1005,7 +1026,6 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(1, percentage, percentage, percentage, percentage, percentage * percentage);
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildCpuTimeData(TimeSpan cpuTime)
 		{
 			if (cpuTime.TotalSeconds < 0)
@@ -1016,7 +1036,6 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(1, cpuTime.TotalSeconds, cpuTime.TotalSeconds, cpuTime.TotalSeconds, cpuTime.TotalSeconds, cpuTime.TotalSeconds * cpuTime.TotalSeconds);
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildApdexData(TimeSpan responseTime, TimeSpan apdexT)
 		{
 			if (responseTime.TotalSeconds < 0)
@@ -1037,13 +1056,11 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(satisfying, tolerating, frustrating, apdexT.TotalSeconds, apdexT.TotalSeconds, 0);
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildFrustratedApdexData()
 		{
 			return new MetricDataWireModel(0, 0, 1, 0, 0, 0);
 		}
 
-		[NotNull]
 		public static MetricDataWireModel BuildIfLinuxData(bool isLinux)
 		{
 			return new MetricDataWireModel(1, (isLinux ? 1 : 0), 0, 0, 0, 0);
@@ -1072,6 +1089,11 @@ namespace NewRelic.Agent.Core.WireModels
 		public static MetricDataWireModel BuildGcpUsabilityError()
 		{
 			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
+		}
+
+		public static MetricDataWireModel BuildAverageData(float value)
+		{
+			return new MetricDataWireModel(1, value, value, value, value, value * value);
 		}
 
 		private static ApdexPerfZone GetApdexPerfZone(TimeSpan responseTime, TimeSpan apdexT)

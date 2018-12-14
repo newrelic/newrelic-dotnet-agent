@@ -22,3 +22,4 @@ RUN dotnet new mvc && \
 
 ENV NEW_RELIC_HOST=staging-collector.newrelic.com
 ENV NEW_RELIC_LICENSE_KEY="b25fd3ca20fe323a9a7c4a092e48d62dc64cc61d"
+ENV ASPNETCORE_URLS="http://+:5000"

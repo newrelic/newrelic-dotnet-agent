@@ -203,5 +203,7 @@ namespace NewRelic.Agent.Configuration
 		bool PayloadSuccessMetricsEnabled { get; }
 
 		string ProcessHostDisplayName { get; }
+
+		uint DatabaseStatementCacheCapcity { get; }
 	}
 }

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
 	// Note: this data is referred to as "TransactionData" in the CAT spec.
-	[JsonArray]
-	public class CrossApplicationRequestData
+	public class CrossApplicationRequestData : IManualSerializable
 	{
 		// The required amount for a valid object is 4, but this object should be returned with less.
 		// Checking the validation is handle upstream in CatHeaderHandler.
@@ -67,21 +67,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		}
 
 		/// <summary>
-		/// Serialize a CrossApplicationRequestData <paramref name="data"/> to an JSON string.
+		/// Serialize this to an JSON string.
 		/// </summary>
-		/// <param name="data">The CrossApplicationRequestData</param>
 		/// <returns>The serialized JSON string</returns>
-		public static string ToJson(CrossApplicationRequestData data)
+		public string ToJson()
 		{
 			using (var stringWriter = new StringWriter())
 			{
 				using (var jsonWriter = new JsonTextWriter(stringWriter))
 				{
 					jsonWriter.WriteStartArray();
-					jsonWriter.WriteValue(data.TransactionGuid);
-					jsonWriter.WriteValue(data.Unused);
-					jsonWriter.WriteValue(data.TripId);
-					jsonWriter.WriteValue(data.PathHash);
+					jsonWriter.WriteValue(TransactionGuid);
+					jsonWriter.WriteValue(Unused);
+					jsonWriter.WriteValue(TripId);
+					jsonWriter.WriteValue(PathHash);
 					jsonWriter.WriteEndArray();
 				}
 

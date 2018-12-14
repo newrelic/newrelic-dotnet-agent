@@ -31,15 +31,17 @@ namespace NewRelic.Agent.Core.Aggregators
 		private readonly IMetricBuilder _metricBuilder;
 
 		private readonly IMetricNameService _metricNameService;
+		private readonly ISqlParsingCacheSupportabilityMetricReporter _sqlParsingCacheSupportabilityMetricReporter;
 
 
-		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters) : base(dataTransportService, scheduler, processStatic)
+		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, ISqlParsingCacheSupportabilityMetricReporter sqlParsingCacheSupportabilityMetricReporter) : base(dataTransportService, scheduler, processStatic)
 		{
 			_metricBuilder = metricBuilder;
 			_metricNameService = metricNameService;
 			_agentHealthReporter = agentHealthReporter;
 			_dnsStatic = dnsStatic;
 			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
+			_sqlParsingCacheSupportabilityMetricReporter = sqlParsingCacheSupportabilityMetricReporter;
 
 			foreach (var source in outOfBandMetricSources)
 			{
@@ -73,6 +75,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter.ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
 
 			_agentHealthReporter.ReportIfHostIsLinuxOs();
+
+			_sqlParsingCacheSupportabilityMetricReporter.CollectMetrics();
 
 			_apiSupportabilityMetricCounters.CollectMetrics();
 

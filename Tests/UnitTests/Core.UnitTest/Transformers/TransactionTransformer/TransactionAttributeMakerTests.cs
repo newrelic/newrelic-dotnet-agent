@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var internalTransaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			var immutableTransaction = internalTransaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -150,7 +150,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -199,7 +199,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -245,7 +245,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -296,7 +296,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.SetHttpResponseStatusCode(400, null);
@@ -382,7 +382,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.SetHttpResponseStatusCode(400, null);
@@ -460,7 +460,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.SetOriginalUri("SameUri");
 			transaction.TransactionMetadata.SetUri("SameUri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -497,7 +497,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -581,7 +581,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -670,7 +670,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = TimeSpan.FromSeconds(2);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -750,7 +750,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			// ARRANGE
 			var priority = 0.5f;
-			var tranasctionBuilder = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var tranasctionBuilder = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			var transaction = tranasctionBuilder.ConvertToImmutableTransaction();
 
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
@@ -799,7 +799,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
 			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
@@ -844,7 +844,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
 			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
@@ -906,7 +906,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
@@ -942,7 +942,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
 			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
@@ -1002,7 +1002,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			transaction.TransactionMetadata.DistributedTraceType = IncomingType;
 			transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAcctId;
@@ -1066,7 +1066,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
 			transaction.TransactionMetadata.DistributedTraceGuid = IncomingGuid;
@@ -1107,7 +1107,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now;
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 
 			transaction.TransactionMetadata.HasIncomingDistributedTracePayload = true;
 
@@ -1145,7 +1145,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -1214,7 +1214,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.SetOriginalUri("SameUri");
 			transaction.TransactionMetadata.SetUri("SameUri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -1249,7 +1249,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -1317,7 +1317,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var transaction = new Transaction(_configuration, new WebTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
 			transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
 			transaction.TransactionMetadata.AddUserErrorAttribute("userErrorAttributeKey", "userErrorAttributeValue");
@@ -1406,7 +1406,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
 
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority);
+			var internalTransaction = new Transaction(_configuration, new OtherTransactionName("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			var immutableTransaction = internalTransaction.ConvertToImmutableTransaction();
 			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");

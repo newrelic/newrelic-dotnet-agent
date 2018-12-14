@@ -75,6 +75,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
 			Mock.Arrange(() => _transaction.CallStackManager).Returns(_callStackManager);
 			Mock.Arrange(() => _transaction.GetTransactionSegmentState()).Returns(transactionSegmentState);
+			Mock.Arrange(() => _transaction.Finish()).Returns(true);
 
 			// grr.  mocking is stupid
 			Mock.Arrange(() => transactionSegmentState.CallStackPush(Arg.IsAny<Segment>()))
@@ -140,9 +141,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void EndTransaction_CallsTransactionTransformer_WithBuiltImmutableTransaction()
 		{
+			Mock.Arrange(() => _transactionFinalizer.Finish(_transaction)).Returns(true);
+
 			_agentWrapperApi.CurrentTransactionWrapperApi.End();
 
 			Mock.Assert(() => _transactionTransformer.Transform(_transaction));
+		}
+
+		[Test]
+		public void EndTransaction_DoesNotCallTransactionTransformer_IfTransactionWasNotFinished()
+		{
+			Mock.Arrange(() => _transactionFinalizer.Finish(_transaction)).Returns(false);
+
+			_agentWrapperApi.CurrentTransactionWrapperApi.End();
+
+			Mock.Assert(() => _transactionTransformer.Transform(Arg.IsAny<ITransaction>()), Occurs.Never());
 		}
 
 		[Test]

@@ -19,36 +19,37 @@ namespace NewRelic.Agent.Core.WireModels
 		public virtual DateTime TimeStamp { get; }
 
 		/// <summary>
-		/// ex. WebTransaction/ASP/post.aspx
+		/// ex. WebTransaction/ASP/post.aspx or NoticeError API Call if outside a transaction
+		/// UI calls this field 'URL' in Errors page; 'Transaction Name' in Error Analytics page
 		/// </summary>
 		[JsonArrayIndex(Index = 1)]
-		[NotNull] public virtual String Path { get; }
+		public virtual string Path { get; }
 
 		/// <summary>
 		/// The error message.
 		/// </summary>
 		[JsonArrayIndex(Index = 2)]
-		[NotNull] public virtual String Message { get; }
+		public virtual string Message { get; }
 
 		/// <summary>
 		/// The class name of the exception thrown.
 		/// </summary>
 		[JsonArrayIndex(Index = 3)]
-		[NotNull] public virtual String ExceptionClassName { get; }
+		public virtual string ExceptionClassName { get; }
 
 		/// <summary>
 		/// Parameters associated with this error.
 		/// </summary>
 		[JsonArrayIndex(Index = 4)]
-		[NotNull] public virtual ErrorTraceAttributesWireModel Attributes { get; }
+		public virtual ErrorTraceAttributesWireModel Attributes { get; }
 
 		/// <summary>
 		/// Guid of this error.
 		/// </summary>
 		[JsonArrayIndex(Index = 5)]
-		[CanBeNull] public virtual String Guid { get; }
+		public virtual string Guid { get; }
 
-		public ErrorTraceWireModel(DateTime timestamp, [NotNull] String path, [NotNull] String message, [NotNull] String exceptionClassName, [NotNull] ErrorTraceAttributesWireModel attributes, [CanBeNull] String guid)
+		public ErrorTraceWireModel(DateTime timestamp, string path, string message, string exceptionClassName, ErrorTraceAttributesWireModel attributes, string guid)
 		{
 			TimeStamp = timestamp;
 			Path = path;
@@ -62,25 +63,25 @@ namespace NewRelic.Agent.Core.WireModels
 		public class ErrorTraceAttributesWireModel
 		{
 			[JsonProperty("stack_trace")]
-			[CanBeNull] public virtual IEnumerable<String> StackTrace { get; }
+			public virtual IEnumerable<string> StackTrace { get; }
 
 			[JsonProperty("agentAttributes")]
-			[NotNull] public virtual IEnumerable<KeyValuePair<String, Object>> AgentAttributes { get; }
+			public virtual IEnumerable<KeyValuePair<string, Object>> AgentAttributes { get; }
 
 			[JsonProperty("userAttributes")]
-			[NotNull] public virtual IEnumerable<KeyValuePair<String, Object>> UserAttributes { get; }
+			public virtual IEnumerable<KeyValuePair<string, Object>> UserAttributes { get; }
 
 			[JsonProperty("intrinsics")]
-			[NotNull] public virtual IEnumerable<KeyValuePair<String, Object>> Intrinsics { get; }
+			public virtual IEnumerable<KeyValuePair<string, Object>> Intrinsics { get; }
 
-			public ErrorTraceAttributesWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [CanBeNull] IEnumerable<String> stackTrace = null)
+			public ErrorTraceAttributesWireModel(IEnumerable<KeyValuePair<string, Object>> agentAttributes, IEnumerable<KeyValuePair<string, Object>> intrinsicAttributes, IEnumerable<KeyValuePair<string, Object>> userAttributes, [CanBeNull] IEnumerable<string> stackTrace = null)
 			{
 				AgentAttributes = agentAttributes.ToReadOnlyDictionary();
 				Intrinsics = intrinsicAttributes.ToReadOnlyDictionary();
 				UserAttributes = userAttributes.ToReadOnlyDictionary();
 
 				if (stackTrace != null)
-					StackTrace = new ReadOnlyCollection<String>(new List<String>(stackTrace));
+					StackTrace = new ReadOnlyCollection<string>(new List<string>(stackTrace));
 			}
 		}
 	}

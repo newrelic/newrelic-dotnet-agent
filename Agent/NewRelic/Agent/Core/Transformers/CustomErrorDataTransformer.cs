@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.Transformers
 			_errorEventAggregator = errorEventAggregator;
 		}
 
-		public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<String, String>> customAttributes, float priority)
+		public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<string, string>> customAttributes, float priority)
 		{
 			if (!_configurationService.Configuration.ErrorCollectorEnabled)
 				return;
@@ -67,6 +67,11 @@ namespace NewRelic.Agent.Core.Transformers
 					}
 				}
 			}
+
+			// For Custom Errors (occurring outside a transaction), UI Error Analytics page co-opts the
+			// 'transactionName' attribute to find the corresponding Error Trace (matching it to 'Path') 
+			// so it can display the stack trace. 
+			errorEventAttributes.Add(Attribute.BuildTransactionNameAttributeForCustomError(errorData.Path));
 
 			errorEventAttributes = _attributeService.FilterAttributes(errorEventAttributes, AttributeDestinations.ErrorEvent);
 			errorTraceAttributes = _attributeService.FilterAttributes(errorTraceAttributes, AttributeDestinations.ErrorTrace);

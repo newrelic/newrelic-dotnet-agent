@@ -34,56 +34,60 @@ namespace NewRelic.Parsing
 		private static readonly ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement> _nullParsedStatementStore = new ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement>();
 
 		// Regex Phrases
-		private const String SelectPhrase = @"(?=^\bset\b.*;\s*\bselect\b|^\bselect\b).*?\s+";
-		private const String InsertPhrase = @"^insert\s+into\s+";
-		private const String UpdatePhrase = @"^update\s+";
-		private const String DeletePhrase = @"^delete\s+";
-		private const String CreatePhrase = @"^create\s+";
-		private const String DropPhrase = @"^drop\s+";
-		private const String AlterPhrase = @"^alter\s+";
-		private const String CallPhrase = @"^call\s+";
-		private const String SetPhrase = @"^set\s+@?";
-		private const String DeclarePhrase = @"^declare\s+@?";
+		private const string SelectPhrase = @"(?=^\bset\b.*;\s*\bselect\b|^\bselect\b).*?\s+";
+		private const string InsertPhrase = @"^insert\s+into\s+";
+		private const string UpdatePhrase = @"^update\s+";
+		private const string DeletePhrase = @"^delete\s+";
+		private const string CreatePhrase = @"^create\s+";
+		private const string DropPhrase = @"^drop\s+";
+		private const string AlterPhrase = @"^alter\s+";
+		private const string CallPhrase = @"^call\s+";
+		private const string SetPhrase = @"^set\s+@?";
+		private const string DeclarePhrase = @"^declare\s+@?";
 
-		// Regex Shortcut Phrases
-		private const string InsertPhraseShortcut = @"^insert";
-		private const string UpdatePhraseShortcut = @"^update";
-		private const string DeletePhraseShortcut = @"^delete";
-		private const string CreatePhraseShortcut = @"^create";
-		private const string DropPhraseShortcut = @"^drop";
-		private const string AlterPhraseShortcut = @"^alter";
-		private const string CallPhraseShortcut = @"^call";
-		private const string SetPhraseShortcut = @"^set";
-		private const string DeclarePhraseShortcut = @"^declare";
-		private const string ExecuteProcedure1Shortcut = @"^exec";
-		private const string ExecuteProcedure2Shortcut = @"^execute";
-		private const string ExecuteProcedure3Shortcut = @"^sp_";
+		// Shortcut phrases.  Parsers determine if they are applicable by checking the start of a cleaned version of the statement
+		// for specific keywords.  If they are deemed applicable, the more expensive regEx is run against the statement to
+		// extract the information and build the ParsedSQLStatement.
+		private const string InsertPhraseShortcut = "insert";
+		private const string UpdatePhraseShortcut = "update";
+		private const string DeletePhraseShortcut = "delete";
+		private const string CreatePhraseShortcut = "create";
+		private const string DropPhraseShortcut = "drop";
+		private const string AlterPhraseShortcut = "alter";
+		private const string CallPhraseShortcut = "call";
+		private const string SetPhraseShortcut = "set";
+		private const string DeclarePhraseShortcut = "declare";
+		private const string ExecuteProcedure1Shortcut = "exec";
+		private const string ExecuteProcedure2Shortcut = "execute";
+		private const string ExecuteProcedure3Shortcut = "sp_";
+		private const string ShowPhraseShortcut = "show";
+		private const string WaitforPhraseShortcut = "waitfor";
 
 		// Regex to match only single SQL statements (i.e. no semicolon other than at the end - DOTNET-3029)
-		private const String SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
+		private const string SingleSqlStatementPhrase = @"^[^;]*[\s;]*$";
 
-		private const String CommentPhrase = @"/\*.*?\*/"; //The ? makes the searching lazy
-		private const String StartObjectNameSeparator = @"[\s\(\[`\""]*";
-		private const String EndObjectNameSeparator = @"[\s\)\]`\""]*";
+		private const string CommentPhrase = @"/\*.*?\*/"; //The ? makes the searching lazy
+		private const string StartObjectNameSeparator = @"[\s\(\[`\""]*";
+		private const string EndObjectNameSeparator = @"[\s\)\]`\""]*";
 		// TODO: cp - This doesn't catch spaces inside of object names, even if the names are surrounded by separators. [Table Name] would resolve to simply "Table".
-		private const String ValidObjectName = @"([^,;\[\s\]\(\)`\""\.]*)";
-		private const String FromPhrase = @"from\s+";
-		private const String VariableNamePhrase = @"([^\s(=,]*).*";
-		private const String ObjectTypePhrase = @"([^\s]*)";
-		private const String CallObjectPhrase = @"([^\s(,]*).*";
-		private const String MetricNamePhrase = @"^[a-z0-9.\$_]*$";
+		private const string ValidObjectName = @"([^,;\[\s\]\(\)`\""\.]*)";
+		private const string FromPhrase = @"from\s+";
+		private const string VariableNamePhrase = @"([^\s(=,]*).*";
+		private const string ObjectTypePhrase = @"([^\s]*)";
+		private const string CallObjectPhrase = @"([^\s(,]*).*";
+		private const string MetricNamePhrase = @"^[a-z0-9.\$_]*$";
 
 		// Regex Strings
 		private const string SelectString = SelectPhrase + FromPhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
-		private const String InsertString = InsertPhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
-		private const String UpdateString = UpdatePhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
-		private const String DeleteString = DeletePhrase + "(" + FromPhrase + @")?(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
-		private const String CreateString = CreatePhrase + ObjectTypePhrase;
-		private const String DropString = DropPhrase + ObjectTypePhrase;
-		private const String AlterString = AlterPhrase + ObjectTypePhrase + ".*";
-		private const String CallString = CallPhrase + CallObjectPhrase;
-		private const String SetString = SetPhrase + VariableNamePhrase;
-		private const String DeclareString = DeclarePhrase + VariableNamePhrase;
+		private const string InsertString = InsertPhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
+		private const string UpdateString = UpdatePhrase + @"(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
+		private const string DeleteString = DeletePhrase + "(" + FromPhrase + @")?(?:" + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")(?:\." + StartObjectNameSeparator + ValidObjectName + EndObjectNameSeparator + @")*";
+		private const string CreateString = CreatePhrase + ObjectTypePhrase;
+		private const string DropString = DropPhrase + ObjectTypePhrase;
+		private const string AlterString = AlterPhrase + ObjectTypePhrase + ".*";
+		private const string CallString = CallPhrase + CallObjectPhrase;
+		private const string SetString = SetPhrase + VariableNamePhrase;
+		private const string DeclareString = DeclarePhrase + VariableNamePhrase;
 
 		private static readonly Regex CommentPattern = new Regex(CommentPhrase, RegexOptions.Compiled | RegexOptions.Singleline);
 		private static readonly Regex ValidMetricNameMatcher = new Regex(MetricNamePhrase, RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -107,7 +111,7 @@ namespace NewRelic.Parsing
 		/// This uses linear search through the regexp patterns.
 		/// </summary>
 		/// <returns>A ParsedDatabaseStatement if some heuristic matches; otherwise null</returns>
-		public static ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, String commandText)
+		public static ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string commandText)
 		{
 			try
 			{
@@ -134,7 +138,7 @@ namespace NewRelic.Parsing
 			}
 		}
 
-		public static Boolean IsValidName(String name)
+		public static bool IsValidName(string name)
 		{
 			return ValidMetricNameMatcher.IsMatch(name);
 		}
@@ -192,7 +196,7 @@ namespace NewRelic.Parsing
 				new WaitforStatementParser().ParseStatement);
 		}
 
-		private delegate ParsedSqlStatement ParseStatement(DatastoreVendor datastoreVendor, CommandType commandType, String commandText, String statement);
+		private delegate ParsedSqlStatement ParseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string commandText, string statement);
 
 		private static ParseStatement CreateCompoundStatementParser(params ParseStatement[] parsers)
 		{
@@ -242,7 +246,7 @@ namespace NewRelic.Parsing
 		public class DefaultStatementParser
 		{
 			private readonly Regex _pattern;
-			private readonly Regex _shortcutRegex;
+			private readonly string _shortcut;
 			private readonly string _key;
 			public string Keyword { get; }
 
@@ -252,21 +256,21 @@ namespace NewRelic.Parsing
 
 			public DefaultStatementParser(string key, Regex pattern, string keyword, string shortcut)
 			{
-				this._key = key;
-				this._pattern = pattern;
-				this.Keyword = keyword;
+				_key = key;
+				_pattern = pattern;
+				Keyword = keyword;
 
 				if (!string.IsNullOrEmpty(shortcut))
 				{
-					this._shortcutRegex = new Regex(shortcut, PatternSwitches);
+					_shortcut = shortcut;
 				}
 
-				SqlParser._operations.Add(key);
+				_operations.Add(key);
 			}
 
-			public virtual ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, String commandText, String statement)
+			public virtual ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, string commandText, string statement)
 			{
-				if (_shortcutRegex != null && !_shortcutRegex.IsMatch(statement))
+				if (!string.IsNullOrEmpty(_shortcut) &&  !statement.StartsWith(_shortcut,StringComparison.CurrentCultureIgnoreCase))
 				{
 					return null;
 				}
@@ -279,13 +283,13 @@ namespace NewRelic.Parsing
 				foreach (Group g in matcher.Groups)
 				{
 					var str = g.ToString();
-					if (!String.IsNullOrEmpty(str))
+					if (!string.IsNullOrEmpty(str))
 					{
 						model = str;
 					}
 				}
 
-				if (String.Equals(model, "select", StringComparison.CurrentCultureIgnoreCase))
+				if (string.Equals(model, "select", StringComparison.CurrentCultureIgnoreCase))
 				{
 					model = "(subquery)";
 				}
@@ -293,17 +297,19 @@ namespace NewRelic.Parsing
 				{
 					model = StringsHelper.FixDatabaseObjectName(model);
 					if (!IsValidModelName(model))
+					{
 						model = "ParseError";
+					}
 				}
 				return CreateParsedDatabaseStatement(vendor, model);
 			}
 
-			protected virtual Boolean IsValidModelName(String name)
+			protected virtual bool IsValidModelName(string name)
 			{
 				return IsValidName(name);
 			}
 
-			protected virtual ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
+			protected virtual ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, string model)
 			{
 				return new ParsedSqlStatement(vendor, model.ToLower(), _key);
 			}
@@ -314,7 +320,7 @@ namespace NewRelic.Parsing
 			private static readonly Regex SelectMatcher = new Regex(@"^select\s+([^\s,]*).*", PatternSwitches);
 			private static readonly Regex FromMatcher = new Regex(@"\s+from\s+", PatternSwitches);
 
-			public ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, String commandText, String statement)
+			public ParsedSqlStatement ParseStatement(DatastoreVendor vendor, CommandType commandType, string commandText, string statement)
 			{
 				var matcher = SelectMatcher.Match(statement);
 				if (matcher.Success)
@@ -328,16 +334,16 @@ namespace NewRelic.Parsing
 
 		private class ShowStatementParser : DefaultStatementParser
 		{
-			public ShowStatementParser() : base("show", new Regex(@"^\s*show\s+(.*)$", PatternSwitches), @"^\s*show")
+			public ShowStatementParser() : base("show", new Regex(@"^\s*show\s+(.*)$", PatternSwitches), ShowPhraseShortcut)
 			{
 			}
 
-			protected override Boolean IsValidModelName(String name)
+			protected override bool IsValidModelName(string name)
 			{
 				return true;
 			}
 
-			protected override ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
+			protected override ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, string model)
 			{
 				if (model.Length > 50)
 				{
@@ -353,17 +359,19 @@ namespace NewRelic.Parsing
 		/// </summary>
 		private class WaitforStatementParser : DefaultStatementParser
 		{
-			public WaitforStatementParser() : base("waitfor", new Regex(@"^waitfor\s+(delay|time)\s+([^\s,(;]*).*", PatternSwitches), @"^waitfor")
+			
+
+			public WaitforStatementParser() : base("waitfor", new Regex(@"^waitfor\s+(delay|time)\s+([^\s,(;]*).*", PatternSwitches), WaitforPhraseShortcut)
 			{
 			}
 
 			// All time stamps we match with the Regex are assumed to be valid "names" for our purpose.
-			protected override bool IsValidModelName(String name)
+			protected override bool IsValidModelName(string name)
 			{
 				return true;
 			}
 
-			protected override ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, String model)
+			protected override ParsedSqlStatement CreateParsedDatabaseStatement(DatastoreVendor vendor, string model)
 			{
 				// We drop the time string in this.model on the floor.  It may contain quotes, colons, periods, etc.
 				return new ParsedSqlStatement(vendor, "time", "waitfor");
@@ -389,7 +397,7 @@ namespace NewRelic.Parsing
 
 			dbParams.Sort(new ParameterComparer());
 
-			String sql = command.CommandText;
+			string sql = command.CommandText;
 			foreach (Object parameter in dbParams)
 			{
 				IDbDataParameter dbParam = (IDbDataParameter)parameter;
@@ -425,7 +433,7 @@ namespace NewRelic.Parsing
 			}
 		}
 
-		private static readonly List<String> quotableTypes = new List<string>() {
+		private static readonly List<string> quotableTypes = new List<string>() {
 			"String",
 			"StringFixedLength",
 			"DateTime",
@@ -438,7 +446,7 @@ namespace NewRelic.Parsing
 			"Guid",
 		};
 
-		private static String QuoteString(String str)
+		private static string QuoteString(string str)
 		{
 			//All single quotes in the string are replaced by two singe quotes as sql server doesn't parse single quotes in strings. 
 			return "'" + str.Replace("'", "''") + "'";

@@ -24,6 +24,7 @@ namespace NewRelic.Agent.Core.Configuration
 	public class DefaultConfiguration : IConfiguration
 	{
 		private const int DefaultSslPort = 443;
+		private const int DefaultSqlStatementCacheCapacity = 1000;
 
 		public static readonly string RawStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.raw);
 		public static readonly string ObfuscatedStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
@@ -91,22 +92,21 @@ namespace NewRelic.Agent.Core.Configuration
 
 			_newRelicAppSettings = TransformAppSettings();
 
-			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsboolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
+			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 		}
 
-		[NotNull]
-		private IDictionary<String, String> TransformAppSettings()
+		private IDictionary<string, string> TransformAppSettings()
 		{
 			if (_localConfiguration.appSettings == null)
-				return new Dictionary<String, String>();
+				return new Dictionary<string, string>();
 
 			return _localConfiguration.appSettings
 				.Where(setting => setting != null)
-				.Select(setting => new KeyValuePair<String, String>(setting.key, setting.value))
+				.Select(setting => new KeyValuePair<string, string>(setting.key, setting.value))
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
-		private bool TryGetAppSettingAsboolWithDefault([NotNull] String key, bool defaultValue)
+		private bool TryGetAppSettingAsBoolWithDefault(string key, bool defaultValue)
 		{
 			var value = _newRelicAppSettings.GetValueOrDefault(key);
 
@@ -118,16 +118,27 @@ namespace NewRelic.Agent.Core.Configuration
 			return parsedBool;
 		}
 
-		private Int32 TryGetAppSettingAsIntWithDefault([NotNull] String key, Int32 defaultValue)
+		private int TryGetAppSettingAsIntWithDefault(string key, int defaultValue)
 		{
 			var value = _newRelicAppSettings.GetValueOrDefault(key);
-			 
-			Int32 parsedInt;
-			var parsedSuccessfully = Int32.TryParse(value, out parsedInt);
+
+			int parsedInt;
+			var parsedSuccessfully = int.TryParse(value, out parsedInt);
 			if (!parsedSuccessfully)
 				return defaultValue;
 
 			return parsedInt;
+		}
+
+		private uint TryGetAppSettingAsUintWithDefault(string key, uint defaultValue)
+		{
+			var value = _newRelicAppSettings.GetValueOrDefault(key);
+
+			uint parsedUint;
+
+			return uint.TryParse(value, out parsedUint)
+				? parsedUint
+				: defaultValue;
 		}
 
 		public bool SecurityPoliciesTokenExists => !String.IsNullOrEmpty(SecurityPoliciesToken);
@@ -1670,6 +1681,11 @@ namespace NewRelic.Agent.Core.Configuration
 				return localAttributeValue;
 			}
 		}
+
+		uint? _databaseStatementCacheCapcity = null;
+
+		public uint DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
+			TryGetAppSettingAsUintWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
 		[NotNull]
 		private IEnumerable<String> GetDeprecatedIgnoreParameters()

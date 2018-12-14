@@ -479,7 +479,7 @@ namespace NewRelic.Reflection
 		[NotNull]
 		private static DynamicMethod CreateDynamicMethod([NotNull] Type ownerType, [NotNull] Type resultType, params Type[] parameterTypes)
 		{
-			return new DynamicMethod(Guid.NewGuid().ToString(), resultType, parameterTypes, ownerType);
+			return new DynamicMethod(Guid.NewGuid().ToString(), resultType, parameterTypes, ownerType, skipVisibility: true);
 		}
 
 #endregion

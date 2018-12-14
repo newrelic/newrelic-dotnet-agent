@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFrameworks>net451</TargetFrameworks>
+    <TargetFrameworks>net46</TargetFrameworks>
     <RootNamespace>CompositeTests</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core.CompositeTests</AssemblyName>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Core\Core.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\Providers\Storage\AsyncLocal\AsyncLocal.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>

@@ -13,6 +13,8 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 		private static readonly ConcurrentDictionary<Type, Func<object, object>> _collectionNamespaceGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
 		private static readonly ConcurrentDictionary<Type, Func<object, object>> _collectionGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
 		private static readonly ConcurrentDictionary<Type, Func<object, object>> _channelSourceGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
+		private static readonly ConcurrentDictionary<Type, Func<object, object>> _databaseGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
+		private static readonly ConcurrentDictionary<Type, Func<object, object>> _serverGetterMap = new ConcurrentDictionary<Type, Func<object, object>>();
 
 		private static Func<object, string> _getCollectionName;
 		private static Func<object, object> _getDatabaseNamespaceFromCollectionNamespace;
@@ -84,13 +86,26 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			return getter(owner);
 		}
 
+		public static object GetDatabaseFromGeneric(object owner)
+		{
+			var getter = _databaseGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Database"));
+			return getter(owner);
+		}
+
+		private static object GetServerFromFromInterface(object owner)
+		{
+			var getter = _serverGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Server"));
+			return getter(owner);
+		}
+
 		public static ConnectionInfo GetConnectionInfoFromCursor(object asyncCursor, object collectionNamespace)
 		{
 			string host = null;
 			string port = null;
 
-			dynamic channelSource = GetChannelSourceFieldFromGeneric(asyncCursor);
-			EndPoint endpoint = GetEndPoint(channelSource.Server);
+			var channelSource = GetChannelSourceFieldFromGeneric(asyncCursor);
+			var server = GetServerFromFromInterface(channelSource);
+			EndPoint endpoint = GetEndPoint(server);
 
 			var dnsEndpoint = endpoint as DnsEndPoint;
 			var ipEndpoint = endpoint as IPEndPoint;

@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
+using System.Diagnostics;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
@@ -105,6 +106,19 @@ namespace NewRelic.Agent.Core.Wrapper
 				if (!transactionWrapperApi.IsValid)
 				{
 					Log.FinestFormat("No transaction, skipping method {0}.{1}({2})", type.FullName, methodName, argumentSignature);
+					return Delegates.NoOp;
+				}
+
+				if (transactionWrapperApi.IsFinished)
+				{
+					if (Log.IsDebugEnabled)
+					{
+						var stackTrace = new StackTrace();
+						Log.DebugFormat("Transaction has already been ended, skipping method {1}.{2}({3}).{0}{4}", System.Environment.NewLine, type.FullName, methodName, argumentSignature, stackTrace);
+					}
+
+					transactionWrapperApi.Detach();
+
 					return Delegates.NoOp;
 				}
 

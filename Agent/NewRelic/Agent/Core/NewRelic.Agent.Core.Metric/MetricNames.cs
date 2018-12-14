@@ -768,6 +768,8 @@ namespace NewRelic.Agent.Core.Metric
 			       "Duration";
 		}
 
+		public const string SupportabilitySqlParsingCachePrefix = Supportability + PathSeparator + "SqlParsingCache";
+
 		#endregion Supportability
 
 		#region Distributed Trace Metrics

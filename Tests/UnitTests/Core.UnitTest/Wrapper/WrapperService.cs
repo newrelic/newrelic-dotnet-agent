@@ -1,13 +1,10 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Wrapper
@@ -17,25 +14,20 @@ namespace NewRelic.Agent.Core.Wrapper
 	{
 		private const uint EmptyTracerArgs = 0;
 
-		[NotNull]
 		private WrapperService _wrapperService;
 
-		[NotNull]
 		private IWrapperMap _wrapperMap;
 
-		[NotNull]
 		private IDefaultWrapper _defaultWrapper;
 
-		[NotNull]
 		private INoOpWrapper _noOpWrapper;
 
-		[NotNull]
+		private IWrapper _transactionRequiredWrapper;
+
 		private IConfigurationService _configurationService;
 
-		[NotNull]
 		private IAgentWrapperApi _agentWrapperApi;
 
-		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
 
 		private IAgentTimerService _agentTimerService;
@@ -53,6 +45,10 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			_defaultWrapper = Mock.Create<IDefaultWrapper>();
 			_noOpWrapper = Mock.Create<INoOpWrapper>();
+
+			_transactionRequiredWrapper = Mock.Create<IWrapper>();
+			Mock.Arrange(() => _transactionRequiredWrapper.IsTransactionRequired).Returns(true);
+
 			_wrapperService = new WrapperService(_configurationService, _wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
 		}
 
@@ -246,12 +242,9 @@ namespace NewRelic.Agent.Core.Wrapper
 		}
 
 		[Test]
-		public void BeforeWrappedMethod_UsesNoOpWrapper_IfTheCurrentSegmentIsLeaf()
+		public void BeforeWrappedMethod_ReturnsNoOp_IfTheCurrentSegmentIsLeaf()
 		{
-			string result = null;
-			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
-			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransactionWrapperApi>())).Returns((_, __) => result = "foo");
-			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(false));
+			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(_transactionRequiredWrapper));
 
 			var transaction = Mock.Create<ITransactionWrapperApi>();
 			var segment = Mock.Create<ISegment>();
@@ -263,18 +256,44 @@ namespace NewRelic.Agent.Core.Wrapper
 			
 
 			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter, _agentTimerService);
+			using (var logging = new UnitTest.Fixtures.Logging())
+			{
+				var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 
-			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+				Assert.AreEqual(Delegates.NoOp, afterWrappedMethod, "AfterWrappedMethod was not the NoOp delegate.");
+				Assert.False(logging.HasMessage("skipping method"));
+			}
+		}
 
-			action(null, null);
+		[Test]
+		public void BeforeWrappedMethod_ReturnsNoOp_IfTheRequiredTransactionIsFinished()
+		{
+			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(_transactionRequiredWrapper));
 
-			Assert.AreEqual("foo", result);
+			var transaction = Mock.Create<ITransactionWrapperApi>();
+			Mock.Arrange(() => transaction.IsValid).Returns(true);
+			Mock.Arrange(() => transaction.IsFinished).Returns(true);
+			Mock.Arrange(() => _agentWrapperApi.CurrentTransactionWrapperApi).Returns(transaction);
+
+
+			var type = typeof(Class_WrapperService);
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
+
+			using (var logging = new UnitTest.Fixtures.Logging())
+			{
+				var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+
+				Assert.AreEqual(Delegates.NoOp, afterWrappedMethod, "AfterWrappedMethod was not the NoOp delegate.");
+				Assert.True(logging.HasMessageThatContains("Transaction has already been ended, skipping method"), "Expected log message was not found.");
+			}
 		}
 	}
 }

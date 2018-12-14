@@ -26,12 +26,15 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
-			dynamic caller = instrumentedMethodCall.MethodCall.InvocationTarget;
+			var caller = instrumentedMethodCall.MethodCall.InvocationTarget;
 
-			var model = caller.CollectionNamespace.CollectionName;
+			var collectionNamespace = MongoDbHelper.GetCollectionNamespacePropertyFromGeneric(caller);
+			var model = MongoDbHelper.GetCollectionName(collectionNamespace);
 
-			dynamic collection = MongoDbHelper.GetCollectionFieldFromGeneric(caller);
-			ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(collection.Database);
+			var collection = MongoDbHelper.GetCollectionFieldFromGeneric(caller);
+			var database = MongoDbHelper.GetDatabaseFromGeneric(collection);
+
+			ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(database);
 
 			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);

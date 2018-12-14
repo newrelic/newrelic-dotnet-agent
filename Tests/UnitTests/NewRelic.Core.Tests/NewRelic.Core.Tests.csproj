@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NewRelic.Cache\SimpleCacheTests.cs" />
     <Compile Include="NewRelic.Collections\ConcurrentHashSet.cs" />
     <Compile Include="NewRelic.Collections\ConcurrentList.cs" />
     <Compile Include="NewRelic.Collections\ConcurrentPriorityQueueTests.cs" />
