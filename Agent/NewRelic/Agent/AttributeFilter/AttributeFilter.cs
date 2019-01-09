@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Trie;
 
 namespace NewRelic.Agent
@@ -65,7 +64,7 @@ namespace NewRelic.Agent
 			var filteredAttributes = new List<T>();
 			foreach (var attr in attributes)
 			{
-				if (ShouldIncludeAttribute(attr, destination))
+				if (CheckOrAddAttributeClusionCache(attr, destination))
 				{
 					filteredAttributes.Add(attr);
 				}
@@ -74,41 +73,23 @@ namespace NewRelic.Agent
 			return filteredAttributes;
 		}
 
-		
-		private bool ShouldIncludeAttribute(T attribute, AttributeDestinations destination)
+		private bool CheckOrAddAttributeClusionCache(T attribute, AttributeDestinations destination)
 		{
-			var cachedClusion = CheckAttributeClusionCache(attribute, destination);
-			if (cachedClusion != null)
-				return cachedClusion.Value;
+			var cacheKey = GetAttributeClusionKey(attribute, destination);
 
-			var result = !ShouldExcludeAttribute(attribute, destination);
+			if (!_cachedClusions.TryGetValue(cacheKey, out bool result))
+			{
+				result = !ShouldExcludeAttribute(attribute, destination);
 
-			AddToAttributeClusionCache(attribute, destination, result);
+				if (_cachedClusions.Count <= MaxCacheSize)
+				{
+					_cachedClusions.TryAdd(cacheKey, result);
+				}
+			}
 
 			return result;
 		}
-		
 
-		private bool? CheckAttributeClusionCache(T attribute, AttributeDestinations destination)
-		{
-			var cacheKey = GetAttributeClusionKey(attribute, destination);
-			if (_cachedClusions.TryGetValue(cacheKey, out bool cachedClusion))
-			{
-				return cachedClusion;
-			}
-
-			return null;
-		}
-
-		private void AddToAttributeClusionCache(T attribute, AttributeDestinations destination, bool result)
-		{
-			if (_cachedClusions.Count > MaxCacheSize)
-				return;
-
-			var cacheKey = GetAttributeClusionKey(attribute, destination);
-			_cachedClusions[cacheKey] = result;
-		}
-		
 		private static string GetAttributeClusionKey(T attribute, AttributeDestinations destination)
 		{
 			// Enum is cast to byte to avoid enum.ToString which does reflection 

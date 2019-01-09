@@ -111,6 +111,11 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		bool IsValid { get; }
 
 		/// <summary>
+		/// Returns true if the duration of this segment should not count towards the parent's exclusive time when async.
+		/// </summary>
+		bool DurationShouldBeDeductedFromParent { get; set; }
+
+		/// <summary>
 		/// Returns true if this is a leaf segment.
 		/// </summary>
 		bool IsLeaf { get; }

@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Parsing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -165,7 +165,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			const string keyPeerHostname = "peer.hostname";
 			
 			var data = (DatastoreSegmentData)segment.Data;
-			spanAttributes.Add(KeyComponent, MetricNames.GetCachedVendorNameString(data.DatastoreVendorName));
+			spanAttributes.Add(KeyComponent, EnumNameCache<DatastoreVendor>.GetName(data.DatastoreVendorName));
 
 			if (!string.IsNullOrWhiteSpace(data.CommandText))
 			{
@@ -190,7 +190,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			const string keyHttpMethod = "http.method";
 
 			var data = (ExternalSegmentData)segment.Data;
-			spanAttributes.Add(keyHttpUrl, Strings.CleanUri(data.Uri));
+			spanAttributes.Add(keyHttpUrl, StringsHelper.CleanUri(data.Uri));
 			spanAttributes.Add(keyHttpMethod, data.Method);
 			spanAttributes.Add(KeyComponent, segment.MethodCallData.TypeName);
 			spanAttributes.Add(KeySpanKind, ValueSpanKind);

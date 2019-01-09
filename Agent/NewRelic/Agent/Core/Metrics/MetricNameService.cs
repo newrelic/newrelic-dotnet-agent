@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.Metrics
 			if (!whitelistRules.Any())
 				return metricName;
 
-			var originalSegments = metricName.Split(MetricNames.PathSeparatorChar);
+			var originalSegments = metricName.Split(MetricNames.PathSeparatorCharArray);
 			if (originalSegments.Count() < 3 || (originalSegments.Count() == 3 && originalSegments[2] == ""))
 				return metricName;
 

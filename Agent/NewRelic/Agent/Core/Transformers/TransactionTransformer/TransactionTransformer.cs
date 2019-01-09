@@ -255,8 +255,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transport = immutableTransactionMetadata.DistributedTraceTransportType;
 
 			{
-				// Response time is just EndTime minus StartTime
-				MetricBuilder.TryBuildTransactionMetrics(isWebTransaction, immutableTransaction.Duration, txStats);
+				MetricBuilder.TryBuildTransactionMetrics(isWebTransaction, immutableTransaction.ResponseTimeOrDuration, txStats);
 
 				if (isDistributedTracingEnabled)
 				{
@@ -299,7 +298,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var referrerCrossProcessId = immutableTransaction.TransactionMetadata.CrossApplicationReferrerProcessId;
 			if (referrerCrossProcessId != null)
-				MetricBuilder.TryBuildClientApplicationMetric(referrerCrossProcessId, immutableTransaction.Duration, immutableTransaction.Duration, txStats);
+			{
+				var catResponseTime = TimeSpan.FromSeconds(immutableTransaction.TransactionMetadata.CrossApplicationResponseTimeInSeconds);
+				MetricBuilder.TryBuildClientApplicationMetric(referrerCrossProcessId, catResponseTime, catResponseTime, txStats);
+			}
 
 			using (_agentTimerService.StartNew("CollectMetrics"))
 			{
@@ -431,7 +433,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			{
 				MetricBuilder.TryBuildFrustratedApdexMetrics(isWebTransaction, transactionApdexMetricName, txStats);
 			} else {
-				MetricBuilder.TryBuildApdexMetrics(transactionApdexMetricName, isWebTransaction, immutableTransaction.Duration, apdexT, txStats);
+				MetricBuilder.TryBuildApdexMetrics(transactionApdexMetricName, isWebTransaction, immutableTransaction.ResponseTimeOrDuration, apdexT, txStats);
 			}
 		}
 

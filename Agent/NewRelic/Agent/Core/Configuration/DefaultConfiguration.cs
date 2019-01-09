@@ -10,8 +10,9 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Memoization;
+using NewRelic.Agent.Helpers;
 using NewRelic.SystemInterfaces;
+using NewRelic.Memoization;
 using NewRelic.SystemExtensions;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces.Web;
@@ -194,14 +195,14 @@ namespace NewRelic.Agent.Core.Configuration
 				?? _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")
 				?? _environment.GetEnvironmentVariable("RoleName");
 			if (appName != null)
-				return appName.Split(',');
+				return appName.Split(StringSeparators.Comma);
 
 			if (_localConfiguration.application.name.Count > 0)
 				return _localConfiguration.application.name;
 
 			appName = _environment.GetEnvironmentVariable("APP_POOL_ID");
 			if (appName != null)
-				return appName.Split(',');
+				return appName.Split(StringSeparators.Comma);
 
 			if (_httpRuntimeStatic.AppDomainAppVirtualPath == null)
 				return new List<String> { _processStatic.GetCurrentProcess().ProcessName };
@@ -1091,7 +1092,15 @@ namespace NewRelic.Agent.Core.Configuration
 			return new BoolConfigurationItem(_localConfiguration.customEvents.enabled, LocalConfigSource);
 		}
 
-		public virtual UInt32 CustomEventsMaxSamplesStored { get { return 10000; } }
+		public virtual UInt32 CustomEventsMaxSamplesStored
+		{
+			get
+			{
+				//if we have a specifed value, use it; otherwise, use our default
+				return _localConfiguration.customEvents.maximumSamplesStoredSpecified ? 
+					_localConfiguration.customEvents.maximumSamplesStored : CustomEventsMaxSamplesStoredDefault;
+			}
+		}
 
 		#endregion
 
@@ -1402,6 +1411,17 @@ namespace NewRelic.Agent.Core.Configuration
 		#endregion
 
 		public bool DiagnosticsCaptureAgentTiming => _localConfiguration.diagnostics.captureAgentTiming;
+
+		private bool? _forceSynchronousTimingCalculationHttpClient;
+		public bool ForceSynchronousTimingCalculationHttpClient
+		{
+			get
+			{
+				return _forceSynchronousTimingCalculationHttpClient.HasValue
+					? _forceSynchronousTimingCalculationHttpClient.Value
+					: (_forceSynchronousTimingCalculationHttpClient = TryGetAppSettingAsBoolWithDefault("ForceSynchronousTimingCalculation.HttpClient", false)).Value;
+			}
+		}
 
 		#endregion
 
@@ -1788,6 +1808,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private const bool TransactionEventsTransactionsEnabledDefault = true;
 		private const UInt32 TransactionEventsMaxSamplesPerMinuteDefault = 10000;
 		private const UInt32 TransactionEventsMaxSamplesStoredDefault = 10000;
+		private const UInt32 CustomEventsMaxSamplesStoredDefault = 10000;
 	}
 }
 

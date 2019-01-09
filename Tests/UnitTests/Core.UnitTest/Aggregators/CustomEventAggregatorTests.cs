@@ -85,6 +85,49 @@ namespace NewRelic.Agent.Core.Aggregators
 			Assert.Null(sentEvents);
 		}
 
+		[Test]
+		public void Collections_are_resized_on_configuration_update_event()
+		{
+			// Arrange
+			var configuration = Mock.Create<IConfiguration>();
+			Mock.Arrange(() => configuration.CustomEventsEnabled).Returns(true);
+			Mock.Arrange(() => configuration.CustomEventsMaxSamplesStored).Returns(2);  //set the reservoir to only two
+			Mock.Arrange(() => configuration.ConfigurationVersion).Returns(configuration.ConfigurationVersion +1);
+			var sentEvents = Enumerable.Empty<CustomEventWireModel>();
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
+				.DoInstead<IEnumerable<CustomEventWireModel>>(events => sentEvents = events);
+
+			//ordered by priority descending
+			var eventsToSend = new[]
+			{
+				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.3f),
+				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f),
+				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f)
+			};
+
+			// Act
+			//collect 3 events, all should be retained - reservoir should be default size of 10000
+			eventsToSend.ForEach(_customEventAggregator.Collect);
+
+			_harvestAction();
+
+			// Assert that all three of the events were retained and sent.
+			Assert.That(sentEvents, Has.Exactly(3).Items);
+			Assert.That(sentEvents, Is.EqualTo(eventsToSend));
+
+			//this event will resize the reservoir (deleting it's contents).  The Collect() method must be called after this.
+			EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(configuration, ConfigurationUpdateSource.Local));
+
+			//collect 3 events, only two should be in the reservoir
+			eventsToSend.ForEach(_customEventAggregator.Collect);
+
+			_harvestAction();
+
+			// Assert that only two of the events were retained and sent.
+			Assert.That(sentEvents, Has.Exactly(2).Items);
+			Assert.That(sentEvents, Is.EqualTo(eventsToSend.OrderByDescending(x => x.Priority).Take(2)));
+		}
+
 		#endregion
 
 		[Test]

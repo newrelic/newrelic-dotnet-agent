@@ -6,6 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 {
@@ -35,7 +36,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 				return Enumerable.Empty<KeyValuePair<String, String>>();
 
 			Int64 accountId;
-			if (!Int64.TryParse(_configurationService.Configuration.CrossApplicationTracingCrossProcessId.Split('#').FirstOrDefault(), out accountId))
+			if (!Int64.TryParse(_configurationService.Configuration.CrossApplicationTracingCrossProcessId.Split(StringSeparators.Hash)[0], out accountId))
 				return Enumerable.Empty<KeyValuePair<String, String>>();
 
 			var syntheticsHeader = new SyntheticsHeader(SyntheticsHeader.SupportedHeaderVersion, accountId, metadata.SyntheticsResourceId, metadata.SyntheticsJobId, metadata.SyntheticsMonitorId) {EncodingKey = _configurationService.Configuration.EncodingKey};

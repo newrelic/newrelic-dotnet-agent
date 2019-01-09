@@ -2221,6 +2221,17 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.CustomEventsEnabled;
 		}
 
+		[Test]
+		public void CustomEventsMaxSamplesStoredPassesThroughToLocalConfig()
+		{
+			Assert.That(_defaultConfig.CustomEventsMaxSamplesStored, Is.EqualTo(10000));
+
+			_localConfig.customEvents.maximumSamplesStored = 10001;
+			Assert.That(_defaultConfig.CustomEventsMaxSamplesStored, Is.EqualTo(10001));
+
+			_localConfig.customEvents.maximumSamplesStored = 9999;
+			Assert.That(_defaultConfig.CustomEventsMaxSamplesStored, Is.EqualTo(9999));
+		}
 		#endregion
 
 		#region SecurityPolicies
@@ -2260,5 +2271,17 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		}
 
 		#endregion SecurityPolicies
+
+		[TestCase(null, ExpectedResult = false)]
+		[TestCase("not a bool", ExpectedResult = false)]
+		[TestCase("false", ExpectedResult = false)]
+		[TestCase("true", ExpectedResult = true)]
+		public bool AsyncHttpClientSegmentsDoNotCountTowardsParentExclusiveTimeTests(string localConfigValue)
+		{
+			_localConfig.appSettings.Add(new configurationAdd { key = "ForceSynchronousTimingCalculation.HttpClient", value = localConfigValue });
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+			return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
+		}
 	}
 }

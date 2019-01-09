@@ -49,6 +49,21 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			var method = (httpRequestMessage.Method != null ? httpRequestMessage.Method.Method : "<unknown>") ?? "<unknown>";
 			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
 
+			if (agentWrapperApi.Configuration.ForceSynchronousTimingCalculationHttpClient)
+			{
+				//When segments complete on a thread that is different than the thread of the parent segment,
+				//we typically do not deduct the child segment's duration from the parent segment's duration
+				//when calculating exclusive time for the parent. In versions of the agent prior to 6.20 this was not
+				//the case and at least one customer is complaining about this. We are special-casing this behavior
+				//for HttpClient to make this customer happier, and because HttpClient is not a real "async" method.
+				//Please refer to the "total time" definition in https://source.datanerd.us/agents/agent-specs/blob/master/Total-Time-Async.md
+				//for more information.
+
+				//This pattern should not be copied to other instrumentation without a good reason, because there may be a better
+				//pattern to use for that use case.
+				segment.DurationShouldBeDeductedFromParent = true;
+			}
+
 
 			// We cannot rely on SerializeHeadersWrapper to attach the headers because it is called on a thread that does not have access to the transaction
 			TryAttachHeadersToRequest(agentWrapperApi, httpRequestMessage);

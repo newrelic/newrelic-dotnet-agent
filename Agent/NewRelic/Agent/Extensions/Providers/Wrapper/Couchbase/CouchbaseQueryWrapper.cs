@@ -1,16 +1,10 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Reflection;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Couchbase
 {
 	public class CouchbaseQueryWrapper : IWrapper
 	{
-
-		private Func<Object, String> _getMethodInfo;
-		public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "Name"));
-
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -24,16 +18,12 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 
-			var model = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
+			var model = CouchbaseHelper.GetBucketName(instrumentedMethodCall.MethodCall.InvocationTarget);
+
+			var parameterTypeName = instrumentedMethodCall.InstrumentedMethodInfo.Method.ParameterTypeNames;
 
 			var parm = instrumentedMethodCall.MethodCall.MethodArguments[0];
-			String commandText = null;
-
-			try
-			{
-				commandText = parm is string ? (string) parm : ((dynamic) parm)._statement;
-			}
-			catch { }
+			var commandText = CouchbaseHelper.GetStatement(parm, parameterTypeName);
 
 			var segment = transactionWrapperApi.StartDatastoreSegment(
 				instrumentedMethodCall.MethodCall,

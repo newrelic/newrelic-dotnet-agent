@@ -284,24 +284,24 @@ namespace NewRelic.Agent.Core.WireModels
 		[Test]
 		public void MetricWireModel_SerializesCorrectlyScoped()
 		{
-			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope1",
-				MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
-
-			var serializedMetric = metric1.ToJson();
-
 			const string expectedJson = @"[{""name"":""DotNet/name"",""scope"":""scope1""},[1,3.0,1.0,3.0,3.0,9.0]]";
+
+			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", "scope1", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
+
+			var serializedMetric = JsonConvert.SerializeObject(metric1);
+
 			Assert.AreEqual(expectedJson, serializedMetric);
 		}
 
 		[Test]
 		public void MetricWireModel_SerializesCorrectlyUnscoped()
 		{
-			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", null,
-				MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
-
-			var serializedMetric = metric1.ToJson();
-
 			const string expectedJson = @"[{""name"":""DotNet/name""},[1,3.0,1.0,3.0,3.0,9.0]]";
+
+			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1)));
+
+			var serializedMetric = JsonConvert.SerializeObject(metric1);
+			
 			Assert.AreEqual(expectedJson, serializedMetric);
 		}
 

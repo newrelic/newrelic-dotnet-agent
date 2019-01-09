@@ -12,13 +12,13 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Parsing;
 using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Generic;
@@ -148,8 +148,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			}
 		}
 
-		public void EndTransaction(ITransaction transaction)
+		public void EndTransaction(ITransaction transaction, bool captureResponseTime)
 		{
+			if (captureResponseTime)
+			{
+				//This only does something once so it's safe to perform each time EndTransaction is called
+				var previouslyCapturedResponseTime = !transaction.TryCaptureResponseTime();
+				if (previouslyCapturedResponseTime && Log.IsDebugEnabled)
+				{
+					var stackTrace = new StackTrace();
+					Log.DebugFormat("Transaction has already captured the response time.{0}{1}", System.Environment.NewLine, stackTrace);
+				}
+			}
+
 			var remainingUnitsOfWork = transaction.NoticeUnitOfWorkEnds();
 
 			// There is still work to do, so delay ending transaction until there no more work left
@@ -351,6 +362,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var currentTransactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(currentTransactionName);
 
 			UpdatePathHash(transaction, currentTransactionMetricName);
+			transaction.TransactionMetadata.SetCrossApplicationResponseTimeInSeconds((float)transaction.GetDurationUntilNow().TotalSeconds);
 
 			//We should only add outbound CAT headers here (not synthetics) given that this is a Response to a request
 			return headers
@@ -548,7 +560,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				this.transaction = transaction;
 			}
 
-			public void End()
+			public void End(bool captureResponseTime = true)
 			{
 				if (transaction.IsFinished)
 				{
@@ -561,7 +573,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					SetWebTransactionName(WebTransactionType.StatusCode, $"{transaction.TransactionMetadata.HttpResponseStatusCode}", TransactionNamePriority.StatusCode);
 				}
 
-				agentWrapperApi.EndTransaction(transaction);
+				agentWrapperApi.EndTransaction(transaction, captureResponseTime);
 			}
 
 			public void Dispose()
@@ -740,23 +752,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}
 
-			public ISegment StartTerminatingSegment(MethodCall methodCall)
-			{
-				if (transaction.Ignored)
-					return _noOpSegment;
-
-				var methodCallData = GetMethodCallData(methodCall);
-
-				var typeName = methodCall.Method.Type.Name;
-				var methodName = methodCall.Method.MethodName;
-
-				var segment = new TypedSegment<MethodSegmentData>(transaction.GetTransactionSegmentState(), methodCallData, new MethodSegmentData(typeName, methodName));
-				segment.IsLeaf = true;
-				segment.IsTerminating = true;
-
-				return segment;
-			}
-
 			public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
 			{
 				if (agentWrapperApi._configurationService.Configuration.DistributedTracingEnabled)
@@ -906,7 +901,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public void Release()
 			{
-				End();
+				End(captureResponseTime: false);
 			}
 
 			public void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
@@ -962,7 +957,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentNullException(nameof(uri));
 				}
 
-				var cleanUri = Strings.CleanUri(uri);
+				var cleanUri = StringsHelper.CleanUri(uri);
 
 				transaction.TransactionMetadata.SetUri(cleanUri);
 			}
@@ -974,7 +969,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentNullException(nameof(uri));
 				}
 
-				var cleanUri = Strings.CleanUri(uri);
+				var cleanUri = StringsHelper.CleanUri(uri);
 
 				transaction.TransactionMetadata.SetOriginalUri(cleanUri);
 			}
@@ -987,7 +982,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				}
 
 				// Always strip query string parameters on a referrer. Per https://newrelic.atlassian.net/browse/DOTNET-2141
-				var cleanUri = Strings.CleanUri(uri);
+				var cleanUri = StringsHelper.CleanUri(uri);
 
 				transaction.TransactionMetadata.SetReferrerUri(cleanUri);
 			}
@@ -1046,6 +1041,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			public bool IsValid => false;
 
+			public bool DurationShouldBeDeductedFromParent { get; set; } = false;
+
 			public bool IsFinished => false;
 
 			public ISegment CurrentSegment => _noOpSegment;
@@ -1055,6 +1052,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			public string SpanId => null;
 
 			public void End()
+			{
+			}
+
+			public void End(bool captureResponseTime = true)
 			{
 			}
 
@@ -1110,14 +1111,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 #if DEBUG
 				Log.Finest("Skipping StartTransactionSegment outside of a transaction");
-#endif
-				return this;
-			}
-
-			public ISegment StartTerminatingSegment(MethodCall methodCall)
-			{
-#if DEBUG
-				Log.Finest("Skipping StartTerminatingSegment outside of a transaction");
 #endif
 				return this;
 			}

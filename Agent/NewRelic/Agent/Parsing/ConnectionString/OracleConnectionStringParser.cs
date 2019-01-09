@@ -3,16 +3,20 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Parsing.ConnectionString
 {
 	public class OracleConnectionStringParser : IConnectionStringParser
 	{
-		private static readonly List<String> _hostKeys = new List<String> { "server", "data source", "host", "dbq" };
+		private static readonly string _closeParen = new string(StringSeparators.CloseParen);
+		private static readonly char[] _stopChars = { StringSeparators.ColonChar, StringSeparators.PathSeparatorChar };
+
+		private static readonly List<string> _hostKeys = new List<string> { "server", "data source", "host", "dbq" };
 
 		private readonly DbConnectionStringBuilder _connectionStringBuilder;
 
-		public OracleConnectionStringParser(String connectionString)
+		public OracleConnectionStringParser(string connectionString)
 		{
 			_connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
 		}
@@ -24,7 +28,7 @@ namespace NewRelic.Parsing.ConnectionString
 			return new ConnectionInfo(host, portPathOrId, null);
 		}
 
-		private String ParseHost()
+		private string ParseHost()
 		{
 			// Example of want we would need to process:
 			// (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost)(PORT=MyPort)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=MyOracleSID)))
@@ -36,40 +40,39 @@ namespace NewRelic.Parsing.ConnectionString
 			var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
 			if (host == null) return null;
 
-			if (host.Contains('('))
+			if (host.Contains(StringSeparators.OpenParenChar))
 			{
-				var sections = host.Split('(');
+				var sections = host.Split(StringSeparators.OpenParen);
 				foreach (var section in sections)
 				{
 					if (!section.ToLowerInvariant().Contains("host=")) continue;
 
-					var startOfValue = section.IndexOf('=') + 1;
-					return section.Substring(startOfValue).Replace(")", String.Empty);
+					var startOfValue = section.IndexOf(StringSeparators.EqualSignChar) + 1;
+					return section.Substring(startOfValue).Replace(_closeParen, string.Empty);
 				}
 			}
-			else if (host.Contains("@"))
+			else if (host.Contains(StringSeparators.AtSignChar))
 			{
-				var sections = host.Split('/');
+				var sections = host.Split(StringSeparators.PathSeparator);
 				var initialHostSection = sections[1];
 				var secondaryHostSection = sections[3];
 				
-				var possibleHost = initialHostSection.Substring(initialHostSection.IndexOf('@') + 1);
-				if (!String.IsNullOrEmpty(possibleHost))
+				var possibleHost = initialHostSection.Substring(initialHostSection.IndexOf(StringSeparators.AtSignChar) + 1);
+				if (!string.IsNullOrEmpty(possibleHost))
 				{
-					var colonLocation = possibleHost.IndexOf(':');
+					var colonLocation = possibleHost.IndexOf(StringSeparators.ColonChar);
 					return colonLocation == -1 ? possibleHost : possibleHost.Substring(0, colonLocation);
 				}
 
-				var endOfValue = secondaryHostSection.IndexOf(':');
-				possibleHost = (endOfValue > -1) ? secondaryHostSection.Substring(0, secondaryHostSection.IndexOf(':')) : secondaryHostSection;
-				if (!String.IsNullOrEmpty(possibleHost)) return possibleHost;
+				var endOfValue = secondaryHostSection.IndexOf(StringSeparators.ColonChar);
+				possibleHost = (endOfValue > -1) ? secondaryHostSection.Substring(0, secondaryHostSection.IndexOf(StringSeparators.ColonChar)) : secondaryHostSection;
+				if (!string.IsNullOrEmpty(possibleHost)) return possibleHost;
 
 				return null;
 			}
 			else
 			{
-				var stops = new[] {':', '/'};
-				var endOfHostname = host.IndexOfAny(stops);
+				var endOfHostname = host.IndexOfAny(_stopChars);
 				return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
 			}
 
@@ -81,36 +84,36 @@ namespace NewRelic.Parsing.ConnectionString
 			var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
 			if (host == null) return null;
 
-			if (host.Contains('('))
+			if (host.Contains(StringSeparators.OpenParenChar))
 			{
-				var sections = host.Split('(');
+				var sections = host.Split(StringSeparators.OpenParen);
 				foreach (var section in sections)
 				{
 					if (!section.ToLowerInvariant().Contains("port=")) continue;
 
-					var startOfValue = section.IndexOf('=') + 1;
-					return section.Substring(startOfValue).Replace(")", String.Empty);
+					var startOfValue = section.IndexOf(StringSeparators.EqualSignChar) + 1;
+					return section.Substring(startOfValue).Replace(_closeParen, string.Empty);
 				}
 			}
 
-			else if (host.Contains('@'))
+			else if (host.Contains(StringSeparators.AtSignChar))
 			{
-				var sections = host.Split('/');
+				var sections = host.Split(StringSeparators.PathSeparator);
 				var initialPortSection = sections[1];
 				var secondaryPortSection = sections[3];
 
-				var startOfValue = initialPortSection.IndexOf(':');
+				var startOfValue = initialPortSection.IndexOf(StringSeparators.ColonChar);
 				if (startOfValue > -1) return initialPortSection.Substring(startOfValue + 1);
 
-				startOfValue = secondaryPortSection.IndexOf(':');
+				startOfValue = secondaryPortSection.IndexOf(StringSeparators.ColonChar);
 				if ( startOfValue > -1 ) return secondaryPortSection.Substring(startOfValue + 1);
 
 				return "default";
 			}
 			else
 			{
-				var startOfValue = host.IndexOf(':') + 1;
-				var endOfValue = host.IndexOf("/", startOfValue);
+				var startOfValue = host.IndexOf(StringSeparators.ColonChar) + 1;
+				var endOfValue = host.IndexOf(StringSeparators.PathSeparatorChar, startOfValue);
 
 				if (endOfValue == -1) endOfValue = host.Length;
 

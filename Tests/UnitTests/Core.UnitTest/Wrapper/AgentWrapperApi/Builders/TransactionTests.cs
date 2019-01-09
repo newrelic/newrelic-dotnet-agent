@@ -188,5 +188,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			const string guidFormatPattern = @"^[0-9A-Fa-f]{16}$";
 			Assert.That(tx.Guid, Does.Match(guidFormatPattern));
 		}
+
+		[Test]
+		public void TransactionShouldOnlyCaptureResponseTimeOnce()
+		{
+			//Verify initial state
+			Assert.Null(_transaction.ResponseTime, "ResponseTime should initially be null.");
+
+			//First attempt to capture the response time
+			Assert.True(_transaction.TryCaptureResponseTime(), "ResponseTime should have been captured but was not captured.");
+
+			//Verify that the response time was captured
+			var capturedResponseTime = _transaction.ResponseTime;
+			Assert.NotNull(capturedResponseTime, "ResponseTime should have a value.");
+
+			//Second attempt to capture the response time
+			Assert.False(_transaction.TryCaptureResponseTime(), "ResponseTime should not be captured again, but it was.");
+			Assert.AreEqual(capturedResponseTime, _transaction.ResponseTime, "ResponseTime should still have the same value as the originally captured ResponseTime.");
+		}
 	}
 }

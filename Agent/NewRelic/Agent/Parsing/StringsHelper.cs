@@ -1,14 +1,40 @@
-﻿using JetBrains.Annotations;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Parsing
 {
 	public static class StringsHelper
 	{
-		[NotNull]
-		public static String FixDatabaseObjectName(String s)
+		public static string CleanUri(string uri)
+		{
+			if (uri == null)
+				return string.Empty;
+
+			var index = uri.IndexOf('?');
+			return (index > 0)
+				? uri.Substring(0, index)
+				: uri;
+		}
+
+		public static string CleanUri(Uri uri)
+		{
+			if (uri == null)
+				return string.Empty;
+
+			// Can't clean up relative URIs (Uri.GetComponents will throw an exception for relative URIs)
+			if (!uri.IsAbsoluteUri)
+				return CleanUri(uri.ToString());
+
+			return uri.GetComponents(
+					UriComponents.Scheme |
+					UriComponents.HostAndPort |
+					UriComponents.Path,
+					UriFormat.UriEscaped);
+		}
+
+		public static string FixDatabaseObjectName(string s)
 		{
 			int index = s.IndexOf('.');
 			if (index > 0)
@@ -33,16 +59,15 @@ namespace NewRelic.Parsing
 			return RemoveBracketsQuotesParenthesis(s).ToLower();
 		}
 
-		[NotNull]
-		private static String FixDatabaseName(String s)
+		private static string FixDatabaseName(string s)
 		{
 			StringBuilder sb = new StringBuilder(s.Length);
 			bool first = true;
-			foreach (String segment in s.Split('.'))
+			foreach (string segment in s.Split(StringSeparators.Period))
 			{
 				if (!first)
 				{
-					sb.Append('.');
+					sb.Append(StringSeparators.Period);
 				}
 				else
 				{
@@ -57,11 +82,11 @@ namespace NewRelic.Parsing
 			new KeyValuePair<char, char>('[',']'),
 			new KeyValuePair<char, char>('"','"'),
 			new KeyValuePair<char, char>('\'','\''),
-			new KeyValuePair<char, char>('(',')')
+			new KeyValuePair<char, char>('(',')'),
+			new KeyValuePair<char, char>('`','`')
 		};
 
-		[NotNull]
-		public static String RemoveBracketsQuotesParenthesis([NotNull] String value)
+		public static string RemoveBracketsQuotesParenthesis(string value)
 		{
 			if (value.Length < 3)
 				return value;

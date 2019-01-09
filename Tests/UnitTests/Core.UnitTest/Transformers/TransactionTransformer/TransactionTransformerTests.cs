@@ -532,6 +532,62 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		[Test]
+		public void ApdexMetricsUseResponseTimeForWebTransactions()
+		{
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<String>())).Returns(TimeSpan.FromSeconds(1));
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
+
+			var immutableTransaction = new ImmutableTransactionBuilder()
+				.IsWebTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(10))
+				.WithResponseTime(TimeSpan.FromSeconds(1))
+				.Build();
+			var transaction = Mock.Create<ITransaction>();
+			Mock.Arrange(() => transaction.ConvertToImmutableTransaction()).Returns(immutableTransaction);
+
+			_transactionTransformer.Transform(transaction);
+
+			//Apdex value based on the response time should be satisfying
+			NrAssert.Multiple(
+					() => Assert.AreEqual(1, generatedMetrics["Apdex/TransactionName"].Value0),
+					() => Assert.AreEqual(1, generatedMetrics["Apdex"].Value0),
+					() => Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value0)
+				);
+		}
+
+		[Test]
+		public void ApdexMetricsUseDurationForOtherTransactions()
+		{
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<String>())).Returns(TimeSpan.FromSeconds(1));
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
+
+			var immutableTransaction = new ImmutableTransactionBuilder()
+				.IsOtherTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(10))
+				.WithResponseTime(TimeSpan.FromSeconds(1))
+				.Build();
+			var transaction = Mock.Create<ITransaction>();
+			Mock.Arrange(() => transaction.ConvertToImmutableTransaction()).Returns(immutableTransaction);
+
+			_transactionTransformer.Transform(transaction);
+
+			//Apdex value based on the duration should be frustrating
+			NrAssert.Multiple(
+					() => Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2),
+					() => Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value2),
+					() => Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value2),
+					//We should not see apdex metrics that are for web transactions
+					() => CollectionAssert.IsNotSubsetOf(new[] { "Apdex/TransactionName", "Apdex" }, generatedMetrics.Keys)
+				);
+		}
+
+		[Test]
 		public void FrustratedApdexRollupMetricIsGenerated_IfApdexTIsNotNullAndIsErrorTransaction()
 		{
 			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
@@ -643,39 +699,97 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void ClientApplicationMetricIsGenerated_IfReferringCrossProcessIdIsNotNull()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
-			var transaction = TestTransactions.CreateDefaultTransaction();
-			transaction.TransactionMetadata.SetCrossApplicationReferrerProcessId("123#456");
+			var immutableTransaction = new ImmutableTransactionBuilder()
+				.IsWebTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(3))
+				.WithResponseTime(TimeSpan.FromSeconds(1))
+				.WithCrossApplicationData(crossApplicationReferrerProcessId: "123#456", crossApplicationResponseTimeInSeconds: 0.8f)
+				.Build();
+			var transaction = Mock.Create<ITransaction>();
+			Mock.Arrange(() => transaction.ConvertToImmutableTransaction()).Returns(immutableTransaction);
+
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
-				"ClientApplication/123#456/all", "HttpDispatcher", "WebTransaction"};
-			foreach (String current in unscoped)
-			{
-				Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric is not contained: " + current);
-				Assert.AreEqual(1, generatedMetrics[current].Value0);
-			}
+			NrAssert.Multiple(
+					() => Assert.AreEqual(1, generatedMetrics["ClientApplication/123#456/all"].Value0),
+					() => Assert.AreEqual(0.8f, generatedMetrics["ClientApplication/123#456/all"].Value1),
+					() => Assert.AreEqual(1, generatedMetrics["HttpDispatcher"].Value0),
+					() => Assert.AreEqual(1, generatedMetrics["HttpDispatcher"].Value1),
+					() => Assert.AreEqual(1, generatedMetrics["WebTransaction"].Value0),
+					() => Assert.AreEqual(1, generatedMetrics["WebTransaction"].Value1)
+				);
 		}
 
 		[Test]
 		public void ClientApplicationMetricIsNotGenerated_IfReferringCrossProcessIdIsNull()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
-			var transaction = TestTransactions.CreateDefaultTransaction(referrerCrossProcessId: null);
+			var immutableTransaction = new ImmutableTransactionBuilder()
+				.IsWebTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(3))
+				.WithResponseTime(TimeSpan.FromSeconds(1))
+				.Build();
+			var transaction = Mock.Create<ITransaction>();
+			Mock.Arrange(() => transaction.ConvertToImmutableTransaction()).Returns(immutableTransaction);
+
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
-				"ClientApplication/123#456/all"};
-			foreach (String current in unscoped)
-			{
-				Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric is not contained: " + current);
-			}
+			CollectionAssert.DoesNotContain(generatedMetrics.Keys, "ClientApplication/123#456/all");
+		}
+
+		[Test]
+		public void TransactionMetricsUseResponseTimeForWebTransactions()
+		{
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+
+			var immutableTransaction = new ImmutableTransactionBuilder()
+				.IsWebTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(3))
+				.WithResponseTime(TimeSpan.FromSeconds(1))
+				.Build();
+			var transaction = Mock.Create<ITransaction>();
+			Mock.Arrange(() => transaction.ConvertToImmutableTransaction()).Returns(immutableTransaction);
+
+			_transactionTransformer.Transform(transaction);
+
+			NrAssert.Multiple(
+					() => Assert.AreEqual(1, generatedMetrics["WebTransaction/TransactionName"].Value1),
+					() => Assert.AreEqual(1, generatedMetrics["WebTransaction"].Value1),
+					() => Assert.AreEqual(1, generatedMetrics["HttpDispatcher"].Value1)
+				);
+		}
+
+		[Test]
+		public void TransactionMetricsUseDurationForOtherTransactions()
+		{
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+
+			var immutableTransaction = new ImmutableTransactionBuilder()
+				.IsOtherTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(3))
+				.WithResponseTime(TimeSpan.FromSeconds(1))
+				.Build();
+			var transaction = Mock.Create<ITransaction>();
+			Mock.Arrange(() => transaction.ConvertToImmutableTransaction()).Returns(immutableTransaction);
+
+			_transactionTransformer.Transform(transaction);
+
+			NrAssert.Multiple(
+					() => Assert.AreEqual(3, generatedMetrics["OtherTransaction/TransactionName"].Value1),
+					() => Assert.AreEqual(3, generatedMetrics["OtherTransaction/all"].Value1),
+					() => CollectionAssert.DoesNotContain(generatedMetrics.Keys, "HttpDispatcher")
+				);
 		}
 
 		#endregion Metrics
@@ -1045,7 +1159,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[NotNull]
 		private static ErrorTraceWireModel GetError()
 		{
-			var attributes = new List<KeyValuePair<String, Object>>();
+			var attributes = new Dictionary<string, object>();
 			var stackTrace = new List<String>();
 			var errorTraceAttributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, attributes, attributes, stackTrace);
 			return new ErrorTraceWireModel(DateTime.Now, "path", "message", "exceptionClassName", errorTraceAttributes, "guid");

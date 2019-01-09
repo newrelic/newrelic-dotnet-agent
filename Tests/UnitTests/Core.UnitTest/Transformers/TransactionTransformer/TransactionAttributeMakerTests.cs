@@ -1428,11 +1428,57 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		#endregion GetUserAndAgentAttributes
 
+		#region ResponseTime vs TransactionDuration tests
 
+		[Test]
+		public void ShouldUseResponseTimeForAttributes()
+		{
+			var transaction = new ImmutableTransactionBuilder()
+				.IsWebTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(10))
+				.WithResponseTime(TimeSpan.FromSeconds(5))
+				.Build();
 
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "category/name");
+			var transactionMetricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
 
+			var attributes = _transactionAttributeMaker.GetAttributes(transaction, transactionMetricName, apdexT:TimeSpan.FromSeconds(7), totalTime: TimeSpan.FromSeconds(10), errorData: new ErrorData(), txStats: transactionMetricStatsCollection);
 
-		
+			var intrinsicAttributes = attributes.GetIntrinsicsDictionary();
+			var expectedResponseTimeInSeconds = TimeSpan.FromSeconds(5).TotalSeconds;
+
+			NrAssert.Multiple(
+					() => Assert.AreEqual(expectedResponseTimeInSeconds, intrinsicAttributes["duration"]),
+					() => Assert.AreEqual(expectedResponseTimeInSeconds, intrinsicAttributes["webDuration"]),
+					() => Assert.AreEqual("S", intrinsicAttributes["nr.apdexPerfZone"])
+				);
+		}
+
+		[Test]
+		public void ShouldUseDurationForAttributes()
+		{
+			var transaction = new ImmutableTransactionBuilder()
+				.IsOtherTransaction("category", "name")
+				.WithDuration(TimeSpan.FromSeconds(10))
+				.WithResponseTime(TimeSpan.FromSeconds(5))
+				.Build();
+
+			var transactionMetricName = new TransactionMetricName("OtherTransaction", "category/name");
+			var transactionMetricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+
+			var attributes = _transactionAttributeMaker.GetAttributes(transaction, transactionMetricName, apdexT: TimeSpan.FromSeconds(7), totalTime: TimeSpan.FromSeconds(10), errorData: new ErrorData(), txStats: transactionMetricStatsCollection);
+
+			var intrinsicAttributes = attributes.GetIntrinsicsDictionary();
+			var expectedResponseTimeInSeconds = TimeSpan.FromSeconds(10).TotalSeconds;
+
+			NrAssert.Multiple(
+					() => Assert.AreEqual(expectedResponseTimeInSeconds, intrinsicAttributes["duration"]),
+					() => Assert.AreEqual("T", intrinsicAttributes["nr.apdexPerfZone"]),
+					() => CollectionAssert.DoesNotContain(intrinsicAttributes.Keys, "webDuration")
+				);
+		}
+
+		#endregion
 
 		private bool DoAttributesContain(IEnumerable<Transactions.Attribute> attributes, string attribName, AttributeDestinations destinations)
 		{

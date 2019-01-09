@@ -20,40 +20,40 @@ namespace NewRelic.Agent.Core.WireModels
 		/// ex. WebTransaction/ASP/post.aspx
 		/// </summary>
 		[JsonArrayIndex(Index = 0)]
-		[NotNull] public virtual String TransactionName { get; }
+		[NotNull] public virtual string TransactionName { get; }
 
 		/// <summary>
 		/// ex. http://localhost:8080/post.aspx
 		/// </summary>
 		[JsonArrayIndex(Index = 1)]
-		[NotNull] public virtual String Uri { get; }
+		[NotNull] public virtual string Uri { get; }
 
 		/// <summary>
 		/// The hash code of the obfuscated sql string.
 		/// ex. 1530282818
 		/// </summary>
 		[JsonArrayIndex(Index = 2)]
-		public virtual Int64 SqlId { get; }
+		public virtual long SqlId { get; }
 
 		/// <summary>
 		/// The sql string for the slowest statement.
 		/// ex. DELETE FROM be_DataStoreSettings WHERE ExtensionType = @type AND ExtensionId = @id; 
 		/// </summary>        
 		[JsonArrayIndex(Index = 3)]
-		[NotNull] public virtual String Sql { get; }
+		[NotNull] public virtual string Sql { get; }
 
 		/// <summary>
 		/// The name of the database metric that this sql statement is associated with.
 		/// ex. Datastore/statement/MySQL/be_DataStoreSettings/DELETE
 		/// </summary>
 		[JsonArrayIndex(Index = 4)]
-		[NotNull] public virtual String DatastoreMetricName { get; }
+		[NotNull] public virtual string DatastoreMetricName { get; }
 
 		/// <summary>
 		/// Total call count ex. 1
 		/// </summary>
 		[JsonArrayIndex(Index = 5)]
-		public virtual UInt32 CallCount { get; }
+		public virtual uint CallCount { get; }
 
 		/// <summary>
 		/// Total call time in milliseconds.
@@ -80,10 +80,10 @@ namespace NewRelic.Agent.Core.WireModels
 		public virtual TimeSpan MaxCallTime { get; }
 
 		[JsonArrayIndex(Index = 9)]
-		[NotNull]
-		public virtual IDictionary<String, Object> ParameterData { get; }
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
+		public virtual IDictionary<string, object> ParameterData { get; }
 		
-		public SqlTraceWireModel([NotNull] String transactionName, [NotNull] String uri, Int64 sqlId, [NotNull] String sql, [NotNull] String datastoreMetricName, UInt32 callCount, TimeSpan totalCallTime, TimeSpan minCallTime, TimeSpan maxCallTime, [NotNull] IEnumerable<KeyValuePair<String, Object>> parameterData)
+		public SqlTraceWireModel(string transactionName, string uri, long sqlId, string sql, string datastoreMetricName, uint callCount, TimeSpan totalCallTime, TimeSpan minCallTime, TimeSpan maxCallTime, IDictionary<string, object> parameterData)
 		{
 			TransactionName = transactionName;
 			Uri = uri;
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Core.WireModels
 			TotalCallTime = totalCallTime;
 			MinCallTime = minCallTime;
 			MaxCallTime = maxCallTime;
-			ParameterData = new ReadOnlyDictionary<String, Object>(parameterData.ToDictionary());
+			ParameterData = new ReadOnlyDictionary<string, object>(parameterData);
 		}
 	}
 }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -414,6 +416,153 @@ namespace CompositeTests
 			_compositeTestAgent.Harvest();
 			var metrics = _compositeTestAgent.Metrics.Where(x => x.MetricName.Name.Contains("AgentTiming"));
 			Assert.IsNotEmpty(metrics);
+		}
+
+		[Test]
+		public void ResponseTimeShouldMatchTransactionDurationForWebTransactions()
+		{
+			//Setup a transaction where the response time and transaction duration are about the same
+			var upperBoundStopWatch = Stopwatch.StartNew();
+			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			var lowerBoundStopWatch = Stopwatch.StartNew();
+			Thread.Sleep(TimeSpan.FromSeconds(0.5));
+			segment.End();
+			lowerBoundStopWatch.Stop();
+			transaction.End();
+			upperBoundStopWatch.Stop();
+
+			_compositeTestAgent.Harvest();
+
+			//Use the WebTransaction metric which should contain the response time
+			var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
+			NrAssert.Multiple(
+					() => Assert.GreaterOrEqual(timingMetric.Data.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+					() => Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+				);
+		}
+
+		[Test]
+		public void ResponseTimeShouldMatchTransactionDurationForOtherTransactions()
+		{
+			//Setup a transaction where the response time and transaction duration are about the same
+			var upperBoundStopWatch = Stopwatch.StartNew();
+			var transaction = _agentWrapperApi.CreateOtherTransaction("category", "transactionName");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			var lowerBoundStopWatch = Stopwatch.StartNew();
+			Thread.Sleep(TimeSpan.FromSeconds(0.5));
+			segment.End();
+			lowerBoundStopWatch.Stop();
+			transaction.End();
+			upperBoundStopWatch.Stop();
+
+			_compositeTestAgent.Harvest();
+
+			//Use the OtherTransaction/all metric which should contain the duration instead of response time
+			var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+			NrAssert.Multiple(
+					() => Assert.GreaterOrEqual(timingMetric.Data.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+					() => Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+				);
+		}
+
+		[Test]
+		public void ResponseTimeAndDurationAreNotTheSameForWebTransactions()
+		{
+			//Setup a transaction where the response time and transaction duration are different
+			var stopWatch = Stopwatch.StartNew();
+			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			transaction.Hold();
+			transaction.End();
+			var expectedResponseTimeUpperBound = stopWatch.Elapsed.TotalSeconds;
+
+			//Cause a delay so that response time and duration should be very different
+			Thread.Sleep(TimeSpan.FromSeconds(0.5));
+			segment.End();
+			transaction.Release();
+			stopWatch.Stop();
+
+			_compositeTestAgent.Harvest();
+
+			//Use the WebTransaction metric which should contain the response time
+			var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
+			Assert.LessOrEqual(timingMetric.Data.Value1, expectedResponseTimeUpperBound);
+		}
+
+		[Test]
+		public void ResponseTimeAndDurationAreNotTheSameForOtherTransactions()
+		{
+			//Setup a transaction where the response time and transaction duration are different
+			var stopWatch = Stopwatch.StartNew();
+			var transaction = _agentWrapperApi.CreateOtherTransaction("category", "transactionName");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			transaction.Hold();
+			transaction.End();
+			var expectedResponseTimeUpperBound = stopWatch.Elapsed.TotalSeconds;
+
+			//Cause a delay so that response time and duration should be very different
+			Thread.Sleep(TimeSpan.FromSeconds(0.5));
+			segment.End();
+			transaction.Release();
+			stopWatch.Stop();
+			var expectedDurationUpperBound = stopWatch.Elapsed.TotalSeconds;
+
+			_compositeTestAgent.Harvest();
+
+			//Use the OtherTransaction/all metric which should contain the duration instead of response time
+			var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "OtherTransaction/all");
+			NrAssert.Multiple(
+					() => Assert.Greater(timingMetric.Data.Value1, expectedResponseTimeUpperBound),
+					() => Assert.LessOrEqual(timingMetric.Data.Value1, expectedDurationUpperBound)
+				);
+		}
+
+		[Test]
+		public void ResponseTimeShouldNotBeCapturedWhenReleasingATransactionBeforeItEnds()
+		{
+			//Setup a transaction where the response time and transaction duration are different
+			var upperBoundStopWatch = Stopwatch.StartNew();
+			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			var lowerBoundStopWatch = Stopwatch.StartNew();
+			transaction.Hold();
+			segment.End();
+			transaction.Release();
+			//Cause a delay so that we can clearly see a difference between the time when Release and End are called
+			Thread.Sleep(TimeSpan.FromSeconds(0.5));
+			lowerBoundStopWatch.Stop();
+			transaction.End();
+			upperBoundStopWatch.Stop();
+
+			_compositeTestAgent.Harvest();
+
+			//Use the WebTransaction metric which should contain the response time
+			var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
+			NrAssert.Multiple(
+					() => Assert.GreaterOrEqual(timingMetric.Data.Value1, lowerBoundStopWatch.Elapsed.TotalSeconds),
+					() => Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds)
+				);
+		}
+
+		[Test]
+		public void ResponseTimeShouldOnlyBeCapturedOnce()
+		{
+			var upperBoundStopWatch = Stopwatch.StartNew();
+			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, "CustomWebTransaction");
+			var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
+			segment.End();
+			transaction.End();
+			upperBoundStopWatch.Stop();
+			//Cause a delay so that we can clearly see a difference between the 2 calls to End the transaction.
+			Thread.Sleep(TimeSpan.FromSeconds(0.5));
+			transaction.End();
+
+			_compositeTestAgent.Harvest();
+
+			//Use the WebTransaction metric which should contain the response time
+			var timingMetric = _compositeTestAgent.Metrics.First(x => x.MetricName.Name == "WebTransaction");
+			Assert.LessOrEqual(timingMetric.Data.Value1, upperBoundStopWatch.Elapsed.TotalSeconds);
 		}
 	}
 }

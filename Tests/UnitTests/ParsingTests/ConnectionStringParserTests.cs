@@ -62,5 +62,29 @@ namespace ParsingTests
 			Assert.True(connectionInfo.DatabaseName == expectedDatabaseName);
 			Assert.True(connectionInfo.InstanceName == expectedInstanceName);
 		}
+
+		[Test]
+		public void ConnectionStringParser_SameConnectionStrings_Matched()
+		{
+			var connectionString1 = @"Server=win-database.pdx.vm.datanerd.us\SQLEXPRESS;Database=NewRelic;";
+			var connectionString2 = @"Server=win-database.pdx.vm.datanerd.us\SQLEXPRESS;Database=NewRelic;";
+
+			var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1);
+			var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2);
+
+			Assert.AreSame(connectionInfo1, connectionInfo2);
+		}
+
+		[Test]
+		public void ConnectionStringParser_DifferentConnectionStrings_NotMatched()
+		{
+			var connectionString1 = @"Server=win-database.pdx.vm.datanerd.us\SQLEXPRESS;Database=NewRelic;";
+			var connectionString2 = @"Server=win-database.pdx.vm.datanerd.us,1433\SQLEXPRESS;Database=NewRelic;";
+
+			var connectionInfo1 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString1);
+			var connectionInfo2 = ConnectionInfoParser.FromConnectionString(DatastoreVendor.MSSQL, connectionString2);
+
+			Assert.AreNotSame(connectionInfo1, connectionInfo2);
+		}
 	}
 }

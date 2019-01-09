@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.SystemExtensions;
 
 namespace NewRelic.Agent.Core.Transactions
 {
 	public class Attribute : IAttribute
 	{
-		private const int CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP = 256; //bytes
+		private const int CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP = 255; //bytes
 
 		public string Key { get { return _key; } }
 		[NotNull]
@@ -36,24 +35,13 @@ namespace NewRelic.Agent.Core.Transactions
 
 		private const AttributeDestinations AllTracesAndEventsDestinations = AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorTrace | AttributeDestinations.SqlTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
 
-		#region "Private builder helpers"
-		[NotNull]
-		private static Object TruncateUserProvidedValue([NotNull] Object value)
+		private static object TruncateUserProvidedValue(object value, uint maxBytes)
 		{
 			var valueAsString = value as string;
 			if (valueAsString == null)
 				return value;
 
-			return TruncateUserProvidedValue(valueAsString);
-		}
-
-		[NotNull]
-		private static string TruncateUserProvidedValue([NotNull] string value)
-		{
-			return new string(value
-				.TakeWhile((c, i) =>
-					Encoding.UTF8.GetByteCount(value.Substring(0, i + 1)) <= CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP)
-				.ToArray());
+			return valueAsString.TruncateUnicodeStringByBytes(maxBytes);
 		}
 
 		private bool CheckAttributeValueForAllowedType(string key, object value)
@@ -66,8 +54,6 @@ namespace NewRelic.Agent.Core.Transactions
 			Log.WarnFormat("Attribute at key {0} of type {1} not allowed.  Only string, bool, and floating point and integral types are acceptable as attributes.", key, type?.ToString() ?? "null");
 			return false;
 		}
-
-		#endregion
 
 		#region "Attribute Builders"
 
@@ -125,8 +111,8 @@ namespace NewRelic.Agent.Core.Transactions
 		[NotNull]
 		public static Attribute BuildRequestParameterAttribute([NotNull] string key, [NotNull] string value)
 		{
-			key = TruncateUserProvidedValue("request.parameters." + key);
-			value = TruncateUserProvidedValue(value);
+			key = ("request.parameters." + key).TruncateUnicodeStringByBytes(CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP);
+			value = value.TruncateUnicodeStringByBytes(CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP);
 			return new Attribute(key, value, AttributeClassification.AgentAttributes, AttributeDestinations.None);
 		}
 
@@ -206,8 +192,8 @@ namespace NewRelic.Agent.Core.Transactions
 		[NotNull]
 		public static Attribute BuildCustomErrorAttribute([NotNull] string key, [NotNull] object value)
 		{
-			key = TruncateUserProvidedValue(key);
-			value = TruncateUserProvidedValue(value);
+			key = key.TruncateUnicodeStringByBytes(CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP);
+			value = TruncateUserProvidedValue(value, CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP);
 			const AttributeDestinations destinations = AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace;
 			return new Attribute(key, value, AttributeClassification.UserAttributes, destinations);
 		}
@@ -393,8 +379,8 @@ namespace NewRelic.Agent.Core.Transactions
 		[NotNull]
 		public static Attribute BuildCustomAttribute([NotNull] string key, [NotNull] object value)
 		{
-			key = TruncateUserProvidedValue(key);
-			value = TruncateUserProvidedValue(value);
+			key = key.TruncateUnicodeStringByBytes(CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP);
+			value = TruncateUserProvidedValue(value, CUSTOM_ATTRIBUTE_VALUE_LENGTH_CLAMP);
 			return new Attribute(key, value, AttributeClassification.UserAttributes, AttributeDestinations.All);
 		}
 

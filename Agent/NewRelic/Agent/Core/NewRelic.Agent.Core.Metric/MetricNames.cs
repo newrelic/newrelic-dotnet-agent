@@ -139,7 +139,8 @@ namespace NewRelic.Agent.Core.Metric
 	public static class MetricNames
 	{
 		public const string PathSeparator = "/";
-		public const char PathSeparatorChar = '/';
+		public static readonly char PathSeparatorChar = PathSeparator[0];
+		public static readonly char[] PathSeparatorCharArray = { PathSeparatorChar };
 
 		#region Apdex
 
@@ -208,7 +209,6 @@ namespace NewRelic.Agent.Core.Metric
 
 		public const string Custom = "Custom";
 
-		private static readonly string[] DatabaseVendorNames = Enum.GetNames(typeof(DatastoreVendor));
 		private static readonly Func<DatastoreVendor, MetricName> DatabaseVendorAll;
 		private static readonly Func<DatastoreVendor, MetricName> DatabaseVendorAllWeb;
 		private static readonly Func<DatastoreVendor, MetricName> DatabaseVendorAllOther;
@@ -217,11 +217,11 @@ namespace NewRelic.Agent.Core.Metric
 		static MetricNames()
 		{
 			DatabaseVendorAll = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
-				MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + All));
+				MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + All));
 			DatabaseVendorAllWeb = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
-				MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + AllWeb));
+				MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + AllWeb));
 			DatabaseVendorAllOther = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
-				MetricName.Create(Datastore + PathSeparator + vendor + PathSeparator + AllOther));
+				MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + AllOther));
 
 			var operations = new HashSet<string>(SqlParser.Operations);
 			operations.Add(DatastoreUnknownOperationName);
@@ -229,7 +229,7 @@ namespace NewRelic.Agent.Core.Metric
 				vendor =>
 				{
 					var dict = new Dictionary<string, MetricName>(operations.Count);
-					var metricNamePrefix = DatastoreOperation + PathSeparator + GetCachedVendorNameString(vendor) + PathSeparator;
+					var metricNamePrefix = DatastoreOperation + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator;
 					foreach (var operation in operations)
 					{
 						dict[operation] = MetricName.Create(metricNamePrefix + operation);
@@ -237,7 +237,7 @@ namespace NewRelic.Agent.Core.Metric
 
 					return operation => (dict.TryGetValue(operation, out var name))
 						? name
-						: MetricName.Create(DatastoreOperation, GetCachedVendorNameString(vendor), operation);
+						: MetricName.Create(DatastoreOperation, EnumNameCache<DatastoreVendor>.GetName(vendor), operation);
 				});
 		}
 
@@ -436,12 +436,6 @@ namespace NewRelic.Agent.Core.Metric
 		public const string DatastoreUnknownOperationName = "other";
 
 		[NotNull, Pure]
-		public static string GetCachedVendorNameString(DatastoreVendor vendor)
-		{
-			return DatabaseVendorNames[(int) vendor];
-		}
-
-		[NotNull, Pure]
 		public static MetricName GetDatastoreVendorAll(this DatastoreVendor vendor)
 		{
 			return DatabaseVendorAll.Invoke(vendor);
@@ -471,13 +465,13 @@ namespace NewRelic.Agent.Core.Metric
 			string operation = null)
 		{
 			operation = operation ?? DatastoreUnknownOperationName;
-			return MetricName.Create(DatastoreStatement, GetCachedVendorNameString(vendor), model, operation);
+			return MetricName.Create(DatastoreStatement, EnumNameCache<DatastoreVendor>.GetName(vendor), model, operation);
 		}
 
 		[NotNull, Pure]
 		public static MetricName GetDatastoreInstance(DatastoreVendor vendor, string host, string portPathOrId)
 		{
-			return MetricName.Create(DatastoreInstance, GetCachedVendorNameString(vendor), host, portPathOrId);
+			return MetricName.Create(DatastoreInstance, EnumNameCache<DatastoreVendor>.GetName(vendor), host, portPathOrId);
 		}
 
 

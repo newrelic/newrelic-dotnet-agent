@@ -2,11 +2,9 @@
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -104,20 +102,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[CanBeNull]
 		private static Segment TryGetLastStartedSegment([NotNull] ImmutableTransaction transaction)
 		{
-			// sacksman - this seems like bullshit.  The last segment should always be the last one in our list, right?
-			return transaction.Segments
-				.Where(segment => segment != null)
-				.OrderByDescending(segment => segment.RelativeStartTime)
-				.FirstOrDefault();
+			return transaction.Segments.LastOrDefault(); 
 		}
 
 		[CanBeNull]
 		private static Segment TryGetLastFinishedSegment([NotNull] ImmutableTransaction transaction)
 		{
-            return transaction.Segments
-				.Where(segment => segment != null)
-				.Where(segment => segment.Duration != null)
-				.OrderByDescending(segment => segment.RelativeStartTime + segment.Duration.Value)
+			return transaction.Segments
+				.Where(segment => segment.RelativeEndTime != null)
+				.OrderByDescending(segment => segment.RelativeEndTime)
 				.FirstOrDefault();
 		}
 
@@ -145,7 +138,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var currentTransactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(currentTransactionName);
 			var referrerPathHash = transaction.TransactionMetadata.CrossApplicationReferrerPathHash;
 
-            var newPathHash = _pathHashMaker.CalculatePathHash(currentTransactionMetricName.PrefixedName, referrerPathHash);
+			var newPathHash = _pathHashMaker.CalculatePathHash(currentTransactionMetricName.PrefixedName, referrerPathHash);
 
 			transaction.TransactionMetadata.SetCrossApplicationPathHash(newPathHash);
 		}

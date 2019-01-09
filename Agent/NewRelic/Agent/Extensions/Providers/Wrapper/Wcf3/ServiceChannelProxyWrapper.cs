@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Helpers;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
@@ -41,7 +42,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			if (typeName == null)
 				throw new NullReferenceException("typeName");
 			// the type name is the full class name followed by a comma and the assembly info.  We need to cut off at the comma
-			typeName = typeName.TrimAfter(",");
+			typeName = typeName.TrimAfterAChar(StringSeparators.CommaChar);
 
 			var methodName = methodCallMessage.MethodName;
 			if (methodName == null)

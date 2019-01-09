@@ -6,6 +6,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using System.Text.RegularExpressions;
+using NewRelic.Agent.Helpers;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json.Linq;
 
@@ -196,12 +197,12 @@ namespace NewRelic.Agent.Core.Utilization
 				var id = NormalizeAndValidateMetadata((string)idToken, "id", GcpName);
 
 				var machineTypeString = (string)machineTypeToken;
-				var machineType = (machineTypeString != null) ? NormalizeAndValidateMetadata(machineTypeString.Split('/').Last(), "machineType", GcpName) : null;
+				var machineType = (machineTypeString != null) ? NormalizeAndValidateMetadata(machineTypeString.Split(StringSeparators.PathSeparator).Last(), "machineType", GcpName) : null;
 
 				var name = NormalizeAndValidateMetadata((string)nameToken, "name", GcpName);
 
 				var zoneTokenString = (string)zoneToken;
-				var zone = (zoneTokenString != null) ? NormalizeAndValidateMetadata(zoneTokenString.Split('/').Last(), "zone", GcpName) : null;
+				var zone = (zoneTokenString != null) ? NormalizeAndValidateMetadata(zoneTokenString.Split(StringSeparators.PathSeparator).Last(), "zone", GcpName) : null;
 
 				if ( id == null && machineType == null && name == null && zone == null)
 				{
@@ -259,8 +260,8 @@ namespace NewRelic.Agent.Core.Utilization
 
 					foreach(var line in fileLines)
 					{
-						var elements = line.Split(':');
-						var cpuSubsystem = elements[subsystemsIndex].Split(',').FirstOrDefault(subsystem => subsystem == "cpu");
+						var elements = line.Split(StringSeparators.Colon);
+						var cpuSubsystem = elements[subsystemsIndex].Split(StringSeparators.Comma).FirstOrDefault(subsystem => subsystem == "cpu");
 						if (cpuSubsystem != null)
 						{
 							var controlGroup = elements[controlGroupIndex];

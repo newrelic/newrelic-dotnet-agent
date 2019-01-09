@@ -1,18 +1,7 @@
 ﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
-using System.Collections.Concurrent;
 
 namespace NewRelic.Agent.Extensions.Parsing
 {
-	public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum
-	{
-		private static readonly ConcurrentDictionary<TEnum, string> Cache = new ConcurrentDictionary<TEnum, string>();
-
-		public static string GetName(TEnum enumValue)
-		{
-			return Cache.GetOrAdd(enumValue, (enumVal) => enumVal.ToString());
-		}
-	}
-
 	public class ParsedSqlStatement
 	{
 		private readonly string _asString;

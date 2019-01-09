@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -308,50 +304,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		private ImmutableTransaction BuildTestTransaction(List<Segment> segments, bool sampled, bool hasIncomingPayload)
 		{
-			var name = new WebTransactionName("foo", "bar");
-			var userErrorAttributes = new ConcurrentDictionary<string, object>();
-			userErrorAttributes.TryAdd("CustomErrorAttrKey", "CustomErrorAttrValue");
-
-			var priority = Priority;
-			var metadata = new ImmutableTransactionMetadata(
-				uri: "uri",
-				originalUri: "originalUri",
-				referrerUri: "referrerUri",
-				queueTime: new TimeSpan(1),
-				requestParameters: new ConcurrentDictionary<string, string>(),
-				userAttributes: new ConcurrentDictionary<string, object>(),
-				userErrorAttributes: userErrorAttributes,
-				httpResponseStatusCode: 200,
-				httpResponseSubStatusCode: 201,
-				transactionExceptionDatas: new List<ErrorData>(),
-				customErrorDatas: new List<ErrorData>(),
-				crossApplicationReferrerPathHash: "crossApplicationReferrerPathHash",
-				crossApplicationPathHash: "crossApplicationPathHash",
-				crossApplicationPathHashes: new List<string>(),
-				crossApplicationReferrerTransactionGuid: "crossApplicationReferrerTransactionGuid",
-				crossApplicationReferrerProcessId: "crossApplicationReferrerProcessId",
-				crossApplicationReferrerTripId: "crossApplicationReferrerTripId",
-				distributedTraceType: "distributedTraceType",
-				distributedTraceAppId: "distributedTraceApp",
-				distributedTraceAccountId: "distributedTraceAccount",
-				distributedTraceTransportType: "distributedTraceTransportType",
-				distributedTraceGuid: DistributedTraceGuid,
-				distributedTraceTransportDuration: TimeSpan.MinValue, // DistributedTraceTransportDuration
-				distributedTraceTraceId: DistributedTraceTraceId,
-				distributedTraceTransactionId: "distributedTransactionId",
-				distributedTraceTrustKey: "distributedTraceTrustKey",
-				distributedTraceSampled: sampled, // DistributedTraceSampled
-				hasOutgoingDistributedTracePayload: false, // HasOutgoingDistributedTracePayload
-				hasIncomingDistributedTracePayload: hasIncomingPayload, // HasIncomingDistributedTracePayload
-				syntheticsResourceId: "syntheticsResourceId",
-				syntheticsJobId: "syntheticsJobId",
-				syntheticsMonitorId: "syntheticsMonitorId",
-				isSynthetics: false,
-				hasCatResponseHeaders: false,
-				priority: priority);
-
-			return new ImmutableTransaction(name, segments, metadata, _startTime, TimeSpan.FromSeconds(1), _transactionGuid, true, true,
-				false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			return new ImmutableTransactionBuilder()
+				.IsWebTransaction("foo", "bar")
+				.WithUserErrorAttribute("CustomErrorAttrKey", "CustomErrorAttrValue")
+				.WithPriority(Priority)
+				.WithDistributedTracing(DistributedTraceGuid, DistributedTraceTraceId, sampled, hasIncomingPayload)
+				.WithSegments(segments)
+				.WithStartTime(_startTime)
+				.WithTransactionGuid(_transactionGuid)
+				.Build();
 		}
 
 		public static ITransactionSegmentState CreateTransactionSegmentState(int uniqueId, int? parentId, int managedThreadId = 1)

@@ -1,6 +1,7 @@
 ﻿using System;
 using NewRelic.SystemExtensions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Parsing;
 
 namespace NewRelic.Providers.Wrapper.OpenRasta
 {
@@ -20,13 +21,16 @@ namespace NewRelic.Providers.Wrapper.OpenRasta
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
-			//Handler name - much like the controller name from ASP .NET MVC / Web API
 			var httpContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<System.Web.HttpContext>(0);
-			var handlerName = httpContext.Request.RawUrl.Substring(httpContext.Request.RawUrl.LastIndexOf("/", StringComparison.InvariantCultureIgnoreCase) + 1);
+			var url = httpContext.Request.RawUrl; // Do not use Request.Url. With OpenRasta, Request.Url is rewritten to something like /ignoreme.rastahook which does not reflect the actual request.
+
+			//Handler name - much like the controller name from ASP .NET MVC / Web API
+			var urlWithoutQueryString = StringsHelper.CleanUri(url);
+			var handlerName = urlWithoutQueryString.Substring(urlWithoutQueryString.LastIndexOf("/", StringComparison.InvariantCultureIgnoreCase) + 1);
 
 			//Since Open Rasta uses convention based routing (i.e. HTTP verbs) there will be little deviation in this name
 			//however we should still pull it out of the MethodArguments for consistency and future-proofing
-			var action = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<String>(1);
+			var action = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<string>(1);
 			var actionName = action ?? instrumentedMethodCall.MethodCall.Method.MethodName;
 
 			//Title casing actionName

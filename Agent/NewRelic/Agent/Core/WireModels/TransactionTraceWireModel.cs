@@ -102,26 +102,26 @@ namespace NewRelic.Agent.Core.WireModels
 		public class TransactionTraceAttributes
 		{
 			[JsonProperty("agentAttributes")]
-			[NotNull]
+			[JsonConverter(typeof(EventAttributesJsonConverter))]
 			public virtual ReadOnlyDictionary<String, Object> AgentAttributes { get; }
 
 			[JsonProperty("userAttributes")]
-			[NotNull]
+			[JsonConverter(typeof(EventAttributesJsonConverter))]
 			public virtual ReadOnlyDictionary<String, Object> UserAttributes { get; }
 
 			[JsonProperty("intrinsics")]
-			[NotNull]
+			[JsonConverter(typeof(EventAttributesJsonConverter))]
 			public virtual ReadOnlyDictionary<String, Object> Intrinsics { get; }
 
-			public TransactionTraceAttributes([NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes)
+			public TransactionTraceAttributes(IDictionary<string,object> agentAttributes, IDictionary<string,object> intrinsicAttributes, IDictionary<string,object> userAttributes)
 			{
-				AgentAttributes = agentAttributes.ToReadOnlyDictionary();
-				Intrinsics = intrinsicAttributes.ToReadOnlyDictionary();
-				UserAttributes = userAttributes.ToReadOnlyDictionary();
+				AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes);
+				Intrinsics = new ReadOnlyDictionary<string, object>(intrinsicAttributes);
+				UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes);
 			}
 		}
 
-		public TransactionTraceData(DateTime startTime, [NotNull] TransactionTraceSegment rootSegment, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes)
+		public TransactionTraceData(DateTime startTime, TransactionTraceSegment rootSegment, IDictionary<string,object> agentAttributes, IDictionary<string,object> intrinsicAttributes, IDictionary<string,object> userAttributes)
 		{
 			StartTime = startTime;
 			RootSegment = rootSegment;
@@ -145,8 +145,8 @@ namespace NewRelic.Agent.Core.WireModels
 		public String Name { get; }
 
 		[JsonArrayIndex(Index = 3)]
-		[NotNull]
-		public IDictionary<String, Object> Parameters { get; }
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
+		public ReadOnlyDictionary<string, object> Parameters { get; }
 
 		[JsonArrayIndex(Index = 4)]
 		[NotNull]
@@ -161,12 +161,12 @@ namespace NewRelic.Agent.Core.WireModels
 		public String MethodName { get; }
 
 
-		public TransactionTraceSegment(TimeSpan timeBetweenTransactionStartAndSegmentStart, TimeSpan timeBetweenTransactionStartAndSegmentEnd, [NotNull] String name, [NotNull] IDictionary<String, Object> parameters, [NotNull] IEnumerable<TransactionTraceSegment> children, String className, String methodName)
+		public TransactionTraceSegment(TimeSpan timeBetweenTransactionStartAndSegmentStart, TimeSpan timeBetweenTransactionStartAndSegmentEnd, String name, IDictionary<String, Object> parameters, IEnumerable<TransactionTraceSegment> children, String className, String methodName)
 		{
 			TimeBetweenTransactionStartAndSegmentStart = timeBetweenTransactionStartAndSegmentStart;
 			TimeBetweenTransactionStartAndSegmentEnd = timeBetweenTransactionStartAndSegmentEnd;
 			Name = name;
-			Parameters = new Dictionary<String, Object>(parameters);
+			Parameters = new ReadOnlyDictionary<string, object>(parameters);
 			Children = new List<TransactionTraceSegment>(children);
 			ClassName = className;
 			MethodName = methodName;

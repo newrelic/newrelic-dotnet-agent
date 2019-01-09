@@ -115,7 +115,9 @@ namespace NewRelic.Agent.Core.DataTransport
 				return DataTransportResponseStatus.OtherError;
 			}
 
-			var response = TrySendDataRequest("metric_data", _configuration.AgentRunId, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
+			var model = new MetricWireModelCollection(_configuration.AgentRunId as string, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
+
+			var response = TrySendDataRequest("metric_data", model);
 
 			if (response.Status == DataTransportResponseStatus.RequestSuccessful)
 				_lastMetricSendTime = endTime;

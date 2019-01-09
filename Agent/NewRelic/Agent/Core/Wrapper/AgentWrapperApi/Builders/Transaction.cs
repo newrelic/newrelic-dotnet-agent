@@ -114,6 +114,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		// Used for RUM and CAT to get the duration until this point in time
 		TimeSpan GetDurationUntilNow();
 
+		TimeSpan? ResponseTime { get; }
+
+		/// <summary>
+		/// Attempts to capture the response time for the transaction.
+		/// </summary>
+		/// <returns>true if the response time was captured, and false if the response time was previously captured.</returns>
+		bool TryCaptureResponseTime();
+
 		ITransactionSegmentState GetTransactionSegmentState();
 		object GetOrSetValueFromCache(string key, Func<object> func);
 		ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql);
@@ -132,6 +140,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[NotNull]
 		private readonly DateTime _startTime;
 		private TimeSpan? _forcedDuration;
+
+		//leveraging boxing so that we can use Interlocked.CompareExchange instead of a lock
+		private volatile object _responseTime;
 
 		private volatile bool _ignored;
 		private int _unitOfWorkCount;
@@ -188,7 +199,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var transactionName = CandidateTransactionName.CurrentTransactionName;
 			var transactionMetadata = TransactionMetadata.ConvertToImmutableMetadata();
 
-			return new ImmutableTransaction(transactionName, Segments, transactionMetadata, _startTime, _forcedDuration ?? _timer.Duration, _guid, _ignoreAutoBrowserMonitoring, _ignoreAllBrowserMonitoring, _ignoreApdex, _sqlObfuscator);
+			return new ImmutableTransaction(transactionName, Segments, transactionMetadata, _startTime, _forcedDuration ?? _timer.Duration, ResponseTime, _guid, _ignoreAutoBrowserMonitoring, _ignoreAllBrowserMonitoring, _ignoreApdex, _sqlObfuscator);
 		}
 
 		public void Ignore()
@@ -275,6 +286,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		{
 			return GetDurationUntilNow();
 		}
+
+		public bool TryCaptureResponseTime()
+		{
+			return null == Interlocked.CompareExchange(ref _responseTime, GetDurationUntilNow(), null);
+		}
+
+		public TimeSpan? ResponseTime => _responseTime as TimeSpan?;
 
 		#endregion
 

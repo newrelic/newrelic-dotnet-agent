@@ -28,6 +28,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[CanBeNull]
 		string CrossApplicationReferrerTripId { get; }
 
+		float CrossApplicationResponseTimeInSeconds { get; }
+
 		string DistributedTraceType { get; set; }
 		string DistributedTraceAppId { get; set; }
 		string DistributedTraceAccountId { get; set; }
@@ -64,6 +66,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		void SetCrossApplicationReferrerContentLength(long referrerContentLength);
 		void SetCrossApplicationReferrerTransactionGuid([NotNull] string transactionGuid);
 		void SetCrossApplicationPathHash([NotNull] string pathHash);
+		void SetCrossApplicationResponseTimeInSeconds(float responseTimeInSeconds);
 		void SetDistributedTraceTransportType(TransportType transportType);
 		void SetSyntheticsResourceId(string syntheticsResourceId);
 		void SetSyntheticsJobId(string syntheticsJobId);
@@ -104,6 +107,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private volatile string _crossApplicationReferrerProcessId;
 		[CanBeNull] private volatile string _crossApplicationReferrerTripId;
 		[CanBeNull] private volatile string _crossApplicationReferrerTransactionGuid;
+		private volatile float _crossApplicationResponseTimeInSeconds = 0;
 
 		[CanBeNull] private volatile string _distributedTraceType;
 		[CanBeNull] private volatile string _distributedTraceAppId;
@@ -159,7 +163,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				.Except(new[] { _latestCrossApplicationPathHash })
 				.Take(PathHashMaker.AlternatePathHashMaxSize);
 
-			return new ImmutableTransactionMetadata(_uri, _originalUri, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, DistributedTraceType, DistributedTraceAppId, DistributedTraceAccountId, DistributedTraceTransportType, DistributedTraceGuid, DistributedTraceTransportDuration, DistributedTraceTraceId,  DistributedTraceTrustKey, DistributedTraceTransactionId, DistributedTraceSampled, HasOutgoingDistributedTracePayload, HasIncomingDistributedTracePayload, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders, Priority);
+			return new ImmutableTransactionMetadata(_uri, _originalUri, _referrerUri, GetTimeSpan(), _requestParameters, _userAttributes, _userErrorAttributes, HttpResponseStatusCode, HttpResponseSubStatusCode, _transactionExceptionDatas, _customErrorDatas, _crossApplicationReferrerPathHash, _latestCrossApplicationPathHash, alternateCrossApplicationPathHashes, _crossApplicationReferrerTransactionGuid, _crossApplicationReferrerProcessId, _crossApplicationReferrerTripId, _crossApplicationResponseTimeInSeconds, DistributedTraceType, DistributedTraceAppId, DistributedTraceAccountId, DistributedTraceTransportType, DistributedTraceGuid, DistributedTraceTransportDuration, DistributedTraceTraceId,  DistributedTraceTrustKey, DistributedTraceTransactionId, DistributedTraceSampled, HasOutgoingDistributedTracePayload, HasIncomingDistributedTracePayload, _syntheticsResourceId, _syntheticsJobId, _syntheticsMonitorId, IsSynthetics, _hasResponseCatHeaders, Priority);
 		}
 
 		public float Priority
@@ -277,6 +281,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		{
 			_crossApplicationReferrerTripId = referrerTripId;
 		}
+
+		public void SetCrossApplicationResponseTimeInSeconds(float responseTimeInSeconds)
+		{
+			Interlocked.Exchange(ref _crossApplicationResponseTimeInSeconds, responseTimeInSeconds);
+		}
+
 		public void SetSyntheticsResourceId(string syntheticsResourceId)
 		{
 			_syntheticsResourceId = syntheticsResourceId;
@@ -308,6 +318,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public string CrossApplicationReferrerProcessId => _crossApplicationReferrerProcessId;
 		public string CrossApplicationReferrerTransactionGuid => _crossApplicationReferrerTransactionGuid;
 		public string LatestCrossApplicationPathHash => _latestCrossApplicationPathHash;
+		public float CrossApplicationResponseTimeInSeconds => _crossApplicationResponseTimeInSeconds;
 
 		public string DistributedTraceType
 		{

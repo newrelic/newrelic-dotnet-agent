@@ -124,3 +124,4 @@ Tests/PlatformTests/packages/
 Tests/PlatformTests/Applications/ServiceFabricApplication/packages/
 Tests/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
 
+/Tests/Benchmarking/BenchmarkDotNet.Artifacts

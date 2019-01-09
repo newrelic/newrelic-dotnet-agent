@@ -27,6 +27,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		private const String NewRelicIdHttpHeader = "X-NewRelic-ID";
 		private const String AppDataHttpHeader = "X-NewRelic-App-Data";
 		private const String TransactionDataHttpHeader = "X-NewRelic-Transaction";
+		private const float ExpectedResponseTimeInSeconds = 0.5f;
 
 		[NotNull]
 		private CatHeaderHandler _catHeaderHandler;
@@ -141,7 +142,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			var headers = _catHeaderHandler.TryGetOutboundResponseHeaders(refereeTransaction, refereeTransactionMetricName).ToDictionary();
 			var resultAppDataHttpHeader = Strings.TryBase64Decode(headers[AppDataHttpHeader]);
 			var guid = refereeTransaction.Guid;
-			var expectedAppDataHttpHeader = "[\"crossProcessId\",\"WebTransaction/foo\",0.0,1.0,-1,\"" + guid + "\",false]";
+			var expectedAppDataHttpHeader = $"[\"crossProcessId\",\"WebTransaction/foo\",0.0,{ExpectedResponseTimeInSeconds},-1,\"{guid}\",false]";
 			NrAssert.Multiple
 			(
 				() => Assert.AreEqual(expectedAppDataHttpHeader, resultAppDataHttpHeader)
@@ -160,7 +161,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			Assert.AreEqual(1, headers.Count);
 			var resultAppDataHttpHeader = Strings.TryBase64Decode(headers[AppDataHttpHeader], encodingKey);
 			var guid = refereeTransaction.Guid;
-			var expectedAppDataHttpHeader = "[\"crossProcessId\",\"WebTransaction/foo\",0.0,1.0,-1,\""+  guid + "\",false]";
+			var expectedAppDataHttpHeader = $"[\"crossProcessId\",\"WebTransaction/foo\",0.0,{ExpectedResponseTimeInSeconds},-1,\"{guid}\",false]";
 			NrAssert.Multiple
 			(
 				() => Assert.AreEqual(expectedAppDataHttpHeader, resultAppDataHttpHeader)
@@ -339,6 +340,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			tx.TransactionMetadata.SetSyntheticsJobId(syntheticsJobId);
 			tx.TransactionMetadata.SetSyntheticsMonitorId(syntheticsMonitorId);
 			tx.TransactionMetadata.SetCrossApplicationReferrerProcessId(referrerCrossProcessId);
+			tx.TransactionMetadata.SetCrossApplicationResponseTimeInSeconds(ExpectedResponseTimeInSeconds);
 
 			return tx;
 		}

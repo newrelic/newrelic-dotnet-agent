@@ -12,29 +12,28 @@ using NewRelic.Agent.Core.Utils;
 using Newtonsoft.Json;
 using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
 	public interface IBrowserMonitoringScriptMaker
 	{
-		String GetScript([NotNull] ITransaction transaction);
+		string GetScript(ITransaction transaction);
 	}
 
 	public class BrowserMonitoringScriptMaker : IBrowserMonitoringScriptMaker
 	{
-		[NotNull]
 		private readonly IConfigurationService _configurationService;
 
-		[NotNull]
 		private readonly ITransactionMetricNameMaker _transactionMetricNameMaker;
 
-		[NotNull]
 		private readonly ITransactionAttributeMaker _transactionAttributeMaker;
 
-		[NotNull]
 		private readonly IAttributeService _attributeService;
 
-		public BrowserMonitoringScriptMaker([NotNull] IConfigurationService configurationService, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] ITransactionAttributeMaker transactionAttributeMaker, [NotNull] IAttributeService attributeService)
+		private static readonly TimeSpan _zeroTimespan = TimeSpan.FromSeconds(0);
+
+		public BrowserMonitoringScriptMaker(IConfigurationService configurationService, ITransactionMetricNameMaker transactionMetricNameMaker, ITransactionAttributeMaker transactionAttributeMaker, IAttributeService attributeService)
 		{
 			_configurationService = configurationService;
 			_transactionMetricNameMaker = transactionMetricNameMaker;
@@ -42,9 +41,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			_attributeService = attributeService;
 		}
 
-		public String GetScript(ITransaction transaction)
+		public string GetScript(ITransaction transaction)
 		{
-			if (String.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
+			if (string.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
 				return null;
 
 			if (_configurationService.Configuration.BrowserMonitoringJavaScriptAgentLoaderType.Equals("none", StringComparison.InvariantCultureIgnoreCase))
@@ -81,9 +80,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			var javascriptAgent = _configurationService.Configuration.BrowserMonitoringJavaScriptAgent;
 			return $"<script type=\"text/javascript\">{javascriptAgentConfiguration}</script><script type=\"text/javascript\">{javascriptAgent}</script>";
 		}
-
-		[NotNull]
-		private BrowserMonitoringConfigurationData GetBrowserConfigurationData([NotNull] ITransaction transaction, TransactionMetricName transactionMetricName, [NotNull] String licenseKey)
+		
+		private BrowserMonitoringConfigurationData GetBrowserConfigurationData(ITransaction transaction, TransactionMetricName transactionMetricName, string licenseKey)
 		{
 			var configuration = _configurationService.Configuration;
 
@@ -108,7 +106,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 				throw new NullReferenceException(nameof(jsAgentPayloadFile));
 
 			var obfuscatedTransactionName = Strings.ObfuscateStringWithKey(transactionMetricName.PrefixedName, licenseKey);
-			var queueTime = transaction.TransactionMetadata.QueueTime ?? TimeSpan.FromSeconds(0);
+			var queueTime = transaction.TransactionMetadata.QueueTime ?? _zeroTimespan;
 			var applicationTime = transaction.GetDurationUntilNow();
 			var attributes = _transactionAttributeMaker.GetUserAndAgentAttributes(transaction.TransactionMetadata);
 
@@ -123,26 +121,28 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			return new BrowserMonitoringConfigurationData(licenseKey, beacon, errorBeacon, browserMonitoringKey, applicationId, obfuscatedTransactionName, queueTime, applicationTime, jsAgentPayloadFile, obfuscatedFormattedAttributes, sslForHttp);
 		}
 
-		[CanBeNull]
-		private String GetObfuscatedFormattedAttributes([NotNull] Attributes attributes, [NotNull] String licenseKey)
+		private string GetObfuscatedFormattedAttributes(Attributes attributes,string licenseKey)
 		{
-			if (attributes.Count() == 0)
+			if (attributes == null || attributes.Count() == 0)
+			{
 				return null;
+			}
 
 			var filteredAttributes = _attributeService.FilterAttributes(attributes, AttributeDestinations.JavaScriptAgent);
 
 			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();
+
 			var userAttributes = filteredAttributes.GetUserAttributesDictionary();
+
 			if (agentAttributes.IsEmpty() && userAttributes.IsEmpty())
+			{
 				return null;
+			}
 
-			var attributeDictionary = new Dictionary<String, IDictionary<String, Object>>();
-			if (agentAttributes.Any())
-				attributeDictionary.Add("a", filteredAttributes.GetAgentAttributesDictionary());
-			if (userAttributes.Any())
-				attributeDictionary.Add("u", filteredAttributes.GetUserAttributesDictionary());
+			var model = new BrowserMonitoringWireModel(agentAttributes, userAttributes);
 
-			var formattedAttributes = JsonConvert.SerializeObject(attributeDictionary);
+			var formattedAttributes = JsonConvert.SerializeObject(model, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+			 
 			return formattedAttributes != null ? Strings.ObfuscateStringWithKey(formattedAttributes, licenseKey) : null;
 		}
 	}

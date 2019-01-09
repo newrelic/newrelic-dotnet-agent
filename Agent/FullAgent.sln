@@ -250,6 +250,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.NuGetHelper", "..\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoDb26", "NewRelic\Agent\Extensions\Providers\Wrapper\MongoDb26\MongoDb26.csproj", "{A4B357E3-9CEF-492C-A0E2-2397D15F1CD6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BenchmarkingTests", "..\Tests\Benchmarking\BenchmarkingTests\BenchmarkingTests.csproj", "{5637B339-04C4-498D-AB09-404D70693331}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -714,6 +716,14 @@ Global
 		{A4B357E3-9CEF-492C-A0E2-2397D15F1CD6}.Release|x64.Build.0 = Release|Any CPU
 		{A4B357E3-9CEF-492C-A0E2-2397D15F1CD6}.Release|x86.ActiveCfg = Release|Any CPU
 		{A4B357E3-9CEF-492C-A0E2-2397D15F1CD6}.Release|x86.Build.0 = Release|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Debug|x64.Build.0 = Debug|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Debug|x86.Build.0 = Debug|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Release|x64.ActiveCfg = Release|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Release|x64.Build.0 = Release|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Release|x86.ActiveCfg = Release|Any CPU
+		{5637B339-04C4-498D-AB09-404D70693331}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -782,10 +792,11 @@ Global
 		{4F5D77F3-B41A-44A7-AF10-2D5462CE0162} = {2D194040-0192-4A87-A076-2B640C7FA82F}
 		{94BF8D27-2122-4573-AA79-90B977B40EF3} = {C0BB7A5D-6820-4058-AC47-0111ECC34015}
 		{A4B357E3-9CEF-492C-A0E2-2397D15F1CD6} = {5E86E10A-C38F-48CB-ADE9-67B22BB2F50A}
+		{5637B339-04C4-498D-AB09-404D70693331} = {BADDAE10-27A9-4452-9432-BFDBC3C62E87}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
+		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FullAgent.vsmdi

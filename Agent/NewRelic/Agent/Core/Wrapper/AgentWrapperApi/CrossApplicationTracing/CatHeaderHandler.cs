@@ -9,6 +9,7 @@ using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
@@ -170,7 +171,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			var txMetadata = transaction.TransactionMetadata;
 			var queueTime = txMetadata.QueueTime?.TotalSeconds ?? 0;
 			var referrerContentLength = txMetadata.GetCrossApplicationReferrerContentLength();
-			var appData = new CrossApplicationResponseData(crossProcessId, transactionMetricName.PrefixedName, (float)queueTime, (float)transaction.GetDurationUntilNow().TotalSeconds, referrerContentLength, transaction.Guid);
+			var responseTimeInSeconds = txMetadata.CrossApplicationResponseTimeInSeconds;
+			var appData = new CrossApplicationResponseData(crossProcessId, transactionMetricName.PrefixedName, (float)queueTime, responseTimeInSeconds, referrerContentLength, transaction.Guid);
 
 			return HeaderEncoder.EncodeSerializedData(appData.ToJson(), _configurationService.Configuration.EncodingKey);
 		}
@@ -195,7 +197,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		private Boolean IsTrustedCrossProcessAccountId(string accountId, IEnumerable<Int64> trustedAccountIds)
 		{
 			Int64 requestAccountId;
-			if (!Int64.TryParse(accountId.Split('#').FirstOrDefault(), out requestAccountId))
+			if (!Int64.TryParse(accountId.Split(StringSeparators.Hash)[0], out requestAccountId))
 			{
 				return false;
 			}

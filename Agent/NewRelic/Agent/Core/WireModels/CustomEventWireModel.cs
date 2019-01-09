@@ -14,13 +14,16 @@ namespace NewRelic.Agent.Core.WireModels
 	public class CustomEventWireModel : IHasPriority
 	{
 		[JsonArrayIndex(Index = 0)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly IEnumerable<KeyValuePair<string, object>> IntrinsicAttributes;
 
 		[JsonArrayIndex(Index = 1)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly IEnumerable<KeyValuePair<string, object>> UserAttributes;
 
 		private float _priority;
 
+		[JsonIgnore] 
 		public float Priority
 		{
 			get { return _priority; }

@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <summary>
 		/// End this transaction.
 		/// </summary>
-		void End();
+		void End(bool captureResponseTime = true);
 
 		/// <summary>
 		/// Creates a segment for a datastore operation.
@@ -90,16 +90,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <exception cref="System.ArgumentNullException"></exception>
 		/// <returns>an opaque object that will be needed if you want to end the segment.</returns>
 		ISegment StartTransactionSegment(MethodCall methodCall, string segmentName);
-
-		/// <summary>
-		/// Creates a segment that terminates instrumentation for a flow of execution. This segment is not sent to APM.
-		/// </summary>
-		/// <param name="methodCall">The method call that is responsible for starting this segment.</param>
-		/// <param name="typeName">The name of the type. Must not be null.</param>
-		/// <param name="methodName">The name of the method. Must not be null.</param>
-		/// <exception cref="System.ArgumentNullException"></exception>
-		/// <returns>an opaque object that will be needed when you want to end the segment.</returns>
-		ISegment StartTerminatingSegment(MethodCall methodCall);
 
 		/// <summary>
 		/// Returns metadata that the agent wants to be attached to outbound requests.

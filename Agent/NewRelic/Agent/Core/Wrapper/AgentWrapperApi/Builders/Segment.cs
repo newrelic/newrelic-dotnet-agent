@@ -46,7 +46,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public int? ParentUniqueId { get; }
 
 		public bool IsLeaf { get; set; }
-		public bool IsTerminating { get; set; }
+
+		public bool DurationShouldBeDeductedFromParent { get; set; } = false;
 
 		private string _spanId;
 		public string SpanId
@@ -133,6 +134,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private volatile bool _parentNotified;
 
 		private long _childDurationTicks = 0;
+		
+		// used to set the ["unfinished"] parameter, not for real-time state of segment
 		public bool Unfinished { get; private set; }
 
 		/// <summary>
@@ -201,7 +204,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public void ChildFinished(Segment childSegment)
 		{
-			if (!childSegment._parentNotified && childSegment._threadId == _threadId)
+			// We are attempting to make a guess about whether a child segment was called synchronously or asynchronously.
+			// This check is not perfect.
+			// _threadId = the thread the parent method _started_ on
+			// _transactionSegmentState.CurrentManagedThreadId = the thread segment.End() was called from for the child segment
+
+			// Oh and BTW, our timing is messed up. So if you're looking at this code and thinking "Oh I should refactor this" maybe you shouldn't and instead do this MMF: https://newrelic.atlassian.net/browse/DOTNET-3049
+
+			var childExecutedSynchronously = _threadId == _transactionSegmentState.CurrentManagedThreadId;
+
+			if (!childSegment._parentNotified && (childExecutedSynchronously || childSegment.DurationShouldBeDeductedFromParent))
 			{
 				childSegment._parentNotified = true;
 				Interlocked.Add(ref _childDurationTicks, childSegment.DurationOrZero.Ticks);

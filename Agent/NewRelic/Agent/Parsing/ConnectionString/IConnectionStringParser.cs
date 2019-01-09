@@ -1,5 +1,7 @@
+using System;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.NewRelic.Cache;
 
 namespace NewRelic.Parsing.ConnectionString
 {
@@ -10,13 +12,18 @@ namespace NewRelic.Parsing.ConnectionString
 
 	public static class ConnectionInfoParser
 	{
-		private readonly static ConnectionInfo Empty = new ConnectionInfo(null, null, null);
+		private const uint CacheCapacity = 1000;
+		private static readonly SimpleCache<string, ConnectionInfo> _connectionInfoCache = new SimpleCache<string, ConnectionInfo>(CacheCapacity);
+
+		private static readonly ConnectionInfo Empty = new ConnectionInfo(null, null, null);
 
 		public static ConnectionInfo FromConnectionString(DatastoreVendor vendor, string connectionString)
 		{
-			IConnectionStringParser parser = GetConnectionParser(vendor, connectionString);
-
-			return parser?.GetConnectionInfo() ?? Empty;
+			return _connectionInfoCache.GetOrAdd(connectionString, () =>
+			{
+				IConnectionStringParser parser = GetConnectionParser(vendor, connectionString);
+				return parser?.GetConnectionInfo() ?? Empty;
+			});
 		}
 
 		private static IConnectionStringParser GetConnectionParser(DatastoreVendor vendor, string connectionString)

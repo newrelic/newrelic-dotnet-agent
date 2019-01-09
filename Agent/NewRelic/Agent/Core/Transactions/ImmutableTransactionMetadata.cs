@@ -41,6 +41,8 @@ namespace NewRelic.Agent.Core.Transactions
 		public string CrossApplicationReferrerProcessId { get; }
 		public string CrossApplicationReferrerTripId { get; }
 
+		public float CrossApplicationResponseTimeInSeconds { get; }
+
 		public string DistributedTraceType { get; }
 		public string DistributedTraceAppId { get; }
 		public string DistributedTraceAccountId { get; }
@@ -82,6 +84,7 @@ namespace NewRelic.Agent.Core.Transactions
 			string crossApplicationReferrerTransactionGuid,
 			string crossApplicationReferrerProcessId,
 			string crossApplicationReferrerTripId,
+			float crossApplicationResponseTimeInSeconds,
 			string distributedTraceType,
 			string distributedTraceAppId,
 			string distributedTraceAccountId,
@@ -121,6 +124,7 @@ namespace NewRelic.Agent.Core.Transactions
 			CrossApplicationReferrerTransactionGuid = crossApplicationReferrerTransactionGuid;
 			CrossApplicationReferrerProcessId = crossApplicationReferrerProcessId;
 			CrossApplicationReferrerTripId = crossApplicationReferrerTripId;
+			CrossApplicationResponseTimeInSeconds = crossApplicationResponseTimeInSeconds;
 			DistributedTraceType = distributedTraceType;
 			DistributedTraceAppId = distributedTraceAppId;
 			DistributedTraceAccountId = distributedTraceAccountId;

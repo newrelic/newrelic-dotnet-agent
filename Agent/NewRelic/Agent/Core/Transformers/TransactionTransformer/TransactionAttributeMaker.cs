@@ -40,8 +40,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			
 			attributes.Add(Attribute.BuildTransactionNameAttribute(transactionMetricName.PrefixedName));
 
-			// Duration (response time) is just EndTime minus StartTime
-			attributes.Add(Attribute.BuildDurationAttribute(immutableTransaction.Duration));
+			// Duration is just EndTime minus StartTime for non-web transactions and response time otherwise
+			attributes.Add(Attribute.BuildDurationAttribute(immutableTransaction.ResponseTimeOrDuration));
 
 			// Total time is the total amount of time spent, even when work is happening parallel, which means it is the sum of all exclusive times.
 			// https://source.datanerd.us/agents/agent-specs/blob/master/Total-Time-Async.md
@@ -54,12 +54,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// Optional transaction attributes
 			attributes.TryAdd(Attribute.BuildQueueDurationAttribute, immutableTransaction.TransactionMetadata.QueueTime);
-			attributes.TryAdd(Attribute.BuildApdexPerfZoneAttribute, ApdexStats.GetApdexPerfZoneOrNull(immutableTransaction.Duration, apdexT));
+			attributes.TryAdd(Attribute.BuildApdexPerfZoneAttribute, ApdexStats.GetApdexPerfZoneOrNull(immutableTransaction.ResponseTimeOrDuration, apdexT));
 
 
 			if (immutableTransaction.IsWebTransaction())
 			{
-				attributes.TryAdd(Attribute.BuildWebDurationAttribute, immutableTransaction.Duration);
+				attributes.TryAdd(Attribute.BuildWebDurationAttribute, immutableTransaction.ResponseTimeOrDuration);
 			}
 
 			var externalData = txStats.GetUnscopedStat(MetricNames.ExternalAll);

@@ -14,10 +14,29 @@ using System.Linq;
 using System.Net;
 using NewRelic.Agent.Core.SharedInterfaces;
 using InternalMetricName = NewRelic.Agent.Core.Metric.MetricName;
+using NewRelic.Agent.Core.JsonConverters;
 
 namespace NewRelic.Agent.Core.WireModels
 {
-	public class MetricWireModel: IAllMetricStatsCollection, IManualSerializable
+	[JsonConverter(typeof(MetricWireModelCollectionJsonConverter))]
+	public class MetricWireModelCollection
+	{
+		public string AgentRunID { get; private set; }
+		public double StartEpochTime { get; private set; }
+		public double EndEpochTime { get; private set; }
+		public IEnumerable<MetricWireModel> Metrics { get; private set; }
+
+		public MetricWireModelCollection(string agentRunId, double beginEpoch, double endEpoch, IEnumerable<MetricWireModel> metrics)
+		{
+			AgentRunID = agentRunId;
+			StartEpochTime = beginEpoch;
+			EndEpochTime = endEpoch;
+			Metrics = metrics;
+		}
+	}
+
+	[JsonConverter(typeof(MetricWireModelJsonConverter))]
+	public class MetricWireModel : IAllMetricStatsCollection
 	{
 		public readonly MetricNameWireModel MetricName;
 		public readonly MetricDataWireModel Data;
@@ -36,7 +55,7 @@ namespace NewRelic.Agent.Core.WireModels
 		/// <returns>An aggregate metric that is the result of merging the given metrics.</returns>
 		public static MetricWireModel Merge(MetricWireModel first, MetricWireModel second)
 		{
-			return Merge(new[] {first, second});
+			return Merge(new[] { first, second });
 		}
 
 		/// <summary>
@@ -83,7 +102,7 @@ namespace NewRelic.Agent.Core.WireModels
 			return MetricName + Data.ToString();
 		}
 
-	   public void AddMetricsToEngine(MetricStatsCollection engine)
+		public void AddMetricsToEngine(MetricStatsCollection engine)
 		{
 			if (string.IsNullOrEmpty(MetricName.Scope))
 			{
@@ -92,22 +111,6 @@ namespace NewRelic.Agent.Core.WireModels
 			else
 			{
 				engine.MergeScopedStats(MetricName.Scope, MetricName.Name, Data);
-			}
-		}
-
-		public string ToJson()
-		{
-			using (var stringWriter = new StringWriter())
-			{
-				using (var jsonWriter = new JsonTextWriter(stringWriter))
-				{
-					jsonWriter.WriteStartArray();
-					jsonWriter.WriteRawValue(MetricName.ToJson());
-					jsonWriter.WriteRawValue(Data.ToJson());
-					jsonWriter.WriteEndArray();
-				}
-
-				return stringWriter.ToString();
 			}
 		}
 
@@ -123,10 +126,10 @@ namespace NewRelic.Agent.Core.WireModels
 			#region Transaction builders
 
 
-			public static void TryBuildTransactionMetrics(bool isWebTransaction, TimeSpan responseTime,
+			public static void TryBuildTransactionMetrics(bool isWebTransaction, TimeSpan responseTimeOrDuration,
 				TransactionMetricStatsCollection txStats)
 			{
-				var data = MetricDataWireModel.BuildTimingData(responseTime, TimeSpan.Zero);
+				var data = MetricDataWireModel.BuildTimingData(responseTimeOrDuration, TimeSpan.Zero);
 
 				var proposedName = isWebTransaction
 					? MetricNames.WebTransactionAll
@@ -134,7 +137,7 @@ namespace NewRelic.Agent.Core.WireModels
 				txStats.MergeUnscopedStats(proposedName, data);
 				txStats.MergeUnscopedStats(InternalMetricName.Create(txStats.GetTransactionName().PrefixedName), data);
 
-				// "HttpDispacher" is a metric that is used to populate the APM response time chart. Again, response time is just EndTime minus StartTime.
+				// "HttpDispacher" is a metric that is used to populate the APM response time chart.
 				if (isWebTransaction)
 				{
 					txStats.MergeUnscopedStats(MetricNames.Dispatcher, data);
@@ -688,15 +691,15 @@ namespace NewRelic.Agent.Core.WireModels
 				BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
 
 			/// <summary>Created during harvest if one or more payloads were accepted.</summary>
-			public MetricWireModel TryBuildAcceptPayloadSuccess(int count) => 
+			public MetricWireModel TryBuildAcceptPayloadSuccess(int count) =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadSuccess, count);
 
 			/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
-			public MetricWireModel TryBuildAcceptPayloadException => 
+			public MetricWireModel TryBuildAcceptPayloadException =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadException);
 
 			/// <summary>Created when AcceptDistributedTracePayload had a parsing exception</summary>
-			public MetricWireModel TryBuildAcceptPayloadParseException => 
+			public MetricWireModel TryBuildAcceptPayloadParseException =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadParseException);
 
 			/// <summary>Created when AcceptDistributedTracePayload was ignored because CreatePayload had already been called</summary>
@@ -704,15 +707,15 @@ namespace NewRelic.Agent.Core.WireModels
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept);
 
 			/// <summary>Created when AcceptDistributedTracePayload was ignored because AcceptPayload had already been called</summary>
-			public MetricWireModel TryBuildAcceptPayloadIgnoredMultiple => 
+			public MetricWireModel TryBuildAcceptPayloadIgnoredMultiple =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredMultiple);
 
 			/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload's major version was greater than the agent's</summary>
-			public MetricWireModel TryBuildAcceptPayloadIgnoredMajorVersion  => 
+			public MetricWireModel TryBuildAcceptPayloadIgnoredMajorVersion =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion);
 
 			/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was null</summary>
-			public MetricWireModel TryBuildAcceptPayloadIgnoredNull => 
+			public MetricWireModel TryBuildAcceptPayloadIgnoredNull =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredNull);
 
 			/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
@@ -720,11 +723,11 @@ namespace NewRelic.Agent.Core.WireModels
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount);
 
 			/// <summary>Created during harvest when one or more payloads are created.</summary>
-			public MetricWireModel TryBuildCreatePayloadSuccess(int count) => 
+			public MetricWireModel TryBuildCreatePayloadSuccess(int count) =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceCreatePayloadSuccess, count);
 
 			/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
-			public MetricWireModel TryBuildCreatePayloadException => 
+			public MetricWireModel TryBuildCreatePayloadException =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceCreatePayloadException);
 
 
@@ -816,7 +819,8 @@ namespace NewRelic.Agent.Core.WireModels
 		}
 	}
 
-	public class MetricNameWireModel : IManualSerializable
+	[JsonConverter(typeof(MetricNameWireModelJsonConverter))]
+	public class MetricNameWireModel
 	{
 		private const string PropertyName = "name";
 		private const string PropertyScope = "scope";
@@ -861,32 +865,10 @@ namespace NewRelic.Agent.Core.WireModels
 		{
 			return $"{Name} ({Scope})";
 		}
-
-		public string ToJson()
-		{
-			using (var stringWriter = new StringWriter())
-			{
-				using (var jsonWriter = new JsonTextWriter(stringWriter))
-				{
-					jsonWriter.WriteStartObject();
-					jsonWriter.WritePropertyName(PropertyName);
-					jsonWriter.WriteValue(Name);
-
-					if (!string.IsNullOrEmpty(Scope))
-					{
-						jsonWriter.WritePropertyName(PropertyScope);
-						jsonWriter.WriteValue(Scope);
-					}
-
-					jsonWriter.WriteEndObject();
-				}
-
-				return stringWriter.ToString();
-			}
-		}
 	}
 
-	public class MetricDataWireModel : IManualSerializable
+	[JsonConverter(typeof(MetricDataWireModelJsonConverter))]
+	public class MetricDataWireModel
 	{
 		private const string CannotBeNegative = "Cannot be negative";
 
@@ -905,31 +887,6 @@ namespace NewRelic.Agent.Core.WireModels
 			Value3 = (float)value3;
 			Value4 = (float)value4;
 			Value5 = (float)value5;
-		}
-
-		public override string ToString()
-		{
-			return ToJson();
-		}
-
-		public string ToJson()
-		{
-			using (var stringWriter = new StringWriter())
-			{
-				using (var jsonWriter = new JsonTextWriter(stringWriter))
-				{
-					jsonWriter.WriteStartArray();
-					jsonWriter.WriteValue(Value0);
-					jsonWriter.WriteValue(Value1);
-					jsonWriter.WriteValue(Value2);
-					jsonWriter.WriteValue(Value3);
-					jsonWriter.WriteValue(Value4);
-					jsonWriter.WriteValue(Value5);
-					jsonWriter.WriteEndArray();
-				}
-
-				return stringWriter.ToString();
-			}
 		}
 
 		public static MetricDataWireModel BuildAggregateData(IEnumerable<MetricDataWireModel> metrics)

@@ -103,9 +103,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var startTime = DateTime.Now;
 			var segments = new Segment[]
 			{
+				GetUnfinishedSegment(startTime, startTime.AddSeconds(0)),
 				GetUnfinishedSegment(startTime, startTime.AddSeconds(1)),
 				GetUnfinishedSegment(startTime, startTime.AddSeconds(2)),
-				GetUnfinishedSegment(startTime, startTime.AddSeconds(0))
 			};
 			var transaction = BuildTestTransaction(segments, startTime);
 			var mockedTransaction = Mock.Create<ITransaction>();
@@ -122,9 +122,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var startTime = DateTime.Now;
 			var segments = new Segment[]
 			{
+				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
 			};
 			var transaction = BuildTestTransaction(segments, startTime);
 			var mockedTransaction = Mock.Create<ITransaction>();
@@ -141,9 +141,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var startTime = DateTime.Now;
 			var segments = new Segment[]
 			{
-				GetUnfinishedSegment(startTime, startTime.AddSeconds(5)),
-				GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
+				GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
+				GetUnfinishedSegment(startTime, startTime.AddSeconds(5)),
 			};
 			var transaction = BuildTestTransaction(segments, startTime);
 			var mockedTransaction = Mock.Create<ITransaction>();
@@ -191,9 +191,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var startTime = DateTime.Now;
 			var segments = new Segment[]
 			{
+				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3))
 			};
 			var transaction = BuildTestTransaction(segments, startTime);
 			var mockedTransaction = Mock.Create<ITransaction>();
@@ -214,9 +214,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var startTime = DateTime.Now;
 			var segments = new Segment[]
 			{
+				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3))
 			};
 			var transaction = BuildTestTransaction(segments, startTime);
 			var mockedTransaction = Mock.Create<ITransaction>();
@@ -237,9 +237,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var startTime = DateTime.Now;
 			var segments = new Segment[]
 			{
+				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3))
 			};
 			var transaction = BuildTestTransaction(segments, startTime);
 			var mockedTransaction = Mock.Create<ITransaction>();
@@ -260,9 +260,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var startTime = DateTime.Now;
 			var segments = new Segment[]
 			{
+				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(1), TimeSpan.FromSeconds(1)),
 				GetFinishedSegment(startTime, startTime.AddSeconds(2), TimeSpan.FromSeconds(1)),
-				GetFinishedSegment(startTime, startTime.AddSeconds(0), TimeSpan.FromSeconds(3))
 			};
 			var transaction = BuildTestTransaction(segments, startTime);
 			var mockedTransaction = Mock.Create<ITransaction>();
@@ -290,7 +290,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var duration = TimeSpan.FromSeconds(1);
 			var guid = Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
 		}
 
 		private static TypedSegment<SimpleSegmentData> GetUnfinishedSegment(DateTime transactionStartTime, DateTime startTime)

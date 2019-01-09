@@ -3,13 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.DependencyInjection;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Helpers;
 using NewRelic.SystemExtensions;
 using NewRelic.SystemExtensions.Collections.Generic;
 using IEnumerableExtensions = NewRelic.SystemExtensions.Collections.Generic.IEnumerableExtensions;
@@ -47,8 +43,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// See spec for details on these fields: https://source.datanerd.us/agents/agent-specs/blob/master/Transaction-Trace-LEGACY.md
 			var startTime = immutableTransaction.StartTime;
-			var duration = immutableTransaction.Duration;
-			var uri = immutableTransaction.TransactionMetadata.Uri?.TrimAfter("?") ?? "/Unknown";
+			var duration = immutableTransaction.ResponseTimeOrDuration;
+			var uri = immutableTransaction.TransactionMetadata.Uri?.TrimAfterAChar(StringSeparators.QuestionMarkChar) ?? "/Unknown";
 
 			if (!_attributeService.AllowRequestUri(AttributeDestinations.TransactionTrace))
 			{

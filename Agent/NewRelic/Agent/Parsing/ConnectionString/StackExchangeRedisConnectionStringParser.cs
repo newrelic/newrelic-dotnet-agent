@@ -1,8 +1,7 @@
 ﻿using NewRelic.Agent.Extensions.Parsing;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Parsing.ConnectionString
 {
@@ -31,13 +30,13 @@ namespace NewRelic.Parsing.ConnectionString
 			// Example connection string: localhost,abortConnect=true
 			// Example connection string: localhost,password=awesomesuace, name=stuffandthings
 
-			var sections = _connectionString.Split(',');
+			var sections = _connectionString.Split(StringSeparators.Comma);
 			foreach (var section in sections)
 			{
 				if(section.Contains('=')) continue;
 
 				// We can only capture the first server we detect.  It could be that there are many....
-				var hostPortPair = section.Split(':');
+				var hostPortPair = section.Split(StringSeparators.Colon);
 				var port = hostPortPair.Length == 2 ? hostPortPair[1] : null;
 				return new ConnectionInfo(ConnectionStringParserHelper.NormalizeHostname(hostPortPair[0]), port, null);
 			}

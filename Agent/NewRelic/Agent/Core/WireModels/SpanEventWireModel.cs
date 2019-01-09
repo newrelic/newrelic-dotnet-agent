@@ -11,19 +11,28 @@ namespace NewRelic.Agent.Core.WireModels
 	[JsonObject(MemberSerialization.OptIn)]
 	public class SpanEventWireModel : IHasPriority
 	{
-		[JsonArrayIndex(Index = 0)] public readonly ReadOnlyDictionary<string, object> IntrinsicAttributes;
-		[JsonArrayIndex(Index = 1)] public readonly ReadOnlyDictionary<string, object> UserAttributes;
-		[JsonArrayIndex(Index = 2)] public readonly ReadOnlyDictionary<string, object> AgentAttributes;
+		[JsonArrayIndex(Index = 0)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
+		public readonly ReadOnlyDictionary<string, object> IntrinsicAttributes;
+
+		[JsonArrayIndex(Index = 1)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
+		public readonly ReadOnlyDictionary<string, object> UserAttributes;
+
+
+		[JsonArrayIndex(Index = 2)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
+		public readonly ReadOnlyDictionary<string, object> AgentAttributes;
 
 		[JsonIgnore] public float Priority { get; }
-
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		private static readonly ReadOnlyDictionary<string, object> EmptyDictionary = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
 
-		public SpanEventWireModel(IEnumerable<KeyValuePair<string, object>> intrinsicAttributes)
+		public SpanEventWireModel(IDictionary<string,object> intrinsicAttributes)
 		{
 			const string priorityKey = "priority";
 
-			IntrinsicAttributes = intrinsicAttributes.ToReadOnlyDictionary();
+			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes);
 			UserAttributes = EmptyDictionary;
 			AgentAttributes = EmptyDictionary;
 

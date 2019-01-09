@@ -92,7 +92,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return new ErrorTraceWireModel(timestamp, path, message, exceptionClassName, errorAttributesWireModel, guid);
 		}
 
-		private IEnumerable<string> GetFormattedStackTrace(ErrorData errorData)
+		private IList<string> GetFormattedStackTrace(ErrorData errorData)
 		{
 			if (errorData.StackTrace == null)
 			{
@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		[NotNull]
-		private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes([NotNull] Attributes attributes, IEnumerable<String> stackTrace)
+		private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(Attributes attributes, IList<string> stackTrace)
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(attributes, AttributeDestinations.ErrorTrace);
 			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();

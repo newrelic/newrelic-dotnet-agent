@@ -125,6 +125,21 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		[Test]
+		public void GetTransactionTrace_CreatesTraceWithCorrectResponseTime()
+		{
+			var expectedDuration = TimeSpan.FromSeconds(7);
+			var expectedResponseTime = TimeSpan.FromSeconds(3);
+			var transaction = BuildTestTransaction(duration: expectedDuration, responseTime: expectedResponseTime);
+			var segments = new[] { BuildNode() };
+			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var attributes = new Attributes();
+
+			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
+
+			Assert.AreEqual(expectedResponseTime, trace.Duration);
+		}
+
+		[Test]
 		public void GetTransactionTrace_CreatesTraceWithCorrectUri()
 		{
 			Mock.Arrange(() => _attributeService.AllowRequestUri(AttributeDestinations.TransactionTrace))
@@ -336,7 +351,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<String, Object>(), name, false));
 		}
 
-		private ImmutableTransaction BuildTestTransaction(DateTime? startTime = null, TimeSpan? duration = null, String uri = null, String guid = null)
+		private ImmutableTransaction BuildTestTransaction(DateTime? startTime = null, TimeSpan? duration = null, TimeSpan? responseTime = null, String uri = null, String guid = null)
 		{
 			var transactionMetadata = new TransactionMetadata();
 			if (uri != null)
@@ -349,7 +364,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			duration = duration ?? TimeSpan.FromSeconds(1);
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration.Value, guid, false, false, false, _databaseService.SqlObfuscator);
+			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration.Value, responseTime, guid, false, false, false, _databaseService.SqlObfuscator);
 		}
 	}
 }

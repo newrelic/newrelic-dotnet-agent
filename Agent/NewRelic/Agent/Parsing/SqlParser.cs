@@ -164,30 +164,28 @@ namespace NewRelic.Parsing
 				// selects are tricky with the set crap on the front of the statement.. /* fooo */set
 				// leave those out of the dictionary
 				new DefaultStatementParser("select", SelectRegex, string.Empty).ParseStatement,
+				new ShowStatementParser().ParseStatement,
+				new DefaultStatementParser("insert", InsertRegex, InsertPhraseShortcut).ParseStatement,
+				new DefaultStatementParser("update", UpdateRegex, UpdatePhraseShortcut).ParseStatement,
+				new DefaultStatementParser("delete", DeleteRegex, DeletePhraseShortcut).ParseStatement,
 
-				CreateStatementParserDictionary(
-					new ShowStatementParser(),
-					new DefaultStatementParser("insert", InsertRegex, InsertPhraseShortcut),
-					new DefaultStatementParser("update", UpdateRegex, UpdatePhraseShortcut),
-					new DefaultStatementParser("delete", DeleteRegex, DeletePhraseShortcut),
+				new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex1, ExecuteProcedure1Shortcut).ParseStatement,
+				new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex2, ExecuteProcedure2Shortcut).ParseStatement,
+				// Invocation of a conventionally named stored procedure.
+				new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex3, ExecuteProcedure3Shortcut).ParseStatement,
 
-					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex1, "exec", ExecuteProcedure1Shortcut),
-					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex2, "execute", ExecuteProcedure2Shortcut),
-					// Invocation of a conventionally named stored procedure.
-					new DefaultStatementParser("ExecuteProcedure", ExecuteProcedureRegex3, "sp_", ExecuteProcedure3Shortcut),
+				new DefaultStatementParser("create", CreateRegex, CreatePhraseShortcut).ParseStatement,
+				new DefaultStatementParser("drop", DropRegex, DropPhraseShortcut).ParseStatement,
+				new DefaultStatementParser("alter", AlterRegex, AlterPhraseShortcut).ParseStatement,
+				new DefaultStatementParser("call", CallRegex, CallPhraseShortcut).ParseStatement,
 
-					new DefaultStatementParser("create", CreateRegex, CreatePhraseShortcut),
-					new DefaultStatementParser("drop", DropRegex, DropPhraseShortcut),
-					new DefaultStatementParser("alter", AlterRegex, AlterPhraseShortcut),
-					new DefaultStatementParser("call", CallRegex, CallPhraseShortcut),
+				// See http://msdn.microsoft.com/en-us/library/ms189484.aspx
+				// The set statement targets a local identifier whose name may start with @.  We just scan over the @.
+				new DefaultStatementParser("set", SetRegex, SetPhraseShortcut).ParseStatement,
 
-					// See http://msdn.microsoft.com/en-us/library/ms189484.aspx
-					// The set statement targets a local identifier whose name may start with @.  We just scan over the @.
-					new DefaultStatementParser("set", SetRegex, SetPhraseShortcut),
-
-					// See http://msdn.microsoft.com/en-us/library/ms188927.aspx
-					// The declare statement targets a local identifier whose name may start with @.  We just scan over the @.
-					new DefaultStatementParser("declare", DeclareRegex, DeclarePhraseShortcut)),
+				// See http://msdn.microsoft.com/en-us/library/ms188927.aspx
+				// The declare statement targets a local identifier whose name may start with @.  We just scan over the @.
+				new DefaultStatementParser("declare", DeclareRegex, DeclarePhraseShortcut).ParseStatement,
 
 				new SelectVariableStatementParser().ParseStatement,
 
@@ -200,65 +198,33 @@ namespace NewRelic.Parsing
 
 		private static ParseStatement CreateCompoundStatementParser(params ParseStatement[] parsers)
 		{
+			//The parsers params are used inside a return function that is referenced by a static class member.
+			//This effectively makes theses parsers stay with agent entire time.
 			return (datastoreVendor, commandType, commandText, statement) =>
 			{
 				foreach (var parser in parsers)
 				{
 					var parsedStatement = parser(datastoreVendor, commandType, commandText, statement);
-					if (parsedStatement != null) return parsedStatement;
+					if (parsedStatement != null)
+					{
+						return parsedStatement;
+					}
 				}
 
 				return _nullParsedStatementStore.GetOrAdd(datastoreVendor, x => new ParsedSqlStatement(datastoreVendor, null, null));
 			};
 		}
-
-		private static ParseStatement CreateStatementParserDictionary(params DefaultStatementParser[] parsers)
-		{
-			var delimiters = new[] { ' ', '(', '\r', '\t', '\n' };
-
-			//This is an instance dictionary that is used inside function that can be called by
-			//multiple concurrent threads.  This seems problematic, but since it is populated
-			//via a method called in the static constructor.
-			var keywordToParser = new Dictionary<string, ParseStatement>();
-			foreach (var parser in parsers)
-			{
-				keywordToParser[parser.Keyword] = parser.ParseStatement;
-			}
-
-			return (datastoreVendor, commandType, commandText, statement) =>
-			{
-				var keyword = statement.Substring(0, statement.IndexOfAny(delimiters)).ToLower();
-				// hack for one of the stored procedure parsers
-				if (keyword.StartsWith("sp_"))
-				{
-					keyword = "sp_";
-				}
-
-				if (keywordToParser.TryGetValue(keyword, out ParseStatement parser))
-				{
-					return parser(datastoreVendor, commandType, commandText, statement);
-				}
-
-				return null;
-			};
-		}
-
+		
 		public class DefaultStatementParser
 		{
 			private readonly Regex _pattern;
 			private readonly string _shortcut;
 			private readonly string _key;
-			public string Keyword { get; }
 
-			public DefaultStatementParser(string key, Regex pattern, string shortcut) :
-				this(key, pattern, key, shortcut)
-			{ }
-
-			public DefaultStatementParser(string key, Regex pattern, string keyword, string shortcut)
+			public DefaultStatementParser(string key, Regex pattern, string shortcut)
 			{
 				_key = key;
 				_pattern = pattern;
-				Keyword = keyword;
 
 				if (!string.IsNullOrEmpty(shortcut))
 				{

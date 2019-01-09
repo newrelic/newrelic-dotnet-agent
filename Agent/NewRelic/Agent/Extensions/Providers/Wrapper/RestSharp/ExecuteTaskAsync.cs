@@ -1,25 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.RestSharp
 {
 	public class ExecuteTaskAsync : IWrapper
 	{
-		private const string AssemblyName = "RestSharp";
-		private const string TypeName = "RestSharp.RestClient";
-
-		private Func<object, Enum> _getMethod;
-		private Func<object, object, Uri> _buildUri;
-
-		public Func<object, Enum> GetMethod => _getMethod ?? (_getMethod = VisibilityBypasser.Instance.GeneratePropertyAccessor<Enum>(AssemblyName, "RestSharp.RestRequest", "Method"));
-		
-		//RestSharp is not strongly signed so type load fails if reference directly for .NET Framework applications
-		public Func<object, object, Uri> BuildUri => _buildUri ?? (_buildUri = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<Uri>(AssemblyName, TypeName, "BuildUri", "RestSharp.IRestRequest"));
-
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -42,7 +28,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 
 			try
 			{
-				uri = BuildUri(restClient, restRequest);
+				uri = RestSharpHelper.BuildUri(restClient, restRequest);
 			}
 			catch (Exception)
 			{
@@ -51,7 +37,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 				return Delegates.NoOp;
 			}
 			
-			var method = GetMethod(restRequest).ToString();
+			var method = RestSharpHelper.GetMethod(restRequest).ToString();
 			
 			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
 
@@ -98,18 +84,15 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 					return;
 				}
 
-				//Cannot use RestSharp types because it is not strong named.
-				var restResponse = ((dynamic)responseTask).Result;
+				var restResponse = RestSharpHelper.GetRestResponse(responseTask);
 
-				var headers = restResponse.Headers;
+				var headers = RestSharpHelper.GetResponseHeaders(restResponse);
 				if (headers == null)
 				{
 					return;
 				}
 
-				var formattedHeaders = GetFormattedHeaders(headers);
-
-				transactionWrapperApi.ProcessInboundResponse(formattedHeaders, segment);
+				transactionWrapperApi.ProcessInboundResponse(headers, segment);
 			}
 			catch (Exception ex)
 			{
@@ -122,12 +105,5 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 			return (response?.Status == TaskStatus.RanToCompletion);
 		}
 
-		private static IEnumerable<KeyValuePair<string, string>> GetFormattedHeaders(IEnumerable<dynamic> headers)
-		{
-			var processedHeaders = headers.Select(parameter => 
-				new KeyValuePair<string, string>(parameter.Name, parameter.Value));
-
-			return processedHeaders;
-		}
 	}
 }

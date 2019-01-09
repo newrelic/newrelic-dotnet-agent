@@ -29,6 +29,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
 	public class BrowserMonitoringConfigurationData
 	{
+		private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
+
 		[JsonProperty("beacon")]
 		[NotNull]
 		public String Beacon { get; }
@@ -85,7 +87,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
 		public String ToJsonString()
 		{
-			return JsonConvert.SerializeObject(this, Formatting.None, new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore});
+			
+			return JsonConvert.SerializeObject(this, Formatting.None, _jsonSettings);
 		}
 
 	}

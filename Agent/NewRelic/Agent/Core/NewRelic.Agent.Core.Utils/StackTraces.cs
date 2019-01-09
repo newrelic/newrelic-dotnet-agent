@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Utils
 {
@@ -66,11 +67,11 @@ namespace NewRelic.Agent.Core.Utils
 			return builder.ToString();
 		}
 
-		[NotNull] public static ICollection<string> ScrubAndTruncate(string stackTrace, int maxDepth)
+		public static IList<string> ScrubAndTruncate(string stackTrace, int maxDepth)
 		{
 			String[] stackTraces = ParseStackTrace(stackTrace);
 
-			List<String> list = new List<String>(stackTraces.Length);
+			var list = new List<String>(stackTraces.Length);
 			foreach (String line in stackTraces)
 			{
 				if (line != null && line.IndexOf("at NewRelic.Agent", 0, Math.Min(20, line.Length)) < 0)
@@ -86,14 +87,13 @@ namespace NewRelic.Agent.Core.Utils
 			return list;
 		}
 
-		private static readonly String[] NEWLINE_SPLITTER = new String[] { System.Environment.NewLine };
 		public static String[] ParseStackTrace(String stackTrace)
 		{
 			if (null == stackTrace)
 			{
 				return new String[0];
 			}
-			return stackTrace.Split(NEWLINE_SPLITTER, StringSplitOptions.None);
+			return stackTrace.Split(StringSeparators.StringNewLine, StringSplitOptions.None);
 		}
 
 		public static ICollection<StackFrame> ScrubAndTruncate(StackFrame[] frames, int maxDepth)

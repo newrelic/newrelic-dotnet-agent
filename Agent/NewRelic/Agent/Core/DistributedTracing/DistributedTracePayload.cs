@@ -8,6 +8,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 	/// <remarks>
 	/// https://source.datanerd.us/agents/agent-specs/blob/master/Distributed-Tracing.md#payload-fields
 	/// </remarks>
+	[JsonConverter(typeof(DistributedTracePayloadJsonConverter))]
 	public class DistributedTracePayload
 	{
 		public const int SupportedMajorVersion = 0;
@@ -115,7 +116,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			try
 			{
-				return JsonConvert.DeserializeObject<DistributedTracePayload>(json, new DistributedTracePayloadJsonConverter());
+				return JsonConvert.DeserializeObject<DistributedTracePayload>(json);
 			}
 			catch (JsonException e)
 			{
@@ -132,7 +133,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		/// <returns>The serialized JSON string</returns>
 		public static string ToJson(DistributedTracePayload payload, bool pretty = false)
 		{
-			return JsonConvert.SerializeObject(payload, pretty ? Formatting.Indented: Formatting.None, new DistributedTracePayloadJsonConverter());
+			return JsonConvert.SerializeObject(payload, pretty ? Formatting.Indented: Formatting.None);
 		}
 	}
 }

@@ -13,12 +13,15 @@ namespace NewRelic.Agent.Core.WireModels
 	public class ErrorEventWireModel : IHasPriority
 	{
 		[JsonArrayIndex(Index = 0)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly ReadOnlyDictionary<string, object> IntrinsicAttributes;
 
 		[JsonArrayIndex(Index = 1)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly ReadOnlyDictionary<string, object> UserAttributes;
 
 		[JsonArrayIndex(Index = 2)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly ReadOnlyDictionary<string, object> AgentAttributes;
 
 		private readonly bool _isSynthetics;
@@ -39,12 +42,12 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 		}
 
-		public ErrorEventWireModel([NotNull] IEnumerable<KeyValuePair<string, object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<string, object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<string, object>> userAttributes, bool isSynthetics, float priority)
+		public ErrorEventWireModel(IDictionary<string,object> agentAttributes, IDictionary<string,object> intrinsicAttributes, IDictionary<string,object> userAttributes, bool isSynthetics, float priority)
 		{
 			Priority = priority;
-			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes.ToDictionary<string, object>());
-			UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes.ToDictionary<string, object>());
-			AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes.ToDictionary<string, object>());
+			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes);
+			UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes);
+			AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes);
 			_isSynthetics = isSynthetics;
 		}
 

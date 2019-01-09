@@ -205,5 +205,7 @@ namespace NewRelic.Agent.Configuration
 		string ProcessHostDisplayName { get; }
 
 		uint DatabaseStatementCacheCapcity { get; }
+
+		bool ForceSynchronousTimingCalculationHttpClient { get; }
 	}
 }

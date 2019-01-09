@@ -166,6 +166,34 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Assert(() => _transactionFinalizer.Finish(_transaction));
 		}
 
+		[Test]
+		public void EndTransaction_ShouldNotLogResponseTimeAlreadyCaptured()
+		{
+			Mock.Arrange(() => _transaction.TryCaptureResponseTime()).Returns(true);
+
+			using (var logging = new UnitTest.Fixtures.Logging())
+			{
+				_agentWrapperApi.CurrentTransactionWrapperApi.End();
+
+				var foundResponseTimeAlreadyCapturedMessage = logging.HasMessageBeginingWith("Transaction has already captured the response time.");
+				Assert.False(foundResponseTimeAlreadyCapturedMessage);
+			}
+		}
+
+		[Test]
+		public void EndTransaction_ShouldLogResponseTimeAlreadyCaptured()
+		{
+			Mock.Arrange(() => _transaction.TryCaptureResponseTime()).Returns(false);
+
+			using (var logging = new UnitTest.Fixtures.Logging())
+			{
+				_agentWrapperApi.CurrentTransactionWrapperApi.End();
+
+				var foundResponseTimeAlreadyCapturedMessage = logging.HasMessageBeginingWith("Transaction has already captured the response time.");
+				Assert.True(foundResponseTimeAlreadyCapturedMessage);
+			}
+		}
+
 		#endregion EndTransaction
 
 		#region Transaction metadata

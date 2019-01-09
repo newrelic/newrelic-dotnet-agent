@@ -3,19 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Helpers;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Agent
 {
 	public class LabelsService : ILabelsService
 	{
-		[NotNull]
 		private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(LabelsService));
 
-		private const Int32 MaxLabels = 64;
-		private const Int32 MaxLength = 255;
+		private const int MaxLabels = 64;
+		private const int MaxLength = 255;
 
-		[NotNull]
 		private readonly IConfigurationService _configurationService;
 
 		// TODO: we should memoize this and reset it to null every time the configuration is updated
@@ -26,7 +25,6 @@ namespace NewRelic.Agent
 			_configurationService = configurationService;
 		}
 
-		[NotNull]
 		private IEnumerable<Label> GetLabelsFromConfiguration()
 		{
 			var labelsString = _configurationService.Configuration.Labels;
@@ -37,8 +35,8 @@ namespace NewRelic.Agent
 			{
 				var labels = labelsString
 					.Trim()
-					.Trim(';')
-					.Split(';')
+					.Trim(StringSeparators.SemiColon)
+					.Split(StringSeparators.SemiColon)
 					.Select(CreateLabelFromString)
 					.GroupBy(label => label.Type)
 					.Select(labelGrouping => labelGrouping.Last())
@@ -57,13 +55,12 @@ namespace NewRelic.Agent
 			}
 		}
 
-		[NotNull]
-		private static Label CreateLabelFromString([NotNull] String typeAndValueString)
+		private static Label CreateLabelFromString([NotNull] string typeAndValueString)
 		{
 			if (typeAndValueString == null)
 				throw new ArgumentNullException("typeAndValueString");
 
-			var typeAndValueArray = typeAndValueString.Split(':');
+			var typeAndValueArray = typeAndValueString.Split(StringSeparators.Colon);
 			if (typeAndValueArray.Length != 2)
 				throw new FormatException("Expected colon separated string but received " + typeAndValueString);
 
@@ -76,11 +73,11 @@ namespace NewRelic.Agent
 				throw new NullReferenceException("value");
 
 			var typeTrimmed = type.Trim();
-			if (typeTrimmed == String.Empty)
+			if (typeTrimmed == string.Empty)
 				throw new FormatException("Expected colon separated string containing a non-empty first item but received " + typeTrimmed);
 
 			var valueTrimmed = value.Trim();
-			if (valueTrimmed == String.Empty)
+			if (valueTrimmed == string.Empty)
 				throw new FormatException("Expected colon separated string containing a non-empty second item but received " + valueTrimmed);
 
 			var typeTruncated = Truncate(typeTrimmed);
@@ -89,10 +86,9 @@ namespace NewRelic.Agent
 			return new Label(typeTruncated, valueTruncated);
 		}
 
-		[NotNull]
-		private static String Truncate([NotNull] String value)
+		private static string Truncate([NotNull] string value)
 		{
-			var result = value.TruncateUnicode(MaxLength);
+			var result = value.TruncateUnicodeStringByLength(MaxLength);
 			if (result.Length != value.Length)
 				Log.WarnFormat("Truncated label key from {0} to {1}", value, result);
 

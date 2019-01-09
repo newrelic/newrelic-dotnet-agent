@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.WireModels
 							new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(),
 							new MethodCallData("typeName", "methodName", 1), data, false))
 					};
-				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, duration, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
 
 				var sqlTraceData = sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, (TypedSegment<DatastoreSegmentData>)immutableTransaction.Segments.FirstOrDefault());
 				traceDatas.Add(sqlTraceData);

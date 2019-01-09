@@ -2,15 +2,12 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Metric;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.CallStack;
+using NewRelic.Parsing;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -41,7 +38,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			if (CrossApplicationResponseData != null)
 				parameters[TransactionGuidSegmentParameterKey] = CrossApplicationResponseData.TransactionGuid;
 
-			var cleanUri = Strings.CleanUri(Uri);
+			var cleanUri = StringsHelper.CleanUri(Uri);
 			parameters["uri"] = cleanUri;
 
 			return parameters;

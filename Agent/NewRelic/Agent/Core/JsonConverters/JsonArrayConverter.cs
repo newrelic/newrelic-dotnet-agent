@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.NewRelic.Cache;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -11,6 +12,8 @@ namespace NewRelic.Agent.Core.JsonConverters
 {
 	public class JsonArrayConverter : JsonConverter
 	{
+		private static SimpleCache<Type, MemberInfo[]> _memberInfoCache = new SimpleCache<Type, MemberInfo[]>(500);
+
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			if (value == null)
@@ -21,7 +24,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 				return;
 
 			// Write out the type as an array of values ordered by JSON index
-			var values = GetJsonMemberValuesOrderedByIndex(value, true);
+			var values = GetJsonMemberValuesOrderedByIndex(value);
 			serializer.Serialize(writer, values);
 		}
 
@@ -38,12 +41,12 @@ namespace NewRelic.Agent.Core.JsonConverters
 
 			// Load JSON
 			var jArray = JArray.Load(reader);
-			if(jArray == null)
+			if (jArray == null)
 				throw new JsonSerializationException("Failed to load JSON into JArray");
-			
+
 			// Find all JsonArrayIndex members in object
-			var jsonInfos = GetJsonMemberInfosOrderedByIndex(type);
-			
+			var jsonInfos = GetJsonMemberInfosOrderedByIndex(type, null);
+
 			// Return an object that represents the deserialized JSON
 			return TryParameterizedConstruct(type, jArray, jsonInfos) ?? DefaultConstruct(type, jArray, jsonInfos);
 		}
@@ -74,8 +77,8 @@ namespace NewRelic.Agent.Core.JsonConverters
 			if (info.Index >= jArray.Count)
 				return null;
 
-			var jToken = jArray[(int) info.Index];
-			if(jToken == null)
+			var jToken = jArray[(int)info.Index];
+			if (jToken == null)
 				throw new JsonSerializationException(string.Format("No JToken found at index {0}", info.Index));
 
 			return jToken.ToObject(info.MemberType);
@@ -118,69 +121,65 @@ namespace NewRelic.Agent.Core.JsonConverters
 
 		public override bool CanConvert(Type objectType) { throw new NotImplementedException(); }
 
-		[NotNull]
-		private static IList<object> GetJsonMemberValuesOrderedByIndex([NotNull] object value, bool validateJsonProperties)
+		private static IList<object> GetJsonMemberValuesOrderedByIndex(object value)
 		{
 			// Find all JsonArrayIndex members in object
-			var postProcessed = GetPostProcessed(value);
-			var jsonInfos = GetJsonMemberInfosOrderedByIndex(postProcessed.GetType(), postProcessed);
-
-			if (validateJsonProperties)
-			{
-				// Verify type has members with valid JSON indexes
-				if (!jsonInfos.Any())
-					throw new JsonSerializationException(string.Format("Failed to serialize object of type {0} -- object has no members marked with JsonArrayIndexAttribute", value.GetType()));
-				if (jsonInfos.First().Index != 0)
-					throw new JsonSerializationException(string.Format("Failed to serialize object of type {0} -- no field or property found for index 0", value.GetType()));
-				if (!jsonInfos.IsSequential(info => info.Index))
-					throw new JsonSerializationException(string.Format("Failed to serialize object of type {0} -- JsonArrayIndex sequence is missing a value in the middle of the sequence", value.GetType()));
-			}
+			var jsonInfos = GetJsonMemberInfosOrderedByIndex(value.GetType(), value);
 
 			return jsonInfos.Select(info => info.ExistingValue).ToList();
 		}
 
-		[NotNull]
-		private static IList<JsonMemberInfo> GetJsonMemberInfosOrderedByIndex([NotNull] Type type, [CanBeNull] object instance = null)
+		private static IList<JsonMemberInfo> GetJsonMemberInfosOrderedByIndex(Type type, object instance)
 		{
-			var propertyJsonInfo = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-				.Where(property => property != null)
-				.Select(property => TryGetJsonMemberInfo(property, instance));
-			var fieldJsonInfo = type.GetFields(BindingFlags.Public | BindingFlags.Instance)
-				.Where(field => field != null)
-				.Select(field => TryGetJsonMemberInfo(field, instance));
+			var memberInfos = _memberInfoCache.GetOrAdd(type, () =>
+			{
+				var members = type.GetMembers(BindingFlags.Public | BindingFlags.Instance)
+				.Where(x => x is FieldInfo || x is PropertyInfo)
+				.Where(x => x.IsDefined(typeof(JsonArrayIndexAttribute),true))
+				.Select(x => new KeyValuePair<uint, MemberInfo>(x.GetCustomAttribute<JsonArrayIndexAttribute>(true).Index, x))
+				.OrderBy(x => x.Key)
+				.ToArray();
 
-			var jsonMemberInfos = propertyJsonInfo
-				.Concat(fieldJsonInfo)
-				.Where(info => info != null)
-				.OrderBy(info => info.Index)
-				.ToList();
+				//Check that there are members to serialize
+				if (members.Length == 0)
+				{
+					throw new JsonSerializationException($"Failed to serialize object of type {type.FullName} -- object has no members marked with JsonArrayIndexAttribute");
+				}
 
-			var duplicateIndexGroup = jsonMemberInfos.GroupBy(info => info.Index).FirstOrDefault(group => group != null && group.Count() > 1);
-			if (duplicateIndexGroup != null)
-				throw new JsonSerializationException(string.Format("Failed to read serialization info for object of type {0} -- index {1} is specified multiple times", type.Name, duplicateIndexGroup.First().Index));
+				//Indexing starts at 0
+				if (members[0].Key != 0)
+				{
+					throw new JsonSerializationException($"Failed to serialize object of type {type.FullName} -- no field or property found for index 0");
+				}
+
+				//Indexes are sequential
+				if (!members.IsSequential(x => x.Key))
+				{
+					throw new JsonSerializationException($"Failed to serialize object of type {type.FullName} -- JsonArrayIndex sequence is missing a value in the middle of the sequence");
+				}
+
+				//Check for duplicate index values
+				var duplicateIndexGroup = members
+				.GroupBy(x => x.Key)
+				.FirstOrDefault(group => group != null && group.Count() > 1);
+
+				if (duplicateIndexGroup != null)
+				{
+					throw new JsonSerializationException($"Failed to read serialization info for object of type {type.FullName} -- index {duplicateIndexGroup.First().Key} is specified multiple times");
+				}
+
+				return members.Select(x => x.Value).ToArray();
+			});
+
+			var jsonMemberInfos = memberInfos.Select(x =>
+			{
+				return x is PropertyInfo
+				? TryGetJsonMemberInfo(x as PropertyInfo, instance)
+				: TryGetJsonMemberInfo(x as FieldInfo, instance);
+			})
+			.ToList();
 
 			return jsonMemberInfos;
-		}
-		
-		[NotNull]
-		private static object GetPostProcessed([NotNull] object value)
-		{
-			var properties = value.GetType().GetProperties();
-			foreach (var property in properties)
-			{
-				if (property == null)
-					continue;
-				if (!Attribute.IsDefined(property, typeof (SerializationStandInAttribute)))
-					continue;
-
-				var postProcessed = property.GetValue(value, null);
-				if (postProcessed == null)
-					continue;
-
-				return postProcessed;
-			}
-
-			return value;
 		}
 
 		public static object SwapInDateTimeAsUnixTimeSeconds(MemberInfo member, object value)
@@ -241,17 +240,16 @@ namespace NewRelic.Agent.Core.JsonConverters
 			if (valueSetter == null)
 				return null;
 
-			if (!Attribute.IsDefined(memberInfo, typeof (JsonArrayIndexAttribute)))
-				return null;
 
-			var attributes = memberInfo.GetCustomAttributes(typeof (JsonArrayIndexAttribute), true);
-			if (attributes.Length <= 0)
-				return null;
+			var attribute = memberInfo.GetCustomAttribute<JsonArrayIndexAttribute>(true);
 
-			if (!(attributes[0] is JsonArrayIndexAttribute attribute))
+			if(attribute == null)
+			{
 				return null;
+			}
 
 			var index = attribute.Index;
+
 			var existingValue = getValue == null ? null : getValue();
 
 			if (existingValue is DateTime)
@@ -311,15 +309,15 @@ namespace NewRelic.Agent.Core.JsonConverters
 			// Non-numeric values don't need to be specially transformed
 			if (jToken.Type != JTokenType.Float && jToken.Type != JTokenType.Integer)
 				return jToken.ToObject(type);
-			
+
 			// Numeric values might have to be specially transformed depending on the serialization attributes in play
-			if(Attribute.IsDefined(memberInfo, typeof (DateTimeSerializesAsUnixTimeSecondsAttribute)))
+			if (Attribute.IsDefined(memberInfo, typeof(DateTimeSerializesAsUnixTimeSecondsAttribute)))
 				return jToken.ToObject<double>().ToDateTime();
-			if (Attribute.IsDefined(memberInfo, typeof (TimeSpanSerializesAsMillisecondsAttribute)))
+			if (Attribute.IsDefined(memberInfo, typeof(TimeSpanSerializesAsMillisecondsAttribute)))
 				return TimeSpan.FromMilliseconds(jToken.ToObject<double>());
-			if(Attribute.IsDefined(memberInfo, typeof (TimeSpanSerializesAsSecondsAttribute)))
+			if (Attribute.IsDefined(memberInfo, typeof(TimeSpanSerializesAsSecondsAttribute)))
 				return TimeSpan.FromSeconds(jToken.ToObject<double>());
-			
+
 			// If none of the special serialization attributes were used then we can just return the untransformed value
 			return jToken.ToObject(type);
 		}
@@ -334,7 +332,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			[NotNull]
 			public readonly Type MemberType;
 
-			[NotNull] 
+			[NotNull]
 			private readonly Action<object, object> _valueSetter;
 
 			public JsonMemberInfo(uint index, [CanBeNull] object existingValue, [NotNull] MemberInfo memberInfo, [NotNull] Type memberType, [NotNull] Action<object, object> valueSetter)

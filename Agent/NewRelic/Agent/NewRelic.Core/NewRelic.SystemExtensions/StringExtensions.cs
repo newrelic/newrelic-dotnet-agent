@@ -2,25 +2,72 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions
 {
 	public static class StringExtensions
 	{
-		[NotNull]
-		public static String TruncateUnicode([NotNull] this String value, Int32 maxLength)
+		public static string TruncateUnicodeStringByLength(this string value, int maxLength)
 		{
 			if (value == null)
+			{
 				throw new ArgumentNullException("value");
+			}
+
 			if (maxLength < 0)
-				throw new ArgumentOutOfRangeException(String.Format("maxLength must be positive.  value: {0}  maxLength: {1}", value, maxLength));
+			{
+				throw new ArgumentOutOfRangeException(String.Format("maxLength must be positive.  value: {0}  maxLength: {1}",
+					value, maxLength));
+			}
+		
+			if (value.Length <= maxLength)
+			{
+				return value;
+			}
 
 			var textElements = new StringInfo(value);
 			if (textElements.LengthInTextElements <= maxLength)
 				return value;
 
 			return textElements.SubstringByTextElements(0, maxLength);
+		}
+
+		public static string TruncateUnicodeStringByBytes(this string value, uint maxBytes)
+		{
+			if (string.IsNullOrEmpty(value))
+			{
+				return value;
+			}
+
+			if (maxBytes == 0)
+			{
+				return string.Empty;
+			}
+
+			if (Encoding.UTF8.GetByteCount(value) <= maxBytes)
+			{
+				return value;
+			}
+
+			var bytes = new byte[maxBytes];
+			var chars = value.ToCharArray();
+
+			try
+			{
+				Encoding.UTF8.GetEncoder().Convert(chars, 0, chars.Length,
+					bytes, 0, (int) maxBytes,
+					true, out int charsUsed, out int _, out bool _);
+				return new string(chars, 0, charsUsed);
+			}
+			//In the case when maxBytes is less than the size of the first character in the input string,
+			//the Encoder.Convert() method will throw buffer is too small exception. In this case, we want
+			//the method to return an empty string instead.
+			catch (ArgumentException)
+			{
+				return string.Empty;
+			}
 		}
 
 		public static Boolean ContainsAny(this String source, IEnumerable<String> searchTargets, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
@@ -33,19 +80,17 @@ namespace NewRelic.SystemExtensions
 			return searchTargets.Any(target => target != null && source.IndexOf(target, comparison) > -1);
 		}
 
-		[NotNull]
-		public static String TrimAfter([NotNull] this String source, [NotNull] String token)
+		public static string TrimAfterAChar( this string source, char token)
 		{
 			if (source == null)
 				throw new ArgumentNullException("source");
-			if (token == null)
-				throw new ArgumentNullException("token");
 
-			var result = source.Split(new[]{token}, 2, StringSplitOptions.None)[0];
-			return result ?? source;
+			var stopIndex = source.IndexOf(token);
+			var result = stopIndex == -1 ? source : source.Substring(0, stopIndex);
+
+			return result;
 		}
 
-		[NotNull]
 		public static String TrimEnd([NotNull] this String source, Char trimChar, Int32 maxCharactersToTrim)
 		{
 			// Traverse backward through string skipping trimChars until maxCharactersToTrim is hit
@@ -59,7 +104,6 @@ namespace NewRelic.SystemExtensions
 			return source.Substring(0, index + 1);
 		}
 
-		[NotNull]
 		public static String EnsureLeading([NotNull] this String source, String leading)
 		{
 			if (leading == null)
@@ -71,7 +115,6 @@ namespace NewRelic.SystemExtensions
 			return leading + source;
 		}
 
-		[NotNull]
 		public static String EnsureTrailing([NotNull] this String source, String trailing)
 		{
 			if (trailing == null)

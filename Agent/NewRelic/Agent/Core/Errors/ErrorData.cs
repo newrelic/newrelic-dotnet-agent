@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Errors
 {
@@ -84,18 +84,18 @@ namespace NewRelic.Agent.Core.Errors
 			return TryCreateHttpErrorData(immutableTransaction);
 		}
 
-		private static Boolean ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IConfigurationService configurationService)
+		private static bool ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IConfigurationService configurationService)
 		{
 			var errorTypeNames = errorData.Select(data => data.ErrorTypeName);
 			return ShouldIgnoreAnyError(errorTypeNames, configurationService);
 		}
 
-		private static Boolean ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
+		private static bool ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
 		{
 			return ShouldIgnoreAnyError(new[] { errorTypeName }, configurationService);
 		}
 
-		private static Boolean ShouldIgnoreAnyError([NotNull] IEnumerable<string> errorTypeNames, IConfigurationService configurationService)
+		private static bool ShouldIgnoreAnyError(IEnumerable<string> errorTypeNames, IConfigurationService configurationService)
 		{
 			foreach (var errorClassName in errorTypeNames)
 			{
@@ -108,7 +108,7 @@ namespace NewRelic.Agent.Core.Errors
 				if (configurationService.Configuration.HttpStatusCodesToIgnore.Contains(errorClassName))
 					return true;
 
-				var splitStatusCode = errorClassName.Split('.');
+				var splitStatusCode = errorClassName.Split(StringSeparators.Period);
 				if (splitStatusCode[0] != null && configurationService.Configuration.HttpStatusCodesToIgnore.Contains(splitStatusCode[0]))
 				{
 					return true;
@@ -118,7 +118,6 @@ namespace NewRelic.Agent.Core.Errors
 			return false;
 		}
 
-		[CanBeNull]
 		private static string TryGetFormattedStatusCode(ImmutableTransaction immutableTransaction)
 		{
 			if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
@@ -132,7 +131,6 @@ namespace NewRelic.Agent.Core.Errors
 				: $"{statusCode}.{subStatusCode}";
 		}
 
-		[CanBeNull]
 		private static ErrorData TryCreateHttpErrorData(ImmutableTransaction immutableTransaction)
 		{
 			if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
@@ -151,17 +149,16 @@ namespace NewRelic.Agent.Core.Errors
 #endif
 			var formattedFullStatusCode = TryGetFormattedStatusCode(immutableTransaction);
 
-			var noticedAt = immutableTransaction.StartTime + immutableTransaction.Duration;
+			var noticedAt = immutableTransaction.StartTime + immutableTransaction.ResponseTimeOrDuration;
 			var errorMessage = statusDescription ?? $"Http Error {formattedFullStatusCode}";
 			var errorTypeName = formattedFullStatusCode;
 
 			return new ErrorData(errorMessage, errorTypeName, null, noticedAt);
 		}
 
-		[NotNull]
 		private static string GetFriendlyExceptionTypeName(string exceptionTypeName)
 		{
-			return exceptionTypeName?.Split(new[] { '`' }, 2)[0] ?? string.Empty;
+			return exceptionTypeName?.Split(StringSeparators.BackTick, 2)[0] ?? string.Empty;
 		}
 	}
 }

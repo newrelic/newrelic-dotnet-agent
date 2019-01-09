@@ -13,12 +13,15 @@ namespace NewRelic.Agent.Core.WireModels
 	public class TransactionEventWireModel : IHasPriority
 	{
 		[JsonArrayIndex(Index = 0)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly ReadOnlyDictionary<string, object> IntrinsicAttributes;
 
 		[JsonArrayIndex(Index = 1)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly ReadOnlyDictionary<string, object> UserAttributes;
 
 		[JsonArrayIndex(Index = 2)]
+		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly ReadOnlyDictionary<string, object> AgentAttributes;
 
 		public bool HasOutgoingDistributedTracePayload { get; set; }
@@ -42,14 +45,14 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 		}
 
-		public TransactionEventWireModel([NotNull] IEnumerable<KeyValuePair<string, object>> userAttributes, [NotNull] IEnumerable<KeyValuePair<string, object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<string, object>> intrinsicAttributes, bool isSynthetics, float priority,bool hasOutgoingDistributedTracePayload, bool hasIncomingDistributedTracePayload)
+		public TransactionEventWireModel(IDictionary<string, object> userAttributes, IDictionary<string, object> agentAttributes,IDictionary<string, object> intrinsicAttributes, bool isSynthetics, float priority,bool hasOutgoingDistributedTracePayload, bool hasIncomingDistributedTracePayload)
 		{
 			Priority = priority;
 			HasOutgoingDistributedTracePayload = hasOutgoingDistributedTracePayload;
 			HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
-			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes.ToDictionary<string, object>());
-			UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes.ToDictionary<string, object>());
-			AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes.ToDictionary<string, object>());
+			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes);
+			UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes);
+			AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes);
 			_isSynthetics = isSynthetics;
 		}
 

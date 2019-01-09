@@ -4,6 +4,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Metrics
 {
@@ -43,7 +44,7 @@ namespace NewRelic.Agent.Core.Metrics
 				return new List<String> { url };
 
 			// Otherwise return each segment as a chunk
-			return url.Split(MetricNames.PathSeparatorChar);
+			return url.Split(StringSeparators.PathSeparator);
 		}
 
 		[NotNull, Pure]

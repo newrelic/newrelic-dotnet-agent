@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Reflection;
+using System.Collections.Generic;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using System.Linq;
 
 // ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Utilities
@@ -83,17 +86,6 @@ namespace NewRelic.Agent.Core.Utilities
 			Assert.NotNull(exception);
 		}
 
-		[Test]
-		public void when_deserializing_sparse_properties_as_array()
-		{
-			var json = "[10,11,12,true]";
-			var deserialized = JsonConvert.DeserializeObject<SparseProperties>(json);
-			NrAssert.Multiple(
-				() => Assert.AreEqual(true, deserialized.MyBoolean),
-				() => Assert.AreEqual(10, deserialized.MyUInt32)
-				);
-		}
-
 		[JsonConverter(typeof(JsonArrayConverter))]
 		private class PartiallySerializedProperties
 		{
@@ -125,23 +117,6 @@ namespace NewRelic.Agent.Core.Utilities
 		}
 
 		[JsonConverter(typeof(JsonArrayConverter))]
-		private class PostProcessedProperties
-		{
-			[JsonArrayIndex(Index = 0)]
-			public Boolean MyBoolean { get; set; }
-			[SerializationStandIn]
-			public PostProcessedProperties PostProcessedThis{ get { return new PostProcessedProperties {MyBoolean = true}; } }
-		}
-
-		[Test]
-		public void when_stand_in_is_present_then_it_is_used_instead()
-		{
-			var postProcessedClass = new PostProcessedProperties();
-			var serialized = JsonConvert.SerializeObject(postProcessedClass);
-			Assert.AreEqual("[true]", serialized);
-		}
-
-		[JsonConverter(typeof (JsonArrayConverter))]
 		private class TimesObject
 		{
 			private DateTime _timestampAsUnixTime = new DateTime(1212, 12, 12, 12, 12, 12);
@@ -191,7 +166,7 @@ namespace NewRelic.Agent.Core.Utilities
 				);
 		}
 
-		[JsonConverter(typeof (JsonArrayConverter))]
+		[JsonConverter(typeof(JsonArrayConverter))]
 		private class SimpleFields
 		{
 			[JsonArrayIndex(Index = 0)]
@@ -250,7 +225,7 @@ namespace NewRelic.Agent.Core.Utilities
 		}
 
 		[JsonConverter(typeof(JsonArrayConverter))]
-		private class SparseFields
+		private class TestClass_Bad_NonContiguous
 		{
 			[JsonArrayIndex(Index = 3)]
 			public Boolean MyBoolean = false;
@@ -259,23 +234,74 @@ namespace NewRelic.Agent.Core.Utilities
 			public UInt32 MyUInt32 = 0;
 		}
 
-		[Test]
-		public void when_serializing_sparse_Fields_as_array()
+		[JsonConverter(typeof(JsonArrayConverter))]
+		private class TestClass_Bad_DuplicateIndex
 		{
-			var sparseFields = new SparseFields();
+			[JsonArrayIndex(Index = 1)]
+			public Boolean MyBoolean = false;
+
+			[JsonArrayIndex(Index = 1)]
+			public Boolean MyBoolean2 = true;
+
+			[JsonArrayIndex(Index = 0)]
+			public UInt32 MyUInt32 = 0;
+		}
+
+
+		[JsonConverter(typeof(JsonArrayConverter))]
+		private class TestClass_Bad_NotStartAtZero
+		{
+			[JsonArrayIndex(Index = 1)]
+			public Boolean MyBoolean = false;
+
+			[JsonArrayIndex(Index = 2)]
+			public Boolean MyBoolean2 = true;
+
+			[JsonArrayIndex(Index = 3)]
+			public UInt32 MyUInt32 = 0;
+		}
+
+
+		[JsonConverter(typeof(JsonArrayConverter))]
+		private class TestClass_Bad_NoMembersWithAttribute
+		{
+			public Boolean MyBoolean = false;
+
+			public Boolean MyBoolean2 = true;
+
+			public UInt32 MyUInt32 = 0;
+		}
+
+		[Test]
+		public void ErrorThrownWhenDeserializingClassWithNonContiguousIndexes()
+		{
+			var sparseFields = new TestClass_Bad_NonContiguous();
 			var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
 			Assert.NotNull(exception);
 		}
 
 		[Test]
-		public void when_deserializing_sparse_Fields_as_array()
+		public void ErrorThrownWhenDeserializingClassWithDuplicateIndexes()
 		{
-			var json = "[10,11,12,true]";
-			var deserialized = JsonConvert.DeserializeObject<SparseFields>(json);
-			NrAssert.Multiple(
-				() => Assert.AreEqual(true, deserialized.MyBoolean),
-				() => Assert.AreEqual(10, deserialized.MyUInt32)
-				);
+			var sparseFields = new TestClass_Bad_DuplicateIndex();
+			var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
+			Assert.NotNull(exception);
+		}
+
+		[Test]
+		public void ErrorThrownWhenDeserializingClassWithIndexNotStartAtZero()
+		{
+			var sparseFields = new TestClass_Bad_NotStartAtZero();
+			var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
+			Assert.NotNull(exception);
+		}
+
+		[Test]
+		public void ErrorThrownWhenDeserializingClassWithNoMembersWithIndexes()
+		{
+			var sparseFields = new TestClass_Bad_NoMembersWithAttribute();
+			var exception = NrAssert.Throws<JsonSerializationException>(() => JsonConvert.SerializeObject(sparseFields));
+			Assert.NotNull(exception);
 		}
 
 		[JsonConverter(typeof(JsonArrayConverter))]
@@ -347,6 +373,39 @@ namespace NewRelic.Agent.Core.Utilities
 				() => Assert.AreEqual(true, deserialized.MyBooleanField),
 				() => Assert.AreEqual("Baz", deserialized.MyStringProperty)
 				);
+		}
+
+
+		[Test]
+		public void TestTypesHaveCorrectJsonArrayIndexAttributes()
+		{
+			var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+				.Where(x => !x.FullName.ToLower().Contains("test"))
+				.ToList();
+
+			foreach (var assembly in assemblies)
+			{
+				var types = assembly.GetTypes()
+					.Where(t => t.GetCustomAttributes<JsonConverterAttribute>().Any())
+					.Where(t => t.GetCustomAttribute<JsonConverterAttribute>().ConverterType == typeof(JsonArrayConverter))
+					.ToList();
+
+				foreach (var type in types)
+				{
+					var members = type.GetMembers(BindingFlags.Public | BindingFlags.Instance)
+						.Where(x => x is FieldInfo || x is PropertyInfo)
+						.Where(x => x.GetCustomAttributes(typeof(JsonArrayIndexAttribute)).Any())
+						.Select(x => new KeyValuePair<uint, MemberInfo>(x.GetCustomAttribute<JsonArrayIndexAttribute>().Index, x))
+						.OrderBy(x => x.Key)
+						.ToArray();
+
+					NrAssert.Multiple(
+						() => Assert.IsNotEmpty(members, $"Type {type.FullName} is marked with JsonArrayConverter but does not have any JsonArrayIndex attributes"),
+						() => Assert.AreEqual(0, members[0].Key, $"Type {type.FullName} is marked with JsonArrayConverter but does not have any JsonArrayIndex with Index of 0"),
+						() => Assert.IsTrue(members.IsSequential(x => x.Key), $"Type {type.FullName} has noncontiguous members"),
+						() => Assert.AreEqual(members.Select(x => x.Key).Count(), members.Select(x => x.Key).Distinct().Count(), $"Type {type.FullName} has duplicated index values"));
+				}
+			}
 		}
 	}
 }

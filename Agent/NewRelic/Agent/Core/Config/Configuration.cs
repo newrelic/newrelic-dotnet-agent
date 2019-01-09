@@ -1847,6 +1847,8 @@ namespace NewRelic.Agent.Core.Config
         
         private bool enabledField;
         
+        private System.Nullable<uint> maximumSamplesStoredField;
+        
         public configurationCustomEvents()
         {
             this.enabledField = true;
@@ -1862,6 +1864,41 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.enabledField = value;
+            }
+        }
+        
+        public uint maximumSamplesStored
+        {
+            get
+            {
+                if (this.maximumSamplesStoredField.HasValue)
+                {
+                    return this.maximumSamplesStoredField.Value;
+                }
+                else
+                {
+                    return default(uint);
+                }
+            }
+            set
+            {
+                this.maximumSamplesStoredField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool maximumSamplesStoredSpecified
+        {
+            get
+            {
+                return this.maximumSamplesStoredField.HasValue;
+            }
+            set
+            {
+                if (value==false)
+                {
+                    this.maximumSamplesStoredField = null;
+                }
             }
         }
     }

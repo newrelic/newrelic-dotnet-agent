@@ -21,6 +21,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public readonly DateTime StartTime;
 		public readonly TimeSpan Duration;
+		public readonly TimeSpan ResponseTimeOrDuration;
 
 		[NotNull]
 		public readonly String Guid;
@@ -37,13 +38,14 @@ namespace NewRelic.Agent.Core.Transactions
 		private IDictionary<string, string> ObfuscatedSqlCache => _obfuscatedSqlCache ?? (_obfuscatedSqlCache = new Dictionary<string, string>());
 
 		// The sqlObfuscator parameter should be the SQL obfuscator as defined by user configuration: obfuscate, off, or raw.
-		public ImmutableTransaction([NotNull] ITransactionName transactionName, [NotNull] IEnumerable<Segment> segments, [NotNull] ImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, [NotNull] string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, SqlObfuscator sqlObfuscator)
+		public ImmutableTransaction([NotNull] ITransactionName transactionName, [NotNull] IEnumerable<Segment> segments, [NotNull] ImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, TimeSpan? responseTime, [NotNull] string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, SqlObfuscator sqlObfuscator)
 		{
 			TransactionName = transactionName;
-			Segments = segments.Where(segment => segment != null && !segment.IsTerminating).ToList();
+			Segments = segments.Where(segment => segment != null).ToList();
 			TransactionMetadata = transactionMetadata;
 			StartTime = startTime;
 			Duration = duration;
+			ResponseTimeOrDuration = IsWebTransaction() ? responseTime ?? Duration : Duration;
 			Guid = guid;
 			IgnoreAutoBrowserMonitoring = ignoreAutoBrowserMonitoring;
 			IgnoreAllBrowserMonitoring = ignoreAllBrowserMonitoring;

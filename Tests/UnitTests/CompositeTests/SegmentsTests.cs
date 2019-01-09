@@ -10,6 +10,8 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace CompositeTests
 {
@@ -620,6 +622,45 @@ namespace CompositeTests
 
 
 		#endregion
+
+		[Test]
+		public void ChildDurationShouldNotCountTowardsParentsExclusiveTime()
+		{
+			var tx = _agentWrapperApi.CreateOtherTransaction("testing", "test");
+			var segment = (TypedSegment<CustomSegmentData>)_agentWrapperApi.StartCustomSegmentOrThrow("parentSegment");
+			//We need the child segment to run on a different thread than the parent
+			Task.Run(() =>
+			{
+				var childSegment = _agentWrapperApi.StartCustomSegmentOrThrow("childSegment");
+				childSegment.DurationShouldBeDeductedFromParent = true;
+				Thread.Sleep(TimeSpan.FromMilliseconds(100));
+				childSegment.End();
+			}).Wait();
+
+			segment.End();
+			tx.End();
+
+			Assert.Less(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
+		}
+
+		[Test]
+		public void ChildDurationShouldCountTowardsParentsExclusiveTime()
+		{
+			var tx = _agentWrapperApi.CreateOtherTransaction("testing", "test");
+			var segment = (TypedSegment<CustomSegmentData>)_agentWrapperApi.StartCustomSegmentOrThrow("parentSegment");
+			//We need the child segment to run on a different thread than the parent
+			Task.Run(() =>
+			{
+				var childSegment = _agentWrapperApi.StartCustomSegmentOrThrow("childSegment");
+				Thread.Sleep(TimeSpan.FromMilliseconds(100));
+				childSegment.End();
+			}).Wait();
+
+			segment.End();
+			tx.End();
+
+			Assert.Greater(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
+		}
 
 		#region Helper methods
 

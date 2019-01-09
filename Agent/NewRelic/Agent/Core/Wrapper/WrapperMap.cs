@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Wrapper
 				.ToList();
 
 			_nonDefaultWrappers.Add(new AttachToAsyncWrapper());
-			_nonDefaultWrappers.Add(new TerminatingSegmentWrapper());
+			_nonDefaultWrappers.Add(new DetachWrapper());
 
 			var defaultWrappers = new List<IDefaultWrapper> {defaultWrapper, new DefaultWrapperAsync()};
 

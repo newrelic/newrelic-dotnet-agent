@@ -66,22 +66,27 @@ namespace NewRelic.Agent.Core.WireModels
 			public virtual IEnumerable<string> StackTrace { get; }
 
 			[JsonProperty("agentAttributes")]
-			public virtual IEnumerable<KeyValuePair<string, Object>> AgentAttributes { get; }
+			[JsonConverter(typeof(EventAttributesJsonConverter))]
+			public virtual ReadOnlyDictionary<string,object> AgentAttributes { get; }
 
 			[JsonProperty("userAttributes")]
-			public virtual IEnumerable<KeyValuePair<string, Object>> UserAttributes { get; }
+			[JsonConverter(typeof(EventAttributesJsonConverter))]
+			public virtual ReadOnlyDictionary<string,object> UserAttributes { get; }
 
 			[JsonProperty("intrinsics")]
-			public virtual IEnumerable<KeyValuePair<string, Object>> Intrinsics { get; }
+			[JsonConverter(typeof(EventAttributesJsonConverter))]
+			public virtual ReadOnlyDictionary<string,object> Intrinsics { get; }
 
-			public ErrorTraceAttributesWireModel(IEnumerable<KeyValuePair<string, Object>> agentAttributes, IEnumerable<KeyValuePair<string, Object>> intrinsicAttributes, IEnumerable<KeyValuePair<string, Object>> userAttributes, [CanBeNull] IEnumerable<string> stackTrace = null)
+			public ErrorTraceAttributesWireModel(IDictionary<string,object> agentAttributes, IDictionary<string,object> intrinsicAttributes, IDictionary<string,object> userAttributes, IList<string> stackTrace = null)
 			{
-				AgentAttributes = agentAttributes.ToReadOnlyDictionary();
-				Intrinsics = intrinsicAttributes.ToReadOnlyDictionary();
-				UserAttributes = userAttributes.ToReadOnlyDictionary();
+				AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes);
+				Intrinsics = new ReadOnlyDictionary<string, object>(intrinsicAttributes);
+				UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes);
 
 				if (stackTrace != null)
-					StackTrace = new ReadOnlyCollection<string>(new List<string>(stackTrace));
+				{
+					StackTrace = new ReadOnlyCollection<string>(stackTrace);
+				}
 			}
 		}
 	}
