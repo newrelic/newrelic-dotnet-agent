@@ -17,8 +17,6 @@ function Test-RegistryValue {
     }
 }
 
-
-
 #Remove Agent Manually
 Write-Host ""
 Write-Host "---------------------------"
@@ -55,8 +53,9 @@ $paths = @(
     "C:\Program Files\New Relic\.Net Agent\",
     "C:\Program Files (x86)\New Relic\.Net Agent\",
     "C:\ProgramData\New Relic\.Net Agent\",
-    "C:\ThinInstallerDestination\New Relic\.Net Agent\", # Custom location for thin installation.
-    "HKLM:\SOFTWARE\New Relic\.NET Agent",
+	"C:\AgentThinInstaller", # Custom location for thin installation.
+    "C:\CutomAgentInstallDirectory"
+	"HKLM:\SOFTWARE\New Relic\.NET Agent",
     "HKLM:\SOFTWARE\Classes\CLSID\{71DA0A04-7777-4EC6-9643-7D28B46A8A41}"
 )
 
@@ -70,7 +69,6 @@ foreach ($path in $paths)
 Write-Host "Done"
 
 Write-Host -NoNewline "Removing Profiler... "
-
 if (Test-RegistryValue -Path 'HKLM:SYSTEM\CurrentControlSet\Services\W3SVC' -Value 'Environment'){
     Remove-ItemProperty -LiteralPath HKLM:SYSTEM\CurrentControlSet\Services\W3SVC -Name Environment
 }
@@ -78,7 +76,6 @@ if (Test-RegistryValue -Path 'HKLM:SYSTEM\CurrentControlSet\Services\W3SVC' -Val
 if (Test-RegistryValue -Path 'HKLM:SYSTEM\CurrentControlSet\Services\WAS' -Value 'Environment'){
     Remove-ItemProperty -LiteralPath HKLM:SYSTEM\CurrentControlSet\Services\WAS -Name Environment
 }
-
 Write-Host "Done"
 
 Write-Host -NoNewline "Removing Install/Uninstall Keys... "

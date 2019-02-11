@@ -1,0 +1,36 @@
+build: 
+    build: linux/.
+    command: bash -c "dos2unix ./build_profiler.sh && ./build_profiler.sh"
+    volumes: 
+        - .:/profiler
+    working_dir: /profiler/linux/
+
+build_debug: 
+    build: linux/.
+    dockerfile: DebugDockerfile
+    command: bash -c "dos2unix ./build_profiler.sh && ./build_profiler.sh"
+    privileged: true
+    volumes: 
+        - .:/profiler
+        - $CORECLR_NEWRELIC_HOME:/agent
+    working_dir: /profiler/linux/
+
+test: 
+    build: linux/.
+    command: dotnet -d run
+    privileged: true
+    dockerfile: Dockerfile.TestUbuntu
+    volumes: 
+        - .:/profiler
+        - $CORECLR_NEWRELIC_HOME:/agent
+        - ./linux/test:/test
+
+test_centos: 
+    build: linux/.
+    command: dotnet -d run
+    privileged: true
+    dockerfile: Dockerfile.TestCentos
+    volumes: 
+        - .:/profiler
+        - $CORECLR_NEWRELIC_HOME:/agent
+        - ./linux/test:/test

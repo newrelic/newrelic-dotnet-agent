@@ -19,6 +19,8 @@ namespace PlatformTests.Applications
 			ServiceNames = serviceNames;
 		}
 
+		public static string RootRepositoryPath { get; } = Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..\..\..\");
+
 		public String MsbuildPath
 		{
 			get
@@ -49,8 +51,7 @@ namespace PlatformTests.Applications
 			"https://api.nuget.org/v3/index.json"
 		};
 
-		public String NugetPath { get; } =
-			Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\..\..\..\Build\Tools\nuget.exe"));
+		public static string NugetPath { get; } = Path.GetFullPath(Path.Combine(RootRepositoryPath, @"Build\Tools\nuget.exe"));
 
 		public void InvokeAnExecutable(string executablePath, string arguments, string workingDirectory)
 		{

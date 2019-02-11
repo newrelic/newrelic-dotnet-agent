@@ -1,16 +1,16 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using System;
+using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
 {
 	public class InvokeActionMethodAsyncWrapper : IWrapper
 	{
 		private Func<object, ControllerContext> _getControllerContext;
-		public Func<object, ControllerContext> GetControllerContext => _getControllerContext ?? (_getControllerContext = VisibilityBypasser.Instance.GenerateFieldAccessor<ControllerContext>("Microsoft.AspNetCore.Mvc.Core", "Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker", "_controllerContext"));
+		private Func<object, ControllerContext> GetControllerContext(string typeName) { return _getControllerContext ?? (_getControllerContext = VisibilityBypasser.Instance.GenerateFieldAccessor<ControllerContext>("Microsoft.AspNetCore.Mvc.Core", typeName, "_controllerContext")); }
 
 		public bool IsTransactionRequired => true;
 
@@ -26,7 +26,8 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 				transactionWrapperApi.AttachToAsync();
 			}
 
-			var controllerContext = GetControllerContext(instrumentedMethodCall.MethodCall.InvocationTarget);
+			//handle the .NetCore 3.0 case where the namespace is Infrastructure instead of Internal.
+			var controllerContext = GetControllerContext(instrumentedMethodCall.MethodCall.Method.Type.FullName).Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 			var actionDescriptor = controllerContext.ActionDescriptor;
 
 			var transactionName = CreateTransactionName(actionDescriptor);
@@ -34,7 +35,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			transactionWrapperApi.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
 			//Framework uses ControllerType.Action for these metrics & transactions. WebApi is Controller.Action for both
-			//Taking opinioned stance to do ControllerType.MethodName for segments. Controller/Action for transactions
+			//Taking opinionated stance to do ControllerType.MethodName for segments. Controller/Action for transactions
 			var controllerTypeName = controllerContext.ActionDescriptor.ControllerTypeInfo.Name;
 			var methodName = controllerContext.ActionDescriptor.MethodInfo.Name;
 

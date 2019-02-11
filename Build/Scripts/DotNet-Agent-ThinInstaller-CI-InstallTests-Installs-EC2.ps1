@@ -30,7 +30,11 @@ Write-Host "Elevated"
 $ErrorActionPreference = "Stop"
 
 
-$AgentVersion = [IO.File]::ReadAllText("Installer\AgentVersion.txt").Trim()
+$install = Get-ChildItem -Path $env:WORKSPACE\Build\BuildArtifacts\ScriptableInstaller -Include NewRelic.Agent.Installer.*.zip -Force -Name
+$installFullPath = $env:WORKSPACE + "\Build\BuildArtifacts\ScriptableInstaller\" + $install
+$AgentVersion = $install.TrimStart('NewRelic.Agent.Installer.').TrimEnd('.zip')
+
+$Destination = "C:\AgentThinInstaller"
 
 # Constants
 Set-Variable -name DefaultInstallLocation -option Constant -value  "$env:ProgramFiles\New Relic\.NET Agent"
@@ -54,10 +58,6 @@ Function CheckForCleanInstallSuccess([string] $frameworkVersion)
 	
     $CurrentLocation = [string](Get-Location)
 	
-    $Destination = "C:\AgentThinInstaller"
-    $Source = "$env:WORKSPACE\NewRelic.Agent.Installer.$AgentVersion.zip"
-	
-
     If(Test-path $Destination) {Remove-item $Destination -Recurse:$true}
     New-Item $Destination -type directory
 
@@ -66,12 +66,12 @@ Function CheckForCleanInstallSuccess([string] $frameworkVersion)
     #[io.compression.zipfile]::ExtractToDirectory($Source, $Destination)
 
     #Works in any version, sleep needed since method is async
-    Expand-Zip $Source $Destination
+    Expand-Zip $installFullPath $Destination
     Start-Sleep -seconds 10
 
     # Install the Agent.
 
-    cd C:\AgentThinInstaller
+    cd $Destination
 
     .\install.cmd -licenseKey 123 | Out-Host
 	
@@ -94,7 +94,7 @@ Function CheckForCleanInstallSuccess([string] $frameworkVersion)
 		else {
 	        # Test uninstalling
                 
-                cd C:\AgentThinInstaller
+                cd $Destination
                 # Write-Host "WP 1: "  (Get-Item -Path ".\" -Verbose).FullName
                
 	        .\uninstall.cmd -Force True
@@ -134,10 +134,6 @@ Function CheckForInstallSameOrNewerVersionSuccess([string] $frameworkVersion)
 	
 	$CurrentLocation = [string](Get-Location)
 	
-    $Destination = "C:\AgentThinInstaller"
-    $Source = "$env:WORKSPACE\NewRelic.Agent.Installer.$AgentVersion.zip"
-	
-
     If(Test-path $Destination) {Remove-item $Destination -Recurse:$true}
     New-Item $Destination -type directory
 
@@ -146,12 +142,12 @@ Function CheckForInstallSameOrNewerVersionSuccess([string] $frameworkVersion)
     #[io.compression.zipfile]::ExtractToDirectory($Source, $Destination)
 
     #Works in any version, sleep needed since method is async
-    Expand-Zip $Source $Destination
+    Expand-Zip $installFullPath $Destination
     Start-Sleep -seconds 10
 
     # Install the agent.
 
-    cd C:\AgentThinInstaller
+    cd $Destination
 
     .\install.cmd -licenseKey 123 | Out-Host
 	
@@ -182,7 +178,7 @@ Function CheckForInstallSameOrNewerVersionSuccess([string] $frameworkVersion)
 		}
 		else {
 	        # Test uninstalling
-                cd C:\AgentThinInstaller
+                cd $Destination
                 # Write-Host "WP 2: "  (Get-Item -Path ".\" -Verbose).FullName
 	        .\uninstall.cmd -Force True
 	        
@@ -221,10 +217,6 @@ Function CheckForInstallSameOrNewerVersionWithNewKeySuccess([string] $frameworkV
 	
 	$CurrentLocation = [string](Get-Location)
 	
-    $Destination = "C:\AgentThinInstaller"
-    $Source = "$env:WORKSPACE\NewRelic.Agent.Installer.$AgentVersion.zip"
-	
-
     If(Test-path $Destination) {Remove-item $Destination -Recurse:$true}
     New-Item $Destination -type directory
 
@@ -233,12 +225,12 @@ Function CheckForInstallSameOrNewerVersionWithNewKeySuccess([string] $frameworkV
     #[io.compression.zipfile]::ExtractToDirectory($Source, $Destination)
 
     #Works in any version, sleep needed since method is async
-    Expand-Zip $Source $Destination
+    Expand-Zip $installFullPath $Destination
     Start-Sleep -seconds 10
 
     # Install the agent.
 
-    cd C:\AgentThinInstaller
+    cd $Destination
 
     .\install.cmd -licenseKey 123 | Out-Host
 	
@@ -269,7 +261,7 @@ Function CheckForInstallSameOrNewerVersionWithNewKeySuccess([string] $frameworkV
 		}
 		else {
 	        # Test uninstalling
-	        cd C:\AgentThinInstaller
+	        cd $Destination
                 #Write-Host "WP 3: "  (Get-Item -Path ".\" -Verbose).FullName
                 .\uninstall.cmd -Force True
 	        
@@ -310,10 +302,6 @@ Function CheckForCleanInstallFailure([string] $frameworkVersion)
 	
 	$CurrentLocation = [string](Get-Location)
 
-    $Destination = "C:\AgentThinInstaller"
-    $Source = "$env:WORKSPACE\NewRelic.Agent.Installer.$AgentVersion.zip"
-	
-
     If(Test-path $Destination) {Remove-item $Destination -Recurse:$true}
     New-Item $Destination -type directory
 
@@ -322,12 +310,12 @@ Function CheckForCleanInstallFailure([string] $frameworkVersion)
     #[io.compression.zipfile]::ExtractToDirectory($Source, $Destination)
 
     #Works in any version, sleep needed since method is async
-    Expand-Zip $Source $Destination
+    Expand-Zip $installFullPath $Destination
     Start-Sleep -seconds 10
 
     # Install the Agent.
 
-    cd C:\AgentThinInstaller
+    cd $Destination
 
     .\install.cmd -licenseKey 123 | Out-Host
 	
@@ -364,10 +352,6 @@ Function CheckForCustomDirectoryInstallSuccess([string] $frameworkVersion)
 	
 	$CurrentLocation = [string](Get-Location)
 	
-    $Destination = "C:\AgentThinInstaller"
-    $Source = "$env:WORKSPACE\NewRelic.Agent.Installer.$AgentVersion.zip"
-	
-
     If(Test-path $Destination) {Remove-item $Destination -Recurse:$true}
     New-Item $Destination -type directory
 
@@ -376,12 +360,12 @@ Function CheckForCustomDirectoryInstallSuccess([string] $frameworkVersion)
     #[io.compression.zipfile]::ExtractToDirectory($Source, $Destination)
 
     #Works in any version, sleep needed since method is async
-    Expand-Zip $Source $Destination
+    Expand-Zip $installFullPath $Destination
     Start-Sleep -seconds 10
 
     # Install the Agent.
 
-    cd C:\AgentThinInstaller
+    cd $Destination
     
     $CustomDirectory = "C:\CutomAgentInstallDirectory"
 
@@ -394,9 +378,8 @@ Function CheckForCustomDirectoryInstallSuccess([string] $frameworkVersion)
 	}
 	else{
         
-        #Check if Extensions, Tools and x86 directories exist.
+        #Check if Extensions and x86 directories exist.
         If((Test-Path "$CustomDirectory\Extensions") -and 
-            (Test-Path "$CustomDirectory\Tools") -and
             (Test-Path "$CustomDirectory\x86")){
             
                 Write-Host ""
@@ -411,7 +394,7 @@ Function CheckForCustomDirectoryInstallSuccess([string] $frameworkVersion)
 				}
 				else {
 		            # Test uninstalling
-                            cd C:\AgentThinInstaller
+                    cd $Destination
 		            .\uninstall.cmd -Force True
 		            #Write-Host "WP 4: "  (Get-Item -Path ".\" -Verbose).FullName
 		            $exitCode = $LastExitCode
@@ -437,7 +420,7 @@ Function CheckForCustomDirectoryInstallSuccess([string] $frameworkVersion)
         else{
                 Write-Host ""
                 Write-Host "---------------------------"
-                Write-Host "Could not find Extensions, Tools and x86 directories after installing - Failed"
+                Write-Host "Could not find Extensions and x86 directories after installing - Failed"
                 Write-Host "---------------------------"
                 Write-Host ""
                 
@@ -450,7 +433,7 @@ Function CheckForCustomDirectoryInstallSuccess([string] $frameworkVersion)
 
 Function VerifyInstallState ([string] $installPath)
 {
-	If ((!(ValidateRequiredTargetFolderFilesExist $installPath)) -or
+	If ((!(ValidateRequiredTargetFolderFilesExist "$installPath")) -or
 		(!(ValidateRequiredProgramDataFilesExist)) -or
 		(!(ValidateRegistryKeys)) -or
 		(!(ValidateRegistryItemProperties))) {
@@ -468,29 +451,14 @@ Function ValidateRequiredTargetFolderFilesExist([string] $targetFullPath)
 	If (
 		(!(CheckFileExists("Extensions\NewRelic.Core.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Storage.HttpContext.dll"))) -or
-		(!(CheckFileExists("Extensions\NewRelic.Providers.TransactionContext.Default.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Storage.OperationContext.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Asp35.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB.dll"))) -or
-		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB26.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Mvc3.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.NServiceBus.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Wcf3.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.WebApi1.dll"))) -or
 		(!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.WebApi2.dll"))) -or
-#		(!(CheckFileExists("Tools\flush_dotnet_temp.cmd"))) -or
-		(!(CheckFileExists("Tools\Ionic.Zip.Reduced.dll"))) -or
-		(!(CheckFileExists("Tools\Microsoft.Web.Administration.dll"))) -or
-		(!(CheckFileExists("Tools\NewRelic.SupportCollator.Client.dll"))) -or
-		(!(CheckFileExists("Tools\NewRelic.SupportCollator.Client.Wrapper.dll"))) -or
-		(!(CheckFileExists("Tools\NewRelicStatusMonitor.exe"))) -or
-		(!(CheckFileExists("Tools\NewRelicStatusMonitor.exe.config"))) -or
-		(!(CheckFileExists("Tools\Newtonsoft.Json.dll"))) -or
-		(!(CheckFileExists("Tools\Ninject.dll"))) -or
-		(!(CheckFileExists("Tools\System.Management.Automation.dll"))) -or
-		(!(CheckFileExists("Tools\SystemInterface.dll"))) -or
-		(!(CheckFileExists("Tools\SystemWrapper.dll"))) -or
-		(!(CheckFileExists("Tools\TrayManager.dll"))) -or
 #		(!(CheckFileExists("default_newrelic.config"))) -or
 #		(!(CheckFileExists("License.txt"))) -or
 		(!(CheckFileExists("NewRelic.Agent.Core.dll"))) -or
@@ -511,7 +479,6 @@ Function ValidateRequiredProgramDataFilesExist
 	If ((!(CheckFileExists("Extensions\extension.xsd"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml"))) -or
-        (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.MongoDB26.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml"))) -or
         (!(CheckFileExists("Extensions\NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml"))) -or
@@ -731,7 +698,7 @@ Function FirstTime_UninstallAndValidate
 {
 	$CurrentLocation = [string](Get-Location)
 
-	cd C:\AgentThinInstaller
+	cd $Destination
 		
     .\uninstall.cmd -Force True
     
@@ -759,9 +726,6 @@ Function FirstTime_UninstallAndValidate
 
 $exitCode = 0
 
-# CLR-ec2-i300, CLR-ec2-i350, CLR-ec2-i400, CLR-ec2-i451
-#$env:SERVER = "CLR-ec2-i300"
-
 Write-Host ""
 Write-Host "---------------------------"
 Write-Host "Test Clean Install."
@@ -769,23 +733,24 @@ Write-Host "---------------------------"
 Write-Host ""
 
 
-if($env:SERVER -like "CLR-ec2-i300*")
-{
-    CheckForCleanInstallFailure "3.0"
-}
-elseif($env:SERVER -like "CLR-ec2-i350*")
+if($env:SERVER -like "dn-inst*-35*")
 {
     CheckForCleanInstallFailure "3.5"
 }
-elseif($env:SERVER -like "CLR-ec2-i400*")
+elseif($env:SERVER -like "dn-inst*-400*")
 {
     # FirstTime_UninstallAndValidate
-    CheckForCleanInstallSuccess "4.0"
+    CheckForCleanInstallFailure "4.0"
 }
-elseif($env:SERVER -like "CLR-ec2-i452*")
+elseif($env:SERVER -like "dn-inst*-452")
 {
     # FirstTime_UninstallAndValidate
     CheckForCleanInstallSuccess "4.5.2"
+}
+else
+{
+	Write-Host "FAILURE: Unable to identify which version of the .Net Framework to test."
+	ReportError(1);
 }
 
 if($exitCode -ne 0)
@@ -799,11 +764,7 @@ Write-Host "Test Install Same or Newer Agent."
 Write-Host "---------------------------"
 Write-Host ""
 
-if($env:SERVER -like "CLR-ec2-i400*")
-{
-    CheckForInstallSameOrNewerVersionSuccess "4.0"
-}
-elseif($env:SERVER -like "CLR-ec2-i452*")
+if($env:SERVER -like "dn-inst*-452")
 {
     CheckForInstallSameOrNewerVersionSuccess "4.5.2"
 }
@@ -814,11 +775,7 @@ Write-Host "Test Install Same or Newer Agent With New LicenceKey and -forceLicen
 Write-Host "---------------------------"
 Write-Host ""
 
-if($env:SERVER -like "CLR-ec2-i400*")
-{
-    CheckForInstallSameOrNewerVersionWithNewKeySuccess "4.0"
-}
-elseif($env:SERVER -like "CLR-ec2-i452*")
+if($env:SERVER -like "dn-inst*-452")
 {
     CheckForInstallSameOrNewerVersionWithNewKeySuccess "4.5.2"
 }
@@ -829,11 +786,7 @@ Write-Host "Test Custom Directory Install."
 Write-Host "---------------------------"
 Write-Host ""
 
-if($env:SERVER -like "CLR-ec2-i400*")
-{
-    CheckForCustomDirectoryInstallSuccess "4.0"
-}
-elseif($env:SERVER -like "CLR-ec2-i452*")
+if($env:SERVER -like "dn-inst*-452")
 {
     CheckForCustomDirectoryInstallSuccess "4.5.2"
 }

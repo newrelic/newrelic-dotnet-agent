@@ -43,7 +43,6 @@ Function RunFunctionalTests
     $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='Environment']").Value = "Local"
     $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='RemoteServers']").Value = "localhost"
     $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='AgentVersion']").Value = $version
-    $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='TestApplicationsPath']").Value = "C:\TestApplications"
     $appConfig.Save($appConfigPath)
 
     iisreset /start

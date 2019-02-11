@@ -10,6 +10,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Helpers;
+using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
@@ -112,7 +113,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
 			try
 			{
-				return CrossApplicationResponseData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(responseHeader, _configurationService.Configuration.EncodingKey));
+				return HeaderEncoder.TryDecodeAndDeserialize <CrossApplicationResponseData>(responseHeader, _configurationService.Configuration.EncodingKey);
 			}
 			catch (Newtonsoft.Json.JsonSerializationException)
 			{
@@ -152,7 +153,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				return null;
 			}
 
-			var data = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(encodedTransactionDataHttpHeader, _configurationService.Configuration.EncodingKey));
+			var data = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encodedTransactionDataHttpHeader, _configurationService.Configuration.EncodingKey);
 
 			return data;
 		}
@@ -174,7 +175,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			var responseTimeInSeconds = txMetadata.CrossApplicationResponseTimeInSeconds;
 			var appData = new CrossApplicationResponseData(crossProcessId, transactionMetricName.PrefixedName, (float)queueTime, responseTimeInSeconds, referrerContentLength, transaction.Guid);
 
-			return HeaderEncoder.EncodeSerializedData(appData.ToJson(), _configurationService.Configuration.EncodingKey);
+			return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(appData), _configurationService.Configuration.EncodingKey);
 		}
 
 		[Pure]
@@ -191,7 +192,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			var tripId = txMetadata.CrossApplicationReferrerTripId ?? transaction.Guid;
 			var transactionData = new CrossApplicationRequestData(transaction.Guid, false, tripId, txMetadata.LatestCrossApplicationPathHash);
 
-			return HeaderEncoder.EncodeSerializedData(transactionData.ToJson(), _configurationService.Configuration.EncodingKey);
+			return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(transactionData), _configurationService.Configuration.EncodingKey);
 		}
 
 		private Boolean IsTrustedCrossProcessAccountId(string accountId, IEnumerable<Int64> trustedAccountIds)

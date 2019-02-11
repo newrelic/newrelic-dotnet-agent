@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="CorStandIn.h" />
+    <ClInclude Include="Macros.h" />
+    <ClInclude Include="Strings.h" />
+    <ClInclude Include="OnDestruction.h" />
+    <ClInclude Include="xplat.h" />
+  </ItemGroup>
+</Project>

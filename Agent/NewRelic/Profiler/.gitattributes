@@ -1,0 +1,6 @@
+## .gitattributes for NewRelic.Profiler
+
+# Set all text files to be checked out with Linux-style line endings (LF, not CRLF)
+# Modern Windows knows how to deal with this, Linux can't handle CRLF
+# This will help with Docker-based testing of Linux containers on Windows
+* text eol=lf

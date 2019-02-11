@@ -120,7 +120,13 @@ namespace NewRelic.Installer
 		{
 			get
 			{
-				var profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Windows", $"{Bitness}", "NewRelic.Profiler.dll");
+				var profilerPath = Path.Combine(SolutionPath, "NewRelic", "Profiler", "Profiler", "bin", $"{Bitness}", $"{Configuration}", "NewRelic.Profiler.dll");
+
+				if (!File.Exists(profilerPath))
+				{
+					profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Windows", $"{Bitness}", "NewRelic.Profiler.dll");
+				}
+
 				return profilerPath;
 			}
 		}
@@ -130,10 +136,14 @@ namespace NewRelic.Installer
 		{
 			get
 			{
-				
-				var profilerSoPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux", ProfilerSoFileName);
+				var profilerPath = Path.Combine(SolutionPath, "NewRelic", "Profiler", ProfilerSoFileName);
 
-				return profilerSoPath;
+				if (!File.Exists(profilerPath))
+				{
+					profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux", ProfilerSoFileName);
+				}
+
+				return profilerPath;
 			}
 		}
 
@@ -372,10 +382,10 @@ namespace NewRelic.Installer
 			ilRepack.Repack();
 		}
 
-		private string GetNugetPackageDllPath(string csprojPath, string packageName, VersionResolution versionResolution, params string[] packageSubFolders)
+		private string GetNugetPackageDllPath(string csprojPath, string packageName, string assemblyName, VersionResolution versionResolution, params string[] packageSubFolders)
 		{
 			var folderPath = GetNugetPackageDllFolderPath(csprojPath, packageName, versionResolution, packageSubFolders);
-			var dllPath = Path.Combine(folderPath, $"{packageName}.dll") ?? String.Empty;
+			var dllPath = Path.Combine(folderPath, $"{assemblyName ?? packageName}.dll") ?? String.Empty;
 
 			return dllPath;
 		}
@@ -442,17 +452,17 @@ namespace NewRelic.Installer
 		{
 			var netstandardAssemblyPaths = new List<string>();
 
-			var autofacDllPath = GetNugetPackageDllPath(_coreProjectPath, "Autofac", VersionResolution.FirstFound, "lib", "netstandard1.1");
+			var autofacDllPath = GetNugetPackageDllPath(_coreProjectPath, "Autofac", null, VersionResolution.FirstFound, "lib", "netstandard1.1");
 			netstandardAssemblyPaths.Add(autofacDllPath);
 
-			var log4netDllPath = GetNugetPackageDllPath(_coreProjectPath, "log4net", VersionResolution.Latest, "lib", "netstandard1.3");
+			var log4netDllPath = GetNugetPackageDllPath(_coreProjectPath, "log4net", null, VersionResolution.Latest, "lib", "netstandard1.3");
 			netstandardAssemblyPaths.Add(log4netDllPath);
 
-			var moreLinqDllPath = GetNugetPackageDllPath(_coreProjectPath, "MoreLinq", VersionResolution.Latest, "lib", "netstandard1.0");
-			netstandardAssemblyPaths.Add(moreLinqDllPath);
-
-			var newtonSoftJsonDllPath = GetNugetPackageDllPath(_coreProjectPath, "Newtonsoft.Json", VersionResolution.Latest, "lib", "netstandard2.0");
+			var newtonSoftJsonDllPath = GetNugetPackageDllPath(_coreProjectPath, "Newtonsoft.Json", null, VersionResolution.Latest, "lib", "netstandard2.0");
 			netstandardAssemblyPaths.Add(newtonSoftJsonDllPath);
+
+			var SharpZipLibDllPath = GetNugetPackageDllPath(_coreProjectPath, "SharpZipLib", "ICSharpCode.SharpZipLib", VersionResolution.Latest, "lib", "netstandard2.0");
+			netstandardAssemblyPaths.Add(SharpZipLibDllPath);
 
 			return netstandardAssemblyPaths;
 		}

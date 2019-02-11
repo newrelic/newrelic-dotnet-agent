@@ -29,7 +29,6 @@ namespace ArtifactBuilder.Artifacts
 			package.CopyToContent($@"{SourceDirectory}\Agent\_build\x64-{Configuration}\Installer\NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
 			package.SetVersion(frameworkAgentComponents.Version);
 			package.Pack();
-			package.PushToProGet();
 		}
 
 		private string DownloadServerMonitorMsi()

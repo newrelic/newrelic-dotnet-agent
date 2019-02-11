@@ -8,10 +8,6 @@ namespace NewRelic.Api.Agent
 		private static IAgent _noOpAgent = new NoOpAgent();
 		private dynamic _wrappedAgent = _noOpAgent;
 
-		internal Agent()
-		{
-		}
-
 		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		internal void SetWrappedAgent(object agentBridge)
 		{

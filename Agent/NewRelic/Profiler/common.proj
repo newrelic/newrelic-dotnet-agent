@@ -1,0 +1,14 @@
+﻿<Project InitialTargets="VersionByGitTag">
+  <PropertyGroup>
+    <Company>New Relic</Company>
+    <Product>New Relic .NET Agent</Product>
+    <Copyright>Copyright © 2017</Copyright>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <Import Project="$(SolutionDir)NewRelic.Dotnet.Agent.targets" Condition="Exists('$(SolutionDir)NewRelic.Dotnet.Agent.targets')" />
+
+  <Target Name="AfterBuild">
+    
+  </Target>
+</Project>

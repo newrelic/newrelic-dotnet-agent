@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Xml;
 
 namespace PlatformTests.Applications
 {
@@ -17,8 +16,7 @@ namespace PlatformTests.Applications
 		private const string PublishSettings = "dotnet-agent.publishsettings";
 		private const string TestPackageName = "NewRelic.Azure.WebSites.x64";
 
-		private static readonly string TestPackageLocalPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),
-			@"..\..\..\..\..\Build\BuildArtifacts\NugetAzureWebSites-x64\"));
+		private static string TestPackageLocalPath { get; } = Path.GetFullPath(Path.Combine(RootRepositoryPath, @"Build\BuildArtifacts\NugetAzureWebSites-x64\"));
 
 		public String ApplicationRootDirectory { get; }
 
@@ -28,8 +26,7 @@ namespace PlatformTests.Applications
 
 		public AzureWebApplication(string applicationName) : base(applicationName, null)
 		{
-			ApplicationRootDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),
-				$@"..\..\..\Applications\{ApplicationName}"));
+			ApplicationRootDirectory = Path.GetFullPath(Path.Combine(RootRepositoryPath, $@"Tests\PlatformTests\Applications\{ApplicationName}"));
 
 			SolutionConfiguration = "Release";
 #if DEBUG

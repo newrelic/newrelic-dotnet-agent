@@ -1,4 +1,5 @@
-﻿namespace NewRelic.Agent.Extensions.Parsing
+﻿
+namespace NewRelic.Agent.Extensions.Parsing
 {
 	public static class UriHelpers
 	{

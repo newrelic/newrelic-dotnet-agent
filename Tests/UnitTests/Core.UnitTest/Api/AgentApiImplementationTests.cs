@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.Api
 
 			_wrapperApi = Mock.Create<IAgentWrapperApi>();
 
-			_agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null);
+			_agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null);
 		}
 
 

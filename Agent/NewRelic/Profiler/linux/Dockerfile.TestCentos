@@ -1,0 +1,25 @@
+FROM centos
+
+WORKDIR /root
+RUN mkdir mvc
+WORKDIR /root/mvc
+
+RUN rpm --import https://packages.microsoft.com/keys/microsoft.asc
+RUN sh -c 'echo -e "[packages-microsoft-com-prod]\nname=packages-microsoft-com-prod \nbaseurl=https://packages.microsoft.com/yumrepos/microsoft-rhel7.3-prod\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/dotnetdev.repo'
+
+RUN yum update --assumeyes
+RUN yum install -y libunwind libicu
+RUN yum install -y dotnet-sdk-2.0.0
+
+RUN dotnet new mvc && \
+    dotnet restore && \
+    dotnet build
+
+EXPOSE 5000
+
+ENV CORECLR_ENABLE_PROFILING=1
+ENV CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
+ENV CORECLR_PROFILER_PATH=/profiler/libNewRelicProfiler.so
+ENV CORECLR_NEWRELIC_HOME=/agent
+ENV NEW_RELIC_HOST=staging-collector.newrelic.com
+ENV NEW_RELIC_LICENSE_KEY="b25fd3ca20fe323a9a7c4a092e48d62dc64cc61d"

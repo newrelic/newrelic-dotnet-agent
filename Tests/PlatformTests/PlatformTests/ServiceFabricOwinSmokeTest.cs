@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.IntegrationTestHelpers;
+﻿using NewRelic.Agent.IntegrationTestHelpers;
 using PlatformTests.Fixtures;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,7 +11,7 @@ namespace PlatformTests
 
 		private AgentLogString _agentLog;
 
-		public ServiceFabricOwinSmokeTest([NotNull]ServiceFabricFixture fixture, [NotNull] ITestOutputHelper output)
+		public ServiceFabricOwinSmokeTest(ServiceFabricFixture fixture, ITestOutputHelper output)
 		{
 			_fixture = fixture;
 			_fixture.TestLogger = output;

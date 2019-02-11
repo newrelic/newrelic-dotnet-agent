@@ -1,9 +1,5 @@
-using System;
-using System.Diagnostics;
-using System.Web;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
@@ -12,10 +8,15 @@ using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System;
+using System.Diagnostics;
+using System.Web;
 
 namespace NewRelic.Agent.Core
 {
@@ -123,7 +124,9 @@ namespace NewRelic.Agent.Core
 
 			AgentServices.StartServices(_container);
 
-			AgentApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
+			// Setup the internal API first so that AgentApi can use it.
+			InternalApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
+			AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
 			Initialize();
 		}

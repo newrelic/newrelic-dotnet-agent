@@ -25,7 +25,8 @@ namespace NewRelic.Agent.Core.Metric
 		SetTransactionName = 14,
 		SetUserParameters = 15,
 		GetBrowserTimingFooter = 16,
-		StartAgent = 17
+		StartAgent = 17,
+		SetTransactionUri = 18
 	}
 
 	public interface IApiSupportabilityMetricCounters : IOutOfBandMetricSource

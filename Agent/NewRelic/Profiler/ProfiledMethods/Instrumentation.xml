@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<extension xmlns="urn:newrelic-extension">
+	<instrumentation>
+		<tracerFactory>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.ProfiledMethods">
+				<exactMethodMatcher methodName="EmptyMethod"/>
+				<exactMethodMatcher methodName="ClassParameter"/>
+				<exactMethodMatcher methodName="ClassReturn"/>
+				<exactMethodMatcher methodName="PassByReference"/>
+				<exactMethodMatcher methodName="PrimitivePassByReference"/>
+				<exactMethodMatcher methodName="ThrowsException"/>
+				<exactMethodMatcher methodName="ThrowsAndCatchesException"/>
+				<exactMethodMatcher methodName="FinallyExecutedOnException"/>
+				<exactMethodMatcher methodName="StaticMethod"/>
+				<exactMethodMatcher methodName="StaticMethod2"/>
+				<exactMethodMatcher methodName="MethodWithOutParameter"/>
+				<exactMethodMatcher methodName="InterfaceParameter"/>
+				<exactMethodMatcher methodName="ExecuteStepSimulator"/>
+				<exactMethodMatcher methodName="Overloaded"/>
+				<exactMethodMatcher methodName="ReturnsValueClass"/>
+				<exactMethodMatcher methodName="CallsUnProfiledThrowsException"/>
+				<exactMethodMatcher methodName="LotsOfParameters"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.OuterClass+InnerClass">
+				<exactMethodMatcher methodName="InnerClassMethod"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.BaseClass">
+				<exactMethodMatcher methodName="Foo"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericsTests">
+				<exactMethodMatcher methodName="GenericParameter"/>
+				<exactMethodMatcher methodName="GenericMethod" />
+				<exactMethodMatcher methodName="GenericMethodWithParameter"/>
+				<exactMethodMatcher methodName="GenericMethodWithParameterAndReturn"/>
+				<exactMethodMatcher methodName="GenericMethodAndNestedGenericParameterAndReturn"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericClass`1">
+				<exactMethodMatcher methodName="DefaultMethod"/>
+				<exactMethodMatcher methodName="DefaultMethod" parameters="!0"/>
+				<exactMethodMatcher methodName="GenericMethod" parameters="!!0"/>
+				<exactMethodMatcher methodName="GenericMethodTwo" parameters="!!0,!0"/>
+				<exactMethodMatcher methodName="GenericMethodThree" parameters="!!0"/>
+				<exactMethodMatcher methodName="GenericMethodFour"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.OuterGenericClass`1+InnerDefaultClass">
+				<exactMethodMatcher methodName="InnerGenericMethod"/>
+				<exactMethodMatcher methodName="InnerGenericMethodReturnsIt"/>
+				<exactMethodMatcher methodName="InnerClassMethodWithClassGenericParam"/>
+				<exactMethodMatcher methodName="InnerClassMethodReturnsIt"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.StaticGenericClass`1">
+				<exactMethodMatcher methodName="DefaultMethod"/>
+				<exactMethodMatcher methodName="GenericMethod"/>
+				<exactMethodMatcher methodName="GenericMethodTwo"/>
+				<exactMethodMatcher methodName="GenericMethodThree"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericClass3`1">
+				<exactMethodMatcher methodName="GetCount"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericClassValueTypeConstraint`1">
+				<exactMethodMatcher methodName="DefaultMethod"/>
+				<exactMethodMatcher methodName="GenericMethodOne"/>
+				<exactMethodMatcher methodName="GenericMethodTwo"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericClassMultipleValueTypeConstraints`2">
+				<exactMethodMatcher methodName="DefaultMethod"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericClassMultipleTypeConstraints`2">
+				<exactMethodMatcher methodName="DefaultMethod"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericClassClassConstraint`1">
+				<exactMethodMatcher methodName="GenericMethod"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.GenericClassComplexConstraints`3">
+				<exactMethodMatcher methodName="DefaultMethod"/>
+				<exactMethodMatcher methodName="GenericMethodOne"/>
+				<exactMethodMatcher methodName="GenericMethodTwo"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.CovariantFactory`1">
+				<exactMethodMatcher methodName="CreateInstance"/>
+				<exactMethodMatcher methodName="GenericMethod"/>
+			</match>
+			<match assemblyName="ProfiledMethods" className="NewRelic.Agent.Tests.ProfiledMethods.ContravariantProcessor`1">
+				<exactMethodMatcher methodName="Process"/>
+				<exactMethodMatcher methodName="GenericMethod"/>
+			</match>
+		</tracerFactory>
+	</instrumentation>
+</extension>

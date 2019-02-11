@@ -111,7 +111,7 @@ App_Data
 #Functional Tests
 FunctionalTests/InstallUtil.InstallLog
 *.coverage
-Agent/TestResults/*
+TestResults/*
 *.pubxml.user
 IntegrationTests/Applications/*/Deploy/
 IntegrationTests/UnboundedApplications/*/Deploy/
@@ -125,3 +125,4 @@ Tests/PlatformTests/Applications/ServiceFabricApplication/packages/
 Tests/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
 
 /Tests/Benchmarking/BenchmarkDotNet.Artifacts
+*.dgml

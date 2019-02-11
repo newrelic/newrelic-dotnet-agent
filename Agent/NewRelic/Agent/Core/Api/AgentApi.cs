@@ -1,7 +1,8 @@
+using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.Api;
-
 // The AgentApi is the only interface we expose to our customers.
 //
 // The public static members of this class must exactly match
@@ -23,7 +24,7 @@ namespace NewRelic.Agent.Core
 	/// All public functions here must be static.
 	/// All public functions here must have the EXACTLY the same type signature as their stub counterparts in NewRelic.Api.Agent/NewRelic.cs
 	/// </summary>
-	public class AgentApi
+	public static class AgentApi 
 	{
 		static AgentApi()
 		{
@@ -31,45 +32,110 @@ namespace NewRelic.Agent.Core
 			AgentInitializer.InitializeAgent();
 		}
 
-		private static IAgentApi _agentApiImplementation;
+		private static IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
 
-		public static void SetAgentApiImplementation(IAgentApi agentApiImplementation)
+		public static void SetSupportabilityMetricCounters(IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
 		{
-			_agentApiImplementation = agentApiImplementation;
+			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
 		}
 
 		public static void InitializePublicAgent(object publicAgent)
 		{
-			_agentApiImplementation?.InitializePublicAgent(publicAgent);
+			InternalApi.InitializePublicAgent(publicAgent);
 		}
 
-		/// <summary>
-		/// Record a custom analytics event.
-		/// </summary>
-		/// <param name="eventType">The name of the metric to record.
-		/// Only the first 255 characters (256 including the nul terminator) are retained.
-		/// </param>
-		/// <param name="attributes">The value to record.
-		/// Only the first 1000 characters are retained.
-		/// </param>
-		public static void RecordCustomEvent(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
+		private static void LogApiError(string methodName, Exception ex)
 		{
-
-			_agentApiImplementation?.RecordCustomEvent(eventType, attributes);
+			try
+			{
+				Log.Warn($"Agent API Error: An error occurred invoking API method \"{methodName}\" - \"{ex}\"");
+			}
+			catch (Exception) // swallow errors
+			{
+			}
 		}
 
-		/// <summary>
-		/// Record a metric value for the given name.
-		/// </summary>
-		/// <param name="name">The name of the metric to record.
-		/// Only the first 1000 characters are retained.
-		/// </param>
-		/// <param name="value">The value to record.
-		/// Only the first 1000 characters are retained.
-		/// </param>
-		public static void RecordMetric(String name, Single value)
+		private static void RecordSupportabilityMetric(ApiMethod apiMethod)
 		{
-			_agentApiImplementation?.RecordMetric(name, value);
+			_apiSupportabilityMetricCounters.Record(apiMethod);
+		}
+
+		/// <summary> Increment the supportability metric counter for specific API. Update our thread state
+		/// as performing work that should not be traced. Execute an action and catch/log any exceptions
+		/// thrown by the action. </summary>
+		/// <param name="action">	  An action to perform. </param>
+		/// <param name="methodName"> A string identifying the API name. </param>
+		/// <param name="apiMethod">  An enum value identifying the supportability metric to create. </param>
+		private static void TryInvoke(Action action, string methodName, ApiMethod apiMethod)
+		{
+			try
+			{
+				using (new IgnoreWork())  //do not trace activity on this call tree
+				{
+					RecordSupportabilityMetric(apiMethod);
+					action();
+				}
+			}
+			catch (Exception ex)
+			{
+				LogApiError(methodName, ex);
+			}
+		}
+
+		/// <summary> Increment the supportability metric counter for specific API. Update our thread state
+		/// as performing work that should not be traced. Execute an function and catch/log any
+		/// exceptions thrown by the action. On failure a default(T) is returned and no exceptions are
+		/// thrown. </summary>
+		/// <typeparam name="T"> Generic type parameter specifying the return type of the action. </typeparam>
+		/// <param name="action">	  An action to perform. </param>
+		/// <param name="methodName"> A string identifying the API name. </param>
+		/// <param name="apiMethod">  An enum value identifying the supportability metric to create. </param>
+		/// <returns> A value of the generic type T. </returns>
+		public static T TryInvoke<T>(Func<T> action, string methodName, ApiMethod apiMethod) 
+		{
+			try
+			{
+				using (new IgnoreWork())  //do not trace activity on this call tree
+				{
+					RecordSupportabilityMetric(apiMethod);
+					return action();
+				}
+			}
+			catch (Exception ex)
+			{ 
+				LogApiError(methodName, ex);
+			}
+			return default(T);
+		}
+
+		/// <summary> Record a custom analytics event. </summary>
+		/// <param name="eventType">  The name of the metric to record. Only the first 255 characters (256
+		/// including the null terminator) are retained. </param>
+		/// <param name="attributes"> The value to record. Only the first 1000 characters are retained. </param>
+		public static void RecordCustomEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
+		{
+			const ApiMethod apiMetric = ApiMethod.RecordCustomEvent;
+			const string apiName = nameof(RecordCustomEvent);
+			void work()
+			{
+				InternalApi.RecordCustomEvent(eventType, attributes);
+			}
+			TryInvoke(work, apiName, apiMetric);
+		}
+
+		/// <summary> Record a metric value for the given name. </summary>
+		/// <param name="name">  The name of the metric to record. Only the first 1000 characters are
+		/// retained. </param>
+		/// <param name="value"> The value to record. Only the first 1000 characters are retained. </param>
+		public static void RecordMetric(string name, float value)
+		{
+			const ApiMethod apiMetric = ApiMethod.RecordMetric;
+			const string apiName = nameof(RecordMetric);
+			void work()
+			{
+				InternalApi.RecordMetric(name, value);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -79,9 +145,15 @@ namespace NewRelic.Agent.Core
 		/// Only the first 1000 characters are retained.
 		/// </param>
 		/// <param name="millis">The response time to record in milliseconds.</param>
-		public static void RecordResponseTimeMetric(String name, Int64 millis)
+		public static void RecordResponseTimeMetric(string name, long millis)
 		{
-			_agentApiImplementation?.RecordResponseTimeMetric(name, millis);
+			const ApiMethod apiMetric = ApiMethod.RecordResponseTimeMetric;
+			const string apiName = nameof(RecordResponseTimeMetric);
+			void work()
+			{
+				InternalApi.RecordResponseTimeMetric(name, millis);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -90,9 +162,15 @@ namespace NewRelic.Agent.Core
 		/// <param name="name">The name of the metric to increment.
 		/// Only the first 1000 characters are retained.
 		/// </param>
-		public static void IncrementCounter(String name)
+		public static void IncrementCounter(string name)
 		{
-			_agentApiImplementation?.IncrementCounter(name);
+			const ApiMethod apiMetric = ApiMethod.IncrementCounter;
+			const string apiName = nameof(IncrementCounter);
+			void work()
+			{
+				InternalApi.IncrementCounter(name);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -110,9 +188,15 @@ namespace NewRelic.Agent.Core
 		/// May be null.
 		/// Only 10,000 characters of combined key/value data is retained.
 		/// </param>
-		public static void NoticeError(Exception exception, IDictionary<String, String> customAttributes)
+		public static void NoticeError(Exception exception, IDictionary<string, string> customAttributes)
 		{
-			_agentApiImplementation?.NoticeError(exception, customAttributes);
+			const ApiMethod apiMetric = ApiMethod.NoticeError;
+			const string apiName = nameof(NoticeError);
+			void work()
+			{
+				InternalApi.NoticeError(exception, customAttributes);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -128,7 +212,13 @@ namespace NewRelic.Agent.Core
 		/// </param>
 		public static void NoticeError(Exception exception)
 		{
-			_agentApiImplementation?.NoticeError(exception);
+			const ApiMethod apiMetric = ApiMethod.NoticeError;
+			const string apiName = nameof(NoticeError);
+			void work()
+			{
+				InternalApi.NoticeError(exception);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -146,9 +236,15 @@ namespace NewRelic.Agent.Core
 		/// May be null.
 		/// Only 10,000 characters of combined key/value data is retained.
 		/// </param>
-		public static void NoticeError(String message, IDictionary<String, String> customAttributes)
+		public static void NoticeError(string message, IDictionary<string, string> customAttributes)
 		{
-			_agentApiImplementation?.NoticeError(message, customAttributes);
+			const ApiMethod apiMetric = ApiMethod.NoticeError;
+			const string apiName = nameof(NoticeError);
+			void work()
+			{
+				InternalApi.NoticeError(message, customAttributes);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -159,9 +255,15 @@ namespace NewRelic.Agent.Core
 		/// Only the first 1000 characters are retained.
 		/// </param>
 		/// <param name="value">The numeric value to add to the current transaction.</param>
-		public static void AddCustomParameter(String key, IConvertible value)
+		public static void AddCustomParameter(string key, IConvertible value)
 		{
-			_agentApiImplementation?.AddCustomParameter(key, value);
+			const ApiMethod apiMetric = ApiMethod.AddCustomParameter;
+			const string apiName = nameof(AddCustomParameter);
+			void work()
+			{
+				InternalApi.AddCustomParameter(key, value);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -174,9 +276,15 @@ namespace NewRelic.Agent.Core
 		/// <param name="value">The value.
 		/// Only the first 1000 characters are retained.
 		/// </param>
-		public static void AddCustomParameter(String key, String value)
+		public static void AddCustomParameter(string key, string value)
 		{
-			_agentApiImplementation?.AddCustomParameter(key, value);
+			const ApiMethod apiMetric = ApiMethod.AddCustomParameter;
+			const string apiName = nameof(AddCustomParameter);
+			void work()
+			{
+				InternalApi.AddCustomParameter(key, value);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -190,23 +298,49 @@ namespace NewRelic.Agent.Core
 		/// <param name="name">The name of the transaction starting with a forward slash.  example: /store/order
 		/// Only the first 1000 characters are retained.
 		/// </param>
-		public static void SetTransactionName(String category, String name)
+		public static void SetTransactionName(string category, string name)
 		{
-			_agentApiImplementation?.SetTransactionName(category, name);
+			const ApiMethod apiMetric = ApiMethod.SetTransactionName;
+			const string apiName = nameof(SetTransactionName);
+			void work()
+			{
+				InternalApi.SetTransactionName(category, name);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
+		/// <summary>
+		/// Set the URI of the current transaction.
+		/// Supports web applications only.
+		/// </summary>
+		/// <param name="uri">The URI of this transaction.</param>
 		public static void SetTransactionUri(Uri uri)
 		{
-			_agentApiImplementation?.SetTransactionUri(uri);
+			const ApiMethod apiMetric = ApiMethod.SetTransactionUri;
+			const string apiName = nameof(SetTransactionUri);
+			void work()
+			{
+				InternalApi.SetTransactionUri(uri);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
 		/// Sets the User Name, Account Name and Product Name to associate with the RUM JavaScript footer for the current web transaction.
 		/// Supports web applications only.
 		/// </summary>
-		public static void SetUserParameters(String userName, String accountName, String productName)
+		/// <param name="userName"> Name of the user to be associated with the transaction.</param>
+		/// <param name="accountName">Name of the account to be associated with the transaction.</param>
+		/// <param name="productName">Name of the product to be associated with the transaction.</param>
+		public static void SetUserParameters(string userName, string accountName, string productName)
 		{
-			_agentApiImplementation?.SetUserParameters(userName, accountName, productName);
+			const ApiMethod apiMetric = ApiMethod.SetUserParameters;
+			const string apiName = nameof(SetUserParameters);
+			void work()
+			{
+				InternalApi.SetUserParameters(userName, accountName, productName);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -215,7 +349,9 @@ namespace NewRelic.Agent.Core
 		/// </summary>
 		public static void IgnoreTransaction()
 		{
-			_agentApiImplementation?.IgnoreTransaction();
+			const ApiMethod apiMetric = ApiMethod.IgnoreTransaction;
+			const string apiName = nameof(IgnoreTransaction);
+			TryInvoke(InternalApi.IgnoreTransaction, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -224,7 +360,9 @@ namespace NewRelic.Agent.Core
 		/// </summary>
 		public static void IgnoreApdex()
 		{
-			_agentApiImplementation?.IgnoreApdex();
+			const ApiMethod apiMetric = ApiMethod.IgnoreApdex;
+			const string apiName = nameof(IgnoreApdex);
+			TryInvoke(InternalApi.IgnoreApdex, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -243,15 +381,24 @@ namespace NewRelic.Agent.Core
 		/// </code>
 		/// </example>
 		/// <returns>An html string to be embedded in a page header.</returns>
-		public static String GetBrowserTimingHeader()
+		public static string GetBrowserTimingHeader()
 		{
-			return _agentApiImplementation?.GetBrowserTimingHeader() ?? String.Empty;
+			const ApiMethod apiMetric = ApiMethod.GetBrowserTimingHeader;
+			const string apiName = nameof(GetBrowserTimingHeader);
+			return TryInvoke(InternalApi.GetBrowserTimingHeader, apiName, apiMetric) ?? string.Empty;
 		}
 
-		[Obsolete]
-		public static String GetBrowserTimingFooter()
+		/// <summary>
+		/// Obsolete method that used to return the html snippet to be inserted into the footer of html pages as part of Real User Monitoring.
+		/// Now only returns and empty string.
+		/// Supports web applications only.
+		/// <returns>An empty string.</returns>
+		[Obsolete("This method returns an empty string.")]
+		public static string GetBrowserTimingFooter()
 		{
-			return _agentApiImplementation?.GetBrowserTimingFooter() ?? String.Empty;
+			const ApiMethod apiMetric = ApiMethod.GetBrowserTimingFooter;
+			const string apiName = nameof(GetBrowserTimingFooter);
+			return TryInvoke(InternalApi.GetBrowserTimingFooter, apiName, apiMetric) ?? string.Empty;
 		}
 
 		/// <summary>
@@ -263,9 +410,16 @@ namespace NewRelic.Agent.Core
 		/// NewRelic.Api.Agent.NewRelic.DisableBrowserMonitoring()
 		/// </code>
 		/// </example>
-		public static void DisableBrowserMonitoring(Boolean overrideManual = false)
+		/// <param name="overrideManual">(Optional) True to override manual instrumentation.</param>
+		public static void DisableBrowserMonitoring(bool overrideManual = false)
 		{
-			_agentApiImplementation?.DisableBrowserMonitoring(overrideManual);
+			const ApiMethod apiMetric = ApiMethod.DisableBrowserMonitoring;
+			const string apiName = nameof(DisableBrowserMonitoring);
+			void work()
+			{
+				InternalApi.DisableBrowserMonitoring(overrideManual);
+			}
+			TryInvoke(work, apiName, apiMetric);
 		}
 
 		/// <summary>
@@ -280,31 +434,49 @@ namespace NewRelic.Agent.Core
 		/// </example>
 		public static void StartAgent()
 		{
-			_agentApiImplementation?.StartAgent();
+			const ApiMethod apiMetric = ApiMethod.StartAgent;
+			const string apiName = nameof(StartAgent);
+			TryInvoke(InternalApi.StartAgent, apiName, apiMetric);
 		}
 
 		/// <summary>
 		/// Sets the name of the application to <paramref name="applicationName"/>. At least one given name must not be null.
 		/// 
 		/// An application may also have up to two additional names. This can be useful, for example, to have multiple 
-		/// applications report under the same rollup name.
+		/// applications report under the same roll-up name.
 		/// </summary>
 		/// <param name="applicationName">The main application name.</param>
 		/// <param name="applicationName2">An optional second application name.</param>
 		/// <param name="applicationName3">An optional third application name.</param>
-		public static void SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)
+		public static void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
 		{
-			_agentApiImplementation?.SetApplicationName(applicationName, applicationName2, applicationName3);
+			const string apiName = nameof(SetApplicationName);
+			void work() 
+			{
+				InternalApi.SetApplicationName(applicationName, applicationName2, applicationName3);
+			}
+
+			TryInvoke(work, apiName, ApiMethod.SetApplicationName);
 		}
 
-		public static IEnumerable<KeyValuePair<String, String>> GetRequestMetadata()
+		/// <summary>
+		/// Get the request metadata for the current transaction.
+		/// If Distributed Tracing is enabled this returns an empty list.
+		/// </summary>
+		/// <returns>A list of key-value pairs representing the request metadata.</returns>
+		public static IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
 		{
-			return _agentApiImplementation?.GetRequestMetadata() ?? new Dictionary<String, String>();
+			return InternalApi.GetRequestMetadata() ?? new Dictionary<string, string>();
 		}
 
-		public static IEnumerable<KeyValuePair<String, String>> GetResponseMetadata()
+		/// <summary>
+		/// Get the response metadata for the current transaction.
+		/// If Distributed Tracing is enabled this returns an empty list.
+		/// </summary>
+		/// <returns>A list of key-value pairs representing the response metadata.</returns>
+		public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
 		{
-			return _agentApiImplementation?.GetResponseMetadata() ?? new Dictionary<String, String>();
+			return InternalApi.GetResponseMetadata() ?? new Dictionary<string, string>();
 		}
 	}
 }

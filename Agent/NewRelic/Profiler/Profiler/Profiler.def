@@ -1,0 +1,5 @@
+LIBRARY "NewRelic.Profiler.dll"
+
+EXPORTS
+    DllCanUnloadNow PRIVATE
+    DllGetClassObject PRIVATE

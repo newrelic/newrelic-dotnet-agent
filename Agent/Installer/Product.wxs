@@ -306,9 +306,6 @@
 			<Component Id="OwinWrapperComponent" Guid="{FC044DC6-52D8-42C6-A9FE-CB9425EF5811}">
 				<File Id="OwinWrapperFile" Name="NewRelic.Providers.Wrapper.Owin.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin.dll"/>
 			</Component>
-			<Component Id="Owin3WrapperComponent" Guid="{09C98DB0-29F7-4DAB-A6BC-FBE6FF380276}">
-				<File Id="Owin3WrapperFile" Name="NewRelic.Providers.Wrapper.Owin3.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin3.dll"/>
-			</Component>
 			<Component Id="HttpWebRequestWrapperComponent" Guid="{9B8A8B55-1A7C-4428-A820-8CC4156A6F6D}">
 				<File Id="HttpWebRequestWrapperFile" Name="NewRelic.Providers.Wrapper.HttpWebRequest.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpWebRequest.dll"/>
 			</Component>
@@ -416,9 +413,6 @@
 			</Component>
 			<Component Id="OwinInstrumentationComponent" Guid="{83B9445D-0D43-4E13-9B66-0A01DA1C6CFA}">
 				<File Id="OwinInstrumentationFile" Name="NewRelic.Providers.Wrapper.Owin.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin.Instrumentation.xml"/>
-			</Component>
-			<Component Id="Owin3InstrumentationComponent" Guid="{7A6890C5-4E29-4A2F-93C3-3C93F060430E}">
-				<File Id="Owin3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Owin3.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin3.Instrumentation.xml"/>
 			</Component>
 			<Component Id="HttpWebRequestInstrumentationComponent" Guid="{4D41C030-AC4E-4580-9BAA-02DF8991B7C8}">
 				<File Id="HttpWebRequestInstrumentationFile" Name="NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml"/>

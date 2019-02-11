@@ -14,10 +14,11 @@
         <DebugSymbols>True</DebugSymbols>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
-        <PackageReference Include="MoreLinq" Version="2.4.0" />
         <PackageReference Include="log4net" Version="2.0.8" />
         <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+        <PackageReference Include="SharpZipLib" Version="1.1.0" />
     </ItemGroup>
   
   <PropertyGroup>
@@ -65,12 +66,6 @@
       <Reference Include="System.Configuration" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Reference Include="ICSharpCode.SharpZipLib">
-            <HintPath>$(SolutionDir)ExternalLibs\ICSharpCode.SharpZipLib.dll</HintPath>
-            <Private>True</Private>
-        </Reference>
-    </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\AttributeFilter\AttributeFilter.csproj" />
         <ProjectReference Include="..\Dongle\Dongle.csproj" />

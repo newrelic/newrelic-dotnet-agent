@@ -153,24 +153,29 @@ $realExitCode = 0
 #     CheckForInstallFailure "3.0"
 #     Write-Host "Real exit code $realExitCode "
 # }
-if($env:SERVER -like "dn-inst-350*")
+if($env:SERVER -like "dn-inst*-35*")
 {
     # LEGACY: Swap the two checks out to enable legacy agent testing!
     # CheckForInstallSuccess "3.5"
     CheckForInstallFailure "3.5"
     Write-Host "Real exit code $realExitCode "
 }
-elseif($env:SERVER -like "dn-inst-400v2*")
+elseif($env:SERVER -like "dn-inst*-40*")
 {
     # LEGACY: Swap the two checks out to enable legacy agent testing!
     # CheckForInstallSuccess "4.0"
     CheckForInstallFailure "4.0"
     Write-Host "Real exit code $realExitCode "
 }
-elseif($env:SERVER -like "dn-inst-452*")
+elseif($env:SERVER -like "dn-inst*-45*")
 {
     CheckForInstallSuccess "4.5.2"
     Write-Host "Real exit code $realExitCode "
+}
+else
+{
+	Write-Host "FAILURE: Unable to identify which version of the .Net Framework to test."
+	ReportError(1);
 }
 # Likely Future test servers
 # LEGACY: Comment out below hereto enable legacy agent testing!

@@ -1,5 +1,39 @@
 $ErrorActionPreference = "Stop"
 
+$nugetPath = (Resolve-Path ".\Build\Tools\nuget.exe").Path
+$msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
+$msBuildPathx64 = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\amd64\MSBuild.exe"
+
+function ExitIfFailLastExitCode {
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
+    }
+}
+
+##################
+# Profiler Build #
+##################
+
+$profilerSolutionPath = "Agent\NewRelic\Profiler\NewRelic.Profiler.sln"
+
+Write-Host "-- Profiler build: Restoring NuGet packages"
+& $nugetPath restore $profilerSolutionPath -Source "https://www.nuget.org/api/v2"
+ExitIfFailLastExitCode
+
+Write-Host "-- Profiler build: Building x64 profiler"
+& $msBuildPathx64 /p:Platform=x64 /p:Configuration=Release $profilerSolutionPath
+ExitIfFailLastExitCode
+
+Write-Host "-- Profiler build: Building Win32 profiler"
+& "$msBuildPath" /p:Platform=Win32 /p:Configuration=Release $profilerSolutionPath
+ExitIfFailLastExitCode
+
+Write-Host "-- Profiler build: Building Linux profiler"
+& .\Agent\NewRelic\Profiler\build\scripts\build_linux.ps1
+ExitIfFailLastExitCode
+
+Remove-Item -Recurse -Force Agent\ProfilerBuildsForDevMachines
+
 ###############
 # NuGet Restore #
 ###############
@@ -8,14 +42,12 @@ $applicationsFull = @("Agent\FullAgent.sln", "FunctionalTests\FunctionalTests.sl
 
 Write-Host "Restoring NuGet packages"
 foreach ($application in $applicationsFull) {
-    C:\nuget.exe restore $application -NoCache -Source "http://win-nuget-repository.pdx.vm.datanerd.us:81/NuGet/Default"
+    & $nugetPath restore $application -NoCache -Source "https://www.nuget.org/api/v2"
 }
 
 #######
 # Build #
 #######
-
-$msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
 
 $applicationsFull = [Ordered]@{"Agent\FullAgent.sln" = "Configuration=Release;Platform=x86;AllowUnsafeBlocks=true";
     "FunctionalTests\FunctionalTests.sln"            = "Configuration=Release";
@@ -74,31 +106,6 @@ if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }
 Pop-Location
-
-###############
-# Annotate the build and the parent CI job #
-###############
-
-$Commit = $env:GIT_COMMIT.Substring(0, 10)
-$authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
-Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit" -Headers @{'Authorization' = $authorization} -Method POST -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
-if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
-    $null
-}
-
-if (!$env:sha1 -and $env:BUILD_CAUSE_UPSTREAMTRIGGER) {
-    Write-Host "Updating description in UPSTREAM Job - URI: $env:UPSTREAM_BUILD_URL"
-    Write-Host "AUTH: $authorization"
-    Write-Host "URI:    $($env:UPSTREAM_BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit"
-    Invoke-RestMethod -Uri "$($env:UPSTREAM_BUILD_URL)submitDescription?description=$agentVersion - $env:GIT_BRANCH - $Commit" -Headers @{'Authorization' = $authorization}  -Method POST -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
-    if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
-        $null
-    }
-}
-
-if ($LastExitCode -ne 0) {
-    exit $LastExitCode
-}
 
 ###############
 # Clean up old containers #

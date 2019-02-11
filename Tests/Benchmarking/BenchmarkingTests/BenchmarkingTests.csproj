@@ -13,7 +13,6 @@
     <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
     <PackageReference Include="JustMock" Version="2015.2.616.2" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
-    <Compile Include="../../CommonFiles/NrAssert.cs"><Link>NrAssert.cs</Link></Compile><Compile Include="../../CommonFiles/AttributeComparer.cs"><Link>AttributeComparer.cs</Link></Compile>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NUnit" Version="3.6.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />

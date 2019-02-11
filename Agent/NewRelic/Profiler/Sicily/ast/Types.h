@@ -1,0 +1,9 @@
+#pragma once
+#include "Type.h"
+#include "ArrayType.h"
+#include "ClassType.h"
+#include "GenericParamType.h"
+#include "GenericType.h"
+#include "MethodType.h"
+#include "PrimitiveType.h"
+#include "TypeList.h"

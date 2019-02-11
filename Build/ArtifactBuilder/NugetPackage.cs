@@ -85,10 +85,5 @@ namespace ArtifactBuilder
 		{
 			NuGetHelpers.Pack(NuspecFilePath, OutputDirectory);
 		}
-
-		public void PushToProGet()
-		{
-			NuGetHelpers.PushToProGet(OutputDirectory);
-		}
 	}
 }

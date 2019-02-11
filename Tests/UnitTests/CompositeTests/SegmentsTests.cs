@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
@@ -12,6 +11,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace CompositeTests
 {
@@ -358,7 +358,7 @@ namespace CompositeTests
 			var catResponseData = new CrossApplicationResponseData("123#456", "transactionName", 1.1f, 2.2f, 3, "guid");
 			var responseHeaders = new Dictionary<string, string>
 			{
-				{"X-NewRelic-App-Data", HeaderEncoder.EncodeSerializedData(catResponseData.ToJson(), encodingKey)}
+				{"X-NewRelic-App-Data", HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(catResponseData), encodingKey)}
 			};
 			transaction.ProcessInboundResponse(responseHeaders, segment);
 			segment.End();

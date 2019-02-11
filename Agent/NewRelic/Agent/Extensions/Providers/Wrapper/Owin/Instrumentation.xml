@@ -1,24 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
-    <tracerFactory>
-      <match assemblyName="Microsoft.Owin.Host.HttpListener" className="Microsoft.Owin.Host.HttpListener.OwinHttpListener">
-        <exactMethodMatcher methodName="StartProcessingRequest" parameters="System.Net.HttpListenerContext" />
-        <exactMethodMatcher methodName="EndRequest" />
+    <tracerFactory name="ResolveAppWrapper">
+      <match assemblyName="Microsoft.Owin.Hosting" className="Microsoft.Owin.Hosting.Engine.HostingEngine">
+        <exactMethodMatcher methodName="ResolveApp" />
       </match>
     </tracerFactory>
-
-    <tracerFactory name="NewRelic.Providers.Wrapper.Owin.PopulateServerKeysWrapper">
-      <match assemblyName="Microsoft.Owin.Host.HttpListener" className="Microsoft.Owin.Host.HttpListener.OwinHttpListener">
-        <exactMethodMatcher methodName="PopulateServerKeys" />
-      </match>
-    </tracerFactory>
-
-    <tracerFactory name="NewRelic.Providers.Wrapper.Owin.OwinHttpListenerContextEnd">
-      <match assemblyName="Microsoft.Owin.Host.HttpListener" className="Microsoft.Owin.Host.HttpListener.RequestProcessing.OwinHttpListenerContext">
-        <exactMethodMatcher methodName="End" parameters="System.Exception" />
-      </match>
-    </tracerFactory>
-
   </instrumentation>
 </extension>

@@ -18,7 +18,7 @@ namespace PlatformTests.Applications
 
 		public ServiceFabricApplication(string applicationName, string[] serviceNames):base(applicationName, serviceNames)
 		{
-			ApplicationRootDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), $@"..\..\..\Applications\{ApplicationName}"));
+			ApplicationRootDirectory = Path.GetFullPath(Path.Combine(RootRepositoryPath, $@"Tests\PlatformTests\Applications\{ApplicationName}"));
 
 			SolutionConfiguration = "Release";
 #if DEBUG
@@ -30,8 +30,7 @@ namespace PlatformTests.Applications
 
 		public override string[] NugetSources { get; } =
 		{
-			Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),
-				@"..\..\..\..\..\Build\BuildArtifacts\NugetAgent\")),
+			Path.GetFullPath(Path.Combine(RootRepositoryPath, @"Build\BuildArtifacts\NugetAgent\")),
 			"http://win-nuget-repository.pdx.vm.datanerd.us:81/NuGet/Default",
 			"https://api.nuget.org/v3/index.json"
 		};
@@ -40,8 +39,7 @@ namespace PlatformTests.Applications
 		{
 			var packageName = "NewRelic.Agent";
 
-			var version = SearchForNewestNugetVersion(Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(),
-				@"..\..\..\..\..\Build\BuildArtifacts\NugetAgent\")));
+			var version = SearchForNewestNugetVersion(Path.GetFullPath(Path.Combine(RootRepositoryPath, @"Build\BuildArtifacts\NugetAgent\")));
 
 			TestLogger?.WriteLine($@"[{DateTime.Now}] Installing {packageName} version {version} .");
 

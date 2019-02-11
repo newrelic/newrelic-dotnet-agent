@@ -35,7 +35,6 @@ namespace ArtifactBuilder.Artifacts
 			TransformNewRelicConfig();
 			package.SetVersion(_agentComponents.Version);
 			package.Pack();
-			package.PushToProGet();
 		}
 
 		private void TransformNewRelicConfig()

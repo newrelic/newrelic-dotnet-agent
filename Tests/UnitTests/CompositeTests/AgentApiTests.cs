@@ -1275,6 +1275,68 @@ namespace CompositeTests
 
 		#endregion SetTransactionName
 
+		#region SetTransactionUri
+
+		[Test]
+		[Description("Verifies a custom transaction uri creates supportability and web transaction metrics.")]
+		public void Test_SetTransactionUri()
+		{
+			// ARRANGE
+			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
+
+			// ACT
+			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
+			var firstUri = new Uri("http://localhost/first");
+			AgentApi.SetTransactionUri(firstUri);
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var actualMetrics = _compositeTestAgent.Metrics;
+			var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
+			var expectedMetrics = new List<ExpectedTimeMetric>
+			{
+				new ExpectedTimeMetric {Name = "WebTransaction/MyCategory/MyTransaction", CallCount = 1},
+				new ExpectedTimeMetric {Name = "Supportability/ApiInvocation/SetTransactionUri", CallCount = 1}
+			};
+
+			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+		}
+
+		[Test]
+		[Description("Verifies that, with multiple SetTransactionUri calls, the first call takes effect.")]
+		public void Test_SetTransactionUri_MultipleCalls_FirstCallWins()
+		{
+			// ARRANGE
+			var agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
+
+			// ACT
+			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			var firstUri = new Uri("http://localhost/first");
+			var secondUri = new Uri("http://localhost/second");
+			AgentApi.SetTransactionUri(firstUri);
+			AgentApi.SetTransactionUri(secondUri);
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var actualMetrics = _compositeTestAgent.Metrics;
+			var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
+			var expectedMetrics = new List<ExpectedTimeMetric>
+			{
+				new ExpectedTimeMetric {Name = "Supportability/ApiInvocation/SetTransactionUri", CallCount = 2}
+			};
+
+			MetricAssertions.MetricsExist(expectedMetrics, actualMetrics);
+		}
+
+		#endregion
+
 		#region SetUserParameters
 
 		[Test]
@@ -1571,7 +1633,7 @@ namespace CompositeTests
 			var crossProcessId = Strings.TryBase64Decode(requestMetadata[NewRelicIdHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
 			Assert.AreEqual(_compositeTestAgent.ServerConfiguration.CatId, crossProcessId);
 
-			var crossApplicationRequestData = CrossApplicationRequestData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(requestMetadata[TransactionDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey));
+			var crossApplicationRequestData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(requestMetadata[TransactionDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
 
 			Assert.NotNull(crossApplicationRequestData);
 
@@ -1610,8 +1672,8 @@ namespace CompositeTests
 			Assert.IsTrue(responseMetadata.Count() == 1);
 			Assert.IsTrue(responseMetadata.ContainsKey(AppDataHttpHeader));
 
-			var crossApplicationResponseData = CrossApplicationResponseData.TryBuildIncomingDataFromJson(HeaderEncoder.DecodeSerializedData(responseMetadata[AppDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey));
-			// var crossApplicationResponseData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseMetadata[AppDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
+			var crossApplicationResponseData = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseMetadata[AppDataHttpHeader], _compositeTestAgent.ServerConfiguration.EncodingKey);
+
 			Assert.NotNull(crossApplicationResponseData);
 
 			NrAssert.Multiple(

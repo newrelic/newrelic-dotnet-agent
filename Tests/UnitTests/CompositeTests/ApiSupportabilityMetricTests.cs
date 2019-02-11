@@ -15,7 +15,6 @@ namespace CompositeTests
 
 		private static CompositeTestAgent _compositeTestAgent;
 		private IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
-		private IAgentApi _agentApi;
 		private IAgentWrapperApi _agentWrapperApi;
 
 		[SetUp]
@@ -24,7 +23,6 @@ namespace CompositeTests
 			_compositeTestAgent = new CompositeTestAgent();
 			_agentWrapperApi = _compositeTestAgent.GetAgentWrapperApi();
 			_apiSupportabilityMetricCounters = _compositeTestAgent.Container.Resolve<IApiSupportabilityMetricCounters>();
-			_agentApi = _compositeTestAgent.GetAgentApiImplementation();
 		}
 
 		[TearDown]
@@ -59,100 +57,100 @@ namespace CompositeTests
 		[Test]
 		public void DisableBrowserMonitoring()
 		{
-			_agentApi.DisableBrowserMonitoring();
+			AgentApi.DisableBrowserMonitoring();
 			HarvestAndValidateMetric("DisableBrowserMonitoring");
 		}
 
 		[Test]
 		public void AddCustomParameter()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.AddCustomParameter("customParameter", "1234"), "AddCustomParameter");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.AddCustomParameter("customParameter", "1234"), "AddCustomParameter");
 		}
 
 		[Test]
 		public void GetBrowserTimingHeader()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.GetBrowserTimingHeader(), "GetBrowserTimingHeader");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.GetBrowserTimingHeader(), "GetBrowserTimingHeader");
 		}
 
 		[Test]
 		public void GetBrowserTimingFooter()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.GetBrowserTimingFooter(), "GetBrowserTimingFooter");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.GetBrowserTimingFooter(), "GetBrowserTimingFooter");
 		}
 
 		[Test]
 		public void IgnoreApdex()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.IgnoreApdex(), "IgnoreApdex");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.IgnoreApdex(), "IgnoreApdex");
 		}
 
 		[Test]
 		public void IgnoreTransaction()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.IgnoreTransaction(), "IgnoreTransaction");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.IgnoreTransaction(), "IgnoreTransaction");
 		}
 
 		[Test]
 		public void IncrementCounter()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.IncrementCounter("fred"), "IncrementCounter");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.IncrementCounter("fred"), "IncrementCounter");
 		}
 
 		[Test]
 		public void NoticeError()
 		{
 			var exception = new IndexOutOfRangeException();
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.NoticeError(exception), "NoticeError");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.NoticeError(exception), "NoticeError");
 		}
 
 		[Test]
 		public void RecordCustomEvent()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.RecordCustomEvent("customEvent", null), "RecordCustomEvent");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.RecordCustomEvent("customEvent", null), "RecordCustomEvent");
 		}
 
 		[Test]
 		public void RecordMetric()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.RecordMetric("metricName", 1f), "RecordMetric");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.RecordMetric("metricName", 1f), "RecordMetric");
 		}
 
 		[Test]
 		public void RecordResponseTimeMetric()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.RecordResponseTimeMetric("responseTimeMetric", 1234L), "RecordResponseTimeMetric");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.RecordResponseTimeMetric("responseTimeMetric", 1234L), "RecordResponseTimeMetric");
 		}
 
 		[Test]
 		public void SetApplicationName()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.SetApplicationName("applicationName"), "SetApplicationName");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.SetApplicationName("applicationName"), "SetApplicationName");
 		}
 
 		[Test]
 		public void SetTransactionName()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.SetTransactionName("custom", "transactionName"), "SetTransactionName");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.SetTransactionName("custom", "transactionName"), "SetTransactionName");
 		}
 
 		[Test]
 		public void SetUserParameters()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.SetUserParameters("userName", "accountName", "productName"), "SetUserParameters");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.SetUserParameters("userName", "accountName", "productName"), "SetUserParameters");
 		}
 
 		[Test]
 		public void StartAgent()
 		{
-			CallAgentApiMethodRequiringTransaction(_agentApi => _agentApi.StartAgent(), "StartAgent");
+			CallAgentApiMethodRequiringTransaction(() => AgentApi.StartAgent(), "StartAgent");
 		}
 
-		private void CallAgentApiMethodRequiringTransaction(Action<IAgentApi> apiMethod, string expectedMetricName)
+		private void CallAgentApiMethodRequiringTransaction(Action apiMethod, string expectedMetricName)
 		{
 			using(var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "TransactionName"))
 			{
-				apiMethod(_agentApi);
+				apiMethod();
 			}
 
 			HarvestAndValidateMetric(expectedMetricName);

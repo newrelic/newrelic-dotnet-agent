@@ -8,7 +8,7 @@ using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
@@ -172,8 +172,8 @@ namespace CompositeTests
 			AgentServices.StartServices(_container);
 
 			DisableAgentInitializer();
-			AgentApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
-
+			InternalApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
+			AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 			// Update configuration (will also start services)
 			LocalConfiguration = GetDefaultTestLocalConfiguration();
 			ServerConfiguration = GetDefaultTestServerConfiguration();

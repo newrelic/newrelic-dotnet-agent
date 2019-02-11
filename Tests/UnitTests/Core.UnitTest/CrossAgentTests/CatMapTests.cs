@@ -198,7 +198,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var serialized = JsonConvert.SerializeObject(inboundPayload);
 			try
 			{
-				return CrossApplicationRequestData.TryBuildIncomingDataFromJson(serialized);
+				return JsonConvert.DeserializeObject<CrossApplicationRequestData>(serialized);
 			}
 			catch
 			{

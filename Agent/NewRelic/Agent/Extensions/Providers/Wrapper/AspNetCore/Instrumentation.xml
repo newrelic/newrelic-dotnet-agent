@@ -10,6 +10,9 @@
 			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker">
 				<exactMethodMatcher methodName="InvokeActionMethodAsync" />
 			</match>
+			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker">
+				<exactMethodMatcher methodName="InvokeActionMethodAsync" />
+			</match>
 		</tracerFactory>
 	</instrumentation>
 </extension>
