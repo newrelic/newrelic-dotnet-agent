@@ -4,7 +4,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 		[NotNull]
 		private IContextStorage<ITransaction> _highPriorityTransactionContext;
 		[NotNull]
-		private readonly WebTransactionName _initialTransactionName = new WebTransactionName("initialCategory", "initialName");
+		private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
 
 		[SetUp]
 		public void SetUp()
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 			// ASSERT
 			Assert.IsNotNull(newTransaction);
 
-			var transactionName = newTransaction.ConvertToImmutableTransaction().TransactionName as WebTransactionName;
+			var transactionName = newTransaction.ConvertToImmutableTransaction().TransactionName;
 			Assert.AreEqual(_initialTransactionName.Name, transactionName.Name);
 		}
 

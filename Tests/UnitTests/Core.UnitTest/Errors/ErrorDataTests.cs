@@ -5,7 +5,6 @@ using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -200,7 +199,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			if (transactionExceptionDatas != null)
 				transactionExceptionDatas.ForEach(data => transactionMetadata.AddExceptionData(data));
 
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();
@@ -220,7 +219,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			if (transactionExceptionDatas != null)
 				transactionExceptionDatas.ForEach(data => transactionMetadata.AddExceptionData(data));
 
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();

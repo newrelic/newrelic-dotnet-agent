@@ -7,7 +7,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -129,8 +128,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 	public class Transaction : ITransaction, ITransactionSegmentState
 	{
-		private static readonly ITransactionName EmptyTransactionName = new OtherTransactionName("empty", "empty");
-
 		private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
 		[NotNull]
 		public IList<Segment> Segments { get => _segments; }

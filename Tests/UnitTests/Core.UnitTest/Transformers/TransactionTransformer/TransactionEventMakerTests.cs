@@ -10,7 +10,6 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
@@ -74,8 +73,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		private static ITransaction BuildTestTransaction(Boolean isWebTransaction = true, String uri = null, String referrerUri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, Boolean includeUserAttributes = false)
 		{
 			var name = isWebTransaction
-				? new WebTransactionName(transactionCategory, transactionName)
-				: new OtherTransactionName(transactionCategory, transactionName) as ITransactionName;
+				? TransactionName.ForWebTransaction(transactionCategory, transactionName)
+				: TransactionName.ForOtherTransaction(transactionCategory, transactionName);
+
 			var segments = Enumerable.Empty<Segment>();
 
 			var placeholderMetadataBuilder = new TransactionMetadata();

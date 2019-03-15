@@ -41,7 +41,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 			try
 			{
-				GetQueryStringBackingField = VisibilityBypasser.Instance.GenerateFieldAccessor<HttpRequest, NameValueCollection>("_queryString");
+				GetQueryStringBackingField = VisibilityBypasser.Instance.GenerateFieldReadAccessor<HttpRequest, NameValueCollection>("_queryString");
 			}
 			catch
 			{

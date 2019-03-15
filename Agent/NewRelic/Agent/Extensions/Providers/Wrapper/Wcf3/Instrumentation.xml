@@ -19,6 +19,13 @@
 		<tracerFactory>
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Channels.ServiceChannelProxy">
 				<exactMethodMatcher methodName="InvokeService" />
+				<exactMethodMatcher methodName="InvokeBeginService" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.ChannelFactory">
+				<exactMethodMatcher methodName="InitializeEndpoint" />
 			</match>
 		</tracerFactory>
 

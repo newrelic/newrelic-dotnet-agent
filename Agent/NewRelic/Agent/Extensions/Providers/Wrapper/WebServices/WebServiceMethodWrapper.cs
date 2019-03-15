@@ -12,7 +12,7 @@ namespace NewRelic.Providers.Wrapper.WebServices
 	public class WebServiceMethodWrapper : IWrapper
 	{
 
-		public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<String>("System.Web.Extensions", "System.Web.Script.Services.WebServiceMethodData", "_methodName"));
+		public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GenerateFieldReadAccessor<String>("System.Web.Extensions", "System.Web.Script.Services.WebServiceMethodData", "_methodName"));
 		public Func<Object, Object> GetMethodOwner => _getMethodOwner ?? (_getMethodOwner = VisibilityBypasser.Instance.GeneratePropertyAccessor<Object>("System.Web.Extensions", "System.Web.Script.Services.WebServiceMethodData", "Owner"));
 		public Func<Object, Object> GetMethodTypeData => _getMethodTypeData ?? (_getMethodTypeData = VisibilityBypasser.Instance.GeneratePropertyAccessor<Object>("System.Web.Extensions", "System.Web.Script.Services.WebServiceData", "TypeData"));
 		public Func<Object, Type> GetMethodType => _getMethodType ?? (_getMethodType = VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>("System.Web.Extensions", "System.Web.Script.Services.WebServiceTypeData", "Type"));

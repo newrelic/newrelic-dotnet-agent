@@ -5,6 +5,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 	public class OpenConnectionWrapper : IWrapper
 	{
 		public const string WrapperName = "OpenConnectionWrapper";
+		public const string NpgsqlWrapperName = "NpgsqlOpenConnectionWrapper";
 
 		public bool IsTransactionRequired => true;
 
@@ -12,7 +13,9 @@ namespace NewRelic.Providers.Wrapper.Sql
 		{
 			var method = methodInfo.Method;
 
-			var isRequestedByName = WrapperName == methodInfo.RequestedWrapperName;
+			var isRequestedByName = 
+				(methodInfo.RequestedWrapperName == WrapperName) ||
+				(methodInfo.RequestedWrapperName == NpgsqlWrapperName);
 
 			var canWrap = isRequestedByName || method.MatchesAny(
 				assemblyNames: new[]
@@ -23,7 +26,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 					"Oracle.DataAccess",
 					"Oracle.ManagedDataAccess",
 					"MySql.Data",
-					"Npgsql",
 					"IBM.Data.DB2"
 				},
 				typeNames: new[]
@@ -35,7 +37,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 					"Oracle.DataAccess.Client.OracleConnection",
 					"Oracle.ManagedDataAccess.Client.OracleConnection",
 					"MySql.Data.MySqlClient.MySqlConnection",
-					"Npgsql.NpgsqlConnection",
 					"IBM.Data.DB2.DB2Connection"
 				},
 				methodNames: new[]
@@ -49,7 +50,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
 		{
 			var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "unknown";
-			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, instrumentedMethodCall.MethodCall.Method.MethodName);
+			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, instrumentedMethodCall.MethodCall.Method.MethodName, isLeaf:true);
 				
 			return Delegates.GetDelegateFor(segment);
 		}

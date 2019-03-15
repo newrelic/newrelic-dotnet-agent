@@ -158,7 +158,7 @@ namespace NewRelic.Agent.Core
 			commandService.AddCommands(
 				new RestartCommand(),
 				new ShutdownCommand(),
-				new StartThreadProfilerCommand(ThreadProfilingService),
+				new StartThreadProfilerCommand(ThreadProfilingService, AgentInstallConfiguration.IsWindows),
 				new StopThreadProfilerCommand(ThreadProfilingService),
 				new InstrumentationUpdateCommand(instrumentationService)
 			);

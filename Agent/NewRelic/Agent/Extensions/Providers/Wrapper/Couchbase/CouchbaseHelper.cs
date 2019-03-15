@@ -25,7 +25,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 			{
 				case ("Couchbase.N1QL.IQueryRequest"):
 				{
-					var statementGetter = _getStatement ?? (_getStatement = VisibilityBypasser.Instance.GenerateFieldAccessor<string>("Couchbase.NetClient", "Couchbase.N1QL.QueryRequest", "_statement"));
+					var statementGetter = _getStatement ?? (_getStatement = VisibilityBypasser.Instance.GenerateFieldReadAccessor<string>("Couchbase.NetClient", "Couchbase.N1QL.QueryRequest", "_statement"));
 					return statementGetter(parm);
 				}
 				// Couchbase.CouchbaseBucket.Query() and Couchbase.CouchbaseBucket.QueryAsync() support the following parameters in addition to string and IQueryRequest.

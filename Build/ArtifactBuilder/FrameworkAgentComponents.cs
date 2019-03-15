@@ -10,7 +10,6 @@ namespace ArtifactBuilder
 		protected override string SourceHomeBuilderPath => $@"{SourcePath}\New Relic Home {Platform}";
 
 		protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
-			$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.pdb",
 			$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Core.Instrumentation.xml",
 			$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Parsing.Instrumentation.xml",
 			$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WrapperUtilities.Instrumentation.xml"

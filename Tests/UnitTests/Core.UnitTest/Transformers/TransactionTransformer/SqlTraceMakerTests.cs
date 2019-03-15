@@ -7,7 +7,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -126,7 +125,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (transactionExceptionDatas != null)
 				transactionExceptionDatas.ForEach(data => txMetadata.AddExceptionData(data));
 
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var immutableMetadata = txMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();

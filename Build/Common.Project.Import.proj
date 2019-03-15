@@ -1,7 +1,10 @@
 ﻿<Project InitialTargets="VersionByGitTag">
   <PropertyGroup>
+    <Authors>New Relic</Authors>
     <Company>New Relic</Company>
-    <Copyright>Copyright © 2017</Copyright>
+    <Copyright>Copyright © $([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <PackageIconUrl>http://newrelic.com/images/avatar-newrelic.png</PackageIconUrl>
+    <PackageProjectUrl>https://docs.newrelic.com/docs/agents/net-agent</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
@@ -21,7 +24,7 @@
     <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
   </PropertyGroup>
 
-  <Target Name="CreateGitVersion" >
+  <Target Name="CreateGitVersion">
     <!-- Get current working branch-->
     <Exec Command="git rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitBranchName" />

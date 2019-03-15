@@ -1,24 +1,19 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using JetBrains.Annotations;
+﻿using System.Text.RegularExpressions;
 
 namespace NewRelic.Agent.Configuration
 {
 	public struct RegexRule
 	{
-		[NotNull]
-		public readonly String MatchExpression;
-		[CanBeNull]
-		public readonly String Replacement;
-		public readonly Boolean Ignore;
-		public readonly Int64 EvaluationOrder;
-		public readonly Boolean TerminateChain;
-		public readonly Boolean EachSegment;
-		public readonly Boolean ReplaceAll;
-		[NotNull]
+		public readonly string MatchExpression;
+		public readonly string Replacement;
+		public readonly bool Ignore;
+		public readonly long EvaluationOrder;
+		public readonly bool TerminateChain;
+		public readonly bool EachSegment;
+		public readonly bool ReplaceAll;
 		public readonly Regex MatchRegex;
 
-		public RegexRule([NotNull] String matchExpression, [CanBeNull] String replacement, Boolean ignore, Int64 evaluationOrder, Boolean terminateChain, Boolean eachSegment, Boolean replaceAll)
+		public RegexRule(string matchExpression, string replacement, bool ignore, long evaluationOrder, bool terminateChain, bool eachSegment, bool replaceAll)
 		{
 			MatchExpression = matchExpression;
 			Replacement = replacement;

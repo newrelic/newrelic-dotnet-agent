@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Transactions
 		/// Removes any outstanding internal transactions.
 		/// </summary>
 		/// <param name="removeAsync">If true, removes from async context storage</param>
-		void RemoveOutstandingInternalTransactions(bool removeAsync);
+		void RemoveOutstandingInternalTransactions(bool removeAsync, bool removePrimary);
 
 		/// <summary>
 		/// Sets the transaction on an async compatible context
@@ -46,6 +46,8 @@ namespace NewRelic.Agent.Core.Transactions
 		/// <param name="transaction">Transaction to store in the async context</param>
 		/// <returns>Returns true if found an async context to store the transaction in</returns>
 		bool SetTransactionOnAsyncContext(ITransaction transaction);
+
+		bool IsAttachedToAsyncStorage { get; }
 	}
 
 	public class TransactionService : ConfigurationBasedService, ITransactionService
@@ -79,6 +81,9 @@ namespace NewRelic.Agent.Core.Transactions
 			_tracePriorityManager = tracePriorityManager;
 			_databaseStatementParser = databaseStatementParser;
 		}
+
+		public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
+
 
 		#region Private Helpers
 
@@ -143,7 +148,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		private ITransaction CreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate)
 		{
-			RemoveOutstandingInternalTransactions(true);
+			RemoveOutstandingInternalTransactions(true, true);
 
 			var transactionContext = GetFirstActivePrimaryContext();
 
@@ -241,23 +246,26 @@ namespace NewRelic.Agent.Core.Transactions
 			if (currentNestedTransactionAttempts > 100)
 			{
 				Log.WarnFormat("Releasing the transaction because there were too many nested transaction attempts.");
-				RemoveOutstandingInternalTransactions(true);
+				RemoveOutstandingInternalTransactions(true, true);
 				return CreateInternalTransaction(initialTransactionName, onCreate);
 			}
 
 			return transaction;
 		}
 
-		public void RemoveOutstandingInternalTransactions(bool removeAsync)
+		public void RemoveOutstandingInternalTransactions(bool removeAsync, bool removePrimary)
 		{
-			TryClearContexts(_sortedPrimaryContexts);
+			if (removePrimary)
+			{
+				TryClearContexts(_sortedPrimaryContexts);
+			}
 
 			if (removeAsync)
 			{
 				_asyncContext?.Clear();
 			}
 		}
-		
+
 		#endregion
 
 		#region Event Handlers

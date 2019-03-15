@@ -4,7 +4,6 @@ using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Extensions.Providers;
 using NUnit.Framework;
 using System;
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		private IAgentHealthReporter _agentHealthReporter;
 
 		private TransactionService _transactionService;
-		private readonly WebTransactionName _initialTransactionName = new WebTransactionName("initialCategory", "initialName");
+		private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
 
 		[SetUp]
 		public void Setup()

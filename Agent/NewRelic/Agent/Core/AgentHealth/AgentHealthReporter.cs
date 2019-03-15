@@ -16,6 +16,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 	public interface IAgentHealthReporter
 	{
 		void ReportAgentVersion([NotNull] string agentVersion, [NotNull] string hostName);
+		void ReportLibraryVersion(string assemblyName, string assemblyVersion);
 		void ReportTransactionEventReservoirResized(uint newSize);
 		void ReportTransactionEventCollected();
 		void ReportTransactionEventsRecollected(int count);
@@ -150,6 +151,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 			// avoiding call to GetHostName. If this supportability metrics is being used
 			// this can be resurrected. But GetHostName calls can then be cached. 
 			//TrySend(_metricBuilder.TryBuildAgentVersionByHostMetric(hostName, agentVersion));
+		}
+		
+		public void ReportLibraryVersion(string assemblyName, string assemblyVersion)
+		{
+			TrySend(_metricBuilder.TryBuildLibraryVersionMetric(assemblyName, assemblyVersion));
 		}
 
 		#region TransactionEvents

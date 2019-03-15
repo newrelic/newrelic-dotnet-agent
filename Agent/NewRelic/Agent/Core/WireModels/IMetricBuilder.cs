@@ -17,6 +17,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 		MetricWireModel TryBuildAgentVersionMetric([NotNull] String agentVersion);
 		MetricWireModel TryBuildAgentVersionByHostMetric([NotNull] String hostName, [NotNull] String agentVersion);
+		MetricWireModel TryBuildLibraryVersionMetric(string assemblyName, string assemblyVersion);
 		MetricWireModel TryBuildMetricHarvestAttemptMetric();
 
 		MetricWireModel TryBuildTransactionEventReservoirResizedMetric();

@@ -6,7 +6,6 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -60,7 +59,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var transaction = Mock.Create<ITransaction>();
 			Mock.Arrange(() => transaction.Finish()).Returns(true);
 
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			Mock.Arrange(() => transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
@@ -162,7 +161,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => mockedTransaction.Finish()).Returns(true);
 			Mock.Arrange(() => mockedTransaction.ConvertToImmutableTransaction()).Returns(transaction);
 
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => mockedTransaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			Mock.Arrange(() => mockedTransaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
@@ -283,7 +282,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			var transactionMetadata = new TransactionMetadata();
 
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			segments = segments ?? Enumerable.Empty<Segment>();
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			startTime = startTime ?? DateTime.Now;

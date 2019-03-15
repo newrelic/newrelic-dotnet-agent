@@ -427,6 +427,12 @@ namespace NewRelic.Agent.Core.WireModels
 				var data = MetricDataWireModel.BuildCountData();
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
+			public MetricWireModel TryBuildLibraryVersionMetric(string assemblyName, string assemblyVersion)
+			{
+				var proposedName = MetricNames.GetSupportabilityLibraryVersion(assemblyName, assemblyVersion);
+				var data = MetricDataWireModel.BuildCountData();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
 
 			public MetricWireModel TryBuildMetricHarvestAttemptMetric()
 			{

@@ -9,7 +9,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 	public class CallHandlerWrapper : IWrapper
 	{
 		[NotNull]
-		public Func<Object, HttpApplication> GetHttpApplication { get { return _getHttpApplication ?? (_getHttpApplication = VisibilityBypasser.Instance.GenerateFieldAccessor<HttpApplication>("System.Web", "System.Web.HttpApplication+CallHandlerExecutionStep", "_application")); } }
+		public Func<Object, HttpApplication> GetHttpApplication { get { return _getHttpApplication ?? (_getHttpApplication = VisibilityBypasser.Instance.GenerateFieldReadAccessor<HttpApplication>("System.Web", "System.Web.HttpApplication+CallHandlerExecutionStep", "_application")); } }
 
 		public bool IsTransactionRequired => true;
 

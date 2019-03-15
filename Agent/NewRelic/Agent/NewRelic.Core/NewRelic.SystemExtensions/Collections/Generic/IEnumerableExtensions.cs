@@ -77,7 +77,7 @@ namespace NewRelic.SystemExtensions.Collections.Generic
 		/// <param name="equalityComparer"></param>
 		/// <returns></returns>
 		[NotNull]
-		public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>([NotNull] this IEnumerable<KeyValuePair<TKey, TValue>> source, DuplicateKeyBehavior duplicateKeyBehavior = DuplicateKeyBehavior.Throw, IEqualityComparer<TKey> equalityComparer = null)
+		public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>([NotNull] this IEnumerable<KeyValuePair<TKey, TValue>> source, DuplicateKeyBehavior duplicateKeyBehavior = DuplicateKeyBehavior.Throw, IEqualityComparer<TKey> equalityComparer = null)
 		{
 			var dictionary = new Dictionary<TKey, TValue>(equalityComparer);
 

@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -224,7 +223,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[NotNull]
 		private ImmutableTransaction BuildTestTransaction(Boolean ignoreAutoBrowserMonitoring = false, Boolean ignoreAllBrowserMonitoring = false)
 		{
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var metadata = new TransactionMetadata().ConvertToImmutableMetadata();
 			var guid = Guid.NewGuid().ToString();

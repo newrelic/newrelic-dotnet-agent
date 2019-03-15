@@ -2,7 +2,7 @@ using System;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -27,51 +27,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		public TransactionMetricName GetTransactionMetricName(ITransactionName transactionName)
 		{
-			var proposedTransactionMetricName = GetProposedTransactionMetricName(transactionName);
+			var proposedTransactionMetricName = new TransactionMetricName(transactionName.IsWeb ? MetricNames.WebTransactionPrefix : MetricNames.OtherTransactionPrefix, transactionName.UnprefixedName);
+
 			var vettedTransactionMetricName = _metricNameService.RenameTransaction(proposedTransactionMetricName);
+
 			return vettedTransactionMetricName;
-		}
-
-		private TransactionMetricName GetProposedTransactionMetricName([NotNull] ITransactionName transactionName)
-		{
-			if (transactionName is WebTransactionName name)
-				return GetTransactionMetricName(name);
-			if (transactionName is UriTransactionName uriTransactionName)
-				return GetTransactionMetricName(uriTransactionName);
-			if (transactionName is OtherTransactionName otherTransactionName)
-				return GetTransactionMetricName(otherTransactionName);
-			if (transactionName is MessageBrokerTransactionName brokerTransactionName)
-				return GetTransactionMetricName(brokerTransactionName);
-			if (transactionName is CustomTransactionName customTransactionName)
-				return GetTransactionMetricName(customTransactionName);
-
-			throw new NotImplementedException("Unsupported ITransactionName type");
-		}
-
-		private TransactionMetricName GetTransactionMetricName([NotNull] WebTransactionName transactionName)
-		{
-			return MetricNames.WebTransaction(transactionName.Category, transactionName.Name);
-		}
-
-		private TransactionMetricName GetTransactionMetricName([NotNull] UriTransactionName transactionName)
-		{
-			var normalizedUri = _metricNameService.NormalizeUrl(transactionName.Uri);
-			return MetricNames.UriTransaction(normalizedUri);
-		}
-
-		private TransactionMetricName GetTransactionMetricName([NotNull] OtherTransactionName transactionName)
-		{
-			return MetricNames.OtherTransaction(transactionName.Category, transactionName.Name);
-		}
-
-		private TransactionMetricName GetTransactionMetricName([NotNull] MessageBrokerTransactionName transactionName)
-		{
-			return MetricNames.MessageBrokerTransaction(transactionName.DestinationType, transactionName.BrokerVendorName, transactionName.Destination);
-		}
-
-		private TransactionMetricName GetTransactionMetricName([NotNull] CustomTransactionName transactionName)
-		{
-			return MetricNames.CustomTransaction(transactionName.Name, transactionName.IsWeb);
 		}
 	}
 

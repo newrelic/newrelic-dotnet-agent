@@ -6,7 +6,6 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.Core.WireModels
 		[NotNull]
 		private SqlTraceWireModel _sqlTraceWireModel;
 
-		private const String TransactionName = "WebTransaction/ASP/post.aspx";
+		private const String TrxDisplayName = "WebTransaction/ASP/post.aspx";
 		private const String Uri = "http://localhost:8080/post.aspx";
 		private const Int32 SqlId = 1530282818;
 		private const String Sql = "Select * from meh";
@@ -41,7 +40,7 @@ namespace NewRelic.Agent.Core.WireModels
 		[SetUp]
 		public void SetUp()
 		{
-			_sqlTraceWireModel = new SqlTraceWireModel(TransactionName, Uri, SqlId, Sql, DatabaseMetricName, CallCount, TotalCallTime, MinCallTime, MaxCallTime, _parameterData);
+			_sqlTraceWireModel = new SqlTraceWireModel(TrxDisplayName, Uri, SqlId, Sql, DatabaseMetricName, CallCount, TotalCallTime, MinCallTime, MaxCallTime, _parameterData);
 		}
 
 		[Test]
@@ -57,7 +56,7 @@ namespace NewRelic.Agent.Core.WireModels
 		public void multiple_sqlId_does_not_has_9_digits_number()
 		{
 			var transactionMetadata = new TransactionMetadata();
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			var duration = TimeSpan.FromSeconds(1);
 			var guid = Guid.NewGuid().ToString();
@@ -97,7 +96,7 @@ namespace NewRelic.Agent.Core.WireModels
 		[Test]
 		public void when_construtor_used_TransactionName_property_is_set()
 		{
-			Assert.AreEqual(TransactionName, _sqlTraceWireModel.TransactionName);
+			Assert.AreEqual(TrxDisplayName, _sqlTraceWireModel.TransactionName);
 		}
 
 		[Test]

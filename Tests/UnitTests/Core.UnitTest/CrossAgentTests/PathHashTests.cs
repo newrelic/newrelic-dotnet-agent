@@ -5,7 +5,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Testing.Assertions;
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 			var transactionNameCategory = transactionNamePieces[1];
 			var transactionNameTail = String.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
-			return new WebTransactionName(transactionNameCategory, transactionNameTail);
+			return TransactionName.ForWebTransaction(transactionNameCategory, transactionNameTail);
 		}
 
 		private static void SetGuid(Transaction transaction, String transactionGuid)

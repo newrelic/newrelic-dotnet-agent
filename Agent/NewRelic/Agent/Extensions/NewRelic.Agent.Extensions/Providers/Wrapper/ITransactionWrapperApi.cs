@@ -37,6 +37,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// </summary>
 		/// <param name="methodCall">The method call that is responsible for starting this segment.</param>
 		/// <param name="commandText">The text representation of the operation being performed.  Not required, though when provided it's used for generating traces.</param>
+		/// <param name="isLeaf">If set to true, the created segment is a leaf segment. The default value is false.</param>
 		/// <exception cref="System.ArgumentNullException">Is thrown if <paramref name="operation"/> is null.</exception>
 		/// <returns>An opaque object that will be needed when you want to end the segment.</returns>
 		ISegment StartDatastoreSegment(MethodCall methodCall, ParsedSqlStatement parsedSqlStatement, ConnectionInfo connectionInfo = null, string commandText = null, IDictionary<string, IConvertible> queryParameters = null, bool isLeaf = false);
@@ -47,9 +48,10 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="methodCall">The method call that is responsible for starting this segment.</param>
 		/// <param name="destinationUri">The destination URI of the external request</param>
 		/// <param name="method">The method of the request, such as an HTTP verb (e.g. GET or POST)</param>
+		/// <param name="isLeaf">If set to true, the created segment is a leaf segment. The default value is false.</param>
 		/// <exception cref="System.ArgumentNullException">Is thrown if <paramref name="destinationUri"/> or <paramref name="method"/> is null.</exception>
 		/// <returns>An opaque object that will be needed when you want to end the segment.</returns>
-		ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method);
+		ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, bool isLeaf = false);
 
 		/// <summary>
 		/// Creates a segment for a method call.
@@ -57,9 +59,10 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="methodCall">The method call that is responsible for starting this segment.</param>
 		/// <param name="typeName">The name of the type. Must not be null.</param>
 		/// <param name="methodName">The name of the method. Must not be null.</param>
+		/// <param name="isLeaf">If true, no child segments will be created from this one. Defaults to false.</param>
 		/// <exception cref="System.ArgumentNullException"></exception>
 		/// <returns>an opaque object that will be needed when you want to end the segment.</returns>
-		ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName);
+		ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName, bool isLeaf = false);
 
 		/// <summary>
 		/// Creates a segment with the &apos;Custom&apos; prefix for a method call.

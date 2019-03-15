@@ -68,7 +68,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 
 			var queryParameters = SqlWrapperHelper.GetQueryParameters(sqlCommand, agentWrapperApi);
 
-			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters);
+			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters, isLeaf: true);
 
 			if (vendor == DatastoreVendor.MSSQL)
 			{

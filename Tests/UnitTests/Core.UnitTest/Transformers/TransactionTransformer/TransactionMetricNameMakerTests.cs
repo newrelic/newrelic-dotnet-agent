@@ -2,7 +2,6 @@
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -30,7 +29,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		[Test]
 		public void BuiltTransactionName_BuildsWebTransactionMetricName_IfWebTransactionName()
 		{
-			var transactionName = new WebTransactionName("foo", "bar");
+			var transactionName =  TransactionName.ForWebTransaction("foo", "bar");
 
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
@@ -43,8 +42,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		{
 			Mock.Arrange(() => _metricNameService.NormalizeUrl(Arg.IsAny<String>()))
 				.Returns<String>((uri) => uri + "/normalized");
-			var transactionName = new UriTransactionName("http://www.google.com/yomama");
 
+			var transactionName = TransactionName.ForUriTransaction("http://www.google.com/yomama/normalized");
+			
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
 			Assert.IsFalse(builtName.ShouldIgnore);
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		[Test]
 		public void BuiltTransactionName_BuildsOtherTransactionMetricName_IfOtherTransactionName()
 		{
-			var transactionName = new OtherTransactionName("foo", "bar");
+			var transactionName = TransactionName.ForOtherTransaction("foo", "bar");
 
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		[Test]
 		public void BuiltTransactionName_BuildsCustomTransactionMetricName_IfCustomWebTransactionName()
 		{
-			var transactionName = new CustomTransactionName("foo", true);
+			var transactionName = TransactionName.ForCustomTransaction(true, "foo", 255);
 
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		[Test]
 		public void BuiltTransactionName_BuildsCustomTransactionMetricName_IfCustomNonWebTransactionName()
 		{
-			var transactionName = new CustomTransactionName("foo", false);
+			var transactionName = TransactionName.ForCustomTransaction(false, "foo", 255);
 
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
@@ -87,23 +87,23 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		[Test]
 		public void BuiltTransactionName_BuildsMessageBrokerTransactionMetricNameWithQueueName_IfNamedMessageBrokerTransactionName()
 		{
-			var transactionName = new MessageBrokerTransactionName("foo", "bar", "baz");
+			var transactionName = TransactionName.ForBrokerTransaction(Extensions.Providers.Wrapper.MessageBrokerDestinationType.Queue, "bar", "baz");
 
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
 			Assert.IsFalse(builtName.ShouldIgnore);
-			Assert.AreEqual("OtherTransaction/Message/bar/foo/Named/baz", builtName.PrefixedName);
+			Assert.AreEqual("OtherTransaction/Message/bar/Queue/Named/baz", builtName.PrefixedName);
 		}
 
 		[Test]
 		public void BuiltTransactionName_BuildsMessageBrokerTransactionMetricNameWithoutQueueName_IfUnnamedMessageBrokerTransactionName()
 		{
-			var transactionName = new MessageBrokerTransactionName("foo", "bar", null);
+			var transactionName = TransactionName.ForBrokerTransaction(Extensions.Providers.Wrapper.MessageBrokerDestinationType.Queue, "bar", null);
 
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 
 			Assert.IsFalse(builtName.ShouldIgnore);
-			Assert.AreEqual("OtherTransaction/Message/bar/foo/Temp", builtName.PrefixedName);
+			Assert.AreEqual("OtherTransaction/Message/bar/Queue/Temp", builtName.PrefixedName);
 		}
 
 		[Test]
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			Mock.Arrange(() => _metricNameService.RenameTransaction(Arg.IsAny<TransactionMetricName>()))
 				.Returns(_ => new TransactionMetricName("WebTransaction", "NewName"));
 
-			var transactionName = new WebTransactionName("foo", "bar");
+			var transactionName = TransactionName.ForWebTransaction("foo", "bar");
 
 			var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);
 

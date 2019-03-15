@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.Commands
 			arguments.Add("profile_id", 4444);
 
 			MockThreadProfilingService service = new MockThreadProfilingService();
-			StartThreadProfilerCommand startCmd = new StartThreadProfilerCommand(service);
+			StartThreadProfilerCommand startCmd = new StartThreadProfilerCommand(service, true);
 			StopThreadProfilerCommand command = new StopThreadProfilerCommand(service);
 			object response = command.Process(arguments);
 			Dictionary<string, object> respDict = response as Dictionary<string, object>;

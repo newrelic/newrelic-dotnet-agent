@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 
 namespace NewRelic.Agent.Core.Transactions

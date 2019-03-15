@@ -47,6 +47,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public bool IsLeaf { get; set; }
 
+		public bool IsExternal { get; set; }
+
 		public bool DurationShouldBeDeductedFromParent { get; set; } = false;
 
 		private string _spanId;

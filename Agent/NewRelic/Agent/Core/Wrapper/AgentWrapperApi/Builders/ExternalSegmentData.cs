@@ -74,7 +74,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
 		{
-			return new TypedSegment<ExternalSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
+			var externalSegment = new TypedSegment<ExternalSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
+			externalSegment.IsExternal = true;
+			return externalSegment;
 		}
 
 		public override string GetTransactionTraceName()

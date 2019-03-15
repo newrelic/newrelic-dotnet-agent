@@ -5,6 +5,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 	public class DataReaderWrapper : IWrapper
 	{
 		public const string WrapperName = "DataReaderWrapper";
+		public const string NpgsqlWrapperName = "NpgsqlDataReaderWrapper";
 
 		public bool IsTransactionRequired => true;
 
@@ -12,7 +13,9 @@ namespace NewRelic.Providers.Wrapper.Sql
 		{
 			var method = methodInfo.Method;
 
-			var isRequestedByName = WrapperName == methodInfo.RequestedWrapperName;
+			var isRequestedByName = 
+				(methodInfo.RequestedWrapperName == WrapperName) ||
+				(methodInfo.RequestedWrapperName == NpgsqlWrapperName);
 
 			var canWrap = isRequestedByName || method.MatchesAny(
 				assemblyNames: new[]
@@ -23,7 +26,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 					"Oracle.DataAccess",
 					"Oracle.ManagedDataAccess",
 					"MySql.Data",
-					"Npgsql",
 					"IBM.Data.DB2"
 				},
 				typeNames: new[]
@@ -33,8 +35,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 					"Oracle.DataAccess.Client.OracleDataReader",
 					"Oracle.ManagedDataAccess.Client.OracleDataReader",
 					"MySql.Data.MySqlClient.MySqlDataReader",
-					"Npgsql.ForwardsOnlyDataReader",
-					"Npgsql.CachingDataReader",
 					"IBM.Data.DB2.DB2DataReader"
 				},
 				methodNames: new[]

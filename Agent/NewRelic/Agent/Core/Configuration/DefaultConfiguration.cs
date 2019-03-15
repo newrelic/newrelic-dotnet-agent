@@ -51,7 +51,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
 		private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
 		private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
-		private IDictionary<string, string> _newRelicAppSettings { get; }
+		private Dictionary<string, string> _newRelicAppSettings { get; }
 
 		public bool UseResourceBasedNamingForWCFEnabled { get; }
 
@@ -96,7 +96,12 @@ namespace NewRelic.Agent.Core.Configuration
 			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 		}
 
-		private IDictionary<string, string> TransformAppSettings()
+		public IReadOnlyDictionary<string, string> GetAppSettings()
+		{
+			return _newRelicAppSettings;
+		}
+
+		private Dictionary<string, string> TransformAppSettings()
 		{
 			if (_localConfiguration.appSettings == null)
 				return new Dictionary<string, string>();

@@ -6,10 +6,10 @@ using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -64,6 +64,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[NotNull] private IAgentHealthReporter _agentHealthReporter;
 
 		private IAgentTimerService _agentTimerService;
+		private IMetricNameService _metricNameService;
 
 		private const string DistributedTraceHeaderName = "Newrelic";
 
@@ -105,10 +106,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_configurationService = Mock.Create<IConfigurationService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_agentTimerService = Mock.Create<IAgentTimerService>();
+			_agentTimerService = Mock.Create<IAgentTimerService>();
+			_metricNameService = new MetricNameService();
 
 			_distributedTracePayloadHandler = Mock.Create<DistributedTracePayloadHandler>(Behavior.CallOriginal, _configurationService, _agentHealthReporter, new AdaptiveSampler());
 
-			_agentWrapperApi = new AgentWrapperApi(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService);
+			_agentWrapperApi = new AgentWrapperApi(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService);
 		}
 
 		private class CallStackManagerFactory : ICallStackManagerFactory
@@ -218,11 +221,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agentWrapperApi.CurrentTransactionWrapperApi.SetWebTransactionName(WebTransactionType.MVC, "foo", priority);
 
 			Assert.NotNull(addedTransactionName);
-			var webTransactionName = addedTransactionName as WebTransactionName;
-			Assert.NotNull(webTransactionName);
+
 			NrAssert.Multiple(
-				() => Assert.AreEqual("MVC", webTransactionName.Category),
-				() => Assert.AreEqual("foo", webTransactionName.Name)
+				() => Assert.AreEqual("MVC", addedTransactionName.Category),
+				() => Assert.AreEqual("foo", addedTransactionName.Name)
 			);
 		}
 
@@ -231,16 +233,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			const TransactionNamePriority priority = TransactionNamePriority.Uri;
 
-			var addedTransactionName = (ITransactionName) null;
+			var addedTransactionName = (ITransactionName)null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransactionWrapperApi.SetWebTransactionNameFromPath(WebTransactionType.MVC, "some/path");
 
 			Assert.NotNull(addedTransactionName);
-			var webTransactionName = addedTransactionName as UriTransactionName;
-			Assert.NotNull(webTransactionName);
-			Assert.AreEqual("some/path", webTransactionName.Uri);
+			Assert.AreEqual("Uri/some/path", addedTransactionName.UnprefixedName);
+			Assert.AreEqual(true, addedTransactionName.IsWeb);
 		}
 
 		[Test]
@@ -248,19 +249,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			const TransactionNamePriority priority = TransactionNamePriority.FrameworkHigh;
 
-			var addedTransactionName = (ITransactionName) null;
+			var addedTransactionName = (ITransactionName)null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransactionWrapperApi.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Topic, "broker", "dest", priority);
 
 			Assert.NotNull(addedTransactionName);
-			var webTransactionName = addedTransactionName as MessageBrokerTransactionName;
-			Assert.NotNull(webTransactionName);
 			NrAssert.Multiple(
-				() => Assert.AreEqual("Topic", webTransactionName.DestinationType),
-				() => Assert.AreEqual("broker", webTransactionName.BrokerVendorName),
-				() => Assert.AreEqual("dest", webTransactionName.Destination)
+				() => Assert.AreEqual("Message/broker/Topic/Named/dest", addedTransactionName.UnprefixedName),
+				() => Assert.AreEqual(false, addedTransactionName.IsWeb)
 			);
 		}
 
@@ -269,19 +267,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			const TransactionNamePriority priority = TransactionNamePriority.FrameworkHigh;
 
-			var addedTransactionName = (ITransactionName) null;
+			var addedTransactionName = (ITransactionName)null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransactionWrapperApi.SetOtherTransactionName("cat", "foo", priority);
 
 			Assert.NotNull(addedTransactionName);
-			var webTransactionName = addedTransactionName as OtherTransactionName;
-			Assert.NotNull(webTransactionName);
-			NrAssert.Multiple(
-				() => Assert.AreEqual("cat", webTransactionName.Category),
-				() => Assert.AreEqual("foo", webTransactionName.Name)
-			);
+			Assert.AreEqual("cat/foo", addedTransactionName.UnprefixedName);
+			Assert.AreEqual(false, addedTransactionName.IsWeb);
 		}
 
 		[Test]
@@ -289,16 +283,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			const TransactionNamePriority priority = TransactionNamePriority.StatusCode;
 
-			var addedTransactionName = (ITransactionName) null;
+			var addedTransactionName = (ITransactionName)null;
 			Mock.Arrange(() => _transaction.CandidateTransactionName.TrySet(Arg.IsAny<ITransactionName>(), priority))
 				.DoInstead<ITransactionName, TransactionNamePriority>((name, _) => addedTransactionName = name);
 
 			_agentWrapperApi.CurrentTransactionWrapperApi.SetCustomTransactionName("foo", priority);
 
 			Assert.NotNull(addedTransactionName);
-			var webTransactionName = addedTransactionName as CustomTransactionName;
-			Assert.NotNull(webTransactionName);
-			Assert.AreEqual("foo", webTransactionName.Name);
+			Assert.AreEqual("Custom/foo", addedTransactionName.UnprefixedName);
+			Assert.AreEqual(false, addedTransactionName.IsWeb);
 		}
 
 		[Test]
@@ -474,7 +467,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void ProcessInboundRequest_SetsReferrerCrossProcessId()
 		{
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
@@ -493,7 +486,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void ProcessInboundRequest_SetsTransactionData()
 		{
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
@@ -514,7 +507,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void ProcessInboundRequest_SetsTransactionData_WithContentLength()
 		{
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
@@ -536,7 +529,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void ProcessInboundRequest_DoesNotSetTransactionDataIfCrossProcessIdAlreadyExists()
 		{
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns("referrerProcessId");
@@ -595,7 +588,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void GetResponseMetadata_ReturnsEmpty_IfNoReferrerCrossProcessId()
 		{
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
@@ -611,7 +604,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void GetResponseMetadata_CallsSetPathHashWithResultsFromPathHashMaker()
 		{
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");
@@ -727,7 +720,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void GetRequestMetadata_CallsSetPathHashWithResultsFromPathHashMaker()
 		{
-			var transactionName = new WebTransactionName("a", "b");
+			var transactionName = TransactionName.ForWebTransaction("a", "b");
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerPathHash).Returns("referrerPathHash");

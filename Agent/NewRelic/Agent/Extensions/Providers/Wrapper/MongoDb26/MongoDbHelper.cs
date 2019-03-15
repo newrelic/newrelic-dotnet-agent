@@ -64,7 +64,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
 		public static object GetCollectionNamespaceFieldFromGeneric(object owner)
 		{
-			var getter = _collectionNamespaceGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldAccessor<object>(t, "_collectionNamespace"));
+			var getter = _collectionNamespaceGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(t, "_collectionNamespace"));
 			return getter(owner);
 		}
 
@@ -76,13 +76,13 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
 		public static object GetCollectionFieldFromGeneric(object owner)
 		{
-			var getter = _collectionGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldAccessor<object>(t, "_collection"));
+			var getter = _collectionGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(t, "_collection"));
 			return getter(owner);
 		}
 
 		private static object GetChannelSourceFieldFromGeneric(object owner)
 		{
-			var getter = _channelSourceGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldAccessor<object>(t, "_channelSource"));
+			var getter = _channelSourceGetterMap.GetOrAdd(owner.GetType(), t => VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(t, "_channelSource"));
 			return getter(owner);
 		}
 
@@ -149,7 +149,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 		{
 			var clientGetter = _getClient ?? (_getClient = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoDatabaseImpl", "Client"));
 			var settingsGetter = _getSettings ?? (_getSettings = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("MongoDB.Driver", "MongoDB.Driver.MongoClient", "Settings"));
-			var serversGetter = _getServers ?? (_getServers = VisibilityBypasser.Instance.GenerateFieldAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.MongoClientSettings", "_servers"));
+			var serversGetter = _getServers ?? (_getServers = VisibilityBypasser.Instance.GenerateFieldReadAccessor<IList>("MongoDB.Driver", "MongoDB.Driver.MongoClientSettings", "_servers"));
 
 			var client = clientGetter(database);
 			var settings = settingsGetter(client);

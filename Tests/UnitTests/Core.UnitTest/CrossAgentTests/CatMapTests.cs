@@ -14,7 +14,6 @@ using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
@@ -87,7 +86,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 			var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-			_agentWrapperApi = new AgentWrapperApi(transactionBuilderService, Mock.Create<ITimerFactory>(), Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>());
+			_agentWrapperApi = new AgentWrapperApi(transactionBuilderService, Mock.Create<ITimerFactory>(), Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>());
 
 			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 		}
@@ -217,7 +216,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 			var transactionNameCategory = transactionNamePieces[1];
 			var transactionNameTail = String.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
-			return new WebTransactionName(transactionNameCategory, transactionNameTail);
+			return TransactionName.ForWebTransaction(transactionNameCategory, transactionNameTail);
 		}
 
 		private static void SetGuid(Transaction transaction, String transactionGuid)

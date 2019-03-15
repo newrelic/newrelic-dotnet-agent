@@ -8,7 +8,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Testing.Assertions;
@@ -92,7 +91,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 			var responseTime = TimeSpan.FromMilliseconds(testCase.ApplicationTimeMilliseconds);
 			Mock.Arrange(() => timer.Duration).Returns(responseTime);
 
-			ITransactionName name = new WebTransactionName(transactionMetricName.Prefix, transactionMetricName.UnPrefixedName);
+			ITransactionName name = TransactionName.ForWebTransaction(transactionMetricName.Prefix, transactionMetricName.UnPrefixedName);
 			var priority = 0.5f;
 			ITransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
 			tx.TransactionMetadata.SetQueueTime(TimeSpan.FromMilliseconds(testCase.QueueTimeMilliseconds));

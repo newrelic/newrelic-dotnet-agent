@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
@@ -14,24 +10,12 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 	public class PostgresCommandWrapper : IWrapper
 	{
 		public bool IsTransactionRequired => true;
+		public const string NpgsqlWrapperName = "NpgsqlCommandWrapper";
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(
-				assemblyNames: new[]
-				{
-					"Npgsql"
-				},
-				typeNames: new[]
-				{
-					"Npgsql.NpgsqlCommand"
-				},
-				methodNames: new[]
-				{
-					"ExecuteAsync",
-					"Execute" 
-				});
+			var canWrap = (methodInfo.RequestedWrapperName == NpgsqlWrapperName);
 
 			if (canWrap)
 			{
@@ -66,7 +50,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 			var queryParameters = SqlWrapperHelper.GetQueryParameters(sqlCommand, agentWrapperApi);
 
 			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
-				parsedStatement, connectionInfo, sql, queryParameters);
+				parsedStatement, connectionInfo, sql, queryParameters, isLeaf: true);
 
 			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
 		}

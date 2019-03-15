@@ -212,6 +212,33 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.IsFalse(errorEvent.AgentAttributes.ContainsKey("request.uri"));
 		}
+
+		[Test]
+		public void TransactionEventIgnoreErrors()
+		{
+			_compositeTestAgent.LocalConfiguration.errorCollector.ignoreErrors.exception =
+				new List<string>() { "System.OperationCanceledException" };
+
+			using (var tx = _agentWrapperApi.CreateTransaction(true, "TestCategory", "TestTransaction", false))
+			{
+				var segment = _agentWrapperApi.StartCustomSegmentOrThrow("TestSegment");
+
+				//The sleep ensures that the exception occurs after the transaction
+				//start date.  Without this, there is a small chance that the timesetamps 
+				//could be the same which would make it difficult to distinguish. 
+				Thread.Sleep(5);
+
+				tx.NoticeError(new System.OperationCanceledException("This exception should be ignored"));
+
+				segment.End();
+			}
+			_compositeTestAgent.Harvest();
+
+			var exEvents = _compositeTestAgent.ErrorEvents;
+
+			Assert.AreEqual(0, exEvents.Count);
+		}
+
 		#endregion
 
 		#region Error Traces Tests
@@ -294,6 +321,7 @@ namespace CompositeTests
 
 			Assert.Less(txEventTimeStamp, exEventTimeStamp);
 		}
+
 		#endregion
 
 		[Test]

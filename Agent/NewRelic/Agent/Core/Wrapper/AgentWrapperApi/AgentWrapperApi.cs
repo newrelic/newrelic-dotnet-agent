@@ -6,16 +6,17 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
+using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
@@ -29,6 +30,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
@@ -68,11 +70,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		private readonly IAgentTimerService _agentTimerService;
 
-		private static readonly Extensions.Providers.Wrapper.ITransactionWrapperApi NoOpTransactionWrapperApi = new NoTransactionWrapperApiImpl();
+		private readonly IMetricNameService _metricNameService;
+
+		private ILogger _logger;
+
+		private static readonly ITransactionWrapperApi NoOpTransactionWrapperApi = new NoTransactionWrapperApiImpl();
 
 		private static readonly ISegment _noOpSegment = new NoTransactionWrapperApiImpl();
 
-		public AgentWrapperApi(ITransactionService transactionService, ITimerFactory timerFactory, ITransactionTransformer transactionTransformer, IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, ICatHeaderHandler catHeaderHandler, IDistributedTracePayloadHandler distributedTracePayloadHandler, ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
+		public AgentWrapperApi(ITransactionService transactionService, ITimerFactory timerFactory, ITransactionTransformer transactionTransformer, IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, ICatHeaderHandler catHeaderHandler, IDistributedTracePayloadHandler distributedTracePayloadHandler, ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, IMetricNameService metricNameService)
 		{
 			_transactionService = transactionService;
 			_timerFactory = timerFactory;
@@ -89,57 +95,70 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_configurationService = configurationService;
 			_agentHealthReporter = agentHealthReporter;
 			_agentTimerService = agentTimerService;
+			_metricNameService = metricNameService;
 		}
 
 		public IConfiguration Configuration => _configurationService.Configuration;
 
+		public ILogger Logger => _logger ?? (_logger = new Logger());
+
 		#region Transaction management
 
-		public Extensions.Providers.Wrapper.ITransactionWrapperApi CreateWebTransaction(WebTransactionType type, string transactionDisplayName, bool mustBeRootTransaction, Action wrapperOnCreate)
+		private static void _noOpWrapperOnCreate() { }
+
+
+		private ITransactionWrapperApi CreateTransaction(TransactionName transactionName, bool mustBeRootTransaction, Action wrapperOnCreate)
+		{
+			var transaction = new TransactionWrapperApi(this, _transactionService.GetOrCreateInternalTransaction(transactionName, wrapperOnCreate ?? _noOpWrapperOnCreate, mustBeRootTransaction));
+
+			return transaction;
+		}
+
+		public ITransactionWrapperApi CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool mustBeRootTransaction)
+		{
+			#pragma warning disable CS0618 // Type or member is obsolete
+			return CreateTransaction(isWeb, category, transactionDisplayName, mustBeRootTransaction, _noOpWrapperOnCreate);
+			#pragma warning restore CS0618 // Type or member is obsolete
+		}
+
+		private ITransactionWrapperApi CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool mustBeRootTransaction, Action wrapperOnCreate)
 		{
 			if (transactionDisplayName == null)
+			{
 				throw new ArgumentNullException("transactionDisplayName");
+			}
 
-			Action onCreate = () =>
-			{
-				wrapperOnCreate?.Invoke();
-			};
-
-			var initialTransactionName = new WebTransactionName(Enum.GetName(typeof(WebTransactionType), type), transactionDisplayName);
-			return new TransactionWrapperApi(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, mustBeRootTransaction));
-		}
-
-		public Extensions.Providers.Wrapper.ITransactionWrapperApi CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
-		{
-			if (brokerVendorName == null)
-				throw new ArgumentNullException("brokerVendorName");
-
-			Action onCreate = () =>
-			{
-				wrapperOnCreate?.Invoke();
-			};
-
-			var initialTransactionName = new MessageBrokerTransactionName(destinationType.ToString(), brokerVendorName, destination);
-			return new TransactionWrapperApi(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, true));
-		}
-
-		public Extensions.Providers.Wrapper.ITransactionWrapperApi CreateOtherTransaction(string category, string name, bool mustBeRootTransaction, Action wrapperOnCreate)
-		{
 			if (category == null)
-				throw new ArgumentNullException("category");
-			if (name == null)
-				throw new ArgumentNullException("name");
-
-			Action onCreate = () =>
 			{
-				wrapperOnCreate?.Invoke();
-			};
+				throw new ArgumentNullException("category");
+			}
 
-			var initialTransactionName = new OtherTransactionName(category, name);
-			return new TransactionWrapperApi(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, mustBeRootTransaction));
+			var initialTransactionName = isWeb 
+				? TransactionName.ForWebTransaction(category, transactionDisplayName) 
+				: TransactionName.ForOtherTransaction(category, transactionDisplayName);
+
+			return CreateTransaction(initialTransactionName, mustBeRootTransaction, wrapperOnCreate);
+		}
+		
+		[Obsolete("Use AgentWrapperAPI.CreateTransaction method instead")]
+		public ITransactionWrapperApi CreateWebTransaction(WebTransactionType type, string transactionDisplayName, bool mustBeRootTransaction, Action wrapperOnCreate)
+		{
+			return CreateTransaction(TransactionName.ForWebTransaction(type, transactionDisplayName), mustBeRootTransaction, wrapperOnCreate);
 		}
 
-		public Extensions.Providers.Wrapper.ITransactionWrapperApi CurrentTransactionWrapperApi
+		[Obsolete("Use AgentWrapperAPI.CreateTransaction method instead")]
+		public ITransactionWrapperApi CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
+		{
+			return CreateTransaction(TransactionName.ForBrokerTransaction(destinationType, brokerVendorName, destination), true, wrapperOnCreate);
+		}
+
+		[Obsolete("Use AgentWrapperAPI.CreateTransaction method instead")]
+		public ITransactionWrapperApi CreateOtherTransaction(string category, string name, bool mustBeRootTransaction, Action wrapperOnCreate)
+		{
+			return CreateTransaction(false, category, name, mustBeRootTransaction, wrapperOnCreate);
+		}
+
+		public ITransactionWrapperApi CurrentTransactionWrapperApi
 		{
 			get
 			{
@@ -175,7 +194,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			if (!finishedTransaction) return;
 
 			// We also want to remove the transaction from the transaction context before returning so that it won't be reused
-			_transactionService.RemoveOutstandingInternalTransactions(true);
+			_transactionService.RemoveOutstandingInternalTransactions(true, true);
 
 			var timer = _agentTimerService.StartNew("TransformDelay");
 			Action transformWork = () =>
@@ -193,6 +212,25 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 				ExecuteOffRequestThread(transformWork);
 			}
+		}
+
+		public bool TryTrackAsyncWorkOnNewTransaction()
+		{
+			if (_transactionService.IsAttachedToAsyncStorage)
+			{
+				var currentTransaction = CurrentTransactionWrapperApi;
+
+				// If the threadID under which the parent segment was created is different from the current thread
+				// it means that we are on a different thread in an asychronous context.
+				var currentSegment = currentTransaction.CurrentSegment as Segment;
+				if (currentSegment != null && currentSegment.ThreadId != Thread.CurrentThread.ManagedThreadId)
+				{
+					Detach(removeAsync: true, removePrimary: false);
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		#endregion Transaction management
@@ -515,23 +553,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var isAdded =_transactionService.SetTransactionOnAsyncContext(transaction);
 			if(!isAdded)
 			{
-				Log.Debug("Failed to add transaction to async storage. This can occur when there are no asyn context providers.");
+				Log.Debug("Failed to add transaction to async storage. This can occur when there are no async context providers.");
 			}
 		}
 
-		private void Detach(bool removeAsync)
+		private void Detach(bool removeAsync, bool removePrimary)
 		{
-			_transactionService.RemoveOutstandingInternalTransactions(removeAsync);
+			_transactionService.RemoveOutstandingInternalTransactions(removeAsync, removePrimary);
 		}
 
 		#endregion
-		
+
 		/// <summary>
 		/// This is a simple shim.  It cannot keep any state.  We could potentially remove the
 		/// need for this class by implementing the extension ITransaction interface in the agent's
 		/// transaction implementation.
 		/// </summary>
-		private sealed class TransactionWrapperApi : Extensions.Providers.Wrapper.ITransactionWrapperApi
+		private sealed class TransactionWrapperApi : ITransactionWrapperApi
 		{
 			private readonly AgentWrapperApi agentWrapperApi;
 			private readonly ITransaction transaction;
@@ -570,7 +608,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 				if (transaction.CandidateTransactionName.CurrentTransactionName.IsWeb && transaction.TransactionMetadata.HttpResponseStatusCode >= 400)
 				{
-					SetWebTransactionName(WebTransactionType.StatusCode, $"{transaction.TransactionMetadata.HttpResponseStatusCode}", TransactionNamePriority.StatusCode);
+					SetTransactionName(TransactionName.ForWebTransaction(WebTransactionType.StatusCode, transaction.TransactionMetadata.HttpResponseStatusCode.ToString()), TransactionNamePriority.StatusCode);
+
 				}
 
 				agentWrapperApi.EndTransaction(transaction, captureResponseTime);
@@ -594,7 +633,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				segmentName = Clamper.ClampLength(segmentName.Trim(), MaxSegmentLength);
 				if (segmentName.Length <= 0)
 					throw new ArgumentException("A segment name cannot be an empty string.");
-				
+
 				var methodCallData = GetMethodCallData(methodCall);
 
 				//TODO: Since the CustomSegmentBuilder is the only thing that separates this from the
@@ -706,7 +745,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				}
 			}
 
-			public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method)
+			public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, bool isLeaf = false)
 			{
 				if (transaction.Ignored)
 					return _noOpSegment;
@@ -716,15 +755,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentNullException(nameof(method));
 				if (!destinationUri.IsAbsoluteUri)
 					throw new ArgumentException("Must use an absolute URI, not a relative URI", nameof(destinationUri));
-				
-				var methodCallData = GetMethodCallData(methodCall);
-				return new TypedSegment<ExternalSegmentData>(transaction.GetTransactionSegmentState(), methodCallData,
-					new ExternalSegmentData(destinationUri, method));
 
+				var methodCallData = GetMethodCallData(methodCall);
+				var segment = new TypedSegment<ExternalSegmentData>(transaction.GetTransactionSegmentState(), methodCallData,
+					new ExternalSegmentData(destinationUri, method));
+				segment.IsExternal = true;
+				segment.IsLeaf = isLeaf;
+				return segment;
 				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}
 
-			public ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName)
+			public ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName, bool isLeaf = false)
 			{
 				if (transaction.Ignored)
 					return _noOpSegment;
@@ -732,9 +773,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					throw new ArgumentNullException(nameof(typeName));
 				if (methodName == null)
 					throw new ArgumentNullException(nameof(methodName));
-				
+
 				var methodCallData = GetMethodCallData(methodCall);
-				return new TypedSegment<MethodSegmentData>(transaction.GetTransactionSegmentState(), methodCallData, new MethodSegmentData(typeName, methodName));
+
+				var segment = new TypedSegment<MethodSegmentData>(transaction.GetTransactionSegmentState(), methodCallData, new MethodSegmentData(typeName, methodName));
+				segment.IsLeaf = isLeaf;
+				return segment;
 
 				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}
@@ -761,7 +805,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					{
 						return Enumerable.Empty<KeyValuePair<string, string>>();
 					}
-					return new [] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKey, payload.HttpSafe()) };
+					return new[] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKey, payload.HttpSafe()) };
 				}
 
 				return agentWrapperApi.GetOutboundRequestHeaders(transaction);
@@ -842,9 +886,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			{
 				Log.Debug($"Noticed application error: {exception}");
 
-				var errorData = ErrorData.FromException(exception, agentWrapperApi._configurationService.Configuration.StripExceptionMessages);
+				// CHeck whether this exception is being ignored
+				// to avoid stacktrace lookup etc. 
+				var exceptionTypeName = exception.GetType().FullName;
+				if (!ErrorData.ShouldIgnoreError(exceptionTypeName, agentWrapperApi._configurationService))
+				{
+					var errorData = ErrorData.FromException(exception,
+						agentWrapperApi._configurationService.Configuration.StripExceptionMessages);
 
-				transaction.TransactionMetadata.AddExceptionData(errorData);
+					transaction.TransactionMetadata.AddExceptionData(errorData);
+				}
 			}
 
 			public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
@@ -860,12 +911,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public void Detach()
 			{
-				agentWrapperApi.Detach(true);
+				agentWrapperApi.Detach(true, true);
 			}
 
 			public void DetachFromPrimary()
 			{
-				agentWrapperApi.Detach(false);
+				agentWrapperApi.Detach(false, true);
 			}
 
 			public void ProcessInboundResponse(IEnumerable<KeyValuePair<string, string>> headers, ISegment segment)
@@ -904,50 +955,50 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				End(captureResponseTime: false);
 			}
 
+			private void SetTransactionName(ITransactionName transactionName, TransactionNamePriority priority)
+			{
+				transaction.CandidateTransactionName.TrySet(transactionName, priority);
+			}
+			
 			public void SetWebTransactionName(WebTransactionType type, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
-				var transactionName = new WebTransactionName(Enum.GetName(typeof(WebTransactionType), type), name);
-				transaction.CandidateTransactionName.TrySet(transactionName, priority);
+				var trxName = TransactionName.ForWebTransaction(type, name);
+				SetTransactionName(trxName, priority);
+			}
+
+			public void SetWebTransactionNameFromPath(string normalizedPath)
+			{
+				var trxName = TransactionName.ForUriTransaction(normalizedPath);
+				SetTransactionName(trxName, TransactionNamePriority.Uri);
 			}
 
 			public void SetWebTransactionNameFromPath(WebTransactionType type, string path)
 			{
 				var cleanedPath = UriHelpers.GetTransactionNameFromPath(path);
-				var transactionName = new UriTransactionName(cleanedPath);
-				transaction.CandidateTransactionName.TrySet(transactionName, TransactionNamePriority.Uri);
+				var normalizedPath = agentWrapperApi._metricNameService.NormalizeUrl(cleanedPath);
+
+				var trxName = TransactionName.ForUriTransaction(normalizedPath);
+
+				SetTransactionName(trxName, TransactionNamePriority.Uri);
 			}
+
 
 			public void SetMessageBrokerTransactionName(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
-				var transactionName = new MessageBrokerTransactionName(destinationType.ToString(), brokerVendorName, destination);
-				transaction.CandidateTransactionName.TrySet(transactionName, priority);
+				var trxName = TransactionName.ForBrokerTransaction(destinationType, brokerVendorName, destination);
+				SetTransactionName(trxName, priority);
 			}
 
 			public void SetOtherTransactionName(string category, string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
-				var transactionName = new OtherTransactionName(category, name);
-				transaction.CandidateTransactionName.TrySet(transactionName, priority);
+				var trxName = TransactionName.ForOtherTransaction(category, name);
+				SetTransactionName(trxName, priority);
 			}
 
 			public void SetCustomTransactionName(string name, TransactionNamePriority priority = TransactionNamePriority.Uri)
 			{
-				// Note: In our public docs to tells users that they must prefix their metric names with "Custom/", but there's no mechanism that actually enforces this restriction, so there's no way to know whether it'll be there or not. For consistency, we'll just strip off "Custom/" if there's at all and then we know it's consistently not there.
-				if (name.StartsWith("Custom/"))
-				{ 
-					name = name.Substring(7);
-				}
-
-				name = Clamper.ClampLength(name.Trim(), MaxSegmentLength);
-				if (name.Length <= 0)
-				{ 
-					throw new ArgumentException("A segment name cannot be an empty string.");
-				}
-
-				// Determine if the current best transaction name is is a web name and, if so, stay in that namespace.
-				var isweb = transaction.CandidateTransactionName.CurrentTransactionName.IsWeb;
-
-				var transactionName = new CustomTransactionName(name, isweb);
-				transaction.CandidateTransactionName.TrySet(transactionName, priority);
+				var trxName = TransactionName.ForCustomTransaction(transaction.CandidateTransactionName.CurrentTransactionName.IsWeb, name, MaxSegmentLength);
+				SetTransactionName(trxName, priority);
 			}
 
 			public void SetUri(string uri)
@@ -1049,6 +1100,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			public bool IsLeaf => false;
 
+			public bool IsExternal => false;
+
 			public string SpanId => null;
 
 			public void End()
@@ -1083,7 +1136,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				return this;
 			}
 
-			public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method)
+			public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, bool isLeaf = false)
 			{
 #if DEBUG
 				Log.Finest("Skipping StartExternalRequestSegment outside of a transaction");
@@ -1099,7 +1152,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				return this;
 			}
 
-			public ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName)
+			public ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName, bool isLeaf = false)
 			{
 #if DEBUG
 				Log.Finest("Skipping StartMethodSegment outside of a transaction");

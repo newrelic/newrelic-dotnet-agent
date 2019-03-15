@@ -3,7 +3,7 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			Mock.Arrange(() => _configuration.TransactionTracerMaxSegments).Returns(transactionTracerMaxSegmentThreashold);
 
-			var transactionName = new WebTransactionName("WebTransaction", "Test");
+			var transactionName = TransactionName.ForWebTransaction("WebTransaction", "Test");
 
 
 			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public void ConstructedTransactionGuidShouldEqualDistributedTraceTraceId()
 		{
 			// Arrange
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var startTime = DateTime.Now;
 			var timer = Mock.Create<ITimer>();
 			var callStackManager = Mock.Create<ICallStackManager>();
@@ -175,7 +175,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public void TransactionGuidShouldBe16CharacterHex()
 		{
 			// Arrange
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var startTime = DateTime.Now;
 			var timer = Mock.Create<ITimer>();
 			var callStackManager = Mock.Create<ICallStackManager>();

@@ -12,10 +12,10 @@ namespace NewRelic.Providers.Wrapper.ScriptHandlerFactory
 		private static class Statics
 		{
 			[NotNull]
-			public static readonly Func<Object, IHttpHandler> GetSyncHandlerOriginalHandler = VisibilityBypasser.Instance.GenerateFieldAccessor<IHttpHandler>(AssemblyName, SyncTypeName, "_originalHandler");
+			public static readonly Func<Object, IHttpHandler> GetSyncHandlerOriginalHandler = VisibilityBypasser.Instance.GenerateFieldReadAccessor<IHttpHandler>(AssemblyName, SyncTypeName, "_originalHandler");
 
 			[NotNull]
-			public static readonly Func<Object, IHttpHandler> GetAsyncHandlerOriginalHandler = VisibilityBypasser.Instance.GenerateFieldAccessor<IHttpHandler>(AssemblyName, AsyncTypeName, "_originalHandler");
+			public static readonly Func<Object, IHttpHandler> GetAsyncHandlerOriginalHandler = VisibilityBypasser.Instance.GenerateFieldReadAccessor<IHttpHandler>(AssemblyName, AsyncTypeName, "_originalHandler");
 		}
 
 

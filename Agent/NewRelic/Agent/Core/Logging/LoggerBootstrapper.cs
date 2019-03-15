@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using log4net;
-using NewRelic.Agent.Core.Logging;
 using log4net.Appender;
 using log4net.Core;
 using log4net.Layout;
@@ -67,7 +66,7 @@ namespace NewRelic.Agent.Core
 
 		private static string STARTUP_APPENDER_NAME = "NEWRELIC_DOTNET_AGENT_STARTUP_APPENDER";
 
-		private static List<Level> DeprecatedLogLevels = new List<Level>() { Level.Alert, Level.Critical, Level.Emergency, Level.Fatal, Level.Finer, Level.Trace, Level.Notice, Level.Severe };
+		private static List<Level> DeprecatedLogLevels = new List<Level>() { Level.Alert, Level.Critical, Level.Emergency, Level.Fatal, Level.Finer, Level.Trace, Level.Notice, Level.Severe, Level.Verbose, Level.Fine };
 
 		public static void Initialize()
 		{
@@ -217,12 +216,21 @@ namespace NewRelic.Agent.Core
 				logger.Log(Level.Warn, $"Log level was set to {AuditLogName} which is not a valid log level. To enable audit logging, set the auditLog configuration option to true. Log level will be treated as INFO for this run.", null);
 			}
 
-			if (DeprecatedLogLevels.Contains(logger.Level))
+			if (IsLogLevelDeprecated(logger.Level))
 			{
 				logger.Log(Level.Warn, string.Format(
 					"The log level, {0}, set in your configuration file has been deprecated. The agent will still log correctly, but you should change to a supported logging level as described in newrelic.config or the online documentation.",
 					logger.Level.ToString()), null);
 			}
+		}
+
+		private static bool IsLogLevelDeprecated(Level level)
+		{
+			foreach (var l in DeprecatedLogLevels)
+			{
+				if (l.Name.Equals(level.Name, StringComparison.InvariantCultureIgnoreCase)) return true;
+			}
+			return false;
 		}
 
 		/// <summary>

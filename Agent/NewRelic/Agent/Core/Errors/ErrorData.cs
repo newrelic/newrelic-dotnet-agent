@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Core.Errors
 			return ShouldIgnoreAnyError(errorTypeNames, configurationService);
 		}
 
-		private static bool ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
+		internal static bool ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
 		{
 			return ShouldIgnoreAnyError(new[] { errorTypeName }, configurationService);
 		}

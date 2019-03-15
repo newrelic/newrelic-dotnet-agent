@@ -48,7 +48,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 		private static object[] GetListElementsAsArray(object owner)
 		{
 			var ownerType = owner.GetType();
-			var getElementsInList = _getListElementsFromGeneric.GetOrAdd(ownerType, t => VisibilityBypasser.Instance.GenerateFieldAccessor<object>(ownerType, "_items"));
+			var getElementsInList = _getListElementsFromGeneric.GetOrAdd(ownerType, t => VisibilityBypasser.Instance.GenerateFieldReadAccessor<object>(ownerType, "_items"));
 			return (object[])getElementsInList(owner);
 		}
 

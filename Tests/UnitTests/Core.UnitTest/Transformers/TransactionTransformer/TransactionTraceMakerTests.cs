@@ -5,7 +5,6 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -357,7 +356,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (uri != null)
 				transactionMetadata.SetUri(uri);
 
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			startTime = startTime ?? DateTime.Now;

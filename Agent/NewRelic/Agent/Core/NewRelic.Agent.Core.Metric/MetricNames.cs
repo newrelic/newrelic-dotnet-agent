@@ -282,56 +282,9 @@ namespace NewRelic.Agent.Core.Metric
 
 		public static readonly MetricName WebTransactionAll = MetricName.Create(WebTransactionPrefix);
 
-		public static readonly MetricName OtherTransactionAll =
-			MetricName.Create(OtherTransactionPrefix + PathSeparator + All);
+		public static readonly MetricName OtherTransactionAll = MetricName.Create(OtherTransactionPrefix + PathSeparator + All);
 
-		public static TransactionMetricName WebTransaction([NotNull] string category, [NotNull] string name)
-		{
-			var unprefixedName = Join(category, name);
-			return new TransactionMetricName(WebTransactionPrefix, unprefixedName);
-		}
-
-		public static TransactionMetricName UriTransaction([NotNull] string uri)
-		{
-			var unprefixedName = Join("Uri", uri);
-			return new TransactionMetricName(WebTransactionPrefix, unprefixedName);
-		}
-
-		public static TransactionMetricName OtherTransaction([NotNull] string category, [NotNull] string name)
-		{
-			var unprefixedName = Join(category, name);
-			return new TransactionMetricName(OtherTransactionPrefix, unprefixedName);
-		}
-
-		public static TransactionMetricName CustomTransaction([NotNull] string name, bool isWeb)
-		{
-			var unprefixedName = Join(Custom, name);
-			var prefix = isWeb ? WebTransactionPrefix : OtherTransactionPrefix;
-			return new TransactionMetricName(prefix, unprefixedName);
-		}
-
-		private const string MessagePs = "Message" + PathSeparator;
-		private const string PsNamedPs = PathSeparator + MessageBrokerNamed + PathSeparator;
-		private const string PsTemp = PathSeparator + MessageBrokerTemp;
-
-		public static TransactionMetricName MessageBrokerTransaction([NotNull] string type, [NotNull] string vendor,
-			[CanBeNull] string name)
-		{
-			//Message/{vendor}/{type}
-			var unprefixedName = new StringBuilder(MessagePs).Append(vendor).Append(PathSeparator).Append(type);
-			if (name != null)
-			{
-				//Message/{vendor}/{type}/Named/{name}
-				unprefixedName.Append(PsNamedPs).Append(name);
-			}
-			else
-			{
-				//Message/{vendor}/{type}/Temp
-				unprefixedName.Append(PsTemp);
-			}
-
-			return new TransactionMetricName(OtherTransactionPrefix, unprefixedName.ToString());
-		}
+		public const string Message = "Message";
 
 		public enum WebTransactionType
 		{
@@ -380,9 +333,9 @@ namespace NewRelic.Agent.Core.Metric
 
 		#region MessageBroker
 
-		private const string MessageBrokerPrefix = "MessageBroker";
-		private const string MessageBrokerNamed = "Named";
-		private const string MessageBrokerTemp = "Temp";
+		public const string MessageBrokerPrefix = "MessageBroker";
+		public const string MessageBrokerNamed = "Named";
+		public const string MessageBrokerTemp = "Temp";
 
 		public const string Msmq = "MSMQ";
 
@@ -540,6 +493,7 @@ namespace NewRelic.Agent.Core.Metric
 		private const string SupportabilityPs = Supportability + PathSeparator;
 
 		private const string SupportabilityAgentVersionPs = SupportabilityPs + "AgentVersion" + PathSeparator;
+		private const string SupportabilityLibraryVersionPs = SupportabilityPs + "Library" + PathSeparator;
 
 		[NotNull]
 		public static string GetSupportabilityAgentVersion([NotNull] string version)
@@ -551,6 +505,11 @@ namespace NewRelic.Agent.Core.Metric
 		public static string GetSupportabilityAgentVersionByHost([NotNull] string host, [NotNull] string version)
 		{
 			return SupportabilityAgentVersionPs + host + PathSeparator + version;
+		}
+
+		public static string GetSupportabilityLibraryVersion(string assemblyName, string assemblyVersion)
+		{
+			return SupportabilityLibraryVersionPs + assemblyName + PathSeparator + assemblyVersion;
 		}
 
 		[NotNull]

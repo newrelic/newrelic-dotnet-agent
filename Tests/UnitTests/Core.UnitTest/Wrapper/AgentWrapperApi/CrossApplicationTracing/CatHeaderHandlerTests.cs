@@ -6,7 +6,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -320,7 +319,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[NotNull]
 		private ITransaction BuildTestTransaction( String pathHash = null, IEnumerable<String> alternatePathHashes = null, String referrerGuid = null, String referrerTripId = null, String referrerPathHash = null, String referrerCrossProcessId = null, String syntheticsResourceId = null, String syntheticsJobId = null, String syntheticsMonitorId = null, Boolean isSynthetics = false, Boolean hasCatResponseHeaders = false)
 		{
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var startTime = DateTime.Now;
 			var duration = TimeSpan.FromSeconds(1);
 			pathHash = pathHash ?? "pathHash";

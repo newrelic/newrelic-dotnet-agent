@@ -1,6 +1,6 @@
 ﻿using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using System;
@@ -12,17 +12,17 @@ namespace NewRelic.Agent.Core.Transactions
 {
 	public class ImmutableTransactionBuilder
 	{
-		private ITransactionName _transactionName = new WebTransactionName("foo", "bar");
+		private ITransactionName _transactionName = TransactionName.ForWebTransaction("foo", "bar");
 
 		public ImmutableTransactionBuilder IsWebTransaction(string category, string name)
 		{
-			_transactionName = new WebTransactionName(category, name);
+			_transactionName = TransactionName.ForWebTransaction(category, name);
 			return this;
 		}
 
 		public ImmutableTransactionBuilder IsOtherTransaction(string category, string name)
 		{
-			_transactionName = new OtherTransactionName(category, name);
+			_transactionName = TransactionName.ForOtherTransaction(category, name);
 			return this;
 		}
 

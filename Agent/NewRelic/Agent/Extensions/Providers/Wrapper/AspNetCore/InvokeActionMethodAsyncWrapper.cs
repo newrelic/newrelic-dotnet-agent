@@ -10,7 +10,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 	public class InvokeActionMethodAsyncWrapper : IWrapper
 	{
 		private Func<object, ControllerContext> _getControllerContext;
-		private Func<object, ControllerContext> GetControllerContext(string typeName) { return _getControllerContext ?? (_getControllerContext = VisibilityBypasser.Instance.GenerateFieldAccessor<ControllerContext>("Microsoft.AspNetCore.Mvc.Core", typeName, "_controllerContext")); }
+		private Func<object, ControllerContext> GetControllerContext(string typeName) { return _getControllerContext ?? (_getControllerContext = VisibilityBypasser.Instance.GenerateFieldReadAccessor<ControllerContext>("Microsoft.AspNetCore.Mvc.Core", typeName, "_controllerContext")); }
 
 		public bool IsTransactionRequired => true;
 

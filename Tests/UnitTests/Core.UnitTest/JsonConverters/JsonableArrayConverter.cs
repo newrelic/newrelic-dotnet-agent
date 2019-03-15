@@ -380,6 +380,7 @@ namespace NewRelic.Agent.Core.Utilities
 		public void TestTypesHaveCorrectJsonArrayIndexAttributes()
 		{
 			var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+				.Where(x => x.FullName.ToLower().Contains("newrelic"))
 				.Where(x => !x.FullName.ToLower().Contains("test"))
 				.ToList();
 

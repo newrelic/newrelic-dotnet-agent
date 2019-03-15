@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration.UnitTest;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -201,7 +200,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[NotNull]
 		private ITransaction BuildTestTransaction(TimeSpan? queueTime = null, TimeSpan? applicationTime = null)
 		{
-			var name = new WebTransactionName("foo", "bar");
+			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var guid = Guid.NewGuid().ToString();
 			var time = applicationTime ?? TimeSpan.FromSeconds(1);

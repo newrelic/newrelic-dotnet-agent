@@ -47,6 +47,10 @@ namespace NewRelic.Reflection.UnitTests
 		private PublicOuter PublicOuterProperty { get { return new PublicOuter(); } }
 		private Int32 Int32Property { get { return 13; } }
 		private String StringTakingAndReturningMethod(String @string) { return @string; }
+		private string _writableStringField = "stringFieldValue";
+		public string GetWritableStringField { get { return _writableStringField; } }
+		private int _writeableIntField = 7;
+		public int GetWriteableIntField { get { return _writeableIntField; } }
 	}
 
 #pragma warning restore 414
@@ -60,7 +64,7 @@ namespace NewRelic.Reflection.UnitTests
 			var publicOuter = PublicOuter.Create();
 			var expectedValue = 7;
 
-			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, Int32>(fieldName);
+			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<PublicOuter, Int32>(fieldName);
 			var actualValue = fieldAccessor(publicOuter);
 
 			Assert.AreEqual(expectedValue, actualValue);
@@ -75,7 +79,7 @@ namespace NewRelic.Reflection.UnitTests
 			var privateInner = PublicOuter.CreatePrivateInner();
 			var expectedValue = 3;
 
-			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<Int32>(assemblyName, typeName, fieldName);
+			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<Int32>(assemblyName, typeName, fieldName);
 			var actualValue = fieldAccessor(privateInner);
 
 			Assert.AreEqual(expectedValue, actualValue);
@@ -88,7 +92,7 @@ namespace NewRelic.Reflection.UnitTests
 			var publicOuter = PublicOuter.Create();
 			var expectedValue = publicOuter.DerivedField;
 
-			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, Object>(fieldName);
+			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<PublicOuter, Object>(fieldName);
 			var actualValue = fieldAccessor(publicOuter);
 
 			Assert.AreEqual(expectedValue, actualValue);
@@ -100,7 +104,7 @@ namespace NewRelic.Reflection.UnitTests
 			var fieldName = "DerivedField";
 			var publicOuter = PublicOuter.Create();
 
-			Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, Derived>(fieldName));
+			Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<PublicOuter, Derived>(fieldName));
 		}
 
 		[Test]
@@ -108,7 +112,7 @@ namespace NewRelic.Reflection.UnitTests
 		{
 			var fieldName = "does_not_exist";
 
-			Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, Object>(fieldName));
+			Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<PublicOuter, Object>(fieldName));
 		}
 
 		[Test]
@@ -117,7 +121,40 @@ namespace NewRelic.Reflection.UnitTests
 			var fieldName = "_int32Field";
 			var publicOuter = PublicOuter.Create();
 
-			Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, String>(fieldName));
+			Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateFieldReadAccessor<PublicOuter, String>(fieldName));
+		}
+
+		[Test]
+		public void correctly_write_private_object_reference()
+		{
+			var fieldName = "_writableStringField";
+			var publicOuter = PublicOuter.Create();
+			var newStringValue = "newStringValue";
+			var action = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(typeof(PublicOuter), fieldName);
+			Assert.DoesNotThrow(() => action(publicOuter, newStringValue));
+			Assert.That(publicOuter.GetWritableStringField == newStringValue);
+		}
+
+		[Test]
+		public void incorrect_object_reference_does_not_throw()
+		{
+			var fieldName = "_writableStringField";
+			var publicOuter = PublicOuter.Create();
+			var newStringValue = "newStringValue";
+			var action = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<string>(typeof(PublicOuter), fieldName);
+			Assert.DoesNotThrow(() => action(new List<string>(), newStringValue));
+			Assert.That(publicOuter.GetWritableStringField != newStringValue);
+		}
+
+		[Test]
+		public void correctly_write_private_value_type()
+		{
+			var fieldName = "_writeableIntField";
+			var publicOuter = PublicOuter.Create();
+			var newIntValue = 42;
+			var action = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<int>(typeof(PublicOuter), fieldName);
+			Assert.DoesNotThrow(() => action(publicOuter, newIntValue));
+			Assert.That(publicOuter.GetWriteableIntField == newIntValue);
 		}
 	}
 

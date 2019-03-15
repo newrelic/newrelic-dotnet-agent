@@ -68,19 +68,21 @@
         <exactMethodMatcher methodName="ExecuteNonQuery" />
       </match>
 
-      <!-- Npgsql Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
-        <exactMethodMatcher methodName="ExecuteReader" />
-        <exactMethodMatcher methodName="ExecuteNonQuery" />
-        <exactMethodMatcher methodName="ExecuteScalar" />
-      </match>
-
       <!-- IBM DB2 driver -->
       <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2Command">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior"/>
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
         <exactMethodMatcher methodName="ExecuteXmlReader"/>
+      </match>
+    </tracerFactory>
+
+    <!-- Npgsql Postgres data provider -->
+    <tracerFactory name="NpgsqlSqlCommandWrapper">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
+        <exactMethodMatcher methodName="ExecuteDbDataReader" parameters="System.Data.CommandBehavior"/>
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
       </match>
     </tracerFactory>
 
@@ -122,20 +124,19 @@
         <exactMethodMatcher methodName="Read" />
       </match>
 
-      <!-- Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.ForwardsOnlyDataReader">
-        <exactMethodMatcher methodName="NextResult" />
-        <exactMethodMatcher methodName="Read" />
-      </match>
-      <match assemblyName="Npgsql" className="Npgsql.CachingDataReader">
-        <exactMethodMatcher methodName="NextResult" />
-        <exactMethodMatcher methodName="Read" />
-      </match>
-      
       <!-- IBM DB2 driver -->
       <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2DataReader">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" />
+      </match>
+    </tracerFactory>
+
+    <!-- Postgres data provider -->
+    <!-- DataReader methods.  DISABLED by deafult due to possible performance impact.  Set enabled to "true" (or omit completely) to enable this instrumentation. -->
+    <tracerFactory name="NpgsqlDataReaderWrapper" enabled="false">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
       </match>
     </tracerFactory>
 
@@ -171,14 +172,16 @@
         <exactMethodMatcher methodName="Open"/>
       </match>
 
-      <!-- Npgsql Postgres data provider -->
-      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection">
-        <exactMethodMatcher methodName="Open"/>
-      </match>
-
       <!-- IBM DB2 driver -->
       <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2Connection">
         <exactMethodMatcher methodName="Open"/>
+      </match>
+    </tracerFactory>
+
+    <!-- Npgsql Postgres data provider -->
+    <tracerFactory name="NpgsqlOpenConnectionWrapper">
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection">
+        <exactMethodMatcher methodName="Open" parameters="System.Boolean,System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>
     

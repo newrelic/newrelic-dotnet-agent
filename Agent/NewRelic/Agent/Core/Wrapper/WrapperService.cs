@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -95,6 +96,7 @@ namespace NewRelic.Agent.Core.Wrapper
 				}
 
 				_functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumentedMethodInfo, trackedWrapper);
+				GenerateLibraryVersionSupportabilityMetric(instrumentedMethodInfo);
 			}
 
 			var wrapper = trackedWrapper.Wrapper;
@@ -192,6 +194,22 @@ namespace NewRelic.Agent.Core.Wrapper
 			{
 				_agentHealthReporter.ReportWrapperShutdown(trackedWrapper.Wrapper, instrumentedMethodCall.MethodCall.Method);
 				_functionIdToWrapper[functionId] = new InstrumentedMethodInfoWrapper(instrumetedMethodInfo, _wrapperMap.GetNoOpWrapper());
+			}
+		}
+
+		private void GenerateLibraryVersionSupportabilityMetric(InstrumentedMethodInfo instrumentedMethodInfo)
+		{
+			try
+			{
+				var reflectionAssemblyName = instrumentedMethodInfo.Method.Type.Assembly.GetName();
+				var assemblyName = reflectionAssemblyName.Name;
+				var assemblyVersion = reflectionAssemblyName.Version.ToString();
+
+				_agentHealthReporter.ReportLibraryVersion(assemblyName, assemblyVersion);
+			}
+			catch (Exception ex)
+			{
+				Log.Error($"Failed to generate Library version Supportability Metric for {instrumentedMethodInfo.ToString()} : exception: {ex}");
 			}
 		}
 	}

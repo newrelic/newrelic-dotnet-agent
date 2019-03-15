@@ -56,7 +56,6 @@ namespace ArtifactBuilder
 			{
 				$@"{SourceHomeBuilderPath}\License.txt",
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
-				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.pdb",
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
 				$@"{SourceHomeBuilderPath}\NewRelic.Api.Agent.dll",
 				NewRelicConfig,

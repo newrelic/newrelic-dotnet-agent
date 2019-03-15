@@ -4,7 +4,6 @@ using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using System;
@@ -43,8 +42,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public static ITransaction CreateDefaultTransaction(Boolean isWebTransaction = true, String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null, bool sampled = false)
 		{
 			var name = isWebTransaction
-				? new WebTransactionName(transactionCategory, transactionName)
-				: new OtherTransactionName(transactionCategory, transactionName) as ITransactionName;
+				? TransactionName.ForWebTransaction(transactionCategory, transactionName)
+				: TransactionName.ForOtherTransaction(transactionCategory, transactionName);
+
 			segments = segments ?? Enumerable.Empty<Segment>();
 
 			var placeholderMetadataBuilder = new TransactionMetadata();
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transactionMetadata = new TransactionMetadata();
 			transactionMetadata.SetUri(uri);
 
-			var name = new WebTransactionName("TxsWithSegments", "TxWithSegmentX");
+			var name = TransactionName.ForWebTransaction("TxsWithSegments", "TxWithSegmentX");
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			var guid = Guid.NewGuid().ToString();
 

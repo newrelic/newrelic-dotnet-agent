@@ -10,6 +10,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 	public class SqlCommandWrapper : IWrapper
 	{
 		public const string WrapperName = "SqlCommandWrapper";
+		public const string NpgsqlWrapperName = "NpgsqlSqlCommandWrapper";
 
 		public bool IsTransactionRequired => true;
 
@@ -17,7 +18,9 @@ namespace NewRelic.Providers.Wrapper.Sql
 		{
 			var method = methodInfo.Method;
 
-			var isRequestedByName = WrapperName == methodInfo.RequestedWrapperName;
+			var isRequestedByName = 
+				(methodInfo.RequestedWrapperName == WrapperName) ||
+				(methodInfo.RequestedWrapperName == NpgsqlWrapperName);
 			
 			var canWrap = isRequestedByName || method.MatchesAny(
 				assemblyNames: new[]
@@ -29,7 +32,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 					"Oracle.ManagedDataAccess",
 					"MySql.Data",
 					"Devart.Data.MySql",
-					"Npgsql",
 					"IBM.Data.DB2"
 				},
 				typeNames: new[]
@@ -40,7 +42,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 					"Oracle.ManagedDataAccess.Client.OracleCommand",
 					"MySql.Data.MySqlClient.MySqlCommand",
 					"Devart.Data.MySql.MySqlCommand",
-					"Npgsql.NpgsqlCommand",
 					"IBM.Data.DB2.DB2Command"
 				},
 				methodNames: new[]
@@ -70,7 +71,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 
 			var queryParameters = SqlWrapperHelper.GetQueryParameters(sqlCommand, agentWrapperApi);
 
-			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters);
+			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters, isLeaf: true);
 
 			if (vendor == DatastoreVendor.MSSQL)
 			{

@@ -32,7 +32,7 @@ namespace NewRelic.Reflection.UnitTests
 
 
 			// setup
-			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<Foo, Int32>(fieldName);
+			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<Foo, Int32>(fieldName);
 			// warm up
 			for (var i = 0; i < 1000; ++i)
 				DoSomething(fieldAccessor(foo));

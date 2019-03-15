@@ -38,6 +38,9 @@ namespace ArtifactBuilder
 					case "nugetagentapi":
 						BuildNugetAgentApi(sourceDirectory, args);
 						break;
+					case "nugetagentextensions":
+						BuildNugetAgentExtensions(sourceDirectory, args);
+						break;
 					case "nugetazurecloudservices":
 						BuildNugetAzureCloudServices(sourceDirectory, args);
 						break;
@@ -113,6 +116,13 @@ namespace ArtifactBuilder
 		{
 			var configuration = args[1];
 			var c = new NugetAgentApi(configuration, sourceDirectory);
+			c.Build();
+		}
+
+		private static void BuildNugetAgentExtensions(string sourceDirectory, string[] args)
+		{
+			var configuration = args[1];
+			var c = new NugetAgentExtensions(configuration, sourceDirectory);
 			c.Build();
 		}
 

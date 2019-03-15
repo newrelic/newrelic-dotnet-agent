@@ -6,6 +6,11 @@
 				<exactMethodMatcher methodName="BuildCommonServices" />
 			</match>
 		</tracerFactory>
+		<tracerFactory name="GenericHostWebHostBuilderExtensionsWrapper">
+			<match assemblyName="Microsoft.AspNetCore.Hosting" className="Microsoft.Extensions.Hosting.GenericHostWebHostBuilderExtensions">
+				<exactMethodMatcher methodName="ConfigureWebHost" />
+			</match>
+		</tracerFactory>
 		<tracerFactory name="NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync">
 			<match assemblyName="Microsoft.AspNetCore.Mvc.Core" className="Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker">
 				<exactMethodMatcher methodName="InvokeActionMethodAsync" />

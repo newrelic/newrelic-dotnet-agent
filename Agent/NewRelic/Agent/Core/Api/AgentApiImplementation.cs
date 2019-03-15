@@ -8,7 +8,6 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -354,10 +353,13 @@ namespace NewRelic.Agent.Core.Api
 				name = Clamper.ClampLength(name);
 
 				var transaction = GetCurrentInternalTransaction();
+
 				var currentTranasctionName = transaction.CandidateTransactionName.CurrentTransactionName;
+
 				var newTransactionName = currentTranasctionName.IsWeb
-					? new WebTransactionName(category, name)
-					: new OtherTransactionName(category, name) as ITransactionName;
+					? TransactionName.ForWebTransaction(category, name)
+					: TransactionName.ForOtherTransaction(category, name);
+
 				transaction.CandidateTransactionName.TrySet(newTransactionName, TransactionNamePriority.UserTransactionName);
 			}
 		}
