@@ -64,6 +64,8 @@ test-results
 # Ignore FullAgent build output
 Agent/_build/
 Agent/NewRelic/Tray/_build/
+Build/_staging
+Build/BuildArtifacts
 
 # Build tools should be saved in full, even if they match ignore patterns.
 !Agent/BuildTools/*

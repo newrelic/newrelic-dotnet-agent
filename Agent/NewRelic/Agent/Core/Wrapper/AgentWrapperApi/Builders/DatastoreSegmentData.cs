@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	{
 		[CanBeNull]
 		public String Operation { protected get; set; }
-		public DatastoreVendor DatastoreVendorName { protected get; set; }
+		public DatastoreVendor DatastoreVendorName { get; set; }
 		[CanBeNull]
 		public String Model { protected get; set; }
 		[CanBeNull]
@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			if (CommandText != null)
 			{
-				segmentParameters["sql"] = immutableTransaction.GetSqlObfuscatedAccordingToConfig(CommandText);
+				segmentParameters["sql"] = immutableTransaction.GetSqlObfuscatedAccordingToConfig(CommandText, DatastoreVendorName);
 			}
 
 			if (configurationService.Configuration.InstanceReportingEnabled)
@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 						{
 							foreach (var index in explainPlan.ObfuscatedHeaders)
 							{
-								data[index] = obfuscator.GetObfuscatedSql(data[index].ToString());
+								data[index] = obfuscator.GetObfuscatedSql(data[index].ToString(), DatastoreVendorName);
 							}
 						}
 

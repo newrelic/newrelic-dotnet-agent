@@ -4,7 +4,10 @@ $ErrorActionPreference = "Stop"
 [Xml]$xml = Get-Content .\DotNet-Functional-NuGet-AgentAPI\DotNet-Functional-NuGet-AgentAPI\packages.config
 $version = $xml.packages.SelectSingleNode("//package[@id='NewRelic.Agent.Api']").version
 $authorization = 'Basic ' + [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("msneeden:$env:JenkinsAPIToken"))
-Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version" -Method POST -Headers @{'Authorization'=$authorization}
+Invoke-RestMethod -Uri "$($env:BUILD_URL)submitDescription?description=$version" -Method POST -Headers @{'Authorization'=$authorization} -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue
+if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+    $null
+}
 
 # Copy out the test application
 $webConfigPath = "$env:WORKSPACE\DotNet-Functional-NuGet-AgentAPI\DotNet-Functional-NuGet-AgentAPI\Web.config"

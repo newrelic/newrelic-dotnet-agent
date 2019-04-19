@@ -32,8 +32,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var segmentData = segment.TypedData;
 			var transactionName = transactionMetricName.PrefixedName;
 			var uri = immutableTransaction.TransactionMetadata.Uri ?? "<unknown>";
-			var sql = immutableTransaction.GetSqlObfuscatedAccordingToConfig(segmentData.CommandText);
-			var sqlId = immutableTransaction.GetSqlId(segmentData.CommandText);
+			var sql = immutableTransaction.GetSqlObfuscatedAccordingToConfig(segmentData.CommandText, segmentData.DatastoreVendorName);
+			var sqlId = immutableTransaction.GetSqlId(segmentData.CommandText, segmentData.DatastoreVendorName);
 
 			var metricName = segment.GetTransactionTraceName();
 			const int count = 1;

@@ -25,4 +25,4 @@ $websiteName = "NuGetAzureWebSitesTest"
 Stop-AzureWebsite -Name $websiteName
 Get-AzureWebsite -Name $websiteName | Select-Object State
 
-RestoreNuGetPackages NewRelicAzureWebCI\NewRelicAzureWebCI.sln "http://win-nuget-repository.pdx.vm.datanerd.us:81/NuGet/Default;https://www.nuget.org/api/v2"
+RestoreNuGetPackages NewRelicAzureWebCI\NewRelicAzureWebCI.sln "https://www.nuget.org/api/v2"

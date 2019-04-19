@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>NewRelic.Net.Agent</id>
+    <version>REPLACE_WITH_VERSION</version>
+    <title>New Relic .NET Agent</title>
+    <authors>New Relic</authors>
+    <owners>New Relic</owners>
+    <projectUrl>https://newrelic.com/.NET</projectUrl>
+    <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This package is meant to be used on conjunction with the New Relic .Net Agent thin installer scripts</description>
+    <summary>This package contains all of the files necessary for installing the New Relic .Net Agent via the thin installer scripts</summary>
+    <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/releases/dotnet</releaseNotes>
+  </metadata>
+</package>

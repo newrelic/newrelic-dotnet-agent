@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public void SetUp()
 		{
 			_databaseService = Mock.Create<IDatabaseService>();
-			Mock.Arrange(() => _databaseService.SqlObfuscator.GetObfuscatedSql(Arg.AnyString)).Returns((String sql) => sql);
+			Mock.Arrange(() => _databaseService.SqlObfuscator.GetObfuscatedSql(Arg.AnyString, Arg.IsAny<DatastoreVendor>())).Returns((string sql) => sql);
 			_configurationService = Mock.Create<IConfigurationService>();
 			Mock.Arrange(() => _configurationService.Configuration.InstanceReportingEnabled).Returns(true);
 			Mock.Arrange(() => _configurationService.Configuration.DatabaseNameReportingEnabled).Returns(true);

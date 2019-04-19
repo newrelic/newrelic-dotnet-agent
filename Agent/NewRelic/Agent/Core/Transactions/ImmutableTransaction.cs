@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -62,9 +63,9 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="sql"></param>
 		/// <returns></returns>
-		public long GetSqlId(string sql)
+		public long GetSqlId(string sql, DatastoreVendor vendor)
 		{
-			var obfuscatedSql = GetObfuscatedSqlFromCache(sql);
+			var obfuscatedSql = GetObfuscatedSqlFromCache(sql, vendor);
 			return DatabaseService.GenerateSqlId(obfuscatedSql);
 		}
 
@@ -74,9 +75,9 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="sql"></param>
 		/// <returns></returns>
-		public string GetSqlObfuscatedAccordingToConfig(string sql)
+		public string GetSqlObfuscatedAccordingToConfig(string sql, DatastoreVendor vendor)
 		{
-			return _sqlObfuscator != SqlObfuscator.GetObfuscatingSqlObfuscator() ? _sqlObfuscator.GetObfuscatedSql(sql) : GetObfuscatedSqlFromCache(sql);
+			return _sqlObfuscator != SqlObfuscator.GetObfuscatingSqlObfuscator() ? _sqlObfuscator.GetObfuscatedSql(sql, vendor) : GetObfuscatedSqlFromCache(sql, vendor);
 		}
 
 		/// <summary>
@@ -86,11 +87,11 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="sql"></param>
 		/// <returns></returns>
-		private string GetObfuscatedSqlFromCache(string sql)
+		private string GetObfuscatedSqlFromCache(string sql, DatastoreVendor vendor)
 		{
 			if (!ObfuscatedSqlCache.TryGetValue(sql, out var obfuscatedSql))
 			{
-				obfuscatedSql = SqlObfuscator.GetObfuscatingSqlObfuscator().GetObfuscatedSql(sql);
+				obfuscatedSql = SqlObfuscator.GetObfuscatingSqlObfuscator().GetObfuscatedSql(sql, vendor);
 				ObfuscatedSqlCache[sql] = obfuscatedSql;
 			}
 

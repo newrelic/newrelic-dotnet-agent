@@ -1,12 +1,13 @@
 using System;
 using System.Text;
 using JetBrains.Annotations;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Database
 {
 	public abstract class SqlObfuscator
 	{
-		public abstract string GetObfuscatedSql(string sql);
+		public abstract string GetObfuscatedSql(string sql, DatastoreVendor vendor = DatastoreVendor.Other);
 
 		private const String ObfuscatedSetting = "obfuscated";
 		private const String RawSetting = "raw";
@@ -59,7 +60,7 @@ namespace NewRelic.Agent.Core.Database
 		/// </summary>
 		class NoSqlObfuscator : SqlObfuscator
 		{
-			public override string GetObfuscatedSql(string sql)
+			public override string GetObfuscatedSql(string sql, DatastoreVendor vendor = DatastoreVendor.Other)
 			{
 				return null;
 			}
@@ -71,7 +72,7 @@ namespace NewRelic.Agent.Core.Database
 		/// </summary>
 		class ObfuscatingSqlObfuscatorUsingExplicit : SqlObfuscator
 		{
-			public override string GetObfuscatedSql(string sql)
+			public override string GetObfuscatedSql(string sql, DatastoreVendor vendor = DatastoreVendor.Other)
 			{
 				if (sql == null)
 				{
@@ -93,7 +94,22 @@ namespace NewRelic.Agent.Core.Database
 						for (; i < length; i++)
 						{
 							ch = sql[i];
-							if (ch == '\\' && i < length - 1)
+
+							// MS SQL Server has different escaping rules by default than most other vendors
+							// In particular, backslashes do not escape the next character, so they should not be treated specially
+							if (vendor == DatastoreVendor.MSSQL && ch == quotechar)
+							{
+								// In order to get a literal single quote inside of a single-quoted string, MSSQL uses two single quotes in a row, so we need to check for this case
+								// This implementation works no matter what the quoting character happens to be
+								if (i < length - 1 && sql[i + 1] == quotechar)
+								{
+									i += 1;
+									continue;
+								}
+								break;
+							}
+
+							if (vendor != DatastoreVendor.MSSQL && ch == '\\' && i < length - 1)
 							{
 								// Skip escaped characters
 								i += 1;
@@ -105,14 +121,14 @@ namespace NewRelic.Agent.Core.Database
 							}
 						}
 						if (i >= length) break;  // Fell off the end
-						// We've reached the termination character of the string, which we'll implicitly consume in the outer loop
+												 // We've reached the termination character of the string, which we'll implicitly consume in the outer loop
 						continue;
 					}
 
-					// Span across numberic values, including floats.
+					// Span across numeric values, including floats.
 					// We're a little lazy here, and allow a single number to have multiple decimal points.
 					// But we know we are dealing with well formed input.
-					if (char.IsDigit(ch) || (ch == '.' && i < length - 1 && char.IsDigit(sql[i+1])))
+					if (char.IsDigit(ch) || (ch == '.' && i < length - 1 && char.IsDigit(sql[i + 1])))
 					{
 						sb.Append('?');
 						for (; i < length; i++)
@@ -166,7 +182,7 @@ namespace NewRelic.Agent.Core.Database
 		/// </summary>
 		class RawSqlObfuscator : SqlObfuscator
 		{
-			public override string GetObfuscatedSql(string sql)
+			public override string GetObfuscatedSql(string sql, DatastoreVendor vendor = DatastoreVendor.Other)
 			{
 				return sql;
 			}

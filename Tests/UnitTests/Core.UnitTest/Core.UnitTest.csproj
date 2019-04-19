@@ -12,7 +12,6 @@
     <PackageReference Include="JustMock" Version="2015.2.616.2" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
-    <Compile Include="../../CommonFiles/NrAssert.cs"><Link>NrAssert.cs</Link></Compile><Compile Include="../../CommonFiles/AttributeComparer.cs"><Link>AttributeComparer.cs</Link></Compile>
     <PackageReference Include="Newtonsoft.Json" Version="7.0.1" />
     <PackageReference Include="NUnit" Version="3.6.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
@@ -38,6 +37,7 @@
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
+    <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\..\Agent\Shared\SharedLog4NetRepository.cs">
@@ -102,10 +102,10 @@
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\incomplete_non_meta_tags.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_no_meta.html" >
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_no_meta.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_charset.html" >
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_charset.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>	
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_x_ua_compatible.html">

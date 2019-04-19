@@ -102,7 +102,13 @@ Function PostMessageToSlack(
     -Uri "https://hooks.slack.com/services/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" `
     -ContentType "application/json" `
     -Method Post `
-    -Body $body
+    -Body $body `
+    -MaximumRedirection 0 `
+    -ErrorVariable invokeErr `
+    -ErrorAction SilentlyContinue
+    if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+        $null
+    }
 }
 
 Function TestPostMessage() {

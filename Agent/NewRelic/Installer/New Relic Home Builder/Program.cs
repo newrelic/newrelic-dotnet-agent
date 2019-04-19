@@ -117,7 +117,7 @@ namespace NewRelic.Installer
 		{
 			get
 			{
-				var profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Windows", $"{Bitness}", "NewRelic.Profiler.dll");
+                var profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Windows", Bitness, "NewRelic.Profiler.dll");
 				return profilerPath;
 			}
 		}
@@ -127,8 +127,8 @@ namespace NewRelic.Installer
 		{
 			get
 			{
-				
-				var profilerSoPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux", ProfilerSoFileName);
+				var folderPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux", Bitness, "libNewRelicProfiler.so");
+				var profilerSoPath = Path.Combine(folderPath, ProfilerSoFileName);
 
 				return profilerSoPath;
 			}

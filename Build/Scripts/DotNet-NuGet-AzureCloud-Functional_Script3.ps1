@@ -1,7 +1,10 @@
 $ErrorActionPreference = "SilentlyContinue"
 
 # Make request to the controller action to self-modify the config
-Invoke-RestMethod -Uri "http://newrelicazurecloudci.cloudapp.net/Home/ModifyConfig" | Out-Null
+Invoke-RestMethod -Uri "http://newrelicazurecloudci.cloudapp.net/Home/ModifyConfig" -MaximumRedirection 0 -ErrorVariable invokeErr -ErrorAction SilentlyContinue | Out-Null
+if($invokeErr[0].FullyQualifiedErrorId.Contains("MaximumRedirectExceeded")){
+    $null
+}
 
 $install = Get-ChildItem $env:WORKSPACE\Agent\_build\x86-Release\Installer\NewRelicAgent_x86_*.msi -Name
 $version = $install.TrimStart('NewRelicAgent_x').TrimStart('{64,86}').TrimStart('_').TrimEnd('.msi')
