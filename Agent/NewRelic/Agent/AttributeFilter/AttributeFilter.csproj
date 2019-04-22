@@ -30,7 +30,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\Trie\Trie.csproj" />
   </ItemGroup>
   <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />

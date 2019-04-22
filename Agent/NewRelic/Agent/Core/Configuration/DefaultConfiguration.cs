@@ -193,24 +193,57 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
 			if (runtimeAppNames.Any())
+			{
+				Log.Info("Application name from SetApplicationName API.");
 				return runtimeAppNames;
+			}
 
-			var appName = _configurationManagerStatic.GetAppSetting("NewRelic.AppName")
-				?? _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")
-				?? _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME")
-				?? _environment.GetEnvironmentVariable("RoleName");
+			var appName = _configurationManagerStatic.GetAppSetting("NewRelic.AppName");
 			if (appName != null)
+			{
+				Log.Info("Application name from web.config or app.config.");
 				return appName.Split(StringSeparators.Comma);
+			}
+
+			appName = _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME");
+			if (appName != null)
+			{
+				Log.Info("Application name from IISEXPRESS_SITENAME Environment Variable.");
+				return appName.Split(StringSeparators.Comma);
+			}
+
+			appName = _environment.GetEnvironmentVariable("NEW_RELIC_APP_NAME");
+			if (appName != null)
+			{
+				Log.Info("Application name from NEW_RELIC_APP_NAME Environment Variable.");
+				return appName.Split(StringSeparators.Comma);
+			}
+
+			appName = _environment.GetEnvironmentVariable("RoleName");
+			if (appName != null)
+			{
+				Log.Info("Application name from RoleName Environment Variable.");
+				return appName.Split(StringSeparators.Comma);
+			}
 
 			if (_localConfiguration.application.name.Count > 0)
+			{
+				Log.Info("Application name from newrelic.config.");
 				return _localConfiguration.application.name;
+			}
 
 			appName = _environment.GetEnvironmentVariable("APP_POOL_ID");
 			if (appName != null)
+			{
+				Log.Info("Application name from Application Pool name.");
 				return appName.Split(StringSeparators.Comma);
+			}
 
 			if (_httpRuntimeStatic.AppDomainAppVirtualPath == null)
+			{
+				Log.Info("Application name from process name.");
 				return new List<String> { _processStatic.GetCurrentProcess().ProcessName };
+			}
 
 			throw new Exception("An application name must be provided");
 		}

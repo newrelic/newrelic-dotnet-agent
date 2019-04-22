@@ -38,6 +38,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 	public class Segment : ISegment
 	{
+		internal static ISegment NoOpSegment = new NoOpSegment();
+
 		protected readonly static IEnumerable<KeyValuePair<String, Object>> EmptyImmutableParameters =
 			new KeyValuePair<String, Object>[0];
 		private const long NoEndTime = -1;
@@ -268,6 +270,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public Segment CreateSimilar(TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<String, Object>> newParameters)
 		{
 			return Data.CreateSimilar(this, newRelativeStartTime, newDuration, newParameters);
+		}
+
+		public string ToStringForFinestLogging()
+		{
+			return $"Id={UniqueId},ParentId={ParentUniqueId?.ToString() ?? "Root"},Name={Data.GetTransactionTraceName()},IsLeaf={IsLeaf},Combinable={Combinable},MethodCallData={_methodCallData}";
 		}
 	}
 

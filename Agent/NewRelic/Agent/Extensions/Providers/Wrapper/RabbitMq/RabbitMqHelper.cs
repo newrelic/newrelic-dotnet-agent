@@ -32,10 +32,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 				: queueNameOrRoutingKey;
 		}
 
-		public static bool TryGetPayloadFromHeaders(Dictionary<string, object> messageHeaders, IAgentWrapperApi agentWrapperApi,
+		public static bool TryGetPayloadFromHeaders(Dictionary<string, object> messageHeaders, IAgent agent,
 			out string serializedPayload)
 		{
-			if (agentWrapperApi.TryGetDistributedTracePayloadFromHeaders(messageHeaders, out var payload))
+			if (agent.TryGetDistributedTracePayloadFromHeaders(messageHeaders, out var payload))
 			{
 				serializedPayload = Encoding.UTF8.GetString((byte[])(payload));
 				return true;
@@ -45,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			return false;
 		}
 
-		public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransactionWrapperApi transactionWrapperApi, int basicPropertiesIndex)
+		public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
 		{
 			// ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
 			// If we implement newer versions of the API or new methods we'll need to re-evaluate.
@@ -56,7 +56,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			var destType = GetBrokerDestinationType(routingKey);
 			var destName = ResolveDestinationName(destType, routingKey);
 
-			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
+			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Produce, VendorName, destName);
 
 			//If the RabbitMQ version doesn't provide the BasicProperties parameter we just bail.
 			if (basicProperties.GetType().ToString() != BasicPropertiesType)
@@ -65,7 +65,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			}
 
 			// We're relying on CreateDistibutedTracePayload to do all the necessary checking realated to whether we return an empty payload or not.
-			var distributedTracePayload = transactionWrapperApi.CreateDistributedTracePayload();
+			var distributedTracePayload = transaction.CreateDistributedTracePayload();
 
 			if (!distributedTracePayload.IsEmpty())
 			{

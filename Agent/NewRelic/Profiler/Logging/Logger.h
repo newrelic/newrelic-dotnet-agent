@@ -1,5 +1,5 @@
 //**********************************************************************************
-// Copyright 2017 New Relic Corporation. All Rights Reserved.
+// Copyright 2019 New Relic Corporation. All Rights Reserved.
 //**********************************************************************************
 #pragma once
 #include <memory>

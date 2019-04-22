@@ -18,7 +18,7 @@ namespace NewRelic.Providers.Wrapper.Msmq
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			const string queueVendorName = "Msmq";
 			var queue = instrumentedMethodCall.MethodCall.InvocationTarget as MessageQueue;
@@ -35,7 +35,7 @@ namespace NewRelic.Providers.Wrapper.Msmq
 				operation = (((int)args[1]) != 0) ? MessageBrokerAction.Peek : MessageBrokerAction.Consume;
 			}
 
-			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, operation, queueVendorName, queue.QueueName);
+			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, operation, queueVendorName, queue.QueueName);
 			return Delegates.GetDelegateFor(segment);
 		}
 	}

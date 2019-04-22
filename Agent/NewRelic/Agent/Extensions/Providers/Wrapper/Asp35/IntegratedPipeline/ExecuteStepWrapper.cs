@@ -61,7 +61,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			if (!HttpRuntime.UsingIntegratedPipeline)
 				return Delegates.NoOp;
@@ -80,13 +80,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 				return Delegates.NoOp;
 
 			// if there is no transaction or segment yet then this will do nothing
-			var segment = agentWrapperApi.CastAsSegment(httpContext.Items[HttpContextActions.HttpContextSegmentKey]);
+			var segment = agent.CastAsSegment(httpContext.Items[HttpContextActions.HttpContextSegmentKey]);
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = null;
 			httpContext.Items[HttpContextActions.HttpContextSegmentTypeKey] = null;
 			segment.End();
 
-			transactionWrapperApi = TryCreateTransaction(agentWrapperApi, httpContext, requestNotification);
-			segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, requestNotification);
+			transaction = TryCreateTransaction(agent, httpContext, requestNotification);
+			segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, requestNotification);
 
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = segment;
 			httpContext.Items[HttpContextActions.HttpContextSegmentTypeKey] = requestNotification;
@@ -94,7 +94,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 			return Delegates.NoOp;
 		}
 
-		private ITransactionWrapperApi TryCreateTransaction([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext, String requestNotification)
+		private ITransaction TryCreateTransaction([NotNull] IAgent agent, [NotNull] HttpContext httpContext, String requestNotification)
 		{
 			// MapRequestHandler is always called so if we make it past that without having already started a transaction then don't start one since we already missed too much.  This is likely to occur during startup when the transaction service spins up half way through a request.
 			var earlyEnoughInTransactionLifecycleToCreate = Statics.PossibleEvents
@@ -102,13 +102,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 				.Where(@event => @event == requestNotification)
 				.Any();
 			if (!earlyEnoughInTransactionLifecycleToCreate)
-				return agentWrapperApi.CurrentTransactionWrapperApi;
+				return agent.CurrentTransaction;
 
 			Action onCreate = () =>
 			{
-				HttpContextActions.TransactionStartup(agentWrapperApi, httpContext);
+				HttpContextActions.TransactionStartup(agent, httpContext);
 			};
-			return agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "Integrated Pipeline", true, onCreate);
+			return agent.CreateWebTransaction(WebTransactionType.ASP, "Integrated Pipeline", true, onCreate);
 		}
 	}
 }

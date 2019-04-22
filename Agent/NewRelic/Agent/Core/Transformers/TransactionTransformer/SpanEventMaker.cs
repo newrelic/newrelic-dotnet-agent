@@ -169,7 +169,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			if (!string.IsNullOrWhiteSpace(data.CommandText))
 			{
-				var statement = immutableTransaction.GetSqlObfuscatedAccordingToConfig(data.CommandText);
+				var statement = immutableTransaction.GetSqlObfuscatedAccordingToConfig(data.CommandText, data.DatastoreVendorName);
 				spanAttributes.Add(keyDbStatement, TruncateDatastoreStatement(statement));
 			}
 

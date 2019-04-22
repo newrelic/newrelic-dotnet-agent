@@ -14,18 +14,18 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 	/// </summary>
 	internal class AddNewRelicStartupFilter : IStartupFilter
 	{
-		private readonly IAgentWrapperApi _agentWrapperApi;
+		private readonly IAgent _agent;
 
-		public AddNewRelicStartupFilter(IAgentWrapperApi agentWrapperApi)
+		public AddNewRelicStartupFilter(IAgent agent)
 		{
-			_agentWrapperApi = agentWrapperApi;
+			_agent = agent;
 		}
 
 		public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
 		{
 			return builder =>
 			{
-				builder.UseMiddleware<WrapPipelineMiddleware>(_agentWrapperApi);
+				builder.UseMiddleware<WrapPipelineMiddleware>(_agent);
 				next(builder);
 			};
 		}

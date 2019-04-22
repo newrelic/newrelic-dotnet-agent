@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			// find the first string argument
 			String segmentName = null;
@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 				throw new ArgumentException("The CustomSegmentWrapper can only be applied to a method with a String parameter.");
 			}
 
-			var segment = transactionWrapperApi.StartCustomSegment(instrumentedMethodCall.MethodCall, segmentName);
+			var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, segmentName);
 
 			return Delegates.GetDelegateFor(segment);
 		}

@@ -14,7 +14,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 
@@ -25,7 +25,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 			var parm = instrumentedMethodCall.MethodCall.MethodArguments[0];
 			var commandText = CouchbaseHelper.GetStatement(parm, parameterTypeName);
 
-			var segment = transactionWrapperApi.StartDatastoreSegment(
+			var segment = transaction.StartDatastoreSegment(
 				instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation),
 				null,

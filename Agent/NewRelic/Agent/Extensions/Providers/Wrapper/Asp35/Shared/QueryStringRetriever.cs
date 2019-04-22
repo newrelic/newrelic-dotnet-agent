@@ -50,7 +50,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		}
 
 		[CanBeNull]
-		private static NameValueCollection TryGetQueryString([NotNull] HttpRequest request, [NotNull] IAgentWrapperApi agentWrapperApi)
+		private static NameValueCollection TryGetQueryString([NotNull] HttpRequest request, [NotNull] IAgent agent)
 		{
 			if (EnsureQueryString != null)
 				return EnsureQueryString(request);
@@ -60,18 +60,18 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 				return GetQueryStringBackingField(request);
 
 			// If we don't have any way of grabbing the query string then our instrumentation is incomplete, likely because a new version of ASP.NET was released with unexpected changes.
-			agentWrapperApi.HandleWrapperException(new NullReferenceException(nameof(GetQueryStringBackingField)));
+			agent.HandleWrapperException(new NullReferenceException(nameof(GetQueryStringBackingField)));
 			return null;
 		}
 
 		[CanBeNull]
-		public static IDictionary<String, String> TryGetQueryStringAsDictionary([NotNull] HttpRequest request, [NotNull] IAgentWrapperApi agentWrapperApi)
+		public static IDictionary<String, String> TryGetQueryStringAsDictionary([NotNull] HttpRequest request, [NotNull] IAgent agent)
 		{
 			try
 			{
 				// Enumerating the NameValueCollection can throw an exception if there are invalid values in the collection. Only applies to .NET 4.5+ apps using requestValidationMode 4.5+.
 				// http://referencesource.microsoft.com/#System.Web/HttpRequest.cs,2646
-				return TryGetQueryString(request, agentWrapperApi)?.ToDictionary();
+				return TryGetQueryString(request, agent)?.ToDictionary();
 			}
 			catch
 			{

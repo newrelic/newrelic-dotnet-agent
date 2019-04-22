@@ -11,9 +11,9 @@ namespace NewRelic.Agent.Core.Wrapper
 			return new CanWrapResponse("DetachWrapper".Equals(methodInfo.RequestedWrapperName));
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
-			agentWrapperApi.CurrentTransactionWrapperApi.Detach();
+			agent.CurrentTransaction.Detach();
 			return Delegates.NoOp;
 		}
 	}

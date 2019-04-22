@@ -36,16 +36,16 @@ namespace NewRelic.Providers.Wrapper.WebApi1
 			return new CanWrapResponse(false);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var httpActionContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpActionContext>(0);
 			var controllerName = TryGetControllerName(httpActionContext) ?? "Unknown Controller";
 			var actionName = TryGetActionName(httpActionContext) ?? "Unknown Action";
 
 			var transactionName = String.Format("{0}/{1}", controllerName, actionName);
-			transactionWrapperApi.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, TransactionNamePriority.FrameworkHigh);
+			transaction.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, TransactionNamePriority.FrameworkHigh);
 			
-			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
 			return Delegates.GetDelegateFor<Task<HttpResponseMessage>>(
 				onFailure: segment.End,
@@ -59,12 +59,12 @@ namespace NewRelic.Providers.Wrapper.WebApi1
 					var context = SynchronizationContext.Current;
 					if (context != null)
 					{
-						task.ContinueWith(_ => agentWrapperApi.HandleExceptions(segment.End), 
+						task.ContinueWith(_ => agent.HandleExceptions(segment.End), 
 							TaskScheduler.FromCurrentSynchronizationContext());
 					}
 					else
 					{
-						task.ContinueWith(_ => agentWrapperApi.HandleExceptions(segment.End), 
+						task.ContinueWith(_ => agent.HandleExceptions(segment.End), 
 							TaskContinuationOptions.ExecuteSynchronously);
 					}
 				});

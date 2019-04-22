@@ -22,7 +22,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall,
-			IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+			IAgent agent, ITransaction transaction)
 		{
 			var incomingContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<IncomingContext>(0);
 			var logicalMessage = incomingContext.IncomingLogicalMessage;
@@ -35,18 +35,18 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
 			const string brokerVendorName = "NServiceBus";
 			var queueName = TryGetQueueName(logicalMessage);
-			transactionWrapperApi = agentWrapperApi.CreateMessageBrokerTransaction(MessageBrokerDestinationType.Queue, brokerVendorName, queueName);
+			transaction = agent.CreateMessageBrokerTransaction(MessageBrokerDestinationType.Queue, brokerVendorName, queueName);
 
-			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, brokerVendorName, queueName);
+			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, brokerVendorName, queueName);
 
-			agentWrapperApi.ProcessInboundRequest(headers, TransportType.HTTP);
+			agent.ProcessInboundRequest(headers, TransportType.HTTP);
 
 			return Delegates.GetDelegateFor(
-				onFailure: transactionWrapperApi.NoticeError,
+				onFailure: transaction.NoticeError,
 				onComplete: () =>
 				{
 					segment.End();
-					transactionWrapperApi.End();
+					transaction.End();
 				});
 		}
 

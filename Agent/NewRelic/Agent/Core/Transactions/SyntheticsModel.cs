@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 namespace NewRelic.Agent.Core.Transactions
 {
 	/// <summary>
-	/// ASYNC PROJECT NOTE: Consider moving some of these methods in this model to NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics.SyntheticsHeaderHandler
+	/// ASYNC PROJECT NOTE: Consider moving some of these methods in this model to NewRelic.Agent.Core.Wrapper.Agent.Synthetics.SyntheticsHeaderHandler
 	/// once the legacy agent is deprecated - this will ensure that we have a lightweight model that has a single responsibility while allowing the SyntheticsHeaderHandler 
 	/// to do all of the data processing. 
 	/// </summary>

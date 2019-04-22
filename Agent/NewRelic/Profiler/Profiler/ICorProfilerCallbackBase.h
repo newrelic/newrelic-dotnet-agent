@@ -8,6 +8,7 @@
 #include "../Logging/Logger.h"
 #include "../MethodRewriter/CustomInstrumentation.h"
 #include "../MethodRewriter/MethodRewriter.h"
+#include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "Function.h"
 #include "ICorProfilerCallbackBase.h"
@@ -315,12 +316,20 @@ namespace Profiler {
 			try {
 				// instrument the method
 				methodRewriter->Instrument(function);
+			} catch (NewRelic::Profiler::SignatureParser::SignatureParserException exception) {
+				// Dont call function->ToString() since that might cause Signature to be parsed again
+				// Printing the FunctionName should be enough to provide enough debugging context
+				// based on other logging preceeding this log output
+				LogError(L"An SignatureParserException was thrown while possibly instrumenting function: ", function->GetFunctionName());
+				return E_FAIL;
 			} catch (NewRelic::Profiler::MessageException exception) {
 				LogError(L"An exception was thrown while possibly instrumenting function: ", function->ToString());
 				LogError(exception._message);
 				return E_FAIL;
 			} catch (...) {
-				LogError(L"An exception was thrown while possibly instrumenting function: ", function->ToString());
+				// This is a fatal exception block, so dont call any other functions other than
+				// Logging to keep the exception from bleeding out.
+				LogError(L"An unexpected exception was thrown while possibly instrumenting a function.");
 				return E_FAIL;
 			}
 			return S_OK;

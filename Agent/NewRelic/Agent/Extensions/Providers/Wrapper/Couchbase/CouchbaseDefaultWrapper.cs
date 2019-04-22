@@ -41,7 +41,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 
@@ -58,7 +58,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 
 			var model = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.Couchbase, model, operation));
 
 			return Delegates.GetDelegateFor(segment);

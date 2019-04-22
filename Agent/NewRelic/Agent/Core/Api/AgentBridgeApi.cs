@@ -7,12 +7,12 @@ namespace NewRelic.Agent.Core.Api
 {
 	public class AgentBridgeApi
 	{
-		private readonly IAgentWrapperApi _agentWrapperApi;
+		private readonly IAgent _agent;
 		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
 
-		public AgentBridgeApi(IAgentWrapperApi agentWrapperApi, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
+		public AgentBridgeApi(IAgent agent, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
 		{
-			_agentWrapperApi = agentWrapperApi;
+			_agent = agent;
 			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
 		}
 
@@ -25,8 +25,8 @@ namespace NewRelic.Agent.Core.Api
 					using (new IgnoreWork())
 					{
 						_apiSupportabilityMetricCounters.Record(ApiMethod.CurrentTransaction);
-						var transactionWrapperApi = _agentWrapperApi.CurrentTransactionWrapperApi;
-						return new TransactionBridgeApi(transactionWrapperApi, _apiSupportabilityMetricCounters);
+						var transaction = _agent.CurrentTransaction;
+						return new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 					}
 				}
 				catch (Exception ex)

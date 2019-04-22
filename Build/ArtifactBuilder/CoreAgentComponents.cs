@@ -18,34 +18,34 @@ namespace ArtifactBuilder
 		{
 			var agentDllsForExtensionDirectory = new List<string>()
 			{
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Core.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Parsing.dll"
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Core.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Parsing.dll"
 			};
 
 			var storageProviders = new List<string>()
 			{
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Storage.AsyncLocal.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
 			};
 
 			var wrapperProviders = new List<string>()
 			{
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.HttpClient.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.MongoDb26.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.Sql.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.SqlAsync.dll"
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.HttpClient.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.MongoDb26.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Sql.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.SqlAsync.dll"
 			};
 
 			var wrapperXmls = new List<string>()
 			{
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml"
 			};
 
 			ExtensionXsd = $@"{SourceHomeBuilderPath}\Extensions\extension.xsd";
@@ -67,13 +67,10 @@ namespace ArtifactBuilder
 			ExtensionDirectoryComponents = new List<string>();
 			ExtensionDirectoryComponents.Add(ExtensionXsd);
 
-			NetstandardExtensionDirectoryComponents = new List<string>();
-			NetstandardExtensionDirectoryComponents.AddRange(agentDllsForExtensionDirectory);
-			NetstandardExtensionDirectoryComponents.AddRange(storageProviders);
-			NetstandardExtensionDirectoryComponents.AddRange(wrapperProviders);
- 			
-			// This empty list is necessary to prevent a null reference exception
-			Net46ExtensionDirectoryComponents = new List<string>();
+			ExtensionDirectoryComponents = new List<string>();
+			ExtensionDirectoryComponents.AddRange(agentDllsForExtensionDirectory);
+			ExtensionDirectoryComponents.AddRange(storageProviders);
+			ExtensionDirectoryComponents.AddRange(wrapperProviders);
 
 			WrapperXmlFiles = new List<string>();
 			WrapperXmlFiles.AddRange(wrapperXmls);

@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 			var caller = instrumentedMethodCall.MethodCall.InvocationTarget;
@@ -43,7 +43,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 
 			ConnectionInfo connectionInfo = MongoDbHelper.GetConnectionInfoFromDatabase(database);
 
-			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);
 
 			if (!instrumentedMethodCall.IsAsync)
@@ -60,17 +60,17 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			{
 				segment.RemoveSegmentFromCallStack();
 
-				transactionWrapperApi.Hold();
+				transaction.Hold();
 
 				if (task == null)
 				{
 					return;
 				}
 
-				task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
+				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
 				{
 					segment.End();
-					transactionWrapperApi.Release();
+					transaction.Release();
 				}));
 			}
 		}

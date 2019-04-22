@@ -18,8 +18,7 @@
 
 		<tracerFactory>
 			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Channels.ServiceChannelProxy">
-				<exactMethodMatcher methodName="InvokeService" />
-				<exactMethodMatcher methodName="InvokeBeginService" />
+				<exactMethodMatcher methodName="Invoke" />
 			</match>
 		</tracerFactory>
 

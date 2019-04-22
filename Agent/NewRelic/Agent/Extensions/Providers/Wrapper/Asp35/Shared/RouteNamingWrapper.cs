@@ -15,7 +15,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			return Delegates.GetDelegateFor<RouteData>(onSuccess: routeData =>
 			{
@@ -36,7 +36,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 				if (url == null)
 					return;
 
-				transactionWrapperApi.SetWebTransactionName(WebTransactionType.ASP, url, TransactionNamePriority.Route);
+				transaction.SetWebTransactionName(WebTransactionType.ASP, url, TransactionNamePriority.Route);
 			});
 		}
 	}

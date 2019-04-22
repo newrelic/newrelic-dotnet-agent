@@ -14,7 +14,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			return new CanWrapResponse("BuildCommonServicesWrapper".Equals(methodInfo.RequestedWrapperName));
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			//Do nothing at start of method
 
@@ -25,7 +25,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 				//Forced evaluation is important. Do not remove ToList()
 				var startupFilters = services.Where(serviceDescriptor => serviceDescriptor.ServiceType == typeof(IStartupFilter)).ToList();
 				
-				services.AddTransient<IStartupFilter>(provider => new AddNewRelicStartupFilter(agentWrapperApi));
+				services.AddTransient<IStartupFilter>(provider => new AddNewRelicStartupFilter(agent));
 				
 				foreach (var filter in startupFilters)
 				{

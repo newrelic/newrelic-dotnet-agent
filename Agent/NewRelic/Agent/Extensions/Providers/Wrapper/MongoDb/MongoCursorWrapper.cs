@@ -16,12 +16,12 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var mongoCursor = (MongoCursor)instrumentedMethodCall.MethodCall.InvocationTarget;
 			var operation = "GetEnumerator";
 			var modelName = (mongoCursor.Collection == null) ? null : mongoCursor.Collection.Name;
-			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.MongoDB, modelName, operation));
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, new ParsedSqlStatement(DatastoreVendor.MongoDB, modelName, operation));
 
 			return Delegates.GetDelegateFor(segment);
 		}

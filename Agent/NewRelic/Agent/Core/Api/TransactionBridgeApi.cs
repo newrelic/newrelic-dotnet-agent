@@ -20,12 +20,12 @@ namespace NewRelic.Agent.Core.Api
 			TransportType.Other
 		};
 
-		private readonly ITransactionWrapperApi _transactionWrapperApi;
+		private readonly ITransaction _transaction;
 		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
 
-		public TransactionBridgeApi(ITransactionWrapperApi transactionWrapperApi, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
+		public TransactionBridgeApi(ITransaction transaction, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
 		{
-			_transactionWrapperApi = transactionWrapperApi;
+			_transaction = transaction;
 			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
 		}
 
@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Api
 				using (new IgnoreWork())
 				{
 					_apiSupportabilityMetricCounters.Record(ApiMethod.CreateDistributedTracePayload);
-					return _transactionWrapperApi.CreateDistributedTracePayload();
+					return _transaction.CreateDistributedTracePayload();
 				}
 			}
 			catch (Exception ex)
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Api
 				using (new IgnoreWork())
 				{
 					_apiSupportabilityMetricCounters.Record(ApiMethod.AcceptDistributedTracePayload);
-					_transactionWrapperApi.AcceptDistributedTracePayload(payload, GetTransportTypeValue(transportType));
+					_transaction.AcceptDistributedTracePayload(payload, GetTransportTypeValue(transportType));
 				}
 			}
 			catch (Exception ex)

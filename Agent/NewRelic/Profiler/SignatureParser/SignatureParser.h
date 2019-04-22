@@ -205,6 +205,14 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser
 				throw SignatureParserException();
 			}
 
+			//Managed C++ and C++/CLI compilers can generate methods that have CustomMods in
+			//unexpected locations as defined by the grammar in the ECMA standard. See
+			//https://github.com/dotnet/corefx/blob/master/src/System.Reflection.Metadata/specs/Ecma-335-Issues.md
+			//for more details.
+			//This is not part of the switch statement so that we can better reuse the existing code for parsing custom
+			//modifiers and their associated additional byte(s) of data.
+			while (TryParseCustomMod(iterator, end));
+
 			auto token = *iterator++;
 			switch(token)
 			{

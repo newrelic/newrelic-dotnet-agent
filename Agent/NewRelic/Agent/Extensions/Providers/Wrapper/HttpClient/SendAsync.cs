@@ -30,11 +30,11 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transactionWrapperApi.AttachToAsync();
+				transaction.AttachToAsync();
 			}
 
 			var httpRequestMessage = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpRequestMessage>(0);
@@ -47,9 +47,9 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 			
 			var method = (httpRequestMessage.Method != null ? httpRequestMessage.Method.Method : "<unknown>") ?? "<unknown>";
-			var segment = agentWrapperApi.CurrentTransactionWrapperApi.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
+			var segment = agent.CurrentTransaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
 
-			if (agentWrapperApi.Configuration.ForceSynchronousTimingCalculationHttpClient)
+			if (agent.Configuration.ForceSynchronousTimingCalculationHttpClient)
 			{
 				//When segments complete on a thread that is different than the thread of the parent segment,
 				//we typically do not deduct the child segment's duration from the parent segment's duration
@@ -66,7 +66,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
 
 			// We cannot rely on SerializeHeadersWrapper to attach the headers because it is called on a thread that does not have access to the transaction
-			TryAttachHeadersToRequest(agentWrapperApi, httpRequestMessage);
+			TryAttachHeadersToRequest(agent, httpRequestMessage);
 
 			return Delegates.GetDelegateFor<Task<HttpResponseMessage>>(
 				onFailure: segment.End, 
@@ -84,16 +84,16 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
 				//Since this finishes on a background thread, it is possible it will race the end of
 				//the transaction. This line of code prevents the transaction from ending early. 
-				transactionWrapperApi.Hold();
+				transaction.Hold();
 
 				//Do not want to post to the sync context as this library is commonly used with the
 				//blocking TPL pattern of .Result or .Wait(). Posting to the sync context will result
 				//in recording time waiting for the current unit of work on the sync context to finish.
-				task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
+				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
 				{
-					TryProcessResponse(agentWrapperApi, responseTask, transactionWrapperApi, segment);
+					TryProcessResponse(agent, responseTask, transaction, segment);
 					segment.End();
-					transactionWrapperApi.Release();
+					transaction.Release();
 				}));
 			}
 		}
@@ -117,11 +117,11 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			return null;
 		}
 
-		private static void TryAttachHeadersToRequest([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpRequestMessage httpRequestMessage)
+		private static void TryAttachHeadersToRequest([NotNull] IAgent agent, [NotNull] HttpRequestMessage httpRequestMessage)
 		{
 			try
 			{
-				var headers = agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata()
+				var headers = agent.CurrentTransaction.GetRequestMetadata()
 					.Where(header => header.Key != null);
 
 				foreach (var header in headers)
@@ -133,11 +133,11 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 			catch (Exception ex)
 			{
-				agentWrapperApi.HandleWrapperException(ex);
+				agent.HandleWrapperException(ex);
 			}
 		}
 
-		private static void TryProcessResponse([NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] Task<HttpResponseMessage> response, [NotNull] ITransactionWrapperApi transactionWrapperApi, [CanBeNull] ISegment segment)
+		private static void TryProcessResponse([NotNull] IAgent agent, [CanBeNull] Task<HttpResponseMessage> response, [NotNull] ITransaction transaction, [CanBeNull] ISegment segment)
 		{
 			try
 			{
@@ -152,11 +152,11 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
 				var flattenedHeaders = headers.Select(Flatten);
 
-				transactionWrapperApi.ProcessInboundResponse(flattenedHeaders, segment);
+				transaction.ProcessInboundResponse(flattenedHeaders, segment);
 			}
 			catch (Exception ex)
 			{
-				agentWrapperApi.HandleWrapperException(ex);
+				agent.HandleWrapperException(ex);
 			}
 		}
 

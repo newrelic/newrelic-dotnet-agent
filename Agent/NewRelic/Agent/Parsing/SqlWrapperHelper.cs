@@ -89,9 +89,9 @@ namespace NewRelic.Parsing
 			return DatastoreVendor.Other;
 		}
 
-		public static IDictionary<string, IConvertible> GetQueryParameters(IDbCommand command, IAgentWrapperApi agentWrapperApi)
+		public static IDictionary<string, IConvertible> GetQueryParameters(IDbCommand command, IAgent agent)
 		{
-			if (!agentWrapperApi.Configuration.DatastoreTracerQueryParametersEnabled)
+			if (!agent.Configuration.DatastoreTracerQueryParametersEnabled)
 			{
 				return null;
 			}

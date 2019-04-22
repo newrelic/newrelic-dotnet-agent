@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
 	/// <summary>
-	/// A factory that returns wrappers for instrumented methods.
+	/// A factory that returns wrappers for instrumented methods
 	/// </summary>
 	public interface IWrapperMap
 	{
@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Wrapper
 	{
 		private readonly List<IDefaultWrapper> _defaultWrappers;
 		private readonly List<IWrapper> _nonDefaultWrappers;
-
+			
 		private readonly TrackedWrapper _noOpTrackedWrapper;
 
 		public WrapperMap([NotNull] IEnumerable<IWrapper> wrappers, [NotNull] IDefaultWrapper defaultWrapper, [NotNull] INoOpWrapper noOpWrapper)
@@ -56,6 +56,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
 		public TrackedWrapper Get(InstrumentedMethodInfo instrumentedMethodInfo)
 		{
+			//Then, see if there's a standard wrapper supporting this method
 			foreach (var wrapper in _nonDefaultWrappers)
 			{
 				if (CanWrap(instrumentedMethodInfo, wrapper))
@@ -63,6 +64,17 @@ namespace NewRelic.Agent.Core.Wrapper
 					return new TrackedWrapper(wrapper);
 				}
 			}
+
+			//Next, check to see if one of the dynamic wrappers can be used
+			foreach (var wrapper in ExtensionsLoader.TryGetDynamicWrapperInstance(instrumentedMethodInfo.RequestedWrapperName))
+			{
+				if (CanWrap(instrumentedMethodInfo, wrapper))
+				{
+					return new TrackedWrapper(wrapper);
+				}
+			}
+
+			//Otherwise, return one of our defaults or a NoOp
 			return GetDefaultWrapperOrSetNoOp(instrumentedMethodInfo);
 		}
 

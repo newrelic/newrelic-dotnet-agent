@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 #if NET45
+using System.Web;
 using Microsoft.Win32;
 #endif
 
@@ -24,8 +26,9 @@ namespace NewRelic.Agent.Core
 		public static string NewRelicInstallPath { get; }
 		public static string HomeExtensionsDirectory { get; }
 		public static string InstallPathExtensionsDirectory { get; }
-		public static string InstallPathNetstandardExtensionsDirectory { get; }
-		public static string InstallPathNet46ExtensionsDirectory { get; }
+		public static int ProcessId { get; }
+		public static string AppDomainName { get; }
+		public static string AppDomainAppVirtualPath { get; }
 
 		static AgentInstallConfiguration()
 		{
@@ -38,10 +41,16 @@ namespace NewRelic.Agent.Core
 			NewRelicInstallPath = GetNewRelicInstallPath();
 			HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
-			InstallPathNetstandardExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions", "netstandard2.0") : null;
-			InstallPathNet46ExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions", "net46") : null;
 			IsNetstandardPresent = GetIsNetstandardPresent();
 			IsNet46OrAbovePresent = GetIsNet46OrAbovePresent();
+			ProcessId = Process.GetCurrentProcess().Id;
+			AppDomainName = AppDomain.CurrentDomain.FriendlyName;
+#if NET45
+			if (HttpRuntime.AppDomainAppVirtualPath != null)
+			{
+				AppDomainAppVirtualPath = HttpRuntime.AppDomainAppVirtualPath;
+			}
+#endif
 		}
 
 		private static bool GetIsNetstandardPresent()

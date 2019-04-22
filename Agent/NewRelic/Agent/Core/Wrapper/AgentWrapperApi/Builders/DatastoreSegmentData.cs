@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Time;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Parsing.ConnectionString;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -24,29 +19,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	{
 		private readonly static ConnectionInfo EmptyConnectionInfo = new ConnectionInfo(null, null, null);
 
-		[CanBeNull]
-		public String Operation => _parsedSqlStatement.Operation;
+		public string Operation => _parsedSqlStatement.Operation;
 		public DatastoreVendor DatastoreVendorName => _parsedSqlStatement.DatastoreVendor;
-		[CanBeNull]
-		public String Model => _parsedSqlStatement.Model;
-		[CanBeNull]
-		public String CommandText { get; set; }
-		[CanBeNull]
-		public String Host => _connectionInfo.Host;
-		[CanBeNull]
-		public String PortPathOrId => _connectionInfo.PortPathOrId;
-		[CanBeNull]
-		public String DatabaseName => _connectionInfo.DatabaseName;
-		[CanBeNull]
-		public Func<Object> GetExplainPlanResources { get; set; }
-		[CanBeNull]
-		public Func<Object, ExplainPlan> GenerateExplainPlan { get; set; }
-		[CanBeNull]
-		public Func<Boolean> DoExplainPlanCondition { get; set; }
+		public string Model => _parsedSqlStatement.Model;
+		public string CommandText { get; set; }
+		public string Host => _connectionInfo.Host;
+		public string PortPathOrId => _connectionInfo.PortPathOrId;
+		public string DatabaseName => _connectionInfo.DatabaseName;
+		public Func<object> GetExplainPlanResources { get; set; }
+		public Func<object, ExplainPlan> GenerateExplainPlan { get; set; }
+		public Func<bool> DoExplainPlanCondition { get; set; }
 
 		public IDictionary<string, IConvertible> QueryParameters { get; set; }
 
-		private Object _explainPlanResources;
+		private object _explainPlanResources;
 		private ExplainPlan _explainPlan;
 
 		private ConnectionInfo _connectionInfo;
@@ -71,7 +57,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			if (CommandText != null)
 			{
-				segmentParameters["sql"] = immutableTransaction.GetSqlObfuscatedAccordingToConfig(CommandText);
+				segmentParameters["sql"] = immutableTransaction.GetSqlObfuscatedAccordingToConfig(CommandText, DatastoreVendorName);
 			}
 
 			if (configurationService.Configuration.InstanceReportingEnabled)
@@ -91,7 +77,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			}
 		}
 
-		internal override IEnumerable<KeyValuePair<String, Object>> Finish()
+		internal override IEnumerable<KeyValuePair<string, object>> Finish()
 		{
 			if (GetExplainPlanResources == null)
 				return null;
@@ -140,7 +126,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 						{
 							foreach (var index in explainPlan.ObfuscatedHeaders)
 							{
-								data[index] = obfuscator.GetObfuscatedSql(data[index].ToString());
+								data[index] = obfuscator.GetObfuscatedSql(data[index].ToString(), DatastoreVendorName);
 							}
 						}
 
@@ -185,7 +171,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var duration = segment.Duration.Value;
 			var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
 
-			if (!String.IsNullOrEmpty(Model))
+			if (!string.IsNullOrEmpty(Model))
 			{
 				MetricBuilder.TryBuildDatastoreStatementMetric(DatastoreVendorName, _parsedSqlStatement, duration, exclusiveDuration, txStats);
 				MetricBuilder.TryBuildDatastoreVendorOperationMetric(DatastoreVendorName, Operation, duration, exclusiveDuration, txStats, true);
@@ -204,7 +190,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			}
 		}
 
-		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
 		{
 			return new TypedSegment<DatastoreSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
 		}

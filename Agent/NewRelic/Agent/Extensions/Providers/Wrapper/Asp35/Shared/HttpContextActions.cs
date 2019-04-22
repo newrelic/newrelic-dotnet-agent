@@ -29,13 +29,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 		}
 
-		public static void TransactionStartup([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		public static void TransactionStartup([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
 			SetFilterHack(httpContext);
-			StoreQueueTime(agentWrapperApi, httpContext);
-			StoreUrls(agentWrapperApi, httpContext);
-			NameTransaction(agentWrapperApi, httpContext);
-			ProcessHeaders(agentWrapperApi, httpContext);
+			StoreQueueTime(agent, httpContext);
+			StoreUrls(agent, httpContext);
+			NameTransaction(agent, httpContext);
+			ProcessHeaders(agent, httpContext);
 		}
 
 		/// <summary>
@@ -57,14 +57,14 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			httpContext.Response.Filter = null;
 		}
 
-		public static void TransactionShutdown([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		public static void TransactionShutdown([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
-			StoreRequestParameters(agentWrapperApi, httpContext);
-			TryWriteResponseHeaders(agentWrapperApi, httpContext);
-			SetStatusCode(agentWrapperApi, httpContext);
+			StoreRequestParameters(agent, httpContext);
+			TryWriteResponseHeaders(agent, httpContext);
+			SetStatusCode(agent, httpContext);
 		}
 
-		private static void StoreQueueTime([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static void StoreQueueTime([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
 			var now = DateTime.UtcNow;
 
@@ -79,12 +79,12 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 			var workerRequestStartTime = GetStartTime(workerRequest);
 			var inQueueTimeSpan = now - workerRequestStartTime;
-			agentWrapperApi.CurrentTransactionWrapperApi.SetQueueTime(inQueueTimeSpan);
+			agent.CurrentTransaction.SetQueueTime(inQueueTimeSpan);
 		}
 
-		private static void StoreUrls([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static void StoreUrls([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
-			var transaction = agentWrapperApi.CurrentTransactionWrapperApi;
+			var transaction = agent.CurrentTransaction;
 
 			var requestPath = RequestPathRetriever.TryGetRequestPath(httpContext.Request);
 
@@ -117,28 +117,28 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 		}
 
-		private static void StoreRequestParameters([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static void StoreRequestParameters([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
-			var parameters = QueryStringRetriever.TryGetQueryStringAsDictionary(httpContext.Request, agentWrapperApi)
+			var parameters = QueryStringRetriever.TryGetQueryStringAsDictionary(httpContext.Request, agent)
 				?? Enumerable.Empty<KeyValuePair<String, String>>();
-			agentWrapperApi.CurrentTransactionWrapperApi.SetRequestParameters(parameters);
+			agent.CurrentTransaction.SetRequestParameters(parameters);
 		}
 
-		private static void NameTransaction([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static void NameTransaction([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
-			agentWrapperApi.CurrentTransactionWrapperApi.SetWebTransactionNameFromPath(WebTransactionType.ASP, httpContext.Request.Path);
+			agent.CurrentTransaction.SetWebTransactionNameFromPath(WebTransactionType.ASP, httpContext.Request.Path);
 		}
 
-		private static void ProcessHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static void ProcessHeaders([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
 			var headers = httpContext.Request.Headers.ToDictionary();
 			var contentLength = httpContext.Request.ContentLength;
-			agentWrapperApi.ProcessInboundRequest(headers, TransportType.HTTP, contentLength);
+			agent.ProcessInboundRequest(headers, TransportType.HTTP, contentLength);
 		}
 
-		private static void TryWriteResponseHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static void TryWriteResponseHeaders([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
-			var headers = agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata();
+			var headers = agent.CurrentTransaction.GetResponseMetadata();
 
 			try
 			{
@@ -157,15 +157,15 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 			catch (Exception ex)
 			{
-				agentWrapperApi.HandleWrapperException(ex);
+				agent.HandleWrapperException(ex);
 			}
 		}
 
-		private static void SetStatusCode([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static void SetStatusCode([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
 			var statusCode = httpContext.Response.StatusCode;
 			var subStatusCode = TryGetSubStatusCode(httpContext);
-			agentWrapperApi.CurrentTransactionWrapperApi.SetHttpResponseStatusCode(statusCode, subStatusCode);
+			agent.CurrentTransaction.SetHttpResponseStatusCode(statusCode, subStatusCode);
 		}
 
 		[CanBeNull]

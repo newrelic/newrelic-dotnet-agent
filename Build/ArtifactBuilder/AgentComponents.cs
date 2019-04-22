@@ -39,8 +39,6 @@ namespace ArtifactBuilder
 		public string Platform { get; }
 		public string SourcePath { get; }
 		public List<string> ExtensionDirectoryComponents { get; set; }
-		public List<string> NetstandardExtensionDirectoryComponents { get; set; }
-		public List<string> Net46ExtensionDirectoryComponents { get; set; }
 		public List<string> WrapperXmlFiles { get; set; }
 		public List<string> RootInstallDirectoryComponents { get; set; }
 		public string AgentApiDll;
@@ -53,20 +51,19 @@ namespace ArtifactBuilder
 		{
 			get
 			{
-				var list = RootInstallDirectoryComponents
-					.Concat(ExtensionDirectoryComponents)
-					.Concat(Net46ExtensionDirectoryComponents)
-					.Concat(NetstandardExtensionDirectoryComponents)
-					.Concat(WrapperXmlFiles)
-					.Append(ExtensionXsd)
-					.Append(AgentApiDll);
+				var list = RootInstallDirectoryComponents;
+
+				list.AddRange(ExtensionDirectoryComponents);
+				list.AddRange(WrapperXmlFiles);
+				list.Add(ExtensionXsd);
+				list.Add(AgentApiDll);
 
 				if (!string.IsNullOrEmpty(LinuxProfiler))
 				{
-					list = list.Append(LinuxProfiler);
+					list.Add(LinuxProfiler);
 				}
 
-				return list.ToList();
+				return list.Distinct().ToList();
 			}
 		}
 		
@@ -92,9 +89,9 @@ namespace ArtifactBuilder
 		public void CopyComponents(string destinationDirectory)
 		{
 			FileHelpers.CopyFile(RootInstallDirectoryComponents, destinationDirectory);
+
 			FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions");
-			FileHelpers.CopyFile(NetstandardExtensionDirectoryComponents, $@"{destinationDirectory}\extensions\netstandard2.0");
-			FileHelpers.CopyFile(Net46ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions\net46");
+
 			FileHelpers.CopyFile(WrapperXmlFiles, $@"{destinationDirectory}\extensions");
 		}
 

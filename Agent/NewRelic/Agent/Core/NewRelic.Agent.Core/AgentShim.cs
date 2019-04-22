@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core
 				if (IgnoreWork.AgentDepth > 0)
 					return null;
 
-				var agent = Agent.Instance;
+				var agent = AgentManager.Instance;
 				if (agent == null || agent.State != AgentState.Started)
 					return null;
 

@@ -19,7 +19,7 @@ namespace NewRelic.Providers.Wrapper.OpenRasta
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var httpContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<System.Web.HttpContext>(0);
 			var url = httpContext.Request.RawUrl; // Do not use Request.Url. With OpenRasta, Request.Url is rewritten to something like /ignoreme.rastahook which does not reflect the actual request.
@@ -37,9 +37,9 @@ namespace NewRelic.Providers.Wrapper.OpenRasta
 			System.Globalization.TextInfo textInfo = new System.Globalization.CultureInfo("en-US", false).TextInfo;
 			actionName = textInfo.ToLower(actionName);
 
-			transactionWrapperApi.SetWebTransactionName(WebTransactionType.OpenRasta, $"{handlerName}/{actionName}", TransactionNamePriority.FrameworkHigh);
+			transaction.SetWebTransactionName(WebTransactionType.OpenRasta, $"{handlerName}/{actionName}", TransactionNamePriority.FrameworkHigh);
 
-			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, handlerName, actionName);
+			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, handlerName, actionName);
 			return segment == null ? Delegates.NoOp : Delegates.GetDelegateFor(segment.End);
 		}
 	}

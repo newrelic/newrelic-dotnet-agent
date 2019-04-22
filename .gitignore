@@ -123,6 +123,7 @@ Agent/UpgradeLog*.htm
 Tests/PlatformTests/packages/
 Tests/PlatformTests/Applications/ServiceFabricApplication/packages/
 Tests/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
+Tests/PlatformTests/Applications/WindowsContainerApplication/packages
 
 /Tests/Benchmarking/BenchmarkDotNet.Artifacts
 *.dgml

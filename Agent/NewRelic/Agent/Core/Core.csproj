@@ -73,7 +73,7 @@
         <ProjectReference Include="..\Dongle\Dongle.csproj" />
         <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
         <ProjectReference Include="..\LabelsService\LabelsService.csproj" />
-        <ProjectReference Include="..\NewRelic.Core\NewRelic.Core.csproj" />
+        <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj" />
         <ProjectReference Include="..\Parsing\Parsing.csproj" />
     </ItemGroup>
     <ItemGroup>

@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var httpApplication = GetHttpApplication(instrumentedMethodCall.MethodCall.InvocationTarget);
 			if (httpApplication == null)
@@ -38,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 				return Delegates.NoOp;
 
 			var httpHandlerName = httpHandler.GetType().Name;
-			transactionWrapperApi.SetWebTransactionName(WebTransactionType.ASP, httpHandlerName, TransactionNamePriority.Handler);
+			transaction.SetWebTransactionName(WebTransactionType.ASP, httpHandlerName, TransactionNamePriority.Handler);
 
 			return Delegates.NoOp;
 		}

@@ -20,10 +20,12 @@ $packagesToBuild = @(
 )
 
 foreach ($pkg in $packagesToBuild) {
+    Write-Output "EXECUTING: $pkg"
     Invoke-Expression $pkg
     if ($LastExitCode -ne 0) {
         exit $LastExitCode
     }
+    Write-Output "----------------------"
 }
 
 if ($IncludeDownloadSite) {

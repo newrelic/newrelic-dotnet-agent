@@ -21,10 +21,10 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 
 		public bool IsTransactionRequired => false;
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 
-			var currentTransaction = agentWrapperApi.CurrentTransactionWrapperApi;
+			var currentTransaction = agent.CurrentTransaction;
 			var transactionAlreadyExists = currentTransaction.IsValid;
 
 			var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "<unknown>";
@@ -39,70 +39,70 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 			{
 				if (!transactionAlreadyExists)
 				{
-					agentWrapperApi.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction because this call is not already encapsulated within a transaction.");
+					agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction because this call is not already encapsulated within a transaction.");
 				}
 				else
 				{
-					trackWorkAsNewTransaction = agentWrapperApi.TryTrackAsyncWorkOnNewTransaction();
+					trackWorkAsNewTransaction = agent.TryTrackAsyncWorkOnNewTransaction();
 
 					if (!trackWorkAsNewTransaction)
 					{
-						agentWrapperApi.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction.  Only asynchronous work spawned on a new thread (e.g. Task.Run, TaskFactory.StartNew, or new Thread()) is supported at this time.");
+						agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction.  Only asynchronous work spawned on a new thread (e.g. Task.Run, TaskFactory.StartNew, or new Thread()) is supported at this time.");
 					}
 					else
 					{
-						agentWrapperApi.Logger.Log(Agent.Extensions.Logging.Level.Finest, $"Tracking call to method {name} under a separate transaction.");
+						agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, $"Tracking call to method {name} under a separate transaction.");
 					}
 				}
 			}
 
-			transactionWrapperApi = agentWrapperApi.CreateTransaction(instrumentedMethodCall.StartWebTransaction, "Custom", name, false);
+			transaction = agent.CreateTransaction(instrumentedMethodCall.StartWebTransaction, "Custom", name, false);
 
-			var newTransactionCreatedByWrapper = transactionWrapperApi.IsValid && (!transactionAlreadyExists || trackWorkAsNewTransaction);
+			var newTransactionCreatedByWrapper = transaction.IsValid && (!transactionAlreadyExists || trackWorkAsNewTransaction);
 
 			if (instrumentedMethodCall.IsAsync)
 			{
-				agentWrapperApi.CurrentTransactionWrapperApi.AttachToAsync();
+				agent.CurrentTransaction.AttachToAsync();
 			}
 
 			var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
-				? transactionWrapperApi.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
-				: transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
+				? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
+				: transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 
 			var hasMetricName = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName);
 			if (hasMetricName)
 			{
 				var priority = instrumentedMethodCall.RequestedTransactionNamePriority ?? TransactionNamePriority.Uri;
-				transactionWrapperApi.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, priority);
+				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, priority);
 			}
 			
 			return instrumentedMethodCall.IsAsync
 				? Delegates.GetDelegateFor<Task>(onFailure: onFailureAsync, onSuccess: onSuccessAsync)
-				: Delegates.GetDelegateFor(onFailure: transactionWrapperApi.NoticeError, onComplete: onCompleteSync);
+				: Delegates.GetDelegateFor(onFailure: transaction.NoticeError, onComplete: onCompleteSync);
 
 
 			void onCompleteSync()
 			{
 				segment.End();
-				transactionWrapperApi.End();
+				transaction.End(captureResponseTime: !transactionAlreadyExists);
 			}
 
 			void onFailureAsync(Exception ex)
 			{
 				if (ex != null)
 				{
-					transactionWrapperApi.NoticeError(ex);
+					transaction.NoticeError(ex);
 				}
 
 				segment.End();
-				transactionWrapperApi.End();
+				transaction.End(captureResponseTime: !transactionAlreadyExists);
 			}
 
 			void onSuccessAsync(Task task)
 			{
 				if (newTransactionCreatedByWrapper)
 				{
-					transactionWrapperApi.Detach();		//Detaches from both primary and async contexts.
+					transaction.Detach();		//Detaches from both primary and async contexts.
 				}
 
 				segment.RemoveSegmentFromCallStack();
@@ -111,7 +111,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 				// Because we cannot add a continuation for segment timing, we cannot support these type of methods
 				if (task == null)
 				{
-					agentWrapperApi.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Warning, method {name} is an async method, but does not have a return type of Task.  This may prevent downstream instrumentation from being captured correctly.  Consider revising the method to have a return-type of Task.");
+					agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Warning, method {name} is an async method, but does not have a return type of Task.  This may prevent downstream instrumentation from being captured correctly.  Consider revising the method to have a return-type of Task.");
 
 					// Since we cannot add a continuation, we have no other choice than to end the segment and tranaction here.
 					// This means we truncate the segment and potentially end the transaction prematurely preventing downstream instrumentation from being invoked.
@@ -120,7 +120,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 					// Also if this is a new transaction, we close it out as well.
 					if (newTransactionCreatedByWrapper)
 					{
-						transactionWrapperApi.End();
+						transaction.End(captureResponseTime: !transactionAlreadyExists);
 					}
 
 					return;
@@ -129,28 +129,28 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 				var context = SynchronizationContext.Current;
 				if (context != null)
 				{
-					task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
+					task.ContinueWith(responseTask => agent.HandleExceptions(() =>
 					{
 						if (responseTask != null && responseTask.IsFaulted && responseTask.Exception != null)
 						{
-							transactionWrapperApi.NoticeError(responseTask.Exception);
+							transaction.NoticeError(responseTask.Exception);
 						}
 
 						segment.End();
-						transactionWrapperApi.End();
+						transaction.End(captureResponseTime: !transactionAlreadyExists);
 					}), TaskScheduler.FromCurrentSynchronizationContext());
 				}
 				else
 				{
-					task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(() =>
+					task.ContinueWith(responseTask => agent.HandleExceptions(() =>
 					{
 						if (responseTask != null && responseTask.IsFaulted && responseTask.Exception != null)
 						{
-							transactionWrapperApi.NoticeError(responseTask.Exception);
+							transaction.NoticeError(responseTask.Exception);
 						}
 
 						segment.End();
-						transactionWrapperApi.End();
+						transaction.End(captureResponseTime: !transactionAlreadyExists);
 					}), TaskContinuationOptions.ExecuteSynchronously);
 				}
 			}

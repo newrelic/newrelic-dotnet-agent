@@ -91,7 +91,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var httpApplication = (HttpApplication)instrumentedMethodCall.MethodCall.InvocationTarget;
 			if (httpApplication == null)
@@ -104,14 +104,14 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			if (eventName == null)
 				throw new NullReferenceException("Could not find a valid eventName for index " + eventIndex);
 
-			var beforeExecutionStep = GetBeforeExecutionStep(instrumentedMethodCall.MethodCall, agentWrapperApi, eventName, httpApplication);
-			var afterExecutionStep = GetAfterExecutionStep(instrumentedMethodCall.MethodCall, agentWrapperApi, eventName, httpApplication);
+			var beforeExecutionStep = GetBeforeExecutionStep(instrumentedMethodCall.MethodCall, agent, eventName, httpApplication);
+			var afterExecutionStep = GetAfterExecutionStep(instrumentedMethodCall.MethodCall, agent, eventName, httpApplication);
 			
 			steps.Add(beforeExecutionStep);
 			return Delegates.GetDelegateFor(() => steps.Add(afterExecutionStep));
 		}
 
-		private void BeforeEvent(MethodCall methodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private void BeforeEvent(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
 		{
 			if (httpApplication == null)
 				throw new ArgumentNullException("httpApplication");
@@ -120,24 +120,24 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			if (httpContext == null)
 				throw new NullReferenceException("httpApplication.Context");
 
-			ITransactionWrapperApi transactionWrapperApi;
+			ITransaction transaction;
 			if (eventName == "BeginRequest")
 			{
 				Action onCreate = () =>
 				{
-					HttpContextActions.TransactionStartup(agentWrapperApi, httpContext);
+					HttpContextActions.TransactionStartup(agent, httpContext);
 				};
-				transactionWrapperApi = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "Classic Pipeline", true, onCreate);
+				transaction = agent.CreateWebTransaction(WebTransactionType.ASP, "Classic Pipeline", true, onCreate);
 			} else
 			{
-				transactionWrapperApi = agentWrapperApi.CurrentTransactionWrapperApi;
+				transaction = agent.CurrentTransaction;
 			}
 
-			var segment = transactionWrapperApi.StartTransactionSegment(methodCall, eventName);
+			var segment = transaction.StartTransactionSegment(methodCall, eventName);
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = segment;
 		}
 
-		private void AfterEvent(MethodCall methodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private void AfterEvent(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
 		{
 			if (httpApplication == null)
 				throw new ArgumentNullException("httpApplication");
@@ -146,23 +146,23 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			if (httpContext == null)
 				throw new NullReferenceException("httpApplication.Context");
 
-			var segment = agentWrapperApi.CastAsSegment(httpContext.Items[HttpContextActions.HttpContextSegmentKey]);
+			var segment = agent.CastAsSegment(httpContext.Items[HttpContextActions.HttpContextSegmentKey]);
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = null;
 			segment.End();
 
 			if (eventName == "EndRequest")
 			{
-				HttpContextActions.TransactionShutdown(agentWrapperApi, httpContext);
-				agentWrapperApi.CurrentTransactionWrapperApi.End();
+				HttpContextActions.TransactionShutdown(agent, httpContext);
+				agent.CurrentTransaction.End();
 			}
 		}
 
 		[NotNull]
-		private Object GetBeforeExecutionStep(MethodCall methodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private Object GetBeforeExecutionStep(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
 		{
 			// ReSharper disable once AssignNullToNotNullAttribute
-			EventHandler beforePipelineEventHandler = (sender, args) => BeforeEvent(methodCall, agentWrapperApi, eventName, sender as HttpApplication);
-			beforePipelineEventHandler = GetExceptionSafeEventHandler(beforePipelineEventHandler, agentWrapperApi);
+			EventHandler beforePipelineEventHandler = (sender, args) => BeforeEvent(methodCall, agent, eventName, sender as HttpApplication);
+			beforePipelineEventHandler = GetExceptionSafeEventHandler(beforePipelineEventHandler, agent);
 
 			var beforePipelineEventExecutionStep = Statics.CreateSyncEventExecutionStep(httpApplication, beforePipelineEventHandler);
 			if (beforePipelineEventExecutionStep == null)
@@ -172,11 +172,11 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 		}
 
 		[NotNull]
-		private Object GetAfterExecutionStep(MethodCall methodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private Object GetAfterExecutionStep(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
 		{
 			// ReSharper disable once AssignNullToNotNullAttribute
-			EventHandler afterPipelineEventHandler = (sender, args) => AfterEvent(methodCall, agentWrapperApi, eventName, sender as HttpApplication);
-			afterPipelineEventHandler = GetExceptionSafeEventHandler(afterPipelineEventHandler, agentWrapperApi);
+			EventHandler afterPipelineEventHandler = (sender, args) => AfterEvent(methodCall, agent, eventName, sender as HttpApplication);
+			afterPipelineEventHandler = GetExceptionSafeEventHandler(afterPipelineEventHandler, agent);
 
 			var afterPipelineEventExecptionStep = Statics.CreateSyncEventExecutionStep(httpApplication, afterPipelineEventHandler);
 			if (afterPipelineEventExecptionStep == null)
@@ -186,11 +186,11 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 		}
 
 		[NotNull, Pure]
-		private static EventHandler GetExceptionSafeEventHandler([NotNull] EventHandler eventHandler, [NotNull] IAgentWrapperApi agentWrapperApi)
+		private static EventHandler GetExceptionSafeEventHandler([NotNull] EventHandler eventHandler, [NotNull] IAgent agent)
 		{
 			return (sender, args) =>
 			{
-				agentWrapperApi.HandleExceptions(() => eventHandler(sender, args));
+				agent.HandleExceptions(() => eventHandler(sender, args));
 			};
 		}
 	}

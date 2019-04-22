@@ -18,14 +18,14 @@ namespace NewRelic.Providers.Wrapper.Msmq
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			const string queueVendorName = "Msmq";
 			var queue = instrumentedMethodCall.MethodCall.InvocationTarget as MessageQueue;
 			if (queue == null)
 				return null;
 
-			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Purge, queueVendorName, queue.QueueName);
+			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Purge, queueVendorName, queue.QueueName);
 			return Delegates.GetDelegateFor(segment);
 		}
 	}

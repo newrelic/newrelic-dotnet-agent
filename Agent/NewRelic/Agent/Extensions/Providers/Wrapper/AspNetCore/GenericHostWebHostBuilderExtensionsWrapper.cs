@@ -14,9 +14,9 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			return new CanWrapResponse("GenericHostWebHostBuilderExtensionsWrapper".Equals(methodInfo.RequestedWrapperName));
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
-			AspNetCore21Types.AddStartupFilterToHostBuilder(instrumentedMethodCall.MethodCall.MethodArguments[0], agentWrapperApi);
+			AspNetCore21Types.AddStartupFilterToHostBuilder(instrumentedMethodCall.MethodCall.MethodArguments[0], agent);
 
 			return Delegates.NoOp;
 		}
@@ -26,7 +26,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 		/// </summary>
 		private static class AspNetCore21Types
 		{
-			public static void AddStartupFilterToHostBuilder(object hostBuilder, IAgentWrapperApi agentWrapperApi)
+			public static void AddStartupFilterToHostBuilder(object hostBuilder, IAgent agent)
 			{
 				var typedHostBuilder = (Microsoft.Extensions.Hosting.IHostBuilder)hostBuilder;
 				typedHostBuilder.ConfigureServices(AddStartupFilter);
@@ -36,7 +36,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 					//Forced evaluation is important. Do not remove ToList()
 					var startupFilters = services.Where(serviceDescriptor => serviceDescriptor.ServiceType == typeof(IStartupFilter)).ToList();
 
-					services.AddTransient<IStartupFilter>(provider => new AddNewRelicStartupFilter(agentWrapperApi));
+					services.AddTransient<IStartupFilter>(provider => new AddNewRelicStartupFilter(agent));
 
 					foreach (var filter in startupFilters)
 					{

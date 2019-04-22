@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<ICpuSampleTransformer, CpuSampleTransformer>();
 			container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
 			container.Register<IEnvironment, SystemInterfaces.Environment>();
-			container.Register<IAgentWrapperApi, AgentWrapperApi>();
+			container.Register<IAgent, Wrapper.AgentWrapperApi.Agent>();
 			container.Register<CpuSampler, CpuSampler>();
 			container.Register<MemorySampler, MemorySampler>();
 			container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();

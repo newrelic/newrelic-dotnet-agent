@@ -37,7 +37,13 @@ namespace NewRelic.Agent.Core
 				AddVariable("Product Name", () => fileVersionInfo?.ProductName);
 
 				AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
+#if NETSTANDARD2_0
+				// This API is only supported on .net FX 4.7 + so limiting it
+				// to .net core since that is the one affected. 
+				AddVariable(".NET Version", () => System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription.ToString());
+#else
 				AddVariable(".NET Version", () => System.Environment.Version.ToString());
+#endif
 				AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
 				AddVariable("x64", () => (IntPtr.Size == 8) ? "yes" : "no");
 

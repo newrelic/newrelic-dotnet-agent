@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			};
 		}
 
-		public static AfterWrappedMethodDelegate GetAsyncDelegateFor(IAgentWrapperApi agentWrapperApi, ISegment segment)
+		public static AfterWrappedMethodDelegate GetAsyncDelegateFor(IAgent agent, ISegment segment)
 		{
 			return GetDelegateFor<Task>(
 				onFailure: segment.End,
@@ -83,12 +83,12 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 					var context = SynchronizationContext.Current;
 					if (context != null)
 					{
-						task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(segment.End), 
+						task.ContinueWith(responseTask => agent.HandleExceptions(segment.End), 
 							TaskScheduler.FromCurrentSynchronizationContext());
 					}
 					else
 					{
-						task.ContinueWith(responseTask => agentWrapperApi.HandleExceptions(segment.End), 
+						task.ContinueWith(responseTask => agent.HandleExceptions(segment.End), 
 							TaskContinuationOptions.ExecuteSynchronously);
 					}
 				});

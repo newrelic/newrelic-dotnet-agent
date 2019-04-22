@@ -47,10 +47,10 @@ namespace NewRelic.Providers.Wrapper.Sql
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "unknown";
-			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, instrumentedMethodCall.MethodCall.Method.MethodName, isLeaf:true);
+			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, instrumentedMethodCall.MethodCall.Method.MethodName, isLeaf:true);
 				
 			return Delegates.GetDelegateFor(segment);
 		}

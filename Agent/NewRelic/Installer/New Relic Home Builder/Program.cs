@@ -67,6 +67,7 @@ namespace NewRelic.Installer
 
 		[NotNull]
 		private String DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
+
 		[NotNull]
 		private String DestinationRegistryFileName { get { return String.Format("New Relic Home {0}.reg", Bitness); } }
 		[NotNull]
@@ -165,8 +166,6 @@ namespace NewRelic.Installer
 			ReCreateDirectoryWithEveryoneAccess(DestinationHomeDirectoryPath);
 
 			Directory.CreateDirectory(DestinationExtensionsDirectoryPath);
-			Directory.CreateDirectory(Path.Combine(DestinationExtensionsDirectoryPath, "netstandard2.0"));
-			Directory.CreateDirectory(Path.Combine(DestinationExtensionsDirectoryPath, "net46"));
 
 			CopyProfiler(isLinux);
 
@@ -264,23 +263,10 @@ namespace NewRelic.Installer
 			if (destinationDirectoryPath == null)
 				throw new ArgumentNullException("destinationDirectoryPath");
 
-			CopyToDirectories(sourceFilePath, new[] { destinationDirectoryPath });
-		}
-
-		private static void CopyToDirectories([NotNull] String sourceFilePath, [NotNull] IEnumerable<String> destinationDirectoryPaths)
-		{
-			if (sourceFilePath == null)
-				throw new ArgumentNullException("sourceFilePath");
-			if (destinationDirectoryPaths == null)
-				throw new ArgumentNullException("destinationDirectoryPaths");
-
 			var fileName = Path.GetFileName(sourceFilePath);
-			destinationDirectoryPaths
-				.Where(destinationDirectoryPath => destinationDirectoryPath != null)
-				.Select(destinationDirectoryPath => Path.Combine(destinationDirectoryPath, fileName))
-				.Where(destinationFilePath => destinationFilePath != null)
-				.ToList()
-				.ForEach(destinationFilePath => File.Copy(sourceFilePath, destinationFilePath, true));
+			var destinationFilePath = Path.Combine(destinationDirectoryPath, fileName);
+
+			File.Copy(sourceFilePath, destinationFilePath, true);
 		}
 
 		private void CopyAgentExtensions()
@@ -301,7 +287,8 @@ namespace NewRelic.Installer
 				.Where(directoryPath => directoryPath.Contains("netstandard") == _isCoreClr || netstandardProjectsToIncludeInBothAgents.Any(directoryPath.Contains))
 				.Select(directoryPath => new DirectoryInfo(directoryPath))
 				.Where(directoryInfo => directoryInfo.Parent != null)
-				.Where(directoryInfo => directoryInfo.Parent.Name == "bin" || directoryInfo.Parent.Name == Configuration);
+				.Where(directoryInfo => directoryInfo.Parent.Name == "bin" || directoryInfo.Parent.Name == Configuration)
+				.ToList();
 
 			var dlls = directories
 				.SelectMany(directoryInfo => directoryInfo.EnumerateFiles("*.dll"))
@@ -310,23 +297,18 @@ namespace NewRelic.Installer
 				.Where(fileInfo => fileInfo != null)
 				.Select(fileInfo => fileInfo.FullName)
 				.Where(filePath => filePath != null)
-				.Where(filePath => FileVersionInfo.GetVersionInfo(filePath).FileVersion == AgentVersion);
+				.Where(filePath => FileVersionInfo.GetVersionInfo(filePath).FileVersion == AgentVersion)
+				.Distinct()
+				.ToList();
 
-			dlls.ForEach(filePath =>
+			foreach(var filePath in dlls)
 			{
 				var destination = DestinationExtensionsDirectoryPath;
 
-				if (filePath.Contains("netstandard"))
-				{
-					destination = Path.Combine(destination, "netstandard2.0");
-				}
-				else if (filePath.Contains("net46"))
-				{
-					destination = Path.Combine(destination, "net46");
-				}
 				CopyNewRelicAssemblies(filePath, destination);
+
 				TryCopyExtensionInstrumentationFile(filePath, DestinationExtensionsDirectoryPath);
-			});
+			};
 		}
 
 		private static void CopyNewRelicAssemblies([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
@@ -337,14 +319,19 @@ namespace NewRelic.Installer
 
 			var directoryInfo = new DirectoryInfo(directoryPath);
 
-			directoryInfo
+			var filePaths = directoryInfo
 				.EnumerateFiles("NewRelic.*.dll")
 				.Where(fileInfo => fileInfo != null)
 				.Where(fileInfo => fileInfo.Name != "NewRelic.Agent.Extensions.dll")
 				.Where(fileInfo => !fileInfo.Name.EndsWith("Tests.dll"))
 				.Select(fileInfo => fileInfo.FullName)
 				.Where(filePath => filePath != null)
-				.ForEach(filePath => CopyToDirectory(filePath, destinationExtensionsDirectoryPath));
+				.ToList();
+
+			foreach (var filePath in filePaths)
+			{
+				CopyToDirectory(filePath, destinationExtensionsDirectoryPath);
+			}
 		}
 
 		private static void TryCopyExtensionInstrumentationFile([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)

@@ -44,30 +44,30 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var methodInfo = TryGetMethodInfo(instrumentedMethodCall.MethodCall.Method.MethodName, instrumentedMethodCall.MethodCall.InvocationTarget);
 			if (methodInfo == null)
 				throw new NullReferenceException("methodInfo");
 
-			var parameters = GetParameters(instrumentedMethodCall.MethodCall, methodInfo, instrumentedMethodCall.MethodCall.MethodArguments, agentWrapperApi);
+			var parameters = GetParameters(instrumentedMethodCall.MethodCall, methodInfo, instrumentedMethodCall.MethodCall.MethodArguments, agent);
 
 			var uri = OperationContext.Current?.IncomingMessageHeaders?.To;
 
-			var name = GetTransactionName(agentWrapperApi, uri, methodInfo);
+			var name = GetTransactionName(agent, uri, methodInfo);
 
-			transactionWrapperApi = agentWrapperApi.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
+			transaction = agent.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
 
 			var absoluteUri = uri?.AbsoluteUri;
 
 			if (!string.IsNullOrEmpty(absoluteUri))
 			{
-				transactionWrapperApi.SetUri(absoluteUri);
+				transaction.SetUri(absoluteUri);
 			}
 
-			transactionWrapperApi.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);
-			transactionWrapperApi.SetRequestParameters(parameters);
-			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
+			transaction.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);
+			transaction.SetRequestParameters(parameters);
+			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
 			var messageProperties = OperationContext.Current?.IncomingMessageProperties;
 			if (messageProperties != null && messageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
@@ -80,17 +80,17 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 					retrievedHeaders.Add(new KeyValuePair<string, string>(headerName, httpRequestMessage.Headers[headerName]));
 				}
 
-				agentWrapperApi.ProcessInboundRequest(retrievedHeaders, TransportType.HTTP);
+				agent.ProcessInboundRequest(retrievedHeaders, TransportType.HTTP);
 			}
 
 			return Delegates.GetDelegateFor(
 				onFailure: exception =>
 				{
-					transactionWrapperApi.NoticeError(exception);
+					transaction.NoticeError(exception);
 				},
 				onComplete: () =>
 				{
-					var headersToAttach = transactionWrapperApi.GetResponseMetadata();
+					var headersToAttach = transaction.GetResponseMetadata();
 					foreach (var header in headersToAttach)
 					{
 						OperationContext.Current?.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
@@ -99,7 +99,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 					}
 
 					segment.End();
-					transactionWrapperApi.End();
+					transaction.End();
 				});
 		}
 
@@ -122,9 +122,9 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			}
 		}
 
-		private string GetTransactionName(IAgentWrapperApi agentWrapperApi, Uri uri, MethodInfo methodInfo)
+		private string GetTransactionName(IAgent agent, Uri uri, MethodInfo methodInfo)
 		{
-			if (agentWrapperApi.Configuration.UseResourceBasedNamingForWCFEnabled)
+			if (agent.Configuration.UseResourceBasedNamingForWCFEnabled)
 			{
 				if (uri != null)
 				{
@@ -172,7 +172,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			return name;
 		}
 
-		private IEnumerable<KeyValuePair<string, string>> GetParameters( MethodCall methodCall,  MethodInfo methodInfo, object[] arguments,  IAgentWrapperApi agentWrapperApi)
+		private IEnumerable<KeyValuePair<string, string>> GetParameters( MethodCall methodCall,  MethodInfo methodInfo, object[] arguments,  IAgent agent)
 		{
 			// only the begin methods will have parameters, end won't
 			if (methodCall.Method.MethodName != SyncMethodName

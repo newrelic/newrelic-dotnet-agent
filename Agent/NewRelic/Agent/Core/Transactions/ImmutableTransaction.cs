@@ -1,34 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Transactions
 {
 	public class ImmutableTransaction
 	{
-		[NotNull]
 		public readonly ITransactionName TransactionName;
 
-		[NotNull]
 		public readonly IEnumerable<Segment> Segments;
 
-		[NotNull]
 		public readonly ImmutableTransactionMetadata TransactionMetadata;
 
 		public readonly DateTime StartTime;
 		public readonly TimeSpan Duration;
 		public readonly TimeSpan ResponseTimeOrDuration;
 
-		[NotNull]
-		public readonly String Guid;
+		public readonly string Guid;
 
-		public readonly Boolean IgnoreAutoBrowserMonitoring;
-		public readonly Boolean IgnoreAllBrowserMonitoring;
-		public readonly Boolean IgnoreApdex;
+		public readonly bool IgnoreAutoBrowserMonitoring;
+		public readonly bool IgnoreAllBrowserMonitoring;
+		public readonly bool IgnoreApdex;
 
 		/// <summary>
 		/// The SQL obfuscator as defined by user configuration
@@ -38,7 +33,7 @@ namespace NewRelic.Agent.Core.Transactions
 		private IDictionary<string, string> ObfuscatedSqlCache => _obfuscatedSqlCache ?? (_obfuscatedSqlCache = new Dictionary<string, string>());
 
 		// The sqlObfuscator parameter should be the SQL obfuscator as defined by user configuration: obfuscate, off, or raw.
-		public ImmutableTransaction([NotNull] ITransactionName transactionName, [NotNull] IEnumerable<Segment> segments, [NotNull] ImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, TimeSpan? responseTime, [NotNull] string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, SqlObfuscator sqlObfuscator)
+		public ImmutableTransaction(ITransactionName transactionName, IEnumerable<Segment> segments, ImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, TimeSpan? responseTime, string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, SqlObfuscator sqlObfuscator)
 		{
 			TransactionName = transactionName;
 			Segments = segments.Where(segment => segment != null).ToList();
@@ -54,7 +49,7 @@ namespace NewRelic.Agent.Core.Transactions
 			_sqlObfuscator = sqlObfuscator;
 		}
 
-		public Boolean IsWebTransaction()
+		public bool IsWebTransaction()
 		{
 			return TransactionName.IsWeb;
 		}
@@ -64,9 +59,9 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="sql"></param>
 		/// <returns></returns>
-		public long GetSqlId(string sql)
+		public long GetSqlId(string sql, DatastoreVendor vendor)
 		{
-			var obfuscatedSql = GetObfuscatedSqlFromCache(sql);
+			var obfuscatedSql = GetObfuscatedSqlFromCache(sql, vendor);
 			return DatabaseService.GenerateSqlId(obfuscatedSql);
 		}
 
@@ -76,9 +71,9 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="sql"></param>
 		/// <returns></returns>
-		public string GetSqlObfuscatedAccordingToConfig(string sql)
+		public string GetSqlObfuscatedAccordingToConfig(string sql, DatastoreVendor vendor)
 		{
-			return _sqlObfuscator != SqlObfuscator.GetObfuscatingSqlObfuscator() ? _sqlObfuscator.GetObfuscatedSql(sql) : GetObfuscatedSqlFromCache(sql);
+			return _sqlObfuscator != SqlObfuscator.GetObfuscatingSqlObfuscator() ? _sqlObfuscator.GetObfuscatedSql(sql, vendor) : GetObfuscatedSqlFromCache(sql, vendor);
 		}
 
 		/// <summary>
@@ -88,11 +83,11 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="sql"></param>
 		/// <returns></returns>
-		private string GetObfuscatedSqlFromCache(string sql)
+		private string GetObfuscatedSqlFromCache(string sql, DatastoreVendor vendor)
 		{
 			if (!ObfuscatedSqlCache.TryGetValue(sql, out var obfuscatedSql))
 			{
-				obfuscatedSql = SqlObfuscator.GetObfuscatingSqlObfuscator().GetObfuscatedSql(sql);
+				obfuscatedSql = SqlObfuscator.GetObfuscatingSqlObfuscator().GetObfuscatedSql(sql, vendor);
 				ObfuscatedSqlCache[sql] = obfuscatedSql;
 			}
 

@@ -21,7 +21,7 @@
     <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj" />
     <ProjectReference Include="..\..\..\..\Parsing\Parsing.csproj" />
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Reflection;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Helpers;
 using NewRelic.Reflection;
@@ -12,9 +14,10 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		private const string ServiceModelAssembly = "System.ServiceModel";
 		private const string ServiceModelInternalsAssembly = "System.ServiceModel.Internals";
 		private const string ServiceChannelProxyType = "System.ServiceModel.Channels.ServiceChannelProxy";
+		private const string MethodDataType = "System.ServiceModel.Channels.ServiceChannelProxy+MethodData";
 		private const string AsyncResultType = "System.Runtime.AsyncResult";
-		private const string InvokeServiceMethod = "InvokeService";
-		private const string InvokeBeginServiceMethod = "InvokeBeginService";
+
+		private const string InvokeMethod = "Invoke";
 
 		public bool IsTransactionRequired => true;
 
@@ -30,6 +33,17 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		private Action<object, AsyncCallback> _setAsyncCallbackWriteAccessor;
 		private Action<object, AsyncCallback> SetAsyncCallbackWriteAccessor() { return _setAsyncCallbackWriteAccessor ?? (_setAsyncCallbackWriteAccessor = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<AsyncCallback>(ServiceModelInternalsAssembly, AsyncResultType, "callback")); }
 
+		// used to allow us to call System.ServiceModel.Channels.ServiceChannelProxy.GetMethodData to determine what type of call we are dealing with
+		private Func<object, System.Runtime.Remoting.Messaging.IMethodCallMessage, object> _getMethodDataMethod;
+		private Func<object, System.Runtime.Remoting.Messaging.IMethodCallMessage, object> GetMethodDataMethod() { return _getMethodDataMethod ?? (_getMethodDataMethod = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<System.Runtime.Remoting.Messaging.IMethodCallMessage, object>(ServiceModelAssembly, ServiceChannelProxyType, "GetMethodData")); }
+
+		//Used as getter to get MethodType
+		private static MethodInfo _methodTypeMethodInfo;
+
+		private static object _serviceEnum;
+		private static object _beginServiceEnum;
+		private static object _taskServiceEnum;
+
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
@@ -39,18 +53,44 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				typeName: ServiceChannelProxyType,
 				methodSignatures: new[]
 				{
-					new MethodSignature(InvokeServiceMethod),
-					new MethodSignature(InvokeBeginServiceMethod)
+					new MethodSignature(InvokeMethod)
 				}
 			);
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
+			var serviceChannelProxy = instrumentedMethodCall.MethodCall.InvocationTarget;
+
+			var message = instrumentedMethodCall.MethodCall.MethodArguments[0] as System.Runtime.Remoting.Messaging.IMethodCallMessage;
+
+			var methodData = GetMethodDataMethod()(serviceChannelProxy, message);
+
+			if (_methodTypeMethodInfo == null)
+			{
+				_methodTypeMethodInfo = methodData.GetType().GetProperty("MethodType").GetMethod;
+			}
+
+			var methodType = _methodTypeMethodInfo.Invoke(methodData, null);
+
+			if (_serviceEnum == null || _beginServiceEnum == null || _taskServiceEnum == null)
+			{
+				var type = methodType.GetType();
+				_serviceEnum = Enum.Parse(type, "Service");
+				_beginServiceEnum = Enum.Parse(type, "BeginService");
+				_taskServiceEnum = Enum.Parse(type, "TaskService");
+			}
+
+			if (!methodType.Equals(_serviceEnum) && !methodType.Equals(_beginServiceEnum) && !methodType.Equals(_taskServiceEnum))
+			{
+				return Delegates.NoOp;
+			}
+
 			var name = GetName(instrumentedMethodCall.MethodCall);
 			var uri = GetUri(instrumentedMethodCall);
-			var segment = transactionWrapperApi.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, name, isLeaf: true);
+
+			var segment = transaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, name, isLeaf: true);
 
 			return Delegates.GetDelegateFor<System.Runtime.Remoting.Messaging.IMethodReturnMessage>(
 				onSuccess: OnSuccess,
@@ -59,11 +99,21 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 			void OnSuccess(System.Runtime.Remoting.Messaging.IMethodReturnMessage methodReturnMessage)
 			{
-				if (instrumentedMethodCall.MethodCall.Method.MethodName == InvokeServiceMethod)
+				if (methodType.Equals(_serviceEnum))
 				{
 					segment.End();
 				}
-				else
+				else if (methodType.Equals(_taskServiceEnum))
+				{
+					var task = (Task)methodReturnMessage.ReturnValue;
+					task.ContinueWith(ContinueWork);
+
+					void ContinueWork(Task _)
+					{
+						segment.End();
+					}
+				}
+				else if (methodType.Equals(_beginServiceEnum))
 				{
 					var originalCallback = GetAsyncCallbackReadAccessor().Invoke(methodReturnMessage.ReturnValue);
 					SetAsyncCallbackWriteAccessor().Invoke(methodReturnMessage.ReturnValue, (AsyncCallback)WrappedAsyncCallback);

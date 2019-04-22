@@ -167,6 +167,61 @@ namespace NewRelic { namespace Profiler { namespace SignatureParser { namespace 
 			// this simply shouldn't throw an exception, can't assert on methodSignature->ToBytes() since we drop custom mods
 		}
 
+		TEST_METHOD(custom_mods_on_return_type)
+		{
+			BYTEVECTOR(signatureBytes,
+				0x00, // default calling convention
+				0x00, // 0 parameters
+				0x20, 0x11, // cmod_opt(token 0x11)
+				0x03, // char return type
+			);
+			MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<TypedReturnType>(std::make_shared<CharType>(), false), std::make_shared<Parameters>(), 0));
+			ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+		}
+
+		TEST_METHOD(custom_mods_on_ref_return_type)
+		{
+			BYTEVECTOR(signatureBytes,
+				0x00, // default calling convention
+				0x00, // 0 parameters
+				0x20, 0x11, // cmod_opt (token 0x11)
+				0x10, // ByRef
+				0x20, 0x02, // cmod_opt (token 0x02)
+				0x1f, 0x04, // comd_req (token 0x04
+				0x03, // char return type
+			);
+			MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<TypedReturnType>(std::make_shared<CharType>(), true), std::make_shared<Parameters>(), 0));
+			ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+		}
+
+		TEST_METHOD(parameter_custom_mod_char_byref_method_signature)
+		{
+			BYTEVECTOR(signatureBytes,
+				0x00, // default calling convention
+				0x01, // 1 parameter
+				0x01, // void return type
+				0x20, 0x11, 0x10, 0x03, // simulates const ref char
+			);
+			auto parameters = std::make_shared<Parameters>();
+			parameters->push_back(std::make_shared<TypedParameter>(std::make_shared<CharType>(), true));
+			MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<VoidReturnType>(), parameters, 0));
+			ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+		}
+
+		TEST_METHOD(parameter_custom_mods_char_byref_method_signature)
+		{
+			BYTEVECTOR(signatureBytes,
+				0x00, // default calling convention
+				0x01, // 1 parameter
+				0x01, // void return type
+				0x20, 0x11, 0x10, 0x20, 0x12, 0x1f, 0x14, 0x03, // simulates const ref char const
+			);
+			auto parameters = std::make_shared<Parameters>();
+			parameters->push_back(std::make_shared<TypedParameter>(std::make_shared<CharType>(), true));
+			MethodSignaturePtr expectedSignature(new MethodSignature(false, false, CorCallingConvention::IMAGE_CEE_CS_CALLCONV_DEFAULT, std::make_shared<VoidReturnType>(), parameters, 0));
+			ParseAndVerifyMethodSignature(signatureBytes, expectedSignature);
+		}
+
 		MethodSignaturePtr TestArrayParameter(uint8_t type, uint32_t dimensions, const std::vector<uint32_t>& sizes, const std::vector<uint32_t>& lowerBounds)
 		{
 			ByteVector bytes;

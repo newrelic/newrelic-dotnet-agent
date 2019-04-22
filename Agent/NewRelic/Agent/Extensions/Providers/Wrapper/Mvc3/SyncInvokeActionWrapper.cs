@@ -16,16 +16,16 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var controllerContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<ControllerContext>(0);
 			var controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
 			var actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
 			var transactionName = String.Format("{0}/{1}", controllerName, actionName);
-			transactionWrapperApi.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
+			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 			
-			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 			if (segment == null)
 				return Delegates.NoOp;
 

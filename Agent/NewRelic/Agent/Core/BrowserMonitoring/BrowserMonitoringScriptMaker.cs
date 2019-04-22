@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
 	public interface IBrowserMonitoringScriptMaker
 	{
-		string GetScript(ITransaction transaction);
+		string GetScript(IInternalTransaction transaction);
 	}
 
 	public class BrowserMonitoringScriptMaker : IBrowserMonitoringScriptMaker
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			_attributeService = attributeService;
 		}
 
-		public string GetScript(ITransaction transaction)
+		public string GetScript(IInternalTransaction transaction)
 		{
 			if (string.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
 				return null;
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
 			// getting a stack trace is expensive, so only do it if we are going to log
 			if (Log.IsFinestEnabled)
-				Log.FinestFormat("RUM: TryGetBrowserTimingHeader success at {0}", new System.Diagnostics.StackTrace(true));
+				transaction.LogFinest("RUM: TryGetBrowserTimingHeader success.");
 
 			// The JavaScript variable NREUMQ stands for New Relic End User Metric "Q". This was the name before marketing renamed "EUM" to "RUM".
 			// We can't change the name of the variable since: (a) we have to be consistent across agents, and (b) it has to be in sync with the rum.js file which is downloaded from NR servers.
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			return $"<script type=\"text/javascript\">{javascriptAgentConfiguration}</script><script type=\"text/javascript\">{javascriptAgent}</script>";
 		}
 		
-		private BrowserMonitoringConfigurationData GetBrowserConfigurationData(ITransaction transaction, TransactionMetricName transactionMetricName, string licenseKey)
+		private BrowserMonitoringConfigurationData GetBrowserConfigurationData(IInternalTransaction transaction, TransactionMetricName transactionMetricName, string licenseKey)
 		{
 			var configuration = _configurationService.Configuration;
 

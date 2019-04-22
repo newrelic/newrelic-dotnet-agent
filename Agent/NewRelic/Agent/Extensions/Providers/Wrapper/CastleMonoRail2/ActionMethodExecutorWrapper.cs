@@ -45,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.CastleMonoRail2
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var contextObject = instrumentedMethodCall.MethodCall.MethodArguments[2];
 			if (contextObject == null)
@@ -59,8 +59,8 @@ namespace NewRelic.Providers.Wrapper.CastleMonoRail2
 			if (actionName == null)
 				throw new NullReferenceException(nameof(actionName));
 
-			transactionWrapperApi.SetWebTransactionName(WebTransactionType.MonoRail, $"{controllerName}.{actionName}", TransactionNamePriority.FrameworkLow);
-			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+			transaction.SetWebTransactionName(WebTransactionType.MonoRail, $"{controllerName}.{actionName}", TransactionNamePriority.FrameworkLow);
+			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
 			return Delegates.GetDelegateFor(segment);
 		}

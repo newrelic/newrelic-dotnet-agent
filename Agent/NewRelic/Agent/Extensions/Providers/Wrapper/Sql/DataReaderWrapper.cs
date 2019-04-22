@@ -46,9 +46,9 @@ namespace NewRelic.Providers.Wrapper.Sql
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
-			var segment = transactionWrapperApi.StartTransactionSegment(instrumentedMethodCall.MethodCall, "DatabaseResult/Iterate");
+			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, "DatabaseResult/Iterate");
 			segment.MakeCombinable();
 				
 			return Delegates.GetDelegateFor(segment);

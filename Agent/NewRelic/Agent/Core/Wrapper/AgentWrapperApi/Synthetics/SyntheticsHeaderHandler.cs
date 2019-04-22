@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
     public interface ISyntheticsHeaderHandler
 	{
         [NotNull]
-        IEnumerable<KeyValuePair<String, String>> TryGetOutboundSyntheticsRequestHeader([NotNull] ITransaction transaction);
+        IEnumerable<KeyValuePair<String, String>> TryGetOutboundSyntheticsRequestHeader([NotNull] IInternalTransaction transaction);
 
         [CanBeNull]
         SyntheticsHeader TryDecodeInboundRequestHeaders([NotNull] IDictionary<String, String> headers);
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 			_configurationService = configurationService;
 		}
 
-		public IEnumerable<KeyValuePair<String, String>> TryGetOutboundSyntheticsRequestHeader(ITransaction transaction)
+		public IEnumerable<KeyValuePair<String, String>> TryGetOutboundSyntheticsRequestHeader(IInternalTransaction transaction)
 		{
 			var metadata = transaction.TransactionMetadata;
 

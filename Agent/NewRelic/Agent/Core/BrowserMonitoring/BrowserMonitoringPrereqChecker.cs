@@ -16,12 +16,12 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		/// <summary>
 		/// Returns true if RUM should be injected. Use if requestPath and contentType are not known.
 		/// </summary>
-		Boolean ShouldManuallyInject([NotNull] ITransaction transaction);
+		Boolean ShouldManuallyInject([NotNull] IInternalTransaction transaction);
 
 		/// <summary>
 		/// Returns true if RUM should be injected. Use if requestPath and contentType are known.
 		/// </summary>
-		Boolean ShouldAutomaticallyInject([NotNull] ITransaction transaction, [CanBeNull] String requestPath, [NotNull] String contentType);
+		Boolean ShouldAutomaticallyInject([NotNull] IInternalTransaction transaction, [CanBeNull] String requestPath, [NotNull] String contentType);
 	}
 
 	public class BrowserMonitoringPrereqChecker : IBrowserMonitoringPrereqChecker
@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			_configurationService = configurationService;
 		}
 
-		public Boolean ShouldManuallyInject(ITransaction transaction)
+		public Boolean ShouldManuallyInject(IInternalTransaction transaction)
 		{
 			if (!IsValidBrowserMonitoringJavaScriptAgentLoaderType())
 				return false;
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			return !transaction.IgnoreAllBrowserMonitoring;
 		}
 		
-		public Boolean ShouldAutomaticallyInject(ITransaction transaction, String requestPath, String contentType)
+		public Boolean ShouldAutomaticallyInject(IInternalTransaction transaction, String requestPath, String contentType)
 		{
 			if (!IsValidBrowserMonitoringJavaScriptAgentLoaderType())
 				return false;

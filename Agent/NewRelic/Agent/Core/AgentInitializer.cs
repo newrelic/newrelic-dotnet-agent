@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core
 
 				// Force agent to be initialized
 				// ReSharper disable once UnusedVariable
-				var agent = Agent.Instance;
+				var agent = AgentManager.Instance;
 			}
 
 			static Assembly LoadFromSameFolder(object sender, ResolveEventArgs args)

@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface ITransactionTransformer
 	{
-		void Transform([NotNull] ITransaction transaction);
+		void Transform([NotNull] IInternalTransaction transaction);
 	}
 
 	public class TransactionTransformer : ITransactionTransformer
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_agentTimerService = agentTimerService;
 		}
 
-		public void Transform(ITransaction transaction)
+		public void Transform(IInternalTransaction transaction)
 		{
 			if (transaction.Ignored)
 			{

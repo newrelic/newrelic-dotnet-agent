@@ -18,26 +18,26 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 	internal class WrapPipelineMiddleware
 	{
 		private readonly RequestDelegate _next;
-		private readonly IAgentWrapperApi _agentWrapperApi;
+		private readonly IAgent _agent;
 
-		public WrapPipelineMiddleware(RequestDelegate next, IAgentWrapperApi agentWrapperApi)
+		public WrapPipelineMiddleware(RequestDelegate next, IAgent agent)
 		{
 			_next = next;
-			_agentWrapperApi = agentWrapperApi;
+			_agent = agent;
 		}
 
 		public async Task Invoke(HttpContext context)
 		{
-			ITransactionWrapperApi transactionWrapperApi = null;
+			ITransaction transaction = null;
 			ISegment segment = null;
 
 			try
 			{
-				transactionWrapperApi = SetupTransaction(context.Request);
-				transactionWrapperApi.AttachToAsync(); //Important that this is called from an Invoke method that has the async keyword.
-				transactionWrapperApi.DetachFromPrimary(); //Remove from thread-local type storage
+				transaction = SetupTransaction(context.Request);
+				transaction.AttachToAsync(); //Important that this is called from an Invoke method that has the async keyword.
+				transaction.DetachFromPrimary(); //Remove from thread-local type storage
 
-				segment = SetupSegment(transactionWrapperApi, context);
+				segment = SetupSegment(transaction, context);
 
 				ProcessHeaders(context);
 
@@ -45,28 +45,28 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			}
 			catch (Exception ex)
 			{
-				_agentWrapperApi.SafeHandleException(ex);
+				_agent.SafeHandleException(ex);
 			}
 
 			try
 			{
 				await _next(context);
-				EndTransaction(segment, transactionWrapperApi, context, null);
+				EndTransaction(segment, transaction, context, null);
 			}
 			catch (Exception ex)
 			{
-				EndTransaction(segment, transactionWrapperApi, context, ex);
+				EndTransaction(segment, transaction, context, ex);
 				throw; //throw here to maintain call stack. 
 			}
 
 			Task SetOutboundTracingDataAsync()
 			{
-				TryWriteResponseHeaders(context, transactionWrapperApi);
+				TryWriteResponseHeaders(context, transaction);
 				return Task.CompletedTask;
 			}
 		}
 
-		private void EndTransaction(ISegment segment, ITransactionWrapperApi transactionWrapperApi, HttpContext context, Exception appException)
+		private void EndTransaction(ISegment segment, ITransaction transaction, HttpContext context, Exception appException)
 		{
 			try
 			{
@@ -77,7 +77,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 				//It's possible that the 2 errors are the same under certain circumstances.
 				if (appException != null)
 				{
-					transactionWrapperApi.NoticeError(appException);
+					transaction.NoticeError(appException);
 
 					//Looks like we won't accurately notice that a 500 is going to be returned for exception cases,
 					//because that appears to be handled at the  web host level or server (kestrel) level 
@@ -88,43 +88,43 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 					var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
 					if (exceptionHandlerFeature != null)
 					{
-						transactionWrapperApi.NoticeError(exceptionHandlerFeature.Error);
+						transaction.NoticeError(exceptionHandlerFeature.Error);
 					}
 				}
 
 				if (responseStatusCode >= 400)
 				{
 					//Attempt low-priority transaction name to reduce chance of metric grouping issues.
-					transactionWrapperApi.SetWebTransactionName(WebTransactionType.StatusCode, $"{responseStatusCode}", TransactionNamePriority.StatusCode);
+					transaction.SetWebTransactionName(WebTransactionType.StatusCode, $"{responseStatusCode}", TransactionNamePriority.StatusCode);
 				}
 
 				segment.End();
 
-				transactionWrapperApi.SetHttpResponseStatusCode(responseStatusCode);
-				transactionWrapperApi.End();
+				transaction.SetHttpResponseStatusCode(responseStatusCode);
+				transaction.End();
 			}
 			catch (Exception ex)
 			{
-				_agentWrapperApi.SafeHandleException(ex);
+				_agent.SafeHandleException(ex);
 			}
 		}
 
-		private ISegment SetupSegment(ITransactionWrapperApi transactionWrapperApi, HttpContext context)
+		private ISegment SetupSegment(ITransaction transaction, HttpContext context)
 		{
 			// Seems like it would be cool to not require all of this for a segment??? 
 			var method = new Method(typeof(WrapPipelineMiddleware), nameof(Invoke), nameof(context));
 			var methodCall = new MethodCall(method, this, new object[] { context });
 
-			var segment = transactionWrapperApi.StartTransactionSegment(methodCall, "Middleware Pipeline");
+			var segment = transaction.StartTransactionSegment(methodCall, "Middleware Pipeline");
 			return segment;
 		}
 
-		private ITransactionWrapperApi SetupTransaction(HttpRequest request)
+		private ITransaction SetupTransaction(HttpRequest request)
 		{
 			var path = request.Path.Value;
 			path = "/".Equals(path) ? "ROOT" : path.Substring(1);
 
-			var transaction = _agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, path);
+			var transaction = _agent.CreateWebTransaction(WebTransactionType.ASP, path);
 
 			transaction.SetUri(request.Path);
 
@@ -147,14 +147,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			var headers = httpContext.Request.Headers.Select(header => new KeyValuePair<string, string>(header.Key, header.Value));
 			var contentLength = httpContext.Request.ContentLength;
 
-			_agentWrapperApi.ProcessInboundRequest(headers, TransportType.HTTP, contentLength);
+			_agent.ProcessInboundRequest(headers, TransportType.HTTP, contentLength);
 		}
 
-		private void TryWriteResponseHeaders(HttpContext httpContext, ITransactionWrapperApi transactionWrapperApi)
+		private void TryWriteResponseHeaders(HttpContext httpContext, ITransaction transaction)
 		{
 			try
 			{
-				var headers = transactionWrapperApi.GetResponseMetadata();
+				var headers = transaction.GetResponseMetadata();
 
 				foreach (var header in headers)
 				{
@@ -166,7 +166,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			}
 			catch (Exception ex)
 			{
-				_agentWrapperApi.SafeHandleException(ex);
+				_agent.SafeHandleException(ex);
 			}
 		}
 	}

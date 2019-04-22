@@ -376,7 +376,7 @@ namespace NewRelic.Agent.Core
 		/// <remarks>This does not call appender.ActivateOptions or add the appender to the logger.</remarks>
 		private static RollingFileAppender SetupRollingFileAppender(ILogConfig config, String fileName, String appenderName)
 		{
-			var log = log4net.LogManager.GetLogger(typeof(Agent));
+			var log = log4net.LogManager.GetLogger(typeof(AgentManager));
 
 			// check that the log file is accessible
 			try

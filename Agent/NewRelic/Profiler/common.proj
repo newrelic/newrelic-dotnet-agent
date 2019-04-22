@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Company>New Relic</Company>
     <Product>New Relic .NET Agent</Product>
-    <Copyright>Copyright © 2017</Copyright>
+    <Copyright>Copyright © 2019</Copyright>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 

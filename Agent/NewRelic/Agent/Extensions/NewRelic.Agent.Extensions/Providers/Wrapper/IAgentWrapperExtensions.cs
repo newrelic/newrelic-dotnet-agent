@@ -6,7 +6,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 	// ReSharper disable once InconsistentNaming
 	public static class IAgentWrapperExtensions
 	{
-		public static void HandleExceptions([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] Action action)
+		public static void HandleExceptions([NotNull] this IAgent agent, [NotNull] Action action)
 		{
 			try
 			{
@@ -14,21 +14,21 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			}
 			catch (Exception ex)
 			{
-				agentWrapperApi.SafeHandleException(ex);
+				agent.SafeHandleException(ex);
 			}
 		}
 
 		/// <summary>
-		/// Attempts to call agentWrapperApi.HandleWrapperException(ex). Catches and swallows any exceptions
+		/// Attempts to call agent.HandleWrapperException(ex). Catches and swallows any exceptions
 		/// to prevent them from harming instrumented application.
 		/// </summary>
-		/// <param name="agentWrapperApi"></param>
+		/// <param name="agent"></param>
 		/// <param name="ex"></param>
-		public static void SafeHandleException([NotNull] this IAgentWrapperApi agentWrapperApi, Exception ex)
+		public static void SafeHandleException([NotNull] this IAgent agent, Exception ex)
 		{
 			try
 			{
-				agentWrapperApi.HandleWrapperException(ex);
+				agent.HandleWrapperException(ex);
 			}
 			catch
 			{

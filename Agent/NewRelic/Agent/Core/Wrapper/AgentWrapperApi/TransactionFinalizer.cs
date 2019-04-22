@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		/// </summary>
 		/// <param name="transaction"></param>
 		/// <returns>true if the transaction got finalized, and false if it was already finalized.</returns>
-		bool Finish([NotNull] ITransaction transaction);
+		bool Finish([NotNull] IInternalTransaction transaction);
 	}
 
 	public class TransactionFinalizer : DisposableService, ITransactionFinalizer
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_subscriptions.Add<TransactionFinalizedEvent>(OnTransactionFinalized);
 		}
 
-		public bool Finish(ITransaction transaction)
+		public bool Finish(IInternalTransaction transaction)
 		{
 
 			if (transaction.Finish())
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		/// Estimates the duration of a transaction based on its segments.
 		/// </summary>
 		/// <returns>An estimate of the duration of a transaction.</returns>
-		private static TimeSpan GetEstimatedTransactionDuration([NotNull] ITransaction internalTransaction, [CanBeNull] Segment lastStartedSegment, [CanBeNull] Segment lastFinishedSegment)
+		private static TimeSpan GetEstimatedTransactionDuration([NotNull] IInternalTransaction internalTransaction, [CanBeNull] Segment lastStartedSegment, [CanBeNull] Segment lastFinishedSegment)
 		{
 			if (lastStartedSegment == null && lastFinishedSegment == null)
 				return TimeSpan.FromMilliseconds(1);
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			return maxEndTime;
 		}
 
-		private void UpdatePathHash([NotNull] ITransaction transaction)
+		private void UpdatePathHash([NotNull] IInternalTransaction transaction)
 		{
 			var currentTransactionName = transaction.CandidateTransactionName.CurrentTransactionName;
 			var currentTransactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(currentTransactionName);

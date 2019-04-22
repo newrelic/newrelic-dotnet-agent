@@ -55,7 +55,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var sqlCommand = (IDbCommand)instrumentedMethodCall.MethodCall.InvocationTarget;
 			if (sqlCommand == null)
@@ -64,24 +64,24 @@ namespace NewRelic.Providers.Wrapper.Sql
 			var sql = sqlCommand.CommandText ?? String.Empty;
 			var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
 			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
-			var connectionInfo = (ConnectionInfo) transactionWrapperApi.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
+			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
 
 			// TODO - Tracer had a supportability metric here to report timing duration of the parser.
-			var parsedStatement = transactionWrapperApi.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
+			var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
 
-			var queryParameters = SqlWrapperHelper.GetQueryParameters(sqlCommand, agentWrapperApi);
+			var queryParameters = SqlWrapperHelper.GetQueryParameters(sqlCommand, agent);
 
-			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters, isLeaf: true);
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters, isLeaf: true);
 
 			if (vendor == DatastoreVendor.MSSQL)
 			{
-				agentWrapperApi.EnableExplainPlans(segment, () => SqlServerExplainPlanActions.AllocateResources(sqlCommand), SqlServerExplainPlanActions.GenerateExplainPlan, null);
+				agent.EnableExplainPlans(segment, () => SqlServerExplainPlanActions.AllocateResources(sqlCommand), SqlServerExplainPlanActions.GenerateExplainPlan, null);
 			}
 			else if (vendor == DatastoreVendor.MySQL)
 			{
 				if (parsedStatement != null)
 				{
-					agentWrapperApi.EnableExplainPlans(segment, () => MySqlExplainPlanActions.AllocateResources(sqlCommand), MySqlExplainPlanActions.GenerateExplainPlan, () => MySqlExplainPlanActions.ShouldGenerateExplainPlan(sql, parsedStatement));
+					agent.EnableExplainPlans(segment, () => MySqlExplainPlanActions.AllocateResources(sqlCommand), MySqlExplainPlanActions.GenerateExplainPlan, () => MySqlExplainPlanActions.ShouldGenerateExplainPlan(sql, parsedStatement));
 				}
 			}
 

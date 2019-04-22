@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
-using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -44,13 +44,13 @@ namespace NewRelic.Agent.Core.Api
 
 		private readonly IConfigurationService _configurationService;
 
-		private readonly IAgentWrapperApi _agentWrapperApi;
+		private readonly IAgent _agent;
 
 		private readonly AgentBridgeApi _agentBridgeApi;
 
 		private readonly ITracePriorityManager _tracePriorityManager;
 
-		public AgentApiImplementation(ITransactionService transactionService, ICustomEventTransformer customEventTransformer, IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, ICustomErrorDataTransformer customErrorDataTransformer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentWrapperApi agentWrapperApi, ITracePriorityManager tracePriorityManager, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
+		public AgentApiImplementation(ITransactionService transactionService, ICustomEventTransformer customEventTransformer, IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, ICustomErrorDataTransformer customErrorDataTransformer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgent agent, ITracePriorityManager tracePriorityManager, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
 		{
 			_transactionService = transactionService;
 			_customEventTransformer = customEventTransformer;
@@ -60,8 +60,8 @@ namespace NewRelic.Agent.Core.Api
 			_browserMonitoringPrereqChecker = browserMonitoringPrereqChecker;
 			_browserMonitoringScriptMaker = browserMonitoringScriptMaker;
 			_configurationService = configurationService;
-			_agentWrapperApi = agentWrapperApi;
-			_agentBridgeApi = new AgentBridgeApi(_agentWrapperApi, apiSupportabilityMetricCounters);
+			_agent = agent;
+			_agentBridgeApi = new AgentBridgeApi(_agent, apiSupportabilityMetricCounters);
 			_tracePriorityManager = tracePriorityManager;
 		}
 
@@ -375,7 +375,7 @@ namespace NewRelic.Agent.Core.Api
 
 			using (new IgnoreWork())
 			{
-				var transaction = _agentWrapperApi.CurrentTransactionWrapperApi;
+				var transaction = _agent.CurrentTransaction;
 				if (transaction != null)
 				{
 					transaction.SetUri(uri.AbsoluteUri);
@@ -415,7 +415,7 @@ namespace NewRelic.Agent.Core.Api
 		{
 			using (new IgnoreWork())
 			{
-				_agentWrapperApi.CurrentTransactionWrapperApi.Ignore();
+				_agent.CurrentTransaction.Ignore();
 			}
 		}
 
@@ -552,7 +552,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 		}
 
-		private ITransaction TryGetCurrentInternalTransaction()
+		private IInternalTransaction TryGetCurrentInternalTransaction()
 		{
 			return _transactionService.GetCurrentInternalTransaction();
 		}
@@ -563,7 +563,7 @@ namespace NewRelic.Agent.Core.Api
 		/// <exception cref="InvalidOperationException"> . </exception>
 		///
 		/// <returns> A transaction. </returns>
-		private ITransaction GetCurrentInternalTransaction()
+		private IInternalTransaction GetCurrentInternalTransaction()
 		{
 			return TryGetCurrentInternalTransaction() ??
 				throw new InvalidOperationException("The API method called is only valid from within a transaction. This error can occur if you call the API method from a thread other than the one the transaction started on.");
@@ -598,7 +598,7 @@ namespace NewRelic.Agent.Core.Api
 				return null;
 			}
 
-			return _agentWrapperApi.CurrentTransactionWrapperApi.GetRequestMetadata();
+			return _agent.CurrentTransaction.GetRequestMetadata();
 		}
 
 		/// <summary> Gets the response metadata for the current transaction. </summary>
@@ -612,7 +612,7 @@ namespace NewRelic.Agent.Core.Api
 				return null;
 			}
 
-			return _agentWrapperApi.CurrentTransactionWrapperApi.GetResponseMetadata();
+			return _agent.CurrentTransaction.GetResponseMetadata();
 		}
 	}
 }

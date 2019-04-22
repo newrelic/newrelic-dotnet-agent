@@ -17,9 +17,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 	public interface ICatHeaderHandler
 	{
 
-		IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(ITransaction transaction);
+		IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction);
 
-		IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(ITransaction transaction, TransactionMetricName transactionMetricName);
+		IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName);
 
 		CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers);
 
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			_configurationService = configurationService;
 		}
 
-		public IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(ITransaction transaction)
+		public IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction)
 		{
 			try
 			{
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			}
 		}
 
-		public IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(ITransaction transaction, TransactionMetricName transactionMetricName)
+		public IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName)
 		{
 			try
 			{
@@ -109,6 +109,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			if (responseHeader == null)
 			{
 				return null;
+			}
+
+			//It is possible that multiple instrumentations, on the service side, try to add New Relic header
+			//to the response on the same transaction. When that happens, the response received by the client
+			//has the New Relic header contains multiple header data separated by commas. The agent will only
+			//decode the first header data in this case.
+			var separatorIndex = responseHeader.IndexOf(",");
+			if (separatorIndex > 0)
+			{
+				responseHeader = responseHeader.Substring(0, separatorIndex);
 			}
 
 			try
@@ -167,7 +177,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		}
 
 		[Pure]
-		private string GetEncodedAppData(ITransaction transaction, TransactionMetricName transactionMetricName, string crossProcessId)
+		private string GetEncodedAppData(IInternalTransaction transaction, TransactionMetricName transactionMetricName, string crossProcessId)
 		{
 			var txMetadata = transaction.TransactionMetadata;
 			var queueTime = txMetadata.QueueTime?.TotalSeconds ?? 0;
@@ -185,7 +195,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		}
 
 		[Pure]
-		private string GetEncodedTransactionData(ITransaction transaction)
+		private string GetEncodedTransactionData(IInternalTransaction transaction)
 		{
 			var txMetadata = transaction.TransactionMetadata;
 			// If CrossApplicationReferrerTripId is null, then this is the first transaction to make an external request. In this case, use its Guid as the tripId.

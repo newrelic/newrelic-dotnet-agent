@@ -17,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.Owin
 			return new CanWrapResponse("ResolveAppWrapper".Equals(methodInfo.RequestedWrapperName));
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var context = instrumentedMethodCall.MethodCall.MethodArguments[0];
 
@@ -27,7 +27,7 @@ namespace NewRelic.Providers.Wrapper.Owin
 
 			method.Invoke(app, new object[]
 			{
-				typeof(OwinStartupMiddleware), new object[] { agentWrapperApi }
+				typeof(OwinStartupMiddleware), new object[] { agent }
 			});
 
 			return Delegates.NoOp;

@@ -26,11 +26,11 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 			return new CanWrapResponse(false);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transactionWrapperApi.AttachToAsync();
+				transaction.AttachToAsync();
 			}
 
 			var sqlCommand = (IDbCommand)instrumentedMethodCall.MethodCall.InvocationTarget;
@@ -42,17 +42,17 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
 			// NOTE: this wrapper currently only supports NpgsqlCommand. If support for other commands is added to this wrapper then the vendor will need to be determined dynamically.
 			const DatastoreVendor vendor = DatastoreVendor.Postgres;
 			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
-			var connectionInfo = (ConnectionInfo) transactionWrapperApi.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
+			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
 
 			// TODO - Tracer had a supportability metric here to report timing duration of the parser.
-			var parsedStatement = transactionWrapperApi.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
+			var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
 
-			var queryParameters = SqlWrapperHelper.GetQueryParameters(sqlCommand, agentWrapperApi);
+			var queryParameters = SqlWrapperHelper.GetQueryParameters(sqlCommand, agent);
 
-			var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
+			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				parsedStatement, connectionInfo, sql, queryParameters, isLeaf: true);
 
-			return Delegates.GetAsyncDelegateFor(agentWrapperApi, segment);
+			return Delegates.GetAsyncDelegateFor(agent, segment);
 		}
 	}
 }

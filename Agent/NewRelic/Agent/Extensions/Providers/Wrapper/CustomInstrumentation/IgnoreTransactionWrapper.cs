@@ -23,9 +23,9 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
-			agentWrapperApi.CurrentTransactionWrapperApi.Ignore();
+			agent.CurrentTransaction.Ignore();
 			return Delegates.NoOp;
 		}
 	}

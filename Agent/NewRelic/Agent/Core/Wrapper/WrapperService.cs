@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
 		[NotNull] private readonly IConfigurationService _configurationService;
 
-		[NotNull] private readonly IAgentWrapperApi _agentWrapperApi;
+		[NotNull] private readonly IAgent _agent;
 
 		[NotNull] private readonly IWrapperMap _wrapperMap;
 
@@ -49,11 +49,11 @@ namespace NewRelic.Agent.Core.Wrapper
 		[NotNull] private readonly ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
 
 		public WrapperService([NotNull] IConfigurationService configurationService, [NotNull] IWrapperMap wrapperMap,
-			[NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
+			[NotNull] IAgent agent, [NotNull] IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
 		{
 			_configurationService = configurationService;
 			_maxConsecutiveFailures = configurationService.Configuration.WrapperExceptionLimit;
-			_agentWrapperApi = agentWrapperApi;
+			_agent = agent;
 			_wrapperMap = wrapperMap;
 			_agentHealthReporter = agentHealthReporter;
 			_agentTimerService = agentTimerService;
@@ -101,30 +101,49 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			var wrapper = trackedWrapper.Wrapper;
 
-			ITransactionWrapperApi transactionWrapperApi = null;
+			var transaction = _agent.CurrentTransaction;
+
+			if (Log.IsFinestEnabled)
+			{
+				transaction.LogFinest($"Attempting to execute {wrapper}");
+			}
+
+			if (transaction.IsFinished)
+			{
+				if (Log.IsFinestEnabled)
+				{
+					if (wrapper.IsTransactionRequired)
+					{
+						transaction.LogFinest($"Transaction has already ended, skipping method {type.FullName}.{methodName}({argumentSignature}).");
+					}
+					else
+					{
+						transaction.LogFinest("Transaction has already ended, detaching from transaction storage context.");
+					}
+				}
+
+				transaction.Detach();
+				transaction = _agent.CurrentTransaction;
+
+				if (wrapper.IsTransactionRequired)
+				{
+					return Delegates.NoOp;
+				}
+			}
+
 			if (wrapper.IsTransactionRequired)
 			{
-				transactionWrapperApi = _agentWrapperApi.CurrentTransactionWrapperApi;
-				if (!transactionWrapperApi.IsValid)
+				if (!transaction.IsValid)
 				{
-					Log.FinestFormat("No transaction, skipping method {0}.{1}({2})", type.FullName, methodName, argumentSignature);
-					return Delegates.NoOp;
-				}
-
-				if (transactionWrapperApi.IsFinished)
-				{
-					if (Log.IsDebugEnabled)
+					if (Log.IsFinestEnabled)
 					{
-						var stackTrace = new StackTrace();
-						Log.DebugFormat("Transaction has already been ended, skipping method {1}.{2}({3}).{0}{4}", System.Environment.NewLine, type.FullName, methodName, argumentSignature, stackTrace);
+						transaction.LogFinest($"No transaction, skipping method {type.FullName}.{methodName}({argumentSignature})");
 					}
 
-					transactionWrapperApi.Detach();
-
 					return Delegates.NoOp;
 				}
 
-				if (transactionWrapperApi.CurrentSegment.IsLeaf)
+				if (transaction.CurrentSegment.IsLeaf)
 				{
 					return Delegates.NoOp;
 				}
@@ -138,7 +157,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			{
 				using (_agentTimerService.StartNew("BeforeWrappedMethod", type.FullName, methodName))
 				{
-					var afterWrappedMethod = wrapper.BeforeWrappedMethod(instrumentedMethodCall, _agentWrapperApi, transactionWrapperApi);
+					var afterWrappedMethod = wrapper.BeforeWrappedMethod(instrumentedMethodCall, _agent, transaction);
 					return (result, exception) =>
 					{
 						using (_agentTimerService.StartNew("AfterWrappedMethod", type.FullName, methodName))

@@ -6,9 +6,9 @@ namespace NewRelic.Agent.Core.Events
 	public class TransactionFinalizedEvent
 	{
 		[NotNull]
-		public readonly ITransaction Transaction;
+		public readonly IInternalTransaction Transaction;
 
-		public TransactionFinalizedEvent([NotNull] ITransaction transaction)
+		public TransactionFinalizedEvent([NotNull] IInternalTransaction transaction)
 		{
 			Transaction = transaction;
 		}

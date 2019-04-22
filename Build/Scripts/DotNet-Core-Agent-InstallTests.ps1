@@ -7,7 +7,7 @@
 $installfilesPath = Join-Path (pwd) "install_files"
 $destination = Join-Path (pwd) "install_location"
 $logDir = Join-Path (pwd) "log_dir"
-$expectedInstalledFileCount = 28
+$expectedInstalledFileCount = 27
 $installType = "global"
 $licenseKey = "12345"
 

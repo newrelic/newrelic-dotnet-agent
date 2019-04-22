@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 {
 	public interface IDistributedTracePayloadHandler
 	{
-		IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(ITransaction transaction, ISegment segment);
+		IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment);
 
 		DistributedTracePayload TryDecodeInboundSerializedDistributedTracePayload(string serializedPayload);
 	}
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		#region Outgoing/Create
 
-		public IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(ITransaction transaction, ISegment segment = null)
+		public IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment = null)
 		{
 			var accountId = _configurationService.Configuration.AccountId;
 			var appId = _configurationService.Configuration.PrimaryApplicationId;

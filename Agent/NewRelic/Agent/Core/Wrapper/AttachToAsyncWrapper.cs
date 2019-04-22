@@ -24,9 +24,9 @@ namespace NewRelic.Agent.Core.Wrapper
 			return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(instrumentedMethodInfo.Method.Type.Assembly.GetName().Name, instrumentedMethodInfo.Method.Type.Name, instrumentedMethodInfo.Method.MethodName);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
-			transactionWrapperApi.AttachToAsync();
+			transaction.AttachToAsync();
 			return Delegates.NoOp;
 		}
 	}

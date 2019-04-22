@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			{
 				var odbcCommand = (OdbcCommand)instrumentedMethodCall.MethodCall.InvocationTarget;
@@ -34,11 +34,11 @@ namespace NewRelic.Providers.Wrapper.Sql
 				var vendor = SqlWrapperHelper.GetVendorName(odbcCommand);
 
 				// TODO - Tracer had a supportability metric here to report timing duration of the parser.
-				var parsedStatement = transactionWrapperApi.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
+				var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, odbcCommand.CommandType, sql);
 
-				var queryParameters = SqlWrapperHelper.GetQueryParameters(odbcCommand, agentWrapperApi);
+				var queryParameters = SqlWrapperHelper.GetQueryParameters(odbcCommand, agent);
 
-				var segment = transactionWrapperApi.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, null, sql, queryParameters);
+				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, null, sql, queryParameters);
 
 				return Delegates.GetDelegateFor(segment);
 			}

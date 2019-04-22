@@ -32,18 +32,18 @@ namespace NewRelic.Agent.Core.Wrapper
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "<unknown>";
 			var methodName = instrumentedMethodCall.MethodCall.Method.MethodName;
 			var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
-				? transactionWrapperApi.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
-				: transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
+				? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
+				: transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 
 			//Only override transaction name if priority set since this is segment-level instrumentation
 			if (!string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
 			{
-				transactionWrapperApi.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
+				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
 			}
 
 			return Delegates.GetDelegateFor(segment);

@@ -28,18 +28,8 @@ namespace ArtifactBuilder
 			{
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Storage.CallContext.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Storage.HttpContext.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Storage.OperationContext.dll"
-			};
-
-			var netstandardExtensions = new List<string>()
-			{
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Core.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll",
-			};
-
-			var net46Extensions = new List<string>()
-			{
-				$@"{SourcePath}\New Relic Home {Platform}\Extensions\net46\NewRelic.Providers.Storage.AsyncLocal.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Storage.OperationContext.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
 			};
 
 			var wrapperProviders = new List<string>()
@@ -57,7 +47,6 @@ namespace ArtifactBuilder
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Mvc3.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.NServiceBus.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.OpenRasta.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Owin.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.RabbitMq.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.RestSharp.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll",
@@ -69,7 +58,9 @@ namespace ArtifactBuilder
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebApi1.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebApi2.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebOptimization.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebServices.dll"
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.WebServices.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
+				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Owin.dll"
 			};
 
 			var wrapperXmls = new List<string>()
@@ -120,9 +111,6 @@ namespace ArtifactBuilder
 			ExtensionDirectoryComponents.AddRange(storageProviders);
 			ExtensionDirectoryComponents.AddRange(wrapperProviders);
 			ExtensionDirectoryComponents.Add(ExtensionXsd);
-
-			NetstandardExtensionDirectoryComponents = new List<string>(netstandardExtensions);
-			Net46ExtensionDirectoryComponents = new List<string>(net46Extensions);
 
 			WrapperXmlFiles = new List<string>();
 			WrapperXmlFiles.AddRange(wrapperXmls);

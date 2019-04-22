@@ -38,7 +38,7 @@ Remove-Item -Recurse -Force Agent\ProfilerBuildsForDevMachines
 # NuGet Restore #
 ###############
 
-$applicationsFull = @("Agent\FullAgent.sln", "FunctionalTests\FunctionalTests.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln", "Tests\PlatformTests\PlatformTests.sln")
+$applicationsFull = @("Agent\FullAgent.sln", "FunctionalTests\FunctionalTests.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln", "Tests\Agent\PlatformTests\PlatformTests.sln")
 
 Write-Host "Restoring NuGet packages"
 foreach ($application in $applicationsFull) {
@@ -53,7 +53,7 @@ $applicationsFull = [Ordered]@{"Agent\FullAgent.sln" = "Configuration=Release;Pl
     "FunctionalTests\FunctionalTests.sln"            = "Configuration=Release";
     "IntegrationTests\IntegrationTests.sln"          = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
     "IntegrationTests\UnboundedIntegrationTests.sln" = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
-	"Tests\PlatformTests\PlatformTests.sln"          = "Configuration=Release";
+	"Tests\Agent\PlatformTests\PlatformTests.sln"          = "Configuration=Release";
 }
 
 Write-Host "Building for full build"
@@ -84,12 +84,13 @@ $agentVersion = [Reflection.AssemblyName]::GetAssemblyName("$env:WORKSPACE\Agent
 
 Write-Host "===================================="
 Write-Host "Executing Linux builds in Docker for Agent Version: $agentVersion"
-Set-Location .\Agent
+Push-Location .\Build\Linux
 docker-compose build
 docker-compose run -e AGENT_VERSION=$agentVersion build_deb
-copy $env:GPG_KEYS .\gpg.tar.bz2
-docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/data/gpg.tar.bz2 build_rpm
-Set-Location ..
+New-Item keys -Type Directory
+Copy-Item $env:GPG_KEYS .\keys\gpg.tar.bz2
+docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
+Pop-Location
 Write-Host "===================================="
 
 if ($LastExitCode -ne 0) {

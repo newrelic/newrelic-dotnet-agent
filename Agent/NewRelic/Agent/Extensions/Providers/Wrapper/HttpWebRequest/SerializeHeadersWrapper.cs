@@ -15,7 +15,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var request = (System.Net.HttpWebRequest)instrumentedMethodCall.MethodCall.InvocationTarget;
 
@@ -29,7 +29,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 				throw new NullReferenceException("request.Headers");
 			}
 
-			var headers = transactionWrapperApi.GetRequestMetadata()
+			var headers = transaction.GetRequestMetadata()
 				.Where(header => header.Key != null);
 
 			foreach (var header in headers)

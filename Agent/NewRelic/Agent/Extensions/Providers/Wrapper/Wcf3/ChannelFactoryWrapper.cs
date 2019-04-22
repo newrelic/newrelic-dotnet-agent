@@ -23,24 +23,24 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			return Delegates.GetDelegateFor(onComplete: () =>
 			{
 				var channelFactory = instrumentedMethodCall.MethodCall.InvocationTarget as ChannelFactory;
-				channelFactory?.Endpoint.Behaviors.Add(new NewRelicEndpointBehavior(agentWrapperApi));
+				channelFactory?.Endpoint.Behaviors.Add(new NewRelicEndpointBehavior(agent));
 			});
 		}
 	}
 
 	public class NewRelicClientMessageInspector : IClientMessageInspector
 	{
-		private IAgentWrapperApi _agentWrapperApi;
+		private IAgent _agent;
 		private const string AppDataHttpHeader = "X-NewRelic-App-Data";
 
-		public NewRelicClientMessageInspector(IAgentWrapperApi agentWrapperApi)
+		public NewRelicClientMessageInspector(IAgent agent)
 		{
-			_agentWrapperApi = agentWrapperApi;
+			_agent = agent;
 		}
 
 		public void AfterReceiveReply(ref Message reply, object correlationState)
@@ -62,7 +62,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			var typedCorrelationState = correlationState as CorrelationState;
 			if (correlationState != null && !string.IsNullOrEmpty(headerValue))
 			{
-				typedCorrelationState.TransactionWrapperApi.ProcessInboundResponse(new[] { new KeyValuePair<string, string>(AppDataHttpHeader, headerValue) }, typedCorrelationState?.Segment);
+				typedCorrelationState.Transaction.ProcessInboundResponse(new[] { new KeyValuePair<string, string>(AppDataHttpHeader, headerValue) }, typedCorrelationState?.Segment);
 
 				//TODO: Change the way WCF instrumentation ends segment so that it always end the external segment here to support TAP and EAP style calls. 
 			}
@@ -70,10 +70,10 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 		public object BeforeSendRequest(ref Message request, IClientChannel channel)
 		{
-			var transactionWrapperApi = _agentWrapperApi.CurrentTransactionWrapperApi;
+			var transactionWrapperApi = _agent.CurrentTransaction;
 			var correlationState = new CorrelationState(transactionWrapperApi, transactionWrapperApi.CurrentSegment);
 
-			if (!correlationState.TransactionWrapperApi.IsValid || !correlationState.Segment.IsExternal)
+			if (!correlationState.Transaction.IsValid || !correlationState.Segment.IsExternal)
 			{
 				return null;
 			}
@@ -102,24 +102,24 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 		public class CorrelationState
 		{
-			public CorrelationState(ITransactionWrapperApi transactionWrapperApi, ISegment segment)
+			public CorrelationState(ITransaction transaction, ISegment segment)
 			{
-				TransactionWrapperApi = transactionWrapperApi;
+				Transaction = transaction;
 				Segment = segment;
 			}
 
-			public ITransactionWrapperApi TransactionWrapperApi { get; }
+			public ITransaction Transaction { get; }
 			public ISegment Segment { get; }
 		}
 	}
 
 	public class NewRelicEndpointBehavior : IEndpointBehavior
 	{
-		private readonly IAgentWrapperApi _agentWrapperApi;
+		private readonly IAgent _agent;
 
-		public NewRelicEndpointBehavior(IAgentWrapperApi agentWrapperApi)
+		public NewRelicEndpointBehavior(IAgent agent)
 		{
-			_agentWrapperApi = agentWrapperApi;
+			_agent = agent;
 		}
 
 		public void AddBindingParameters(ServiceEndpoint endpoint, BindingParameterCollection bindingParameters)
@@ -128,7 +128,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 		public void ApplyClientBehavior(ServiceEndpoint endpoint, ClientRuntime clientRuntime)
 		{
-			var inspector = new NewRelicClientMessageInspector(_agentWrapperApi);
+			var inspector = new NewRelicClientMessageInspector(_agent);
 			clientRuntime.ClientMessageInspectors.Add(inspector);
 		}
 

@@ -31,7 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    <ProjectReference Include="..\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\..\Shared\SharedLog4NetRepository.cs">

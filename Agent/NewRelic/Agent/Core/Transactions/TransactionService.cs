@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <returns></returns>
 		[CanBeNull]
-		ITransaction GetCurrentInternalTransaction();
+		IInternalTransaction GetCurrentInternalTransaction();
 
 		/// <summary>
 		/// Returns the existing internal transaction, if any, or creates a new internal transaction and returns it.
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core.Transactions
 		/// <param name="mustBeRootTransaction">Whether or not the transaction must be root.</param>
 		/// <returns></returns>
 		[CanBeNull]
-		ITransaction GetOrCreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true);
+		IInternalTransaction GetOrCreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true);
 
 		/// <summary>
 		/// Removes any outstanding internal transactions.
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="transaction">Transaction to store in the async context</param>
 		/// <returns>Returns true if found an async context to store the transaction in</returns>
-		bool SetTransactionOnAsyncContext(ITransaction transaction);
+		bool SetTransactionOnAsyncContext(IInternalTransaction transaction);
 
 		bool IsAttachedToAsyncStorage { get; }
 	}
@@ -54,10 +54,10 @@ namespace NewRelic.Agent.Core.Transactions
 	{
 		private const String TransactionContextKey = "NewRelic.Transaction";
 		[NotNull]
-		private readonly IEnumerable<IContextStorage<ITransaction>> _sortedPrimaryContexts;
+		private readonly IEnumerable<IContextStorage<IInternalTransaction>> _sortedPrimaryContexts;
 
 		[CanBeNull]
-		private readonly IContextStorage<ITransaction> _asyncContext;
+		private readonly IContextStorage<IInternalTransaction> _asyncContext;
 
 		[NotNull]
 		private readonly ITimerFactory _timerFactory;
@@ -88,27 +88,27 @@ namespace NewRelic.Agent.Core.Transactions
 		#region Private Helpers
 
 		[NotNull]
-		private static IEnumerable<IContextStorage<ITransaction>> GetPrimaryTransactionContexts([NotNull] IEnumerable<IContextStorageFactory> factories)
+		private static IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts([NotNull] IEnumerable<IContextStorageFactory> factories)
 		{
 			var list = factories
 				.Where(factory => factory != null)
 				.Where(factory => !factory.IsAsyncStorage)
-				.Select(factory => factory.CreateContext<ITransaction>("NewRelic.Transaction"))
+				.Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
 				.Where(transactionContext => transactionContext != null)
 				.ToList(); //ToList() is important to force evaluation only once
 
-			list.Add(new ThreadLocalStorage<ITransaction>("NewRelic.Transaction"));
+			list.Add(new ThreadLocalStorage<IInternalTransaction>("NewRelic.Transaction"));
 
 			return list
 				.OrderByDescending(transactionContext => transactionContext.Priority).ToList();
 		}
 
-		private static IContextStorage<ITransaction> GetAsyncTransactionContext([NotNull] IEnumerable<IContextStorageFactory> factories)
+		private static IContextStorage<IInternalTransaction> GetAsyncTransactionContext([NotNull] IEnumerable<IContextStorageFactory> factories)
 		{
 			return factories
 				.Where(factory => factory != null)
 				.Where(factory => factory.IsAsyncStorage)
-				.Select(factory => factory.CreateContext<ITransaction>("NewRelic.Transaction"))
+				.Select(factory => factory.CreateContext<IInternalTransaction>("NewRelic.Transaction"))
 				.Where(transactionContext => transactionContext != null)
 				.Where(transactionContext => transactionContext.CanProvide)
 				.OrderByDescending(transactionContext => transactionContext.Priority)
@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Transactions
 		}
 
 		[CanBeNull]
-		private ITransaction TryGetInternalTransaction(IContextStorage<ITransaction> transactionContext)
+		private IInternalTransaction TryGetInternalTransaction(IContextStorage<IInternalTransaction> transactionContext)
 		{
 			try
 			{
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 		}
 
-		private IContextStorage<ITransaction> GetFirstActivePrimaryContext()
+		private IContextStorage<IInternalTransaction> GetFirstActivePrimaryContext()
 		{
 			foreach (var context in _sortedPrimaryContexts)
 			{
@@ -146,7 +146,7 @@ namespace NewRelic.Agent.Core.Transactions
 			return null;
 		}
 
-		private ITransaction CreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate)
+		private IInternalTransaction CreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate)
 		{
 			RemoveOutstandingInternalTransactions(true, true);
 
@@ -170,6 +170,8 @@ namespace NewRelic.Agent.Core.Transactions
 				return null;
 			}
 
+			if (Log.IsFinestEnabled) transaction.LogFinest($"Created transaction on {transactionContext}");
+
 			if (onCreate != null)
 			{ 
 				onCreate();
@@ -178,7 +180,7 @@ namespace NewRelic.Agent.Core.Transactions
 			return transaction;
 		}
 
-		private void TryClearContexts(IEnumerable<IContextStorage<ITransaction>> contexts)
+		private void TryClearContexts(IEnumerable<IContextStorage<IInternalTransaction>> contexts)
 		{
 			foreach (var context in contexts)
 			{
@@ -197,21 +199,28 @@ namespace NewRelic.Agent.Core.Transactions
 
 		#region Public API
 
-		public ITransaction GetCurrentInternalTransaction()
+		public IInternalTransaction GetCurrentInternalTransaction()
 		{
+			IInternalTransaction transaction;
 			foreach (var context in _sortedPrimaryContexts)
 			{
-				var transaction = TryGetInternalTransaction(context);
+				transaction = TryGetInternalTransaction(context);
 				if (transaction != null)
 				{
+					if (Log.IsFinestEnabled) transaction.LogFinest($"Retrived from {context.ToString()}");
 					return transaction;
 				}
 			}
 
-			return TryGetInternalTransaction(_asyncContext);
+			transaction = TryGetInternalTransaction(_asyncContext);
+			if (transaction != null)
+			{
+				if (Log.IsFinestEnabled) transaction.LogFinest($"Retrived from {_asyncContext.ToString()}");
+			}
+			return transaction;
 		}
 
-		public bool SetTransactionOnAsyncContext(ITransaction transaction)
+		public bool SetTransactionOnAsyncContext(IInternalTransaction transaction)
 		{
 			if(_asyncContext == null)
 			{
@@ -221,12 +230,13 @@ namespace NewRelic.Agent.Core.Transactions
 			if(_asyncContext.GetData() == null)
 			{
 				_asyncContext.SetData(transaction);
+				if (Log.IsFinestEnabled) transaction.LogFinest($"Attached to {_asyncContext}");
 			}
 
 			return true;
 		}
 		
-		public ITransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true)
+		public IInternalTransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true)
 		{
 			var transaction = GetCurrentInternalTransaction();
 			if (transaction == null)
@@ -277,13 +287,5 @@ namespace NewRelic.Agent.Core.Transactions
 		}
 
 		#endregion
-
-		private class ThreadLocalContainer<T> : IThreadLocal<T>
-		{
-			[ThreadStatic]
-			private static T _value;
-
-			public T Value { get => _value; set => _value = value; }
-		}
 	}
 }

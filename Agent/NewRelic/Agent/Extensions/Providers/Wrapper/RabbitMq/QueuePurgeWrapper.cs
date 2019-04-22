@@ -15,14 +15,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			// (IModel) uint QueuePurge(string queue)
 			var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
 			var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
 			var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 
-			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Purge, RabbitMqHelper.VendorName, destName);
+			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Purge, RabbitMqHelper.VendorName, destName);
 			return Delegates.GetDelegateFor(segment);
 		}
 	}

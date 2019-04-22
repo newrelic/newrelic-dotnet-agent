@@ -21,25 +21,25 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var logicalMessage = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<LogicalMessage>(1);
 
 			const string brokerVendorName = "NServiceBus";
 			var queueName = TryGetQueueName(logicalMessage);
-			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, brokerVendorName, queueName);
+			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, brokerVendorName, queueName);
 
-			AttachCatHeaders(agentWrapperApi, logicalMessage);
+			AttachCatHeaders(agent, logicalMessage);
 
 			return Delegates.GetDelegateFor(segment);
 		}
 
-		private static void AttachCatHeaders([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] LogicalMessage logicalMessage)
+		private static void AttachCatHeaders([NotNull] IAgent agent, [NotNull] LogicalMessage logicalMessage)
 		{
 			if (logicalMessage.Headers == null)
 				return;
 
-			var headers = agentWrapperApi.CurrentTransactionWrapperApi
+			var headers = agent.CurrentTransaction
 				.GetRequestMetadata()
 				.Where(header => header.Value != null && header.Key != null);
 				

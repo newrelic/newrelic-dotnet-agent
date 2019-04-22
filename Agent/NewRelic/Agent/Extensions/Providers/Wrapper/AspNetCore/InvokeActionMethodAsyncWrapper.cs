@@ -19,11 +19,11 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			return new CanWrapResponse("NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync".Equals(methodInfo.RequestedWrapperName));
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{
-				transactionWrapperApi.AttachToAsync();
+				transaction.AttachToAsync();
 			}
 
 			//handle the .NetCore 3.0 case where the namespace is Infrastructure instead of Internal.
@@ -32,14 +32,14 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
 			var transactionName = CreateTransactionName(actionDescriptor);
 
-			transactionWrapperApi.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
+			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
 			//Framework uses ControllerType.Action for these metrics & transactions. WebApi is Controller.Action for both
 			//Taking opinionated stance to do ControllerType.MethodName for segments. Controller/Action for transactions
 			var controllerTypeName = controllerContext.ActionDescriptor.ControllerTypeInfo.Name;
 			var methodName = controllerContext.ActionDescriptor.MethodInfo.Name;
 
-			var segment = transactionWrapperApi.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerTypeName, methodName);
+			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerTypeName, methodName);
 
 			return Delegates.GetDelegateFor<Task>(
 				onFailure: segment.End,
@@ -69,7 +69,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 				}
 				catch (Exception ex)
 				{
-					agentWrapperApi.SafeHandleException(ex);
+					agent.SafeHandleException(ex);
 				}
 			}
 		}

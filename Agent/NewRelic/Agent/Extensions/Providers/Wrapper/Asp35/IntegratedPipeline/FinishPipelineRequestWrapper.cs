@@ -17,19 +17,19 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			if (!HttpRuntime.UsingIntegratedPipeline)
 				return Delegates.NoOp;
 
 			var httpContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpContext>(0);
-			HttpContextActions.TransactionShutdown(agentWrapperApi, httpContext);
+			HttpContextActions.TransactionShutdown(agent, httpContext);
 
-			var segment = agentWrapperApi.CastAsSegment(httpContext.Items[HttpContextActions.HttpContextSegmentKey] as ISegment);
+			var segment = agent.CastAsSegment(httpContext.Items[HttpContextActions.HttpContextSegmentKey] as ISegment);
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = null;
 			httpContext.Items[HttpContextActions.HttpContextSegmentTypeKey] = null;
 			segment.End();			
-			agentWrapperApi.CurrentTransactionWrapperApi.End();
+			agent.CurrentTransaction.End();
 
 			return Delegates.NoOp;
 		}

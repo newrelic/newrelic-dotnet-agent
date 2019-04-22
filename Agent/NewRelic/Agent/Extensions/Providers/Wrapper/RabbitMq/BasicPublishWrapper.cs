@@ -19,10 +19,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			// 3.6.0+ (5.1.0+) (IModel)void BasicPublish(string exchange, string routingKey, bool mandatory, IBasicProperties basicProperties, byte[] body)
-			var segment = RabbitMqHelper.CreateSegmentForPublishWrappers(instrumentedMethodCall, transactionWrapperApi, BasicPropertiesIndex);
+			var segment = RabbitMqHelper.CreateSegmentForPublishWrappers(instrumentedMethodCall, transaction, BasicPropertiesIndex);
 
 			return Delegates.GetDelegateFor(segment);
 		}

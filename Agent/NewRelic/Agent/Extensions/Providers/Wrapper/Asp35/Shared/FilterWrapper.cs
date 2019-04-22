@@ -26,7 +26,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var httpContext = HttpContext.Current;
 			// we have seen httpContext == null in the wild, so don't throw an exception
@@ -49,7 +49,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 			//add our filter and add a key to httpContext.Items to reflect this. 
 			//   (the key is used above to insure we only add our filter once).
-			var newFilter = TryGetStreamInjector(agentWrapperApi, httpContext);
+			var newFilter = TryGetStreamInjector(agent, httpContext);
 			if (newFilter != null)
 			{
 				httpContext.Response.Filter = newFilter;
@@ -60,7 +60,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		}
 
 		[CanBeNull]
-		private static Stream TryGetStreamInjector([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpContext httpContext)
+		private static Stream TryGetStreamInjector([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
 			var currentFilter = httpContext.Response.Filter;
 			var contentEncoding = httpContext.Response.ContentEncoding;
@@ -68,7 +68,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			var requestPath = httpContext.Request.Path;
 
 			// NOTE: We need to be very careful if we decide to move where TryGetStreamInjector is called from. The agent assumes that this call will happen fairly late in the pipeline as it has a side-effect of freezing the transaction name and capturing all of the currently recorded transaction attributes.
-			return agentWrapperApi.TryGetStreamInjector(currentFilter, contentEncoding, contentType, requestPath);
+			return agent.TryGetStreamInjector(currentFilter, contentEncoding, contentType, requestPath);
 		}
 	}
 }

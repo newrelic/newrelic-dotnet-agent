@@ -15,13 +15,13 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var exception = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<Exception>(2);
 			if (exception == null)
 				return Delegates.NoOp;
 
-			transactionWrapperApi.NoticeError(exception);
+			transaction.NoticeError(exception);
 
 			return Delegates.NoOp;
 		}

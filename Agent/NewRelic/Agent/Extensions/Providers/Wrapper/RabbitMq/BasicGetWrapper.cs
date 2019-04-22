@@ -15,14 +15,14 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransactionWrapperApi transactionWrapperApi)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			// (IModel) BasicGetResult BasicGet(string queue, bool noAck)
 			var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
 			var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
 			var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 
-			var segment = transactionWrapperApi.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
+			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
 
 			// ATTENTION: We have validated that the use of dynamic, here and below, is appropriate based on the visibility of the data we're working with.
 			// If we implement newer versions of the API or new methods we'll need to re-evaluate.
@@ -40,9 +40,9 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 				{
 					var basicProperties = result.BasicProperties;
 					var headers = (Dictionary<string, object>)basicProperties.Headers;
-					if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, agentWrapperApi, out var payload))
+					if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, agent, out var payload))
 					{
-						transactionWrapperApi.AcceptDistributedTracePayload(payload, TransportType.AMQP);
+						transaction.AcceptDistributedTracePayload(payload, TransportType.AMQP);
 					}
 				}
 				

@@ -33,8 +33,6 @@
 			<ComponentRef Id="LogsFolderComponent"/>
 			<ComponentGroupRef Id="ProductComponents"/>
 			<ComponentGroupRef Id="NewRelic.Agent.Extensions"/>
-			<ComponentGroupRef Id="NewRelic.Agent.NetstandardExtensions"/>
-			<ComponentGroupRef Id="NewRelic.Agent.Net46Extensions"/>
 			<ComponentGroupRef Id="NewRelic.Agent.Extensions.Instrumentation"/>
 			<?ifdef IsWin64?>
 			<ComponentGroupRef Id="Product32Components"/>
@@ -71,19 +69,19 @@
 		</Feature>
 
 		<UIRef Id="WizardUI"/>
-		
+
 		<!-- Add a checkbox to the exit dialog. -->
 		<SetProperty Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Restart IIS.	IIS must be restarted before New Relic will start monitoring." After="ExecuteAction" Sequence="ui">
 			<![CDATA[&IISRegistryFeature=3]]>
 		</SetProperty>
-		
+
 		<!-- Make the finish button on the exit dialog run the RestartIisAction custom action. -->
 		<UI>
 			<Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="RestartIis">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
 		</UI>
 
 		<Icon Id="NewRelicIcon.ico" SourceFile="..\Miscellaneous\NewRelic-icon-16x16.ico"/>
-		
+
 		<!-- New Relic banners. -->
 		<WixVariable Id="WixUIBannerBmp" Value="ui-banner.bmp"/>
 		<WixVariable Id="WixUIDialogBmp" Value="ui-dialog.bmp"/>
@@ -111,7 +109,7 @@
 
 		<!-- Link to the custom actions assembly so we can call custom action methods during install. -->
 		<Binary Id="CustomActionsDll" SourceFile="$(var.InstallerActions.TargetDir)\$(var.InstallerActions.TargetName).CA.dll" />
-		
+
 		<!-- Specify the custom actions we want to call. -->
 		<CustomAction Id="FindPreviousLicenseKey" BinaryKey="CustomActionsDll" DllEntry="FindPreviousLicenseKey" Execute="immediate" Return="check"/>
 		<CustomAction Id="SaveDeferredCustomActionData" BinaryKey="CustomActionsDll" DllEntry="SaveDeferredCustomActionData" Execute="immediate" Return="check"/>
@@ -120,37 +118,35 @@
 		<CustomAction Id="CleanupPreviousInstall" BinaryKey="CustomActionsDll" DllEntry="CleanupPreviousInstall" Execute="deferred" Impersonate="no" Return="check"/>
 		<CustomAction Id='RestartIis' BinaryKey="CustomActionsDll" DllEntry="RestartIis" Impersonate="yes"/>
 		<CustomAction Id='CloseStatusMonitor' BinaryKey="CustomActionsDll" DllEntry="CloseStatusMonitor" Impersonate="yes"/>
-		
+
 		<!-- Run the custom actions at the beginning of the install. -->
 		<InstallUISequence>
-			
+
 		</InstallUISequence>
-		
+
 		<!-- Run the custom actions at the end of the install. -->
 		<InstallExecuteSequence>
 			<Custom Action="FindPreviousLicenseKey" After="CostFinalize">NOT Installed</Custom>
 			<Custom Action="SaveDeferredCustomActionData" After="InstallFiles">NOT Installed</Custom>
 			<Custom Action="WixCloseApplications" Before="InstallValidate">Installed</Custom>
-		  <Custom Action="CloseStatusMonitor" After="CostFinalize"/>
+			<Custom Action="CloseStatusMonitor" After="CostFinalize"/>
 		</InstallExecuteSequence>
 
 		<util:CloseApplication Id="CloseNewRelicStatusMonitor" Target="NewRelicStatusMonitor.exe" CloseMessage="yes" RebootPrompt="no">Installed</util:CloseApplication>
-		
+
 		<!-- Directory structure setup. -->
 		<Directory Id="TARGETDIR" Name="SourceDir">
 			<Directory Id="$(var.PlatformProgramFilesFolder)">
 				<Directory Id="NewRelicFolder" Name="New Relic">
 					<Directory Id="NETAGENTFOLDER" Name=".NET Agent">
-						<Directory Id="NewRelic.Agent.Core"/> <!-- Alias name for NETAGENTFOLDER -->
+						<Directory Id="NewRelic.Agent.Core"/>
+						<!-- Alias name for NETAGENTFOLDER -->
 						<Directory Id="ToolsFolder" Name="Tools" />
-						<Directory Id="ProgramFilesExtensionsFolder" Name="Extensions">
-							<Directory Id="ProgramFilesNetstandardExtensionsFolder" Name="netstandard2.0" />
-							<Directory Id="ProgramFilesNet46ExtensionsFolder" Name="net46" />
-						</Directory>
+						<Directory Id="ProgramFilesExtensionsFolder" Name="Extensions"/>
 					</Directory>
 				</Directory>
 			</Directory>
-			
+
 			<?ifdef IsWin64?>
 			<Directory Id="ProgramFilesFolder">
 				<Directory Id="NewRelic32Folder" Name="New Relic">
@@ -158,7 +154,7 @@
 				</Directory>
 			</Directory>
 			<?endif?>
-			
+
 			<Directory Id="CommonAppDataFolder">
 				<Directory Id="NewRelicCommonFolder" Name="New Relic">
 					<Directory Id="NETAGENTCOMMONFOLDER" Name=".NET Agent">
@@ -251,7 +247,7 @@
 			<Component Id="JetBrainsAnnotationsComponent" Guid="{12C77711-1BF1-42B8-A884-B25D57B467B3}">
 				<File Id="JetBrainsAnnotationsFile" Name="JetBrains.Annotations.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\JetBrains.Annotations.dll"/>
 			</Component>
-			
+
 			<!-- Storage providers -->
 			<Component Id="CallContextProviderComponent" Guid="{2C25F20D-113E-4314-940F-9B54469F184D}">
 				<File Id="CallContextProviderFile" Name="NewRelic.Providers.Storage.CallContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.CallContext.dll"/>
@@ -261,6 +257,9 @@
 			</Component>
 			<Component Id="OperationContextProviderComponent" Guid="{6BE8050A-0A01-4F5B-B3B6-274652DF24E6}">
 				<File Id="OperationContextProviderFile" Name="NewRelic.Providers.Storage.OperationContext.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.OperationContext.dll"/>
+			</Component>
+			<Component Id="AsyncLocalProviderComponent" Guid="{CDF55B52-A5DE-4D54-BF3D-5B90F205383C}">
+				<File Id="AsyncLocalProviderFile" Name="NewRelic.Providers.Storage.AsyncLocal.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Storage.AsyncLocal.dll"/>
 			</Component>
 
 			<!-- Wrappers -->
@@ -303,9 +302,6 @@
 			<Component Id="HttpClientWrapperComponent" Guid="{3AD831AA-59A8-49A2-96F1-DF84BE4CB128}">
 				<File Id="HttpClientWrapperFile" Name="NewRelic.Providers.Wrapper.HttpClient.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpClient.dll"/>
 			</Component>
-			<Component Id="OwinWrapperComponent" Guid="{FC044DC6-52D8-42C6-A9FE-CB9425EF5811}">
-				<File Id="OwinWrapperFile" Name="NewRelic.Providers.Wrapper.Owin.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin.dll"/>
-			</Component>
 			<Component Id="HttpWebRequestWrapperComponent" Guid="{9B8A8B55-1A7C-4428-A820-8CC4156A6F6D}">
 				<File Id="HttpWebRequestWrapperFile" Name="NewRelic.Providers.Wrapper.HttpWebRequest.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpWebRequest.dll"/>
 			</Component>
@@ -319,7 +315,7 @@
 				<File Id="CustomInstrumentationWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentation.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll"/>
 			</Component>
 			<Component Id="CustomInstrumentationAsyncWrapperComponent" Guid="{A08DD1E7-A16D-431E-BF8E-0B299781A8BA}">
-			<File Id="CustomInstrumentationAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll"/>
+				<File Id="CustomInstrumentationAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll"/>
 			</Component>
 			<Component Id="MsmqWrapperComponent" Guid="{8DBF938B-4DE7-421E-821B-E9A6761C6CCF}">
 				<File Id="MsmqWrapperFile" Name="NewRelic.Providers.Wrapper.Msmq.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Msmq.dll"/>
@@ -343,6 +339,13 @@
 				<File Id="CouchbaseWrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Couchbase.dll"/>
 			</Component>
 
+			<Component Id="OwinWrapperComponent" Guid="{FC044DC6-52D8-42C6-A9FE-CB9425EF5811}">
+				<File Id="OwinWrapperFile" Name="NewRelic.Providers.Wrapper.Owin.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin.dll"/>
+			</Component>
+			<Component Id="AspNetCoreWrapperComponent" Guid="{383038F5-CC7D-4A78-8B10-0F489FEFEBE1}">
+				<File Id="AspNetCoreWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll"/>
+			</Component>
+
 			<!-- Reference libraries -->
 			<Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
 				<File Id="NewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Core.dll"/>
@@ -352,20 +355,7 @@
 			</Component>
 		</ComponentGroup>
 
-		<ComponentGroup Id="NewRelic.Agent.NetstandardExtensions" Directory="ProgramFilesNetstandardExtensionsFolder">
-			<Component Id="NetstandardNewRelicCoreReferenceComponent" Guid="{C67B8942-1A9F-4244-85A4-348523447C57}">
-				<File Id="NetstandardNewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\netstandard2.0\NewRelic.Core.dll"/>
-			</Component>
-			<Component Id="AspNetCoreWrapperComponent" Guid="{383038F5-CC7D-4A78-8B10-0F489FEFEBE1}">
-				<File Id="AspNetCoreWrapperFile" Name="NewRelic.Providers.Wrapper.AspNetCore.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\netstandard2.0\NewRelic.Providers.Wrapper.AspNetCore.dll"/>
-			</Component>
-		</ComponentGroup>
 
-		<ComponentGroup Id="NewRelic.Agent.Net46Extensions" Directory="ProgramFilesNet46ExtensionsFolder">
-			<Component Id="AsyncLocalProviderComponent" Guid="{CDF55B52-A5DE-4D54-BF3D-5B90F205383C}">
-				<File Id="AsyncLocalProviderFile" Name="NewRelic.Providers.Storage.AsyncLocal.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\net46\NewRelic.Providers.Storage.AsyncLocal.dll"/>
-			</Component>
-		</ComponentGroup>
 
 		<!-- Wrapper Instrumentation Files-->
 		<ComponentGroup Id="NewRelic.Agent.Extensions.Instrumentation" Directory="AppDataExtensionsFolder">
@@ -455,7 +445,7 @@
 				<File Id="ExtensionsSchemaFile" Name="extension.xsd" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\extension.xsd"/>
 			</Component>
 		</ComponentGroup>
-		
+
 		<!-- API -->
 		<Component Id="ApiComponent" Guid="{26BF7AE0-A921-438C-A16C-FF6F8E0F9366}" Directory="NETAGENTFOLDER">
 			<File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.SolutionDir)_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net45\NewRelic.Api.Agent.dll" />
