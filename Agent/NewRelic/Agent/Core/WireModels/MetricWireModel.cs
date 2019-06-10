@@ -15,6 +15,7 @@ using System.Net;
 using NewRelic.Agent.Core.SharedInterfaces;
 using InternalMetricName = NewRelic.Agent.Core.Metric.MetricName;
 using NewRelic.Agent.Core.JsonConverters;
+using NewRelic.Agent.Core.Samplers;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -114,6 +115,19 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 		}
 
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(this, obj))
+				return true;
+
+			if(obj is MetricWireModel other)
+			{
+				return other.MetricName.Equals(this.MetricName) && other.Data.Equals(this.Data);
+			}
+
+			return false;
+		}
+
 		public class MetricBuilder : IMetricBuilder
 		{
 			private readonly IMetricNameService _metricNameService;
@@ -157,10 +171,26 @@ namespace NewRelic.Agent.Core.WireModels
 				txStats.MergeUnscopedStats(proposedName, data);
 			}
 
-			public MetricWireModel TryBuildMemoryPhysicalMetric(double memoryPhysical)
+			public MetricWireModel TryBuildMemoryPhysicalMetric(long memoryPhysical)
 			{
 				var data = MetricDataWireModel.BuildByteData(memoryPhysical);
 				return BuildMetric(_metricNameService, MetricNames.MemoryPhysical, null, data);
+			}
+
+			public MetricWireModel TryBuildMemoryVirtualMetric(long memoryVirtual)
+			{
+				var data = MetricDataWireModel.BuildByteData(memoryVirtual);
+				return BuildMetric(_metricNameService, MetricNames.MemoryVirtual, null, data);
+			}
+			public MetricWireModel TryBuildMemoryWorkingSetMetric(long memoryWorkingSet)
+			{
+				var data = MetricDataWireModel.BuildByteData(memoryWorkingSet);
+				return BuildMetric(_metricNameService, MetricNames.MemoryWorkingSet, null, data);
+			}
+			public MetricWireModel TryBuildThreadpoolUsageStatsMetric(ThreadType type, ThreadStatus status, int countThreadpoolThreads)
+			{
+				var data = MetricDataWireModel.BuildGaugeValue(countThreadpoolThreads);
+				return BuildMetric(_metricNameService, MetricNames.GetThreadpoolUsageStatsName(type, status), null, data);
 			}
 
 			public MetricWireModel TryBuildCpuUserTimeMetric(TimeSpan cpuTime)
@@ -878,21 +908,44 @@ namespace NewRelic.Agent.Core.WireModels
 	{
 		private const string CannotBeNegative = "Cannot be negative";
 
+		/// <summary>
+		/// Count
+		/// </summary>
 		public readonly long Value0;
+
+		/// <summary>
+		/// Total Time
+		/// </summary>
 		public readonly float Value1;
+
+		/// <summary>
+		/// Exclusive Time
+		/// </summary>
 		public readonly float Value2;
+
+		/// <summary>
+		/// Max Time
+		/// </summary>
 		public readonly float Value3;
+
+		/// <summary>
+		/// Min Time
+		/// </summary>
 		public readonly float Value4;
+
+		/// <summary>
+		/// Sum Of Squares
+		/// </summary>
 		public readonly float Value5;
 
-		private MetricDataWireModel(long value0, double value1, double value2, double value3, double value4, double value5)
+		private MetricDataWireModel(long value0, float value1, float value2, float value3, float value4, float value5)
 		{
 			Value0 = value0;
-			Value1 = (float)value1;
-			Value2 = (float)value2;
-			Value3 = (float)value3;
-			Value4 = (float)value4;
-			Value5 = (float)value5;
+			Value1 = value1;
+			Value2 = value2;
+			Value3 = value3;
+			Value4 = value4;
+			Value5 = value5;
 		}
 
 		public static MetricDataWireModel BuildAggregateData(IEnumerable<MetricDataWireModel> metrics)
@@ -945,7 +998,7 @@ namespace NewRelic.Agent.Core.WireModels
 				throw new ArgumentException(CannotBeNegative, nameof(totalExclusiveTime));
 			}
 
-			return new MetricDataWireModel(1, totalTime.TotalSeconds, totalExclusiveTime.TotalSeconds, totalTime.TotalSeconds, totalTime.TotalSeconds, totalTime.TotalSeconds * totalTime.TotalSeconds);
+			return new MetricDataWireModel(1, (float)totalTime.TotalSeconds, (float)totalExclusiveTime.TotalSeconds, (float)totalTime.TotalSeconds, (float)totalTime.TotalSeconds, (float)totalTime.TotalSeconds * (float)totalTime.TotalSeconds);
 		}
 
 		public static MetricDataWireModel BuildCountData(int callCount = 1)
@@ -958,7 +1011,28 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(callCount, 0, 0, 0, 0, 0);
 		}
 
-		public static MetricDataWireModel BuildByteData(double totalBytes, double? exclusiveBytes = null)
+		/// <summary>
+		/// Allows recording of a metric based on a single observed value at point in time.
+		/// </summary>
+		/// <example>
+		/// Current Speed, Current Temperature are good examples
+		/// Number of Cache Entries, Number of Threads are also good examples
+		/// # of ApiCalls in a harvest window is not a good example.
+		/// </example>
+		/// <param name="gaugeValue"></param>
+		/// <returns></returns>
+		public static MetricDataWireModel BuildGaugeValue(float gaugeValue)
+		{
+			return BuildSummaryValue(1, gaugeValue, gaugeValue, gaugeValue);
+		}
+
+		public static MetricDataWireModel BuildSummaryValue(int count, float value, float min, float max)
+		{
+			//Converts MELT style metrics to the current style of metrics
+			return new MetricDataWireModel(count, value, value, min, max, value * value);
+		}
+
+		public static MetricDataWireModel BuildByteData(long totalBytes, long? exclusiveBytes = null)
 		{
 			exclusiveBytes = exclusiveBytes ?? totalBytes;
 
@@ -996,7 +1070,7 @@ namespace NewRelic.Agent.Core.WireModels
 				throw new ArgumentException(CannotBeNegative, nameof(cpuTime));
 			}
 
-			return new MetricDataWireModel(1, cpuTime.TotalSeconds, cpuTime.TotalSeconds, cpuTime.TotalSeconds, cpuTime.TotalSeconds, cpuTime.TotalSeconds * cpuTime.TotalSeconds);
+			return new MetricDataWireModel(1, (float)cpuTime.TotalSeconds, (float)cpuTime.TotalSeconds, (float)cpuTime.TotalSeconds, (float)cpuTime.TotalSeconds, (float)cpuTime.TotalSeconds * (float)cpuTime.TotalSeconds);
 		}
 
 		public static MetricDataWireModel BuildApdexData(TimeSpan responseTime, TimeSpan apdexT)
@@ -1016,7 +1090,7 @@ namespace NewRelic.Agent.Core.WireModels
 			var tolerating = apdexPerfZone == ApdexPerfZone.Tolerating ? 1 : 0;
 			var frustrating = apdexPerfZone == ApdexPerfZone.Frustrating ? 1 : 0;
 
-			return new MetricDataWireModel(satisfying, tolerating, frustrating, apdexT.TotalSeconds, apdexT.TotalSeconds, 0);
+			return new MetricDataWireModel(satisfying, tolerating, frustrating, (float)apdexT.TotalSeconds, (float)apdexT.TotalSeconds, 0);
 		}
 
 		public static MetricDataWireModel BuildFrustratedApdexData()
@@ -1068,6 +1142,25 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 
 			return ticks <= apdexT.Multiply(4).Ticks ? ApdexPerfZone.Tolerating : ApdexPerfZone.Frustrating;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(this, obj))
+				return true;
+
+			return obj is MetricDataWireModel other &&
+				this.Value0 == other.Value0 &&
+				this.Value1 == other.Value1 &&
+				this.Value2 == other.Value2 &&
+				this.Value3 == other.Value3 &&
+				this.Value4 == other.Value4 &&
+				this.Value5 == other.Value5;
+		}
+
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
 		}
 
 		private enum ApdexPerfZone

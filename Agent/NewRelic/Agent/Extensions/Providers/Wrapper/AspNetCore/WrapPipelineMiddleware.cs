@@ -31,6 +31,13 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			ITransaction transaction = null;
 			ISegment segment = null;
 
+			if (context.Request.Method == "OPTIONS")
+			{
+				// Don't create a transaction in this case to avoid MGIs associated with CORS pre-flight requests
+				await _next(context);
+				return;
+			}
+
 			try
 			{
 				transaction = SetupTransaction(context.Request);

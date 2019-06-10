@@ -23,43 +23,14 @@ namespace ArtifactBuilder.Artifacts
 
 			var package = new NugetPackage(StagingDirectory, OutputDirectory);
 			package.CopyAll(PackageDirectory);
-			var serverMonitorFileName = DownloadServerMonitorMsi();
-			DoInstallerReplacements($"NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi", serverMonitorFileName);
+			DoInstallerReplacements($"NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
 			package.CopyToLib(frameworkAgentComponents.AgentApiDll);
 			package.CopyToContent($@"{SourceDirectory}\Agent\_build\x64-{Configuration}\Installer\NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
 			package.SetVersion(frameworkAgentComponents.Version);
 			package.Pack();
 		}
 
-		private string DownloadServerMonitorMsi()
-		{
-			using (var client = new WebClient())
-			{
-				var xml = client.DownloadString("https://nr-downloads-main.s3.amazonaws.com/?delimiter=/&prefix=windows_server_monitor/release/");
-
-				var xdoc = XDocument.Parse(xml);
-				var ns = xdoc.Root.GetDefaultNamespace();
-				var items = xdoc.Root.Elements(ns + "Contents")
-					.Select(x => x.Element(ns + "Key"))
-					.Where(x => x.Value.Contains("x64") && x.Value.Contains("msi"))
-					.Select(x => x.Value)
-					.ToList();
-				items.Sort();
-
-				var filePath = items.Last();
-				var fileName = filePath.Replace("windows_server_monitor/release/", string.Empty);
-
-				var bytes = client.DownloadData($"https://download.newrelic.com/{filePath}");
-
-				var path = $@"{StagingDirectory}\content\{fileName}";
-				Directory.CreateDirectory(Path.GetDirectoryName(path));
-				File.WriteAllBytes(path, bytes);
-
-				return fileName;
-			}
-		}
-
-		private void DoInstallerReplacements(string agentInstaller, string serverMonitorInstaller)
+		private void DoInstallerReplacements(string agentInstaller)
 		{
 			var paths = new [] {
 				$@"{StagingDirectory}\content\newrelic.cmd",
@@ -70,9 +41,8 @@ namespace ArtifactBuilder.Artifacts
 			{
 				var contents = File.ReadAllText(path);
 				contents = contents
-					.Replace("AGENT_INSTALLER", agentInstaller)
-					.Replace("SERVERMONITOR_INSTALLER", serverMonitorInstaller);
-				if (!contents.Contains(agentInstaller) || !contents.Contains(serverMonitorInstaller))
+					.Replace("AGENT_INSTALLER", agentInstaller);
+				if (!contents.Contains(agentInstaller))
 				{
 					throw new Exception($"Unable to set version in {path}");
 				}

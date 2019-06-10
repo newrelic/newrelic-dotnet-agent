@@ -1,12 +1,12 @@
 ﻿using BenchmarkingTests.Scaffolding.Benchmarker;
 using BenchmarkingTests.Scaffolding.CodeExerciser;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
 using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System.Collections.Generic;
 using System.Data;
+using NewRelic.Core;
 using NewRelic.Parsing;
 using System.Threading;
 

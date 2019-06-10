@@ -12,6 +12,7 @@ $packagesToBuild = @(
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAgentExtensions $configuration",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureCloudServices $configuration",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAgent $configuration",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAwsLambdaOpenTracer $configuration",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj ZipArchives $configuration",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj CoreInstaller $configuration",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj ScriptableInstaller $configuration",
@@ -32,3 +33,5 @@ if ($IncludeDownloadSite) {
     #The download site should be built after the other artifacts are built, because it depends on the other artifacts
     dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj DownloadSite $configuration
 }
+
+.\generateBuildProperties -outputPath "BuildArtifacts\_buildProperties"

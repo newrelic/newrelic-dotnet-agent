@@ -12,6 +12,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 	{
 		public bool IsTransactionRequired => false;
 
+		public const string WrapperName = "Asp35.ExecuteStepTracer";
+
 		public static class Statics
 		{
 			#region private static readonly IEnumerable<String> PossibleEvents
@@ -56,8 +58,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.HttpApplication", methodName: "ExecuteStep");
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 

@@ -28,12 +28,39 @@ namespace NewRelic.Agent.Core.Utilities
 			_installPathExtensionsDirectory = installPathExtensionsDirectory;
 
 			_dynamicLoadWrapperAssemblies = new Dictionary<string, string>() {
-				{ "BuildCommonServicesWrapper",                                      Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
-				{ "GenericHostWebHostBuilderExtensionsWrapper",                      Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
-				{ "NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync",   Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
-				{ "ResolveAppWrapper",                                               Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Owin.dll") }
+				{ "BuildCommonServicesWrapper",																		Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
+				{ "GenericHostWebHostBuilderExtensionsWrapper",														Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
+				{ "NewRelic.Providers.Wrapper.AspNetCore.InvokeActionMethodAsync",									Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.AspNetCore.dll") },
+
+				{ "ResolveAppWrapper",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Owin.dll") },
+
+				{ "Asp35.CreateEventExecutionStepsTracer",															Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+				{ "Asp35.ExecuteStepTracer",																		Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+				{ "Asp35.FinishPipelineRequestTracer",																Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+				{ "Asp35.OnErrorTracer",																			Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+				{ "Asp35.GetRouteDataTracer",																		Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+				{ "Asp35.CallHandlerTracer",																		Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+				{ "Asp35.FilterTracer",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+				{ "Asp35.AspPagesTransactionNameTracer",															Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Asp35.dll") },
+
+				{ "OdbcCommandTracer",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "OleDbCommandTracer",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+
+				{ "SqlCommandTracer",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "SqlCommandTracerAsync",																			Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "SqlCommandWrapper",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "SqlCommandWrapperAsync",																			Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+
+				{ "DataReaderTracer",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "DataReaderTracerAsync",																			Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "DataReaderWrapper",																				Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "DataReaderWrapperAsync",																			Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+
+				{ "OpenConnectionTracer",																			Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+				{ "OpenConnectionWrapper",																			Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Wrapper.Sql.dll") },
+
 			};
-			
+
 			var nonAutoReflectedAssemblies = _dynamicLoadWrapperAssemblies.Values.Distinct().ToList();
 
 			//Add this to the log.
@@ -46,7 +73,7 @@ namespace NewRelic.Agent.Core.Utilities
 			{
 				var asmPath = Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Storage.AsyncLocal.dll");
 				Log.Info($"The following assembly is not applicable based on installed Framework: {asmPath}");
-				
+
 				nonAutoReflectedAssemblies.Add(asmPath);
 			}
 
@@ -73,10 +100,10 @@ namespace NewRelic.Agent.Core.Utilities
 		private static IEnumerable<T> AutoLoadExtensions<T>()
 		{
 			Log.Info($"Loading extensions of type {typeof(T)} from folder: {_installPathExtensionsDirectory}");
-			
+
 			var result = TypeInstantiator.ExportedInstancesFromAssemblyPaths<T>(_autoReflectedAssemblies);
 
-			foreach(var ex in result.Exceptions)
+			foreach (var ex in result.Exceptions)
 			{
 				Log.Warn($"An exception occurred while loading an extension: {ex}");
 			}
@@ -154,7 +181,7 @@ namespace NewRelic.Agent.Core.Utilities
 
 		public static IEnumerable<IWrapper> LoadDynamicWrapper(string assemblyPath)
 		{
-			
+
 			lock (_loadDynamicWrapperLockObj)
 			{
 				if (!_dynamicLoadAssemblyStatus.TryGetValue(assemblyPath.ToLower(), out var wrappers))
@@ -174,7 +201,7 @@ namespace NewRelic.Agent.Core.Utilities
 				return wrappers;
 			}
 
-			
+
 		}
 
 		public static IEnumerable<IWrapper> TryGetDynamicWrapperInstance(string requestedWrapperName)
@@ -193,7 +220,8 @@ namespace NewRelic.Agent.Core.Utilities
 			try
 			{
 				return factory != null && factory.IsValid;
-			} catch (Exception)
+			}
+			catch (Exception)
 			{
 				// REVIEW maybe log at finest?
 				return false;

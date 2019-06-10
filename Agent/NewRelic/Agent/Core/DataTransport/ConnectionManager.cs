@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
@@ -22,20 +21,13 @@ namespace NewRelic.Agent.Core.DataTransport
 		private static readonly TimeSpan MinimumRetryTime = TimeSpan.FromSeconds(5);
 		private static readonly TimeSpan MaximumRetryTime = TimeSpan.FromMinutes(5);
 
-		[NotNull]
 		private readonly IConnectionHandler _connectionHandler;
-
-		[NotNull]
 		private readonly IScheduler _scheduler;
-
 		private TimeSpan _retryTime = MinimumRetryTime;
+		private bool _started;
+		private readonly object _syncObject = new object();
 
-		private Boolean _started;
-
-		[NotNull]
-		private readonly Object _syncObject = new Object();
-
-		public ConnectionManager([NotNull] IConnectionHandler connectionHandler, [NotNull] IScheduler scheduler)
+		public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
 		{
 			_connectionHandler = connectionHandler;
 			_scheduler = scheduler;
@@ -153,7 +145,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		public T SendDataRequest<T>(String method, params Object[] data)
+		public T SendDataRequest<T>(string method, params object[] data)
 		{
 			lock (_syncObject)
 			{
@@ -165,7 +157,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		#region Helper methods
 
-		private static void ImmediateShutdown(String message)
+		private static void ImmediateShutdown(string message)
 		{
 			Log.InfoFormat("Shutting down: {0}", message);
 			EventBus<KillAgentEvent>.Publish(new KillAgentEvent());

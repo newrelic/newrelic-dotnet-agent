@@ -4,30 +4,26 @@ using System.Text;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
 	public static class DataCompressor
 	{
-		public const String DeflateCompression = "deflate";
-		public const String GzipCompression = "gzip";
+		public const string DeflateCompression = "deflate";
+		public const string GzipCompression = "gzip";
 
-		[NotNull]
-		public static Byte[] Compress([NotNull] String data)
+		public static byte[] Compress(string data)
 		{
 			var bytes = new UTF8Encoding().GetBytes(data);
 			return Compress(bytes);
 		}
 
-		[NotNull]
-		public static Byte[] Compress([NotNull] Byte[] bytes)
+		public static byte[] Compress(byte[] bytes)
 		{
 			return Compress(bytes, DeflateCompression);
 		}
 
-		[NotNull]
-		public static Byte[] Compress([NotNull] Byte[] bytes, [NotNull] String compressionType)
+		public static byte[] Compress(byte[] bytes, string compressionType)
 		{
 			using (var stream = new MemoryStream(bytes.Length))
 			using (var outputStream = GetCompressionOutputStream(stream, compressionType))
@@ -39,7 +35,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		private static DeflaterOutputStream GetCompressionOutputStream(Stream stream, String requestedCompression)
+		private static DeflaterOutputStream GetCompressionOutputStream(Stream stream, string requestedCompression)
 		{
 			var compressionType = requestedCompression.ToLower();
 			switch (compressionType)
@@ -53,8 +49,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		[NotNull]
-		public static String Decompress([NotNull] Byte[] compressedBytes)
+		public static string Decompress(byte[] compressedBytes)
 		{
 			using (var memoryStream = new MemoryStream())
 			using (var inflaterStream = new InflaterInputStream(memoryStream, new Inflater()))

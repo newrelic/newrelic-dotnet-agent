@@ -6,21 +6,14 @@ using NewRelic.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
-	public class OdbcCommandWrapper :IWrapper
+	public class OdbcCommandWrapper : IWrapper
 	{
+		public const string WrapperName = "OdbcCommandTracer";
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Data", typeName: "System.Data.Odbc.OdbcCommand",
-				methodNames: new[]
-				{
-					"ExecuteReader",
-					"ExecuteNonQuery",
-					"ExecuteScalar"
-				});
-			return new CanWrapResponse(canWrap);
+			return new CanWrapResponse(methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase));
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

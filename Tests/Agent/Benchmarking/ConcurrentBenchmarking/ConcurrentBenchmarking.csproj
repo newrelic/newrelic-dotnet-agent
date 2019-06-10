@@ -32,8 +32,4 @@
     <ProjectReference Include="..\..\..\..\Agent\NewRelic\Agent\Core\Core.csproj" />
     <ProjectReference Include="..\..\..\..\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="ConcurrentBenchmarking.v2.ncrunchproject" />
-  </ItemGroup>
 </Project>

@@ -10,10 +10,6 @@
         <OutputPath>$(SolutionDir)_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <DebugType>full</DebugType>
-        <DebugSymbols>True</DebugSymbols>
-    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="ILRepack" Version="2.0.16" />
@@ -23,6 +19,18 @@
         <PackageReference Include="SharpZipLib" Version="1.1.0" />
     </ItemGroup>
   
+
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <TransformOnBuild>true</TransformOnBuild>
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+    <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
+  </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
+
   <PropertyGroup>
     <ConfigurationCsPath>Config\Configuration.cs</ConfigurationCsPath>
     <ExtensionCsPath>NewRelic.Agent.Core.Extension\Extension.cs</ExtensionCsPath>
@@ -51,6 +59,18 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Autofac" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration">
+      <Version>2.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions">
+      <Version>2.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables">
+      <Version>2.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json">
+      <Version>2.0.0</Version>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
@@ -91,6 +111,11 @@
              first build attempt and then succeed on the second build attempt. These includes remedy this issue. -->
         <Compile Include="Config\Configuration.cs" Condition="!Exists('Config\Configuration.cs')" />
         <Compile Include="NewRelic.Agent.Core.Extension\Extension.cs" Condition="!Exists('NewRelic.Agent.Core.Extension\Extension.cs')" />
+        <Compile Include="AgentInstallConfiguration_Generated.cs" Condition="!Exists('AgentInstallConfiguration_Generated.cs')">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>AgentInstallConfiguration_Generated.tt</DependentUpon>
+        </Compile>
     </ItemGroup>
     <ItemGroup>
         <None Include="$(SolutionDir)NewRelicStrongNameKey.snk">
@@ -102,6 +127,15 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <SubType>Designer</SubType>
         </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+      <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Update="AgentInstallConfiguration_Generated.tt">
+        <Generator>TextTemplatingFileGenerator</Generator>
+        <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
+      </None>
     </ItemGroup>
 
   <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
@@ -162,5 +196,5 @@
     <Exec Command="$(ILRepackCommand)" />
   </Target>
 
-  <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+  <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
 </Project>

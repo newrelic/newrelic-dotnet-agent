@@ -1,8 +1,7 @@
 ﻿using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

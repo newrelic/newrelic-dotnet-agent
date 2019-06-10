@@ -187,5 +187,15 @@ namespace NewRelic.Agent.Core.Metrics
 
 			Assert.That(MetricNames.SupportabilityThreadProfilingSampleCount, Is.EqualTo("Supportability/ThreadProfiling/SampleCount"));
 		}
+
+		[Test]
+		public static void MetricNamesTest_ThreadPoolStats()
+		{
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.Available), Is.EqualTo("DotNet/Threadpool/Worker/Available"));
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.InUse), Is.EqualTo("DotNet/Threadpool/Worker/InUse"));
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.Available), Is.EqualTo("DotNet/Threadpool/Completion/Available"));
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.InUse), Is.EqualTo("DotNet/Threadpool/Completion/InUse"));
+			Assert.That(MetricNames.DotNetPerfThreadsCountAll, Is.EqualTo("DotNet/Threads/Active"));
+		}
 	}
 }

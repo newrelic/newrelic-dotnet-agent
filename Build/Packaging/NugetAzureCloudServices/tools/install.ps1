@@ -3,10 +3,9 @@ param($installPath, $toolsPath, $package, $project)
 Import-Module (Join-Path $toolsPath NewRelicHelper.psm1)
 
 $newRelicAgentMsiFileName = "AGENT_INSTALLER"
-$newRelicServerMonitorMsiFileName = "SERVERMONITOR_INSTALLER"
 
-Write-Host "***Updating project items newrelic.cmd, $newRelicAgentMsiFileName, and $newRelicServerMonitorMsiFileName***"
-update_newrelic_project_items $project $newRelicAgentMsiFileName $newRelicServerMonitorMsiFileName
+Write-Host "***Updating project items newrelic.cmd, $newRelicAgentMsiFileName***"
+update_newrelic_project_items $project $newRelicAgentMsiFileName
 
 Write-Host "***Updating the Windows Azure ServiceDefinition.csdef with the newrelic.cmd Startup task***"
 update_azure_service_definition $project

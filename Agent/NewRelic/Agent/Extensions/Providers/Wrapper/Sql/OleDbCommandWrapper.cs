@@ -8,19 +8,13 @@ namespace NewRelic.Providers.Wrapper.Sql
 {
 	public class OleDbCommandWrapper : IWrapper
 	{
+		public const string WrapperName = "OleDbCommandTracer";
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Data", typeName: "System.Data.OleDb.OleDbCommand",
-				methodNames: new[]
-				{
-					"ExecuteReader",
-					"ExecuteNonQuery",
-					"ExecuteScalar"
-				});
-			return new CanWrapResponse(canWrap);
+			return new CanWrapResponse(methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase));
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)

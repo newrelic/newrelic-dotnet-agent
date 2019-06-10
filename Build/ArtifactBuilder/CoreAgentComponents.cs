@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ArtifactBuilder
 {
@@ -30,53 +31,51 @@ namespace ArtifactBuilder
 			var wrapperProviders = new List<string>()
 			{
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.HttpClient.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.MongoDb26.dll",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Sql.dll",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.SqlAsync.dll"
 			};
 
-			var wrapperXmls = new List<string>()
+			var wrapperXmls = new[]
 			{
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
 				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
-				$@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml"
 			};
 
 			ExtensionXsd = $@"{SourceHomeBuilderPath}\Extensions\extension.xsd";
 			NewRelicXsd = $@"{SourceHomeBuilderPath}\newrelic.xsd";
 			NewRelicConfig = $@"{SourceHomeBuilderPath}\newrelic.config";
 
-			var root = new List<string>()
+			NewRelicLicenseFile = $@"{SourceHomeBuilderPath}\LICENSE.txt";
+			NewRelicThirdPartyNoticesFile = $@"{SourceHomeBuilderPath}\THIRD_PARTY_NOTICES.txt";
+
+			var root = new[]
 			{
-				$@"{SourceHomeBuilderPath}\License.txt",
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
 				$@"{SourceHomeBuilderPath}\NewRelic.Api.Agent.dll",
 				NewRelicConfig,
 				$@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll",
 				NewRelicXsd,
+				NewRelicLicenseFile,
+				NewRelicThirdPartyNoticesFile,
 				$@"{SourceHomeBuilderPath}\README.md",
 			};
 
-			ExtensionDirectoryComponents = new List<string>();
-			ExtensionDirectoryComponents.Add(ExtensionXsd);
+			SetRootInstallDirectoryComponents(root);
 
-			ExtensionDirectoryComponents = new List<string>();
-			ExtensionDirectoryComponents.AddRange(agentDllsForExtensionDirectory);
-			ExtensionDirectoryComponents.AddRange(storageProviders);
-			ExtensionDirectoryComponents.AddRange(wrapperProviders);
+			var extensions = agentDllsForExtensionDirectory
+				.Concat(storageProviders)
+				.Concat(wrapperProviders)
+				.Append(ExtensionXsd)
+				.ToArray();
 
-			WrapperXmlFiles = new List<string>();
-			WrapperXmlFiles.AddRange(wrapperXmls);
-
-			RootInstallDirectoryComponents = new List<string>();
-			RootInstallDirectoryComponents.AddRange(root);
+			SetExtensionDirectoryComponents(extensions);
+			
+			SetWrapperXmlFiles(wrapperXmls);
 
 			AgentApiDll = $@"{SourcePath}\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
 

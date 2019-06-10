@@ -1,8 +1,8 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -11,16 +11,12 @@ namespace NewRelic.Agent.Core.Samplers
 	[TestFixture]
 	public class CpuSamplerTests
 	{
-		[NotNull]
 		private CpuSampler _cpuSampler;
 
-		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
 
-		[NotNull]
 		private ICpuSampleTransformer _cpuSampleTransformer;
 
-		[NotNull]
 		private Action _sampleAction;
 
 		[SetUp]
@@ -31,7 +27,7 @@ namespace NewRelic.Agent.Core.Samplers
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _sampleAction = action);
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_cpuSampleTransformer = Mock.Create<ICpuSampleTransformer>();
-			_cpuSampler = new CpuSampler(scheduler, _cpuSampleTransformer, _agentHealthReporter);
+			_cpuSampler = new CpuSampler(scheduler, _cpuSampleTransformer, _agentHealthReporter, new ProcessStatic());
 		}
 
 		[TearDown]

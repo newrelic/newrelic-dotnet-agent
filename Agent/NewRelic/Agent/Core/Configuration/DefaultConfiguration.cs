@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Logging;
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private const string SecurityPolicyConfigSource = "Security Policy";
 		private const string LocalConfigSource = "Local Configuration";
 		private const string ServerConfigSource = "Server Configuration";
-		private static Int64 _currentConfigurationVersion;
+		private static long _currentConfigurationVersion;
 		private const uint DefaultSpanEventsMaxSamplesStored = 1000u;
 		private readonly IEnvironment _environment = new EnvironmentMock();
 		private readonly IProcessStatic _processStatic = new ProcessStatic();
@@ -54,6 +53,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private Dictionary<string, string> _newRelicAppSettings { get; }
 
 		public bool UseResourceBasedNamingForWCFEnabled { get; }
+		public bool GenerateFullGcMemThreadMetricsEnabled { get; }
 
 		/// <summary>
 		/// Default configuration constructor.  It will contain reasonable default values for everything and never anything more.
@@ -94,6 +94,7 @@ namespace NewRelic.Agent.Core.Configuration
 			_newRelicAppSettings = TransformAppSettings();
 
 			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
+			GenerateFullGcMemThreadMetricsEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.GenerateFullGCMemThreadMetrics", false);
 		}
 
 		public IReadOnlyDictionary<string, string> GetAppSettings()
@@ -147,11 +148,11 @@ namespace NewRelic.Agent.Core.Configuration
 				: defaultValue;
 		}
 
-		public bool SecurityPoliciesTokenExists => !String.IsNullOrEmpty(SecurityPoliciesToken);
+		public bool SecurityPoliciesTokenExists => !string.IsNullOrEmpty(SecurityPoliciesToken);
 
 		#region IConfiguration Properties
 
-		public Object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
+		public object AgentRunId { get { return _serverConfiguration.AgentRunId; } }
 
 		public virtual bool AgentEnabled
 		{
@@ -167,8 +168,8 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		private String _agentLicenseKey;
-		public virtual String AgentLicenseKey
+		private string _agentLicenseKey;
+		public virtual string AgentLicenseKey
 		{
 			get
 			{
@@ -185,11 +186,10 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		private IEnumerable<String> _applicationNames;
-		public virtual IEnumerable<String> ApplicationNames { get { return _applicationNames ?? (_applicationNames = GetApplicationNames()); } }
+		private IEnumerable<string> _applicationNames;
+		public virtual IEnumerable<string> ApplicationNames { get { return _applicationNames ?? (_applicationNames = GetApplicationNames()); } }
 
-		[NotNull]
-		private IEnumerable<String> GetApplicationNames()
+		private IEnumerable<string> GetApplicationNames()
 		{
 			var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
 			if (runtimeAppNames.Any())
@@ -242,7 +242,7 @@ namespace NewRelic.Agent.Core.Configuration
 			if (_httpRuntimeStatic.AppDomainAppVirtualPath == null)
 			{
 				Log.Info("Application name from process name.");
-				return new List<String> { _processStatic.GetCurrentProcess().ProcessName };
+				return new List<string> { _processStatic.GetCurrentProcess().ProcessName };
 			}
 
 			throw new Exception("An application name must be provided");
@@ -250,24 +250,24 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public bool AutoStartAgent { get { return _localConfiguration.service.autoStart; } }
 
-		public Int32 WrapperExceptionLimit { get { return TryGetAppSettingAsIntWithDefault("WrapperExceptionLimit", 5); } }
+		public int WrapperExceptionLimit { get { return TryGetAppSettingAsIntWithDefault("WrapperExceptionLimit", 5); } }
 
 		#region Browser Monitoring
 
-		public virtual String BrowserMonitoringApplicationId { get { return _serverConfiguration.RumSettingsApplicationId ?? String.Empty; } }
+		public virtual string BrowserMonitoringApplicationId { get { return _serverConfiguration.RumSettingsApplicationId ?? string.Empty; } }
 		public virtual bool BrowserMonitoringAutoInstrument { get { return _localConfiguration.browserMonitoring.autoInstrument; } }
-		public virtual String BrowserMonitoringBeaconAddress { get { return _serverConfiguration.RumSettingsBeacon ?? String.Empty; } }
-		public virtual String BrowserMonitoringErrorBeaconAddress { get { return _serverConfiguration.RumSettingsErrorBeacon ?? String.Empty; } }
-		public virtual String BrowserMonitoringJavaScriptAgent { get { return _serverConfiguration.RumSettingsJavaScriptAgentLoader ?? String.Empty; } }
-		public virtual String BrowserMonitoringJavaScriptAgentFile { get { return _serverConfiguration.RumSettingsJavaScriptAgentFile ?? String.Empty; } }
-		public virtual String BrowserMonitoringJavaScriptAgentLoaderType { get { return ServerOverrides(_serverConfiguration.RumSettingsBrowserMonitoringLoader, _localConfiguration.browserMonitoring.loader); } }
-		public virtual String BrowserMonitoringKey { get { return _serverConfiguration.RumSettingsBrowserKey ?? String.Empty; } }
+		public virtual string BrowserMonitoringBeaconAddress { get { return _serverConfiguration.RumSettingsBeacon ?? string.Empty; } }
+		public virtual string BrowserMonitoringErrorBeaconAddress { get { return _serverConfiguration.RumSettingsErrorBeacon ?? string.Empty; } }
+		public virtual string BrowserMonitoringJavaScriptAgent { get { return _serverConfiguration.RumSettingsJavaScriptAgentLoader ?? string.Empty; } }
+		public virtual string BrowserMonitoringJavaScriptAgentFile { get { return _serverConfiguration.RumSettingsJavaScriptAgentFile ?? string.Empty; } }
+		public virtual string BrowserMonitoringJavaScriptAgentLoaderType { get { return ServerOverrides(_serverConfiguration.RumSettingsBrowserMonitoringLoader, _localConfiguration.browserMonitoring.loader); } }
+		public virtual string BrowserMonitoringKey { get { return _serverConfiguration.RumSettingsBrowserKey ?? string.Empty; } }
 		public virtual bool BrowserMonitoringUseSsl { get { return HighSecurityModeOverrides(true, _localConfiguration.browserMonitoring.sslForHttp); } }
 
 		#endregion
 
 		private string _securityPoliciesToken;
-		[NotNull]
+
 		public virtual string SecurityPoliciesToken
 		{
 			get
@@ -368,9 +368,9 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		private IEnumerable<String> _captureAttributesExcludes;
+		private IEnumerable<string> _captureAttributesExcludes;
 
-		public virtual IEnumerable<String> CaptureAttributesExcludes
+		public virtual IEnumerable<string> CaptureAttributesExcludes
 		{
 			get
 			{
@@ -383,18 +383,18 @@ namespace NewRelic.Agent.Core.Configuration
 						.Concat(deprecatedDisabledExcludes)
 						.Concat(deprecatedIgnoredExcludes);
 
-					return new HashSet<String>(allExcludes);
+					return new HashSet<string>(allExcludes);
 				});
 			}
 		}
 
-		private IEnumerable<String> _captureAttributesDefaultExcludes;
+		private IEnumerable<string> _captureAttributesDefaultExcludes;
 
-		public virtual IEnumerable<String> CaptureAttributesDefaultExcludes
+		public virtual IEnumerable<string> CaptureAttributesDefaultExcludes
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureAttributesDefaultExcludes, () => new HashSet<String> { "identity.*" });
+				return Memoizer.Memoize(ref _captureAttributesDefaultExcludes, () => new HashSet<string> { "identity.*" });
 			}
 		}
 		
@@ -447,13 +447,13 @@ namespace NewRelic.Agent.Core.Configuration
 			return shouldCapture;
 		}
 
-		private IEnumerable<String> _captureTransactionEventAttributesExcludes;
+		private IEnumerable<string> _captureTransactionEventAttributesExcludes;
 
-		public virtual IEnumerable<String> CaptureTransactionEventAttributesExcludes
+		public virtual IEnumerable<string> CaptureTransactionEventAttributesExcludes
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureTransactionEventAttributesExcludes, () => new HashSet<String>(_localConfiguration.transactionEvents.attributes.exclude));
+				return Memoizer.Memoize(ref _captureTransactionEventAttributesExcludes, () => new HashSet<string>(_localConfiguration.transactionEvents.attributes.exclude));
 			}
 		}
 
@@ -521,14 +521,14 @@ namespace NewRelic.Agent.Core.Configuration
 			return shouldCapture;
 		}
 
-		public virtual IEnumerable<String> CaptureTransactionTraceAttributesExcludes
+		public virtual IEnumerable<string> CaptureTransactionTraceAttributesExcludes
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureTransactionTraceAttributesExcludes, () => new HashSet<String>(_localConfiguration.transactionTracer.attributes.exclude));
+				return Memoizer.Memoize(ref _captureTransactionTraceAttributesExcludes, () => new HashSet<string>(_localConfiguration.transactionTracer.attributes.exclude));
 			}
 		}
-		private IEnumerable<String> _captureTransactionTraceAttributesExcludes;
+		private IEnumerable<string> _captureTransactionTraceAttributesExcludes;
 
 
 		public virtual bool CaptureErrorCollectorAttributes => ShouldCaptureErrorCollectorAttributes();
@@ -596,13 +596,13 @@ namespace NewRelic.Agent.Core.Configuration
 			return shouldCapture;
 		}
 
-		private IEnumerable<String> _captureErrorCollectorAttributesExcludes;
+		private IEnumerable<string> _captureErrorCollectorAttributesExcludes;
 
-		public virtual IEnumerable<String> CaptureErrorCollectorAttributesExcludes
+		public virtual IEnumerable<string> CaptureErrorCollectorAttributesExcludes
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureErrorCollectorAttributesExcludes, () => new HashSet<String>(_localConfiguration.errorCollector.attributes.exclude));
+				return Memoizer.Memoize(ref _captureErrorCollectorAttributesExcludes, () => new HashSet<string>(_localConfiguration.errorCollector.attributes.exclude));
 			}
 		}
 
@@ -655,14 +655,14 @@ namespace NewRelic.Agent.Core.Configuration
 			return shouldCapture;
 		}
 
-		public virtual IEnumerable<String> CaptureBrowserMonitoringAttributesExcludes
+		public virtual IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureBrowserMonitoringAttributesExcludes, () => new HashSet<String>(_localConfiguration.browserMonitoring.attributes.exclude));
+				return Memoizer.Memoize(ref _captureBrowserMonitoringAttributesExcludes, () => new HashSet<string>(_localConfiguration.browserMonitoring.attributes.exclude));
 			}
 		}
-		private IEnumerable<String> _captureBrowserMonitoringAttributesExcludes;
+		private IEnumerable<string> _captureBrowserMonitoringAttributesExcludes;
 
 
 		private BoolConfigurationItem _shouldCaptureCustomParameters;
@@ -760,23 +760,23 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#region Collector Connection
 
-		public virtual String CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
+		public virtual string CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
 		public virtual uint CollectorPort => (uint)(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : DefaultSslPort);
 		public virtual bool CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
-		public virtual Single CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
+		public virtual float CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
 		public virtual bool CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
 		public virtual bool CollectorSyncStartup { get { return _localConfiguration.service.syncStartup; } }
-		public virtual UInt32 CollectorTimeout { get { return (_localConfiguration.service.requestTimeout > 0) ? (UInt32)_localConfiguration.service.requestTimeout : CollectorSendDataOnExit ? 2000u : 60 * 2 * 1000; } }
+		public virtual uint CollectorTimeout { get { return (_localConfiguration.service.requestTimeout > 0) ? (uint)_localConfiguration.service.requestTimeout : CollectorSendDataOnExit ? 2000u : 60 * 2 * 1000; } }
 
 		#endregion
 
 		public virtual bool CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread; } }
 
-		public Int64 ConfigurationVersion { get; private set; }
+		public long ConfigurationVersion { get; private set; }
 
 		#region Cross Application Tracing
 
-		public virtual String CrossApplicationTracingCrossProcessId { get { return _serverConfiguration.CatId; } }
+		public virtual string CrossApplicationTracingCrossProcessId { get { return _serverConfiguration.CatId; } }
 
 		private bool? _crossApplicationTracingEnabled;
 		public virtual bool CrossApplicationTracingEnabled => _crossApplicationTracingEnabled ?? (_crossApplicationTracingEnabled = IsCatEnabled()).Value;
@@ -872,21 +872,21 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual UInt32 ErrorCollectorMaxEventSamplesStored
+		public virtual uint ErrorCollectorMaxEventSamplesStored
 		{
 			get
 			{
-				var configuredValue = ServerOverrides((Int32?)_serverConfiguration.RpmConfig.ErrorCollectorMaxEventSamplesStored, _localConfiguration.errorCollector.maxEventSamplesStored);
-				return (UInt32)configuredValue;
+				var configuredValue = ServerOverrides((int?)_serverConfiguration.RpmConfig.ErrorCollectorMaxEventSamplesStored, _localConfiguration.errorCollector.maxEventSamplesStored);
+				return (uint)configuredValue;
 			}
 		}
 
-		public virtual UInt32 ErrorsMaximumPerPeriod { get { return 20; } }
-		public virtual IEnumerable<String> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
+		public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
+		public virtual IEnumerable<string> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
 
 		#endregion
 
-		public virtual String EncodingKey { get { return _serverConfiguration.EncodingKey; } }
+		public virtual string EncodingKey { get { return _serverConfiguration.EncodingKey; } }
 
 		public virtual bool HighSecurityModeEnabled => _localConfiguration.highSecurity.enabled;
 
@@ -981,12 +981,12 @@ namespace NewRelic.Agent.Core.Configuration
 			return new BoolConfigurationItem(_localConfiguration.stripExceptionMessages.enabled, LocalConfigSource);
 		}
 
-		public virtual Int32 InstrumentationLevel { get { return ServerOverrides(_serverConfiguration.RpmConfig.InstrumentationLevel, 3); } }
+		public virtual int InstrumentationLevel { get { return ServerOverrides(_serverConfiguration.RpmConfig.InstrumentationLevel, 3); } }
 		public virtual bool InstrumentationLoggingEnabled { get { return _localConfiguration.instrumentation.log; } }
 
 		#region Labels
 
-		public virtual String Labels
+		public virtual string Labels
 		{
 			get
 			{
@@ -998,19 +998,19 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#region Proxy
 
-		public virtual String ProxyHost { get { return _localConfiguration.service.proxy.host; } }
-		public virtual String ProxyUriPath { get { return _localConfiguration.service.proxy.uriPath; } }
-		public virtual Int32 ProxyPort { get { return _localConfiguration.service.proxy.port; } }
-		public virtual String ProxyUsername { get { return _localConfiguration.service.proxy.user; } }
-		public virtual String ProxyPassword { get { return _localConfiguration.service.proxy.password; } }
-		public virtual String ProxyDomain { get { return _localConfiguration.service.proxy.domain ?? String.Empty; } }
+		public virtual string ProxyHost { get { return _localConfiguration.service.proxy.host; } }
+		public virtual string ProxyUriPath { get { return _localConfiguration.service.proxy.uriPath; } }
+		public virtual int ProxyPort { get { return _localConfiguration.service.proxy.port; } }
+		public virtual string ProxyUsername { get { return _localConfiguration.service.proxy.user; } }
+		public virtual string ProxyPassword { get { return _localConfiguration.service.proxy.password; } }
+		public virtual string ProxyDomain { get { return _localConfiguration.service.proxy.domain ?? string.Empty; } }
 
 		#endregion
 
 		#region DataTransmission
 		public bool PutForDataSend { get { return _localConfiguration.dataTransmission.putForDataSend; } }
 
-		public String CompressedContentEncoding
+		public string CompressedContentEncoding
 		{
 			get
 			{
@@ -1056,18 +1056,18 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual Int32 SqlExplainPlansMax { get { return _localConfiguration.transactionTracer.maxExplainPlans; } }
-		public virtual UInt32 SqlStatementsPerTransaction { get { return 500; } }
-		public virtual Int32 SqlTracesPerPeriod { get { return 10; } }
+		public virtual int SqlExplainPlansMax { get { return _localConfiguration.transactionTracer.maxExplainPlans; } }
+		public virtual uint SqlStatementsPerTransaction { get { return 500; } }
+		public virtual int SqlTracesPerPeriod { get { return 10; } }
 
 		#endregion
 
-		public virtual Int32 StackTraceMaximumFrames { get { return _localConfiguration.maxStackTraceLines; } }
-		public virtual IEnumerable<String> HttpStatusCodesToIgnore
+		public virtual int StackTraceMaximumFrames { get { return _localConfiguration.maxStackTraceLines; } }
+		public virtual IEnumerable<string> HttpStatusCodesToIgnore
 		{
 			get
 			{
-				var localStatusCodesToIgnore = new List<String>();
+				var localStatusCodesToIgnore = new List<string>();
 				foreach (var localCode in _localConfiguration.errorCollector.ignoreStatusCodes.code)
 				{
 					localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
@@ -1075,7 +1075,7 @@ namespace NewRelic.Agent.Core.Configuration
 				return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, localStatusCodesToIgnore);
 			}
 		}
-		public virtual IEnumerable<String> ThreadProfilingIgnoreMethods { get { return _localConfiguration.threadProfiling ?? new List<String>(); } }
+		public virtual IEnumerable<string> ThreadProfilingIgnoreMethods { get { return _localConfiguration.threadProfiling ?? new List<string>(); } }
 
 		#region Custom Events
 
@@ -1130,7 +1130,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return new BoolConfigurationItem(_localConfiguration.customEvents.enabled, LocalConfigSource);
 		}
 
-		public virtual UInt32 CustomEventsMaxSamplesStored
+		public virtual uint CustomEventsMaxSamplesStored
 		{
 			get
 			{
@@ -1142,7 +1142,7 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion
 
-		public bool DisableSamplers { get { return _localConfiguration.application.disableSamplers; } }
+		public bool DisableSamplers { get { return EnvironmentOverrides(_localConfiguration.application.disableSamplers, "NEW_RELIC_DISABLE_SAMPLERS"); } }
 
 		public bool ThreadProfilingEnabled { get { return _localConfiguration.threadProfilingEnabled; } }
 
@@ -1161,7 +1161,7 @@ namespace NewRelic.Agent.Core.Configuration
 				return ServerCanDisable(_serverConfiguration.AnalyticsEventCollectionEnabled, TransactionEventsEnabledDefault);
 			}
 		}
-		public virtual UInt32 TransactionEventsMaxSamplesPerMinute
+		public virtual uint TransactionEventsMaxSamplesPerMinute
 		{
 			get
 			{
@@ -1179,7 +1179,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual UInt32 TransactionEventsMaxSamplesStored
+		public virtual uint TransactionEventsMaxSamplesStored
 		{
 			get
 			{
@@ -1240,7 +1240,7 @@ namespace NewRelic.Agent.Core.Configuration
 				return ServerCanDisable(_serverConfiguration.TraceCollectionEnabled, configuredValue);
 			}
 		}
-		public virtual Int32 TransactionTracerMaxSegments { get { return _localConfiguration.transactionTracer.maxSegments; } }
+		public virtual int TransactionTracerMaxSegments { get { return _localConfiguration.transactionTracer.maxSegments; } }
 
 		private RecordSqlConfigurationItem _recordSqlConfiguration;
 
@@ -1313,7 +1313,7 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 
 		public virtual TimeSpan TransactionTracerStackThreshold { get { return ServerOverrides((TimeSpanExtensions.FromSeconds(_serverConfiguration.RpmConfig.TransactionTracerStackThreshold)), TimeSpan.FromMilliseconds(_localConfiguration.transactionTracer.stackTraceThreshold)); } }
-		public virtual Int32 TransactionTracerMaxStackTraces { get { return _localConfiguration.transactionTracer.maxStackTrace; } }
+		public virtual int TransactionTracerMaxStackTraces { get { return _localConfiguration.transactionTracer.maxStackTrace; } }
 		public virtual IEnumerable<Regex> RequestPathExclusionList
 		{
 			get
@@ -1331,7 +1331,7 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion
 
-		public virtual IEnumerable<Int64> TrustedAccountIds { get { return _serverConfiguration.TrustedIds ?? new List<Int64>(); } }
+		public virtual IEnumerable<long> TrustedAccountIds { get { return _serverConfiguration.TrustedIds ?? new List<long>(); } }
 
 		public bool UsingServerSideConfig { get { return _serverConfiguration.UsingServerSideConfig; } }
 
@@ -1355,22 +1355,22 @@ namespace NewRelic.Agent.Core.Configuration
 			get { return _rrlRegexRules ?? (_rrlRegexRules = GetRegexRules(_serverConfiguration.UrlRegexRules)); }
 		}
 
-		private IDictionary<String, IEnumerable<String>> _transactionNameWhitelistRules;
-		public IDictionary<String, IEnumerable<String>> TransactionNameWhitelistRules
+		private IDictionary<string, IEnumerable<string>> _transactionNameWhitelistRules;
+		public IDictionary<string, IEnumerable<string>> TransactionNameWhitelistRules
 		{
 			get { return _transactionNameWhitelistRules ?? (_transactionNameWhitelistRules = GetWhitelistRules(_serverConfiguration.TransactionNameWhitelistRules)); }
 		}
 
-		private IDictionary<String, Double> _webTransactionsApdex;
+		private IDictionary<string, double> _webTransactionsApdex;
 
-		public IDictionary<String, Double> WebTransactionsApdex
+		public IDictionary<string, double> WebTransactionsApdex
 		{
-			get { return _webTransactionsApdex ?? (_webTransactionsApdex = _serverConfiguration.WebTransactionsApdex ?? new Dictionary<String, Double>()); }
+			get { return _webTransactionsApdex ?? (_webTransactionsApdex = _serverConfiguration.WebTransactionsApdex ?? new Dictionary<string, double>()); }
 		}
 
 		#endregion Metric naming
 
-		public String NewRelicConfigFilePath { get { return _localConfiguration.ConfigurationFileName; } }
+		public string NewRelicConfigFilePath { get { return _localConfiguration.ConfigurationFileName; } }
 
 		#region Utilization
 
@@ -1442,7 +1442,7 @@ namespace NewRelic.Agent.Core.Configuration
 				var value = _configurationManagerStatic.GetAppSetting("NewRelic.Utilization.BillingHost")
 					?? EnvironmentOverrides(_localConfiguration.utilization.billingHost, "NEW_RELIC_UTILIZATION_BILLING_HOSTNAME");
 
-				return String.IsNullOrEmpty(value) ? null : value.Trim(); //Keeping IsNullOrEmpty just in case customer sets value to "".
+				return string.IsNullOrEmpty(value) ? null : value.Trim(); //Keeping IsNullOrEmpty just in case customer sets value to "".
 			}
 		}
 
@@ -1466,13 +1466,13 @@ namespace NewRelic.Agent.Core.Configuration
 		#region Helpers
 
 		// ReSharper restore PossibleNullReferenceException
-		private TimeSpan ParseTransactionThreshold(String threshold, [NotNull] Func<Double, TimeSpan> numberToTimeSpanConverter)
+		private TimeSpan ParseTransactionThreshold(string threshold, Func<double, TimeSpan> numberToTimeSpanConverter)
 		{
-			if (String.IsNullOrEmpty(threshold))
+			if (string.IsNullOrEmpty(threshold))
 				return TransactionTraceApdexF;
 
-			Double parsedTransactionThreshold;
-			return Double.TryParse(threshold, out parsedTransactionThreshold)
+			double parsedTransactionThreshold;
+			return double.TryParse(threshold, out parsedTransactionThreshold)
 				? numberToTimeSpanConverter(parsedTransactionThreshold)
 				: TransactionTraceApdexF;
 		}
@@ -1483,10 +1483,9 @@ namespace NewRelic.Agent.Core.Configuration
 			return server.Value && local;
 		}
 
-		[NotNull]
-		private static String ServerOverrides(String server, String local)
+		private static string ServerOverrides(string server, string local)
 		{
-			return server ?? local ?? String.Empty;
+			return server ?? local ?? string.Empty;
 		}
 
 		private static T ServerOverrides<T>(T? server, T local) where T : struct
@@ -1499,24 +1498,21 @@ namespace NewRelic.Agent.Core.Configuration
 			return HighSecurityModeEnabled ? overriddenValue : originalValue;
 		}
 
-		[NotNull]
 		private static T ServerOverrides<T>(T server, T local) where T : class
 		{
 			Debug.Assert(local != null);
 			return server ?? local;
 		}
 
-		[CanBeNull]
-		private String EnvironmentOverrides(String local, params String[] environmentVariableNames)
+		private string EnvironmentOverrides(string local, params string[] environmentVariableNames)
 		{
-			return (environmentVariableNames ?? Enumerable.Empty<String>())
+			return (environmentVariableNames ?? Enumerable.Empty<string>())
 				.Select(_environment.GetEnvironmentVariable)
 				.Where(value => value != null)
 				.FirstOrDefault()
 				?? local;
 		}
 
-		[CanBeNull]
 		private int? EnvironmentOverrides(int? local, params string[] environmentVariableNames)
 		{
 			var env = environmentVariableNames
@@ -1563,8 +1559,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return list;
 		}
 
-		[NotNull]
-		public static IEnumerable<RegexRule> GetRegexRules([CanBeNull] IEnumerable<ServerConfiguration.RegexRule> rules)
+		public static IEnumerable<RegexRule> GetRegexRules(IEnumerable<ServerConfiguration.RegexRule> rules)
 		{
 			if (rules == null)
 				return new List<RegexRule>();
@@ -1576,7 +1571,7 @@ namespace NewRelic.Agent.Core.Configuration
 				.ToList();
 		}
 
-		private static RegexRule? TryGetRegexRule([CanBeNull] ServerConfiguration.RegexRule rule)
+		private static RegexRule? TryGetRegexRule(ServerConfiguration.RegexRule rule)
 		{
 			if (rule == null)
 				return null;
@@ -1594,8 +1589,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return new RegexRule(matchExpression, replacement, ignore, evaluationOrder, terminateChain, eachSegment, replaceAll);
 		}
 
-		[CanBeNull]
-		private static String UpdateRegexForDotNet([CanBeNull] String replacement)
+		private static string UpdateRegexForDotNet(string replacement)
 		{
 			if (string.IsNullOrEmpty(replacement))
 				return replacement;
@@ -1605,11 +1599,10 @@ namespace NewRelic.Agent.Core.Configuration
 			return backreferencePattern.Replace(replacement, "$$$1");
 		}
 
-		[NotNull]
-		public static IDictionary<String, IEnumerable<String>> GetWhitelistRules([CanBeNull] IEnumerable<ServerConfiguration.WhitelistRule> whitelistRules)
+		public static IDictionary<string, IEnumerable<string>> GetWhitelistRules(IEnumerable<ServerConfiguration.WhitelistRule> whitelistRules)
 		{
 			if (whitelistRules == null)
-				return new Dictionary<String, IEnumerable<String>>();
+				return new Dictionary<string, IEnumerable<string>>();
 
 			return whitelistRules
 				.Where(rule => rule != null)
@@ -1619,7 +1612,7 @@ namespace NewRelic.Agent.Core.Configuration
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepLast);
 		}
 
-		private static KeyValuePair<String, IEnumerable<String>>? TryGetValidPrefixAndTerms([NotNull] ServerConfiguration.WhitelistRule rule)
+		private static KeyValuePair<string, IEnumerable<string>>? TryGetValidPrefixAndTerms(ServerConfiguration.WhitelistRule rule)
 		{
 			if (rule.Terms == null)
 			{
@@ -1635,12 +1628,11 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 
 			var terms = rule.Terms;
-			return new KeyValuePair<String, IEnumerable<String>>(prefix, terms);
+			return new KeyValuePair<string, IEnumerable<string>>(prefix, terms);
 		}
 
 
-		[CanBeNull]
-		private static String TryGetValidPrefix([CanBeNull] String prefix)
+		private static string TryGetValidPrefix(string prefix)
 		{
 			if (prefix == null)
 				return null;
@@ -1693,10 +1685,9 @@ namespace NewRelic.Agent.Core.Configuration
 			Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See http://docs.newrelic.com for details.", deprecatedPropertyName, newPropertyName);
 		}
 
-		[NotNull]
-		private IEnumerable<String> GetDeprecatedExplicitlyDisabledParameters()
+		private IEnumerable<string> GetDeprecatedExplicitlyDisabledParameters()
 		{
-			var disabledProperties = new List<String>();
+			var disabledProperties = new List<string>();
 
 			if (_localConfiguration.parameterGroups != null)
 			{
@@ -1745,10 +1736,9 @@ namespace NewRelic.Agent.Core.Configuration
 		public uint DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
 			TryGetAppSettingAsUintWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
-		[NotNull]
-		private IEnumerable<String> GetDeprecatedIgnoreParameters()
+		private IEnumerable<string> GetDeprecatedIgnoreParameters()
 		{
-			var ignoreParameters = new List<String>();
+			var ignoreParameters = new List<string>();
 			ignoreParameters.AddRange(DeprecatedIgnoreCustomParameters());
 			ignoreParameters.AddRange(DeprecatedIgnoreIdentityParameters().Select(param => "identity." + param));
 			ignoreParameters.AddRange(DeprecatedIgnoreResponseHeaderParameters().Select(param => "response.headers." + param));
@@ -1758,8 +1748,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return ignoreParameters.Distinct();
 		}
 
-		[NotNull]
-		private IEnumerable<String> DeprecatedIgnoreCustomParameters()
+		private IEnumerable<string> DeprecatedIgnoreCustomParameters()
 		{
 			if (_localConfiguration.parameterGroups != null
 				&& _localConfiguration.parameterGroups.customParameters != null
@@ -1769,11 +1758,10 @@ namespace NewRelic.Agent.Core.Configuration
 				LogDeprecatedPropertyUse("parameterGroups.customParameters.ignore", "attributes.exclude");
 				return _localConfiguration.parameterGroups.customParameters.ignore;
 			}
-			return Enumerable.Empty<String>();
+			return Enumerable.Empty<string>();
 		}
 
-		[NotNull]
-		private IEnumerable<String> DeprecatedIgnoreIdentityParameters()
+		private IEnumerable<string> DeprecatedIgnoreIdentityParameters()
 		{
 			if (_localConfiguration.parameterGroups != null
 				&& _localConfiguration.parameterGroups.identityParameters != null
@@ -1783,11 +1771,10 @@ namespace NewRelic.Agent.Core.Configuration
 				LogDeprecatedPropertyUse("parameterGroups.identityParameters.ignore", "attributes.exclude");
 				return _localConfiguration.parameterGroups.identityParameters.ignore;
 			}
-			return Enumerable.Empty<String>();
+			return Enumerable.Empty<string>();
 		}
 
-		[NotNull]
-		private IEnumerable<String> DeprecatedIgnoreResponseHeaderParameters()
+		private IEnumerable<string> DeprecatedIgnoreResponseHeaderParameters()
 		{
 			if (_localConfiguration.parameterGroups != null
 				&& _localConfiguration.parameterGroups.responseHeaderParameters != null
@@ -1797,11 +1784,10 @@ namespace NewRelic.Agent.Core.Configuration
 				LogDeprecatedPropertyUse("parameterGroups.responseHeaderParameters.ignore", "attributes.exclude");
 				return _localConfiguration.parameterGroups.responseHeaderParameters.ignore;
 			}
-			return Enumerable.Empty<String>();
+			return Enumerable.Empty<string>();
 		}
 
-		[NotNull]
-		private IEnumerable<String> DeprecatedIgnoreRequestHeaderParameters()
+		private IEnumerable<string> DeprecatedIgnoreRequestHeaderParameters()
 		{
 			if (_localConfiguration.parameterGroups != null
 				&& _localConfiguration.parameterGroups.requestHeaderParameters != null
@@ -1811,11 +1797,10 @@ namespace NewRelic.Agent.Core.Configuration
 				LogDeprecatedPropertyUse("parameterGroups.requestHeaderParameters.ignore", "attributes.exclude");
 				return _localConfiguration.parameterGroups.requestHeaderParameters.ignore;
 			}
-			return Enumerable.Empty<String>();
+			return Enumerable.Empty<string>();
 		}
 
-		[NotNull]
-		private IEnumerable<String> DeprecatedIgnoreRequestParameters()
+		private IEnumerable<string> DeprecatedIgnoreRequestParameters()
 		{
 			if (_localConfiguration.requestParameters != null
 				&& _localConfiguration.requestParameters.ignore != null
@@ -1825,7 +1810,7 @@ namespace NewRelic.Agent.Core.Configuration
 				var requestParams = ServerOverrides(_serverConfiguration.RpmConfig.ParametersToIgnore, _localConfiguration.requestParameters.ignore);
 				return requestParams;
 			}
-			return Enumerable.Empty<String>();
+			return Enumerable.Empty<string>();
 		}
 
 		#endregion
@@ -1844,9 +1829,9 @@ namespace NewRelic.Agent.Core.Configuration
 
 		private const bool TransactionEventsEnabledDefault = true;
 		private const bool TransactionEventsTransactionsEnabledDefault = true;
-		private const UInt32 TransactionEventsMaxSamplesPerMinuteDefault = 10000;
-		private const UInt32 TransactionEventsMaxSamplesStoredDefault = 10000;
-		private const UInt32 CustomEventsMaxSamplesStoredDefault = 10000;
+		private const uint TransactionEventsMaxSamplesPerMinuteDefault = 10000;
+		private const uint TransactionEventsMaxSamplesStoredDefault = 10000;
+		private const uint CustomEventsMaxSamplesStoredDefault = 10000;
 	}
 }
 

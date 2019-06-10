@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.SystemExtensions.Threading;
 
 namespace NewRelic.Collections
 {
 	public class ConcurrentList<T> : IList<T>
 	{
-		[NotNull]
 		private readonly IList<T> _list = new List<T>();
-		[NotNull]
+
 		private readonly Func<IDisposable> _readLock;
-		[NotNull]
+
 		private readonly Func<IDisposable> _writeLock;
 
 		public ConcurrentList()

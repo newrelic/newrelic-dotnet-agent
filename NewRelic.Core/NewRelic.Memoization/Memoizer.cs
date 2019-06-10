@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Memoization
 {
@@ -12,8 +11,7 @@ namespace NewRelic.Memoization
 		/// <param name="backer">The place to store the memoized <typeparamref name="T"/>.</param>
 		/// <param name="evaluator">The method to call when backer is null. This should not return null.</param>
 		/// <returns>The memoized <typeparamref name="T"/>.</returns>
-		[NotNull]
-		public static T Memoize<T>([CanBeNull] ref T backer, [NotNull] Func<T> evaluator) where T : class
+		public static T Memoize<T>(ref T backer, Func<T> evaluator) where T : class
 		{
 			if (evaluator == null)
 				throw new ArgumentNullException("evaluator");
@@ -28,7 +26,7 @@ namespace NewRelic.Memoization
 		/// <param name="backer">The place to store the memoized <typeparamref name="T"/>.</param>
 		/// <param name="evaluator">The method to call when backer is null.</param>
 		/// <returns>The memoized <typeparamref name="T"/>.</returns>
-		public static T Memoize<T>([CanBeNull] ref T? backer, [NotNull] Func<T> evaluator) where T : struct
+		public static T Memoize<T>(ref T? backer, Func<T> evaluator) where T : struct
 		{
 			if (evaluator == null)
 				throw new ArgumentNullException("evaluator");

@@ -1,30 +1,29 @@
 ﻿using System;
-using System.Diagnostics;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Samplers
 {
 	public class CpuSampler : AbstractSampler
 	{
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
-		[NotNull]
 		private readonly ICpuSampleTransformer _cpuSampleTransformer;
 
-		private readonly Int32 _processorCount;
+		private readonly int _processorCount;
 		private DateTime _lastSampleTime;
 		private TimeSpan _lastProcessorTime;
+		private readonly IProcessStatic _processStatic;
 
-		public CpuSampler([NotNull] IScheduler scheduler, [NotNull] ICpuSampleTransformer cpuSampleTransformer, [NotNull] IAgentHealthReporter agentHealthReporter)
+		public CpuSampler(IScheduler scheduler, ICpuSampleTransformer cpuSampleTransformer, IAgentHealthReporter agentHealthReporter, IProcessStatic processStatic)
 			: base(scheduler, TimeSpan.FromMinutes(1))
 		{
 			_agentHealthReporter = agentHealthReporter;
 			_cpuSampleTransformer = cpuSampleTransformer;
+			_processStatic = processStatic;
 
 			try
 			{
@@ -57,39 +56,32 @@ namespace NewRelic.Agent.Core.Samplers
 			}
 		}
 
-		private static TimeSpan GetCurrentUserProcessorTime()
+		private TimeSpan GetCurrentUserProcessorTime()
 		{
-			using (var process = Process.GetCurrentProcess())
-			{
-				return process.UserProcessorTime;
-			}
+			var process = _processStatic.GetCurrentProcess();
+			return process.UserProcessorTime;
 		}
 	}
 
 	public class ImmutableCpuSample
 	{
-		[NotNull]
-		public readonly Int32 ProcessorCount;
+		public readonly int ProcessorCount;
 
-		[NotNull]
 		public readonly DateTime LastSampleTime;
 
-		[NotNull]
 		public readonly TimeSpan LastUserProcessorTime;
 
-		[NotNull]
 		public readonly DateTime CurrentSampleTime;
 
-		[NotNull]
 		public readonly TimeSpan CurrentUserProcessorTime;
 
-		public ImmutableCpuSample(Int32 processorCount, DateTime lastSampleTime, TimeSpan lastUserProcessorTime, DateTime currentSampleTime, TimeSpan currentUserProcessorTime)
+		public ImmutableCpuSample(int processorCount, DateTime lastSampleTime, TimeSpan lastUserProcessorTime, DateTime currentSampleTime, TimeSpan currentUserProcessorTime)
 		{
 			ProcessorCount = processorCount;
 			LastSampleTime = lastSampleTime;
 			LastUserProcessorTime = lastUserProcessorTime;
 			CurrentSampleTime = currentSampleTime;
-            CurrentUserProcessorTime = currentUserProcessorTime;
+			CurrentUserProcessorTime = currentUserProcessorTime;
 		}
 	}
 }

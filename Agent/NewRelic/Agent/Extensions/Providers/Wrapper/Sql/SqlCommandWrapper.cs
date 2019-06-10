@@ -4,59 +4,76 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Agent.Extensions.Parsing;
+using System.Linq;
+using JetBrains.Annotations;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
-	public class SqlCommandWrapper : IWrapper
+	public class SqlCommandAsyncWrapper : SqlCommandWrapperBase
 	{
-		public const string WrapperName = "SqlCommandWrapper";
-		public const string NpgsqlWrapperName = "NpgsqlSqlCommandWrapper";
+		private static readonly string[] _tracerNames =
+		{
+			"SqlCommandTracerAsync",
+			"SqlCommandWrapperAsync"
+		};
+
+		public override string[] WrapperNames => _tracerNames;
+
+		public override bool ExecuteAsAsync => true;
+	}
+
+	public class SqlCommandWrapper : SqlCommandWrapperBase
+	{
+
+		private static readonly string[] _tracerNames =
+		{
+			"SqlCommandTracer",
+			"SqlCommandWrapper"
+		};
+
+		public override string[] WrapperNames => _tracerNames;
+
+		public override bool ExecuteAsAsync => false;
+	}
+
+	public abstract class SqlCommandWrapperBase : IWrapper
+	{
+		public abstract string[] WrapperNames { get; }
+
+		/// <summary>
+		/// Sometimes, the methods that are being instrumented appear to be async in that they return a Task, but they are not actually
+		/// decorated with the async decorator.  When this happens, the InstrumentedMethodCall.IsAsync cannot be relied upon to determine 
+		/// whether or not to attach the AfterWrappedMethod as a continuation or to just run it.
+		/// 
+		/// Here is an example of the suble difference:
+		/// public async Task<int> ExecuteScalar(...)
+		/// public Task<int> ExecuteScalar(...)
+		/// </summary>
+		public abstract bool ExecuteAsAsync { get; }
 
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
+			var canWrap = WrapperNames.Contains(methodInfo.RequestedWrapperName, StringComparer.OrdinalIgnoreCase);
 
-			var isRequestedByName = 
-				(methodInfo.RequestedWrapperName == WrapperName) ||
-				(methodInfo.RequestedWrapperName == NpgsqlWrapperName);
-			
-			var canWrap = isRequestedByName || method.MatchesAny(
-				assemblyNames: new[]
-				{
-					"System.Data",
-					"System.Data.SqlClient",
-					"System.Data.OracleClient",
-					"Oracle.DataAccess",
-					"Oracle.ManagedDataAccess",
-					"MySql.Data",
-					"Devart.Data.MySql",
-					"IBM.Data.DB2"
-				},
-				typeNames: new[]
-				{
-					"System.Data.SqlClient.SqlCommand",
-					"System.Data.OracleClient.OracleCommand",
-					"Oracle.DataAccess.Client.OracleCommand",
-					"Oracle.ManagedDataAccess.Client.OracleCommand",
-					"MySql.Data.MySqlClient.MySqlCommand",
-					"Devart.Data.MySql.MySqlCommand",
-					"IBM.Data.DB2.DB2Command"
-				},
-				methodNames: new[]
-				{
-					"ExecuteReader",
-					"ExecuteNonQuery",
-					"ExecuteScalar",
-					"ExecuteXmlReader"
-				});
+			if (canWrap && ExecuteAsAsync)
+			{
+				var method = methodInfo.Method;
+				return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(method.Type.Assembly.GetName().Name, method.Type.FullName, method.MethodName);
+			}
 
 			return new CanWrapResponse(canWrap);
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
+			//This only happens if we are in an async context.  Regardless if we are adding the after delegate as a contination.
+			if (instrumentedMethodCall.IsAsync)
+			{
+				transaction.AttachToAsync();
+			}
+
 			var sqlCommand = (IDbCommand)instrumentedMethodCall.MethodCall.InvocationTarget;
 			if (sqlCommand == null)
 				return Delegates.NoOp;
@@ -64,7 +81,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 			var sql = sqlCommand.CommandText ?? String.Empty;
 			var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
 			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
-			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
+			var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
 
 			// TODO - Tracer had a supportability metric here to report timing duration of the parser.
 			var parsedStatement = transaction.GetParsedDatabaseStatement(vendor, sqlCommand.CommandType, sql);
@@ -73,19 +90,23 @@ namespace NewRelic.Providers.Wrapper.Sql
 
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement, connectionInfo, sql, queryParameters, isLeaf: true);
 
-			if (vendor == DatastoreVendor.MSSQL)
+			switch (vendor)
 			{
-				agent.EnableExplainPlans(segment, () => SqlServerExplainPlanActions.AllocateResources(sqlCommand), SqlServerExplainPlanActions.GenerateExplainPlan, null);
-			}
-			else if (vendor == DatastoreVendor.MySQL)
-			{
-				if (parsedStatement != null)
-				{
-					agent.EnableExplainPlans(segment, () => MySqlExplainPlanActions.AllocateResources(sqlCommand), MySqlExplainPlanActions.GenerateExplainPlan, () => MySqlExplainPlanActions.ShouldGenerateExplainPlan(sql, parsedStatement));
-				}
+				case DatastoreVendor.MSSQL:
+					agent.EnableExplainPlans(segment, () => SqlServerExplainPlanActions.AllocateResources(sqlCommand), SqlServerExplainPlanActions.GenerateExplainPlan, null);
+					break;
+
+				case DatastoreVendor.MySQL:
+					if (parsedStatement != null)
+					{
+						agent.EnableExplainPlans(segment, () => MySqlExplainPlanActions.AllocateResources(sqlCommand), MySqlExplainPlanActions.GenerateExplainPlan, () => MySqlExplainPlanActions.ShouldGenerateExplainPlan(sql, parsedStatement));
+					}
+					break;
 			}
 
-			return Delegates.GetDelegateFor(segment);
+			return ExecuteAsAsync
+				? Delegates.GetAsyncDelegateFor(agent, segment)
+				: Delegates.GetDelegateFor(segment);
 		}
 
 	}

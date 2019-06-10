@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.ServiceModel;
 using System.Threading.Tasks;
@@ -6,6 +8,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Helpers;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
+using NewRelic.SystemExtensions.Collections;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {
@@ -32,6 +35,10 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		//Used to write our AsyncCallback wrapper back to the callback on the IAsyncResult.
 		private Action<object, AsyncCallback> _setAsyncCallbackWriteAccessor;
 		private Action<object, AsyncCallback> SetAsyncCallbackWriteAccessor() { return _setAsyncCallbackWriteAccessor ?? (_setAsyncCallbackWriteAccessor = VisibilityBypasser.Instance.GenerateFieldWriteAccessor<AsyncCallback>(ServiceModelInternalsAssembly, AsyncResultType, "callback")); }
+
+		//used to get the AsyncCallback exception so that we can log it.
+		private Func<object, Exception> _getAsyncCallbackException;
+		private Func<object, Exception> GetAsyncCallbackException() { return _getAsyncCallbackException ?? (_getAsyncCallbackException = VisibilityBypasser.Instance.GenerateFieldReadAccessor<Exception>(ServiceModelInternalsAssembly, AsyncResultType, "exception")); }
 
 		// used to allow us to call System.ServiceModel.Channels.ServiceChannelProxy.GetMethodData to determine what type of call we are dealing with
 		private Func<object, System.Runtime.Remoting.Messaging.IMethodCallMessage, object> _getMethodDataMethod;
@@ -101,25 +108,42 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			{
 				if (methodType.Equals(_serviceEnum))
 				{
+					if (methodReturnMessage.Exception != null)
+					{
+						HandleException(methodReturnMessage.Exception);
+					}
 					segment.End();
 				}
 				else if (methodType.Equals(_taskServiceEnum))
 				{
+					segment.RemoveSegmentFromCallStack();
 					var task = (Task)methodReturnMessage.ReturnValue;
 					task.ContinueWith(ContinueWork);
 
-					void ContinueWork(Task _)
+					void ContinueWork(Task t)
 					{
+						var aggregateException = t.Exception as AggregateException;
+						var protocolException = aggregateException?.InnerExceptions.FirstOrDefault(IsProtocolException);
+						if (protocolException != null)
+						{
+							HandleException(t.Exception);
+						}
 						segment.End();
 					}
 				}
 				else if (methodType.Equals(_beginServiceEnum))
 				{
+					segment.RemoveSegmentFromCallStack();
 					var originalCallback = GetAsyncCallbackReadAccessor().Invoke(methodReturnMessage.ReturnValue);
 					SetAsyncCallbackWriteAccessor().Invoke(methodReturnMessage.ReturnValue, (AsyncCallback)WrappedAsyncCallback);
 
 					void WrappedAsyncCallback(IAsyncResult asyncResult)
 					{
+						var exception = GetAsyncCallbackException().Invoke(asyncResult);
+						if (exception != null)
+						{
+							HandleException(exception);
+						}
 						segment.End();
 						originalCallback?.Invoke(asyncResult);
 					}
@@ -128,7 +152,25 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 			void OnFailure(Exception exception)
 			{
+				HandleException(exception);
 				segment.End();
+			}
+
+			void HandleException(Exception exception)
+			{
+				var protocolException = exception as ProtocolException;
+
+				if (protocolException == null)
+				{
+					var aggregateException = exception as AggregateException;
+					protocolException = aggregateException?.InnerExceptions.FirstOrDefault(IsProtocolException) as ProtocolException;
+				}
+
+				var webException = protocolException?.InnerException as WebException;
+				if (webException != null)
+				{
+					transaction.ProcessInboundResponse(webException.Response?.Headers?.ToDictionary(), segment);
+				}
 			}
 		}
 
@@ -162,6 +204,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		{
 			var serviceChannel = GetServiceChannel().Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 			return serviceChannel.RemoteAddress.Uri;
+		}
+
+		private static bool IsProtocolException(Exception e)
+		{
+			return e is ProtocolException;
 		}
 	}
 }

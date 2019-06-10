@@ -38,32 +38,33 @@ namespace ArtifactBuilder
 
 		public string Platform { get; }
 		public string SourcePath { get; }
-		public List<string> ExtensionDirectoryComponents { get; set; }
-		public List<string> WrapperXmlFiles { get; set; }
-		public List<string> RootInstallDirectoryComponents { get; set; }
+		public IReadOnlyCollection<string> ExtensionDirectoryComponents { get; private set; }
+		public IReadOnlyCollection<string> WrapperXmlFiles { get; private set; }
+		public IReadOnlyCollection<string> RootInstallDirectoryComponents { get; private set; }
 		public string AgentApiDll;
 		public string LinuxProfiler;
 		public string ExtensionXsd;
 		public string NewRelicXsd;
 		public string NewRelicConfig;
+		public string NewRelicLicenseFile;
+		public string NewRelicThirdPartyNoticesFile;
 
 		private List<string> AllComponents
 		{
 			get
 			{
-				var list = RootInstallDirectoryComponents;
-
-				list.AddRange(ExtensionDirectoryComponents);
-				list.AddRange(WrapperXmlFiles);
-				list.Add(ExtensionXsd);
-				list.Add(AgentApiDll);
+				var list = RootInstallDirectoryComponents
+					.Concat(ExtensionDirectoryComponents)
+					.Concat(WrapperXmlFiles)
+					.Append(ExtensionXsd)
+					.Append(AgentApiDll);
 
 				if (!string.IsNullOrEmpty(LinuxProfiler))
 				{
-					list.Add(LinuxProfiler);
+					list = list.Append(LinuxProfiler);
 				}
 
-				return list.Distinct().ToList();
+				return list.ToList();
 			}
 		}
 		
@@ -86,12 +87,25 @@ namespace ArtifactBuilder
 		protected abstract List<string> IgnoredHomeBuilderFiles { get; }
 		protected abstract void CreateAgentComponents();
 
+		protected void SetRootInstallDirectoryComponents(params string[] items)
+		{
+			RootInstallDirectoryComponents = new HashSet<string>(items);
+		}
+
+		protected void SetWrapperXmlFiles(params string[] items)
+		{
+			WrapperXmlFiles = new HashSet<string>(items);
+		}
+
+		protected void SetExtensionDirectoryComponents(params string[] items)
+		{
+			ExtensionDirectoryComponents = new HashSet<string>(items);
+		}
+
 		public void CopyComponents(string destinationDirectory)
 		{
 			FileHelpers.CopyFile(RootInstallDirectoryComponents, destinationDirectory);
-
 			FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions");
-
 			FileHelpers.CopyFile(WrapperXmlFiles, $@"{destinationDirectory}\extensions");
 		}
 
@@ -169,7 +183,7 @@ namespace ArtifactBuilder
 				}
 			}
 
-			LogAndThrow("Additional Files in Home Builder directory that are missing", missingComponents);
+			LogAndThrow("There are additional files in the Home Builder directory that are not specified in this artifact's component set:", missingComponents);
 		}
 	}
 }

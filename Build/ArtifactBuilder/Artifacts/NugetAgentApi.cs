@@ -21,6 +21,8 @@ namespace ArtifactBuilder.Artifacts
 			package.CopyAll(PackageDirectory);
 			package.CopyToLib(frameworkAgentComponents.AgentApiDll, "net45");
 			package.CopyToLib(coreAgentComponents.AgentApiDll, "netstandard2.0");
+			package.CopyToRoot(frameworkAgentComponents.NewRelicLicenseFile);
+			package.CopyToRoot(frameworkAgentComponents.NewRelicThirdPartyNoticesFile);
 			package.SetVersion(frameworkAgentComponents.Version);
 			package.Pack();
 		}

@@ -99,6 +99,7 @@ Agent/NewRelic/Profiler/Profiler/VersionInfo.h
 
 # Ignore source files generated during build
 Agent/Installer/Core.wxs
+Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
 
 
 
@@ -120,10 +121,10 @@ IntegrationTests/.vs/config/applicationhost.config
 Agent/UpgradeLog*.htm
 
 #PlatformTests
-Tests/PlatformTests/packages/
-Tests/PlatformTests/Applications/ServiceFabricApplication/packages/
-Tests/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
-Tests/PlatformTests/Applications/WindowsContainerApplication/packages
+Tests/Agent/PlatformTests/packages/
+Tests/Agent/PlatformTests/Applications/ServiceFabricApplication/packages/
+Tests/Agent/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
+Tests/Agent/PlatformTests/Applications/WindowsContainerApplication/packages
 
 /Tests/Benchmarking/BenchmarkDotNet.Artifacts
 *.dgml

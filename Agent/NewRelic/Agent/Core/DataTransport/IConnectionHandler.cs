@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -7,6 +6,6 @@ namespace NewRelic.Agent.Core.DataTransport
 	{
 		void Connect();
 		void Disconnect();
-		T SendDataRequest<T>([NotNull] String method, [NotNull] params Object[] data);
+		T SendDataRequest<T>(string method, params object[] data);
 	}
 }

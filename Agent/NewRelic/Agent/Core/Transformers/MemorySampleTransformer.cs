@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
@@ -7,30 +7,52 @@ namespace NewRelic.Agent.Core.Transformers
 {
 	public interface IMemorySampleTransformer
 	{
-		void Transform([NotNull] ImmutableMemorySample sample);
+		void Transform(ImmutableMemorySample sample);
 	}
 
 	public class MemorySampleTransformer : IMemorySampleTransformer
 	{
-		[NotNull]
-		protected readonly IMetricBuilder MetricBuilder;
+		private readonly IMetricBuilder _metricBuilder;
 
-		[NotNull]
 		private readonly IMetricAggregator _metricAggregator;
 
-		public MemorySampleTransformer([NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator)
+		private readonly IConfigurationService _configurationService;
+
+
+		public MemorySampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, IConfigurationService configurationService)
 		{
-			MetricBuilder = metricBuilder;
+			_metricBuilder = metricBuilder;
 			_metricAggregator = metricAggregator;
+			_configurationService = configurationService;
 		}
 
 		public void Transform(ImmutableMemorySample sample)
 		{
-			var unscopedCpuUserTimeMetric = MetricBuilder.TryBuildMemoryPhysicalMetric(sample.MemoryPhysical);
-			RecordMetric(unscopedCpuUserTimeMetric);
+			// Do not create metrics if memory values are 0
+			// Value may be 0 due to lack of support on called platform (i.e. Linux does not provide Process.PrivateMemorySize64)
+			if (sample.MemoryPrivate > 0)
+			{
+				var unscopedMemoryPhysicalMetric = _metricBuilder.TryBuildMemoryPhysicalMetric(sample.MemoryPrivate);
+				RecordMetric(unscopedMemoryPhysicalMetric);
+			}
+
+			if (_configurationService.Configuration.GenerateFullGcMemThreadMetricsEnabled)
+			{
+				if (sample.MemoryVirtual > 0)
+				{
+					var unscopedMemoryVirtualMetric = _metricBuilder.TryBuildMemoryVirtualMetric(sample.MemoryVirtual);
+					RecordMetric(unscopedMemoryVirtualMetric);
+				}
+
+				if (sample.MemoryWorkingSet > 0)
+				{
+					var unscopedMemoryWorkingSetMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(sample.MemoryWorkingSet);
+					RecordMetric(unscopedMemoryWorkingSetMetric);
+				}
+			}
 		}
 
-		private void RecordMetric([CanBeNull] MetricWireModel metric)
+		private void RecordMetric(MetricWireModel metric)
 		{
 			if (metric == null)
 				return;

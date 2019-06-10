@@ -4,6 +4,7 @@ using NewRelic.Agent.Core.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {

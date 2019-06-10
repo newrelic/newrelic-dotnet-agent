@@ -84,6 +84,13 @@ elseif($deployingPackage -eq "NewRelic.Azure.WebSites.Extension")
 	$chatMessage = "NuGet package '$packageName' has been updated with version $version."
 
 }
+elseif($deployingPackage -eq "NewRelic.OpenTracing.AmazonLambda.Tracer")
+{
+	$packageName = Get-ChildItem $rootDirectory\Build\BuildArtifacts\NugetAwsLambdaOpenTracer\NewRelic.OpenTracing.AmazonLambda.Tracer.*.nupkg -Name
+	$packagePath = Convert-Path $rootDirectory\Build\BuildArtifacts\NugetAwsLambdaOpenTracer\$packageName
+	$version = $packageName.TrimStart('NewRelic.OpenTracing.AmazonLambda.Tracer').TrimStart('.').TrimEnd('.nupkg')
+	$chatMessage = "NuGet package '$packageName' has been updated with version $version."
+}
 else
 {
 	Write-Host "Input value for deployingPackage parameter not recognized."

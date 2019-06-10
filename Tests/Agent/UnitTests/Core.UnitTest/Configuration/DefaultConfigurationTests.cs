@@ -1218,6 +1218,20 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.SpanEventsEnabled;
 		}
 
+		[TestCase(true, null, ExpectedResult = true)]
+		[TestCase(false, null, ExpectedResult = false)]
+		[TestCase(true, "true", ExpectedResult = true)]
+		[TestCase(true, "false", ExpectedResult = false)]
+		[TestCase(false, "true", ExpectedResult = true)]
+		public bool DisableSamplersEnvironmentOverridesLocal(bool localDisableSamplers, string environmentDisableSamplers)
+		{
+			_localConfig.application.disableSamplers = localDisableSamplers;
+
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISABLE_SAMPLERS")).Returns(environmentDisableSamplers);
+
+			return _defaultConfig.DisableSamplers;
+		}
+
 		[Test]
 		public void UrlRegexRulesPullsValueFromServerConfiguration()
 		{

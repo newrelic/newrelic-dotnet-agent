@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Events;
@@ -19,19 +18,10 @@ namespace NewRelic.Agent.Core.DataTransport
 	[TestFixture]
 	public class DataTransportServiceTests
 	{
-		[NotNull]
 		private DataTransportService _dataTransportService;
-
-		[NotNull]
 		private IConnectionManager _connectionManager;
-
-		[NotNull]
 		private IConfiguration _configuration;
-
-		[NotNull]
 		private DisposableCollection _disposableCollection;
-
-		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
 
 		private static readonly HttpException[] HttpExceptionsThatShouldTriggerSupportabilityMetrics =

@@ -9,20 +9,20 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
 	public class AspPagesTransactionNameWrapper : IWrapper
 	{
+		public const string WrapperName = "Asp35.AspPagesTransactionNameTracer";
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.UI.Page", methodNames: new[] { "ProcessRequest", "AsyncPageBeginProcessRequest" });
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var page = instrumentedMethodCall.MethodCall.InvocationTarget as Page;
-			if (page == null) 
+			if (page == null)
 				return Delegates.NoOp;
 
 			var pagePath = page.AppRelativeVirtualPath;

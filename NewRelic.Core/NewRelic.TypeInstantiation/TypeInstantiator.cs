@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace NewRelic.TypeInstantiation
 {
@@ -38,7 +36,7 @@ namespace NewRelic.TypeInstantiation
 			}
 		}
 
-		[NotNull]
+
 		private static IEnumerable<Type> ExportedTypesFromAssembly(Assembly assembly)
 		{
 			if (assembly == null)
@@ -81,7 +79,7 @@ namespace NewRelic.TypeInstantiation
 				&& typeof(T).IsAssignableFrom(type);
 		}
 
-		private static T InstanceFromType<T>([NotNull] Type type)
+		private static T InstanceFromType<T>(Type type)
 		{
 			try
 			{
@@ -94,8 +92,8 @@ namespace NewRelic.TypeInstantiation
 			}
 		}
 
-		[NotNull]
-		private static GetTypesResult GetExportedTypes([NotNull] IEnumerable<Assembly> assemblies)
+
+		private static GetTypesResult GetExportedTypes(IEnumerable<Assembly> assemblies)
 		{
 			var types = new List<Type>();
 			var exceptions = new List<Exception>();
@@ -139,7 +137,6 @@ namespace NewRelic.TypeInstantiation
 			return new TypeInstantiatorResult<T>(instances, exceptions);
 		}
 
-		[NotNull]
 		public static TypeInstantiatorResult<T> InstancesFromTypes<T>(IEnumerable<Type> types)
 		{
 			if (types == null)
@@ -172,13 +169,11 @@ namespace NewRelic.TypeInstantiation
 
 		private class GetTypesResult
 		{
-			[NotNull]
 			public readonly IEnumerable<Type> Types;
 
-			[NotNull]
 			public readonly IEnumerable<Exception> Exceptions;
 			
-			public GetTypesResult([NotNull] IEnumerable<Type> instances, [NotNull] IEnumerable<Exception> exceptions)
+			public GetTypesResult(IEnumerable<Type> instances, IEnumerable<Exception> exceptions)
 			{
 				Types = instances;
 				Exceptions = exceptions;

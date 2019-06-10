@@ -7,7 +7,6 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using JetBrains.Annotations;
 using MoreLinq;
 
 namespace NewRelic.Installer
@@ -20,26 +19,22 @@ namespace NewRelic.Installer
 		// ReSharper disable MemberCanBePrivate.Global
 		// ReSharper disable UnusedAutoPropertyAccessor.Global
 		[CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
-		[NotNull]
-		public String SolutionPath { get; set; }
+		public string SolutionPath { get; set; }
 
 		[CommandLine.Option("configuration", Required = false, HelpText = "$(Configuration)")]
-		[NotNull]
-		public String Configuration { get; set; }
+		public string Configuration { get; set; }
 
 		private bool _isCoreClr = false;
 		private bool _isLinux = false;
 
-		[NotNull]
-		public String Bitness { get; set; }
+		public string Bitness { get; set; }
 
 
 		// ReSharper restore UnusedAutoPropertyAccessor.Global
 		// ReSharper restore MemberCanBePrivate.Global
 
 		// output paths
-		[NotNull]
-		private String DestinationHomeDirectoryName {
+		private string DestinationHomeDirectoryName {
 			get
 			{
 				var name = HomeDirectoryNamePrefix + Bitness;
@@ -55,51 +50,39 @@ namespace NewRelic.Installer
 				return name;
 			}
 		}
-		[NotNull]
-		private String DestinationHomeDirectoryPath { get { return Path.Combine(SolutionPath, DestinationHomeDirectoryName); } }
-		[NotNull]
-		private String DestinationAgentFilePath { get { return Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Agent.Core.dll"); } }
-		[NotNull]
+		private string DestinationHomeDirectoryPath { get { return Path.Combine(SolutionPath, DestinationHomeDirectoryName); } }
+		private string DestinationAgentFilePath { get { return Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Agent.Core.dll"); } }
 		private string DestinationProfilerDllPath => Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Profiler.dll");
 
-		[NotNull]
 		private string DestinationProfilerSoPath => Path.Combine(DestinationHomeDirectoryPath, ProfilerSoFileName);
 
-		[NotNull]
-		private String DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
+		private string DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
 
-		[NotNull]
-		private String DestinationRegistryFileName { get { return String.Format("New Relic Home {0}.reg", Bitness); } }
-		[NotNull]
-		private String DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
-		[NotNull]
-		private String DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
-		[NotNull]
-		private String BuildOutputPath { get { return Path.Combine(SolutionPath, "_build"); } }
-		[NotNull]
-		private String AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
+		private string DestinationRegistryFileName { get { return string.Format("New Relic Home {0}.reg", Bitness); } }
+		private string DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
+		private string DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
+		private string BuildOutputPath { get { return Path.Combine(SolutionPath, "_build"); } }
+		private string AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
 
 		// input paths
-		[NotNull]
-		private String AnyCpuBuildDirectoryName { get { return String.Format("AnyCPU-{0}", Configuration); } }
-		[NotNull]
-		private String NewRelicConfigPath { get { return Path.Combine(SolutionPath, "Configuration", "newrelic.config") ?? String.Empty; } }
-		[NotNull]
-		private String NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
-		[NotNull]
-		private String ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
+		private string AnyCpuBuildDirectoryName { get { return string.Format("AnyCPU-{0}", Configuration); } }
+		private string NewRelicConfigPath { get { return Path.Combine(SolutionPath, "Configuration", "newrelic.config") ?? string.Empty; } }
+		private string NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
+		private string ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
 
-		private string LicenseFilePath => Path.Combine(SolutionPath, "Miscellaneous", "License.txt");
+		private string LicenseSourceDirectoryPath { get { return Path.GetFullPath(Path.Combine(SolutionPath, "../licenses")); } }
+		private string LicenseFilePath => Path.Combine(LicenseSourceDirectoryPath, "LICENSE.txt");
+		private string ThirdPartyNoticesFilePath => Path.Combine(LicenseSourceDirectoryPath, "THIRD_PARTY_NOTICES.txt");
 		private string MiscInstrumentationFilePath => Path.Combine(SolutionPath, "Miscellaneous", "NewRelic.Providers.Wrapper.Misc.Instrumentation.xml");
 
-		private string Core20ReadmeFileName = "netcore20-agent-readme.md";
+		private readonly string Core20ReadmeFileName = "netcore20-agent-readme.md";
+
 		private string ReadmeFilePath => Path.Combine(SolutionPath, "Miscellaneous", Core20ReadmeFileName);
 
 		private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net45", "NewRelic.Api.Agent.dll");
 
 		private string AgentVersion => FileVersionInfo.GetVersionInfo(DestinationAgentFilePath).FileVersion;
 
-		[NotNull]
 		private string ProfilerDllPath
 		{
 			get
@@ -115,7 +98,6 @@ namespace NewRelic.Installer
 			}
 		}
 
-		[NotNull]
 		private string ProfilerSoPath
 		{
 			get
@@ -131,13 +113,17 @@ namespace NewRelic.Installer
 			}
 		}
 
-		[NotNull]
-		private String CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net45"); } }
+		private string AgentCoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net45"); } }
 
-		private string ILRepackedNewRelicAgentCorePath { get { return Path.Combine(CoreBuildDirectoryPath + "-ILRepacked", "NewRelic.Agent.Core.dll"); } }
-		private String NewRelicAgentExtensionsPath { get { return Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
-		[NotNull]
-		private String ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Extensions"); } }
+		private string ILRepackedNewRelicAgentCorePath { get { return Path.Combine(AgentCoreBuildDirectoryPath + "-ILRepacked", "NewRelic.Agent.Core.dll"); } }
+
+		private string NewRelicCoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Core", _isCoreClr ? "netstandard2.0" : "net45"); } }
+		
+		private string ILRepackedNewRelicCorePath { get {  return Path.Combine(NewRelicCoreBuildDirectoryPath + "-ILRepacked", "NewRelic.Core.dll"); } }
+
+		private string NewRelicAgentExtensionsPath { get { return Path.Combine(AgentCoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
+
+		private string ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Extensions"); } }
 
 		void RealMain()
 		{
@@ -176,6 +162,8 @@ namespace NewRelic.Installer
 			CopyToDirectory(NewRelicAgentExtensionsPath, DestinationHomeDirectoryPath);
 			CopyAgentExtensions();
 			CopyOtherDependencies();
+
+			CopyToDirectory(ILRepackedNewRelicCorePath, DestinationExtensionsDirectoryPath);
 
 			var shouldCreateRegistryFile = (isCoreClr == false);
 			if (shouldCreateRegistryFile)
@@ -228,9 +216,11 @@ namespace NewRelic.Installer
 		{
 			CopyToDirectory(MiscInstrumentationFilePath, DestinationExtensionsDirectoryPath);
 
+			CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
+			CopyToDirectory(ThirdPartyNoticesFilePath, DestinationHomeDirectoryPath);
+
 			if (_isCoreClr)
 			{
-				CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
 				CopyToDirectory(AgentApiPath, DestinationHomeDirectoryPath);
 				CopyToDirectory(ReadmeFilePath, DestinationHomeDirectoryPath);
 				File.Move(Path.Combine(DestinationHomeDirectoryPath, Core20ReadmeFileName), Path.Combine(DestinationHomeDirectoryPath, "README.md"));
@@ -238,11 +228,11 @@ namespace NewRelic.Installer
 			}
 
 			// We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.
-			var jetBrainsAnnotationsAssemblyPath = Path.Combine(CoreBuildDirectoryPath, "JetBrains.Annotations.dll");
+			var jetBrainsAnnotationsAssemblyPath = Path.Combine(AgentCoreBuildDirectoryPath, "JetBrains.Annotations.dll");
 			CopyToDirectory(jetBrainsAnnotationsAssemblyPath, DestinationExtensionsDirectoryPath);
 		}
 
-		private static void ReCreateDirectoryWithEveryoneAccess(String directoryPath)
+		private static void ReCreateDirectoryWithEveryoneAccess(string directoryPath)
 		{
 			try { Directory.Delete(directoryPath, true); }
 			catch (DirectoryNotFoundException) { }
@@ -256,7 +246,7 @@ namespace NewRelic.Installer
 			directoryInfo.SetAccessControl(directorySecurity);
 		}
 
-		private static void CopyToDirectory([NotNull] String sourceFilePath, [NotNull] String destinationDirectoryPath)
+		private static void CopyToDirectory(string sourceFilePath, string destinationDirectoryPath)
 		{
 			if (sourceFilePath == null)
 				throw new ArgumentNullException("sourceFilePath");
@@ -273,7 +263,7 @@ namespace NewRelic.Installer
 		{
 			var directoriesWithoutFramework = Directory.EnumerateDirectories(ExtensionsDirectoryPath, Configuration, SearchOption.AllDirectories);
 
-			List<string> allDirectoriesForConfiguration = new List<String>(directoriesWithoutFramework);
+			List<string> allDirectoriesForConfiguration = new List<string>(directoriesWithoutFramework);
 			foreach (var directory in directoriesWithoutFramework)
 			{
 				var frameworkSubDirectories = Directory.EnumerateDirectories(directory, "*net*");
@@ -311,7 +301,7 @@ namespace NewRelic.Installer
 			};
 		}
 
-		private static void CopyNewRelicAssemblies([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
+		private static void CopyNewRelicAssemblies(string assemblyFilePath, string destinationExtensionsDirectoryPath)
 		{
 			var directoryPath = Path.GetDirectoryName(assemblyFilePath);
 			if (directoryPath == null)
@@ -334,7 +324,7 @@ namespace NewRelic.Installer
 			}
 		}
 
-		private static void TryCopyExtensionInstrumentationFile([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
+		private static void TryCopyExtensionInstrumentationFile(string assemblyFilePath, string destinationExtensionsDirectoryPath)
 		{
 			var directory = Path.GetDirectoryName(assemblyFilePath);
 			if (directory == null)
@@ -360,19 +350,19 @@ namespace NewRelic.Installer
 			{
 				@"COR_ENABLE_PROFILING=1",
 				@"COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}",
-				String.Format(@"COR_PROFILER_PATH={0}", DestinationProfilerDllPath),
-				String.Format(@"NEWRELIC_HOME={0}\", DestinationHomeDirectoryPath)
+				string.Format(@"COR_PROFILER_PATH={0}", DestinationProfilerDllPath),
+				string.Format(@"NEWRELIC_HOME={0}\", DestinationHomeDirectoryPath)
 			};
 
-			var bytes = new List<Byte>();
+			var bytes = new List<byte>();
 			foreach (var @string in strings)
 			{
 				if (@string == null)
 					continue;
 				bytes.AddRange(Encoding.Unicode.GetBytes(@string));
-				bytes.AddRange(new Byte[] { 0, 0 });
+				bytes.AddRange(new byte[] { 0, 0 });
 			}
-			bytes.AddRange(new Byte[] { 0, 0 });
+			bytes.AddRange(new byte[] { 0, 0 });
 
 			var hexString = BitConverter.ToString(bytes.ToArray()).Replace('-', ',');
 			const string fileContentsFormatter =
@@ -384,7 +374,7 @@ namespace NewRelic.Installer
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WAS]
 ""Environment""=hex(7):{0}
 ";
-			var fileContents = String.Format(fileContentsFormatter, hexString);
+			var fileContents = string.Format(fileContentsFormatter, hexString);
 			File.WriteAllText(DestinationRegistryFilePath, fileContents);
 		}
 

@@ -38,7 +38,8 @@ namespace CompositeTests.CrossAgentTests.SecurityPolicies
 			var collectorWireFactory = Mock.Create<ICollectorWireFactory>();
 			_collectorWire = Mock.Create<ICollectorWire>();
 			var systemInfo = Mock.Create<ISystemInfo>();
-			var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo);
+			var processStatic = Mock.Create<IProcessStatic>();
+			var agentEnvironment = new NewRelic.Agent.Core.Environment(systemInfo, processStatic);
 
 			Mock.Arrange(() => collectorWireFactory.GetCollectorWire(null)).IgnoreArguments().Returns(_collectorWire);
 			Mock.Arrange(() => environment.GetEnvironmentVariable("NEW_RELIC_SECURITY_POLICIES_TOKEN")).Returns("ffff-fbff-ffff-ffff");

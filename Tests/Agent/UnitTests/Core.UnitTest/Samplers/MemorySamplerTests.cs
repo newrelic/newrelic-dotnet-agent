@@ -1,8 +1,8 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -11,16 +11,11 @@ namespace NewRelic.Agent.Core.Samplers
 	[TestFixture]
 	public class MemorySamplerTests
 	{
-		[NotNull]
 		private MemorySampler _memorySampler;
 
-		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
-
-		[NotNull]
 		private IMemorySampleTransformer _memorySampleTransformer;
 
-		[NotNull]
 		private Action _sampleAction;
 
 		[SetUp]
@@ -31,7 +26,7 @@ namespace NewRelic.Agent.Core.Samplers
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _sampleAction = action);
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_memorySampleTransformer = Mock.Create<IMemorySampleTransformer>();
-			_memorySampler = new MemorySampler(scheduler, _memorySampleTransformer, _agentHealthReporter);
+			_memorySampler = new MemorySampler(scheduler, _memorySampleTransformer, _agentHealthReporter, new ProcessStatic());
 		}
 
 		[TearDown]

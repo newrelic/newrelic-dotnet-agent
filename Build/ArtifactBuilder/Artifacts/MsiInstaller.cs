@@ -98,7 +98,7 @@ namespace ArtifactBuilder.Artifacts
 			}
 		}
 
-		private void ValidateAgentComponentsAndWixReferenceTheSameFiles(IList<string> agentComponent, WixFragmentComponentGroup wixGroup)
+		private void ValidateAgentComponentsAndWixReferenceTheSameFiles(IReadOnlyCollection<string> agentComponent, WixFragmentComponentGroup wixGroup)
 		{
 			var agentComponentFiles = agentComponent.Select(Path.GetFileName).Except(_extensionFilesToIgnore).ToList();
 			var wixFiles = wixGroup.Component.Select(c => c.File.Name).ToList();

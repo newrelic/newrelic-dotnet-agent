@@ -3,7 +3,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Logging;
@@ -31,22 +30,20 @@ namespace NewRelic.Agent.Core.DataTransport
 			Received = 2
 		}
 
-		public const String AuditLogFormat = "Data {0} from the {1} : {2}";
+		public const string AuditLogFormat = "Data {0} from the {1} : {2}";
 
 		public const int ProtocolVersion = 16;
 
-		private const Int32 CompressMinimumByteLength = 20;
-		private Boolean _diagnoseConnectionError = true;
-		
-		[NotNull]
+		private const int CompressMinimumByteLength = 20;
+		private bool _diagnoseConnectionError = true;
 		private readonly IConfiguration _configuration;
 
-		public HttpCollectorWire([NotNull] IConfiguration configuration)
+		public HttpCollectorWire(IConfiguration configuration)
 		{
 			_configuration = configuration;
 		}
 
-		public String SendData(String method, ConnectionInfo connectionInfo, String serializedData)
+		public string SendData(string method, ConnectionInfo connectionInfo, string serializedData)
 		{
 			try
 			{
@@ -78,21 +75,20 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		private static String SendRequest(WebRequest request, Byte[] requestPayloadData)
+		private static string SendRequest(WebRequest request, byte[] requestPayloadData)
 		{
 			SendRequestPayload(request, requestPayloadData);
 			var response = GetResponse(request);
 			return response;
 		}
 
-		private static void AuditLog(Direction direction, Source source, String uri)
+		private static void AuditLog(Direction direction, Source source, string uri)
 		{
-			var message = String.Format(AuditLogFormat, direction, source, uri);
+			var message = string.Format(AuditLogFormat, direction, source, uri);
 			Log.Audit(message);
 		}
 
-		[NotNull]
-		private String GetUri([NotNull] String method, [NotNull] ConnectionInfo connectionInfo)
+		private string GetUri(string method, ConnectionInfo connectionInfo)
 		{
 			var uri = new StringBuilder("/agent_listener/invoke_raw_method?method=")
 				.Append(method)
@@ -105,17 +101,17 @@ namespace NewRelic.Agent.Core.DataTransport
 			if (_configuration.AgentRunId != null)
 				uri.Append("&run_id=").Append(_configuration.AgentRunId);
 
-			var uriBuilder = new UriBuilder(connectionInfo.HttpProtocol, connectionInfo.Host, (Int32)connectionInfo.Port, uri.ToString());
+			var uriBuilder = new UriBuilder(connectionInfo.HttpProtocol, connectionInfo.Host, (int)connectionInfo.Port, uri.ToString());
 			return uriBuilder.Uri.ToString().Replace("%3F", "?");
 		}
 
-		private CollectorRequestPayload GetRequestPayload([NotNull] String serializedData)
+		private CollectorRequestPayload GetRequestPayload(string serializedData)
 		{
 			var bytes = new UTF8Encoding().GetBytes(serializedData);
 
 			var shouldCompress = bytes.Length >= CompressMinimumByteLength;
 
-			String compressionType = null;
+			string compressionType = null;
 			if (shouldCompress)
 			{
 				compressionType = _configuration.CompressedContentEncoding;
@@ -127,8 +123,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			return payload;
 		}
 
-		[NotNull]
-		private WebRequest BuildRequest([NotNull] String uri, [NotNull] ConnectionInfo connectionInfo, [NotNull] CollectorRequestPayload requestCollectorRequestPayload)
+		private WebRequest BuildRequest(string uri, ConnectionInfo connectionInfo, CollectorRequestPayload requestCollectorRequestPayload)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(uri);
 			if (request.Headers == null)
@@ -144,7 +139,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				request.Proxy = connectionInfo.Proxy;
 			}
 
-			request.Timeout = (Int32)_configuration.CollectorTimeout;
+			request.Timeout = (int)_configuration.CollectorTimeout;
 			request.ContentType = "application/octet-stream";
 			request.UserAgent = $"NewRelic-DotNetAgent/{AgentVersion.Version}";
 
@@ -159,19 +154,18 @@ namespace NewRelic.Agent.Core.DataTransport
 			return request;
 		}
 
-		private static void SendRequestPayload([NotNull] WebRequest request, [NotNull] Byte[] payload)
+		private static void SendRequestPayload(WebRequest request, byte[] payload)
 		{
 			using (var outputStream = request.GetRequestStream())
 			{
 				if (outputStream == null)
 					throw new NullReferenceException("outputStream");
 
-				outputStream.Write(payload, 0, (Int32)request.ContentLength);
+				outputStream.Write(payload, 0, (int)request.ContentLength);
 			}
 		}
 
-		[NotNull]
-		private static String GetResponse([NotNull] WebRequest request)
+		private static string GetResponse(WebRequest request)
 		{
 			using (var response = request.GetResponse())
 			{
@@ -197,7 +191,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		private static void ThrowExceptionFromHttpWebResponse(String serializedData, [NotNull] HttpWebResponse response)
+		private static void ThrowExceptionFromHttpWebResponse(string serializedData, HttpWebResponse response)
 		{
 			try
 			{
@@ -210,7 +204,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		private void DiagnoseConnectionError([NotNull] ConnectionInfo connectionInfo)
+		private void DiagnoseConnectionError(ConnectionInfo connectionInfo)
 		{
 			_diagnoseConnectionError = false;
 			try
@@ -229,9 +223,9 @@ namespace NewRelic.Agent.Core.DataTransport
 			TestConnection(connectionInfo);
 		}
 
-		private static void TestConnection([NotNull] ConnectionInfo connectionInfo)
+		private static void TestConnection(ConnectionInfo connectionInfo)
 		{
-			const String testAddress = "http://www.google.com";
+			const string testAddress = "http://www.google.com";
 			try
 			{
 				using (var wc = new WebClient())

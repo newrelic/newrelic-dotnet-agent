@@ -2,6 +2,7 @@ using System.IO;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -16,10 +17,12 @@ namespace NewRelic.Agent.Core
 		{
 			var config = Mock.Create<IConfiguration>();
 			var systemInfo = Mock.Create<ISystemInfo>();
+			var processStatic = Mock.Create<IProcessStatic>();
+
 			Mock.Arrange(() => systemInfo.GetTotalPhysicalMemoryBytes()).Returns(16000);
 			using (new ConfigurationAutoResponder(config))
 			{
-				var env = new Environment(systemInfo);
+				var env = new Environment(systemInfo, processStatic);
 				Assert.Greater(env.TotalPhysicalMemory, 0);
 			}
 		}

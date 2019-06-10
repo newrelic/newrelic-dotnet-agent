@@ -42,6 +42,12 @@ namespace NewRelic.Agent.Core.Wrapper
 			_nonDefaultWrappers.Add(new AttachToAsyncWrapper());
 			_nonDefaultWrappers.Add(new DetachWrapper());
 
+			_nonDefaultWrappers.Add(new CustomSegmentWrapper());
+			_nonDefaultWrappers.Add(new IgnoreTransactionWrapper());
+			_nonDefaultWrappers.Add(new MultithreadedTrackingWrapper());
+			_nonDefaultWrappers.Add(new OtherTransactionWrapper());
+
+
 			var defaultWrappers = new List<IDefaultWrapper> {defaultWrapper, new DefaultWrapperAsync()};
 
 			_defaultWrappers = defaultWrappers;

@@ -8,12 +8,12 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 {
 	public class FinishPipelineRequestWrapper : IWrapper
 	{
+		public const string WrapperName = "Asp35.FinishPipelineRequestTracer";
 		public bool IsTransactionRequired => false;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.HttpRuntime", methodName: "FinishPipelineRequest");
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 
@@ -28,7 +28,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 			var segment = agent.CastAsSegment(httpContext.Items[HttpContextActions.HttpContextSegmentKey] as ISegment);
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = null;
 			httpContext.Items[HttpContextActions.HttpContextSegmentTypeKey] = null;
-			segment.End();			
+			segment.End();
 			agent.CurrentTransaction.End();
 
 			return Delegates.NoOp;

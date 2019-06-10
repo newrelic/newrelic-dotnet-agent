@@ -25,6 +25,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
+using NewRelic.Core;
 using NewRelic.Parsing;
 using NewRelic.SystemExtensions.Collections.Generic;
 

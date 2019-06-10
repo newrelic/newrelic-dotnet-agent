@@ -51,7 +51,7 @@ Function RunFunctionalTests
     Write-Host "Executing the install-specific functional tests"
 
     Write-Host "nunit3-console.exe `"$env:WORKSPACE\FunctionalTests\bin\Release\FunctionalTests.dll`" --where `"cat==Install`" --workers=1 `"--result=TestResult_NUnit2.xml;format=nunit2`" `"--result=TestResult_NUnit3.xml;format=nunit3`""
-    & "C:\Program Files (x86)\NUnit.org\nunit-console\nunit3-console.exe" "$env:WORKSPACE\FunctionalTests\bin\Release\FunctionalTests.dll" --where "cat==Install" --workers=1 "--result=TestResult_NUnit2.xml;format=nunit2" "--result=TestResult_NUnit3.xml;format=nunit3"
+    & "$env:WORKSPACE\Build\Tools\NUnit-Console\nunit3-console.exe" "$env:WORKSPACE\FunctionalTests\bin\Release\FunctionalTests.dll" --where "cat==Install" --workers=1 "--result=TestResult_NUnit2.xml;format=nunit2" "--result=TestResult_NUnit3.xml;format=nunit3"
 
     $exitCode = $LastExitCode
     

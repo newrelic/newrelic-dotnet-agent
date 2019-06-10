@@ -11,7 +11,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -207,7 +207,7 @@ namespace NewRelic.Agent.Core.Transactions
 				transaction = TryGetInternalTransaction(context);
 				if (transaction != null)
 				{
-					if (Log.IsFinestEnabled) transaction.LogFinest($"Retrived from {context.ToString()}");
+					if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {context.ToString()}");
 					return transaction;
 				}
 			}
@@ -215,7 +215,7 @@ namespace NewRelic.Agent.Core.Transactions
 			transaction = TryGetInternalTransaction(_asyncContext);
 			if (transaction != null)
 			{
-				if (Log.IsFinestEnabled) transaction.LogFinest($"Retrived from {_asyncContext.ToString()}");
+				if (Log.IsFinestEnabled) transaction.LogFinest($"Retrieved from {_asyncContext.ToString()}");
 			}
 			return transaction;
 		}

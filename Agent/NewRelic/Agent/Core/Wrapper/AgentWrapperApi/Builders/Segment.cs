@@ -7,7 +7,7 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Configuration;
 using System.Threading;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

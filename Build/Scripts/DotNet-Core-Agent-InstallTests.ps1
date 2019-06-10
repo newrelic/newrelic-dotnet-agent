@@ -7,7 +7,6 @@
 $installfilesPath = Join-Path (pwd) "install_files"
 $destination = Join-Path (pwd) "install_location"
 $logDir = Join-Path (pwd) "log_dir"
-$expectedInstalledFileCount = 27
 $installType = "global"
 $licenseKey = "12345"
 
@@ -46,12 +45,6 @@ Function Unpack-Installer-Zip {
 Function Install-Agent {
     .\install_files\installAgent.ps1 -destination $destination -installType $installType -licensekey $licenseKey -logDir $logDir | Out-Null
     $? | Should BeTrue
-    return $true
-}
-
-Function Check-Install-Location {
-    $fileCount = (Get-ChildItem $destination -Recurse).Length
-    $fileCount | Should Be $expectedInstalledFileCount
     return $true
 }
 
@@ -100,9 +93,6 @@ Describe 'Install-Core-Agent' {
         }
     }
     Context 'Verify the install' {
-        It "Verify the installed files" {
-            Check-Install-Location | Should Be $true
-        }
         It "Verify the log dir exists" {
             $logDir | Should Exist
         }

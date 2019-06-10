@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -6,12 +7,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
 	public class OnErrorWrapper : IWrapper
 	{
+		public const string WrapperName = "Asp35.OnErrorTracer";
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.HttpApplication", methodName: "RecordError");
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 

@@ -13,6 +13,14 @@ namespace NewRelic.Agent.Core.Samplers
 
 		private readonly TimeSpan _frequency;
 
+		protected virtual bool Enabled
+		{
+			get
+			{
+				return !_configuration.DisableSamplers;
+			}
+		}
+
 		protected AbstractSampler([NotNull] IScheduler scheduler, TimeSpan frequency)
 		{
 			_scheduler = scheduler;
@@ -37,7 +45,7 @@ namespace NewRelic.Agent.Core.Samplers
 
 		private void Start()
 		{
-			if (_configuration.DisableSamplers)
+			if (!Enabled)
 				return;
 
 			_scheduler.ExecuteEvery(Sample, _frequency);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.Core.DataTransport
 	[JsonConverter(typeof (CollectorExceptionEnvelopeConverter))]
 	public class CollectorExceptionEnvelope
 	{
-		[NotNull]
 		public readonly Exception Exception;
 
-		public CollectorExceptionEnvelope([NotNull] Exception exception)
+		public CollectorExceptionEnvelope(Exception exception)
 		{
 			Exception = exception;
 		}
@@ -22,12 +20,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
 	public class CollectorExceptionEnvelopeConverter : JsonConverter
 	{
-		public override void WriteJson(JsonWriter writer, Object value, Newtonsoft.Json.JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
 		{
 			var jToken = JToken.Load(reader);
 			if (jToken == null)
@@ -37,13 +35,12 @@ namespace NewRelic.Agent.Core.DataTransport
 			return new CollectorExceptionEnvelope(exception);
 		}
 
-		[NotNull]
-		private static Exception DeserializeExceptionFromCollectorResponse([NotNull] JToken jToken)
+		private static Exception DeserializeExceptionFromCollectorResponse(JToken jToken)
 		{
 			if (jToken.Type != JTokenType.Object)
 				return new Exception(jToken.ToString());
 
-			var dictionary = jToken.ToObject<IDictionary<String, Object>>();
+			var dictionary = jToken.ToObject<IDictionary<string, object>>();
 			var message = dictionary.GetValueOrDefault("message") ?? jToken.ToString();
 
 			var type = dictionary.GetValueOrDefault("error_type");
@@ -53,7 +50,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			return new Exception(message.ToString());
 		}
 
-		public override Boolean CanConvert(Type objectType)
+		public override bool CanConvert(Type objectType)
 		{
 			return objectType == typeof(CollectorExceptionEnvelope);
 		}

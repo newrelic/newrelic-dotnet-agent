@@ -11,7 +11,7 @@ using Telerik.JustMock;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Core.DistributedTracing;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace

@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Net;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemInterfaces
 {
 	public interface IDnsStatic
 	{
-		[NotNull]
+
 		String GetHostName();
 
-		[NotNull]
-		IPHostEntry GetHostEntry([NotNull] String hostNameOrAddres);
+
+		IPHostEntry GetHostEntry(String hostNameOrAddres);
 	}
 
 	public class DnsStatic : IDnsStatic

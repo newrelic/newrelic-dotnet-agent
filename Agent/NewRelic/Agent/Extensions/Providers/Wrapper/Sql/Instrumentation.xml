@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <extension xmlns="urn:newrelic-extension">
   <instrumentation>
-    <tracerFactory>
+
+    <tracerFactory name="OdbcCommandTracer">
+      <!-- built in ODBC driver -->
+      <match assemblyName="System.Data" className="System.Data.Odbc.OdbcCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+    </tracerFactory>
+
+    
+    <tracerFactory name="OleDbCommandTracer">
+      <!-- built in ODBC driver -->
+      <match assemblyName="System.Data" className="System.Data.OleDb.OleDbCommand">
+        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+    </tracerFactory>
+
+
+    <tracerFactory name="SqlCommandTracer">
 
       <!-- built in MS SQL driver (framework) -->
       <match assemblyName="System.Data" className="System.Data.SqlClient.SqlCommand">
@@ -19,18 +40,12 @@
         <exactMethodMatcher methodName="ExecuteXmlReader" />
       </match>
 
-      <!-- built in OLE driver -->
-      <match assemblyName="System.Data" className="System.Data.OleDb.OleDbCommand">
+      <!-- MS SQL flagship data access driver -->
+      <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlCommand">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
         <exactMethodMatcher methodName="ExecuteNonQuery" />
         <exactMethodMatcher methodName="ExecuteScalar" />
-      </match>
-
-      <!-- built in ODBC driver -->
-      <match assemblyName="System.Data" className="System.Data.Odbc.OdbcCommand">
-        <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior" />
-        <exactMethodMatcher methodName="ExecuteNonQuery" />
-        <exactMethodMatcher methodName="ExecuteScalar" />
+        <exactMethodMatcher methodName="ExecuteXmlReader" />
       </match>
 
       <!-- built in deprecated Oracle driver -->
@@ -75,10 +90,8 @@
         <exactMethodMatcher methodName="ExecuteScalar" />
         <exactMethodMatcher methodName="ExecuteXmlReader"/>
       </match>
-    </tracerFactory>
 
-    <!-- Npgsql Postgres data provider -->
-    <tracerFactory name="NpgsqlSqlCommandWrapper">
+      <!-- Postgres SQL Driver-->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
         <exactMethodMatcher methodName="ExecuteDbDataReader" parameters="System.Data.CommandBehavior"/>
         <exactMethodMatcher methodName="ExecuteNonQuery" />
@@ -86,8 +99,43 @@
       </match>
     </tracerFactory>
 
+    <tracerFactory name="SqlCommandTracerAsync">
+
+      <!-- built in MS SQL driver (framework) -->
+      <match assemblyName="System.Data" className="System.Data.SqlClient.SqlCommand">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- built in MS SQL driver (core / nuget) -->
+      <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlCommand">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- MS SQL flagship data access driver -->
+      <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlCommand">
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- Postgres SQL Driver-->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlCommand">
+        <exactMethodMatcher methodName="ExecuteScalarAsync"/>
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync"/>
+        <exactMethodMatcher methodName="ExecuteDbDataReaderAsync"/>
+      </match>
+      
+    </tracerFactory>
+    
     <!-- DataReader methods. DISABLED by default due to possible performance impact. Set enabled to "true" (or omit completely) to enable this instrumentation. -->
-    <tracerFactory enabled="false">
+    <tracerFactory name="DataReaderTracer" enabled="false">
       <!-- built in MS SQL driver (framework) -->
       <match assemblyName="System.Data" className="System.Data.SqlClient.SqlDataReader">
         <exactMethodMatcher methodName="NextResult" />
@@ -96,6 +144,12 @@
 
       <!-- built in MS SQL driver (core / nuget) -->
       <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- MS SQL flagship data access driver -->
+      <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlDataReader">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" />
       </match>
@@ -129,19 +183,42 @@
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" />
       </match>
-    </tracerFactory>
 
-    <!-- Postgres data provider -->
-    <!-- DataReader methods.  DISABLED by deafult due to possible performance impact.  Set enabled to "true" (or omit completely) to enable this instrumentation. -->
-    <tracerFactory name="NpgsqlDataReaderWrapper" enabled="false">
+      <!-- Postgres data provider -->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
         <exactMethodMatcher methodName="NextResult" />
         <exactMethodMatcher methodName="Read" parameters="System.Boolean" />
       </match>
     </tracerFactory>
 
+    <tracerFactory name="DataReaderTracerAsync" enabled="false">
+      <!-- built in MS SQL driver (framework) -->
+      <match assemblyName="System.Data" className="System.Data.SqlClient.SqlDataReader">
+        <exactMethodMatcher methodName="NextResultAsync" />
+        <exactMethodMatcher methodName="ReadAsync" />
+      </match>
+
+      <!-- built in MS SQL driver (core / nuget) -->
+      <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlDataReader">
+        <exactMethodMatcher methodName="NextResultAsync" />
+        <exactMethodMatcher methodName="ReadAsync" />
+      </match>
+
+      <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlDataReader">
+        <exactMethodMatcher methodName="NextResultAsync" />
+        <exactMethodMatcher methodName="ReadAsync" />
+      </match>
+      
+      <!-- Postgres data provider -->
+      <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
+        <exactMethodMatcher methodName="NextResultAsync" />
+        <exactMethodMatcher methodName="ReadAsync" />
+      </match>
+    </tracerFactory>
+    
+    
     <!-- DbConnection.Open() -->
-    <tracerFactory>
+    <tracerFactory name="OpenConnectionTracer">
       <!-- built in MS SQL driver (framework) -->
       <match assemblyName="System.Data" className="System.Data.SqlClient.SqlConnection,System.Data.Odbc.OdbcConnection,System.Data.OleDb.OleDbConnection">
         <exactMethodMatcher methodName="Open" />
@@ -149,6 +226,11 @@
 
       <!-- built in MS SQL driver (core / nuget) -->
       <match assemblyName="System.Data.SqlClient" className="System.Data.SqlClient.SqlConnection">
+        <exactMethodMatcher methodName="Open" />
+      </match>
+
+      <!-- MS SQL flagship data access driver -->
+      <match assemblyName="Microsoft.Data.SqlClient" className="Microsoft.Data.SqlClient.SqlConnection">
         <exactMethodMatcher methodName="Open" />
       </match>
 
@@ -176,14 +258,12 @@
       <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2Connection">
         <exactMethodMatcher methodName="Open"/>
       </match>
-    </tracerFactory>
 
-    <!-- Npgsql Postgres data provider -->
-    <tracerFactory name="NpgsqlOpenConnectionWrapper">
+      <!-- Npgsql Postgres data provider -->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlConnection">
         <exactMethodMatcher methodName="Open" parameters="System.Boolean,System.Threading.CancellationToken"/>
       </match>
     </tracerFactory>
-    
+
   </instrumentation>
 </extension>

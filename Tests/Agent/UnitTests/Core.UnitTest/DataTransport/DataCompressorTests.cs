@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.GZip;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -14,7 +13,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		[TestCase("")]
 		[TestCase("foo")]
 		[TestCase("Զԣש", Description = "Some UTF-8 characters")]
-		public void DeflateCompressedDataShouldDecompressToSameValue([NotNull] String input)
+		public void DeflateCompressedDataShouldDecompressToSameValue(string input)
 		{
 			var compressed = DataCompressor.Compress(input);
 			var decompressed = DataCompressor.Decompress(compressed);
@@ -26,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		[TestCase("")]
 		[TestCase("foo")]
 		[TestCase("Զԣש", Description = "Some UTF-8 characters")]
-		public void GZipCompressedDataShouldDecompressToSameValue([NotNull] String input)
+		public void GZipCompressedDataShouldDecompressToSameValue(string input)
 		{
 			var compressed = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.GzipCompression);
 			var decompressed = DecompressGzip(compressed);
@@ -36,7 +35,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		[Test]
 		public void DefaultCompressionShouldBeDeflate()
 		{
-			const String input = "input";
+			const string input = "input";
 			var defaultCompression = DataCompressor.Compress(input);
 			var explicitCompression = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.DeflateCompression);
 			Assert.AreEqual(defaultCompression, explicitCompression);
@@ -45,8 +44,8 @@ namespace NewRelic.Agent.Core.DataTransport
 		[Test]
 		public void ShouldThrowWhenInvalidCompressionType()
 		{
-			const String input = "input";
-			const String invalidCompression = "invalidType";
+			const string input = "input";
+			const string invalidCompression = "invalidType";
 
 			Assert.Throws<ArgumentException>(() => DataCompressor.Compress(new UTF8Encoding().GetBytes(input), invalidCompression));
 		}
@@ -54,13 +53,13 @@ namespace NewRelic.Agent.Core.DataTransport
 		[Test]
 		[TestCase("DEFLATE")]
 		[TestCase("GZIP")]
-		public void ShouldHandleInconsistentCompressionCasing(String compressionType)
+		public void ShouldHandleInconsistentCompressionCasing(string compressionType)
 		{
-			const String input = "input";
+			const string input = "input";
 			Assert.DoesNotThrow(() => DataCompressor.Compress(new UTF8Encoding().GetBytes(input), compressionType));
 		}
 
-		private static String DecompressGzip(Byte[] compressedBytes)
+		private static string DecompressGzip(byte[] compressedBytes)
 		{
 			using (var memoryStream = new MemoryStream())
 			using (var inflaterStream = new GZipInputStream(memoryStream))

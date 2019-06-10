@@ -8,6 +8,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
 	public class CallHandlerWrapper : IWrapper
 	{
+		public const string WrapperName = "Asp35.CallHandlerTracer";
+
 		[NotNull]
 		public Func<Object, HttpApplication> GetHttpApplication { get { return _getHttpApplication ?? (_getHttpApplication = VisibilityBypasser.Instance.GenerateFieldReadAccessor<HttpApplication>("System.Web", "System.Web.HttpApplication+CallHandlerExecutionStep", "_application")); } }
 
@@ -18,8 +20,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.HttpApplication+CallHandlerExecutionStep", methodName: "System.Web.HttpApplication.IExecutionStep.Execute");
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 

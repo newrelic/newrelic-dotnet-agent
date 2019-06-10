@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelicCore = NewRelic.Core;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 {
@@ -12,7 +13,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		[Test]
 		public void TracePriorityManager_CreateNoSeed()
 		{
-			var priorityManager = new TracePriorityManager();
+			var priorityManager = new NewRelicCore.DistributedTracing.TracePriorityManager();
 			for (var i = 0; i < 50; ++i)
 			{
 				var priority = priorityManager.Create();
@@ -32,7 +33,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		[Test]
 		public void TracePriorityManager_CreateWithSeed()
 		{
-			var priorityManager = new TracePriorityManager(SeedForTesting);
+			var priorityManager = new NewRelicCore.DistributedTracing.TracePriorityManager(SeedForTesting);
 			foreach (var expect in Expected)
 			{
 				var priority = priorityManager.Create();
@@ -46,7 +47,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			[Values(0.0f, 1.0f, 0.5f, 0.000001f)] float adjust
 			)
 		{
-			var adjustedPriority = TracePriorityManager.Adjust(priority, adjust);
+			var adjustedPriority = NewRelicCore.DistributedTracing.TracePriorityManager.Adjust(priority, adjust);
 			Assert.That(adjustedPriority, Is.EqualTo(priority+adjust).Within(Epsilon));
 		}
 	}

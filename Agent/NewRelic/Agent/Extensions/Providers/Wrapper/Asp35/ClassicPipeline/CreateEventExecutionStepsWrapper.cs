@@ -12,6 +12,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 {
 	public class CreateEventExecutionStepsWrapper : IWrapper
 	{
+		public const string WrapperName = "Asp35.CreateEventExecutionStepsTracer";
+
 		public bool IsTransactionRequired => false;
 
 		/// <summary>
@@ -77,7 +79,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			{
 				var field = HttpApplicationType
 					.GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-				if(field == null)
+				if (field == null)
 					throw new NullReferenceException("No HttpApplication field named " + fieldName);
 
 				return field.GetValue(null) ?? new Object();
@@ -86,8 +88,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.HttpApplication", methodName: "CreateEventExecutionSteps");
+
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 
@@ -106,7 +108,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 
 			var beforeExecutionStep = GetBeforeExecutionStep(instrumentedMethodCall.MethodCall, agent, eventName, httpApplication);
 			var afterExecutionStep = GetAfterExecutionStep(instrumentedMethodCall.MethodCall, agent, eventName, httpApplication);
-			
+
 			steps.Add(beforeExecutionStep);
 			return Delegates.GetDelegateFor(() => steps.Add(afterExecutionStep));
 		}
@@ -128,7 +130,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 					HttpContextActions.TransactionStartup(agent, httpContext);
 				};
 				transaction = agent.CreateWebTransaction(WebTransactionType.ASP, "Classic Pipeline", true, onCreate);
-			} else
+			}
+			else
 			{
 				transaction = agent.CurrentTransaction;
 			}

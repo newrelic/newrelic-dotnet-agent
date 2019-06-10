@@ -31,6 +31,13 @@ namespace ArtifactBuilder
 			xml.Save(NuspecFilePath);
 		}
 
+		public void SetVersionFromDll(string dllPath, string preReleaseSuffix = null)
+		{
+			var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(dllPath).FileVersion;
+			if (!string.IsNullOrEmpty(preReleaseSuffix)) version += $"-{preReleaseSuffix}";
+			SetVersion($"{version}");
+		}
+
 		public void CopyAll(string sourceDirectory, string subDirectory = null)
 		{
 			FileHelpers.CopyAll(sourceDirectory, $@"{StagingDirectory}\{subDirectory}");
@@ -79,6 +86,16 @@ namespace ArtifactBuilder
 		public void CopyToTools(IEnumerable<string> filePaths, string subDirectory = null)
 		{
 			FileHelpers.CopyFile(filePaths, $@"{StagingDirectory}\tools\{subDirectory}");
+		}
+
+		public void CopyToRoot(string filePath, string subDirectory = null)
+		{
+			FileHelpers.CopyFile(filePath, $@"{StagingDirectory}\{subDirectory}");
+		}
+
+		public void CopyToRoot(IEnumerable<string> filePaths, string subDirectory = null)
+		{
+			FileHelpers.CopyFile(filePaths, $@"{StagingDirectory}\{subDirectory}");
 		}
 
 		public void Pack()

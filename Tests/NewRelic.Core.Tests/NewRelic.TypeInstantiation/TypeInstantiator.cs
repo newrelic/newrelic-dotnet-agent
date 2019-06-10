@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.CSharp;
-using NewRelic.SystemExtensions;
 using NUnit.Framework;
 
 public interface IInterface {}
@@ -230,7 +229,7 @@ public class Baz {}");
 				var concreteAssemblyPath = Path.Combine(directoryPath, "DoNothing.dll");
 				GenerateAssembly(@"public class DoNothing : IDoSomething { }", concreteAssemblyPath, additionalAssemblyReferences: new[] { interfaceAssembly });
 			};
-			AppDomainExtensions.IsolateMethodInAppDomain(testMethod1, AssemblyResolverHolder.AssemblyResolver, directory.FullName);
+			AppDomainExtensions.IsolateMethodInAppDomain(testMethod1, directory.FullName);
 
 			Action<String> testMethod2 = directoryPath =>
 			{
@@ -245,7 +244,7 @@ public class Baz {}");
 				Assert.AreEqual(1, result.Exceptions.Count());
 			};
 
-			AppDomainExtensions.IsolateMethodInAppDomain(testMethod2, AssemblyResolverHolder.AssemblyResolver, directory.FullName);
+			AppDomainExtensions.IsolateMethodInAppDomain(testMethod2, directory.FullName);
 			directory.Delete(true);
 		}
 
@@ -282,7 +281,7 @@ public class Bar : IInterface {}"),
 				Assert.AreEqual(2, result.Instances.Count());
 				Assert.AreEqual(0, result.Exceptions.Count());
 			};
-			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, AssemblyResolverHolder.AssemblyResolver, directory.FullName);
+			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, directory.FullName);
 			directory.Delete(true);
 		}
 
@@ -322,7 +321,7 @@ public class Bar : IInterface {}"),
 				Assert.AreEqual(0, result.Instances.Count());
 				Assert.AreEqual(0, result.Exceptions.Count());
 			};
-			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, AssemblyResolverHolder.AssemblyResolver, directory.FullName);
+			AppDomainExtensions.IsolateMethodInAppDomain(testMethod, directory.FullName);
 			directory.Delete(true);
 		}
 

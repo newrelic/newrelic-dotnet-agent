@@ -86,7 +86,7 @@
 		<WixVariable Id="WixUIBannerBmp" Value="ui-banner.bmp"/>
 		<WixVariable Id="WixUIDialogBmp" Value="ui-dialog.bmp"/>
 
-		<WixVariable Id="WixUILicenseRtf" Value="..\Miscellaneous\License.rtf"/>
+		<WixVariable Id="WixUILicenseRtf" Value="..\..\licenses\License.rtf"/>
 	</Product>
 
 	<Fragment>
@@ -196,7 +196,10 @@
 		<ComponentGroup Id="ProductComponents" Directory="NETAGENTFOLDER">
 			<!-- Text -->
 			<Component Id="LicenseComponent" Guid="{47114807-F20A-478D-9F4F-4B3D6CF195BE}">
-				<File Id="LicenseFile" Name="License.txt" KeyPath="yes" Source="..\Miscellaneous\License.txt" />
+				<File Id="LicenseFile" Name="LICENSE.txt" KeyPath="yes" Source="..\..\licenses\LICENSE.txt" />
+			</Component>
+			<Component Id="ThirdPartyNoticesComponent" Guid="{AE9FF10E-629E-49FB-957D-672CBC8AD6E3}">
+				<File Id="ThirdPartyNoticesFile" Name="THIRD_PARTY_NOTICES.txt" KeyPath="yes" Source="..\..\licenses\THIRD_PARTY_NOTICES.txt" />
 			</Component>
 
 			<!-- Libraries -->
@@ -308,15 +311,6 @@
 			<Component Id="SqlWrapperComponent" Guid="{9AD5D094-926F-4EB6-A00E-D82F5AD36C9F}">
 				<File Id="SqlWrapperFile" Name="NewRelic.Providers.Wrapper.Sql.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Sql.dll"/>
 			</Component>
-			<Component Id="SqlAsyncWrapperComponent" Guid="{4AF25E49-06F1-4128-88DD-0F964F2C4559}">
-				<File Id="SqlAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.SqlAsync.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.SqlAsync.dll"/>
-			</Component>
-			<Component Id="CustomInstrumentationWrapperComponent" Guid="{568E5793-692C-4265-8912-C2484455523F}">
-				<File Id="CustomInstrumentationWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentation.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll"/>
-			</Component>
-			<Component Id="CustomInstrumentationAsyncWrapperComponent" Guid="{A08DD1E7-A16D-431E-BF8E-0B299781A8BA}">
-				<File Id="CustomInstrumentationAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll"/>
-			</Component>
 			<Component Id="MsmqWrapperComponent" Guid="{8DBF938B-4DE7-421E-821B-E9A6761C6CCF}">
 				<File Id="MsmqWrapperFile" Name="NewRelic.Providers.Wrapper.Msmq.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Msmq.dll"/>
 			</Component>
@@ -409,9 +403,6 @@
 			</Component>
 			<Component Id="SqlInstrumentationComponent" Guid="{A0A11FC0-E592-4F35-BB19-ECC934C98B98}">
 				<File Id="SqlInstrumentationFile" Name="NewRelic.Providers.Wrapper.Sql.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml"/>
-			</Component>
-			<Component Id="SqlAsyncInstrumentationComponent" Guid="{30272B80-2830-4453-A9BF-8EA98842B50A}">
-				<File Id="SqlAsyncInstrumentationFile" Name="NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml"/>
 			</Component>
 			<Component Id="MsmqInstrumentationComponent" Guid="{047670EA-8D02-47AE-A1E7-63B8ECF8D3B0}">
 				<File Id="MsmqInstrumentationFile" Name="NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml"/>

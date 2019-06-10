@@ -307,7 +307,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 		#endregion
 
-		#region BuildAggregateData
+		#region Build Metrics
 
 		[Test]
 		public void BuildAggregateData()
@@ -323,7 +323,45 @@ namespace NewRelic.Agent.Core.WireModels
 			Assert.AreEqual(one.Value5 + two.Value5, actual.Value5);
 		}
 
-		#endregion BuildAggregateData
+		[Test]
+		public void BuildGaugeMetric()
+		{
+			const int expectedValue = 21;
+
+			var metricData = MetricDataWireModel.BuildGaugeValue(expectedValue);
+
+			NrAssert.Multiple(
+				() => Assert.AreEqual(1, metricData.Value0),
+				()=> Assert.AreEqual(expectedValue,metricData.Value1),
+				() => Assert.AreEqual(expectedValue, metricData.Value2),
+				() => Assert.AreEqual(expectedValue, metricData.Value3),
+				() => Assert.AreEqual(expectedValue, metricData.Value4),
+				() => Assert.AreEqual(expectedValue*expectedValue, metricData.Value5)
+			);
+		}
+
+		[Test]
+		public void BuildSummaryMetric()
+		{
+			const int count = 18;
+			const int value = 20;
+			const int min = 10;
+			const int max = 30;
+			const int sumSquares = value * value;
+
+			var metricData = MetricDataWireModel.BuildSummaryValue(count, value, min, max);
+
+			NrAssert.Multiple(
+				() => Assert.AreEqual(count, metricData.Value0),
+				() => Assert.AreEqual(value, metricData.Value1),
+				() => Assert.AreEqual(value, metricData.Value2),
+				() => Assert.AreEqual(min, metricData.Value3),
+				() => Assert.AreEqual(max, metricData.Value4),
+				() => Assert.AreEqual(sumSquares, metricData.Value5)
+			);
+		}
+
+		#endregion
 
 		#region DistributedTracing
 		private static List<TestCaseData> GetSupportabilityDistributedTraceTestData()

@@ -36,6 +36,7 @@ using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
+using NewRelicCore = NewRelic.Core;
 
 // ReSharper disable RedundantTypeArgumentsOfMethod
 namespace NewRelic.Agent.Core.DependencyInjection
@@ -68,10 +69,12 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			// Other
 			container.Register<ICpuSampleTransformer, CpuSampleTransformer>();
 			container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
+			container.Register<IThreadStatsSampleTransformer, ThreadStatsSampleTransformer>();
 			container.Register<IEnvironment, SystemInterfaces.Environment>();
 			container.Register<IAgent, Wrapper.AgentWrapperApi.Agent>();
 			container.Register<CpuSampler, CpuSampler>();
 			container.Register<MemorySampler, MemorySampler>();
+			container.Register<ThreadStatsSampler, ThreadStatsSampler>();
 			container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
 			container.Register<IProcessStatic, ProcessStatic>();
 			container.Register<IDnsStatic, DnsStatic>();
@@ -169,7 +172,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			{
 				container.Register<INativeMethods, LinuxNativeMethods>();
 			}
-			container.Register<ITracePriorityManager, TracePriorityManager>();
+			container.Register<NewRelicCore.DistributedTracing.ITracePriorityManager, NewRelicCore.DistributedTracing.TracePriorityManager>();
 
 			container.Build();
 		}
@@ -184,6 +187,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Resolve<IAgentHealthReporter>();
 			container.Resolve<CpuSampler>();
 			container.Resolve<MemorySampler>();
+			container.Resolve<ThreadStatsSampler>();
 			container.Resolve<ConfigurationTracker>();
 			container.Resolve<LiveInstrumentationServerConfigurationListener>();
 		}

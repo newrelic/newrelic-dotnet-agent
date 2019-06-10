@@ -93,7 +93,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 					var headersToAttach = transaction.GetResponseMetadata();
 					foreach (var header in headersToAttach)
 					{
-						OperationContext.Current?.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
+						var outgoingMessageHeaders = OperationContext.Current?.OutgoingMessageHeaders;
+						if (outgoingMessageHeaders != null && outgoingMessageHeaders.MessageVersion.Envelope != EnvelopeVersion.None)
+						{
+							OperationContext.Current?.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
+						}
 
 						AddHeaderToHttpResponsePropertyForOutgoingMessage(header);
 					}

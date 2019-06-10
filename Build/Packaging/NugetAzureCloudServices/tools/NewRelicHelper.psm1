@@ -48,13 +48,9 @@ function create_dialog([System.String]$title, [System.String]$msg){
 }
 
 #Modify NewRelic.msi and NewRelic.cmd so that they will be copy always
-function update_newrelic_project_items([System.__ComObject] $project, [System.String]$agentMsi, [System.String]$serverMonitorMsi){
+function update_newrelic_project_items([System.__ComObject] $project, [System.String]$agentMsi){
 	$newrelicAgentMsi = $project.ProjectItems.Item($agentMsi)
 	$copyToOutputMsi = $newrelicAgentMsi.Properties.Item("CopyToOutputDirectory")
-	$copyToOutputMsi.Value = 1
-
-	$newrelicServerMonitorMsi = $project.ProjectItems.Item($serverMonitorMsi)
-	$copyToOutputMsi = $newrelicServerMonitorMsi.Properties.Item("CopyToOutputDirectory")
 	$copyToOutputMsi.Value = 1
 
 	$newrelicCmd = $project.ProjectItems.Item("newrelic.cmd")

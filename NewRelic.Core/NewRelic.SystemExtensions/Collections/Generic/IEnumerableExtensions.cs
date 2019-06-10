@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions.Collections.Generic
 {
@@ -14,8 +13,7 @@ namespace NewRelic.SystemExtensions.Collections.Generic
 		/// <param name="source"></param>
 		/// <param name="predicate">A function to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
 		/// <returns></returns>
-		[NotNull]
-		public static IEnumerable<T> Unless<T>([NotNull] this IEnumerable<T> source, [NotNull] Func<T, Boolean> predicate)
+		public static IEnumerable<T> Unless<T>(this IEnumerable<T> source, Func<T, Boolean> predicate)
 		{
 			return source.Where(current => !predicate(current));
 		}
@@ -29,8 +27,8 @@ namespace NewRelic.SystemExtensions.Collections.Generic
 		/// <param name="source"></param>
 		/// <param name="predicate">A function that takes the last element and the current element (in that order) to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
 		/// <returns></returns>
-		[NotNull]
-		public static IEnumerable<T> Unless<T>([NotNull] this IEnumerable<T> source, [NotNull] Func<T, T, Boolean> predicate)
+
+		public static IEnumerable<T> Unless<T>(this IEnumerable<T> source, Func<T, T, Boolean> predicate)
 		{
 			var last = default(T);
 			return source.Where((current, index) =>
@@ -76,8 +74,8 @@ namespace NewRelic.SystemExtensions.Collections.Generic
 		/// <param name="duplicateKeyBehavior"></param>
 		/// <param name="equalityComparer"></param>
 		/// <returns></returns>
-		[NotNull]
-		public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>([NotNull] this IEnumerable<KeyValuePair<TKey, TValue>> source, DuplicateKeyBehavior duplicateKeyBehavior = DuplicateKeyBehavior.Throw, IEqualityComparer<TKey> equalityComparer = null)
+
+		public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source, DuplicateKeyBehavior duplicateKeyBehavior = DuplicateKeyBehavior.Throw, IEqualityComparer<TKey> equalityComparer = null)
 		{
 			var dictionary = new Dictionary<TKey, TValue>(equalityComparer);
 
@@ -100,14 +98,12 @@ namespace NewRelic.SystemExtensions.Collections.Generic
 			return dictionary;
 		}
 
-		[NotNull, Pure]
-		public static IEnumerable<T> NotNull<T>([NotNull] this IEnumerable<T> source)
+		public static IEnumerable<T> NotNull<T>(this IEnumerable<T> source)
 		{
 			return source.Where(x => x != null);
 		}
 
-		[NotNull, Pure]
-		public static IEnumerable<T> Swallow<T, TException>([NotNull] this IEnumerable<T> source) where TException : Exception
+		public static IEnumerable<T> Swallow<T, TException>(this IEnumerable<T> source) where TException : Exception
 		{
 			using (var enumerator = source.GetEnumerator())
 			{
@@ -129,19 +125,17 @@ namespace NewRelic.SystemExtensions.Collections.Generic
 			}
 		}
 
-		[NotNull, Pure]
-		public static IEnumerable<T> Swallow<T>([NotNull] this IEnumerable<T> source)
+		public static IEnumerable<T> Swallow<T>(this IEnumerable<T> source)
 		{
 			return Swallow<T, Exception>(source);
 		}
 
-		[NotNull, Pure]
-		public static IEnumerable<T> ForEachLazy<T>([NotNull] this IEnumerable<T> source, Action<T> action)
+		public static IEnumerable<T> ForEachLazy<T>(this IEnumerable<T> source, Action<T> action)
 		{
 			return new ForEachEnumerable<T>(source, action);
 		}
 
-		public static void ForEachNow<T>([NotNull] this IEnumerable<T> source, Action<T> action)
+		public static void ForEachNow<T>(this IEnumerable<T> source, Action<T> action)
 		{
 			var enumerable = source.ForEachLazy(action);
 			// ReSharper disable once UnusedVariable

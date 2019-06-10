@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions.Threading
 {
 	public static class ReaderWriterLockSlimExtensions
 	{
 
-		[NotNull]
-		public static Func<IDisposable> ReusableDisposableReadLock([NotNull] this ReaderWriterLockSlim readerWriterLockSlim)
+		public static Func<IDisposable> ReusableDisposableReadLock(this ReaderWriterLockSlim readerWriterLockSlim)
 		{
 			if (readerWriterLockSlim == null)
 				throw new ArgumentNullException("readerWriterLockSlim");
@@ -16,8 +14,7 @@ namespace NewRelic.SystemExtensions.Threading
 			return ReusableDisposableLock(readerWriterLockSlim.EnterReadLock, readerWriterLockSlim.ExitReadLock);
 		}
 
-		[NotNull]
-		public static Func<IDisposable> ReusableDisposableWriteLock([NotNull] this ReaderWriterLockSlim readerWriterLockSlim)
+		public static Func<IDisposable> ReusableDisposableWriteLock(this ReaderWriterLockSlim readerWriterLockSlim)
 		{
 			if (readerWriterLockSlim == null)
 				throw new ArgumentNullException("readerWriterLockSlim");
@@ -25,9 +22,8 @@ namespace NewRelic.SystemExtensions.Threading
 			return ReusableDisposableLock(readerWriterLockSlim.EnterWriteLock, readerWriterLockSlim.ExitWriteLock);
 		}
 
-		[NotNull]
 		private static Func<IDisposable> ReusableDisposableLock(
-			[NotNull] Action acquire, [NotNull] Action release)
+			Action acquire, Action release)
 		{
 
 			var disposable = new DisposeDelegate(release);
@@ -48,7 +44,7 @@ namespace NewRelic.SystemExtensions.Threading
 
 		private sealed class DisposeDelegate : IDisposable
 		{
-			[NotNull] private readonly Action _action;
+			private readonly Action _action;
 			public bool LockWasTaken { private get; set; } = false;
 
 			public DisposeDelegate(Action action)

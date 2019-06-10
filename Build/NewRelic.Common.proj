@@ -1,0 +1,45 @@
+﻿<Project InitialTargets="VersionByGitTag">
+  <PropertyGroup>
+    <Authors>New Relic</Authors>
+    <Company>New Relic</Company>
+    <Copyright>Copyright © $([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <PackageIconUrl>http://newrelic.com/images/avatar-newrelic.png</PackageIconUrl>
+    <PackageProjectUrl>https://docs.newrelic.com/docs/agents/net-agent</PackageProjectUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <Target Name="CreateGitVersion">
+    <!-- Get current working branch-->
+    <Exec Command="git rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitBranchName" />
+    </Exec>
+    <!-- Get current hash-->
+    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitHash" />
+    </Exec>
+    <!-- Get last release version-->
+    <Exec Command="git describe --match $(GitTagPrefix)[0-9]* --abbrev=0 HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitLatestTagVersion" />
+    </Exec>
+    <!-- Get get the number of commits between the release tag and current working branch-->
+    <Exec Command="git rev-list $(GitLatestTagVersion)..$(GitBranchName) --count HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitCommitCount" />
+    </Exec>
+    <PropertyGroup>
+      <GitGitLatestTagVersionSanitized>$(GitLatestTagVersion.Replace('$(GitTagPrefix)',''))</GitGitLatestTagVersionSanitized>
+      <GitVersion>$(GitGitLatestTagVersionSanitized).$(GitCommitCount).0</GitVersion>
+      <Version>$(GitVersion)</Version>
+      <PackageVersion>$(GitVersion)</PackageVersion>
+      <AssemblyFileVersion>$(GitVersion)</AssemblyFileVersion>
+      <AssemblyVersion>$(GitVersion)</AssemblyVersion>
+      <GitBranchNameSanitized Condition="'$(GitBranchName)' != 'dev' And '$(GitBranchName)' != 'master'">.branch.$(GitBranchName.Replace('/','-'))</GitBranchNameSanitized>
+      <InformationalVersion>$(GitVersion)+sha.$(GitHash)$(GitBranchNameSanitized)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+</Project>

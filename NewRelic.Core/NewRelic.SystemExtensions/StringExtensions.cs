@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions
 {
@@ -91,7 +90,7 @@ namespace NewRelic.SystemExtensions
 			return result;
 		}
 
-		public static String TrimEnd([NotNull] this String source, Char trimChar, Int32 maxCharactersToTrim)
+		public static String TrimEnd(this String source, Char trimChar, Int32 maxCharactersToTrim)
 		{
 			// Traverse backward through string skipping trimChars until maxCharactersToTrim is hit
 			var index = source.Length - 1;
@@ -104,7 +103,7 @@ namespace NewRelic.SystemExtensions
 			return source.Substring(0, index + 1);
 		}
 
-		public static String EnsureLeading([NotNull] this String source, String leading)
+		public static String EnsureLeading(this String source, String leading)
 		{
 			if (leading == null)
 				return source;
@@ -115,7 +114,7 @@ namespace NewRelic.SystemExtensions
 			return leading + source;
 		}
 
-		public static String EnsureTrailing([NotNull] this String source, String trailing)
+		public static String EnsureTrailing(this String source, String trailing)
 		{
 			if (trailing == null)
 				return source;

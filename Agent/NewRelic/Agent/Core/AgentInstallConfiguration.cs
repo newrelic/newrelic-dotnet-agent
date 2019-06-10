@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Diagnostics;
+using NewRelic.SystemInterfaces;
 #if NET45
 using System.Web;
 using Microsoft.Win32;
@@ -9,7 +9,7 @@ using Microsoft.Win32;
 
 namespace NewRelic.Agent.Core
 {
-	public static class AgentInstallConfiguration
+	public static partial class AgentInstallConfiguration
 	{
 #if NETSTANDARD2_0
 		private const string NewRelicHomeEnvironmentVariable = "CORECLR_NEWRELIC_HOME";
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
 			IsNetstandardPresent = GetIsNetstandardPresent();
 			IsNet46OrAbovePresent = GetIsNet46OrAbovePresent();
-			ProcessId = Process.GetCurrentProcess().Id;
+			ProcessId = new ProcessStatic().GetCurrentProcess().Id;
 			AppDomainName = AppDomain.CurrentDomain.FriendlyName;
 #if NET45
 			if (HttpRuntime.AppDomainAppVirtualPath != null)

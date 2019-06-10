@@ -6,12 +6,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
 	public class RouteNamingWrapper : IWrapper
 	{
+		public readonly string WrapperName = "Asp35.GetRouteDataTracer";
+
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.Routing.RouteCollection", methodName: "GetRouteData");
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 

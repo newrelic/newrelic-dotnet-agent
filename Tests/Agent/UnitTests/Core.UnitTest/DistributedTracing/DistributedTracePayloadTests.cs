@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using Telerik.JustMock;
+using NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {

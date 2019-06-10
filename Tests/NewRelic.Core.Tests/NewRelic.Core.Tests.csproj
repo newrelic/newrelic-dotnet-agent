@@ -63,10 +63,7 @@
     <Compile Include="NewRelic.Collections\DisposableCollection.cs" />
     <Compile Include="NewRelic.Collections\PrioritizedNodeTests.cs" />
     <Compile Include="NewRelic.Collections\StaticCounterTests.cs" />
-    <Compile Include="NewRelic.Dispatchers\EventBus.cs" />
-    <Compile Include="NewRelic.Dispatchers\EventSubscription.cs" />
     <Compile Include="NewRelic.Memoization\MemozierTests.cs" />
-    <Compile Include="NewRelic.SystemExtensions\AppDomainExtensionsTests.cs" />
     <Compile Include="NewRelic.SystemExtensions\Collections\Generic\DictionaryExtensions.cs" />
     <Compile Include="NewRelic.SystemExtensions\Collections\Generic\IEnumerableExtensionsTests.cs" />
     <Compile Include="NewRelic.SystemExtensions\Collections\NameValueCollectionExtensions.cs" />
@@ -74,7 +71,7 @@
     <Compile Include="NewRelic.SystemExtensions\StringExtensions.cs" />
     <Compile Include="NewRelic.SystemExtensions\Threading\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="NewRelic.SystemExtensions\TimeSpanExtensionsTests.cs" />
-    <Compile Include="NewRelic.TypeInstantiation\AssemblyResolverHolder.cs" />
+    <Compile Include="NewRelic.TypeInstantiation\AppDomainExtensions.cs" />
     <Compile Include="NewRelic.TypeInstantiation\TypeInstantiator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="packages.config" />

@@ -1,14 +1,12 @@
-using System;
-
 namespace NewRelic.Agent.Core.DataTransport
 {
 	public class CollectorRequestPayload
 	{
-		public Boolean IsCompressed { get; set; }
-		public String CompressionType { get; }
-		public Byte[] Data { get; }
+		public bool IsCompressed { get; set; }
+		public string CompressionType { get; }
+		public byte[] Data { get; }
 
-		public CollectorRequestPayload(Boolean isCompressed, String compressionType, Byte[] data)
+		public CollectorRequestPayload(bool isCompressed, string compressionType, byte[] data)
 		{
 			IsCompressed = isCompressed;
 			CompressionType = compressionType;

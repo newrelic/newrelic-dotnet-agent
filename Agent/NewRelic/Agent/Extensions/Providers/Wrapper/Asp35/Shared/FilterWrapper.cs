@@ -9,6 +9,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
 	public class FilterWrapper : IWrapper
 	{
+		public const string WrapperName = "Asp35.FilterTracer";
+
 		private const String BrowerAgentInjectedKey = "NewRelic.BrowerAgentInjected";
 
 		public bool IsTransactionRequired => false;
@@ -21,8 +23,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny(assemblyName: "System.Web", typeName: "System.Web.HttpWriter", methodNames: new [] { "Filter", "FilterIntegrated" });
+			var canWrap = methodInfo.RequestedWrapperName.Equals(WrapperName, StringComparison.OrdinalIgnoreCase);
 			return new CanWrapResponse(canWrap);
 		}
 

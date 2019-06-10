@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -10,9 +9,9 @@ namespace NewRelic.Agent.Core.DataTransport
 		[Test]
 		public void deserializes_from_successful_response()
 		{
-			const String json = @"{""return_value"": ""Hello!""}";
+			const string json = @"{""return_value"": ""Hello!""}";
 
-			var result = JsonConvert.DeserializeObject<CollectorResponseEnvelope<String>>(json);
+			var result = JsonConvert.DeserializeObject<CollectorResponseEnvelope<string>>(json);
 
 			Assert.NotNull(result);
 			Assert.AreEqual("Hello!", result.ReturnValue);
@@ -21,9 +20,9 @@ namespace NewRelic.Agent.Core.DataTransport
 		[Test]
 		public void deserializes_from_error_response()
 		{
-			const String json = @"{""exception"": ""banana""}";
+			const string json = @"{""exception"": ""banana""}";
 
-			var result = JsonConvert.DeserializeObject<CollectorResponseEnvelope<String>>(json);
+			var result = JsonConvert.DeserializeObject<CollectorResponseEnvelope<string>>(json);
 
 			Assert.NotNull(result);
 			Assert.NotNull(result.CollectorExceptionEnvelope);
