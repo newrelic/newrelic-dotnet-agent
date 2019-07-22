@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -19,36 +18,27 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		/// </summary>
 		/// <param name="transaction"></param>
 		/// <returns>true if the transaction got finalized, and false if it was already finalized.</returns>
-		bool Finish([NotNull] IInternalTransaction transaction);
+		bool Finish(IInternalTransaction transaction);
 	}
 
 	public class TransactionFinalizer : DisposableService, ITransactionFinalizer
 	{
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
-
-		[NotNull]
 		private readonly ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-		[NotNull]
 		private readonly IPathHashMaker _pathHashMaker;
-
-		[NotNull]
 		private readonly ITransactionTransformer _transactionTransformer;
 
-		public TransactionFinalizer([NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] IPathHashMaker pathHashMaker, [NotNull] ITransactionTransformer transactionTransformer)
+		public TransactionFinalizer(IAgentHealthReporter agentHealthReporter, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, ITransactionTransformer transactionTransformer)
 		{
 			_agentHealthReporter = agentHealthReporter;
 			_transactionMetricNameMaker = transactionMetricNameMaker;
 			_pathHashMaker = pathHashMaker;
 			_transactionTransformer = transactionTransformer;
-
 			_subscriptions.Add<TransactionFinalizedEvent>(OnTransactionFinalized);
 		}
 
 		public bool Finish(IInternalTransaction transaction)
 		{
-
 			if (transaction.Finish())
 			{
 				UpdatePathHash(transaction);
@@ -58,7 +48,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			return false;
 		}
 
-		private void OnTransactionFinalized([NotNull] TransactionFinalizedEvent eventData)
+		private void OnTransactionFinalized(TransactionFinalizedEvent eventData)
 		{
 			var internalTransaction = eventData.Transaction;
 
@@ -99,14 +89,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			}
 		}
 
-		[CanBeNull]
-		private static Segment TryGetLastStartedSegment([NotNull] ImmutableTransaction transaction)
+		private static Segment TryGetLastStartedSegment(ImmutableTransaction transaction)
 		{
 			return transaction.Segments.LastOrDefault(); 
 		}
 
-		[CanBeNull]
-		private static Segment TryGetLastFinishedSegment([NotNull] ImmutableTransaction transaction)
+		private static Segment TryGetLastFinishedSegment(ImmutableTransaction transaction)
 		{
 			return transaction.Segments
 				.Where(segment => segment.RelativeEndTime != null)
@@ -118,7 +106,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		/// Estimates the duration of a transaction based on its segments.
 		/// </summary>
 		/// <returns>An estimate of the duration of a transaction.</returns>
-		private static TimeSpan GetEstimatedTransactionDuration([NotNull] IInternalTransaction internalTransaction, [CanBeNull] Segment lastStartedSegment, [CanBeNull] Segment lastFinishedSegment)
+		private static TimeSpan GetEstimatedTransactionDuration(IInternalTransaction internalTransaction, Segment lastStartedSegment, Segment lastFinishedSegment)
 		{
 			if (lastStartedSegment == null && lastFinishedSegment == null)
 				return TimeSpan.FromMilliseconds(1);
@@ -132,7 +120,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			return maxEndTime;
 		}
 
-		private void UpdatePathHash([NotNull] IInternalTransaction transaction)
+		private void UpdatePathHash(IInternalTransaction transaction)
 		{
 			var currentTransactionName = transaction.CandidateTransactionName.CurrentTransactionName;
 			var currentTransactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(currentTransactionName);

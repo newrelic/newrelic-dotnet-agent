@@ -60,8 +60,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		public static void TransactionShutdown([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
 		{
 			StoreRequestParameters(agent, httpContext);
-			TryWriteResponseHeaders(agent, httpContext);
 			SetStatusCode(agent, httpContext);
+			TryWriteResponseHeaders(agent, httpContext);
 		}
 
 		private static void StoreQueueTime([NotNull] IAgent agent, [NotNull] HttpContext httpContext)

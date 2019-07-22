@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
+using NewRelic.Core;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
 using System;

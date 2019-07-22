@@ -1,34 +1,36 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
 using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Instrumentation;
+using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.Wrapper;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.SystemInterfaces;
-using Telerik.JustMock;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Instrumentation;
-using NewRelic.Agent.Core.ThreadProfiling;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core.Logging;
 using NewRelic.Providers.Storage.AsyncLocal;
-using NewRelic.Agent.Core.Wrapper;
+using NewRelic.SystemInterfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using Telerik.JustMock;
 
 namespace CompositeTests
 {
@@ -65,7 +67,7 @@ namespace CompositeTests
 		[NotNull]
 		public List<ErrorTraceWireModel> ErrorTraces { get; } = new List<ErrorTraceWireModel>();
 
-		public EventHarvestData ErrorEventAdditionalInfo { get; } = new EventHarvestData();
+		public EventHarvestData AdditionalHarvestData { get; } = new EventHarvestData();
 
 		[NotNull]
 		public List<ErrorEventWireModel> ErrorEvents { get; } = new List<ErrorEventWireModel>();
@@ -112,6 +114,8 @@ namespace CompositeTests
 
 		public CompositeTestAgent(bool shouldAllowThreads, bool includeAsyncLocalStorage)
 		{
+			Log.Initialize(new Logger());
+
 			_shouldAllowThreads = shouldAllowThreads;
 
 			// Create the fake classes necessary to construct services
@@ -189,16 +193,16 @@ namespace CompositeTests
 				.Returns(SaveDataAndReturnSuccess(CustomEvents));
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(TransactionTraces));
-			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
-				.Returns(SaveDataAndReturnSuccess(TransactionEvents));
+			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<TransactionEventWireModel>>()))
+				.Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, TransactionEvents));
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<ErrorTraceWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(ErrorTraces));
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(SqlTraces));
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
-				.Returns(SaveDataAndReturnSuccess(ErrorEventAdditionalInfo, ErrorEvents));
+				.Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.Returns(SaveDataAndReturnSuccess(ErrorEventAdditionalInfo, SpanEvents));
+				.Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
 
 		}
 

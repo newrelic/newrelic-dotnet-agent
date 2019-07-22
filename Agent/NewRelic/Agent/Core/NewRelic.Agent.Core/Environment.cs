@@ -9,8 +9,8 @@ using System.Web.Configuration;
 #endif
 using System.Web;
 using Microsoft.Win32;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core
 
 		private readonly IProcessStatic _processStatic;
 
-		public ulong TotalPhysicalMemory { get; }
+		public ulong? TotalPhysicalMemory { get; }
 		public string AppDomainAppPath { get; }
 
 		public Environment(ISystemInfo systemInfo, IProcessStatic processStatic)

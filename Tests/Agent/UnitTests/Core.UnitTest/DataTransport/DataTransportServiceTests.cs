@@ -4,9 +4,11 @@ using System.Net;
 using System.Net.Sockets;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Fixtures;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
@@ -23,13 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		private IConfiguration _configuration;
 		private DisposableCollection _disposableCollection;
 		private IAgentHealthReporter _agentHealthReporter;
-
-		private static readonly HttpException[] HttpExceptionsThatShouldTriggerSupportabilityMetrics =
-		{
-			new ServerErrorException("Server Error Exception", HttpStatusCode.InternalServerError),
-			new RequestTimeoutException("Request timeout exception"),
-			new PostTooLargeException("Post too large")
-		};
+		private IConnectionHandler _connectionHandler;
 
 		private static readonly Exception[] ExceptionsThatShouldTriggerSupportabilityMetrics =
 		{
@@ -47,7 +43,9 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _configuration.AgentRunId).Returns("MyAgentRunId");
 			_disposableCollection.Add(new ConfigurationAutoResponder(_configuration));
 
-			_connectionManager = Mock.Create<IConnectionManager>();
+			_connectionHandler = Mock.Create<IConnectionHandler>();
+			var scheduler = Mock.Create<IScheduler>();
+			_connectionManager = Mock.Create(() => new ConnectionManager(_connectionHandler, scheduler));
 			var dateTimeStatic = Mock.Create<IDateTimeStatic>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>(); 
 			_disposableCollection.Add(_dataTransportService = new DataTransportService(_connectionManager, dateTimeStatic, _agentHealthReporter));
@@ -67,64 +65,40 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
 				.Returns<string, object[]>(null);
 
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+			var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
 			Assert.AreEqual(DataTransportResponseStatus.RequestSuccessful, result);
 		}
 
-		[Test]
-		public void SendXyz_ReturnsConnectionError_IfConnectionException()
+		[TestCase((HttpStatusCode)400, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)401, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)403, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)404, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)405, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)407, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)408, DataTransportResponseStatus.Retain)]
+		[TestCase((HttpStatusCode)409, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)410, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)411, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)413, DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard)]
+		[TestCase((HttpStatusCode)414, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)415, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)417, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)429, DataTransportResponseStatus.Retain)]
+		[TestCase((HttpStatusCode)431, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)500, DataTransportResponseStatus.Retain)]
+		[TestCase((HttpStatusCode)503, DataTransportResponseStatus.Retain)]
+		[TestCase((HttpStatusCode)333, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)444, DataTransportResponseStatus.Discard)]
+		[TestCase((HttpStatusCode)555, DataTransportResponseStatus.Discard)]
+		public void SendXyz_ReturnsCorrectRetention_IfHttpException(HttpStatusCode statusCode, DataTransportResponseStatus expected)
 		{
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new ConnectionException(null));
+				.Throws(new HttpException(statusCode, null));
 
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+			var actual = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
-			Assert.AreEqual(DataTransportResponseStatus.ConnectionError, result);
-		}
-
-		[Test]
-		public void SendXyz_ReturnsPostTooBigError_IfPostTooBigException()
-		{
-			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new PostTooBigException(null));
-
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
-
-			Assert.AreEqual(DataTransportResponseStatus.PostTooBigError, result);
-		}
-
-		[Test]
-		public void SendXyz_ReturnsPostTooBigError_IfPostTooLargeException()
-		{
-			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new PostTooLargeException(null));
-
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
-
-			Assert.AreEqual(DataTransportResponseStatus.PostTooBigError, result);
-		}
-
-		[Test]
-		public void SendXyz_ReturnsServerError_IfServerException()
-		{
-			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new ServerErrorException(null, HttpStatusCode.InternalServerError));
-
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
-
-			Assert.AreEqual(DataTransportResponseStatus.ServerError, result);
-		}
-
-		[Test]
-		public void SendXyz_ReturnsRequestTimeout_IfRequestTimeoutException()
-		{
-			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new RequestTimeoutException(null));
-
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
-
-			Assert.AreEqual(DataTransportResponseStatus.RequestTimeout, result);
+			Assert.AreEqual(expected, actual);
 		}
 
 		[Test]
@@ -133,9 +107,9 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
 				.Throws(new SocketException(-1));
 
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+			var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
-			Assert.AreEqual(DataTransportResponseStatus.CommunicationError, result);
+			Assert.AreEqual(DataTransportResponseStatus.Retain, result);
 		}
 
 		[Test]
@@ -144,9 +118,9 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
 				.Throws(new WebException());
 
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+			var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
-			Assert.AreEqual(DataTransportResponseStatus.CommunicationError, result);
+			Assert.AreEqual(DataTransportResponseStatus.Retain, result);
 		}
 
 		[Test]
@@ -155,54 +129,48 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
 				.Throws(new Exception());
 
-			var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+			var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
-			Assert.AreEqual(DataTransportResponseStatus.OtherError, result);
+			Assert.AreEqual(DataTransportResponseStatus.Discard, result);
 		}
 
-		[Test]
-		public void SendXyz_PublishesRestartAgentEvent_IfForceRestartException()
+		[TestCase(HttpStatusCode.Unauthorized)]
+		[TestCase(HttpStatusCode.Conflict)]
+		public void SendXyz_PublishesRestartAgentEvent_ForCertainHttpStatusCodes(HttpStatusCode statusCode)
 		{
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new ForceRestartException(null));
+				.Throws(new HttpException(statusCode, null));
 
 			using (new EventExpectation<RestartAgentEvent>())
 			{
-				_dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+				_dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+			}
+
+			Mock.Assert(() => _connectionHandler.Disconnect(), Occurs.Once());
+			Mock.Assert(() => _connectionHandler.Connect(), Occurs.Once());
+		}
+
+		[Test]
+		public void SendXyz_PublishesShutdownAgentEvent_IfForHttpStatusCodeGone()
+		{
+			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+				.Throws(new HttpException(HttpStatusCode.Gone, null));
+
+			using (new EventExpectation<KillAgentEvent>())
+			{
+				_dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 			}
 		}
 
 		[Test]
-		public void SendXyz_PublishesShutdownAgentEvent_IfLicenseException()
+		public void SendXyz_GenerateCollectorErrorExceptionSupportabilityMetrics_ForHttpExceptions()
 		{
-			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new LicenseException(null));
+			var exception = new HttpException(HttpStatusCode.InternalServerError, "Internal Server Error");
 
-			using (new EventExpectation<KillAgentEvent>())
-			{
-				_dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
-			}
-		}
-
-		[Test]
-		public void SendXyz_PublishesShutdownAgentEvent_IfForceDisconnectException()
-		{
-			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
-				.Throws(new ForceDisconnectException(null));
-
-			using (new EventExpectation<KillAgentEvent>())
-			{
-				_dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
-			}
-		}
-
-		[Test, TestCaseSource(nameof(HttpExceptionsThatShouldTriggerSupportabilityMetrics))]
-		public void SendXyz_GenerateCollectorErrorExceptionSupportabilityMetrics_ForHttpExceptions(HttpException exception)
-		{
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
 				.Throws(exception);
 
-			_dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+			_dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCollectorErrorException(Arg.Is("analytic_event_data"), Arg.IsAny<TimeSpan>(), Arg.Is(exception.StatusCode)));
 		}
@@ -213,7 +181,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
 				.Throws(exception);
 
-			_dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
+			_dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityCollectorErrorException(Arg.Is("analytic_event_data"), Arg.IsAny<TimeSpan>(), Arg.IsNull<HttpStatusCode?>()));
 		}

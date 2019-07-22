@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using MoreLinq;
+﻿using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -12,8 +8,12 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
+using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -21,22 +21,11 @@ namespace NewRelic.Agent.Core.Aggregators
 	[TestFixture]
 	public class ErrorEventAggregatorTests
 	{
-		[NotNull]
 		private IDataTransportService _dataTransportService;
-
-		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
-
-		[NotNull]
 		private ErrorEventAggregator _errorEventAggregator;
-
-		[NotNull]
 		private IProcessStatic _processStatic;
-
-		[NotNull]
 		private ConfigurationAutoResponder _configurationAutoResponder;
-
-		[NotNull]
 		private Action _harvestAction;
 
 		private const string TimeStampKey = "timestamp";
@@ -182,7 +171,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
-		public void Events_are_not_retained_after_harvest_if_response_equals_unknown_error()
+		public void Events_are_not_retained_after_harvest_if_response_equals_discard()
 		{
 			// Arrange
 			IEnumerable<ErrorEventWireModel> sentEvents = null;
@@ -190,7 +179,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
 				{
 					sentEvents = events;
-					return DataTransportResponseStatus.OtherError;
+					return DataTransportResponseStatus.Discard;
 				});
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
@@ -205,7 +194,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
-		public void Events_are_retained_after_harvest_if_response_equals_connection_error()
+		public void Events_are_retained_after_harvest_if_response_equals_retain()
 		{
 			// Arrange
 			var sentEventCount = int.MinValue;
@@ -213,7 +202,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
-					return DataTransportResponseStatus.ConnectionError;
+					return DataTransportResponseStatus.Retain;
 				});
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
@@ -221,75 +210,6 @@ namespace NewRelic.Agent.Core.Aggregators
 			sentEventCount = int.MinValue; // reset
 
 			// Act - re-run Harvest to verify the Events are still there
-			_harvestAction();
-
-			// Assert
-			Assert.AreEqual(2, sentEventCount);
-		}
-
-		[Test]
-		public void Events_are_retained_after_harvest_if_response_equals_service_unavailable_error()
-		{
-			// Arrange
-			var sentEventCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
-				{
-					sentEventCount = events.Count();
-					return DataTransportResponseStatus.ServerError;
-				});
-			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
-			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
-			_harvestAction();
-			sentEventCount = int.MinValue; // reset
-
-			// Act
-			_harvestAction();
-
-			// Assert
-			Assert.AreEqual(2, sentEventCount);
-		}
-
-		[Test]
-		public void Events_are_retained_after_harvest_if_response_equals_communication_error()
-		{
-			// Arrange
-			var sentEventCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
-				{
-					sentEventCount = events.Count();
-					return DataTransportResponseStatus.CommunicationError;
-				});
-			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
-			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
-			_harvestAction();
-			sentEventCount = int.MinValue; // reset
-
-			// Act
-			_harvestAction();
-
-			// Assert
-			Assert.AreEqual(2, sentEventCount);
-		}
-
-		[Test]
-		public void Events_are_retained_after_harvest_if_response_equals_request_timeout_error()
-		{
-			// Arrange
-			var sentEventCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
-				{
-					sentEventCount = events.Count();
-					return DataTransportResponseStatus.RequestTimeout;
-				});
-			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
-			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
-			_harvestAction();
-			sentEventCount = int.MinValue; // reset
-
-			// Act
 			_harvestAction();
 
 			// Assert
@@ -305,7 +225,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
-					return DataTransportResponseStatus.PostTooBigError;
+					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
 				});
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.2f));
@@ -328,7 +248,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<ErrorEventWireModel>>((_, events) =>
 				{
 					sentEvents = events;
-					return DataTransportResponseStatus.PostTooBigError;
+					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
 				});
 			_errorEventAggregator.Collect(Mock.Create<ErrorEventWireModel>(_emptyAttributes, _intrinsicAttributes, _emptyAttributes, false, 0.1f));
 			_harvestAction();
@@ -349,7 +269,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportErrorEventSeen(), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportErrorEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportErrorEventsSent(Arg.IsAny<int>()), Occurs.Never());
 		}
 
 		[Test]
@@ -438,7 +358,6 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		#region Helpers
 
-		[NotNull]
 		private static IConfiguration GetDefaultConfiguration(int? versionNumber = null)
 		{
 			var configuration = Mock.Create<IConfiguration>();

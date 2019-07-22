@@ -1,8 +1,8 @@
-using System;
-using System.IO;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
+using NewRelic.Core.Logging;
+using System;
+using System.IO;
 
 namespace NewRelic.Agent.Core.Instrumentation
 {

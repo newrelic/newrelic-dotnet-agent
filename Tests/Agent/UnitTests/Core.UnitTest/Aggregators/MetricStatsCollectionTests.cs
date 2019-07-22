@@ -1,14 +1,8 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+﻿using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.WireModels;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -16,18 +10,14 @@ namespace NewRelic.Agent.Core.Aggregators
 	[TestFixture]
 	class MetricStatsCollectionTests
 	{
-
-		[NotNull]
 		private IMetricBuilder _metricBuilder;
-
-		[NotNull]
 		private IMetricNameService _metricNameService;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_metricNameService = Mock.Create<IMetricNameService>();
-			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
+			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 			_metricBuilder = new MetricWireModel.MetricBuilder(_metricNameService);
 		}
 
@@ -58,7 +48,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void MergeUnscopedStats_ChangeName()
 		{
 			IMetricNameService mNameService = Mock.Create<IMetricNameService>();
-			Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => "IAmRenamed");
+			Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => "IAmRenamed");
 			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 			var engine = new MetricStatsCollection();
 			engine.MergeUnscopedStats(metric1.MetricName.Name, metric1.Data);
@@ -81,7 +71,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void MergeUnscopedStats_PreDoneMetrics()
 		{
 			IMetricNameService mNameService = Mock.Create<IMetricNameService>();
-			Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => "IAmRenamed");
+			Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => "IAmRenamed");
 			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 			var engine = new MetricStatsCollection();
 			engine.MergeUnscopedStats(metric1);
@@ -223,10 +213,10 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void MergeScopedStats_VerifyRenaming()
 		{
 			IMetricNameService mNameService = Mock.Create<IMetricNameService>();
-			Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => "IAmRenamed");
+			Mock.Arrange(() => mNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => "IAmRenamed");
 			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 			var engine = new MetricStatsCollection();
-			var scopedStats = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var scopedStats = new MetricStatsDictionary<string, MetricDataWireModel>();
 			scopedStats[metric1.MetricName.Name] = metric1.Data;
 			engine.MergeScopedStats(metric1.MetricName.Scope, scopedStats);
 			IEnumerable<MetricWireModel> stats = engine.ConvertToJsonForSending(mNameService);
@@ -435,7 +425,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myScope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 			var engine = new MetricStatsCollection();
-			MetricStatsDictionary<String, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
 			engine.MergeScopedStats(metric1.MetricName.Scope,txStats);
 			IEnumerable<MetricWireModel> stats = engine.ConvertToJsonForSending(_metricNameService);
@@ -458,7 +448,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "myscope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 			var engine = new MetricStatsCollection();
-			MetricStatsDictionary<String, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
 			txStats.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
 			engine.MergeScopedStats(metric1.MetricName.Scope, txStats);
@@ -483,9 +473,9 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			var metric1 = MetricWireModel.BuildMetric(_metricNameService, "name", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 			var engine = new MetricStatsCollection();
-			MetricStatsDictionary<String, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats1.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
-			MetricStatsDictionary<String, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats2.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
 			engine.MergeScopedStats(metric1.MetricName.Scope, txStats1);
 			engine.MergeScopedStats(metric1.MetricName.Scope, txStats2);
@@ -512,9 +502,9 @@ namespace NewRelic.Agent.Core.Aggregators
 			var metric2 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", "scope", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)));
 
 			var engine = new MetricStatsCollection();
-			MetricStatsDictionary<String, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats1.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
-			MetricStatsDictionary<String, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats2.Merge(metric2.MetricName.Name, metric2.Data, MetricDataWireModel.BuildAggregateData);
 			engine.MergeScopedStats(metric2.MetricName.Scope, txStats1);
 			engine.MergeScopedStats(metric2.MetricName.Scope, txStats2);
@@ -555,13 +545,13 @@ namespace NewRelic.Agent.Core.Aggregators
 
 
 			var engine = new MetricStatsCollection();
-			MetricStatsDictionary<String, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats1 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats1.Merge(metric1.MetricName.Name, metric1.Data, MetricDataWireModel.BuildAggregateData);
-			MetricStatsDictionary<String, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats2 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats2.Merge(metric2.MetricName.Name, metric2.Data, MetricDataWireModel.BuildAggregateData);
-			MetricStatsDictionary<String, MetricDataWireModel> txStats3 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats3 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats3.Merge(metric3.MetricName.Name, metric3.Data, MetricDataWireModel.BuildAggregateData);
-			MetricStatsDictionary<String, MetricDataWireModel> txStats4 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> txStats4 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			txStats4.Merge(metric4.MetricName.Name, metric4.Data, MetricDataWireModel.BuildAggregateData);
 
 			engine.MergeScopedStats(metric2.MetricName.Scope, txStats1);
@@ -625,14 +615,14 @@ namespace NewRelic.Agent.Core.Aggregators
 			var metric6 = MetricWireModel.BuildMetric(_metricNameService, "DotNet/another", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(6)));
 
 			var engine1 = new MetricStatsCollection();
-			MetricStatsDictionary<String, MetricDataWireModel> scoped1 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> scoped1 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			scoped1.Merge("DotNet/name1", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1)), MetricDataWireModel.BuildAggregateData);
 			scoped1.Merge("DotNet/name2", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(2)), MetricDataWireModel.BuildAggregateData);
 			engine1.MergeUnscopedStats(metric5);
 			engine1.MergeScopedStats("engine1scope", scoped1);
 
 			var engine2 = new MetricStatsCollection();
-			MetricStatsDictionary<String, MetricDataWireModel> scoped2 = new MetricStatsDictionary<string, MetricDataWireModel>();
+			MetricStatsDictionary<string, MetricDataWireModel> scoped2 = new MetricStatsDictionary<string, MetricDataWireModel>();
 			scoped2.Merge("DotNet/name3", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(1)), MetricDataWireModel.BuildAggregateData);
 			scoped2.Merge("DotNet/name4", MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(2)), MetricDataWireModel.BuildAggregateData);
 			engine1.MergeUnscopedStats(metric6);

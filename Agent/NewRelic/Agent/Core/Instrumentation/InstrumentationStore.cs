@@ -1,8 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Instrumentation
 {

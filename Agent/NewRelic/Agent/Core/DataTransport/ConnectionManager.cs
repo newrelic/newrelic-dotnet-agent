@@ -1,13 +1,13 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Events;
+﻿using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions;
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -18,12 +18,19 @@ namespace NewRelic.Agent.Core.DataTransport
 	/// </summary>
 	public class ConnectionManager : ConfigurationBasedService, IConnectionManager
 	{
-		private static readonly TimeSpan MinimumRetryTime = TimeSpan.FromSeconds(5);
-		private static readonly TimeSpan MaximumRetryTime = TimeSpan.FromMinutes(5);
+		private static readonly TimeSpan[] ConnectionRetryBackoffSequence = new[]
+		{
+			TimeSpan.FromSeconds(15),
+			TimeSpan.FromSeconds(15),
+			TimeSpan.FromSeconds(30),
+			TimeSpan.FromSeconds(60),
+			TimeSpan.FromSeconds(120),
+			TimeSpan.FromSeconds(300)
+		};
 
 		private readonly IConnectionHandler _connectionHandler;
 		private readonly IScheduler _scheduler;
-		private TimeSpan _retryTime = MinimumRetryTime;
+		private int _connectionAttempt = 0;
 		private bool _started;
 		private readonly object _syncObject = new object();
 
@@ -77,33 +84,13 @@ namespace NewRelic.Agent.Core.DataTransport
 					_connectionHandler.Connect();
 				}
 
-				_retryTime = MinimumRetryTime;
-			}
-			// This exception is thrown when the Agent is to restart; for example when Agent settings on the APM change.
-			catch (ForceRestartException)
-			{
-				ScheduleRestart();
-			}
-			// This exception is thrown when there has been a connection error between the collector(APM) and the Agent.
-			catch (ConnectionException)
-			{
-				ScheduleRestart();
-			}
-			// This exception is thrown when the collector(APM) returns a RuntimeError
-			catch (RuntimeException)
-			{
-				ScheduleRestart();
-			}
-			// This exception is thrown when the collector(APM) returns an exception that we don't know about
-			catch (ExceptionFactories.UnknownRPMException)
-			{
-				ScheduleRestart();
+				_connectionAttempt = 0;
 			}
 			// This exception is thrown when the agent receives an unexpected HTTP error
 			// This is also the parent type of some of the more specific HTTP errors that we handle
-			catch (HttpException)
+			catch (HttpException ex)
 			{
-				ScheduleRestart();
+				HandleHttpErrorResponse(ex);
 			}
 			// Occurs when the agent connects to APM but the connection gets aborted by the collector
 			catch (SocketException)
@@ -165,10 +152,24 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		private void ScheduleRestart()
 		{
+			var _retryTime = ConnectionRetryBackoffSequence[_connectionAttempt];
 			Log.InfoFormat("Will attempt to reconnect in {0} seconds", _retryTime.TotalSeconds);
 			_scheduler.ExecuteOnce(Connect, _retryTime);
 
-			_retryTime = TimeSpanMath.Min(_retryTime.Multiply(2), MaximumRetryTime);
+			_connectionAttempt = Math.Min(_connectionAttempt + 1, ConnectionRetryBackoffSequence.Length - 1);
+		}
+
+		private void HandleHttpErrorResponse(HttpException ex)
+		{
+			switch (ex.StatusCode)
+			{
+				case HttpStatusCode.Gone:
+					ImmediateShutdown(ex.Message);
+					break;
+				default:
+					ScheduleRestart();
+					break;
+			}
 		}
 
 		#endregion
@@ -196,7 +197,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		private void OnRestartAgent(RestartAgentEvent eventData)
 		{
-			Connect();
+			Reconnect();
 		}
 
 		private void OnCleanShutdown(CleanShutdownEvent eventData)

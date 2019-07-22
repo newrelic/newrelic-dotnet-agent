@@ -1,12 +1,13 @@
+using JetBrains.Annotations;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core;
+using NewRelic.Core.NewRelic.Cache;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Core.NewRelic.Cache;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {

@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
-using System.Text.RegularExpressions;
 using NewRelic.Agent.Helpers;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 #if NETSTANDARD2_0
 using System.IO;
@@ -29,6 +29,7 @@ namespace NewRelic.Agent.Core.Utilization
 		private const string GcpName = @"gcp";
 		private const string PcfName = @"pcf";
 		private const string DockerName = @"docker";
+		private const string KubernetesName = @"kubernetes";
 
 		private readonly string AwsUri = @"http://169.254.169.254/2016-09-02/dynamic/instance-identity/document";
 
@@ -88,7 +89,18 @@ namespace NewRelic.Agent.Core.Utilization
 			{
 				var dockerVendorInfo = GetDockerVendorInfo();
 				if (dockerVendorInfo != null)
+				{
 					vendors.Add(dockerVendorInfo.VendorName, dockerVendorInfo);
+				}
+			}
+
+			if (_configuration.UtilizationDetectKubernetes)
+			{
+				var kubernetesInfo = GetKubernetesInfo();
+				if (kubernetesInfo != null)
+				{
+					vendors.Add(kubernetesInfo.VendorName, kubernetesInfo);
+				}
 			}
 
 			return vendors;
@@ -96,7 +108,7 @@ namespace NewRelic.Agent.Core.Utilization
 
 		private IVendorModel GetAwsVendorInfo()
 		{
-			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsUri));
+			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AwsUri), AwsName);
 			if (responseString != null)
 			{
 				return ParseAwsVendorInfo(responseString);
@@ -119,7 +131,7 @@ namespace NewRelic.Agent.Core.Utilization
 				var instanceId = NormalizeAndValidateMetadata((string)instanceIdToken, "instanceId", AwsName);
 				var instanceType = NormalizeAndValidateMetadata((string)instanceTypeToken, "instanceType", AwsName);
 
-				if (availabilityZone == null && instanceId == null && instanceType == null)
+				if (availabilityZone == null || instanceId == null || instanceType == null)
 				{
 					return null;
 				}
@@ -134,7 +146,7 @@ namespace NewRelic.Agent.Core.Utilization
 
 		private IVendorModel GetAzureVendorInfo()
 		{
-			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AzureUri), new List<string> { AzureHeader });
+			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(AzureUri), AzureName, new List<string> { AzureHeader });
 			if (responseString != null)
 			{
 				return ParseAzureVendorInfo(responseString);
@@ -159,7 +171,7 @@ namespace NewRelic.Agent.Core.Utilization
 				var vmId = NormalizeAndValidateMetadata((string)vmIdToken, "vmId", AzureName);
 				var vmSize = NormalizeAndValidateMetadata((string)vmSizeToken, "vmSize", AzureName);
 
-				if ( location == null && name == null && vmId == null && vmSize == null )
+				if ( location == null || name == null || vmId == null || vmSize == null )
 				{
 					return null;
 				}
@@ -174,7 +186,7 @@ namespace NewRelic.Agent.Core.Utilization
 
 		private IVendorModel GetGcpVendorInfo()
 		{
-			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(GcpUri), new List<string> { GcpHeader });
+			var responseString = _vendorHttpApiRequestor.CallVendorApi(new Uri(GcpUri), GcpName, new List<string> { GcpHeader });
 			if (responseString != null)
 			{
 				return ParseGcpVendorInfo(responseString);
@@ -204,7 +216,7 @@ namespace NewRelic.Agent.Core.Utilization
 				var zoneTokenString = (string)zoneToken;
 				var zone = (zoneTokenString != null) ? NormalizeAndValidateMetadata(zoneTokenString.Split(StringSeparators.PathSeparator).Last(), "zone", GcpName) : null;
 
-				if ( id == null && machineType == null && name == null && zone == null)
+				if ( id == null || machineType == null || name == null || zone == null)
 				{
 					return null;
 				}
@@ -223,7 +235,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var instanceIp = NormalizeAndValidateMetadata(GetProcessEnvironmentVariable(PcfInstanceIp), "cf_instance_ip", PcfName);
 			var memoryLimit = NormalizeAndValidateMetadata(GetProcessEnvironmentVariable(PcfMemoryLimit), "memory_limit", PcfName);
 
-			if ( instanceGuid == null && instanceIp == null && memoryLimit == null)
+			if ( instanceGuid == null || instanceIp == null || memoryLimit == null)
 			{
 				return null;
 			}
@@ -291,6 +303,13 @@ namespace NewRelic.Agent.Core.Utilization
 			return null;
 		}
 
+		public IVendorModel GetKubernetesInfo()
+		{
+			var envVar = _environment.GetEnvironmentVariable("KUBERNETES_SERVICE_HOST");
+			var kubernetesServiceHost = NormalizeAndValidateMetadata(envVar, "kubernetes_service_host", KubernetesName);
+			return kubernetesServiceHost != null ? new KubernetesVendorModel(kubernetesServiceHost) : null;
+		}
+
 		public string NormalizeAndValidateMetadata(string metadataValue, string metadataField, string vendorName)
 		{
 			if (metadataValue == null)
@@ -321,6 +340,9 @@ namespace NewRelic.Agent.Core.Utilization
 						break;
 					case DockerName:
 						_agentHealthReporter.ReportBootIdError();
+						break;
+					case KubernetesName:
+						_agentHealthReporter.ReportKubernetesUtilizationError();
 						break;
 				}
 

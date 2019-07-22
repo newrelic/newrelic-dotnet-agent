@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NewRelic.Agent.Core.DataTransport
+﻿namespace NewRelic.Agent.Core.DataTransport
 {
 	public interface ISerializer
 	{

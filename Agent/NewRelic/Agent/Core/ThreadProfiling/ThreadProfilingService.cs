@@ -1,8 +1,8 @@
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections;

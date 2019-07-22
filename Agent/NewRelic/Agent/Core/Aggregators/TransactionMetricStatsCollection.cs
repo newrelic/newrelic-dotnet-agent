@@ -1,11 +1,8 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Metric;
+﻿using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -19,7 +16,6 @@ namespace NewRelic.Agent.Core.Aggregators
 		private readonly TransactionMetricName transactionName;
 		private Func<MetricDataWireModel, MetricDataWireModel, MetricDataWireModel> mergeFunction = MetricDataWireModel.BuildAggregateData;
 
-
 		public TransactionMetricStatsCollection(TransactionMetricName txName)
 		{
 			transactionName = txName;
@@ -30,14 +26,13 @@ namespace NewRelic.Agent.Core.Aggregators
 			return transactionName;
 		}
 
-		[ItemCanBeNull]
 		public MetricDataWireModel GetUnscopedStat(MetricName name)
 		{
 			unscopedStats.TryGetValue(name, out MetricDataWireModel output);
 			return output;
 		}
 
-		public void MergeUnscopedStats(MetricName name, [NotNull] MetricDataWireModel metric)
+		public void MergeUnscopedStats(MetricName name, MetricDataWireModel metric)
 		{
 			if (name != null)
 			{
@@ -45,7 +40,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		public void MergeScopedStats(MetricName name, [NotNull] MetricDataWireModel metric)
+		public void MergeScopedStats(MetricName name, MetricDataWireModel metric)
 		{
 			if (name != null)
 			{
@@ -67,9 +62,9 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		public MetricStatsDictionary<String, MetricDataWireModel> GetUnscopedForTesting()
+		public MetricStatsDictionary<string, MetricDataWireModel> GetUnscopedForTesting()
 		{
-			var toReturn = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var toReturn = new MetricStatsDictionary<string, MetricDataWireModel>();
 			foreach (var current in unscopedStats)
 			{
 				toReturn[current.Key.ToString()] = current.Value;
@@ -77,9 +72,9 @@ namespace NewRelic.Agent.Core.Aggregators
 			return toReturn;
 		}
 
-		public MetricStatsDictionary<String, MetricDataWireModel> GetScopedForTesting()
+		public MetricStatsDictionary<string, MetricDataWireModel> GetScopedForTesting()
 		{
-			var toReturn = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var toReturn = new MetricStatsDictionary<string, MetricDataWireModel>();
 			foreach (var current in scopedStats)
 			{
 				toReturn[current.Key.ToString()] = current.Value;

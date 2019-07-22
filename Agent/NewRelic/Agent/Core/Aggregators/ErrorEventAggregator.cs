@@ -6,14 +6,11 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-
-
 	public interface IErrorEventAggregator
 	{
 		void Collect(ErrorEventWireModel errorEventWireModel);
@@ -114,20 +111,17 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			switch (responseStatus)
 			{
-				case DataTransportResponseStatus.CommunicationError:
-				case DataTransportResponseStatus.RequestTimeout:
-				case DataTransportResponseStatus.ServerError:
-				case DataTransportResponseStatus.ConnectionError:
-					RetainEvents(errorEvents);
-					break;
-				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((uint)(errorEvents.Count * ReservoirReductionSizeMultiplier));
-					RetainEvents(errorEvents);
-					break;
 				case DataTransportResponseStatus.RequestSuccessful:
 					_agentHealthReporter.ReportErrorEventsSent(errorEvents.Count);
 					break;
-				case DataTransportResponseStatus.OtherError:
+				case DataTransportResponseStatus.Retain:
+					RetainEvents(errorEvents);
+					break;
+				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+					ReduceReservoirSize((uint)(errorEvents.Count * ReservoirReductionSizeMultiplier));
+					RetainEvents(errorEvents);
+					break;
+				case DataTransportResponseStatus.Discard:
 				default:
 					break;
 			}

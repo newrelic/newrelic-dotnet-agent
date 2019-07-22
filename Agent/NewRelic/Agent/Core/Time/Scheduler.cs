@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Time
 {

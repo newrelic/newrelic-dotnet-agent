@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Web;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Exceptions;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utilization;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
-using NewRelic.Agent.Configuration;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Web;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -41,8 +42,9 @@ namespace NewRelic.Agent.Core.DataTransport
 		private readonly ISystemInfo _systemInfo;
 		private readonly Environment _environment;
 		private readonly IAgentHealthReporter _agentHealthReporter;
+		private readonly IEnvironment _environmentVariableHelper;
 
-		public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter)
+		public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter, IEnvironment environmentVariableHelper)
 		{
 			_serializer = serializer;
 			_collectorWireFactory = collectorWireFactory;
@@ -52,6 +54,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			_environment = environment;
 			_systemInfo = systemInfo;
 			_agentHealthReporter = agentHealthReporter;
+			_environmentVariableHelper = environmentVariableHelper;
 
 			_connectionInfo = new ConnectionInfo(_configuration);
 			_dataRequestWire = new NoOpCollectorWire();
@@ -87,7 +90,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 				LogSecurityPolicySettingsOnceAllSettingsResolved();
 
-				_dataRequestWire = _collectorWireFactory.GetCollectorWire(_configuration);
+				_dataRequestWire = _collectorWireFactory.GetCollectorWire(_configuration, serverConfiguration.RequestHeadersMap, _agentHealthReporter);
 				SendAgentSettings();
 				Log.Info("Agent fully connected.");
 			}
@@ -117,15 +120,10 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		public void Disconnect()
 		{
-			if (_configuration.AgentRunId != null)
+			if (!string.IsNullOrEmpty(_configuration.AgentRunId?.ToString()))
 				SendShutdownCommand();
 
 			Disable();
-		}
-
-		private object SendDataRequest(string method, params object[] data)
-		{
-			return SendDataOverWire<object>(_dataRequestWire, method, data);
 		}
 
 		public T SendDataRequest<T>(string method, params object[] data)
@@ -250,6 +248,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
 			Log.InfoFormat("Your New Relic Application Name(s): {0}", string.Join(":", appNames.ToArray()));
 
+			var metadata = _environmentVariableHelper.GetEnvironmentVariablesWithPrefix("NEW_RELIC_METADATA_");
+						
 			return new ConnectModel(
 				_processStatic.GetCurrentProcess().Id,
 				"dotnet",
@@ -267,6 +267,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				identifier,
 				_labelsService.Labels,
 				GetJsAgentSettings(),
+				metadata ?? new Dictionary<string, string>(),
 				new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
 				_configuration.CollectorSendEnvironmentInfo ? _environment : null,
 				_configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null);
@@ -331,7 +332,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 			try
 			{
-				SendDataRequest("agent_settings", agentSettings);
+				SendDataOverWire<object>(_dataRequestWire, "agent_settings", agentSettings);
 			}
 			catch (Exception ex)
 			{
@@ -343,7 +344,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		{
 			try
 			{
-				SendNonDataRequest("shutdown");
+				SendNonDataRequest<object>("shutdown");
 			}
 			catch (Exception ex)
 			{
@@ -355,7 +356,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		{
 			_dataRequestWire = new NoOpCollectorWire();
 
-			if (_configuration.AgentRunId == null)
+			if (string.IsNullOrEmpty(_configuration.AgentRunId?.ToString()))
 				return;
 
 			EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(ServerConfiguration.GetDefault()));
@@ -367,13 +368,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		private T SendNonDataRequest<T>(string method, params object[] data)
 		{
-			var wire = _collectorWireFactory.GetCollectorWire(_configuration);
+			var wire = _collectorWireFactory.GetCollectorWire(_configuration, _agentHealthReporter);
 			return SendDataOverWire<T>(wire, method, data);
-		}
-
-		private void SendNonDataRequest(string method, params object[] data)
-		{
-			SendNonDataRequest<object>(method, data);
 		}
 
 		private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
@@ -384,13 +380,14 @@ namespace NewRelic.Agent.Core.DataTransport
 				var responseBody = wire.SendData(method, _connectionInfo, serializedData);
 				return ParseResponse<T>(responseBody);
 			}
-			catch (InstructionException ex)
+			catch (Exceptions.HttpException ex)
 			{
-				Log.DebugFormat("Received a {0} instruction invoking method \"{1}\"", ex.GetType().Name, method);
+				Log.DebugFormat("Received a {0} {1} response invoking method \"{2}\"", (int)ex.StatusCode, ex.StatusCode, method);
 
-				var forceDisconnectException = ex as ForceDisconnectException;
-				if (forceDisconnectException != null)
-					Log.InfoFormat("Shutting down: {0}", ex.Message);
+				if (ex.StatusCode == HttpStatusCode.Gone)
+				{
+					Log.Info("The server has requested that the agent disconnect. The agent is shutting down.");
+				}
 
 				throw;
 			}
@@ -404,9 +401,6 @@ namespace NewRelic.Agent.Core.DataTransport
 		private T ParseResponse<T>(string responseBody)
 		{
 			var responseEnvelope = _serializer.Deserialize<CollectorResponseEnvelope<T>>(responseBody);
-			if (responseEnvelope.CollectorExceptionEnvelope != null)
-				throw responseEnvelope.CollectorExceptionEnvelope.Exception;
-
 			return responseEnvelope.ReturnValue;
 		}
 

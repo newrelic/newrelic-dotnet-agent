@@ -1,11 +1,13 @@
-﻿using System;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Exceptions;
+using NewRelic.Core.Logging;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Exceptions;
-using NewRelic.Agent.Core.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -31,16 +33,28 @@ namespace NewRelic.Agent.Core.DataTransport
 		}
 
 		public const string AuditLogFormat = "Data {0} from the {1} : {2}";
-
-		public const int ProtocolVersion = 16;
-
+		public const int ProtocolVersion = 17;
 		private const int CompressMinimumByteLength = 20;
+		private const string EmptyResponseBody = "{}";
+
 		private bool _diagnoseConnectionError = true;
 		private readonly IConfiguration _configuration;
+		private readonly Dictionary<string, string> _requestHeadersMap;
+		private static Dictionary<string, string> _emptyRequestHeadersMap = new Dictionary<string, string>();
+		private readonly IAgentHealthReporter _agentHealthReporter;
 
-		public HttpCollectorWire(IConfiguration configuration)
+		public HttpCollectorWire(IConfiguration configuration, IAgentHealthReporter agentHealthReporter)
 		{
 			_configuration = configuration;
+			_requestHeadersMap = _emptyRequestHeadersMap;
+			_agentHealthReporter = agentHealthReporter;
+		}
+
+		public HttpCollectorWire(IConfiguration configuration, Dictionary<string, string> requestHeadersMap, IAgentHealthReporter agentHealthReporter)
+		{
+			_configuration = configuration;
+			_requestHeadersMap = requestHeadersMap ?? _emptyRequestHeadersMap;
+			_agentHealthReporter = agentHealthReporter;
 		}
 
 		public string SendData(string method, ConnectionInfo connectionInfo, string serializedData)
@@ -55,6 +69,18 @@ namespace NewRelic.Agent.Core.DataTransport
 
 				var requestPayload = GetRequestPayload(serializedData);
 				var request = BuildRequest(uri, connectionInfo, requestPayload);
+
+				// Check serializedData length < MaxPayloadSizeInBytes before sending
+				// if > silently drop the payload for now, ideally want to be able split the data
+				// into chunks to send
+				if (requestPayload.Data.Length > _configuration.CollectorMaxPayloadSizeInBytes)
+				{
+					// Log that the payload is being dropped. 
+					Log.ErrorFormat("Dropped large payload: size: {0}, max_payload_size_bytes={1}", requestPayload.Data.Length, _configuration.CollectorMaxPayloadSizeInBytes);
+					_agentHealthReporter.ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(method);
+					return "{}"; // mimics what is sent by NoOpCollectorWire
+				}
+
 				var response = SendRequest(request, requestPayload.Data);
 
 				Log.DebugFormat("Received : {0}", response);
@@ -85,7 +111,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		private static void AuditLog(Direction direction, Source source, string uri)
 		{
 			var message = string.Format(AuditLogFormat, direction, source, uri);
-			Log.Audit(message);
+			Logging.AuditLog.Log(message);
 		}
 
 		private string GetUri(string method, ConnectionInfo connectionInfo)
@@ -101,7 +127,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			if (_configuration.AgentRunId != null)
 				uri.Append("&run_id=").Append(_configuration.AgentRunId);
 
-			var uriBuilder = new UriBuilder(connectionInfo.HttpProtocol, connectionInfo.Host, (int)connectionInfo.Port, uri.ToString());
+			var uriBuilder = new UriBuilder(connectionInfo.HttpProtocol, connectionInfo.Host, connectionInfo.Port, uri.ToString());
 			return uriBuilder.Uri.ToString().Replace("%3F", "?");
 		}
 
@@ -150,7 +176,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
 			var encoding = (requestCollectorRequestPayload.IsCompressed) ? requestCollectorRequestPayload.CompressionType.ToLower() : "identity";
 			request.Headers.Add("CONTENT-ENCODING", encoding);
-			
+
+			foreach (var header in _requestHeadersMap)
+			{
+				request.Headers.Add(header.Key, header.Value);
+			}
+
 			return request;
 		}
 
@@ -183,25 +214,33 @@ namespace NewRelic.Agent.Core.DataTransport
 				using (var reader = new StreamReader(responseStream, Encoding.UTF8))
 				{
 					var responseBody = reader.ReadLine();
-					if (responseBody == null)
-						throw new NullReferenceException("responseBody");
-
-					return responseBody;
+					return responseBody != null ? responseBody : EmptyResponseBody;
 				}
 			}
 		}
 
 		private static void ThrowExceptionFromHttpWebResponse(string serializedData, HttpWebResponse response)
 		{
-			try
-			{
-				throw ExceptionFactories.NewException(response.StatusCode, response.StatusDescription);
-			}
-			catch (SerializationException)
+			if (response.StatusCode == HttpStatusCode.UnsupportedMediaType)
 			{
 				Log.ErrorFormat("Invalid json: {0}.  Please report to support@newrelic.com", serializedData);
-				throw;
 			}
+
+			// P17: Not supposed to read/use the exception message in the connect response body. We are still going to log it, carefully, since it is very useful for support.
+			try
+			{
+				using (var reader = new StreamReader(response.GetResponseStream(), ASCIIEncoding.ASCII))
+				{
+					var responseText = reader.ReadToEnd();
+					Log.DebugFormat("Received HTTP status code {0} with message {1}", response.StatusCode.ToString(), responseText);
+				}
+			}
+			catch(Exception exception)
+			{
+				Log.DebugFormat("Unable to parse repsonse body with {0}", exception.Message);
+			}
+
+			throw new HttpException(response.StatusCode, response.StatusDescription);
 		}
 
 		private void DiagnoseConnectionError(ConnectionInfo connectionInfo)

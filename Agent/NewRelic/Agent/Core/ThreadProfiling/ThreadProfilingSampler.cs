@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Core.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading;

@@ -55,13 +55,16 @@ namespace NewRelic.Agent.Core.Aggregators
 			var syntheticsTransactionEvents = _syntheticsTransactionEvents;
 			var aggregatedEvents = transactionEvents.Union(syntheticsTransactionEvents).ToList();
 
+			// EventHarvestData is required for extrapolation in the UI.
+			var eventHarvestData = new EventHarvestData(_transactionEvents.Size, (uint)_transactionEvents.GetAddAttemptsCount());
+
 			ResetCollections(GetReservoirSize());
 
 			// if we don't have any events to publish then don't
 			if (aggregatedEvents.Count <= 0)
 				return;
 
-			var responseStatus = DataTransportService.Send(aggregatedEvents);
+			var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents);
 
 			AdaptiveSampler.EndOfSamplingInterval();
 
@@ -98,20 +101,17 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			switch (responseStatus)
 			{
-				case DataTransportResponseStatus.CommunicationError:
-				case DataTransportResponseStatus.RequestTimeout:
-				case DataTransportResponseStatus.ServerError:
-				case DataTransportResponseStatus.ConnectionError:
-					RetainEvents(transactionEvents);
-					break;
-				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((uint)(transactionEvents.Count * ReservoirReductionSizeMultiplier));
-					RetainEvents(transactionEvents);
-					break;
 				case DataTransportResponseStatus.RequestSuccessful:
 					_agentHealthReporter.ReportTransactionEventsSent(transactionEvents.Count);
 					break;
-				case DataTransportResponseStatus.OtherError:
+				case DataTransportResponseStatus.Retain:
+					RetainEvents(transactionEvents);
+					break;
+				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+					ReduceReservoirSize((uint)(transactionEvents.Count * ReservoirReductionSizeMultiplier));
+					RetainEvents(transactionEvents);
+					break;
+				case DataTransportResponseStatus.Discard:
 				default:
 					break;
 			}

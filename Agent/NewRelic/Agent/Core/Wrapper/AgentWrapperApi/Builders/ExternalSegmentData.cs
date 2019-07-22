@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Time;
@@ -13,14 +12,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
 	public class ExternalSegmentData : AbstractSegmentData
 	{
-		private const String TransactionGuidSegmentParameterKey = "transaction_guid";
+		private const string TransactionGuidSegmentParameterKey = "transaction_guid";
 
-		[NotNull]
 		public Uri Uri { get; }
-		[NotNull]
-		public String Method { get; }
+		public string Method { get; }
 
-		public ExternalSegmentData(Uri uri, String method, CrossApplicationResponseData crossApplicationResponseData = null)
+		public ExternalSegmentData(Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData = null)
 		{
 			Uri = uri;
 			Method = method;
@@ -30,9 +27,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public CrossApplicationResponseData CrossApplicationResponseData { get; set; }
 
 
-		internal override IEnumerable<KeyValuePair<String, Object>> Finish()
+		internal override IEnumerable<KeyValuePair<string, object>> Finish()
 		{
-			var parameters = new Dictionary<String, Object>();
+			var parameters = new Dictionary<string, object>();
 
 			// The CAT response data will not be null if the agent received a response that contained CAT headers (e.g. if the request went to an app that is monitored by a supported New Relic agent)
 			if (CrossApplicationResponseData != null)
@@ -72,7 +69,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			}
 		}
 
-		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
 		{
 			var externalSegment = new TypedSegment<ExternalSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
 			externalSegment.IsExternal = true;

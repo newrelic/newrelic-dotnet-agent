@@ -1,5 +1,4 @@
 ﻿using System;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.SystemInterfaces;
@@ -13,8 +12,6 @@ namespace NewRelic.Agent.Core.Samplers
 	{
 		private CpuSampler _cpuSampler;
 
-		private IAgentHealthReporter _agentHealthReporter;
-
 		private ICpuSampleTransformer _cpuSampleTransformer;
 
 		private Action _sampleAction;
@@ -25,9 +22,9 @@ namespace NewRelic.Agent.Core.Samplers
 			var scheduler = Mock.Create<IScheduler>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _sampleAction = action);
-			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_cpuSampleTransformer = Mock.Create<ICpuSampleTransformer>();
-			_cpuSampler = new CpuSampler(scheduler, _cpuSampleTransformer, _agentHealthReporter, new ProcessStatic());
+			_cpuSampler = new CpuSampler(scheduler, _cpuSampleTransformer, new ProcessStatic());
+			_cpuSampler.Start();
 		}
 
 		[TearDown]

@@ -2,9 +2,9 @@
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Utilization
 {
@@ -38,9 +38,10 @@ namespace NewRelic.Agent.Core.Utilization
 			var totalMemory = _systemInfo.GetTotalPhysicalMemoryBytes();
 			var logicalProcessors = _systemInfo.GetTotalLogicalProcessors();
 			var hostname = _dnsStatic.GetHostName();
+			var fullHostName = _dnsStatic.GetFullHostName();
+			var ipAddress = _dnsStatic.GetIpAddresses();
 			var vendors = GetVendorSettings();
 			var bootIdResult = _systemInfo.GetBootId();
-			
 
 			if (!bootIdResult.IsValid)
 			{
@@ -50,7 +51,7 @@ namespace NewRelic.Agent.Core.Utilization
 
 			//if bootId is longer than 128 characters, truncate it to 128 characters.
 			var bootId = Truncate(bootIdResult.BootId, MaxBootIdLength);
-			return new UtilizationSettingsModel(logicalProcessors, totalMemory, hostname, bootId, vendors, GetUtilitizationConfig());
+			return new UtilizationSettingsModel(logicalProcessors, totalMemory, hostname, fullHostName, ipAddress, bootId, vendors, GetUtilitizationConfig());
 		}
 
 		private string Truncate(string bootId, int maxLength)
@@ -80,7 +81,7 @@ namespace NewRelic.Agent.Core.Utilization
 				return null;
 			}
 
-				return new UtilitizationConfig(_configuration.UtilizationBillingHost, _configuration.UtilizationLogicalProcessors, _configuration.UtilizationTotalRamMib);
+			return new UtilitizationConfig(_configuration.UtilizationBillingHost, _configuration.UtilizationLogicalProcessors, _configuration.UtilizationTotalRamMib);
 		}
 	}
 }

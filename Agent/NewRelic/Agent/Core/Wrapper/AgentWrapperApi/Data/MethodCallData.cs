@@ -1,19 +1,14 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
 {
 	public class MethodCallData
 	{
-		[NotNull]
-		public readonly String TypeName;
+		public readonly string TypeName;
+		public readonly string MethodName;
+		public readonly int InvocationTargetHashCode;
 
-		[NotNull]
-		public readonly String MethodName;
-
-		public readonly Int32 InvocationTargetHashCode;
-
-		public MethodCallData([NotNull] String typeName, [NotNull] String methodName, Int32 invocationTargetHashCode)
+		public MethodCallData(string typeName, string methodName, int invocationTargetHashCode)
 		{
 			TypeName = typeName;
 			MethodName = methodName;

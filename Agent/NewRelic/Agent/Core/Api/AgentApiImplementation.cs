@@ -5,7 +5,6 @@ using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
@@ -17,6 +16,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -458,7 +458,7 @@ namespace NewRelic.Agent.Core.Api
 				transaction.IgnoreAllBrowserMonitoringForThisTx();
 
 				// The transaction's name must be frozen if we're going to generate a RUM script
-				transaction.CandidateTransactionName.Freeze();
+				transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.ManualBrowserScriptInjection);
 
 				return _browserMonitoringScriptMaker.GetScript(transaction);
 			}

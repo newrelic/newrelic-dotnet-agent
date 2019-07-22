@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.Logging;
 using System.Linq;
 using System.Text;
 using Autofac;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {

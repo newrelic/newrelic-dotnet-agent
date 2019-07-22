@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NewRelic.Agent.Core.Api;
-using NewRelic.Agent.Core.DistributedTracing;
+﻿using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CompositeTests
 {
@@ -91,7 +91,7 @@ namespace CompositeTests
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
-			transactionBridgeApi.AcceptDistributedTracePayload(DistributedTracePayload.ToJson(_distributedTracePayload), 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);
+			transactionBridgeApi.AcceptDistributedTracePayload(_distributedTracePayload.ToJson(), 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);
 
 			segment.End();
 			transaction.End();
@@ -122,7 +122,7 @@ namespace CompositeTests
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
-			transactionBridgeApi.AcceptDistributedTracePayload(DistributedTracePayload.ToJson(_distributedTracePayload), 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);
+			transactionBridgeApi.AcceptDistributedTracePayload(_distributedTracePayload.ToJson(), 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);
 
 			segment.End();
 			transaction.End();

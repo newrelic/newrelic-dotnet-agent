@@ -52,13 +52,15 @@ namespace ArtifactBuilder
 			NewRelicLicenseFile = $@"{SourceHomeBuilderPath}\LICENSE.txt";
 			NewRelicThirdPartyNoticesFile = $@"{SourceHomeBuilderPath}\THIRD_PARTY_NOTICES.txt";
 
+			WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
+
 			var root = new[]
 			{
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
 				$@"{SourceHomeBuilderPath}\NewRelic.Api.Agent.dll",
 				NewRelicConfig,
-				$@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll",
+				WindowsProfiler,
 				NewRelicXsd,
 				NewRelicLicenseFile,
 				NewRelicThirdPartyNoticesFile,

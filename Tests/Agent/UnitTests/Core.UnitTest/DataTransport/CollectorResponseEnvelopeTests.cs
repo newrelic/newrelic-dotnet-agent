@@ -16,17 +16,5 @@ namespace NewRelic.Agent.Core.DataTransport
 			Assert.NotNull(result);
 			Assert.AreEqual("Hello!", result.ReturnValue);
 		}
-
-		[Test]
-		public void deserializes_from_error_response()
-		{
-			const string json = @"{""exception"": ""banana""}";
-
-			var result = JsonConvert.DeserializeObject<CollectorResponseEnvelope<string>>(json);
-
-			Assert.NotNull(result);
-			Assert.NotNull(result.CollectorExceptionEnvelope);
-			Assert.AreEqual("banana", result.CollectorExceptionEnvelope.Exception.Message);
-		}
 	}
 }

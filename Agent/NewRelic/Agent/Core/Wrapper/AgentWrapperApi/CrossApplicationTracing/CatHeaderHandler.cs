@@ -1,30 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Helpers;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
+using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
 	public interface ICatHeaderHandler
 	{
-
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction);
-
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName);
-
 		CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers);
-
 		string TryDecodeInboundRequestHeadersForCrossProcessId(IDictionary<string, string> headers);
-
 		CrossApplicationRequestData TryDecodeInboundRequestHeaders(IDictionary<string, string> headers);
 	}
 
@@ -176,7 +170,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			return Strings.TryBase64Decode(encodedNewRelicIdHttpHeader, _configurationService.Configuration.EncodingKey);
 		}
 
-		[Pure]
 		private string GetEncodedAppData(IInternalTransaction transaction, TransactionMetricName transactionMetricName, string crossProcessId)
 		{
 			var txMetadata = transaction.TransactionMetadata;
@@ -188,13 +181,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(appData), _configurationService.Configuration.EncodingKey);
 		}
 
-		[Pure]
 		private string GetEncodedNewRelicId(string referrerCrossProcessId)
 		{
 			return Strings.Base64Encode(referrerCrossProcessId, _configurationService.Configuration.EncodingKey);
 		}
 
-		[Pure]
 		private string GetEncodedTransactionData(IInternalTransaction transaction)
 		{
 			var txMetadata = transaction.TransactionMetadata;

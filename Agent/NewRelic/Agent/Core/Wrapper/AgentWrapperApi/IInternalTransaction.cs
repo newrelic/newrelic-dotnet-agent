@@ -17,6 +17,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		/// </summary>
 		IList<Segment> Segments { get; }
 		ICandidateTransactionName CandidateTransactionName { get; }
+		void RollupTransactionNameByStatusCodeIfNeeded();
 		ITransactionMetadata TransactionMetadata { get; }
 		ICallStackManager CallStackManager { get; }
 		int UnitOfWorkCount { get; }

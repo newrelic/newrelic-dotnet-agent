@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Data;
-using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Parsing;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using System.Threading;
-using NewRelic.Core.NewRelic.Cache;
+﻿using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
+using NewRelic.Core.NewRelic.Cache;
+using NewRelic.Parsing;
+using System;
+using System.Data;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

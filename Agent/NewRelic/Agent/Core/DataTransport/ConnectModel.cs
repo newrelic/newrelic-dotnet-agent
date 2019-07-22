@@ -52,6 +52,9 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("settings")]
 		public readonly JavascriptAgentSettingsModel JavascriptAgentSettings;
 
+		[JsonProperty("metadata")]
+		public readonly Dictionary<string, string> Metadata;
+
 		[JsonProperty("utilization")]
 		public readonly UtilizationSettingsModel UtilizationSettings;
 
@@ -61,7 +64,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("security_policies", NullValueHandling = NullValueHandling.Ignore)]
 		public readonly SecurityPoliciesSettingsModel SecurityPoliciesSettings;
 
-		public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings)
+		public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, Dictionary<string, string> metadata, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings)
 		{
 			ProcessId = processId;
 			Language = language;
@@ -75,6 +78,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			Identifier = identifier;
 			Labels = labels;
 			JavascriptAgentSettings = javascriptAgentSettings;
+			Metadata = metadata;
 			UtilizationSettings = utilizationSettings;
 			Environment = environment;
 			SecurityPoliciesSettings = securityPoliciesSettings;

@@ -8,8 +8,8 @@ namespace NewRelic.Agent.Core.Utilities
 {
 	public interface ISystemInfo
 	{
-		UInt64 GetTotalPhysicalMemoryBytes();
-		Int32 GetTotalLogicalProcessors();
+		ulong? GetTotalPhysicalMemoryBytes();
+		int? GetTotalLogicalProcessors();
 		BootIdResult GetBootId();
 	}
 }

@@ -192,6 +192,7 @@ namespace NewRelic.Agent.Core.Metric
 		#endregion Errors
 
 		public const string OtherTransactionPrefix = "OtherTransaction";
+
 		public const string WebTransactionPrefix = "WebTransaction";
 
 		public static readonly MetricName RequestQueueTime = MetricName.Create("WebFrontend/QueueTime");
@@ -487,6 +488,9 @@ namespace NewRelic.Agent.Core.Metric
 		private const string SupportabilityUtilizationBootIdError =
 			SupportabilityUtilizationPs + "boot_id" + PathSeparator + "error";
 
+		private const string SupportabilityUtilizationKubernetesError =
+			SupportabilityUtilizationPs + "kubernetes" + PathSeparator + "error";
+
 		private const string SupportabilityUtilizationAwsError =
 			SupportabilityUtilizationPs + "aws" + PathSeparator + "error";
 
@@ -501,6 +505,8 @@ namespace NewRelic.Agent.Core.Metric
 
 		public static string GetSupportabilityBootIdError() => SupportabilityUtilizationBootIdError;
 
+		public static string GetSupportabilityKubernetesUsabilityError() => SupportabilityUtilizationKubernetesError;
+
 		public static string GetSupportabilityAwsUsabilityError() => SupportabilityUtilizationAwsError;
 
 		public static string GetSupportabilityAzureUsabilityError() => SupportabilityUtilizationAzureError;
@@ -508,6 +514,11 @@ namespace NewRelic.Agent.Core.Metric
 		public static string GetSupportabilityGcpUsabilityError() => SupportabilityUtilizationGcpError;
 
 		public static string GetSupportabilityPcfUsabilityError() => SupportabilityUtilizationPcfError;
+
+		public static string GetSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint)
+		{
+			return SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix + PathSeparator + endpoint;
+		}
 
 		public static string GetSupportabilityAgentTimingMetric(string suffix)
 		{
@@ -813,16 +824,48 @@ namespace NewRelic.Agent.Core.Metric
 		public const string CpuUserTime = "CPU/User Time";
 
 		public const string DotNetPerf = "DotNet";
-		public const string DotNetPerfThreadpool = DotNetPerf + PathSeparator + "Threadpool";
+		public const string DotNetPerfThreadpool = DotNetPerf + PathSeparator + "Threadpool" + PathSeparator;
+		public const string DotNetPerfThreadpoolThroughput = DotNetPerfThreadpool + "Throughput" + PathSeparator;
 
 		public static string GetThreadpoolUsageStatsName(ThreadType type, ThreadStatus status)
 		{
-			return DotNetPerfThreadpool + PathSeparator + EnumNameCache<ThreadType>.GetName(type) + PathSeparator + EnumNameCache<ThreadStatus>.GetName(status);
+			return DotNetPerfThreadpool + EnumNameCache<ThreadType>.GetName(type) + PathSeparator + EnumNameCache<ThreadStatus>.GetName(status);
 		}
 
-		public const string DotNetPerfThreads = DotNetPerf + PathSeparator + "Threads";
-		public const string DotNetPerfThreadsCountAll = DotNetPerfThreads + PathSeparator + "Active";
+		public static string GetThreadpoolThroughputStatsName(ThreadpoolThroughputStatsType type)
+		{
+			return DotNetPerfThreadpoolThroughput + EnumNameCache<ThreadpoolThroughputStatsType>.GetName(type);
+		}
+
+		private static readonly Dictionary<GCSampleType, string> GCMetricNames = new Dictionary<GCSampleType, string>
+		{
+			{ GCSampleType.HandlesCount , "GC/Handles" },
+			{ GCSampleType.InducedCount , "GC/Induced" },
+			{ GCSampleType.PercentTimeInGc , "GC/PercentTimeInGC" },
+
+			{ GCSampleType.Gen0CollectionCount , "GC/Gen0/Executions" },
+			{ GCSampleType.Gen0Size , "GC/Gen0/Size" },
+			{ GCSampleType.Gen0Promoted , "GC/Gen0/Promoted" },
+
+			{ GCSampleType.Gen1CollectionCount , "GC/Gen1/Executions" },
+			{ GCSampleType.Gen1Size , "GC/Gen1/Size" },
+			{ GCSampleType.Gen1Promoted , "GC/Gen1/Promoted" },
+
+			{ GCSampleType.Gen2CollectionCount , "GC/Gen2/Executions" },
+			{ GCSampleType.Gen2Size , "GC/Gen2/Size" },
+			{ GCSampleType.Gen2Survived, "GC/Gen2/Survived" },
+
+			{ GCSampleType.LOHSize , "GC/LOH/Size" },
+			{ GCSampleType.LOHSurvived, "GC/LOH/Survived" },
+		};
+		
+		public static string GetGCMetricName(GCSampleType sampleType)
+		{
+			return GCMetricNames[sampleType];
+		}
 
 		#endregion Performance Metrics
+
+		public const string SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix = Supportability + PathSeparator + "DotNet/Collector" + PathSeparator + "MaxPayloadSizeLimit";
 	}
 }

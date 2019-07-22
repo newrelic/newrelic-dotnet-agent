@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Core.DistributedTracing;
+﻿using NewRelic.Core.DistributedTracing;
+using NewRelic.Core.JsonConverters;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using System;

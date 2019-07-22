@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core;
+using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using NewRelic.SystemExtensions.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Telerik.JustMock;
 
 namespace CompositeTests

@@ -1,11 +1,11 @@
-﻿using System;
+﻿using NewRelic.Agent.Extensions.Providers;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
+using NewRelic.TypeInstantiation;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Extensions.Providers;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.TypeInstantiation;
 
 namespace NewRelic.Agent.Core.Utilities
 {

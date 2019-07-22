@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public readonly bool Unused;
 		public readonly string TripId;
 		public readonly string PathHash;
-		
+
 		public CrossApplicationRequestData(string transactionGuid, bool unused, string tripId, string pathHash) 
 		{
 			TransactionGuid = transactionGuid;

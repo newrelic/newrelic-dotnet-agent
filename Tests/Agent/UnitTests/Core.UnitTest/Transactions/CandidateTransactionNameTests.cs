@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Transactions
 		[Test]
 		public void Build_IgnoresNamesAddedAfterFreezing()
 		{
-			_candidateTransactionName.Freeze();
+			_candidateTransactionName.Freeze(TransactionNameFreezeReason.CrossApplicationTracing);
 			Assert.IsFalse(_candidateTransactionName.TrySet(TransactionName.ForWebTransaction("newCategory", "newName"), TransactionNamePriority.FrameworkHigh));
 
 			var builtName = _candidateTransactionName.CurrentTransactionName;

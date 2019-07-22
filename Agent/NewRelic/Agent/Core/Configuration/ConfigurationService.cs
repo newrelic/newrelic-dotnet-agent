@@ -1,13 +1,13 @@
-﻿using System;
-using System.Linq;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
+using System;
+using System.Linq;
 using System.Reflection;
 
 namespace NewRelic.Agent.Core.Configuration

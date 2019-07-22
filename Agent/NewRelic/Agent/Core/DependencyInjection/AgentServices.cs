@@ -74,9 +74,23 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IAgent, Wrapper.AgentWrapperApi.Agent>();
 			container.Register<CpuSampler, CpuSampler>();
 			container.Register<MemorySampler, MemorySampler>();
+			container.Register<Func<IThreadEventsListener>>(() => new ThreadEventsListener());
 			container.Register<ThreadStatsSampler, ThreadStatsSampler>();
+			container.Register<IGcSampleTransformer, GcSampleTransformer>();
+#if NETFRAMEWORK
+			container.Register<Func<string, IPerformanceCounterCategoryProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterCategoryProxy);
+			container.Register<Func<string, string, string, IPerformanceCounterProxy>>(PerformanceCounterProxyFactory.DefaultCreatePerformanceCounterProxy);
+			container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
+			container.Register<GcSampler, GcSampler>();
+#else
+			container.Register<Func<IGCEventsListener>>(() => new GCEventsListener());
+			container.Register<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
+			container.Register<GCSamplerNetCore, GCSamplerNetCore>();
+#endif
+
 			container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
 			container.Register<IProcessStatic, ProcessStatic>();
+			container.Register<INetworkData, NetworkData>();
 			container.Register<IDnsStatic, DnsStatic>();
 			container.Register<IHttpRuntimeStatic, HttpRuntimeStatic>();
 			container.Register<IConfigurationManagerStatic, ConfigurationManagerStatic>();
@@ -185,9 +199,14 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Resolve<AssemblyResolutionService>();
 			container.Resolve<ITransactionFinalizer>();
 			container.Resolve<IAgentHealthReporter>();
-			container.Resolve<CpuSampler>();
-			container.Resolve<MemorySampler>();
-			container.Resolve<ThreadStatsSampler>();
+#if NETFRAMEWORK
+			container.Resolve<GcSampler>().Start();
+#else
+			container.Resolve<GCSamplerNetCore>().Start();
+#endif
+			container.Resolve<CpuSampler>().Start();
+			container.Resolve<MemorySampler>().Start();
+			container.Resolve<ThreadStatsSampler>().Start();
 			container.Resolve<ConfigurationTracker>();
 			container.Resolve<LiveInstrumentationServerConfigurationListener>();
 		}

@@ -1,9 +1,9 @@
-﻿using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.SharedInterfaces;
+﻿using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.WireModels;
-using System;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
+using System;
 
 namespace NewRelic.Agent.Core.Metric
 {

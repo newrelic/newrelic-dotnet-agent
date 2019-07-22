@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.TransactionTraces;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -24,31 +20,14 @@ namespace NewRelic.Agent.Core.Aggregators
 	[TestFixture]
 	public class TransactionTraceAggregatorTests
 	{
-		[NotNull]
 		private TransactionTraceAggregator _transactionTraceAggregator;
-
-		[NotNull]
 		private IDataTransportService _dataTransportService;
-
-		[NotNull]
 		private IEnumerable<ITransactionCollector> _transactionCollectors;
-
-		[NotNull]
 		private ITransactionCollector _transactionCollector1;
-
-		[NotNull]
 		private ITransactionCollector _transactionCollector2;
-
-		[NotNull]
 		private IDnsStatic _dnsStatic;
-
-		[NotNull]
 		private IProcessStatic _processStatic;
-
-		[NotNull]
 		private Action _harvestAction;
-
-		[NotNull]
 		private ConfigurationAutoResponder _configurationAutoResponder;
 
 		[SetUp]
@@ -130,7 +109,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<TransactionTraceWireModel>>(traces =>
 				{
 					sentTraces = traces;
-					return DataTransportResponseStatus.ServerError;
+					return DataTransportResponseStatus.Retain;
 				});
 
 			var trace = new TransactionTraceWireModelComponents(new TransactionMetricName(), TimeSpan.FromSeconds(5), false, () => Mock.Create<TransactionTraceWireModel>());

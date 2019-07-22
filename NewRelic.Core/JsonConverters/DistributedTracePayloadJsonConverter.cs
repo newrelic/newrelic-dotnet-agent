@@ -1,17 +1,15 @@
-﻿using NewRelic.Core.Utilities;
+﻿using NewRelic.Core.DistributedTracing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NewRelic.Core.DistributedTracing;
 using System;
-using DistributedTracePayload = NewRelic.Core.DistributedTracing.DistributedTracePayload;
 
 namespace NewRelic.Core.JsonConverters
 {
-
 	public class DistributedTracePayloadJsonConverter : JsonConverter
 	{
 		private const int RequiredDataObjectFieldCount = 6;
 		private const int MaximumDataObjectFieldCount = 10;
+
 		private static void ParseVersion(JToken selection, DistributedTracePayload payload)
 		{
 			payload.Version = selection.ToObject<int[]>();

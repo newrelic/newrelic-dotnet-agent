@@ -1,6 +1,8 @@
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
+using NewRelic.SystemInterfaces;
 using System;
 using System.Configuration;
 using System.IO;
@@ -8,8 +10,6 @@ using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.SystemInterfaces;
 #if NETSTANDARD2_0
 using System.Reflection;
 using NewRelic.Agent.Core.Configuration;

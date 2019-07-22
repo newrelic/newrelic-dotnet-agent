@@ -76,13 +76,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		[Test]
 		[TestCase("ForceRestartException")]
-		[TestCase("ConnectionException")]
-		[TestCase("RuntimeException")]
-		[TestCase("UnknownRPMException")]
-		[TestCase("ServerErrorException")]
-		[TestCase("PostTooLargeException")]
-		[TestCase("SerializationException")]
-		[TestCase("RequestTimeoutException")]
 		[TestCase("HttpException")]
 		[TestCase("SocketException")]
 		[TestCase("IOException")]
@@ -92,28 +85,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			switch (execeptionType)
 			{
 				case "ForceRestartException":
-					ex = new ForceRestartException(null);
-					break;
-				case "ConnectionException":
-					ex = new ConnectionException(null);
-					break;
-				case "RuntimeException":
-					ex = new RuntimeException(null);
-					break;
-				case "UnknownRPMException":
-					ex = new ExceptionFactories.UnknownRPMException(null);
-					break;
-				case "ServerErrorException":
-					ex = new ServerErrorException(null, HttpStatusCode.InternalServerError);
-					break;
-				case "PostTooLargeException":
-					ex = new PostTooLargeException(null);
-					break;
-				case "SerializationException":
-					ex = new SerializationException(null);
-					break;
-				case "RequestTimeoutException":
-					ex = new RequestTimeoutException(null);
+					ex = new HttpException(HttpStatusCode.Conflict, null);
 					break;
 				case "HttpException":
 					ex = new HttpException(HttpStatusCode.MethodNotAllowed, null);
@@ -147,19 +119,32 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		[Test]
-		public void Constructor_PublishesShutdownAgentEvent_IfAnyOtherExceptionOccurs()
+		[TestCaseSource(typeof(ConnectionManagerTests), nameof(ShutdownScenarios))]
+		public void Constructor_PublishesShutdownAgentEvent_IfCertainExceptionsOccur(Exception testData)
 		{
 			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
 			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
 			Mock.Arrange(() => _connectionHandler.Connect())
-				.Throws(new Exception());
+				.Throws(testData);
 
 			// Act (construct ConnectionManager)
 			using (new EventExpectation<KillAgentEvent>())
 			using (new ConnectionManager(_connectionHandler, _scheduler))
 			{
+			}
+		}
+
+		private static TestCaseData[] ShutdownScenarios
+		{
+			get
+			{
+				var testCases = new[] {
+					new TestCaseData(new Exception()),
+					new TestCaseData(new HttpException(HttpStatusCode.Gone, null))
+				};
+
+				return testCases;
 			}
 		}
 
@@ -170,7 +155,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
 			Mock.Arrange(() => _connectionHandler.Connect())
-				.Throws(new ServerErrorException(null, HttpStatusCode.InternalServerError));
+				.Throws(new HttpException(HttpStatusCode.InternalServerError, null));
 
 			Action scheduledAction = null;
 			var scheduledTime = new TimeSpan();
@@ -185,22 +170,22 @@ namespace NewRelic.Agent.Core.DataTransport
 			using (new ConnectionManager(_connectionHandler, _scheduler))
 			{
 				Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
-				Assert.AreEqual(5, scheduledTime.TotalSeconds);
+				Assert.AreEqual(15, scheduledTime.TotalSeconds);
 
 				scheduledAction();
-				Assert.AreEqual(10, scheduledTime.TotalSeconds);
+				Assert.AreEqual(15, scheduledTime.TotalSeconds);
 
 				scheduledAction();
-				Assert.AreEqual(20, scheduledTime.TotalSeconds);
+				Assert.AreEqual(30, scheduledTime.TotalSeconds);
 
 				scheduledAction();
-				Assert.AreEqual(40, scheduledTime.TotalSeconds);
+				Assert.AreEqual(60, scheduledTime.TotalSeconds);
 
 				scheduledAction();
-				Assert.AreEqual(80, scheduledTime.TotalSeconds);
+				Assert.AreEqual(120, scheduledTime.TotalSeconds);
 
 				scheduledAction();
-				Assert.AreEqual(160, scheduledTime.TotalSeconds);
+				Assert.AreEqual(300, scheduledTime.TotalSeconds);
 
 				scheduledAction();
 				Assert.AreEqual(300, scheduledTime.TotalSeconds);

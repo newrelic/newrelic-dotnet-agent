@@ -1,9 +1,10 @@
-using System;
-using System.Text;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Config;
+using NewRelic.Core;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
+using System.Text;
+
 namespace NewRelic.Agent.Core.Utils
 {
 	[TestFixture]

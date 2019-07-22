@@ -1,8 +1,7 @@
-﻿using System;
-using NewRelic.Core.JsonConverters;
+﻿using NewRelic.Core.JsonConverters;
+using NewRelic.Core.Logging;
 using Newtonsoft.Json;
-using NewRelic.Core.Utilities;
-//using NewRelic.Core.Logging;
+using System;
 
 namespace NewRelic.Core.DistributedTracing
 {
@@ -79,19 +78,19 @@ namespace NewRelic.Core.DistributedTracing
 
 			if ( string.IsNullOrEmpty(accountId) || string.IsNullOrEmpty(appId))
 			{ 
-				//Log.Finest("Did not generate payload because AccountId or PrimaryApplicationId were not populated. This is normal for requests occurring before round trip with server has completed.");
+				Log.Finest("Did not generate payload because AccountId or PrimaryApplicationId were not populated. This is normal for requests occurring before round trip with server has completed.");
 				return null;
 			}
 
 			if ( string.IsNullOrEmpty(type) || string.IsNullOrEmpty(traceId))
 			{
-				//Log.Finest("Did not generate payload becasue Type or TraceId were not populated.");
+				Log.Finest("Did not generate payload becasue Type or TraceId were not populated.");
 				return null;
 			}
 
 			if (string.IsNullOrEmpty(guid) && string.IsNullOrEmpty(transactionId))
 			{
-				//Log.Finest("Did not generate payload because neither guid nor transactionId were populated.");
+				Log.Finest("Did not generate payload because neither guid nor transactionId were populated.");
 				return null;
 			}
 
@@ -134,7 +133,7 @@ namespace NewRelic.Core.DistributedTracing
 		/// <returns>The serialized JSON string</returns>
 		public string ToJson(bool pretty = false)
 		{
-			return JsonConvert.SerializeObject(this, pretty ? Formatting.Indented: Formatting.None);
+			return JsonConvert.SerializeObject(this, pretty ? Formatting.Indented : Formatting.None);
 		}
 
 		/// <summary>
@@ -164,7 +163,7 @@ namespace NewRelic.Core.DistributedTracing
 					stringToConvert = Strings.TryBase64Decode(stringToConvert);
 					if (stringToConvert == null)
 					{
-						//Log.Debug("Could not decode distributed trace payload string: " + encodedString);
+						Log.Debug("Could not decode distributed trace payload string: " + encodedString);
 						return null;
 					}
 				}

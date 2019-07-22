@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas);
 		DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas);
 		DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics);
-		DataTransportResponseStatus Send(IEnumerable<TransactionEventWireModel> transactionEvents);
+		DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents);
 		DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents);
 		DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<SpanEventWireModel> enumerable);
 		DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels);

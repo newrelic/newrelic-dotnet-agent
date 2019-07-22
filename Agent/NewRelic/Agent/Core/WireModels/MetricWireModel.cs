@@ -9,10 +9,8 @@ using NewRelic.SystemExtensions;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using NewRelic.Agent.Core.SharedInterfaces;
 using InternalMetricName = NewRelic.Agent.Core.Metric.MetricName;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Samplers;
@@ -187,10 +185,17 @@ namespace NewRelic.Agent.Core.WireModels
 				var data = MetricDataWireModel.BuildByteData(memoryWorkingSet);
 				return BuildMetric(_metricNameService, MetricNames.MemoryWorkingSet, null, data);
 			}
+
 			public MetricWireModel TryBuildThreadpoolUsageStatsMetric(ThreadType type, ThreadStatus status, int countThreadpoolThreads)
 			{
 				var data = MetricDataWireModel.BuildGaugeValue(countThreadpoolThreads);
 				return BuildMetric(_metricNameService, MetricNames.GetThreadpoolUsageStatsName(type, status), null, data);
+			}
+
+			public MetricWireModel TryBuildThreadpoolThroughputStatsMetric(ThreadpoolThroughputStatsType type, int statsVal)
+			{
+				var data = MetricDataWireModel.BuildGaugeValue(statsVal);
+				return BuildMetric(_metricNameService, MetricNames.GetThreadpoolThroughputStatsName(type), null, data);
 			}
 
 			public MetricWireModel TryBuildCpuUserTimeMetric(TimeSpan cpuTime)
@@ -226,6 +231,31 @@ namespace NewRelic.Agent.Core.WireModels
 				var data = MetricDataWireModel.BuildTimingData(queueTime, queueTime);
 				txStats.MergeUnscopedStats(MetricNames.RequestQueueTime, data);
 			}
+
+			public MetricWireModel TryBuildGCBytesMetric(GCSampleType sampleType, long value)
+			{
+				var data = MetricDataWireModel.BuildByteData(value);
+				return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+			}
+
+			public MetricWireModel TryBuildGCCountMetric(GCSampleType sampleType, int value)
+			{
+				var data = MetricDataWireModel.BuildCountData(value);
+				return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+			}
+
+			public MetricWireModel TryBuildGCPercentMetric(GCSampleType sampleType, float value)
+			{
+				var data = MetricDataWireModel.BuildPercentageData(value);
+				return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+			}
+
+			public MetricWireModel TryBuildGCGaugeMetric(GCSampleType sampleType, float value)
+			{
+				var data = MetricDataWireModel.BuildGaugeValue(value);
+				return BuildMetric(_metricNameService, MetricNames.GetGCMetricName(sampleType), null, data);
+			}
+
 
 			#region Transaction apdex builders
 
@@ -687,6 +717,13 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
+			public MetricWireModel TryBuildKubernetesUsabilityError()
+			{
+				var proposedName = MetricNames.GetSupportabilityKubernetesUsabilityError();
+				var data = MetricDataWireModel.BuildKubernetesUsabilityError();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
 			public MetricWireModel TryBuildAwsUsabilityError()
 			{
 				var proposedName = MetricNames.GetSupportabilityAwsUsabilityError();
@@ -788,6 +825,11 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
+			private MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimitMetric(string proposedName, int count) =>
+				BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
+
+			public MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1) =>
+				TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimitMetric(MetricNames.GetSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint), count);
 
 			#endregion Supportability builders
 
@@ -1104,6 +1146,11 @@ namespace NewRelic.Agent.Core.WireModels
 		}
 
 		public static MetricDataWireModel BuildBootIdError()
+		{
+			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
+		}
+
+		internal static MetricDataWireModel BuildKubernetesUsabilityError()
 		{
 			return new MetricDataWireModel(1, 0, 0, 0, 0, 0);
 		}

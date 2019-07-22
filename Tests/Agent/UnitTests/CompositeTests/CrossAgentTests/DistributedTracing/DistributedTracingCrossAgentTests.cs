@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Castle.Core.Internal;
+using NewRelic.Agent.Core;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core;
+using NewRelic.Core.DistributedTracing;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Castle.Core.Internal;
-using NewRelic.Agent.Core;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Utils;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
 using Telerik.JustMock;
 
 namespace CompositeTests.CrossAgentTests.DistributedTracing

@@ -1,7 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
-
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+﻿namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	/// <summary>
 	/// The immutable details about an instrumented method.
@@ -10,17 +7,13 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 	{
 		private readonly long _functionId;
 		public readonly Method Method;
-		[CanBeNull]
-		public readonly String RequestedWrapperName;
-		[NotNull]
+		public readonly string RequestedWrapperName;
 		public readonly bool IsAsync;
-		[CanBeNull]
 		public readonly string RequestedMetricName;
-		[CanBeNull]
 		public readonly TransactionNamePriority? RequestedTransactionNamePriority;
 		public readonly bool StartWebTransaction;
 
-		public InstrumentedMethodInfo(long functionId, Method method, [CanBeNull] String requestedWrapperName, bool isAsync, [CanBeNull] string requestedMetricName, TransactionNamePriority? requestedTransactionNamePriority, bool startWebTransaction)
+		public InstrumentedMethodInfo(long functionId, Method method, string requestedWrapperName, bool isAsync, string requestedMetricName, TransactionNamePriority? requestedTransactionNamePriority, bool startWebTransaction)
 		{
 			Method = method;
 			RequestedWrapperName = requestedWrapperName;
@@ -31,12 +24,12 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			StartWebTransaction = startWebTransaction;
 		}
 
-		public override Int32 GetHashCode()
+		public override int GetHashCode()
 		{
 			return _functionId.GetHashCode();
 		}
 
-		public override Boolean Equals(Object other)
+		public override bool Equals(object other)
 		{
 			if (!(other is InstrumentedMethodInfo))
 				return false;

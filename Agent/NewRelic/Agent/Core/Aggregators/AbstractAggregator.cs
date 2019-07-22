@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
@@ -10,18 +9,12 @@ namespace NewRelic.Agent.Core.Aggregators
 {
 	public abstract class AbstractAggregator<T> : ConfigurationBasedService
 	{
-		[NotNull]
 		protected readonly IDataTransportService DataTransportService;
-
-		[NotNull]
 		private readonly IScheduler _scheduler;
-
-		[NotNull]
 		private readonly IProcessStatic _processStatic;
-
 		private readonly TimeSpan _harvestCycle = TimeSpan.FromMinutes(1);
 
-		protected AbstractAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic)
+		protected AbstractAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic)
 		{
 			DataTransportService = dataTransportService;
 			_scheduler = scheduler;

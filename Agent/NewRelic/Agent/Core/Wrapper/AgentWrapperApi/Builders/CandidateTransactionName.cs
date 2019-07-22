@@ -1,27 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
+﻿using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using Newtonsoft.Json;
+using System;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
+	public enum TransactionNameFreezeReason
+	{
+		AutoBrowserScriptInjection,
+		ManualBrowserScriptInjection,
+		CrossApplicationTracing
+	}
+
 	public interface ICandidateTransactionName
 	{
-		bool TrySet([NotNull] ITransactionName transactionName, TransactionNamePriority priority);
+		bool TrySet(ITransactionName transactionName, TransactionNamePriority priority);
 
 		/// <summary>
 		/// Freeze the transaction name so it can't be changed again.
 		/// </summary>
-		void Freeze();
+		void Freeze(TransactionNameFreezeReason reason);
 
 		// REVIEW this was marked non-null but the code seems to indicate that null transaction names are accepted through constructors
-		[NotNull]
 		ITransactionName CurrentTransactionName { get; }
 	}
 
@@ -32,15 +33,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		/// This variable is volatile because it is accessed without a lock in the
 		/// CurrentTransaction accessor.
 		/// </summary>
-		[NotNull]
 		private volatile ITransactionName _currentTransactionName;
-
 		private ITransaction _transaction;
-
-		[NotNull]
 		private TransactionNamePriority _highestPriority;
-			
-		[NotNull]
 		private bool _isFrozen = false;
 
 		public CandidateTransactionName(ITransaction transaction, ITransactionName initialTransactionName)
@@ -86,7 +81,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			return !_isFrozen && (newPriority == TransactionNamePriority.UserTransactionName || newPriority > _highestPriority || _currentTransactionName == null);
 		}
 
-		public void Freeze()
+		public void Freeze(TransactionNameFreezeReason reason)
 		{
 			// the _isFrozen variable is accessed under the same lock in the Add method.
 			lock (this)
@@ -97,14 +92,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			if (Log.IsFinestEnabled)
 			{
-				_transaction.LogFinest($"Freezing transaction name to {FormatTransactionName(_currentTransactionName, _highestPriority)}");
+				_transaction.LogFinest($"Freezing transaction name to {FormatTransactionName(_currentTransactionName, _highestPriority)} for {reason}");
 			}
 		}
 
 		public ITransactionName CurrentTransactionName => _currentTransactionName;
 
-		[CanBeNull]
-		private static String FormatTransactionName([NotNull] ITransactionName transactionName, TransactionNamePriority priority)
+		private static string FormatTransactionName(ITransactionName transactionName, TransactionNamePriority priority)
 		{
 			return $"{transactionName.GetType().Name}{JsonConvert.SerializeObject(transactionName)} (priority {(int)priority}, {priority})";
 		}

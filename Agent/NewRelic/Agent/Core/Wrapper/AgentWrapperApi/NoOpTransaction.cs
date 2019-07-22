@@ -1,11 +1,11 @@
-﻿using System;
+﻿using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using NewRelic.Agent.Core.Api;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Extensions.Parsing;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

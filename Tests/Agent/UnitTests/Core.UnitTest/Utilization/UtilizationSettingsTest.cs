@@ -18,20 +18,23 @@ namespace NewRelic.Agent.Core.Utilization
 				{ "azure", new AzureVendorModel("myLocation", "myName", "myVmId", "myVmSize") },
 				{ "gcp" , new GcpVendorModel("myId", "myMachineType", "myName", "myZone") },
 				{ "pcf", new PcfVendorModel("myInstanceGuid", "myInstanceIp", "myMemoryLimit") },
-				{ "docker", new DockerVendorModel("myBootId") }
+				{ "docker", new DockerVendorModel("myBootId") },
+				{ "kubernetes", new KubernetesVendorModel("10.96.0.1") }
 			};
 			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
-			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
 
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
 			var expectedObject = new Dictionary<String, Object>
 			{
-				{"metadata_version", 3},
+				{"metadata_version", 5},
 				{"logical_processors", 4},
 				{"total_ram_mib", 1024},
 				{"hostname", "lo-calhost"},
+				{"full_hostname", "lo-calhost.domain.com"},
+				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
 					"config",  new Dictionary<String, Object>
 					{
@@ -82,6 +85,12 @@ namespace NewRelic.Agent.Core.Utilization
 							{
 								{"id", "myBootId" }
 							}
+						},
+						{
+							"kubernetes", new Dictionary<String,Object>
+							{
+								{"kubernetes_service_host", "10.96.0.1" }
+							}
 						}
 					}
 				}
@@ -102,17 +111,19 @@ namespace NewRelic.Agent.Core.Utilization
 				{ "docker", new DockerVendorModel("myBootId") }
 			};
 			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
-			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
 
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
 			var expectedObject = new Dictionary<String, Object>
 			{
-				{"metadata_version", 3},
+				{"metadata_version", 5},
 				{"logical_processors", 4},
 				{"total_ram_mib", 1024},
 				{"hostname", "lo-calhost"},
+				{"full_hostname", "lo-calhost.domain.com"},
+				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
 					"config",  new Dictionary<String, Object>
 					{
@@ -172,17 +183,19 @@ namespace NewRelic.Agent.Core.Utilization
 		{
 			var vendors = new Dictionary<string,IVendorModel>();
 			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
-			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
 
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
 			var expectedObject = new Dictionary<String, Object>
 			{
-				{"metadata_version", 3},
+				{"metadata_version", 5},
 				{"logical_processors", 4},
 				{"total_ram_mib", 1024},
 				{"hostname", "lo-calhost"},
+				{"full_hostname", "lo-calhost.domain.com"},
+				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
 					"config",  new Dictionary<String, Object>
 					{
@@ -202,17 +215,19 @@ namespace NewRelic.Agent.Core.Utilization
 		{
 			var vendors = new Dictionary<string,IVendorModel>();
 			UtilitizationConfig config = GetUtilitizationConfig(null);
-			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
 
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
 			var expectedObject = new Dictionary<String, Object>
 			{
-				{"metadata_version", 3},
+				{"metadata_version", 5},
 				{"logical_processors", 4},
 				{"total_ram_mib", 1024},
-				{"hostname", "lo-calhost"}
+				{"hostname", "lo-calhost"},
+				{"full_hostname", "lo-calhost.domain.com"},
+				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }}
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
 			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
@@ -223,17 +238,19 @@ namespace NewRelic.Agent.Core.Utilization
 		{
 			var vendors = new Dictionary<string, IVendorModel>();
 			UtilitizationConfig config = GetUtilitizationConfig(null, null, null);
-			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
 
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
 			var expectedObject = new Dictionary<String, Object>
 			{
-				{"metadata_version", 3},
+				{"metadata_version", 5},
 				{"logical_processors", 4},
 				{"total_ram_mib", 1024},
-				{"hostname", "lo-calhost"}
+				{"hostname", "lo-calhost"},
+				{"full_hostname", "lo-calhost.domain.com"},
+				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
 			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
@@ -244,17 +261,19 @@ namespace NewRelic.Agent.Core.Utilization
 		{
 			var vendors = new Dictionary<string, IVendorModel>();
 			var config = new UtilitizationConfig("loc-alhost", 2, 2048);
-			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
 
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
 			var expectedObject = new Dictionary<String, Object>
 			{
-				{"metadata_version", 3},
+				{"metadata_version", 5},
 				{"logical_processors", 4},
 				{"total_ram_mib", 1024},
 				{"hostname", "lo-calhost"},
+				{"full_hostname", "lo-calhost.domain.com"},
+				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
 					"config",  new Dictionary<String, Object>
 					{
@@ -273,17 +292,19 @@ namespace NewRelic.Agent.Core.Utilization
 		{
 			var vendors = new Dictionary<string, IVendorModel>();
 			var config = new UtilitizationConfig(null, null, 2048);
-			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", null, vendors, config);
+			var settingsModel = new UtilizationSettingsModel(4, 1024 * 1024 * 1024, "lo-calhost", "lo-calhost.domain.com", new List<string> { "1.2.3.4", "5.6.7.8" }, null, vendors, config);
 
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
 			var expectedObject = new Dictionary<String, Object>
 			{
-				{"metadata_version", 3},
+				{"metadata_version", 5},
 				{"logical_processors", 4},
 				{"total_ram_mib", 1024},
 				{"hostname", "lo-calhost"},
+				{"full_hostname", "lo-calhost.domain.com"},
+				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
 					"config",  new Dictionary<String, Object>
 					{

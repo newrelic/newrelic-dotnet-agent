@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NewRelic.Agent.Extensions.Providers
+﻿namespace NewRelic.Agent.Extensions.Providers
 {
 	/// <summary>
 	/// Classes that implement this interface provide storage mechanism for object instances within the context
@@ -15,12 +13,12 @@ namespace NewRelic.Agent.Extensions.Providers
 		/// The priority this context should have over other contexts.  Higher priority contexts trump lower priority contexts.
 		/// </summary>
 		/// <remarks>The .NET Agent built-in contexts will all be less than 128 so a user can override all built-in contexts by choosing a priority over 128.  If two contexts have the same priority, it is undefined which one will take precedence.</remarks>
-		Byte Priority { get; }
+		byte Priority { get; }
 		/// <summary>
 		/// Identifies whether this context can provide a context at this time.  In some cases, a context might not be able to provide a context due to the current state of the system, in which case the next context in the list (based on priority) will be used.
 		/// </summary>
 		/// <remarks>Implementations of this method should be very performant as it will be called with fairly high frequency.</remarks>
-		Boolean CanProvide { get; }
+		bool CanProvide { get; }
 		/// <summary>
 		/// Get the data stored in the current context.
 		/// </summary>

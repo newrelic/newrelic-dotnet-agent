@@ -95,20 +95,17 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			switch (responseStatus)
 			{
-				case DataTransportResponseStatus.CommunicationError:
-				case DataTransportResponseStatus.RequestTimeout:
-				case DataTransportResponseStatus.ServerError:
-				case DataTransportResponseStatus.ConnectionError:
-					RetainEvents(spanEvents);
-					break;
-				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((uint)(spanEvents.Count * ReservoirReductionSizeMultiplier));
-					RetainEvents(spanEvents);
-					break;
 				case DataTransportResponseStatus.RequestSuccessful:
 					_agentHealthReporter.ReportSpanEventsSent(spanEvents.Count);
 					break;
-				case DataTransportResponseStatus.OtherError:
+				case DataTransportResponseStatus.Retain:
+					RetainEvents(spanEvents);
+					break;
+				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+					ReduceReservoirSize((uint)(spanEvents.Count * ReservoirReductionSizeMultiplier));
+					RetainEvents(spanEvents);
+					break;
+				case DataTransportResponseStatus.Discard:
 				default:
 					break;
 			}

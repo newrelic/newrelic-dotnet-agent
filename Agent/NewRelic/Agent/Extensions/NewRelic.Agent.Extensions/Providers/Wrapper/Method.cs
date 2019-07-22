@@ -1,19 +1,15 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	public class Method
 	{
-		[NotNull]
 		public readonly Type Type;
-		[NotNull]
-		public readonly String MethodName;
-		[NotNull]
-		public readonly String ParameterTypeNames;
+		public readonly string MethodName;
+		public readonly string ParameterTypeNames;
 		private readonly int _hashCode;
 
-		public Method([NotNull] Type type, [NotNull] String methodName, [NotNull] String parameterTypeNames, int hashCode)
+		public Method(Type type, string methodName, string parameterTypeNames, int hashCode)
 		{
 			if (type == null)
 				throw new ArgumentNullException("type");
@@ -30,17 +26,17 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			_hashCode = hashCode;
 		}
 
-		public Method([NotNull] Type type, [NotNull] String methodName, [NotNull] String parameterTypeNames) :
+		public Method(Type type, string methodName, string parameterTypeNames) :
 			this(type, methodName, parameterTypeNames, GetHashCode(type, methodName, parameterTypeNames))
 		{
 		}
 
-		public override Int32 GetHashCode()
+		public override int GetHashCode()
 		{
 			return _hashCode;
 		}
 
-		private static Int32 GetHashCode(Type type, String methodName, String parameterTypeNames)
+		private static int GetHashCode(Type type, string methodName, string parameterTypeNames)
 		{
 			unchecked
 			{
@@ -52,7 +48,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			}
 		}
 
-		public override Boolean Equals(Object other)
+		public override bool Equals(object other)
 		{
 			if (!(other is Method))
 				return false;
@@ -71,9 +67,9 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			return true;
 		}
 
-		public override String ToString()
+		public override string ToString()
 		{
-			return String.Format("{0}:{1}({2})", Type.AssemblyQualifiedName, MethodName, ParameterTypeNames);
+			return string.Format("{0}:{1}({2})", Type.AssemblyQualifiedName, MethodName, ParameterTypeNames);
 		}
 	}
 }

@@ -5,8 +5,8 @@ using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Transformers
 {

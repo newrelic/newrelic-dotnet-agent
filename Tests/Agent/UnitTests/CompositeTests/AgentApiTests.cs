@@ -1,16 +1,16 @@
 ﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NewRelic.Agent.Core.Api;
 
 namespace CompositeTests
 {
@@ -1660,6 +1660,7 @@ namespace CompositeTests
 
 			// ACT
 			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			transaction.SetHttpResponseStatusCode(300);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			_compositeTestAgent.GetAgent().ProcessInboundRequest(AgentApi.GetRequestMetadata(), TransportType.HTTP); // we test this elsewhere
 			segment.End();
@@ -1678,7 +1679,7 @@ namespace CompositeTests
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual(_compositeTestAgent.ServerConfiguration.CatId, crossApplicationResponseData.CrossProcessId),
-				() => Assert.AreEqual("WebTransaction/ASP/TransactionName", crossApplicationResponseData.TransactionName),
+				() => Assert.AreEqual("WebTransaction/StatusCode/300", crossApplicationResponseData.TransactionName),
 				() => Assert.NotNull(crossApplicationResponseData.QueueTimeInSeconds),
 				() => Assert.IsTrue(crossApplicationResponseData.ResponseTimeInSeconds > 0),
 				() => Assert.NotNull(crossApplicationResponseData.ContentLength),

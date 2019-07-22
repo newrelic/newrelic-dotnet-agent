@@ -394,22 +394,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		}
 
 		[TestCase(true, false, ExpectedResult = false)]
-		[TestCase(false, true, ExpectedResult = true)]
-		public bool ErrorCollectorCatpureEventsSetFromServer(bool local, bool server)
-		{
-			_localConfig.errorCollector.captureEvents = local;
-			_serverConfig.RpmConfig.ErrorCollectorCaptureEvents = server;
-			return _defaultConfig.ErrorCollectorCaptureEvents;
-		}
-
-		[TestCase(true, false, ExpectedResult = false)]
 		[TestCase(false, true, ExpectedResult = false)]
 		[TestCase(true, true, ExpectedResult = true)]
 		[TestCase(false, false, ExpectedResult = false)]
 		public bool ErrorCollectorCaptureEventsConditionalOverrideFromServer(bool local, bool server)
 		{
 			_localConfig.errorCollector.captureEvents = local;
-			_serverConfig.RpmConfig.CollectErrorEvents = server;
+			_serverConfig.ErrorEventCollectionEnabled = server;
+
 			return _defaultConfig.ErrorCollectorCaptureEvents;
 		}
 
@@ -417,14 +409,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public uint ErrorCollectorMaxNumberEventSamplesSetFromLocal(int local)
 		{
 			_localConfig.errorCollector.maxEventSamplesStored = local;
-			return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
-		}
-
-		[TestCase(50, 75, ExpectedResult = 75)]
-		public uint ErrorCollectorMaxNumberEventSamplesSetFromServer(int local, int server)
-		{
-			_localConfig.errorCollector.maxEventSamplesStored = local;
-			_serverConfig.RpmConfig.ErrorCollectorMaxEventSamplesStored = (uint?)server;
 			return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
 		}
 
@@ -1981,6 +1965,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void UtilizationDetectDockerIsTrueByDefault()
 		{
 			Assert.IsTrue(_defaultConfig.UtilizationDetectDocker);
+		}
+
+		[Test]
+		public void UtilizationDetectKubernetesIsTrueByDefault()
+		{
+			Assert.IsTrue(_defaultConfig.UtilizationDetectKubernetes);
 		}
 
 		[Test]

@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -20,22 +19,11 @@ namespace NewRelic.Agent.Core.Aggregators
 	[TestFixture]
 	public class SqlTraceAggregatorTests
 	{
-		[NotNull]
 		private SqlTraceAggregator _sqlTraceAggregator;
-
-		[NotNull]
 		private IDataTransportService _dataTransportService;
-
-		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
-
-		[NotNull]
 		private IProcessStatic _processStatic;
-
-		[NotNull]
 		private ConfigurationAutoResponder _configurationAutoResponder;
-
-		[NotNull]
 		private Action _harvestAction;
 
 		[SetUp]
@@ -447,7 +435,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
-		public void zero_sql_traces_are_retained_after_harvest_if_response_equals_unknown_error()
+		public void zero_sql_traces_are_retained_after_harvest_if_response_equals_discard()
 		{
 			// Arrange
 			IEnumerable<SqlTraceWireModel> sentSqlTraces = null;
@@ -455,7 +443,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
 				{
 					sentSqlTraces = sqlTraces;
-					return DataTransportResponseStatus.OtherError;
+					return DataTransportResponseStatus.Discard;
 				});
 
 			var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -474,7 +462,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
-		public void sql_traces_are_retained_after_harvest_if_response_equals_connection_error()
+		public void sql_traces_are_retained_after_harvest_if_response_equals_retain()
 		{
 			// Arrange
 			var sentSqlTracesCount = int.MinValue;
@@ -482,82 +470,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
 				{
 					sentSqlTracesCount = sqlTraces.Count();
-					return DataTransportResponseStatus.ConnectionError;
-				});
-
-			var sqlTracesToSend = new SqlTraceStatsCollection();
-			sqlTracesToSend.Insert(GetSqlTrace(1, maxCallTime: TimeSpan.FromSeconds(10)));
-			_sqlTraceAggregator.Collect(sqlTracesToSend);
-
-			// Act
-			_harvestAction();
-			sentSqlTracesCount = int.MinValue; // reset
-			_harvestAction();
-
-			// Assert
-			Assert.AreEqual(1, sentSqlTracesCount);
-		}
-
-		[Test]
-		public void sql_traces_are_retained_after_harvest_if_response_equals_service_unavailable_error()
-		{
-			// Arrange
-			var sentSqlTracesCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
-				.Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
-				{
-					sentSqlTracesCount = sqlTraces.Count();
-					return DataTransportResponseStatus.ServerError;
-				});
-
-			var sqlTracesToSend = new SqlTraceStatsCollection();
-			sqlTracesToSend.Insert(GetSqlTrace(1, maxCallTime: TimeSpan.FromSeconds(10)));
-			_sqlTraceAggregator.Collect(sqlTracesToSend);
-
-			// Act
-			_harvestAction();
-			sentSqlTracesCount = int.MinValue; // reset
-			_harvestAction();
-
-			// Assert
-			Assert.AreEqual(1, sentSqlTracesCount);
-		}
-
-		[Test]
-		public void sql_traces_are_retained_after_harvest_if_response_equals_communication_error()
-		{
-			// Arrange
-			var sentSqlTracesCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
-				.Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
-				{
-					sentSqlTracesCount = sqlTraces.Count();
-					return DataTransportResponseStatus.CommunicationError;
-				});
-
-			var sqlTracesToSend = new SqlTraceStatsCollection();
-			sqlTracesToSend.Insert(GetSqlTrace(1, maxCallTime: TimeSpan.FromSeconds(10)));
-			_sqlTraceAggregator.Collect(sqlTracesToSend);
-
-			// Act
-			_harvestAction();
-			sentSqlTracesCount = int.MinValue; // reset
-			_harvestAction();
-
-			// Assert
-			Assert.AreEqual(1, sentSqlTracesCount);
-		}
-
-		[Test]
-		public void sql_traces_are_retained_after_harvest_if_response_equals_request_timeout_error()
-		{
-			// Arrange
-			var sentSqlTracesCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<SqlTraceWireModel>>()))
-				.Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
-				{
-					sentSqlTracesCount = sqlTraces.Count();
-					return DataTransportResponseStatus.RequestTimeout;
+					return DataTransportResponseStatus.Retain;
 				});
 
 			var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -582,7 +495,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<SqlTraceWireModel>>(sqlTraces =>
 				{
 					sentSqlTraces = sqlTraces;
-					return DataTransportResponseStatus.PostTooBigError;
+					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
 				});
 
 			var sqlTracesToSend = new SqlTraceStatsCollection();
@@ -621,9 +534,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		#endregion testing
 
-			#region Helpers
+		#region Helpers
 
-		[NotNull]
 		private static IConfiguration GetDefaultConfiguration(Int32? versionNumber=null, Int32? sqlTracesPerPeriod = null)
 		{
 			var configuration = Mock.Create<IConfiguration>();

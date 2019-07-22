@@ -1,7 +1,7 @@
-using System;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Logging;
+using NewRelic.Core.Logging;
 using NUnit.Framework;
+using System;
 
 namespace NewRelic.Agent.Core
 {

@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using NewRelic.Agent.Core.Utils;
+﻿using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 // ReSharper disable CheckNamespace
 // ReSharper disable InconsistentNaming

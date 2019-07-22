@@ -4,12 +4,12 @@ using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Metrics

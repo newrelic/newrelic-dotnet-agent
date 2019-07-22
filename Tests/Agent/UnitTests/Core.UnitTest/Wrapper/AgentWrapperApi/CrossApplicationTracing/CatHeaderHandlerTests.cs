@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Api;
-using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Utils;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
-using Telerik.JustMock;
-using NewRelic.SystemExtensions.Collections.Generic;
-using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core;
+using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Testing.Assertions;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {

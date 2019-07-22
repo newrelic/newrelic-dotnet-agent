@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace NewRelic.SystemInterfaces
 {
@@ -19,6 +20,11 @@ namespace NewRelic.SystemInterfaces
 		public string GetEnvironmentVariable(string variable, EnvironmentVariableTarget environmentVariableTarget)
 		{
 			return _getEnvironmentVariable(variable);
+		}
+
+		public Dictionary<string, string> GetEnvironmentVariablesWithPrefix(string prefix)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

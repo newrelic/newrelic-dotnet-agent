@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CompositeTests
 {

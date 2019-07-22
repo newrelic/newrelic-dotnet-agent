@@ -1,16 +1,12 @@
-﻿using System;
-using JetBrains.Annotations;
-
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+﻿namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	public class CanWrapResponse
 	{
-		public Boolean CanWrap;
+		public bool CanWrap;
 
-		[CanBeNull]
-		public String AdditionalInformation;
+		public string AdditionalInformation;
 
-		public CanWrapResponse(Boolean canWrap, [CanBeNull] String additionalInformation = null)
+		public CanWrapResponse(bool canWrap, string additionalInformation = null)
 		{
 			CanWrap = canWrap;
 			AdditionalInformation = additionalInformation;

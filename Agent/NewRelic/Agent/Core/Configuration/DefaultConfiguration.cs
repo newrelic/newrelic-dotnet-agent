@@ -1,20 +1,20 @@
-﻿using System;
+﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Helpers;
+using NewRelic.Core.Logging;
+using NewRelic.Memoization;
+using NewRelic.SystemExtensions;
+using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.SystemInterfaces;
+using NewRelic.SystemInterfaces.Web;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Helpers;
-using NewRelic.SystemInterfaces;
-using NewRelic.Memoization;
-using NewRelic.SystemExtensions;
-using NewRelic.SystemExtensions.Collections.Generic;
-using NewRelic.SystemInterfaces.Web;
 
 namespace NewRelic.Agent.Core.Configuration
 {
@@ -53,7 +53,6 @@ namespace NewRelic.Agent.Core.Configuration
 		private Dictionary<string, string> _newRelicAppSettings { get; }
 
 		public bool UseResourceBasedNamingForWCFEnabled { get; }
-		public bool GenerateFullGcMemThreadMetricsEnabled { get; }
 
 		/// <summary>
 		/// Default configuration constructor.  It will contain reasonable default values for everything and never anything more.
@@ -94,7 +93,6 @@ namespace NewRelic.Agent.Core.Configuration
 			_newRelicAppSettings = TransformAppSettings();
 
 			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
-			GenerateFullGcMemThreadMetricsEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.GenerateFullGCMemThreadMetrics", false);
 		}
 
 		public IReadOnlyDictionary<string, string> GetAppSettings()
@@ -761,13 +759,13 @@ namespace NewRelic.Agent.Core.Configuration
 		#region Collector Connection
 
 		public virtual string CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
-		public virtual uint CollectorPort => (uint)(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : DefaultSslPort);
+		public virtual int CollectorPort => EnvironmentOverrides(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : (int?)null, "NEW_RELIC_PORT") ?? DefaultSslPort;
 		public virtual bool CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
 		public virtual float CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
 		public virtual bool CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
 		public virtual bool CollectorSyncStartup { get { return _localConfiguration.service.syncStartup; } }
 		public virtual uint CollectorTimeout { get { return (_localConfiguration.service.requestTimeout > 0) ? (uint)_localConfiguration.service.requestTimeout : CollectorSendDataOnExit ? 2000u : 60 * 2 * 1000; } }
-
+		public virtual int CollectorMaxPayloadSizeInBytes { get { return _serverConfiguration.MaxPayloadSizeInBytes ?? MaxPayloadSizeInBytes; } }
 		#endregion
 
 		public virtual bool CompleteTransactionsOnThread { get { return _localConfiguration.service.completeTransactionsOnThread; } }
@@ -806,15 +804,13 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#region Span Events
 
-		private bool? _spanEventsEnabled;
-
-		public virtual bool SpanEventsEnabled => _spanEventsEnabled ?? (_spanEventsEnabled = AreSpanEventsEnabled()).Value;
-
-		private bool AreSpanEventsEnabled()
+		public virtual bool SpanEventsEnabled
 		{
-			var spanEventsEnabled = EnvironmentOverrides(_localConfiguration.spanEvents.enabled, "NEW_RELIC_SPAN_EVENTS_ENABLED");
-
-			return DistributedTracingEnabled && spanEventsEnabled;
+			get
+			{
+				var enabled = ServerCanDisable(_serverConfiguration.SpanEventCollectionEnabled, EnvironmentOverrides(_localConfiguration.spanEvents.enabled, "NEW_RELIC_SPAN_EVENTS_ENABLED"));
+				return DistributedTracingEnabled && enabled;
+			}
 		}
 
 		#endregion
@@ -844,9 +840,6 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion Distributed Tracing
 
-
-
-
 		#region Errors
 
 		public virtual bool ErrorCollectorEnabled
@@ -862,13 +855,7 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				// If CollectErrorEvents is false then it takes precedence.
-				var configuredValue = _serverConfiguration.RpmConfig.CollectErrorEvents ?? true;
-				if (configuredValue == true)
-				{
-					configuredValue = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorCaptureEvents, _localConfiguration.errorCollector.captureEvents);
-				}
-				return configuredValue;
+				return ServerCanDisable(_serverConfiguration.ErrorEventCollectionEnabled, _localConfiguration.errorCollector.captureEvents);
 			}
 		}
 
@@ -876,8 +863,7 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				var configuredValue = ServerOverrides((int?)_serverConfiguration.RpmConfig.ErrorCollectorMaxEventSamplesStored, _localConfiguration.errorCollector.maxEventSamplesStored);
-				return (uint)configuredValue;
+				return (uint)_localConfiguration.errorCollector.maxEventSamplesStored;
 			}
 		}
 
@@ -1399,6 +1385,11 @@ namespace NewRelic.Agent.Core.Configuration
 			get { return _localConfiguration.utilization.detectDocker; }
 		}
 
+		public bool UtilizationDetectKubernetes
+		{
+			get { return _localConfiguration.utilization.detectKubernetes; }
+		}
+
 		public int? UtilizationLogicalProcessors
 		{
 			get
@@ -1832,6 +1823,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private const uint TransactionEventsMaxSamplesPerMinuteDefault = 10000;
 		private const uint TransactionEventsMaxSamplesStoredDefault = 10000;
 		private const uint CustomEventsMaxSamplesStoredDefault = 10000;
+		private const int MaxPayloadSizeInBytes = 1000000; // 1 MiB
 	}
 }
 

@@ -1,4 +1,3 @@
-using System;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Aggregators

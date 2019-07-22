@@ -1,26 +1,22 @@
 ﻿using System;
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Samplers
 {
 	public class MemorySampler : AbstractSampler
 	{
-		private readonly IAgentHealthReporter _agentHealthReporter;
-
 		private readonly IMemorySampleTransformer _memorySampleTransformer;
 
 		private readonly IProcessStatic _processStatic;
 
 		private const int MemorySampleIntervalSeconds = 1;
 
-		public MemorySampler(IScheduler scheduler, IMemorySampleTransformer memorySampleTransformer, IAgentHealthReporter agentHealthReporter, IProcessStatic processStatic)
+		public MemorySampler(IScheduler scheduler, IMemorySampleTransformer memorySampleTransformer, IProcessStatic processStatic)
 			: base(scheduler, TimeSpan.FromSeconds(MemorySampleIntervalSeconds))
 		{
-			_agentHealthReporter = agentHealthReporter;
 			_memorySampleTransformer = memorySampleTransformer;
 			_processStatic = processStatic;
 		}

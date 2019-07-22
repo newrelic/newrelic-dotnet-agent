@@ -1,27 +1,24 @@
 ﻿using System;
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Samplers
 {
 	public class CpuSampler : AbstractSampler
 	{
-		private readonly IAgentHealthReporter _agentHealthReporter;
-
 		private readonly ICpuSampleTransformer _cpuSampleTransformer;
 
 		private readonly int _processorCount;
 		private DateTime _lastSampleTime;
 		private TimeSpan _lastProcessorTime;
 		private readonly IProcessStatic _processStatic;
+		private const int CpuSampleIntervalSeconds = 1;
 
-		public CpuSampler(IScheduler scheduler, ICpuSampleTransformer cpuSampleTransformer, IAgentHealthReporter agentHealthReporter, IProcessStatic processStatic)
-			: base(scheduler, TimeSpan.FromMinutes(1))
+		public CpuSampler(IScheduler scheduler, ICpuSampleTransformer cpuSampleTransformer, IProcessStatic processStatic)
+			: base(scheduler, TimeSpan.FromSeconds(CpuSampleIntervalSeconds))
 		{
-			_agentHealthReporter = agentHealthReporter;
 			_cpuSampleTransformer = cpuSampleTransformer;
 			_processStatic = processStatic;
 

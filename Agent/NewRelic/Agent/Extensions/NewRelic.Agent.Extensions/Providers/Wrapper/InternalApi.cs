@@ -233,7 +233,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// NewRelic.Api.Agent.NewRelic.DisableBrowserMonitoring()
 		/// </code>
 		/// </example>
-		public static void DisableBrowserMonitoring(Boolean overrideManual = false)
+		public static void DisableBrowserMonitoring(bool overrideManual = false)
 		{
 			_agentApiImplementation?.DisableBrowserMonitoring(overrideManual);
 		}

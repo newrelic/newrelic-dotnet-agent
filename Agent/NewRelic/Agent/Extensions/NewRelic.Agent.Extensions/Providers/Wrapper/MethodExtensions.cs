@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	public static class MethodExtensions
 	{
-		public static Boolean MatchesAny(this Method actualMethod, String assemblyName, String typeName, [NotNull] IEnumerable<String> methodNames, [CanBeNull] IEnumerable<String> parameterSignatures = null)
+		public static bool MatchesAny(this Method actualMethod, string assemblyName, string typeName, IEnumerable<string> methodNames, IEnumerable<string> parameterSignatures = null)
 		{
 			var assemblyNameActual = actualMethod.Type.Assembly.GetName().Name;
 			var typeNameActual = actualMethod.Type.FullName;
@@ -18,7 +16,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 				parameterSignatures.Any(expectedSignaturesName => expectedSignaturesName == actualMethod.ParameterTypeNames));
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, String assemblyName, String typeName, [NotNull] IEnumerable<MethodSignature> methodSignatures)
+		public static bool MatchesAny(this Method actualMethod, string assemblyName, string typeName, IEnumerable<MethodSignature> methodSignatures)
 		{
 			var assemblyNameActual = actualMethod.Type.Assembly.GetName().Name;
 			var typeNameActual = actualMethod.Type.FullName;
@@ -29,7 +27,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			return methodSignatures.Any(methodSignature => (methodSignature.MethodName == actualMethod.MethodName) && (methodSignature.ParameterSignature == null || methodSignature.ParameterSignature == actualMethod.ParameterTypeNames));
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, IEnumerable<String> assemblyNames, IEnumerable<String> typeNames, IEnumerable<String> methodNames, [CanBeNull] IEnumerable<String> parameterSignatures = null)
+		public static bool MatchesAny(this Method actualMethod, IEnumerable<string> assemblyNames, IEnumerable<string> typeNames, IEnumerable<string> methodNames, IEnumerable<string> parameterSignatures = null)
 		{
 			var assemblyName = actualMethod.Type.Assembly.GetName().Name;
 			var typeName = actualMethod.Type.FullName;
@@ -41,37 +39,37 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 				parameterSignatures.Any(expectedSignaturesName => expectedSignaturesName == actualMethod.ParameterTypeNames));
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, String assemblyName, String typeName, String methodName, IEnumerable<String> parameterSignatures)
+		public static bool MatchesAny(this Method actualMethod, string assemblyName, string typeName, string methodName, IEnumerable<string> parameterSignatures)
 		{
 			return MatchesAny(actualMethod, new[] { assemblyName }, new[] { typeName }, new[] { methodName }, parameterSignatures);
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, String assemblyName, IEnumerable<String> typeNames, String methodName)
+		public static bool MatchesAny(this Method actualMethod, string assemblyName, IEnumerable<string> typeNames, string methodName)
 		{
 			return MatchesAny(actualMethod, new[] { assemblyName }, typeNames, new[] { methodName });
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, String assemblyName, String typeName, String methodName)
+		public static bool MatchesAny(this Method actualMethod, string assemblyName, string typeName, string methodName)
 		{
 			return MatchesAny(actualMethod, new[] { assemblyName }, new[] { typeName }, new[] { methodName });
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, String assemblyName, String typeName, String methodName, String parameterSignature)
+		public static bool MatchesAny(this Method actualMethod, string assemblyName, string typeName, string methodName, string parameterSignature)
 		{
 			return MatchesAny(actualMethod, new[] { assemblyName }, new[] { typeName }, new[] { methodName }, new[] { parameterSignature });
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, IEnumerable<String> assemblyNames, IEnumerable<String> typeNames, IEnumerable<String> methodNames, String parameterSignature)
+		public static bool MatchesAny(this Method actualMethod, IEnumerable<string> assemblyNames, IEnumerable<string> typeNames, IEnumerable<string> methodNames, string parameterSignature)
 		{
 			return MatchesAny(actualMethod, assemblyNames, typeNames, methodNames, new[] { parameterSignature });
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, IEnumerable<String> assemblyNames, IEnumerable<String> typeNames, String methodName, String parameterSignature)
+		public static bool MatchesAny(this Method actualMethod, IEnumerable<string> assemblyNames, IEnumerable<string> typeNames, string methodName, string parameterSignature)
 		{
 			return MatchesAny(actualMethod, assemblyNames, typeNames, new[] { methodName }, new[] { parameterSignature });
 		}
 
-		public static Boolean MatchesAny(this Method actualMethod, IEnumerable<String> assemblyNames, String typeName, String methodName, String parameterSignature)
+		public static bool MatchesAny(this Method actualMethod, IEnumerable<string> assemblyNames, string typeName, string methodName, string parameterSignature)
 		{
 			return MatchesAny(actualMethod, assemblyNames, new[] { typeName }, new[] { methodName }, new[] { parameterSignature });
 		}

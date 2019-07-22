@@ -1,8 +1,7 @@
-﻿using NewRelic.Agent.Core.DistributedTracing;
+﻿using NewRelic.Core.DistributedTracing;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using System;
-using DistributedTraceAcceptPayloadParseException = NewRelic.Agent.Core.DistributedTracing.DistributedTraceAcceptPayloadParseException;
 
 namespace NewRelic.Agent.Core.JsonConverters
 {
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 		{
 			var input = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, $"{guid:X8}", $"{traceId:X8}", trustKey, priority, sampled, 
 				new DateTime(time[0], time[1], time[2], time[3], time[4], time[5], DateTimeKind.Utc), $"{_transactionId:X8}");
-			var serialized = DistributedTracePayload.ToJson(input);
+			var serialized = input.ToJson();
 			var deserialized = DistributedTracePayload.TryBuildIncomingPayloadFromJson(serialized);
 			Assert.That(deserialized.Version, Is.Not.Null);
 			Assert.That(deserialized.Version, Has.Exactly(2).Items);
@@ -61,7 +60,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			var transactionId = $"{0xfffffffffffffffful:X9}";
 
 			var input = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, $"{guid:X8}", $"{traceId:X8}", trustKey, priority, sampled, timestamp, transactionId);
-			var serialized = DistributedTracePayload.ToJson(input);
+			var serialized = input.ToJson();
 
 			Assert.Throws<DistributedTraceAcceptPayloadParseException>(() => DistributedTracePayload.TryBuildIncomingPayloadFromJson(serialized));
 		}

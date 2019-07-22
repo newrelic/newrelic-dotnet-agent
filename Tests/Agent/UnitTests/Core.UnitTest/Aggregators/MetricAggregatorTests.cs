@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -26,42 +25,16 @@ namespace NewRelic.Agent.Core.Aggregators
 	[TestFixture]
 	public class MetricAggregatorTests
 	{
-		[NotNull]
 		private IDataTransportService _dataTransportService;
-
-		[NotNull]
 		private IMetricBuilder _metricBuilder;
-		
-		[NotNull]
 		private IOutOfBandMetricSource _outOfBandMetricSource;
-		
-		[NotNull]
 		private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
-        private IMetricNameService _metricNameService;
-
-        [NotNull]
+		private IMetricNameService _metricNameService;
 		private MetricAggregator _metricAggregator;
-
-		[NotNull]
 		private IDnsStatic _dnsStatic;
-
-		[NotNull]
 		private IProcessStatic _processStatic;
-
-		[NotNull]
 		private Action _harvestAction;
-
-		[NotNull]
 		private ConfigurationAutoResponder _configurationAutoResponder;
-
-		private static readonly DataTransportResponseStatus[] ResponsesThatShouldRetainData =
-		{
-			DataTransportResponseStatus.RequestTimeout,
-			DataTransportResponseStatus.ServerError,
-			DataTransportResponseStatus.CommunicationError
-		};
 
 		[SetUp]
 		public void SetUp()
@@ -77,10 +50,10 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_dnsStatic = Mock.Create<IDnsStatic>();
 			_processStatic = Mock.Create<IProcessStatic>();
-            _metricNameService = Mock.Create<IMetricNameService>();
-            Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
+			_metricNameService = Mock.Create<IMetricNameService>();
+			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 
-            var scheduler = Mock.Create<IScheduler>();
+			var scheduler = Mock.Create<IScheduler>();
 			var apiSupportabilityMetricCounters = Mock.Create<IApiSupportabilityMetricCounters>();
 			var sqlParsingCacheSupportabilityMetricReporter = Mock.Create<ISqlParsingCacheSupportabilityMetricReporter>();
 			
@@ -136,24 +109,24 @@ namespace NewRelic.Agent.Core.Aggregators
 				);
 		}
 
-        public class TestMetricWireModel : IAllMetricStatsCollection
-        {
-            private TransactionMetricStatsCollection txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "Test", false));
+		public class TestMetricWireModel : IAllMetricStatsCollection
+		{
+			private TransactionMetricStatsCollection txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "Test", false));
 
-            public void CreateMetric(IMetricBuilder metricBuilder)
-            {
-                MetricBuilder.TryBuildSimpleSegmentMetric("test_metric", TimeSpan.FromSeconds(3),
-                        TimeSpan.FromSeconds(1), txStats);
-            }
+			public void CreateMetric(IMetricBuilder metricBuilder)
+			{
+				MetricBuilder.TryBuildSimpleSegmentMetric("test_metric", TimeSpan.FromSeconds(3),
+						TimeSpan.FromSeconds(1), txStats);
+			}
 
-            public void AddMetricsToEngine(MetricStatsCollection engine)
-            {
-                Thread.Sleep(5);
-                txStats.AddMetricsToEngine(engine);
-            }
-        }
+			public void AddMetricsToEngine(MetricStatsCollection engine)
+			{
+				Thread.Sleep(5);
+				txStats.AddMetricsToEngine(engine);
+			}
+		}
 
-        [Test]
+		[Test]
 		public void StatsEngineQueue_Is_Busy()
 		{
 			var dataTransportService = Mock.Create<IDataTransportService>();
@@ -179,8 +152,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			for (int i = 0; i < maxThreads; i++)
 			{
-                var test = new TestMetricWireModel();
-                test.CreateMetric(metricBuilder);
+				var test = new TestMetricWireModel();
+				test.CreateMetric(metricBuilder);
 
 				Thread thread = new Thread(() =>
 				{
@@ -213,12 +186,12 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			//Check the number of metrics being sent up.
 			Assert.IsTrue(sentMetrics.Count() == 3, "Count was " + sentMetrics.Count());
-            // there should be one supportability and two DotNet (one scoped and one unscoped)
-            String[] names = new String[] { "Supportability/MetricHarvest/transmit", "DotNet/test_metric" };
-            foreach (MetricWireModel current in sentMetrics)
-            {
-                Assert.IsTrue(names.Contains(current.MetricName.Name), "Name is not present: " + current.MetricName.Name);
-            }
+			// there should be one supportability and two DotNet (one scoped and one unscoped)
+			string[] names = new string[] { "Supportability/MetricHarvest/transmit", "DotNet/test_metric" };
+			foreach (MetricWireModel current in sentMetrics)
+			{
+				Assert.IsTrue(names.Contains(current.MetricName.Name), "Name is not present: " + current.MetricName.Name);
+			}
 		}
 
 		[Test]
@@ -235,31 +208,31 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			Assert.NotNull(sentMetrics);
 			Assert.AreEqual(3, sentMetrics.Count());
-            MetricWireModel sentMetric1 = null;
-            MetricWireModel sentMetric2 = null;
-            MetricWireModel sentMetric3 = null;
+			MetricWireModel sentMetric1 = null;
+			MetricWireModel sentMetric2 = null;
+			MetricWireModel sentMetric3 = null;
 
-            foreach (MetricWireModel metric in sentMetrics)
-            {
-                if ("DotNet/metric1".Equals(metric.MetricName.Name))
-                {
-                    sentMetric1 = metric;
-                }
-                else if ("DotNet/metric2".Equals(metric.MetricName.Name))
-                {
-                    sentMetric2 = metric;
-                }
-                else if ("Supportability/MetricHarvest/transmit".Equals(metric.MetricName.Name))
-                {
-                    sentMetric3 = metric;
-                }
-                else
-                {
-                    Assert.Fail("Unexpected metric name " + metric.MetricName.Name);
-                }
-            }
+			foreach (MetricWireModel metric in sentMetrics)
+			{
+				if ("DotNet/metric1".Equals(metric.MetricName.Name))
+				{
+					sentMetric1 = metric;
+				}
+				else if ("DotNet/metric2".Equals(metric.MetricName.Name))
+				{
+					sentMetric2 = metric;
+				}
+				else if ("Supportability/MetricHarvest/transmit".Equals(metric.MetricName.Name))
+				{
+					sentMetric3 = metric;
+				}
+				else
+				{
+					Assert.Fail("Unexpected metric name " + metric.MetricName.Name);
+				}
+			}
 
-            NrAssert.Multiple(
+			NrAssert.Multiple(
 				() => Assert.AreEqual("DotNet/metric1", sentMetric1.MetricName.Name),
 				() => Assert.AreEqual(null, sentMetric1.MetricName.Scope),
 				() => Assert.AreEqual(1, sentMetric1.Data.Value0),
@@ -286,7 +259,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				() => Assert.AreEqual(0, sentMetric3.Data.Value3),
 				() => Assert.AreEqual(0, sentMetric3.Data.Value4),
 				() => Assert.AreEqual(0, sentMetric3.Data.Value5)
-				);
+			);
 		}
 
 		[Test]
@@ -304,28 +277,28 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			Assert.NotNull(sentMetrics);
 			Assert.AreEqual(3, sentMetrics.Count());
-            MetricWireModel sentMetric1 = null;
-            MetricWireModel sentMetric2 = null;
-            MetricWireModel sentMetric3 = null;
+			MetricWireModel sentMetric1 = null;
+			MetricWireModel sentMetric2 = null;
+			MetricWireModel sentMetric3 = null;
 
-            foreach (MetricWireModel metric in sentMetrics)
-            {
-                if ("DotNet/metric1".Equals(metric.MetricName.Name))
-                {
-                    sentMetric1 = metric;
-                }
-                else if ("DotNet/metric2".Equals(metric.MetricName.Name))
-                {
-                    sentMetric2 = metric;
-                }
-                else if ("Supportability/MetricHarvest/transmit".Equals(metric.MetricName.Name))
-                {
-                    sentMetric3 = metric;
-                } else
-                {
-                    Assert.Fail("Unexpected metric name " + metric.MetricName.Name);
-                }
-            }
+			foreach (MetricWireModel metric in sentMetrics)
+			{
+				if ("DotNet/metric1".Equals(metric.MetricName.Name))
+				{
+					sentMetric1 = metric;
+				}
+				else if ("DotNet/metric2".Equals(metric.MetricName.Name))
+				{
+					sentMetric2 = metric;
+				}
+				else if ("Supportability/MetricHarvest/transmit".Equals(metric.MetricName.Name))
+				{
+					sentMetric3 = metric;
+				} else
+				{
+					Assert.Fail("Unexpected metric name " + metric.MetricName.Name);
+				}
+			}
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual("DotNet/metric1", sentMetric1.MetricName.Name),
@@ -354,7 +327,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				() => Assert.AreEqual(0, sentMetric3.Data.Value3),
 				() => Assert.AreEqual(0, sentMetric3.Data.Value4),
 				() => Assert.AreEqual(0, sentMetric3.Data.Value5)
-				);
+			);
 		}
 
 		[Test]
@@ -365,8 +338,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()), Occurs.Once());
 		}
 
-		[Test, TestCaseSource(nameof(ResponsesThatShouldRetainData))]
-		public void Metrics_are_retained_after_harvest_if_response_equals_service_unavailable_error(DataTransportResponseStatus responseStatus)
+		[Test]
+		public void Metrics_are_retained_after_harvest_if_response_equals_retain()
 		{
 			// Arrange
 			IEnumerable<MetricWireModel> unsentMetrics = null;
@@ -374,7 +347,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<IEnumerable<MetricWireModel>>((metrics) =>
 				{
 					unsentMetrics = metrics;
-					return responseStatus;
+					return DataTransportResponseStatus.Retain;
 				});
 
 			_metricAggregator.Collect(BuildMetric(_metricNameService, "DotNet/metric1", null, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(1))));

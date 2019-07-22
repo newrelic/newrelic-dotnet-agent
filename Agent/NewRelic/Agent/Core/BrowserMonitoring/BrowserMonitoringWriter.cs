@@ -1,7 +1,7 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using NewRelic.Core;
+using System;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Utils;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {

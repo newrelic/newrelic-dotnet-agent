@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -11,6 +10,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -18,21 +18,16 @@ namespace NewRelic.Agent.Core.Aggregators
 	{
 		void Collect(IAllMetricStatsCollection metric);
 	}
+
 	public class MetricAggregator : AbstractAggregator<IAllMetricStatsCollection>, IMetricAggregator
 	{
 		private MetricStatsEngineQueue _metricStatsEngineQueue;
-
 		private readonly IAgentHealthReporter _agentHealthReporter;
-
 		private readonly IDnsStatic _dnsStatic;
-
 		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
-
 		private readonly IMetricBuilder _metricBuilder;
-
 		private readonly IMetricNameService _metricNameService;
 		private readonly ISqlParsingCacheSupportabilityMetricReporter _sqlParsingCacheSupportabilityMetricReporter;
-
 
 		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, ISqlParsingCacheSupportabilityMetricReporter sqlParsingCacheSupportabilityMetricReporter) : base(dataTransportService, scheduler, processStatic)
 		{
@@ -60,7 +55,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		public override void Collect(IAllMetricStatsCollection metric)
 		{
-			Boolean done = false;
+			bool done = false;
 			while (!done)
 			{
 				done = _metricStatsEngineQueue.MergeMetric(metric);
@@ -107,14 +102,11 @@ namespace NewRelic.Agent.Core.Aggregators
 			{
 				case DataTransportResponseStatus.RequestSuccessful:
 					break;
-				case DataTransportResponseStatus.CommunicationError:
-				case DataTransportResponseStatus.RequestTimeout:
-				case DataTransportResponseStatus.ServerError:
+				case DataTransportResponseStatus.Retain:
 					RetainMetricData(unsuccessfulSendMetrics);
 					break;
-				case DataTransportResponseStatus.ConnectionError:
-				case DataTransportResponseStatus.PostTooBigError:
-				case DataTransportResponseStatus.OtherError:
+				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+				case DataTransportResponseStatus.Discard:
 				default:
 					break;
 			}
@@ -159,20 +151,20 @@ namespace NewRelic.Agent.Core.Aggregators
 		/// </summary>
 		public class MetricStatsEngineQueue
 		{
-			private Int32 _statsEngineCount;
+			private int _statsEngineCount;
 
 			private Queue<MetricStatsCollection> _statsEngineQueue;
 			// at harvest time readers drain and a write lock allows the entire queue to be swapped out
 			private readonly ReaderWriterLockSlim _lock;
 			// this lock is to ensure that only one reader at a time can dequeue/enqueue stats engines from/to the queue,
 			// since Queue is not threadsafe an ConcurrentQueue was not available until .NET 4.0
-			private readonly Object _queueReadersLock;
+			private readonly object _queueReadersLock;
 
 			internal MetricStatsEngineQueue()
 			{
 				_statsEngineQueue = new Queue<MetricStatsCollection>();
 				_lock = new ReaderWriterLockSlim();
-				_queueReadersLock = new Object();
+				_queueReadersLock = new object();
 			}
 
 			public int StatsEngineCount => _statsEngineCount;
@@ -186,7 +178,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			/// </summary>
 			/// <param name="metric"></param>
 			/// <returns></returns>
-			public Boolean MergeMetric(IAllMetricStatsCollection metric)
+			public bool MergeMetric(IAllMetricStatsCollection metric)
 			{
 				if (_lock.TryEnterReadLock(50))
 				{

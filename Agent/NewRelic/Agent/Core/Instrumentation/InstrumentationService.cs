@@ -1,9 +1,9 @@
-﻿using System;
+﻿using NewRelic.Agent.Core.ThreadProfiling;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.ThreadProfiling;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Instrumentation
 {
@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.Instrumentation
 			{
 				if (!_instrumentationStore.IsEmpty || !_liveInstrumentationStore.IsEmpty)
 				{
-					Log.Info("Applying instrumentation");
+					Log.Info("Applying additional Agent instrumentation");
 					foreach (var instrumentationSet in _instrumentationStore.GetInstrumentation())
 					{
 						_nativeMethods.AddCustomInstrumentation(instrumentationSet.Key, instrumentationSet.Value);
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Instrumentation
 				}
 				else
 				{
-					Log.Info("No instrumentation to apply.");
+					Log.Info("No additional Agent instrumentation to apply.");
 				}
 			}
 		}

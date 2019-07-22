@@ -1,11 +1,12 @@
-﻿using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Utils;
-using NewRelic.Agent.Core.WireModels;
+﻿using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
+using NewRelic.Core;
+using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
+using NewRelicCoreDistributedTracing = NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -103,7 +104,7 @@ namespace NewRelic.Agent.Core.Utilities
 		public void SerializeAndEncodeDistributedTracePayload_CreatesCorrectEncodedString()
 		{
 			var payload = GetDistributedTracePayload();
-			var jsonString = DistributedTracePayload.ToJson(payload);
+			var jsonString = payload.ToJson();
 			var encodedJsonString = Strings.Base64Encode(jsonString);
 			var serializedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 
@@ -139,7 +140,7 @@ namespace NewRelic.Agent.Core.Utilities
 		[Test]
 		public void TryDecodeAndDeserializeDistributedTracePayload_UnencodedObject_ReturnsCorrectDeserializedObject()
 		{
-			var payload = DistributedTracePayload.ToJson(GetDistributedTracePayload());
+			var payload = GetDistributedTracePayload().ToJson();
 			var deserializedObject = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(payload);
 			var expectedObject = GetDistributedTracePayload();
 
@@ -178,7 +179,7 @@ namespace NewRelic.Agent.Core.Utilities
 		{
 			// The following base64 string isn't an encoding of a DistributedTracePayload but it is valid base64.
 			var encodedString = "eyJ2IjpbMCwxXSwiZCI6eyJEaWZmZXJlbnQiOiJUeXBlIiwidHkiOiJBcHAiLCJhYyI6IjkxMjMiLCJhcCI6IjUxNDI0IiwiaWQiOiI1ZjQ3NGQ2NGI5Y2M5YjJhIiwidHIiOiIzMjIxYmYwOWFhMGJjZjBkIiwidGsiOiIxMjM0NSIsInByIjowLjEyMzQsInNhIjpmYWxzZSwidGkiOjE1Mjk0MjQxMzA2MDMsInR4IjoiMjc4NTZmNzBkM2QzMTRiNyJ9fQ==";
-			Assert.Throws<DistributedTraceAcceptPayloadParseException>(() => HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedString));
+			Assert.Throws<NewRelicCoreDistributedTracing.DistributedTraceAcceptPayloadParseException>(() => HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedString));
 		}
 
 		[Test]
@@ -188,7 +189,7 @@ namespace NewRelic.Agent.Core.Utilities
 			payload.Version = new int[] { 9999, 1};
 			var encodedString = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
 
-			Assert.Throws<DistributedTraceAcceptPayloadVersionException>(() => HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedString));
+			Assert.Throws<NewRelicCoreDistributedTracing.DistributedTraceAcceptPayloadVersionException>(() => HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedString));
 			
 		}
 

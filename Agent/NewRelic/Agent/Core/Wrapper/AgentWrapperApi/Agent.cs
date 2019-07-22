@@ -5,16 +5,16 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
-using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		internal readonly IAgentHealthReporter _agentHealthReporter;
 		internal readonly IAgentTimerService _agentTimerService;
 		internal readonly IMetricNameService _metricNameService;
-		internal ILogger _logger;
+		internal Extensions.Logging.ILogger _logger;
 
 		internal static Agent Instance;
 		private static readonly ITransaction NoOpTransaction = new NoOpTransaction();
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		public IConfiguration Configuration => _configurationService.Configuration;
 
-		public ILogger Logger => _logger ?? (_logger = new Logger());
+		public Extensions.Logging.ILogger Logger => _logger ?? (_logger = new Logger());
 
 		#region Transaction management
 
@@ -315,7 +315,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 					return null;
 
 				// Once the transaction name is used for RUM it must be frozen
-				transaction.CandidateTransactionName.Freeze();
+				transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.AutoBrowserScriptInjection);
 
 				var script = _browserMonitoringScriptMaker.GetScript(transaction);
 				if (script == null)

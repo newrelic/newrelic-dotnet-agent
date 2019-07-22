@@ -1,5 +1,4 @@
 ﻿using System;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.SystemInterfaces;
@@ -13,7 +12,6 @@ namespace NewRelic.Agent.Core.Samplers
 	{
 		private MemorySampler _memorySampler;
 
-		private IAgentHealthReporter _agentHealthReporter;
 		private IMemorySampleTransformer _memorySampleTransformer;
 
 		private Action _sampleAction;
@@ -24,9 +22,9 @@ namespace NewRelic.Agent.Core.Samplers
 			var scheduler = Mock.Create<IScheduler>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _sampleAction = action);
-			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_memorySampleTransformer = Mock.Create<IMemorySampleTransformer>();
-			_memorySampler = new MemorySampler(scheduler, _memorySampleTransformer, _agentHealthReporter, new ProcessStatic());
+			_memorySampler = new MemorySampler(scheduler, _memorySampleTransformer, new ProcessStatic());
+			_memorySampler.Start();
 		}
 
 		[TearDown]

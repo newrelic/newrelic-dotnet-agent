@@ -4,15 +4,11 @@ namespace NewRelic.Agent.Core.DataTransport
 {
 	public class CollectorResponseEnvelope<T>
 	{
-		[JsonProperty("exception")]
-		public readonly CollectorExceptionEnvelope CollectorExceptionEnvelope;
-
 		[JsonProperty("return_value")]
 		public readonly T ReturnValue;
 
-		public CollectorResponseEnvelope(CollectorExceptionEnvelope collectorExceptionEnvelope, T returnValue)
+		public CollectorResponseEnvelope(T returnValue)
 		{
-			CollectorExceptionEnvelope = collectorExceptionEnvelope;
 			ReturnValue = returnValue;
 		}
 	}

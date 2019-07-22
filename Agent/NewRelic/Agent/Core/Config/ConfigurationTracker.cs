@@ -1,10 +1,10 @@
+using JetBrains.Annotations;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Core.Logging;
 using System;
 using System.IO;
 using System.Threading;
-using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Time;
 
 namespace NewRelic.Agent.Core.Config
 {

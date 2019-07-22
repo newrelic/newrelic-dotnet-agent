@@ -1,16 +1,9 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Metric;
+﻿using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -18,22 +11,18 @@ namespace NewRelic.Agent.Core.Aggregators
 	[TestFixture]
 	class TransactionMetricStatsCollectionTests
 	{
-
-		[NotNull]
 		private IMetricBuilder _metricBuilder;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_metricBuilder = GetSimpleMetricBuilder();
-		   
 		}
 
-		[NotNull]
 		public static IMetricBuilder GetSimpleMetricBuilder()
 		{
 			var metricNameService = Mock.Create<IMetricNameService>();
-			Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
+			Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 			return new MetricWireModel.MetricBuilder(metricNameService);
 		}
 
@@ -50,8 +39,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
 
-			MetricStatsDictionary<String, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
-			MetricStatsDictionary<String, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
 			Assert.AreEqual(1, unscoped.Count);
 			Assert.AreEqual(0, scoped.Count);
 			var data = unscoped["DotNet/name"];
@@ -78,8 +67,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
 
-			MetricStatsDictionary<String, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
-			MetricStatsDictionary<String, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
 			Assert.AreEqual(0, unscoped.Count);
 			Assert.AreEqual(1, scoped.Count);
 			var data = scoped["DotNet/name"];
@@ -104,8 +93,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
 
-			MetricStatsDictionary<String, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
-			MetricStatsDictionary<String, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
 			Assert.AreEqual(0, unscoped.Count);
 			Assert.AreEqual(2, scoped.Count);
 			var data = scoped["DotNet/name"];
@@ -142,8 +131,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			Assert.AreEqual("WebTransaction/Test", txStats.GetTransactionName().PrefixedName);
 
-			MetricStatsDictionary<String, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
-			MetricStatsDictionary<String, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> unscoped = txStats.GetUnscopedForTesting();
+			MetricStatsDictionary<string, MetricDataWireModel> scoped = txStats.GetScopedForTesting();
 			Assert.AreEqual(1, unscoped.Count);
 			Assert.AreEqual(2, scoped.Count);
 			var data = scoped["DotNet/name"];

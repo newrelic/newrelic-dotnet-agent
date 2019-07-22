@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+﻿namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	public enum TransactionNamePriority
 	{
@@ -11,6 +9,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		FrameworkLow = 5,
 		FrameworkHigh = 6,
 		CustomTransactionName = 8,
-		UserTransactionName = Int32.MaxValue
+		UserTransactionName = int.MaxValue
 	}
 }

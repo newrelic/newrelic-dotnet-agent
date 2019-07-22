@@ -5,9 +5,9 @@ using System.Net.Mime;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {

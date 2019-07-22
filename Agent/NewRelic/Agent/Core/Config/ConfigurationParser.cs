@@ -1,14 +1,14 @@
+using NewRelic.Core;
+using NewRelic.Core.Logging;
 using System;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Utils;
+using System.Text;
 
 namespace NewRelic.Agent.Core.Config
 {
-	
+
 	/// <summary>
 	/// The ConfigurationParser populates configuration objects with dictionaries of key/value pairs.
 	/// It uses the ConfigurationAttribute annotations on the configuration object to define the key mappings.

@@ -19,7 +19,7 @@
 
             Visit http://rpm.newrelic.com after your package deploy is complete to see your performance metrics.
     </description>
-    <summary>Includes the latest New Relic .NET Agent x64 artifacts for deployment to your application's build output directory.</summary>
+    <summary>Includes the latest New Relic .NET Agent artifacts for deployment to your application's build output directory.</summary>
     <releaseNotes>For detailed information see: https://docs.newrelic.com/docs/releases/dotnet</releaseNotes>
     <contentFiles>
       <files include="**/newrelic/**/*.*" buildAction="None" copyToOutput="true" flatten="false" />

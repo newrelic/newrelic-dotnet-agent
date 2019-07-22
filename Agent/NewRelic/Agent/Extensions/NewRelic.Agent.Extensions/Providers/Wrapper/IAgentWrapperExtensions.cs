@@ -1,12 +1,11 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	// ReSharper disable once InconsistentNaming
 	public static class IAgentWrapperExtensions
 	{
-		public static void HandleExceptions([NotNull] this IAgent agent, [NotNull] Action action)
+		public static void HandleExceptions(this IAgent agent, Action action)
 		{
 			try
 			{
@@ -24,7 +23,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// </summary>
 		/// <param name="agent"></param>
 		/// <param name="ex"></param>
-		public static void SafeHandleException([NotNull] this IAgent agent, Exception ex)
+		public static void SafeHandleException(this IAgent agent, Exception ex)
 		{
 			try
 			{

@@ -5,7 +5,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -74,21 +73,18 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			switch (responseStatus)
 			{
-				case DataTransportResponseStatus.CommunicationError:
-				case DataTransportResponseStatus.RequestTimeout:
-				case DataTransportResponseStatus.ServerError:
-				case DataTransportResponseStatus.ConnectionError:
+				case DataTransportResponseStatus.RequestSuccessful:
+					_agentHealthReporter.ReportCustomEventsSent(customEvents.Count);
+					break;
+				case DataTransportResponseStatus.Retain:
 					RetainEvents(customEvents);
 					break;
-				case DataTransportResponseStatus.PostTooBigError:
+				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
 					var newSize = (uint)(customEvents.Count * ReservoirReductionSizeMultiplier);
 					ReduceReservoirSize(newSize);
 					RetainEvents(customEvents);
 					break;
-				case DataTransportResponseStatus.RequestSuccessful:
-					_agentHealthReporter.ReportCustomEventsSent(customEvents.Count);
-					break;
-				case DataTransportResponseStatus.OtherError:
+				case DataTransportResponseStatus.Discard:
 				default:
 					break;
 			}

@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Time;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.CallStack;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
 	public class MessageBrokerSegmentData : AbstractSegmentData
 	{
 
-		private const String TransactionGuidSegmentParameterKey = "transaction_guid";
+		private const string TransactionGuidSegmentParameterKey = "transaction_guid";
 
-		public String Vendor { get; set; }
+		public string Vendor { get; set; }
 
-		public String Destination { get; set; }
+		public string Destination { get; set; }
 
 		public MetricNames.MessageBrokerDestinationType DestinationType { get; set; }
 
@@ -69,7 +65,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		}
 
-		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
 		{
 			return new TypedSegment<MessageBrokerSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
 		}

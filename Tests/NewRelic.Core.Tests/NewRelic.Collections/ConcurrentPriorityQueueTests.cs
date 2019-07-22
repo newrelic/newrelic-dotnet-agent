@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using NUnit.Framework;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core;
+using NUnit.Framework;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
-using NewRelic.Agent.Core.Utilities;
+using System.Threading.Tasks;
 
 namespace NewRelic.Collections.UnitTests
 {

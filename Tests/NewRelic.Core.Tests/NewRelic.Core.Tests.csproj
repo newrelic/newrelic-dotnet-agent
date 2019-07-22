@@ -53,6 +53,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="Telerik.JustMock, Version=2015.2.616.2, Culture=neutral, PublicKeyToken=721b6c5bc0326b3a, processorArchitecture=MSIL">
+      <HintPath>..\..\Agent\packages\JustMock.2015.2.616.2\lib\Net35\Telerik.JustMock.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="NewRelic.Cache\SimpleCacheTests.cs" />
@@ -71,6 +74,9 @@
     <Compile Include="NewRelic.SystemExtensions\StringExtensions.cs" />
     <Compile Include="NewRelic.SystemExtensions\Threading\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="NewRelic.SystemExtensions\TimeSpanExtensionsTests.cs" />
+    <Compile Include="NewRelic.SystemInterfaces\DnsStaticTests.cs" />
+    <Compile Include="NewRelic.SystemInterfaces\NetworkDataTests.cs" />
+    <Compile Include="NewRelic.SystemInterfaces\PerformanceCounterProxyFactoryTests.cs" />
     <Compile Include="NewRelic.TypeInstantiation\AppDomainExtensions.cs" />
     <Compile Include="NewRelic.TypeInstantiation\TypeInstantiator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

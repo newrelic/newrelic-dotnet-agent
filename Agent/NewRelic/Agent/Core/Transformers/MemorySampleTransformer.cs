@@ -36,19 +36,16 @@ namespace NewRelic.Agent.Core.Transformers
 				RecordMetric(unscopedMemoryPhysicalMetric);
 			}
 
-			if (_configurationService.Configuration.GenerateFullGcMemThreadMetricsEnabled)
+			if (sample.MemoryVirtual > 0)
 			{
-				if (sample.MemoryVirtual > 0)
-				{
-					var unscopedMemoryVirtualMetric = _metricBuilder.TryBuildMemoryVirtualMetric(sample.MemoryVirtual);
-					RecordMetric(unscopedMemoryVirtualMetric);
-				}
+				var unscopedMemoryVirtualMetric = _metricBuilder.TryBuildMemoryVirtualMetric(sample.MemoryVirtual);
+				RecordMetric(unscopedMemoryVirtualMetric);
+			}
 
-				if (sample.MemoryWorkingSet > 0)
-				{
-					var unscopedMemoryWorkingSetMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(sample.MemoryWorkingSet);
-					RecordMetric(unscopedMemoryWorkingSetMetric);
-				}
+			if (sample.MemoryWorkingSet > 0)
+			{
+				var unscopedMemoryWorkingSetMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(sample.MemoryWorkingSet);
+				RecordMetric(unscopedMemoryWorkingSetMetric);
 			}
 		}
 

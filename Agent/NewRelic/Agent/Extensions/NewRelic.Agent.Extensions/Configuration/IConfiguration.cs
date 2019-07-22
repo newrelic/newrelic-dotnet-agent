@@ -45,12 +45,13 @@ namespace NewRelic.Agent.Configuration
 		string CaptureCustomParametersSource { get; }
 		bool CaptureRequestParameters { get; }
 		string CollectorHost { get; }
-		uint CollectorPort { get; }
+		int CollectorPort { get; }
 		bool CollectorSendDataOnExit { get; }
 		float CollectorSendDataOnExitThreshold { get; }
 		bool CollectorSendEnvironmentInfo { get; }
 		bool CollectorSyncStartup { get; }
 		uint CollectorTimeout { get; }
+		int CollectorMaxPayloadSizeInBytes { get; }
 		bool CompleteTransactionsOnThread { get; }
 		string CompressedContentEncoding { get; }
 		long ConfigurationVersion { get; }
@@ -127,12 +128,12 @@ namespace NewRelic.Agent.Configuration
 		bool UtilizationDetectGcp { get; }
 		bool UtilizationDetectPcf { get; }
 		bool UtilizationDetectDocker { get; }
+		bool UtilizationDetectKubernetes { get; }
 		int? UtilizationLogicalProcessors { get;  }
 		int? UtilizationTotalRamMib { get; }
 		string UtilizationBillingHost { get; }
 		bool DiagnosticsCaptureAgentTiming { get; }
 		bool UseResourceBasedNamingForWCFEnabled { get; }
-		bool GenerateFullGcMemThreadMetricsEnabled { get; }
 		int? SamplingTarget { get; }
 		uint SpanEventsMaxSamplesStored { get; }
 		int? SamplingTargetPeriodInSeconds { get; }

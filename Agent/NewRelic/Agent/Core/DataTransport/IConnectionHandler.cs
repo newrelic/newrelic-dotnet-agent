@@ -1,5 +1,3 @@
-using System;
-
 namespace NewRelic.Agent.Core.DataTransport
 {
 	public interface IConnectionHandler

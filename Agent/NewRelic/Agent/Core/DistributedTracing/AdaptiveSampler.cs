@@ -1,10 +1,10 @@
 ﻿using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.DistributedTracing;
+using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {

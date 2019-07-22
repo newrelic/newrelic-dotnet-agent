@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -16,9 +15,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		KeyValuePair<string, object>[] UserErrorAttributes { get; }
 
 		string Uri { get; }
-		[CanBeNull]
 		string OriginalUri { get; }
-		[CanBeNull]
 		string ReferrerUri { get; }
 
 		int? HttpResponseStatusCode { get; }

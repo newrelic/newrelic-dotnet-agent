@@ -1,14 +1,12 @@
+using JetBrains.Annotations;
+using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Core.Logging;
+using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
-using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands
 {

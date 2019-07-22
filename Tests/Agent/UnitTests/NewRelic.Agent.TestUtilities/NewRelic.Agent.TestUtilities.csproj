@@ -10,6 +10,10 @@
     <PackageReference Include="NUnit" Version="3.6.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Agent\NewRelic\Agent\Core\Core.csproj" />
+    <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

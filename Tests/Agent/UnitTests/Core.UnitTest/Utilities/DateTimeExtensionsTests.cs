@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using NewRelic.Core;
 using NUnit.Framework;
+using System;
 
 namespace NewRelic.Agent.Core.Utilities
 {

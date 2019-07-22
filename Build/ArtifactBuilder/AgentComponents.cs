@@ -42,6 +42,7 @@ namespace ArtifactBuilder
 		public IReadOnlyCollection<string> WrapperXmlFiles { get; private set; }
 		public IReadOnlyCollection<string> RootInstallDirectoryComponents { get; private set; }
 		public string AgentApiDll;
+		public string WindowsProfiler;
 		public string LinuxProfiler;
 		public string ExtensionXsd;
 		public string NewRelicXsd;
@@ -114,6 +115,7 @@ namespace ArtifactBuilder
 			CheckForMissingComponents();
 			CheckForXmlFilesThatAreNotUtf8();
 			CheckForMissingFilesInHomeBuilderDirectory();
+			CheckForRequiredProperties();
 		}
 
 		private void LogAndThrow(string msg, IList<string> files)
@@ -184,6 +186,22 @@ namespace ArtifactBuilder
 			}
 
 			LogAndThrow("There are additional files in the Home Builder directory that are not specified in this artifact's component set:", missingComponents);
+		}
+
+		private void CheckForRequiredProperties()
+		{
+			var requiredProperties = new Dictionary<string, string> { { nameof(WindowsProfiler), WindowsProfiler } };
+			var missingPropertyNames = new List<string>();
+
+			foreach (var requiredProperty in requiredProperties)
+			{
+				if (string.IsNullOrEmpty(requiredProperty.Value))
+				{
+					missingPropertyNames.Add(requiredProperty.Key);
+				}
+			}
+
+			LogAndThrow($"The following properties were not specified for {Platform}-{Configuration}:", missingPropertyNames);
 		}
 	}
 }

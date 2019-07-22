@@ -21,6 +21,7 @@ namespace NewRelic.Agent.Core.Utilization
 		private const string PcfInstanceGuid = @"CF_INSTANCE_GUID";
 		private const string PcfInstanceIp = @"CF_INSTANCE_IP";
 		private const string PcfMemoryLimit = @"MEMORY_LIMIT";
+		private const string KubernetesServiceHost = @"KUBERNETES_SERVICE_HOST";
 
 		[SetUp]
 		public void Setup()
@@ -57,6 +58,7 @@ namespace NewRelic.Agent.Core.Utilization
 		[TestCase("westus2", "location", "azure", "westus2")]
 		[TestCase("<script>do something </script>", "zone", "gcp", null )]
 		[TestCase("ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd260", "zone", "aws", "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")]
+		[TestCase("10.96.0.1", "kubernetes_service_host", "kubernetes", "10.96.0.1")]
 		public void GetVendors_NormalizeAndValidateMetadata(string metadataValue, string metadataField, string vendorName, string expectedResponse)
 		{
 			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
@@ -101,10 +103,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (AwsVendorModel)vendorInfo.ParseAwsVendorInfo(json);
 
-			Assert.NotNull(model);
-			Assert.True(model.InstanceId == "i-1234567890abcdef0");
-			Assert.Null(model.InstanceType);
-			Assert.Null(model.AvailabilityZone);
+			Assert.IsNull(model);
 		}
 
 		[Test]
@@ -154,11 +153,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (AzureVendorModel)vendorInfo.ParseAzureVendorInfo(json);
 
-			Assert.NotNull(model);
-			Assert.True(model.Location == "CentralUS");
-			Assert.Null(model.Name);
-			Assert.True(model.VmId == "5c08b38e-4d57-4c23-ac45-aca61037f084");
-			Assert.Null(model.VmSize);
+			Assert.Null(model);
 		}
 
 		[Test]
@@ -210,11 +205,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
 			var model = (GcpVendorModel)vendorInfo.ParseGcpVendorInfo(json);
 
-			Assert.NotNull(model);
-			Assert.True(model.Id == "3161347020215157000");
-			Assert.True(model.MachineType == "custom - 1 - 1024");
-			Assert.Null(model.Name);
-			Assert.Null(model.Zone);
+			Assert.Null(model);
 		}
 
 		[Test]
@@ -262,9 +253,34 @@ namespace NewRelic.Agent.Core.Utilization
 			Assert.Null(model);
 		}
 
+		[Test]
+		public void GetVendors_GetKubernetesVendorInfo_Complete()
+		{
+			var serviceHost = "10.96.0.1";
+			SetEnvironmentVariable(KubernetesServiceHost, serviceHost, EnvironmentVariableTarget.Process);
+
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+			var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
+
+			Assert.NotNull(model);
+			Assert.True(model.KubernetesServiceHost == serviceHost);
+		}
+
+		[Test]
+		public void GetVendors_GetKubernetesVendorInfo_None()
+		{
+			SetEnvironmentVariable(KubernetesServiceHost, null, EnvironmentVariableTarget.Process);
+
+			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, _environment, _vendorHttpApiRequestor);
+			var model = (KubernetesVendorModel)vendorInfo.GetKubernetesInfo();
+
+			Assert.Null(model);
+		}
+
 		private void SetEnvironmentVariable(string variableName, string value, EnvironmentVariableTarget environmentVariableTarget)
 		{
 			Mock.Arrange(() => _environment.GetEnvironmentVariable(variableName, environmentVariableTarget)).Returns(value);
+			Mock.Arrange(() => _environment.GetEnvironmentVariable(variableName)).Returns(value);
 		}
 	}
 }

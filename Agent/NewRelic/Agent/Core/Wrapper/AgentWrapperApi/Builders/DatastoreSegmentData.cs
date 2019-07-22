@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using NewRelic.Agent.Core.Logging;
+﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Time;
-using static NewRelic.Agent.Core.WireModels.MetricWireModel;
-using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

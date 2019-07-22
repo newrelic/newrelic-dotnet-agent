@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace NewRelic.Agent.Extensions.Parsing
+﻿namespace NewRelic.Agent.Extensions.Parsing
 {
 	public class ConnectionInfo
 	{
-		public ConnectionInfo(String host, String portPathOrId, String databaseName, String instanceName = null)
+		public ConnectionInfo(string host, string portPathOrId, string databaseName, string instanceName = null)
 		{
 			Host = ValueOrUnknown(host);
 			PortPathOrId = ValueOrUnknown(portPathOrId);
@@ -17,9 +15,9 @@ namespace NewRelic.Agent.Extensions.Parsing
 			return string.IsNullOrEmpty(value) ? "unknown" : value;
 		}
 
-		public String Host { get; private set; }
-		public String PortPathOrId { get; private set; }
-		public String DatabaseName { get; private set; }
-		public String InstanceName { get; private set; }
+		public string Host { get; private set; }
+		public string PortPathOrId { get; private set; }
+		public string DatabaseName { get; private set; }
+		public string InstanceName { get; private set; }
 	}
 }

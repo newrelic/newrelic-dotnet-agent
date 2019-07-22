@@ -1,8 +1,10 @@
-﻿using System;
+﻿using NewRelic.Agent.Core.Logging;
+using NewRelic.Core.Logging;
+using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
 
 // This ensures that we use a different logging repository from the rest of the process that we end up in.
 [assembly: log4net.Config.Repository("NewRelic Log4Net Repository")]
@@ -29,6 +31,8 @@ namespace NewRelic.Agent.TestUtilities
 			Logger.AddAppender(MemoryAppender);
 
 			Logger.Repository.Configured = true;
+
+			Log.Initialize(new Logger());
 		}
 
 		/// <summary>

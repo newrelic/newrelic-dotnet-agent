@@ -3428,6 +3428,8 @@ namespace NewRelic.Agent.Core.Config
         
         private bool detectDockerField;
         
+        private bool detectKubernetesField;
+        
         private System.Nullable<int> logicalProcessorsField;
         
         private System.Nullable<int> totalRamMibField;
@@ -3441,6 +3443,7 @@ namespace NewRelic.Agent.Core.Config
             this.detectGcpField = true;
             this.detectPcfField = true;
             this.detectDockerField = true;
+            this.detectKubernetesField = true;
         }
         
         [System.ComponentModel.DefaultValueAttribute(true)]
@@ -3505,6 +3508,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.detectDockerField = value;
+            }
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool detectKubernetes
+        {
+            get
+            {
+                return this.detectKubernetesField;
+            }
+            set
+            {
+                this.detectKubernetesField = value;
             }
         }
         

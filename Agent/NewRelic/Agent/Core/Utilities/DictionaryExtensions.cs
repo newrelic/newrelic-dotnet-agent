@@ -1,6 +1,7 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using NewRelic.Core;
+using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utilities
 {

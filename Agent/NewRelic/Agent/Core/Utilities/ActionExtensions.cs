@@ -1,6 +1,6 @@
-﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
+﻿using JetBrains.Annotations;
+using NewRelic.Core.Logging;
+using System;
 
 namespace NewRelic.Agent.Core.Utilities
 {

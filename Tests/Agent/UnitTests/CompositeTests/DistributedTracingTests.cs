@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Utilities;
+﻿using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.DistributedTracing;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CompositeTests
 {

@@ -17,10 +17,16 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildCpuTimeRollupMetric(bool isWebTransaction, TimeSpan cpuTime);
 		MetricWireModel TryBuildCpuTimeMetric(TransactionMetricName transactionMetricName, TimeSpan cpuTime);
 
+		MetricWireModel TryBuildGCBytesMetric(GCSampleType sampleType, long value);
+		MetricWireModel TryBuildGCCountMetric(GCSampleType sampleType, int value);
+		MetricWireModel TryBuildGCPercentMetric(GCSampleType sampleType, float value);
+		MetricWireModel TryBuildGCGaugeMetric(GCSampleType sampleType, float value);
+
 		MetricWireModel TryBuildAgentVersionMetric(string agentVersion);
 		MetricWireModel TryBuildAgentVersionByHostMetric(string hostName, string agentVersion);
 
 		MetricWireModel TryBuildThreadpoolUsageStatsMetric(ThreadType type, ThreadStatus status, int countThreadpoolThreads);
+		MetricWireModel TryBuildThreadpoolThroughputStatsMetric(ThreadpoolThroughputStatsType type, int statsVal);
 
 		MetricWireModel TryBuildLibraryVersionMetric(string assemblyName, string assemblyVersion);
 		MetricWireModel TryBuildMetricHarvestAttemptMetric();
@@ -60,7 +66,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 		MetricWireModel TryBuildLinuxOsMetric(bool isLinux);
 		MetricWireModel TryBuildBootIdError();
-
+		MetricWireModel TryBuildKubernetesUsabilityError();
 		MetricWireModel TryBuildAwsUsabilityError();
 		MetricWireModel TryBuildAzureUsabilityError();
 		MetricWireModel TryBuildPcfUsabilityError();
@@ -110,5 +116,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildSqlParsingCacheCountMetric(string name, int count);
 
 		MetricWireModel TryBuildSqlParsingCacheSizeMetric(string name, int size);
+
+		MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1);
 	}
 }

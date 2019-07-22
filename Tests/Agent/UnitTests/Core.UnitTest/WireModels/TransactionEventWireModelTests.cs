@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using NewRelic.Core;
 using Newtonsoft.Json;
-using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace

@@ -1,9 +1,10 @@
-﻿using System;
-using System.Text;
-using System.IO;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utils;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
+using System;
+using System.IO;
+using System.Text;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {

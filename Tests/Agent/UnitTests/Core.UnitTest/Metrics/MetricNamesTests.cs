@@ -1,8 +1,11 @@
 ﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Metrics
 {
@@ -129,7 +132,7 @@ namespace NewRelic.Agent.Core.Metrics
 			Assert.That(MetricNames.GetSupportabilityAzureUsabilityError(),Is.EqualTo("Supportability/utilization/azure/error"));
 			Assert.That(MetricNames.GetSupportabilityGcpUsabilityError(), Is.EqualTo("Supportability/utilization/gcp/error"));
 			Assert.That(MetricNames.GetSupportabilityPcfUsabilityError(), Is.EqualTo("Supportability/utilization/pcf/error"));
-
+			Assert.That(MetricNames.GetSupportabilityKubernetesUsabilityError(), Is.EqualTo("Supportability/utilization/kubernetes/error"));
 		}
 
 		[Test]
@@ -189,13 +192,56 @@ namespace NewRelic.Agent.Core.Metrics
 		}
 
 		[Test]
-		public static void MetricNamesTest_ThreadPoolStats()
+		public static void MetricNamesTest_ThreadPoolUsageStats()
 		{
 			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.Available), Is.EqualTo("DotNet/Threadpool/Worker/Available"));
 			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.InUse), Is.EqualTo("DotNet/Threadpool/Worker/InUse"));
 			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.Available), Is.EqualTo("DotNet/Threadpool/Completion/Available"));
 			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.InUse), Is.EqualTo("DotNet/Threadpool/Completion/InUse"));
-			Assert.That(MetricNames.DotNetPerfThreadsCountAll, Is.EqualTo("DotNet/Threads/Active"));
+		}
+
+		[Test]
+		public static void MetricNamesTest_ThreadPoolThroughputStats()
+		{
+			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.Requested), Is.EqualTo("DotNet/Threadpool/Throughput/Requested"));
+			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.Started), Is.EqualTo("DotNet/Threadpool/Throughput/Started"));
+			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.QueueLength), Is.EqualTo("DotNet/Threadpool/Throughput/QueueLength"));
+		}
+
+		[Test]
+		public static void MetricNamesTest_GetGCMetricName()
+		{
+			var countGCSampleTypes = Enum.GetValues(typeof(GCSampleType)).Length;
+
+			var expectedMetricNames = new Dictionary<GCSampleType, string>
+			{
+				{ GCSampleType.HandlesCount, "GC/Handles" },
+				{ GCSampleType.InducedCount, "GC/Induced" },
+				{ GCSampleType.PercentTimeInGc, "GC/PercentTimeInGC" },
+
+				{ GCSampleType.Gen0CollectionCount, "GC/Gen0/Executions" },
+				{ GCSampleType.Gen0Size, "GC/Gen0/Size" },
+				{ GCSampleType.Gen0Promoted, "GC/Gen0/Promoted" },
+
+				{ GCSampleType.Gen1CollectionCount, "GC/Gen1/Executions" },
+				{ GCSampleType.Gen1Size, "GC/Gen1/Size" },
+				{ GCSampleType.Gen1Promoted, "GC/Gen1/Promoted" },
+
+				{ GCSampleType.Gen2CollectionCount, "GC/Gen2/Executions" },
+				{ GCSampleType.Gen2Size, "GC/Gen2/Size" },
+				{ GCSampleType.Gen2Survived, "GC/Gen2/Survived" },
+
+				{ GCSampleType.LOHSize, "GC/LOH/Size" },
+				{ GCSampleType.LOHSurvived, "GC/LOH/Survived" },
+			};
+
+			//Ensure that we have covered all sample types with our tests
+			Assert.AreEqual(countGCSampleTypes, expectedMetricNames.Count);
+
+			foreach(var sampleType in expectedMetricNames)
+			{
+				Assert.That(MetricNames.GetGCMetricName(sampleType.Key), Is.EqualTo(sampleType.Value));
+			}
 		}
 	}
 }

@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -7,6 +6,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
+using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -38,6 +38,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 		void ReportWrapperShutdown([NotNull] IWrapper wrapper, [NotNull] Method method);
 		void ReportIfHostIsLinuxOs();
 		void ReportBootIdError();
+		void ReportKubernetesUtilizationError();
 		void ReportAwsUtilizationError();
 		void ReportAzureUtilizationError();
 		void ReportPcfUtilizationError();
@@ -80,6 +81,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 		void ReportSpanEventsSent(int count);
 
 		void CollectDistributedTraceSuccessMetrics();
+
+		void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint);
 	}
 
 	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
@@ -272,6 +275,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		public void ReportBootIdError() => TrySend(_metricBuilder.TryBuildBootIdError());
 
+		public void ReportKubernetesUtilizationError() => TrySend(_metricBuilder.TryBuildKubernetesUsabilityError());
+
 		public void ReportAwsUtilizationError() => TrySend(_metricBuilder.TryBuildAwsUsabilityError());
 
 		public void ReportAzureUtilizationError() => TrySend(_metricBuilder.TryBuildAzureUsabilityError());
@@ -380,6 +385,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 		}
 
 		#endregion
+
+		public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
+		{
+			TrySend(_metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint));
+		}
 
 		public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
 		{

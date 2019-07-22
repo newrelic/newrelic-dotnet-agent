@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+﻿namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	public interface IWrapper
 	{
@@ -17,8 +15,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="instrumentedMethodCall">The method call being wrapped, plus any instrumentation options.</param>
 		/// <param name="agent">The API that wrappers can use to talk to the agent.</param>
 		/// <param name="transaction">The current transaction or null if IsTransactionRequired is false</param>
-		[NotNull]
-		AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgent agent, [CanBeNull] ITransaction transaction);
+		AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction);
 
 		/// <summary>
 		/// Returns true if this wrapper requires a transaction.  If it does, BeforeWrappedMethod will not be invoked

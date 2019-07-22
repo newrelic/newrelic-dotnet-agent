@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.ThreadProfiling;
+using NewRelic.Core.Logging;
+using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands
 {

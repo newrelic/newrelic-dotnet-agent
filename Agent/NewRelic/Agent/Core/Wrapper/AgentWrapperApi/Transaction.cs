@@ -1,33 +1,32 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
+﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
-using System.Data;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using NewRelic.Agent.Core.Api;
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using NewRelic.Core;
+using NewRelic.Core.DistributedTracing;
+using NewRelic.Core.Logging;
 using NewRelic.Parsing;
 using NewRelic.SystemExtensions.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -62,10 +61,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				return;
 			}
 
-			if (CandidateTransactionName.CurrentTransactionName.IsWeb && TransactionMetadata.HttpResponseStatusCode >= 300)
-			{
-				SetTransactionName(TransactionName.ForWebTransaction(WebTransactionType.StatusCode, TransactionMetadata.HttpResponseStatusCode.ToString()), TransactionNamePriority.StatusCode);
-			}
+			RollupTransactionNameByStatusCodeIfNeeded();
 
 			if (captureResponseTime)
 			{
@@ -394,8 +390,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				return headers;
 			}
 
+			RollupTransactionNameByStatusCodeIfNeeded();
+
 			// freeze transaction name so it doesn't change after we report it back to the caller app that made the external request
-			CandidateTransactionName.Freeze();
+			CandidateTransactionName.Freeze(TransactionNameFreezeReason.CrossApplicationTracing);
 
 			var currentTransactionName = CandidateTransactionName.CurrentTransactionName;
 			var currentTransactionMetricName =
@@ -609,6 +607,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			SetTransactionName(trxName, priority);
 		}
 
+		public void RollupTransactionNameByStatusCodeIfNeeded()
+		{
+			if (CandidateTransactionName.CurrentTransactionName.IsWeb && TransactionMetadata.HttpResponseStatusCode >= 300)
+			{
+				SetTransactionName(TransactionName.ForWebTransaction(WebTransactionType.StatusCode, TransactionMetadata.HttpResponseStatusCode.ToString()), TransactionNamePriority.StatusCode);
+			}
+		}
+
 		public void SetUri(string uri)
 		{
 			if (uri == null)
@@ -674,12 +680,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 
 		private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
-		[NotNull]
 		public IList<Segment> Segments { get => _segments; }
 
-		[NotNull]
 		private readonly ITimer _timer;
-		[NotNull]
 		private readonly DateTime _startTime;
 		private TimeSpan? _forcedDuration;
 
@@ -691,7 +694,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private int _totalNestedTransactionAttempts;
 		private readonly int _transactionTracerMaxSegments;
 
-		[NotNull] private string _guid;
+		private string _guid;
 
 		private volatile bool _ignoreAutoBrowserMonitoring;
 		private volatile bool _ignoreAllBrowserMonitoring;

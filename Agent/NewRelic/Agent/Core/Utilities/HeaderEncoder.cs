@@ -1,7 +1,6 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Utils;
+﻿using NewRelic.Core;
+using NewRelic.Core.DistributedTracing;
+using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using System;
 
@@ -59,7 +58,7 @@ namespace NewRelic.Agent.Core.Utilities
 		/// <returns>The serialized and encoded data.</returns>
 		public static string SerializeAndEncodeDistributedTracePayload(DistributedTracePayload data)
 		{
-			var serializedData = DistributedTracePayload.ToJson(data);
+			var serializedData = data.ToJson();
 			if (serializedData == null)
 			{
 				throw new NullReferenceException("serializedData");

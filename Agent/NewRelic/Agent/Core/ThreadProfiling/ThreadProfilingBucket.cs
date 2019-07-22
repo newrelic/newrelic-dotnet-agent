@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
+using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.ThreadProfiling

@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
 	public class TrackedWrapper
 	{
-		[NotNull]
 		public readonly IWrapper Wrapper;
+		private int _numberOfConsecutiveFailures;
+		public int NumberOfConsecutiveFailures => _numberOfConsecutiveFailures;
 
-		private Int32 _numberOfConsecutiveFailures;
-		public Int32 NumberOfConsecutiveFailures => _numberOfConsecutiveFailures;
-
-		public TrackedWrapper([NotNull] IWrapper wrapper)
+		public TrackedWrapper(IWrapper wrapper)
 		{
 			Wrapper = wrapper;
 		}

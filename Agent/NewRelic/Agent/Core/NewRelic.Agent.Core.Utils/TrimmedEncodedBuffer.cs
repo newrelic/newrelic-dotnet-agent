@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NewRelic.Core;
+using System;
 using System.Text;
 
 namespace NewRelic.Agent.Core.Utils

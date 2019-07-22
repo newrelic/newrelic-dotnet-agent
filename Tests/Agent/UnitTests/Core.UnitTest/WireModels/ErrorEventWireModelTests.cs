@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.Utilities;
+﻿using NewRelic.Core;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;

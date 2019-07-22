@@ -1,11 +1,11 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using NewRelic.Agent.Core.Utilization;
+using NewRelic.Core.Logging;
+using NewRelic.SystemInterfaces;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Utilization;
-using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -23,7 +23,7 @@ namespace NewRelic.Agent.Core.Utilities
 			_dnsStatic = dnsStatic;
 		}
 
-		public UInt64 GetTotalPhysicalMemoryBytes()
+		public ulong? GetTotalPhysicalMemoryBytes()
 		{
 			try
 			{
@@ -38,13 +38,20 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 			catch (Exception)
 			{
-				return 0;
+				return null;
 			}
 		}
 
-		public Int32 GetTotalLogicalProcessors()
+		public int? GetTotalLogicalProcessors()
 		{
-			return System.Environment.ProcessorCount;
+			try
+			{
+				return System.Environment.ProcessorCount;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
 		}
 
 		public BootIdResult GetBootId()

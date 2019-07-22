@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Configuration.UnitTest;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Utils;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NUnit.Framework;
-using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
-using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core;
+using NUnit.Framework;
+using System;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Telerik.JustMock;
+using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {

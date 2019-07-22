@@ -1,12 +1,10 @@
 ﻿using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
 	public class DefaultWrapperAsync : IDefaultWrapper
 	{
-		[NotNull]
 		private static readonly string[] PossibleWrapperNames = {
 			"NewRelic.Agent.Core.Wrapper.DefaultWrapper",
 			"NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync",
@@ -30,7 +28,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("custom", "custom", instrumentedMethodInfo.Method.MethodName);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgent agent, ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			if (instrumentedMethodCall.IsAsync)
 			{

@@ -32,7 +32,6 @@ namespace NewRelic.Agent.Core.Transformers
 			_configurationService = Mock.Create<IConfigurationService>();
 
 			_memorySampleTransformer = new MemorySampleTransformer(_metricBuilder, _metricAggregator, _configurationService);
-			Mock.Arrange(() => _configurationService.Configuration.GenerateFullGcMemThreadMetricsEnabled).Returns(true);
 		}
 
 		[Test]

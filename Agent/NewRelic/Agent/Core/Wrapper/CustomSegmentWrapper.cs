@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
 	public class CustomSegmentWrapper : IWrapper
 	{
-		[NotNull]
-		private static readonly String[] PossibleWrapperNames = {
+		private static readonly string[] PossibleWrapperNames = {
 			"NewRelic.Providers.Wrapper.CustomInstrumentation.CustomSegmentWrapper",
 			"NewRelic.Providers.Wrapper.CustomInstrumentationAsync.CustomSegmentWrapperAsync",
 			"NewRelic.Agent.Core.Tracer.Factories.CustomSegmentTracerFactory"
@@ -36,10 +34,10 @@ namespace NewRelic.Agent.Core.Wrapper
 			}
 
 			// find the first string argument
-			String segmentName = null;
+			string segmentName = null;
 			foreach (var argument in instrumentedMethodCall.MethodCall.MethodArguments)
 			{
-				segmentName = argument as String;
+				segmentName = argument as string;
 				if (segmentName != null)
 					break;
 			}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Utilization
 {
@@ -9,7 +10,7 @@ namespace NewRelic.Agent.Core.Utilization
 	{
 		private const int WebReqeustTimeout = 1000;
 
-		public virtual string CallVendorApi(Uri uri, IEnumerable<string> headers = null)
+		public virtual string CallVendorApi(Uri uri, string vendorName, IEnumerable<string> headers = null)
 		{
 			try
 			{
@@ -36,8 +37,26 @@ namespace NewRelic.Agent.Core.Utilization
 					return reader.ReadToEnd();
 				}
 			}
-			catch
+			catch (Exception ex)
 			{
+				if (ex is WebException webEx)
+				{
+					var response = (HttpWebResponse)webEx.Response;
+					if (response != null)
+					{
+						var statusCode = response.StatusCode.ToString() ?? string.Empty;
+						var statusDescription = response.StatusDescription ?? string.Empty;
+						Log.DebugFormat("CallVendorApi ({0}) failed with WebException with status: {1}; message: {2}", vendorName, statusCode, statusDescription);
+					}
+					else
+					{
+						Log.DebugFormat("CallVendorApi ({0}) failed with WebException: {1}", vendorName, webEx.Message);
+					}
+				}
+				else
+				{
+					Log.DebugFormat("CallVendorApi ({0}) failed with Exception: {1}", vendorName, ex.Message);
+				}
 				return null;
 			}
 		}

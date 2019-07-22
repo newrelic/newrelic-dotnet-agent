@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Utils;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Transactions
 {

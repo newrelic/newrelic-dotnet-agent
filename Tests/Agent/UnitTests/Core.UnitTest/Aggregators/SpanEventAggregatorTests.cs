@@ -3,8 +3,8 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using System;
@@ -154,9 +154,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventsAreNotRetainedAfterHarvestIfResponseEquals(
-			[Values(DataTransportResponseStatus.RequestSuccessful, 
-				DataTransportResponseStatus.OtherError)] DataTransportResponseStatus response)
+		public void SpanEventAggregatorTests_EventsAreNotRetainedAfterHarvestIfResponseEqualsDiscard()
 		{
 			// Arrange
 			IEnumerable<SpanEventWireModel> sentEvents = null;
@@ -164,7 +162,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
 				{
 					sentEvents = events;
-					return response;
+					return DataTransportResponseStatus.Discard;
 				});
 
 			CollectSpanEvents(2);
@@ -179,12 +177,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventsAreRetainedAfterHarvestIfResponseEquals(
-			[Values(DataTransportResponseStatus.ConnectionError, 
-					DataTransportResponseStatus.ServerError,
-					DataTransportResponseStatus.CommunicationError,
-					DataTransportResponseStatus.RequestTimeout
-				)] DataTransportResponseStatus response)
+		public void SpanEventAggregatorTests_EventsAreRetainedAfterHarvestIfResponseEqualsRetain()
 		{
 			const int eventCount = 2;
 			// Arrange
@@ -193,7 +186,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
-					return response;
+					return DataTransportResponseStatus.Retain;
 				});
 
 			CollectSpanEvents(eventCount);
@@ -210,12 +203,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 
 		[Test]
-		public void SpanEventAggregatorTests_MetricsAreCorrectAfterHarvestRetryIfSendResponseEquals(
-			[Values(DataTransportResponseStatus.ConnectionError,
-				DataTransportResponseStatus.ServerError,
-				DataTransportResponseStatus.CommunicationError,
-				DataTransportResponseStatus.RequestTimeout
-			)] DataTransportResponseStatus response)
+		public void SpanEventAggregatorTests_MetricsAreCorrectAfterHarvestRetryIfSendResponseEqualsDiscard()
 		{
 			const int eventCount = 2;
 			// Arrange
@@ -225,7 +213,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
-					var returnValue = (firstTime) ? response : DataTransportResponseStatus.RequestSuccessful;
+					var returnValue = (firstTime) ? DataTransportResponseStatus.Retain : DataTransportResponseStatus.RequestSuccessful;
 					firstTime = false;
 					return returnValue;
 				});
@@ -262,7 +250,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
-					return DataTransportResponseStatus.PostTooBigError;
+					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
 				});
 
 			CollectSpanEvents(eventCount);
@@ -287,7 +275,7 @@ namespace NewRelic.Agent.Core.Aggregators
 				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
 				{
 					sentEvents = events;
-					return DataTransportResponseStatus.PostTooBigError;
+					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
 				});
 
 			CollectSpanEvents(eventCount);

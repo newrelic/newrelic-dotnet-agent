@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
-using Newtonsoft.Json;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
+using Newtonsoft.Json;
+using System;
+using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {

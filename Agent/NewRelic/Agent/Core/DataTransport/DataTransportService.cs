@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using NewRelic.Agent.Core.AgentHealth;
+﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -52,46 +53,39 @@ namespace NewRelic.Agent.Core.DataTransport
 			TrySendDataRequest("profile_data", _configuration.AgentRunId, threadProfilingData);
 		}
 
-		public DataTransportResponseStatus Send(IEnumerable<TransactionEventWireModel> transactionEvents)
+		public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents)
 		{
-			var response = TrySendDataRequest("analytic_event_data", _configuration.AgentRunId, transactionEvents);
-			return response.Status;
+			return TrySendDataRequest("analytic_event_data", _configuration.AgentRunId, eventHarvestData, transactionEvents);
 		}
 
 		public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents)
 		{
-			var response = TrySendDataRequest("error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
-			return response.Status;
+			return TrySendDataRequest("error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
 		}
 
 		public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<SpanEventWireModel> spanEvents)
 		{
-			var response = TrySendDataRequest("span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
-			return response.Status;
+			return TrySendDataRequest("span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
 		}
 
 		public DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents)
 		{
-			var response = TrySendDataRequest("custom_event_data", _configuration.AgentRunId, customEvents);
-			return response.Status;
+			return TrySendDataRequest("custom_event_data", _configuration.AgentRunId, customEvents);
 		}
 
 		public DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas)
 		{
-			var response = TrySendDataRequest("transaction_sample_data", _configuration.AgentRunId, transactionSampleDatas);
-			return response.Status;
+			return TrySendDataRequest("transaction_sample_data", _configuration.AgentRunId, transactionSampleDatas);
 		}
 
 		public DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas)
 		{
-			var response = TrySendDataRequest("error_data", _configuration.AgentRunId, errorTraceDatas);
-			return response.Status;
+			return TrySendDataRequest("error_data", _configuration.AgentRunId, errorTraceDatas);
 		}
 
 		public DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels)
 		{
-			var response = TrySendDataRequest("sql_trace_data", sqlTraceWireModels);
-			return response.Status;
+			return TrySendDataRequest("sql_trace_data", sqlTraceWireModels);
 		}
 
 		public DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics)
@@ -106,17 +100,17 @@ namespace NewRelic.Agent.Core.DataTransport
 			{
 				Log.ErrorFormat("The last data send timestamp ({0}) is greater than or equal to the current timestamp ({1}). The metrics in this batch will be dropped.", _lastMetricSendTime, endTime);
 				_lastMetricSendTime = _dateTimeStatic.UtcNow;
-				return DataTransportResponseStatus.OtherError;
+				return DataTransportResponseStatus.Discard;
 			}
 
 			var model = new MetricWireModelCollection(_configuration.AgentRunId as string, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
 
-			var response = TrySendDataRequest("metric_data", model);
+			var status = TrySendDataRequest("metric_data", model);
 
-			if (response.Status == DataTransportResponseStatus.RequestSuccessful)
+			if (status == DataTransportResponseStatus.RequestSuccessful)
 				_lastMetricSendTime = endTime;
 
-			return response.Status;
+			return status;
 		}
 
 		#endregion Public API
@@ -124,9 +118,10 @@ namespace NewRelic.Agent.Core.DataTransport
 		#region Private helpers
 
 
-		private DataTransportResponse<object> TrySendDataRequest(string method, params object[] data)
+		private DataTransportResponseStatus TrySendDataRequest(string method, params object[] data)
 		{
-			return TrySendDataRequest<object>(method, data);
+			var response = TrySendDataRequest<object>(method, data);
+			return response.Status;
 		}
 
 		private DataTransportResponse<T> TrySendDataRequest<T>(string method, params object[] data)
@@ -137,71 +132,88 @@ namespace NewRelic.Agent.Core.DataTransport
 				var returnValue = _connectionManager.SendDataRequest<T>(method, data);
 				return new DataTransportResponse<T>(DataTransportResponseStatus.RequestSuccessful, returnValue);
 			}
-			catch (LicenseException ex)
+			catch (HttpException ex)
 			{
-				return Shutdown<T>(ex.Message);
+				LogErrorResponse(ex, method, startTime, ex.StatusCode);
+				RestartOrShutdownIfNecessary(ex);
+				var errorStatus = GetDataTransportResponseStatusByHttpStatusCode(ex.StatusCode);
+				return new DataTransportResponse<T>(errorStatus);
 			}
-			catch (ForceDisconnectException ex)
+			catch (Exception ex) when (ex is SocketException || ex is WebException)
 			{
-				return Shutdown<T>(ex.Message);
-			}
-			catch (ForceRestartException)
-			{
-				return Restart<T>();
-			}
-			catch (ConnectionException ex)
-			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.ConnectionError, method, startTime);
-			}
-			catch (PostTooBigException ex)
-			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.PostTooBigError, method, startTime);
-			}
-			catch (PostTooLargeException ex)
-			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.PostTooBigError, method, startTime, ex.StatusCode);
-			}
-			catch (RequestTimeoutException ex)
-			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.RequestTimeout, method, startTime, ex.StatusCode);
-			}
-			catch (ServerErrorException ex)
-			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.ServerError, method, startTime, ex.StatusCode);
-			}
-			catch (SocketException ex)
-			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.CommunicationError, method, startTime);
-			}
-			catch (WebException ex)
-			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.CommunicationError, method, startTime);
+				LogErrorResponse(ex, method, startTime, null);
+				return new DataTransportResponse<T>(DataTransportResponseStatus.Retain);
 			}
 			catch (Exception ex)
 			{
-				return GetErrorResponse<T>(ex, DataTransportResponseStatus.OtherError, method, startTime);
+				LogErrorResponse(ex, method, startTime, null);
+				return new DataTransportResponse<T>(DataTransportResponseStatus.Discard);
 			}
 		}
 
-		private static DataTransportResponse<T> Shutdown<T>(string message)
+		private static void RestartOrShutdownIfNecessary(HttpException ex)
+		{
+			switch (ex.StatusCode)
+			{
+				case HttpStatusCode.Unauthorized:
+				case HttpStatusCode.Conflict:
+					Restart();
+					break;
+				case HttpStatusCode.Gone:
+					Shutdown(ex.Message);
+					break;
+			}
+		}
+
+		private static void Shutdown(string message)
 		{
 			Log.InfoFormat("Shutting down: {0}", message);
 			EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
-			return new DataTransportResponse<T>(DataTransportResponseStatus.OtherError);
 		}
 
-		private static DataTransportResponse<T> Restart<T>()
+		private static void Restart()
 		{
 			EventBus<RestartAgentEvent>.Publish(new RestartAgentEvent());
-			return new DataTransportResponse<T>(DataTransportResponseStatus.OtherError);
 		}
 
-		private DataTransportResponse<T> GetErrorResponse<T>(Exception exception, DataTransportResponseStatus errorStatus, string method, DateTime startTime, HttpStatusCode? httpStatusCode = null)
+		private void LogErrorResponse(Exception exception, string method, DateTime startTime, HttpStatusCode? httpStatusCode)
 		{
 			var endTime = DateTime.UtcNow;
 			_agentHealthReporter.ReportSupportabilityCollectorErrorException(method, endTime - startTime, httpStatusCode);
 			Log.Error(exception);
-			return new DataTransportResponse<T>(errorStatus);
+		}
+
+		private DataTransportResponseStatus GetDataTransportResponseStatusByHttpStatusCode(HttpStatusCode httpStatusCode)
+		{
+			switch (httpStatusCode)
+			{
+				/* 400 */ case HttpStatusCode.BadRequest:
+				/* 401 */ case HttpStatusCode.Unauthorized:
+				/* 403 */ case HttpStatusCode.Forbidden:
+				/* 404 */ case HttpStatusCode.NotFound:
+				/* 405 */ case HttpStatusCode.MethodNotAllowed:
+				/* 407 */ case HttpStatusCode.ProxyAuthenticationRequired:
+				/* 409 */ case HttpStatusCode.Conflict:
+				/* 410 */ case HttpStatusCode.Gone:
+				/* 411 */ case HttpStatusCode.LengthRequired:
+				/* 414 */ case HttpStatusCode.RequestUriTooLong:
+				/* 415 */ case HttpStatusCode.UnsupportedMediaType:
+				/* 417 */ case HttpStatusCode.ExpectationFailed:
+				/* 431 */ case (HttpStatusCode)431:
+					return DataTransportResponseStatus.Discard;
+
+				/* 408 */ case HttpStatusCode.RequestTimeout:
+				/* 429 */ case (HttpStatusCode)429:
+				/* 500 */ case HttpStatusCode.InternalServerError:
+				/* 503 */ case HttpStatusCode.ServiceUnavailable:
+					return DataTransportResponseStatus.Retain;
+
+				/* 413 */ case HttpStatusCode.RequestEntityTooLarge:
+					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
+
+				default:
+					return DataTransportResponseStatus.Discard;
+			}
 		}
 
 		#endregion Private helpers

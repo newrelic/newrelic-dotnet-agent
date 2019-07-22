@@ -1,10 +1,10 @@
+using JetBrains.Annotations;
+using NewRelic.Core;
+using NewRelic.Core.Logging;
+using NewRelic.SystemExtensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.SystemExtensions;
 
 namespace NewRelic.Agent.Core.Transactions
 {

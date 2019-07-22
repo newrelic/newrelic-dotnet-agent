@@ -102,17 +102,14 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			switch (responseStatus)
 			{
-				case DataTransportResponseStatus.CommunicationError:
-				case DataTransportResponseStatus.RequestTimeout:
-				case DataTransportResponseStatus.ServerError:
-				case DataTransportResponseStatus.ConnectionError:
-					Retain(errorTraceWireModels);
-					break;
 				case DataTransportResponseStatus.RequestSuccessful:
 					_agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
 					break;
-				case DataTransportResponseStatus.PostTooBigError:
-				case DataTransportResponseStatus.OtherError:
+				case DataTransportResponseStatus.Retain:
+					Retain(errorTraceWireModels);
+					break;
+				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
+				case DataTransportResponseStatus.Discard:
 				default:
 					break;
 			}

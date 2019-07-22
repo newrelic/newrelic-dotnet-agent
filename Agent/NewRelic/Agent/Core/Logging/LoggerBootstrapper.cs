@@ -1,15 +1,17 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
-using log4net.Layout;
 using log4net.Filter;
-using log4netLogger = log4net.Repository.Hierarchy.Logger;
+using log4net.Layout;
 using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.Logging;
+using NewRelic.Core.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using log4netLogger = log4net.Repository.Hierarchy.Logger;
 
 namespace NewRelic.Agent.Core
 {
@@ -116,6 +118,8 @@ namespace NewRelic.Agent.Core
 			// to the agent logger, which will get picked up by 
 			// the other appenders.
 			ShutdownStartupLogAppender(logger);
+
+			Log.Initialize(new Logger());
 		}
 
 		/// <summary>

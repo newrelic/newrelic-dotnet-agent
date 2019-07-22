@@ -1,11 +1,11 @@
+using JetBrains.Annotations;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Core.Logging;
+using NewRelic.SystemExtensions.Collections.Generic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {

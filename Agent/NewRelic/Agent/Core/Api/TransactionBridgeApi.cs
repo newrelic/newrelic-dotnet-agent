@@ -1,7 +1,7 @@
 using System;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Api
 {

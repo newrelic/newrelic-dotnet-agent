@@ -38,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			if (httpContext.Items.Contains(BrowerAgentInjectedKey))
 				return Delegates.NoOp;
 
-			if (httpContext.Response.StatusCode >= 400)
+			if (httpContext.Response.StatusCode >= 300)
 				return Delegates.NoOp;
 
 			var httpWriter = (HttpWriter)instrumentedMethodCall.MethodCall.InvocationTarget;

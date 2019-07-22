@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
@@ -8,12 +6,10 @@ namespace NewRelic.Agent.Core.Wrapper
 	// This interface needed for DI/mocking purposes.
 	public interface IDefaultWrapper : IWrapper
 	{
-		
 	}
 
 	public class DefaultWrapper : IDefaultWrapper
 	{
-		[NotNull]
 		private static readonly string[] PossibleWrapperNames = {
 			"NewRelic.Agent.Core.Wrapper.DefaultWrapper",
 			"NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync",

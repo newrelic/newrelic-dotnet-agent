@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
+using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -20,8 +20,14 @@ namespace NewRelic.Agent.Core.Configuration
 		[JsonProperty("apdex_t")]
 		public Double? ApdexT { get; set; }
 
+		[JsonProperty("collect_error_events")]
+		public Boolean? ErrorEventCollectionEnabled { get; set; }
+
 		[JsonProperty("collect_analytics_events")]
 		public Boolean? AnalyticsEventCollectionEnabled { get; set; }
+
+		[JsonProperty("collect_span_events")]
+		public Boolean? SpanEventCollectionEnabled { get; set; }
 
 		[JsonProperty("collect_custom_events")]
 		public Boolean? CustomEventCollectionEnabled { get; set; }
@@ -34,6 +40,10 @@ namespace NewRelic.Agent.Core.Configuration
 
 		[JsonProperty("data_report_period")]
 		public Int64? DataReportPeriod { get; set; }
+
+		[JsonProperty("max_payload_size_in_bytes")]
+		// Making it int per the agent spec. 
+		public int? MaxPayloadSizeInBytes { get; set; }
 
 		[JsonProperty("encoding_key")]
 		public String EncodingKey { get; set; }
@@ -58,6 +68,9 @@ namespace NewRelic.Agent.Core.Configuration
 
 		[JsonProperty("trusted_account_ids")]
 		public IEnumerable<Int64> TrustedIds { get; set; }
+
+		[JsonProperty("request_headers_map")]
+		public Dictionary<string, string> RequestHeadersMap { get; set; }
 
 
 		// Server Side Config
@@ -179,12 +192,6 @@ namespace NewRelic.Agent.Core.Configuration
 			[JsonProperty("error_collector.ignore_errors")]
 			public IEnumerable<String> ErrorCollectorErrorsToIgnore { get; set; }
 
-			[JsonProperty("error_collector.capture_events")]
-			public Boolean? ErrorCollectorCaptureEvents { get; set; }
-
-			[JsonProperty("error_collector.max_event_samples_stored")]
-			public UInt32? ErrorCollectorMaxEventSamplesStored { get; set; }
-
 			[JsonProperty("instrumentation.level")]
 			public Int32? InstrumentationLevel { get; set; }
 
@@ -214,9 +221,6 @@ namespace NewRelic.Agent.Core.Configuration
 
 			[JsonProperty("capture_params")]
 			public Boolean? CaptureParametersEnabled { get; set; }
-
-			[JsonProperty("collect_error_events")]
-			public Boolean? CollectErrorEvents { get; set; }
 		}
 
 		public class InstrumentationConfig

@@ -9,14 +9,15 @@ namespace NewRelic.Agent.Core.Utilization
 	[JsonObject(MemberSerialization.OptIn)]
 	public class UtilizationSettingsModel
 	{
-		public UtilizationSettingsModel(int logicalProcessors, ulong totalRamBytes, [NotNull] string hostname, string bootId, [NotNull] IDictionary<string, IVendorModel> vendors, [CanBeNull] UtilitizationConfig utilitizationConfig)
+		public UtilizationSettingsModel(int? logicalProcessors, ulong? totalRamBytes, [NotNull] string hostname, string fullHostName, List<string> ipAddress, string bootId, [NotNull] IDictionary<string, IVendorModel> vendors, [CanBeNull] UtilitizationConfig utilitizationConfig)
 		{
 			LogicalProcessors = logicalProcessors;
-			TotalRamMebibytes = totalRamBytes / (1024 * 1024);
+			TotalRamMebibytes = totalRamBytes.HasValue ? totalRamBytes.Value / (1024 * 1024) : totalRamBytes;
 			Hostname = hostname;
+			FullHostName = fullHostName;
+			IpAddress = ipAddress;
 			BootId = bootId;
 			Vendors = vendors;
-				
 			Config = utilitizationConfig;
 		}
 
@@ -24,18 +25,24 @@ namespace NewRelic.Agent.Core.Utilization
 		/// Utilization spec version number
 		/// </summary>
 		[JsonProperty("metadata_version")] 
-		public readonly int MetadataVersion = 3;
+		public readonly int MetadataVersion = 5;
 
 		[JsonProperty("logical_processors")] 
-		public readonly int LogicalProcessors;
+		public readonly int? LogicalProcessors;
 
 		[JsonProperty("total_ram_mib")]
-		public readonly ulong TotalRamMebibytes;
+		public readonly ulong? TotalRamMebibytes;
 
 		[NotNull]
 		[JsonProperty("hostname")]
 		public readonly string Hostname;
-		
+
+		[JsonProperty("full_hostname")]
+		public readonly string FullHostName;
+
+		[JsonProperty("ip_address")]
+		public readonly List<string> IpAddress;
+
 		[JsonProperty("boot_id", NullValueHandling = NullValueHandling.Ignore)]
 		public readonly String BootId;
 

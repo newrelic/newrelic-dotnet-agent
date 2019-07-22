@@ -1,37 +1,27 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
-using System.Diagnostics;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
 	public interface IWrapperService
 	{
-		[CanBeNull]
-		AfterWrappedMethodDelegate BeforeWrappedMethod([NotNull] Type type, [NotNull] String methodName, [NotNull] String argumentSignature, [CanBeNull] Object invocationTarget, [NotNull] Object[] methodArguments, [CanBeNull] String tracerFactoryName, [CanBeNull] String metricName, [NotNull] uint tracerArguments, UInt64 functionId);
-
+		AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature, object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName, uint tracerArguments, ulong functionId);
 		void ClearCaches();
 	}
 
 	public class WrapperService : IWrapperService
 	{
-		private readonly Int32 _maxConsecutiveFailures;
-
-		[NotNull] private readonly IConfigurationService _configurationService;
-
-		[NotNull] private readonly IAgent _agent;
-
-		[NotNull] private readonly IWrapperMap _wrapperMap;
-
-		[NotNull] private readonly IAgentHealthReporter _agentHealthReporter;
-
+		private readonly int _maxConsecutiveFailures;
+		private readonly IConfigurationService _configurationService;
+		private readonly IAgent _agent;
+		private readonly IWrapperMap _wrapperMap;
+		private readonly IAgentHealthReporter _agentHealthReporter;
 		private readonly IAgentTimerService _agentTimerService;
 
 		private class InstrumentedMethodInfoWrapper
@@ -46,10 +36,9 @@ namespace NewRelic.Agent.Core.Wrapper
 			}
 		}
 		
-		[NotNull] private readonly ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
+		private readonly ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
 
-		public WrapperService([NotNull] IConfigurationService configurationService, [NotNull] IWrapperMap wrapperMap,
-			[NotNull] IAgent agent, [NotNull] IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
+		public WrapperService(IConfigurationService configurationService, IWrapperMap wrapperMap, IAgent agent, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
 		{
 			_configurationService = configurationService;
 			_maxConsecutiveFailures = configurationService.Configuration.WrapperExceptionLimit;
@@ -60,9 +49,9 @@ namespace NewRelic.Agent.Core.Wrapper
 			_functionIdToWrapper = new ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper>();
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, String methodName, String argumentSignature,
-			Object invocationTarget, Object[] methodArguments, String tracerFactoryName, String metricName,
-			uint tracerArguments, UInt64 functionId)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature,
+			object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName,
+			uint tracerArguments, ulong functionId)
 		{
 			InstrumentedMethodInfo instrumentedMethodInfo = default(InstrumentedMethodInfo);
 			TrackedWrapper trackedWrapper;
@@ -205,7 +194,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			return tracerFactoryName;
 		}
 
-		private void HandleBeforeWrappedMethodException(UInt64 functionId, TrackedWrapper trackedWrapper, InstrumentedMethodCall instrumentedMethodCall, InstrumentedMethodInfo instrumetedMethodInfo)
+		private void HandleBeforeWrappedMethodException(ulong functionId, TrackedWrapper trackedWrapper, InstrumentedMethodCall instrumentedMethodCall, InstrumentedMethodInfo instrumetedMethodInfo)
 		{
 			trackedWrapper.NoticeFailure();
 
