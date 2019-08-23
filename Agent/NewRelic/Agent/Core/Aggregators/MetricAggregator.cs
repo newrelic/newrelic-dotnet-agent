@@ -70,6 +70,9 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter.ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
 
 			_agentHealthReporter.ReportIfHostIsLinuxOs();
+			_agentHealthReporter.ReportDotnetVersion();
+
+			_agentHealthReporter.ReportAgentInfo();
 
 			_sqlParsingCacheSupportabilityMetricReporter.CollectMetrics();
 

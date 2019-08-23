@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
@@ -35,6 +36,7 @@ namespace NewRelic.Agent.Core.Samplers
 		private readonly IGcSampleTransformer _transformer;
 		private const int GcSampleInterval = 1;
 		private IPerformanceCounterProxyFactory _pcProxyFactory;
+		private readonly object _lockObj = new object();
 
 		/// <summary>
 		/// Translates the sample type enum to the name of the windows performance counter
@@ -128,25 +130,55 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			if (!Enabled)
 			{
+				Log.Debug($"The GC Sampler is NOT enabled");
 				//We always want to do this because we don't want to code with the internals 
 				//of the base class in mind.
 				base.Start();
 				return;
 			}
 
-			//Build a set of proxies for each performance counter being sampled.
-			_perfCounterProxies = new Dictionary<GCSampleType, IPerformanceCounterProxy>();
+			var failedSampleTypes = new List<GCSampleType>();
 
-			foreach (var sampleTypeEnum in _perfCounterNames.Keys)
+			var countInstantiated = 0;
+			lock (_lockObj)
 			{
-				try
+				//Build a set of proxies for each performance counter being sampled.
+				_perfCounterProxies = new Dictionary<GCSampleType, IPerformanceCounterProxy>();
+				
+				foreach (var sampleTypeEnum in _perfCounterNames.Keys)
 				{
-					_perfCounterProxies[sampleTypeEnum] = _pcProxyFactory.CreatePerformanceCounterProxy(GCPerfCounterCategoryName, _perfCounterNames[sampleTypeEnum]);
+
+					try
+					{
+						_perfCounterProxies[sampleTypeEnum] = _pcProxyFactory.CreatePerformanceCounterProxy(GCPerfCounterCategoryName, _perfCounterNames[sampleTypeEnum]);
+						countInstantiated++;
+					}
+					catch (UnauthorizedAccessException)
+					{
+						var userName = "<unknown>";
+						try
+						{
+							userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+						}
+						catch
+						{ }
+
+						Log.Warn($"The executing user, {userName}, has insufficient permissions to collect Windows Performance Counters.");
+						break;
+					}
+					catch (Exception ex)
+					{
+						failedSampleTypes.Add(sampleTypeEnum);
+						Log.Debug($"Error encountered during the creation of performance counter proxy for GC sample type '{sampleTypeEnum}'.  Metrics of this type will not be captured.  Error : {ex}");
+					}
 				}
-				catch (Exception ex)
-				{
-					Log.Warn($"Error encountered during the creation of performance counter proxy for GC sample type '{sampleTypeEnum}'.  Metrics of this type will not be captured.  Error : {ex}");
-				}
+			}
+
+			//Print message indicating which perf counter proxies failed to start.
+			if (failedSampleTypes.Count > 0)
+			{
+				var msgToken = string.Join(", ", failedSampleTypes.Select(x => x.ToString()).ToArray());
+				Log.Warn($"The following Garbage Collection Performance Counters could not be started: {msgToken}.  Debug Level logs will contain more information.");
 			}
 
 			//We always want to do this because we don't want to code with the internals 
@@ -154,10 +186,14 @@ namespace NewRelic.Agent.Core.Samplers
 			base.Start();
 
 			//If unable to create any proxies, there is no need to run the timer
-			if (_perfCounterProxies.Count == 0)
+			if (countInstantiated == 0)
 			{
 				Log.Warn("No GC performance counters were instantiated.  GC Metrics will not be captured.");
 				Stop();
+			}
+			else
+			{
+				Log.Debug($"The GC Sampler was started, collecting {_perfCounterProxies.Count} performance counter(s).");
 			}
 		}
 
@@ -165,13 +201,16 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			base.Stop();
 
-			if (_perfCounterProxies != null)
+			lock (_lockObj)
 			{
-				foreach (var perfCounterProxy in _perfCounterProxies.Values)
+				if (_perfCounterProxies != null)
 				{
-					perfCounterProxy.Dispose();
+					foreach (var perfCounterProxy in _perfCounterProxies.Values)
+					{
+						perfCounterProxy.Dispose();
+					}
+					_perfCounterProxies = null;
 				}
-				_perfCounterProxies = null;
 			}
 		}
 
@@ -181,10 +220,13 @@ namespace NewRelic.Agent.Core.Samplers
 			{
 				var sampleValues = new Dictionary<GCSampleType, float>();
 
-				foreach (var proxy in _perfCounterProxies)
+				lock (_lockObj)
 				{
-					var val = _perfCounterValueHandlers[proxy.Key](proxy.Value);
-					sampleValues[proxy.Key] = val;
+					foreach (var proxy in _perfCounterProxies)
+					{
+						var val = _perfCounterValueHandlers[proxy.Key](proxy.Value);
+						sampleValues[proxy.Key] = val;
+					}
 				}
 
 				_transformer.Transform(sampleValues);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions.Collections;
@@ -11,16 +10,14 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
 	public static class HttpContextActions
 	{
-		public const String HttpContextSegmentKey = "NewRelic.Asp.HttpContextSegmentKey";
-		public const String HttpContextSegmentTypeKey = "NewRelic.Asp.HttpContextSegmentTypeKey";
+		public const string HttpContextSegmentKey = "NewRelic.Asp.HttpContextSegmentKey";
+		public const string HttpContextSegmentTypeKey = "NewRelic.Asp.HttpContextSegmentTypeKey";
 
 		// System.Web.HttpResponseStreamFilterSink is an internal type so we cannot reference it directly
 		public static readonly Type HttpResponseStreamFilterSinkType = typeof (HttpResponse).Assembly.GetType("System.Web.HttpResponseStreamFilterSink");
 
-		[CanBeNull]
 		private static Func<HttpWorkerRequest, DateTime> _getStartTime;
 
-		[NotNull]
 		private static Func<HttpWorkerRequest, DateTime> GetStartTime
 		{
 			get
@@ -29,7 +26,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 		}
 
-		public static void TransactionStartup([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		public static void TransactionStartup(IAgent agent, HttpContext httpContext)
 		{
 			SetFilterHack(httpContext);
 			StoreQueueTime(agent, httpContext);
@@ -48,7 +45,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		/// The solution that this method provides is to set the filter to null early in the pipeline, which will trigger the necessary side-effects without actually attaching a filter. We need to be careful to do this only if another filter has not already been attached. Due to (yet again) more strange behavior in ASP.NET, the only way to tell if a filter has already been attached is to check if the filter is currently a System.Web.HttpResponseStreamFilterSink (which is the default filter).
 		/// </summary>
 		/// <param name="httpContext"></param>
-		private static void SetFilterHack([NotNull] HttpContext httpContext)
+		private static void SetFilterHack(HttpContext httpContext)
 		{
 			var filter = httpContext.Response.Filter;
 			if (filter != null && filter.GetType() != HttpResponseStreamFilterSinkType)
@@ -57,14 +54,14 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			httpContext.Response.Filter = null;
 		}
 
-		public static void TransactionShutdown([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		public static void TransactionShutdown(IAgent agent, HttpContext httpContext)
 		{
 			StoreRequestParameters(agent, httpContext);
 			SetStatusCode(agent, httpContext);
 			TryWriteResponseHeaders(agent, httpContext);
 		}
 
-		private static void StoreQueueTime([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static void StoreQueueTime(IAgent agent, HttpContext httpContext)
 		{
 			var now = DateTime.UtcNow;
 
@@ -82,7 +79,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			agent.CurrentTransaction.SetQueueTime(inQueueTimeSpan);
 		}
 
-		private static void StoreUrls([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static void StoreUrls(IAgent agent, HttpContext httpContext)
 		{
 			var transaction = agent.CurrentTransaction;
 
@@ -91,19 +88,18 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			var requestUrl = RequestUrlRetriever.TryGetRequestUrl(httpContext.Request, () => requestPath);
 			if (requestUrl != null)
 			{
-				transaction.SetUri(requestUrl.AbsoluteUri);
-				transaction.SetOriginalUri(requestUrl.AbsoluteUri);
+				transaction.SetUri(requestUrl.AbsolutePath);
+				transaction.SetOriginalUri(requestUrl.AbsolutePath);
 			}
 
 			var referrerUri = TryGetReferrerUri(httpContext.Request);
 			if (referrerUri != null)
 			{
-				transaction.SetReferrerUri(referrerUri.AbsoluteUri);
+				transaction.SetReferrerUri(referrerUri.AbsolutePath);
 			}
 		}
 
-		[CanBeNull]
-		private static Uri TryGetReferrerUri([NotNull] HttpRequest request)
+		private static Uri TryGetReferrerUri(HttpRequest request)
 		{
 			try
 			{
@@ -117,26 +113,26 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 		}
 
-		private static void StoreRequestParameters([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static void StoreRequestParameters(IAgent agent, HttpContext httpContext)
 		{
 			var parameters = QueryStringRetriever.TryGetQueryStringAsDictionary(httpContext.Request, agent)
-				?? Enumerable.Empty<KeyValuePair<String, String>>();
+				?? Enumerable.Empty<KeyValuePair<string, string>>();
 			agent.CurrentTransaction.SetRequestParameters(parameters);
 		}
 
-		private static void NameTransaction([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static void NameTransaction(IAgent agent, HttpContext httpContext)
 		{
 			agent.CurrentTransaction.SetWebTransactionNameFromPath(WebTransactionType.ASP, httpContext.Request.Path);
 		}
 
-		private static void ProcessHeaders([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static void ProcessHeaders(IAgent agent, HttpContext httpContext)
 		{
 			var headers = httpContext.Request.Headers.ToDictionary();
 			var contentLength = httpContext.Request.ContentLength;
 			agent.ProcessInboundRequest(headers, TransportType.HTTP, contentLength);
 		}
 
-		private static void TryWriteResponseHeaders([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static void TryWriteResponseHeaders(IAgent agent, HttpContext httpContext)
 		{
 			var headers = agent.CurrentTransaction.GetResponseMetadata();
 
@@ -161,15 +157,14 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 		}
 
-		private static void SetStatusCode([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static void SetStatusCode(IAgent agent, HttpContext httpContext)
 		{
 			var statusCode = httpContext.Response.StatusCode;
 			var subStatusCode = TryGetSubStatusCode(httpContext);
 			agent.CurrentTransaction.SetHttpResponseStatusCode(statusCode, subStatusCode);
 		}
 
-		[CanBeNull]
-		private static Int32? TryGetSubStatusCode([NotNull] HttpContext httpContext)
+		private static int? TryGetSubStatusCode(HttpContext httpContext)
 		{
 			// Oddly, SubStatusCode will throw in classic pipeline mode
 			if (!HttpRuntime.UsingIntegratedPipeline)

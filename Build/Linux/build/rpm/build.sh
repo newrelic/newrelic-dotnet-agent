@@ -80,6 +80,10 @@ cp /docs/netcore20-agent-readme.md ./README.md
 mv Extensions extensions
 
 dos2unix *.x* extensions/*.x* *.sh
+
+# agentinfo.json
+cp /rpm/agentinfo.json .
+
 popd
 tar -zcvf "./SOURCES/${PACKAGE_NAME}-${AGENT_VERSION}.tar.gz" "${TARBALL_ROOT}"
 

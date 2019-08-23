@@ -232,12 +232,12 @@ namespace NewRelic.Agent.Core.DataTransport
 				using (var reader = new StreamReader(response.GetResponseStream(), ASCIIEncoding.ASCII))
 				{
 					var responseText = reader.ReadToEnd();
-					Log.DebugFormat("Received HTTP status code {0} with message {1}", response.StatusCode.ToString(), responseText);
+					Log.ErrorFormat("Received HTTP status code {0} with message {1}", response.StatusCode.ToString(), responseText);
 				}
 			}
 			catch(Exception exception)
 			{
-				Log.DebugFormat("Unable to parse repsonse body with {0}", exception.Message);
+				Log.ErrorFormat("Unable to parse repsonse body with {0}", exception.Message);
 			}
 
 			throw new HttpException(response.StatusCode, response.StatusDescription);

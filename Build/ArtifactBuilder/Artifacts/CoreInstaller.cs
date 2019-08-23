@@ -23,8 +23,14 @@ namespace ArtifactBuilder.Artifacts
 			x86Components.ValidateComponents();
 			
 			FileHelpers.DeleteDirectories(StagingDirectory, OutputDirectory);
+			var agentInfox64 = new AgentInfo
+			{
+				InstallType = "ScriptableCore"
+			};
 			x64Components.CopyComponents($@"{StagingDirectory}\x64");
 			x86Components.CopyComponents($@"{StagingDirectory}\x86");
+			agentInfox64.WriteToDisk($@"{StagingDirectory}\x64");
+			agentInfox64.WriteToDisk($@"{StagingDirectory}\x86");
 
 			FileHelpers.CopyFile($@"{SourceDirectory}\Build\Packaging\CoreInstaller\installAgent.ps1", StagingDirectory);
 			FileHelpers.CopyFile($@"{SourceDirectory}\Build\Packaging\CoreInstaller\installAgentUsage.txt", StagingDirectory);

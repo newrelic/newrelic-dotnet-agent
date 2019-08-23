@@ -45,11 +45,17 @@ dos2unix ${INSTALL_ROOT}/DEBIAN/*
 
 printf "\nPackage: ${PACKAGE_NAME}\nVersion: ${AGENT_VERSION}\n" >> ${INSTALL_ROOT}/DEBIAN/control
 
+# agentinfo.json for deb
+cp /deb/agentinfo.json .
+
 # create debian package
 dpkg-deb --build ${INSTALL_ROOT}
 cp /tmp/${PACKAGE_NAME}.deb /release/${PACKAGE_FILE_BASENAME}.deb
 # create a copy of the agent that only uses the package name to make it easy to link to builds
 cp /tmp/${PACKAGE_NAME}.deb /release/${PACKAGE_NAME}.deb
+
+# agentinfo.json for tar.gz
+cp /common/agentinfo.json .
 
 # create tar ball
 tar cvfz /release/${PACKAGE_FILE_BASENAME}.tar.gz -C ${INSTALL_LOCATION} ..

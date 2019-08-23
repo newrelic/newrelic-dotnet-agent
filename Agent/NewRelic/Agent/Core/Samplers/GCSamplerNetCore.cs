@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
-using System.Reflection;
 using System.Threading;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
@@ -27,7 +26,9 @@ namespace NewRelic.Agent.Core.Samplers
 		private readonly Func<IGCEventsListener> _eventListenerFactory;
 		private readonly IGcSampleTransformer _transformer;
 
-		protected override bool Enabled => base.Enabled && _fxSamplerIsApplicableToFramework().Result;
+		protected override bool Enabled => base.Enabled 
+			&& (_configuration?.EventListenerSamplersEnabled).GetValueOrDefault(false) 
+			&& _fxSamplerIsApplicableToFramework().Result;
 
 		/// <summary>
 		/// Method determines if the event source that we are interested in will be available on this framework (net-core vs. net-framework).
@@ -54,6 +55,13 @@ namespace NewRelic.Agent.Core.Samplers
 				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
 			}
 
+			//Disable Event Listeners on Linux due to memory leak
+			if (!AgentInstallConfiguration.IsWindows)
+			{
+				_fxSamplerIsApplicableToFrameworkDefaultValue = false;
+				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
+			}
+
 			var spc = typeof(EventSource).Assembly;
 			if (spc == null)
 			{
@@ -61,16 +69,9 @@ namespace NewRelic.Agent.Core.Samplers
 				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
 			}
 
-			//This looks like the best way to determine if we can get the GC data from managed code.
+			//This is the EventSource that we try to subscribe to
 			Type runtimeEventSourceType = spc.GetType("System.Diagnostics.Tracing.RuntimeEventSource");
 			if (runtimeEventSourceType == null)
-			{
-				_fxSamplerIsApplicableToFrameworkDefaultValue = false;
-				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
-			}
-
-			var m_staticLogField = runtimeEventSourceType.GetField("Log", BindingFlags.NonPublic | BindingFlags.Static);
-			if (m_staticLogField == null)
 			{
 				_fxSamplerIsApplicableToFrameworkDefaultValue = false;
 				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);

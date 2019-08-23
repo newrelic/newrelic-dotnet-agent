@@ -14,6 +14,7 @@ using System.Net;
 using InternalMetricName = NewRelic.Agent.Core.Metric.MetricName;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Samplers;
+using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -175,11 +176,6 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, MetricNames.MemoryPhysical, null, data);
 			}
 
-			public MetricWireModel TryBuildMemoryVirtualMetric(long memoryVirtual)
-			{
-				var data = MetricDataWireModel.BuildByteData(memoryVirtual);
-				return BuildMetric(_metricNameService, MetricNames.MemoryVirtual, null, data);
-			}
 			public MetricWireModel TryBuildMemoryWorkingSetMetric(long memoryWorkingSet)
 			{
 				var data = MetricDataWireModel.BuildByteData(memoryWorkingSet);
@@ -474,6 +470,13 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region Supportability builders
 
+			public MetricWireModel TryBuildDotnetFrameworkVersionMetric(DotnetFrameworkVersion version)
+			{
+				var proposedName = MetricNames.GetSupportabilityDotnetFrameworkVersion(version);
+				var data = MetricDataWireModel.BuildCountData();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
 			public MetricWireModel TryBuildAgentVersionMetric(string agentVersion)
 			{
 				var proposedName = MetricNames.GetSupportabilityAgentVersion(agentVersion);
@@ -497,6 +500,13 @@ namespace NewRelic.Agent.Core.WireModels
 			public MetricWireModel TryBuildMetricHarvestAttemptMetric()
 			{
 				const string proposedName = MetricNames.SupportabilityMetricHarvestTransmit;
+				var data = MetricDataWireModel.BuildCountData();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
+			public MetricWireModel TryBuildInstallTypeMetric(string installType)
+			{
+				var proposedName = MetricNames.GetSupportabilityInstallType(installType);
 				var data = MetricDataWireModel.BuildCountData();
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}

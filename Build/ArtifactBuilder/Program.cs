@@ -30,7 +30,7 @@ namespace ArtifactBuilder
 						BuildNugetAzureWebsites(sourceDirectory, args);
 						break;
 					case "azuresiteextension":
-						BuildAzureSiteExtension(sourceDirectory, args);
+						BuildAzureSiteExtension(sourceDirectory);
 						break;
 					case "nugetagent":
 						BuildNugetAgent(sourceDirectory, args);
@@ -164,10 +164,9 @@ namespace ArtifactBuilder
 			new ScriptableInstaller(configuration, sourceDirectory).Build();
 		}
 
-		private static void BuildAzureSiteExtension(string sourceDirectory, string[] args)
+		private static void BuildAzureSiteExtension(string sourceDirectory)
 		{
-			var version = args[1];
-			var c = new AzureSiteExtension(version, sourceDirectory);
+			var c = new AzureSiteExtension(sourceDirectory);
 			c.Build();
 		}
 	}

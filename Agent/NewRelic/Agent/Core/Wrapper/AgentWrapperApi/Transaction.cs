@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 					return Segment.NoOpSegment;
 				}
 
-				return Segments[currentSegmentIndex.Value];
+				return Segments[currentSegmentIndex.Value] ?? Segment.NoOpSegment;
 			}
 		}
 

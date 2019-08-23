@@ -55,24 +55,27 @@ namespace NewRelic { namespace Profiler {
 
 		virtual bool ShouldInstrument() override
 		{
-			auto processPath = GetAndTransformProcessPath();
 			auto commandLine = _systemCalls->GetProgramCommandLine();
+
 			LogInfo(L"Command line: ", commandLine);
-			// Don't instrument msbuild, yes, case specific check is brittle.
-			auto foundBuild = commandLine.find(_X("MSBuild.dll"));
-			if (foundBuild != xstring_t::npos) {
-				LogInfo("This build process should not be instrumented, unloading profiler.");
+			
+			auto shouldNotInstrument = _methodRewriter->ShouldNotInstrumentCommandNetCore(commandLine);
+
+			if (shouldNotInstrument) {
+
+				LogInfo(L"Unloading Profiler - Command line not identified as valid invocation for instrumentation.");
 				return false;
 			}
+
 			return true;
 		}
 
-		virtual HRESULT MinimumDotnetVersionCheck(IUnknown* pICorProfilerInfoUnk) override
+		virtual HRESULT
+		MinimumDotnetVersionCheck(IUnknown* pICorProfilerInfoUnk) override
 		{
 			CComPtr<ICorProfilerInfo8> temp;
 			HRESULT result = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo8), (void**)&temp);
-			if (FAILED(result))
-			{
+			if (FAILED(result)) {
 				LogError(_X(".NET Core 2.0 or greater required. Profiler not attaching."));
 				return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
 			}
@@ -107,4 +110,5 @@ namespace NewRelic { namespace Profiler {
 			return S_OK;
 		}
 	};
-}}
+}
+}

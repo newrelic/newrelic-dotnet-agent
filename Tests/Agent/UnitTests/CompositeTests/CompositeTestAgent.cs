@@ -320,6 +320,11 @@ namespace CompositeTests
 			CurrentConfiguration = newConfig;
 		}
 
+		public void SetEventListenerSamplersEnabled(bool enable)
+		{
+			CurrentConfiguration.EventListenerSamplersEnabled = enable;
+		}
+
 		[NotNull]
 		private static configuration GetDefaultTestLocalConfiguration()
 		{

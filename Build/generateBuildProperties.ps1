@@ -5,11 +5,16 @@ Param(
 
 New-Item -ItemType Directory -Force -Path $outputPath
 
-function getVersionFromTag([string] $tagPrefix) {
+function getVersionFromTag([string] $tagPrefix, [switch] $excludeCommitCount) {
     $GitLatestTagVersion = git describe --match "$tagPrefix[0-9]*" --abbrev=0 HEAD
     $GitGitLatestTagVersionSanitized = $GitLatestTagVersion.Replace($tagPrefix,'')
     $GitCommitCount = git rev-list "$GitLatestTagVersion..$GitBranchName" --count HEAD
     $GitVersion = "$GitGitLatestTagVersionSanitized.$GitCommitCount.0"
+
+    if ($excludeCommitCount -eq $true) {
+      $GitVersion = "$GitGitLatestTagVersionSanitized.0"
+    }
+
     return $GitVersion
 }
 
@@ -21,3 +26,4 @@ Set-Content -Path "$outputPath\commithash.txt" -Value $GitCommitHash
 Set-Content -Path "$outputPath\version_agent.txt" -Value (getVersionFromTag "v")
 Set-Content -Path "$outputPath\version_lambdaopentracer.txt" -Value (getVersionFromTag "AwsLambdaOpenTracer_v")
 Set-Content -Path "$outputPath\version_lambdawrapper.txt" -Value (getVersionFromTag "AwsLambdaWrapper_v")
+Set-Content -Path "$outputPath\version_azuresiteextension.txt" -Value (getVersionFromTag "AzureSiteExtension_v" -excludeCommitCount)

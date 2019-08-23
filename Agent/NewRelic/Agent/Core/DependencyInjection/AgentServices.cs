@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
@@ -200,7 +201,13 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Resolve<ITransactionFinalizer>();
 			container.Resolve<IAgentHealthReporter>();
 #if NETFRAMEWORK
-			container.Resolve<GcSampler>().Start();
+			// Start GCSampler on separate thread due to delay in collecting Instance Names,
+			// which can stall application startup and cause the app start to timeout
+			// (e.g. Windows Services have a default startup timeout of 30 seconds)
+			var gcSampler = container.Resolve<GcSampler>();
+			var samplerStartThread = new Thread(() => gcSampler.Start());
+			samplerStartThread.IsBackground = true;
+			samplerStartThread.Start();
 #else
 			container.Resolve<GCSamplerNetCore>().Start();
 #endif

@@ -33,6 +33,12 @@ namespace ArtifactBuilder.Artifacts
 			package.CopyToLib(_agentComponents.AgentApiDll);
 			package.CopyAll(PackageDirectory);
 			TransformNewRelicConfig();
+			var agentInfo = new AgentInfo
+			 {
+				 InstallType = $"NugetAzureWebsites{Platform}"
+			};
+
+			agentInfo.WriteToDisk(RootDirectory);
 			package.SetVersion(_agentComponents.Version);
 			package.Pack();
 		}

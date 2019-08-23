@@ -1,24 +1,23 @@
-#include <stdint.h>
-#include <memory>
 #include <exception>
 #include <functional>
+#include <memory>
+#include <stdint.h>
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #define LOGGER_DEFINE_STDLOG
+#include "../MethodRewriter/MethodRewriter.h"
 #include "CppUnitTest.h"
-#include "UnreferencedFunctions.h"
 #include "MockFunction.h"
 #include "MockSystemCalls.h"
-#include "../MethodRewriter/MethodRewriter.h"
+#include "UnreferencedFunctions.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace Test
-{
-	TEST_CLASS(MethodRewriterTest)
-	{
-	public:
-		/*
+namespace NewRelic { namespace Profiler { namespace MethodRewriter {
+	namespace Test {
+		TEST_CLASS(MethodRewriterTest){
+			public :
+				/*
 		TEST_METHOD(request_function_name_callback)
 		{
 			// setup a default method rewriter and function to instrument
@@ -36,59 +35,97 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 			ValidateDefaultMockFunctionCallback();
 		}*/
 
-		TEST_METHOD(overloads_are_instrumented)
-		{
-			// ARRANGE
-			auto overload1 = std::make_shared<MockFunction>();
-			BYTEVECTOR(signature1Bytes,
-				0x00, // default calling convention
-				0x01, // 1 parameter
-				0x01, // void return
-				0x12, // parameter 1 class
-				0x49  // class token (compressed 0x01000012)
-				);
-			overload1->_signature = std::make_shared<ByteVector>(signature1Bytes);
+		TEST_METHOD(overloads_are_instrumented){
+					// ARRANGE
+					auto overload1 = std::make_shared<MockFunction>();
+		BYTEVECTOR(signature1Bytes,
+			0x00, // default calling convention
+			0x01, // 1 parameter
+			0x01, // void return
+			0x12, // parameter 1 class
+			0x49 // class token (compressed 0x01000012)
+		);
+		overload1->_signature = std::make_shared<ByteVector>(signature1Bytes);
 
-			auto overload2 = std::make_shared<MockFunction>();
-			BYTEVECTOR(signature2Bytes,
-				0x00, // default calling convention
-				0x01, // 1 parameter
-				0x01, // void return
-				0x0e  // parameter 1 string
-				);
-			overload1->_signature = std::make_shared<ByteVector>(signature2Bytes);
+		auto overload2 = std::make_shared<MockFunction>();
+		BYTEVECTOR(signature2Bytes,
+			0x00, // default calling convention
+			0x01, // 1 parameter
+			0x01, // void return
+			0x0e // parameter 1 string
+		);
+		overload1->_signature = std::make_shared<ByteVector>(signature2Bytes);
 
-			auto system = std::make_shared<MockSystemCalls>();
-			auto configuration = std::make_shared<Configuration::Configuration>();
-			auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
-			instrumentationSet->insert(overload1->GetInstrumentationPoint());
-			instrumentationSet->insert(overload2->GetInstrumentationPoint());
-			auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
-			auto methodRewriter = std::make_shared<MethodRewriter>(configuration, instrumentation, system);
+		auto system = std::make_shared<MockSystemCalls>();
+		auto configuration = std::make_shared<Configuration::Configuration>();
+		auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
+		instrumentationSet->insert(overload1->GetInstrumentationPoint());
+		instrumentationSet->insert(overload2->GetInstrumentationPoint());
+		auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
+		auto methodRewriter = std::make_shared<MethodRewriter>(configuration, instrumentation, system);
 
-			uint8_t overload1CallCount = 0;
-			overload1->_writeMethodHandler = [&overload1CallCount](const ByteVector&)
-			{
-				++overload1CallCount;
-			};
+		uint8_t overload1CallCount = 0;
+		overload1->_writeMethodHandler = [&overload1CallCount](const ByteVector&) {
+			++overload1CallCount;
+		};
 
-			uint8_t overload2CallCount = 0;
-			overload2->_writeMethodHandler = [&overload2CallCount](const ByteVector&)
-			{
-				++overload2CallCount;
-			};
+		uint8_t overload2CallCount = 0;
+		overload2->_writeMethodHandler = [&overload2CallCount](const ByteVector&) {
+			++overload2CallCount;
+		};
 
-			// ACT
-			methodRewriter->Instrument(overload1);
-			methodRewriter->Instrument(overload2);
+		// ACT
+		methodRewriter->Instrument(overload1);
+		methodRewriter->Instrument(overload2);
 
-			// ASSERT
-			Assert::AreEqual((uint8_t)1, overload1CallCount, L"Function should have been instrumented 1 time!");
-			Assert::AreEqual((uint8_t)1, overload2CallCount, L"Function should have been instrumented 1 time!");
-		}
+		// ASSERT
+		Assert::AreEqual((uint8_t)1, overload1CallCount, L"Function should have been instrumented 1 time!");
+		Assert::AreEqual((uint8_t)1, overload2CallCount, L"Function should have been instrumented 1 time!");
+	}
 
-	private:
-		/*
+	TEST_METHOD(netCore_dotnet_exe_invocations_not_instrumented)
+	{
+		auto system = std::make_shared<MockSystemCalls>();
+		auto configuration = std::make_shared<Configuration::Configuration>();
+		auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
+		auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
+		auto methodRewriter = std::make_shared<MethodRewriter>(configuration, instrumentation, system);
+
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("DotNet Run")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exe run")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"dotnet.exe\" run")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"c:\\program files\\dotnet.exe\" run")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"c:\\program files\\dotnet.exe\"   run")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet publish")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet restore")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run -p c:\\test\\test.csproj")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run -p \"c:\\program files\\test.csproj\"")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run -p ~/test.csproj")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exe exec \"c:\\program files\\MSBuild.dll\" -maxcpucount")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exe exec c:\\test\\msbuild.dll")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet new console")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet new mvc")));
+
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnetXexe restore")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"c:\\program files\\dotnet.exe\"run")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec test.dll")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec publish.dll")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet publish.dll")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run.dll")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet restore.dll")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exerun publish.dll")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("IpublishedThis.exe")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet new.dll")));
+		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec new.dll")));
+
+		//These will incorrectly not be instrumented, but they are edge cases.  We are documenting them here.
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("IpublishedThis.exe \"dotnet run \"")));
+		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec IpublishedThis.dll \"dotnet run \"")));
+	}
+
+private:
+	/*
 		static void ValidateDefaultMockFunctionCallback()
 		{
 			auto callbackFunction = [](uintptr_t actualFunctionId, const wchar_t* actualClassName, const wchar_t* actualMethodName)
@@ -110,5 +147,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 			catch (...) { }
 		}
 		*/
-	};
-}}}}
+};
+}}
+}
+}

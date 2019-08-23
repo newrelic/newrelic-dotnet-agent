@@ -125,11 +125,6 @@ namespace NewRelic.Parsing
 				// Remove comments.
 				var statement = CommentPattern.Replace(commandText, string.Empty).TrimStart();
 
-				if (statement.IndexOf(' ') < 0)
-				{
-					return new ParsedSqlStatement(datastoreVendor, StringsHelper.FixDatabaseObjectName(statement), "ExecuteProcedure");
-				}
-
 				return _statementParser(datastoreVendor, commandType, commandText, statement);
 			}
 			catch

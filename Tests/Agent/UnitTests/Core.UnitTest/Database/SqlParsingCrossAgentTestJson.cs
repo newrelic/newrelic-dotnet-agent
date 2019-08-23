@@ -10,7 +10,7 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 		//   {""input"":""SELECT * FROM(SELECT * FROM foobar) WHERE x > y"",        ""operation"":""select"", ""table"":""(subquery)""}
 
 
-		public const String TestCases = 
+		public const String TestCases =
 @"[
   {""input"":""SELECT * FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},
   {""input"":""SELECT F FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},
@@ -62,7 +62,14 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
   {""input"":""SELECT /* a */ * FROM alpha"",                            ""operation"":""select"", ""table"":""alpha""},
   {""input"":""SELECT * /* a */ FROM alpha"",                            ""operation"":""select"", ""table"":""alpha""},
   {""input"":""SELECT * FROM /* a */ alpha"",                            ""operation"":""select"", ""table"":""alpha""},
-  {""input"":""/* X */ SELECT /* Y */ foo/**/ FROM /**/alpha/**/"",      ""operation"":""select"", ""table"":""alpha""}
+  {""input"":""/* X */ SELECT /* Y */ foo/**/ FROM /**/alpha/**/"",      ""operation"":""select"", ""table"":""alpha""},
+
+  {""input"":""mystoredprocedure'123'"",      ""operation"":""other"", ""table"":null},
+  {""input"":""mystoredprocedure\t'123'"",      ""operation"":""other"", ""table"":null},
+  {""input"":""mystoredprocedure\r'123'"",      ""operation"":""other"", ""table"":null},
+  {""input"":""[mystoredprocedure]123"",      ""operation"":""other"", ""table"":null},
+  {""input"":""\""mystoredprocedure\""abc"",      ""operation"":""other"", ""table"":null},
+  {""input"":""mystoredprocedure"",      ""operation"":""other"", ""table"":null}
 ]";
 	}
 }

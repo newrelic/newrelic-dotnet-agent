@@ -36,6 +36,9 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("high_security")]
 		public readonly bool HighSecurityModeEnabled;
 
+		[JsonProperty("event_harvest_config")]
+		public readonly EventHarvestConfigModel EventHarvestConfig;
+
 		/// <summary>
 		/// This identifier field is provided to avoid https://newrelic.atlassian.net/browse/DSCORE-778
 		///
@@ -64,7 +67,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("security_policies", NullValueHandling = NullValueHandling.Ignore)]
 		public readonly SecurityPoliciesSettingsModel SecurityPoliciesSettings;
 
-		public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, Dictionary<string, string> metadata, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings)
+		public ConnectModel(int processId, string language, string displayHost, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, Dictionary<string, string> metadata, UtilizationSettingsModel utilizationSettings, Environment environment, SecurityPoliciesSettingsModel securityPoliciesSettings, EventHarvestConfigModel eventHarvestConfig)
 		{
 			ProcessId = processId;
 			Language = language;
@@ -82,6 +85,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			UtilizationSettings = utilizationSettings;
 			Environment = environment;
 			SecurityPoliciesSettings = securityPoliciesSettings;
+			EventHarvestConfig = eventHarvestConfig;
 		}
 	}
 
@@ -159,6 +163,22 @@ namespace NewRelic.Agent.Core.DataTransport
 			CustomEvents = new Dictionary<string, bool>() { { "enabled", configuration.CustomEventsEnabled } };
 			CustomParameters = new Dictionary<string, bool>() { { "enabled", configuration.CaptureCustomParameters } };
 			CustomInstrumentationEditor = new Dictionary<string, bool>() { { "enabled", configuration.CustomInstrumentationEditorEnabled } };
+		}
+	}
+
+	public class EventHarvestConfigModel
+	{
+		[JsonProperty("harvest_limits")]
+		public readonly Dictionary<string, uint> HarvestLimits;
+
+		public EventHarvestConfigModel(IConfiguration configuration)
+		{
+			HarvestLimits = new Dictionary<string, uint>() {
+				{ "analytic_event_data", configuration.TransactionEventsMaxSamplesStored },
+				{ "custom_event_data", configuration.CustomEventsMaxSamplesStored },
+				{ "error_event_data", configuration.ErrorCollectorMaxEventSamplesStored },
+				{ "span_event_data", configuration.SpanEventsMaxSamplesStored },
+			};
 		}
 	}
 }

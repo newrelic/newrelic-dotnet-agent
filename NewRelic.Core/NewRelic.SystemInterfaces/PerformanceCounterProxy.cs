@@ -15,6 +15,7 @@ namespace NewRelic.SystemInterfaces
 	public class PerformanceCounterProxy : IPerformanceCounterProxy
 	{
 		private readonly PerformanceCounter _counter;
+		private bool _counterIsDisposed = false;
 
 		public PerformanceCounterProxy(string categoryName, string counterName, string instanceName)
 		{
@@ -28,7 +29,11 @@ namespace NewRelic.SystemInterfaces
 		
 		public void Dispose()
 		{
-			_counter?.Dispose();
+			if (_counter != null && !_counterIsDisposed)
+			{
+				_counter.Dispose();
+				_counterIsDisposed = true;
+			}
 		}
 	}
 

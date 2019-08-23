@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using NewRelic.Core.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -15,6 +16,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 {
 	public interface IAgentHealthReporter
 	{
+		void ReportDotnetVersion();
 		void ReportAgentVersion([NotNull] string agentVersion, [NotNull] string hostName);
 		void ReportLibraryVersion(string assemblyName, string assemblyVersion);
 		void ReportTransactionEventReservoirResized(uint newSize);
@@ -83,6 +85,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 		void CollectDistributedTraceSuccessMetrics();
 
 		void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint);
+
+		void ReportAgentInfo();
 	}
 
 	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
@@ -145,6 +149,14 @@ namespace NewRelic.Agent.Core.AgentHealth
 					Log.Info($"Event {agentHealthEvent} has occurred {timesOccured} times in the last {TimeBetweenExecutions.TotalSeconds} seconds");
 				}
 			}
+		}
+
+		public void ReportDotnetVersion()
+		{
+#if NET45
+			var metric = _metricBuilder.TryBuildDotnetFrameworkVersionMetric(AgentInstallConfiguration.DotnetFrameworkVersion);
+			TrySend(metric);
+#endif
 		}
 
 		public void ReportAgentVersion(string agentVersion, string hostName)
@@ -232,6 +244,24 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void ReportSqlTracesSent(int count) => TrySend(_metricBuilder.TryBuildSqlTracesSentMetric(count));
 
 		#endregion ErrorTraces
+
+		public void ReportAgentInfo()
+		{
+			if(AgentInstallConfiguration.AgentInfo == null)
+			{
+				TrySend(_metricBuilder.TryBuildInstallTypeMetric("Unknown"));
+				return;
+			}
+
+			if (AgentInstallConfiguration.AgentInfo.AzureSiteExtension)
+			{
+				TrySend(_metricBuilder.TryBuildInstallTypeMetric((AgentInstallConfiguration.AgentInfo.InstallType ?? "Unknown") + "SiteExtension"));
+			}
+			else
+			{
+				TrySend(_metricBuilder.TryBuildInstallTypeMetric(AgentInstallConfiguration.AgentInfo.InstallType ?? "Unknown"));
+			}
+		}
 
 		public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
 		{

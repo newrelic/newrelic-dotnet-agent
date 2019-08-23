@@ -4,10 +4,12 @@
     <tracerFactory>
       <match assemblyName="StackExchange.Redis" className="StackExchange.Redis.ConnectionMultiplexer">
         <exactMethodMatcher methodName="ExecuteSyncImpl" />
+        <exactMethodMatcher methodName="ExecuteAsyncImpl" />
       </match>
-			<match assemblyName="StackExchange.Redis.StrongName" className="StackExchange.Redis.ConnectionMultiplexer">
-				<exactMethodMatcher methodName="ExecuteSyncImpl" />
-			</match>
+      <match assemblyName="StackExchange.Redis.StrongName" className="StackExchange.Redis.ConnectionMultiplexer">
+        <exactMethodMatcher methodName="ExecuteSyncImpl" />
+        <exactMethodMatcher methodName="ExecuteAsyncImpl" />
+      </match>
     </tracerFactory>
   </instrumentation>
 </extension>

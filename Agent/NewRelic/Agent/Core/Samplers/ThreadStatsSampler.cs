@@ -58,7 +58,10 @@ namespace NewRelic.Agent.Core.Samplers
 				return;
 			}
 
-			_listener = _listener ?? _threadListenerFactory();
+			if ((_configuration?.EventListenerSamplersEnabled).GetValueOrDefault(false))
+			{
+				_listener = _listener ?? _threadListenerFactory();
+			}
 		}
 
 		protected override void Stop()

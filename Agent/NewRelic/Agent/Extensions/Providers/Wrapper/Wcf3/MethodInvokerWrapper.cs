@@ -58,11 +58,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 			transaction = agent.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
 
-			var absoluteUri = uri?.AbsoluteUri;
+			var requestPath = uri?.AbsolutePath;
 
-			if (!string.IsNullOrEmpty(absoluteUri))
+			if (!string.IsNullOrEmpty(requestPath))
 			{
-				transaction.SetUri(absoluteUri);
+				transaction.SetUri(requestPath);
 			}
 
 			transaction.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);

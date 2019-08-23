@@ -1,42 +1,44 @@
 #pragma once
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <stdint.h>
-#include <iomanip>
-#include "../Common/xplat.h"
 #include "../Common/Macros.h"
-#include "Exceptions.h"
-#include "IFunction.h"
-#include "FunctionManipulator.h"
-#include "Instrumentors.h"
-#include "../Logging/Logger.h"
+#include "../Common/xplat.h"
 #include "../Configuration/Configuration.h"
 #include "../Configuration/InstrumentationConfiguration.h"
+#include "../Logging/Logger.h"
+#include "Exceptions.h"
+#include "FunctionManipulator.h"
+#include "IFunction.h"
+#include "Instrumentors.h"
+#include <iomanip>
+#include <memory>
+#include <stdint.h>
+#include <string>
+#include <regex>
+#include <unordered_map>
 
-namespace NewRelic { namespace Profiler { namespace MethodRewriter
-{
+#include "../Configuration/Strings.h"
 
-	class MethodRewriter
-	{
+namespace NewRelic { namespace Profiler { namespace MethodRewriter {
+
+	class MethodRewriter {
 	public:
-
-		MethodRewriter(Configuration::ConfigurationPtr configuration, Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const ISystemCallsPtr& system) :
-			_configuration(configuration),
-			_instrumentationConfiguration(instrumentationConfiguration),
-			_instrumentedAssemblies(new std::set<xstring_t>()),
-			_instrumentedFunctionNames(new std::set<xstring_t>()),
-			_instrumentedTypes(new std::set<xstring_t>()),
-			_helperInstrumentor(std::make_unique<HelperInstrumentor>()),
-			_apiInstrumentor(std::make_unique<ApiInstrumentor>()),
-			_defaultInstrumentor(std::make_unique<DefaultInstrumentor>()),
-			_corePath(GetCorePath(system))
+		MethodRewriter(Configuration::ConfigurationPtr configuration, Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const ISystemCallsPtr& system)
+			: _configuration(configuration)
+			, _instrumentationConfiguration(instrumentationConfiguration)
+			, _instrumentedAssemblies(new std::set<xstring_t>())
+			, _instrumentedFunctionNames(new std::set<xstring_t>())
+			, _instrumentedTypes(new std::set<xstring_t>())
+			, _helperInstrumentor(std::make_unique<HelperInstrumentor>())
+			, _apiInstrumentor(std::make_unique<ApiInstrumentor>())
+			, _defaultInstrumentor(std::make_unique<DefaultInstrumentor>())
+			, _corePath(GetCorePath(system))
 		{
 			Initialize();
 		}
 
-		MethodRewriter(std::shared_ptr<MethodRewriter> oldMethodRewriter, Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const ISystemCallsPtr& system) :
-			MethodRewriter(oldMethodRewriter->_configuration, instrumentationConfiguration, system) {}
+		MethodRewriter(std::shared_ptr<MethodRewriter> oldMethodRewriter, Configuration::InstrumentationConfigurationPtr instrumentationConfiguration, const ISystemCallsPtr& system)
+			: MethodRewriter(oldMethodRewriter->_configuration, instrumentationConfiguration, system)
+		{
+		}
 
 		void Initialize()
 		{
@@ -79,16 +81,36 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 		{
 			std::set<Configuration::InstrumentationPointPtr> set;
 			for (auto instrumentationPoint : *_instrumentationConfiguration->GetInstrumentationPoints().get()) {
-				if (assemblyName == instrumentationPoint->AssemblyName)
-				{
+				if (assemblyName == instrumentationPoint->AssemblyName) {
 					set.emplace(instrumentationPoint);
 				}
 			}
 			return set;
 		}
 
+		bool ShouldNotInstrumentCommandNetCore(xstring_t const& commandLine)
+		{
+			//If it contains MsBuild, it is a build command and should not be profiled.
+			bool shouldNotInstrument = Strings::ContainsCaseInsensitive(commandLine, _X("MSBuild.dll"));
+
+			//Search for "dotnet run" or "dotnet publish" variations using a regular expression.
+			//If it is a hit, it should not instrument the invocation of dotnet.exe
+			//Example Hits:	dotnet run
+			//				dotnet.exe run -f netcoreapp2.2
+			//				"c\program files\dotnet.exe" run
+			//				f:\program files\dotnet.exe run -f netcoreapp2.2
+			//				all of the above with publish instead of run.
+
+			auto needle = std::wregex(L".*(dotnet)(\\.exe)?(\")?\\s+(run|publish|restore|new)(\\s+.*|$)", std::regex_constants::icase);
+
+			std::wstring haystack = std::wstring(commandLine.begin(), commandLine.end());
+			shouldNotInstrument = shouldNotInstrument || std::regex_search(haystack, needle);
+
+			return shouldNotInstrument;
+		}
+
 		// test to see if we should instrument this application at all
-		bool ShouldInstrument(xstring_t processName, xstring_t appPoolId)
+		bool ShouldInstrumentNetFramework(xstring_t const& processName, xstring_t const& appPoolId)
 		{
 			LogTrace("Checking to see if we should instrument this process.");
 			return _configuration->ShouldInstrumentProcess(processName, appPoolId);
@@ -99,7 +121,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 			return InSet(_instrumentedAssemblies, assemblyName);
 		}
 
-		bool ShouldInstrumentType(xstring_t typeName) 
+		bool ShouldInstrumentType(xstring_t typeName)
 		{
 			return InSet(_instrumentedTypes, typeName);
 		}
@@ -116,10 +138,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
 			InstrumentationSettingsPtr instrumentationSettings = std::make_shared<InstrumentationSettings>(_instrumentationConfiguration, _corePath);
 
-			if (_helperInstrumentor->Instrument(function, instrumentationSettings) ||
-				_apiInstrumentor->Instrument(function, instrumentationSettings) ||
-				_defaultInstrumentor->Instrument(function, instrumentationSettings))
-			{
+			if (_helperInstrumentor->Instrument(function, instrumentationSettings) || _apiInstrumentor->Instrument(function, instrumentationSettings) || _defaultInstrumentor->Instrument(function, instrumentationSettings)) {
 			}
 		}
 
@@ -162,14 +181,12 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 			if (installPath == nullptr)
 				return nullptr;
 
-			if (system->FileExists(*installPath.get()))
-			{
+			if (system->FileExists(*installPath.get())) {
 				return installPath;
 			}
 
 			return std::unique_ptr<xstring_t>(new xstring_t(*installPath + PATH_SEPARATOR + _X("NewRelic.Agent.Core.dll")));
 		}
-
 	};
 	typedef std::shared_ptr<MethodRewriter> MethodRewriterPtr;
 

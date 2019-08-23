@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			try
 			{
-				var immutableMemorySample = new ImmutableMemorySample(GetCurrentProcessPrivateMemorySize(), GetCurrentProcessVirtualMemorySize(), GetCurrentProcessWorkingSet());
+				var immutableMemorySample = new ImmutableMemorySample(GetCurrentProcessPrivateMemorySize(), GetCurrentProcessWorkingSet());
 				_memorySampleTransformer.Transform(immutableMemorySample);
 			}
 			catch (Exception ex)
@@ -38,10 +38,6 @@ namespace NewRelic.Agent.Core.Samplers
 		private long GetCurrentProcessPrivateMemorySize()
 		{
 			return _processStatic.GetCurrentProcess().PrivateMemorySize64;
-		}
-		private long GetCurrentProcessVirtualMemorySize()
-		{
-			return _processStatic.GetCurrentProcess().VirtualMemorySize64;
 		}
 		private long GetCurrentProcessWorkingSet()
 		{
@@ -57,19 +53,13 @@ namespace NewRelic.Agent.Core.Samplers
 		public readonly long MemoryPrivate;
 
 		/// <summary>
-		/// Process.VirtualMemorySize64; metric name = Memory/VirtualMemory 
-		/// </summary>
-		public readonly long MemoryVirtual;
-
-		/// <summary>
 		/// Process.WorkingSet64; metric name = Memory/WorkingSet
 		/// </summary>
 		public readonly long MemoryWorkingSet;
 
-		public ImmutableMemorySample(long memoryPrivate, long memoryVirtual, long memoryWorkingSet)
+		public ImmutableMemorySample(long memoryPrivate, long memoryWorkingSet)
 		{
 			MemoryPrivate = memoryPrivate;
-			MemoryVirtual = memoryVirtual;
 			MemoryWorkingSet = memoryWorkingSet;
 		}
 	}

@@ -4,13 +4,13 @@ using System;
 using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Samplers;
+using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.WireModels
 {
 	public interface IMetricBuilder
 	{
 		MetricWireModel TryBuildMemoryPhysicalMetric(long memoryPhysical);
-		MetricWireModel TryBuildMemoryVirtualMetric(long memoryVirtual);
 		MetricWireModel TryBuildMemoryWorkingSetMetric(long memoryWorkingSet);
 		MetricWireModel TryBuildCpuUserTimeMetric(TimeSpan cpuTime);
 		MetricWireModel TryBuildCpuUserUtilizationMetric(float cpuUtilization);
@@ -22,6 +22,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildGCPercentMetric(GCSampleType sampleType, float value);
 		MetricWireModel TryBuildGCGaugeMetric(GCSampleType sampleType, float value);
 
+		MetricWireModel TryBuildDotnetFrameworkVersionMetric(DotnetFrameworkVersion version);
 		MetricWireModel TryBuildAgentVersionMetric(string agentVersion);
 		MetricWireModel TryBuildAgentVersionByHostMetric(string hostName, string agentVersion);
 
@@ -118,5 +119,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildSqlParsingCacheSizeMetric(string name, int size);
 
 		MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1);
+
+		MetricWireModel TryBuildInstallTypeMetric(string installType);
 	}
 }

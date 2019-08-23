@@ -2,6 +2,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core;
 using NewRelic.Parsing;
 using System;
 using System.Collections.Generic;
@@ -461,10 +462,20 @@ namespace NewRelic.Agent.Core.Metric
 		#region Supportability
 
 		private const string Supportability = "Supportability";
+		private const string SupportabilityDotnetPs = Supportability + PathSeparator + "Dotnet" + PathSeparator;
 		private const string SupportabilityPs = Supportability + PathSeparator;
 
+		private const string SupportabilityNetFrameworkVersionPs = SupportabilityDotnetPs + "NetFramework" + PathSeparator;
 		private const string SupportabilityAgentVersionPs = SupportabilityPs + "AgentVersion" + PathSeparator;
 		private const string SupportabilityLibraryVersionPs = SupportabilityPs + "Library" + PathSeparator;
+
+
+		private const string SupportabilityInstallTypePs = SupportabilityPs + "Dotnet/InstallType" + PathSeparator;
+
+		public static string GetSupportabilityDotnetFrameworkVersion(DotnetFrameworkVersion version)
+		{
+			return SupportabilityNetFrameworkVersionPs + version;
+		}
 
 		public static string GetSupportabilityAgentVersion(string version)
 		{
@@ -671,6 +682,7 @@ namespace NewRelic.Agent.Core.Metric
 		public const string SupportabilityDistributedTraceCreatePayloadException =
 			SupportabilityDistributedTraceCreatePayloadPs + "Exception";
 
+
 		public static string GetSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode)
 		{
 			return Supportability + PathSeparator + "Agent/Collector/HTTPError" + PathSeparator + (int) statusCode;
@@ -687,6 +699,11 @@ namespace NewRelic.Agent.Core.Metric
 		}
 
 		public const string SupportabilitySqlParsingCachePrefix = Supportability + PathSeparator + "SqlParsingCache";
+		
+		public static string GetSupportabilityInstallType(string installType)
+		{
+			return SupportabilityInstallTypePs + installType;
+		}
 
 		#endregion Supportability
 
@@ -818,13 +835,11 @@ namespace NewRelic.Agent.Core.Metric
 
 		private const string _memoryPrefix = "Memory";
 		public const string MemoryPhysical = _memoryPrefix + PathSeparator + "Physical"; // Legacy name from before the other memory metrics were added
-		public const string MemoryVirtual = _memoryPrefix + PathSeparator + "VirtualMemory";
 		public const string MemoryWorkingSet = _memoryPrefix + PathSeparator + "WorkingSet";
 		public const string CpuUserUtilization = "CPU/User/Utilization";
 		public const string CpuUserTime = "CPU/User Time";
 
-		public const string DotNetPerf = "DotNet";
-		public const string DotNetPerfThreadpool = DotNetPerf + PathSeparator + "Threadpool" + PathSeparator;
+		public const string DotNetPerfThreadpool = "Threadpool" + PathSeparator;
 		public const string DotNetPerfThreadpoolThroughput = DotNetPerfThreadpool + "Throughput" + PathSeparator;
 
 		public static string GetThreadpoolUsageStatsName(ThreadType type, ThreadStatus status)
@@ -843,15 +858,15 @@ namespace NewRelic.Agent.Core.Metric
 			{ GCSampleType.InducedCount , "GC/Induced" },
 			{ GCSampleType.PercentTimeInGc , "GC/PercentTimeInGC" },
 
-			{ GCSampleType.Gen0CollectionCount , "GC/Gen0/Executions" },
-			{ GCSampleType.Gen0Size , "GC/Gen0/Size" },
+			{ GCSampleType.Gen0CollectionCount , "GC/Gen0/Collections" },
+			{ GCSampleType.Gen0Size , "GC/Gen0/Size" },	
 			{ GCSampleType.Gen0Promoted , "GC/Gen0/Promoted" },
 
-			{ GCSampleType.Gen1CollectionCount , "GC/Gen1/Executions" },
+			{ GCSampleType.Gen1CollectionCount , "GC/Gen1/Collections" },
 			{ GCSampleType.Gen1Size , "GC/Gen1/Size" },
 			{ GCSampleType.Gen1Promoted , "GC/Gen1/Promoted" },
 
-			{ GCSampleType.Gen2CollectionCount , "GC/Gen2/Executions" },
+			{ GCSampleType.Gen2CollectionCount , "GC/Gen2/Collections" },
 			{ GCSampleType.Gen2Size , "GC/Gen2/Size" },
 			{ GCSampleType.Gen2Survived, "GC/Gen2/Survived" },
 

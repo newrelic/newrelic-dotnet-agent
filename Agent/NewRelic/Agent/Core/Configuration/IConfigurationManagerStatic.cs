@@ -1,4 +1,5 @@
 ﻿using System;
+using NewRelic.Core.Logging;
 
 #if NETSTANDARD2_0
 using Microsoft.Extensions.Configuration;
@@ -10,7 +11,6 @@ namespace NewRelic.Agent.Core.Configuration
 	public interface IConfigurationManagerStatic
 	{
 		string GetAppSetting(string key);
-		int? GetAppSettingInt(string key);
 	}
 
 	// sdaubin : Why do we have a mock in the agent code?  This is a code smell.
@@ -27,11 +27,6 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			return _getAppSetting(variable);
 		}
-
-		public int? GetAppSettingInt(string key)
-		{
-			return null;
-		}
 	}
 
 #if NET45
@@ -47,26 +42,15 @@ namespace NewRelic.Agent.Core.Configuration
 
 			return System.Configuration.ConfigurationManager.AppSettings.Get(key);
 		}
-
-		public int? GetAppSettingInt(string key)
-		{
-			if (int.TryParse(GetAppSetting(key), out var value))
-			{
-				return value;
-			}
-
-			return null;
-		}
 	}
 #else
 	public class ConfigurationManagerStatic : IConfigurationManagerStatic
 	{
+		private bool localConfigChecksDisabled;
+
 		public string GetAppSetting(string key)
 		{
-			if (key == null)
-			{
-				return null;
-			}
+			if (localConfigChecksDisabled || key == null) return null;
 
 			// We're wrapping this in a try/catch to deal with the case where the necessary assemblies, in this case
 			// Microsoft.Extensions.Configuration, aren't present in the application being instrumented
@@ -74,21 +58,18 @@ namespace NewRelic.Agent.Core.Configuration
 			{
 				return AppSettingsConfigResolveWhenUsed.GetAppSetting(key);
 			}
-			catch (Exception)
+			catch (FileNotFoundException e)
 			{
+				if (Log.IsDebugEnabled) Log.Debug($"appsettings.json will not be searched for config values because this application does not reference: {e.FileName}.");
+				localConfigChecksDisabled = true;
 				return null;
 			}
-
-		}
-
-		public int? GetAppSettingInt(string key)
-		{
-			if (int.TryParse(GetAppSetting(key), out var value))
+			catch (Exception e)
 			{
-				return value;
+				if (Log.IsDebugEnabled) Log.Debug($"appsettings.json will not be searched for config values because an error was encountered: {e}");
+				localConfigChecksDisabled = true;
+				return null;
 			}
-
-			return null;
 		}
 	}
 #endif

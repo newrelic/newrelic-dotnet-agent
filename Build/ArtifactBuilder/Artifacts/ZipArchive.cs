@@ -27,6 +27,13 @@ namespace ArtifactBuilder.Artifacts
 			agentComponents.ValidateComponents();
 			agentComponents.CopyComponents(StagingDirectory);
 
+			var agentInfo = new AgentInfo
+			{
+				InstallType = $"ZipWin{Platform}{AgentType.ToString()}"
+			};
+
+			agentInfo.WriteToDisk(StagingDirectory);
+
 			var zipFilePath = AgentType == AgentType.Framework
 				? $@"{OutputDirectory}\newrelic-framework-agent_{agentComponents.Version}_{Platform}.zip"
 				: $@"{OutputDirectory}\newrelic-netcore20-agent-win_{agentComponents.Version}_{Platform}.zip";

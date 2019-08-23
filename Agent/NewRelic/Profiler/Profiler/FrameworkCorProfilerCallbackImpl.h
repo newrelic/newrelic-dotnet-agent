@@ -38,7 +38,7 @@ namespace NewRelic { namespace Profiler
 		}
 #pragma warning (pop)
 
-		virtual bool ShouldInstrument()
+		virtual bool ShouldInstrument() override
 		{
 			auto processPath = GetAndTransformProcessPath();
 
@@ -46,7 +46,8 @@ namespace NewRelic { namespace Profiler
 			{
 				return true;
 			}
-			if (!_methodRewriter->ShouldInstrument(processPath, GetAppPoolId(_systemCalls)))
+
+			if (!_methodRewriter->ShouldInstrumentNetFramework(processPath, GetAppPoolId(_systemCalls)))
 			{
 				LogInfo("This process should not be instrumented, unloading profiler.");
 				return false;

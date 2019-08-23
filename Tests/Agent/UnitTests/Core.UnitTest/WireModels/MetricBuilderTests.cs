@@ -35,19 +35,6 @@ namespace NewRelic.Agent.Core.WireModels
 		}
 
 		[Test]
-		public void BuildMemoryVirtualMetric()
-		{
-			const int rawBytes = 2048;
-
-			var actualMetric = _metricBuilder.TryBuildMemoryVirtualMetric(rawBytes);
-
-			NrAssert.Multiple(
-				() => Assert.AreEqual(MetricNames.MemoryVirtual, actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildByteData(rawBytes), actualMetric.Data)
-			);
-		}
-
-		[Test]
 		public void BuildMemoryWorkingSetMetric()
 		{
 			const int rawBytes = 1536;

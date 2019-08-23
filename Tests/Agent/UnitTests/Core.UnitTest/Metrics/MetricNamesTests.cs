@@ -194,18 +194,18 @@ namespace NewRelic.Agent.Core.Metrics
 		[Test]
 		public static void MetricNamesTest_ThreadPoolUsageStats()
 		{
-			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.Available), Is.EqualTo("DotNet/Threadpool/Worker/Available"));
-			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.InUse), Is.EqualTo("DotNet/Threadpool/Worker/InUse"));
-			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.Available), Is.EqualTo("DotNet/Threadpool/Completion/Available"));
-			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.InUse), Is.EqualTo("DotNet/Threadpool/Completion/InUse"));
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.Available), Is.EqualTo("Threadpool/Worker/Available"));
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Worker, Samplers.ThreadStatus.InUse), Is.EqualTo("Threadpool/Worker/InUse"));
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.Available), Is.EqualTo("Threadpool/Completion/Available"));
+			Assert.That(MetricNames.GetThreadpoolUsageStatsName(Samplers.ThreadType.Completion, Samplers.ThreadStatus.InUse), Is.EqualTo("Threadpool/Completion/InUse"));
 		}
 
 		[Test]
 		public static void MetricNamesTest_ThreadPoolThroughputStats()
 		{
-			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.Requested), Is.EqualTo("DotNet/Threadpool/Throughput/Requested"));
-			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.Started), Is.EqualTo("DotNet/Threadpool/Throughput/Started"));
-			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.QueueLength), Is.EqualTo("DotNet/Threadpool/Throughput/QueueLength"));
+			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.Requested), Is.EqualTo("Threadpool/Throughput/Requested"));
+			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.Started), Is.EqualTo("Threadpool/Throughput/Started"));
+			Assert.That(MetricNames.GetThreadpoolThroughputStatsName(Samplers.ThreadpoolThroughputStatsType.QueueLength), Is.EqualTo("Threadpool/Throughput/QueueLength"));
 		}
 
 		[Test]
@@ -219,15 +219,15 @@ namespace NewRelic.Agent.Core.Metrics
 				{ GCSampleType.InducedCount, "GC/Induced" },
 				{ GCSampleType.PercentTimeInGc, "GC/PercentTimeInGC" },
 
-				{ GCSampleType.Gen0CollectionCount, "GC/Gen0/Executions" },
+				{ GCSampleType.Gen0CollectionCount, "GC/Gen0/Collections" },
 				{ GCSampleType.Gen0Size, "GC/Gen0/Size" },
 				{ GCSampleType.Gen0Promoted, "GC/Gen0/Promoted" },
 
-				{ GCSampleType.Gen1CollectionCount, "GC/Gen1/Executions" },
+				{ GCSampleType.Gen1CollectionCount, "GC/Gen1/Collections" },
 				{ GCSampleType.Gen1Size, "GC/Gen1/Size" },
 				{ GCSampleType.Gen1Promoted, "GC/Gen1/Promoted" },
 
-				{ GCSampleType.Gen2CollectionCount, "GC/Gen2/Executions" },
+				{ GCSampleType.Gen2CollectionCount, "GC/Gen2/Collections" },
 				{ GCSampleType.Gen2Size, "GC/Gen2/Size" },
 				{ GCSampleType.Gen2Survived, "GC/Gen2/Survived" },
 

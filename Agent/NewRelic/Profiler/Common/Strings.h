@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <algorithm>
 #include "xplat.h"
 
 namespace NewRelic { namespace Profiler
@@ -29,6 +30,19 @@ namespace NewRelic { namespace Profiler
 				return false;
 
 			return stringToSearch.find(token) != std::string::npos;
+		}
+		
+		static bool ContainsCaseInsensitive(xstring_t const& stringToSearch, xstring_t const& token)
+		{
+			if (stringToSearch.length() < token.length())
+				return false;
+
+			auto it = std::search(
+				stringToSearch.begin(), stringToSearch.end(),
+				token.begin(), token.end(),
+				[](const xchar_t& ch1, const xchar_t& ch2) { return ch1 == ch2 || ch1 == (ch2 ^ 32); });
+
+			return (it != stringToSearch.end());
 		}
 
 		static bool AreEqualCaseInsensitive(xstring_t const& s1, xstring_t const& s2)

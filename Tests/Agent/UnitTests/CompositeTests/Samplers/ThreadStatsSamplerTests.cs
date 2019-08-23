@@ -26,6 +26,8 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			_sampleAction = null;
 			_compositeTestAgent = new CompositeTestAgent();
+			_compositeTestAgent.SetEventListenerSamplersEnabled(true);
+
 			var scheduler = Mock.Create<IScheduler>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _sampleAction = action);

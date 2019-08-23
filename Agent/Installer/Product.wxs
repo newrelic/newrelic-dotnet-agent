@@ -18,7 +18,7 @@
 	<?endif?>
 
 	<Product Id="*" Name="$(var.ProductName)" Language="1033" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" Manufacturer="New Relic" UpgradeCode="{5AECDCE4-3892-4C79-BA1B-88EEF252BB25}">
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Comments="Version: !(bind.FileVersion.NewRelic.Agent.Core.dll)" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
 		<MediaTemplate EmbedCab="yes"/>
@@ -447,6 +447,15 @@
 			<Component Id="ConfigSchemaComponent" Guid="{62C95105-4972-44CA-99D8-A03E349926AE}">
 				<File Id="ConfigSchemaFile" Name="newrelic.xsd" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\newrelic.xsd" />
 			</Component>
+      <?ifdef IsWin64?>
+      <Component Id="AgentInfo64Component" Guid="{5B2A8729-4BE3-49E8-92CE-C68BF559AFC8}">
+        <File Id="AgentInfo64File" Name="agentinfo.json" KeyPath="yes" Source="$(var.SolutionDir)\Miscellaneous\x64\agentinfo.json" />
+      </Component>
+      <?else?>
+      <Component Id="AgentInfo86Component" Guid="{8E5F405F-4B5E-4C33-9D01-B1BC0AE28BBA}">
+        <File Id="AgentInfo86File" Name="agentinfo.json" KeyPath="yes" Source="$(var.SolutionDir)\Miscellaneous\x86\agentinfo.json" />
+      </Component>
+      <?endif?>
 		</ComponentGroup>
 
 		<!-- Registry keys -->

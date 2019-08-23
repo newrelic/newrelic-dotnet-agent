@@ -18,7 +18,6 @@ namespace NewRelic.SystemInterfaces
 		string MainModuleFileName { get; }
 		DateTime StartTime { get; }
 		long PrivateMemorySize64 { get; }
-		long VirtualMemorySize64 { get; }
 		long WorkingSet64 { get; }
 		System.Diagnostics.FileVersionInfo FileVersionInfo { get; }
 		TimeSpan UserProcessorTime { get; }
@@ -54,14 +53,13 @@ namespace NewRelic.SystemInterfaces
 			_process = process;
 		}
 
-		public string ProcessName { get { return _process.ProcessName; } }
-		public int Id { get { return _process.Id; } }
-		public string MainModuleFileName { get { return _process.MainModule.FileName; } }
-		public DateTime StartTime { get { return _process.StartTime; } }
-		public long PrivateMemorySize64 { get { return _process.PrivateMemorySize64; } }
-		public long VirtualMemorySize64 { get { return _process.VirtualMemorySize64; } }
-		public long WorkingSet64 { get { return _process.WorkingSet64; } }
-		public System.Diagnostics.FileVersionInfo FileVersionInfo { get { return _process.MainModule.FileVersionInfo; } }
-		public TimeSpan UserProcessorTime { get { return _process.UserProcessorTime; } }
+		public string ProcessName => _process.ProcessName;
+		public int Id => _process.Id;
+		public string MainModuleFileName => _process.MainModule.FileName;
+		public DateTime StartTime => _process.StartTime;
+		public long PrivateMemorySize64 => _process.PrivateMemorySize64;
+		public long WorkingSet64 => _process.WorkingSet64;
+		public System.Diagnostics.FileVersionInfo FileVersionInfo => _process.MainModule.FileVersionInfo;
+		public TimeSpan UserProcessorTime => _process.UserProcessorTime;
 	}
 }

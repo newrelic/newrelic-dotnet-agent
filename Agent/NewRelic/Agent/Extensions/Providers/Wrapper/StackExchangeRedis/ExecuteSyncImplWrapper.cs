@@ -1,9 +1,9 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
-using NewRelic.Agent.Extensions.Parsing;
+using System;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 {
@@ -28,18 +28,13 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			}
 		}
 
-		private static readonly string[] AssemblyNames = {
-			Common.RedisAssemblyName,
-			Common.RedisAssemblyStrongName
-		};
-
 		public bool IsTransactionRequired => true;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
 			var canWrap = method.MatchesAny(
-				assemblyNames: AssemblyNames,
+				assemblyNames: Common.AssemblyNames,
 				typeNames: new[] { "StackExchange.Redis.ConnectionMultiplexer" },
 				methodNames: new[] { "ExecuteSyncImpl" }
 			);
@@ -47,23 +42,9 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			return new CanWrapResponse(canWrap);
 		}
 
-		[NotNull]
-		private static string GetRedisCommand([NotNull] MethodCall methodCall)
-		{
-			// instrumentedMethodCall.MethodCall.MethodArguments[0] returns an Object representing a StackExchange.Redis.Message object
-			var message = methodCall.MethodArguments[0];
-			if (message == null)
-				throw new NullReferenceException("message");
-
-			var getCommand = Common.GetMessageCommandAccessor(methodCall.Method.Type.Assembly);
-
-			var command = getCommand(message);
-			return command.ToString();
-		}
-
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
-			var operation = GetRedisCommand(instrumentedMethodCall.MethodCall);
+			var operation = Common.GetRedisCommand(instrumentedMethodCall.MethodCall);
 
 			//calling here to setup a static prior to actual bypasser init to speed up all subsequent calls..
 			AssignFullName(instrumentedMethodCall);
@@ -93,12 +74,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 
 		private static string AssignFullName(InstrumentedMethodCall instrumentedMethodCall)
 		{
-			return _assemblyName ?? (_assemblyName = ParseFullName(instrumentedMethodCall.MethodCall.Method.Type.Assembly.FullName));
-		}
-
-		private static string ParseFullName(string fullName)
-		{
-			return fullName.Contains(Common.RedisAssemblyStrongName) ? Common.RedisAssemblyStrongName : Common.RedisAssemblyName;
+			return _assemblyName ?? (_assemblyName = Common.ParseFullName(instrumentedMethodCall.MethodCall.Method.Type.Assembly.FullName));
 		}
 	}
 }

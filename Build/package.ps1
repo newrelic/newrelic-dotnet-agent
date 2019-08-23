@@ -4,8 +4,10 @@ Param(
   [switch]$IncludeDownloadSite
 )
 
+.\generateBuildProperties -outputPath "BuildArtifacts\_buildProperties"
+
 $packagesToBuild = @(
-    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj AzureSiteExtension 1.2.0",
+    "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj AzureSiteExtension",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureWebSites $configuration x64",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureWebSites $configuration x86",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAgentApi $configuration",
@@ -33,5 +35,3 @@ if ($IncludeDownloadSite) {
     #The download site should be built after the other artifacts are built, because it depends on the other artifacts
     dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj DownloadSite $configuration
 }
-
-.\generateBuildProperties -outputPath "BuildArtifacts\_buildProperties"

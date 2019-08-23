@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -69,5 +68,8 @@ namespace NewRelic.Agent.Core.Configuration
 
 		[JsonProperty("browser_monitoring.auto_instrument")]
 		public Boolean BrowserMonitoringAutoInstrument { get; set; }
+
+		[JsonProperty("transaction_event.max_samples_stored")]
+		public UInt32 TransactionEventMaxSamplesStored { get; set; }
 	}
 }

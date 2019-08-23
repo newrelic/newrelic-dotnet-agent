@@ -25,10 +25,17 @@ namespace ArtifactBuilder.Artifacts
 			var x86Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x86", SourceDirectory);
 			x64Components.ValidateComponents();
 			x86Components.ValidateComponents();
-
+			
 			FileHelpers.CopyAll($@"{PackageDirectory}\Installer", FilesToZipFolderName);
 			var replacements = new Dictionary<string, string>() { { "AGENT_VERSION_STRING", x64Components.Version } };
 			FileHelpers.ReplaceTextInFile($@"{FilesToZipFolderName}\install.ps1", replacements);
+
+			var agentInfo = new AgentInfo
+			{
+				InstallType = "ScriptableFramework"
+			};
+
+			agentInfo.WriteToDisk(FilesToZipFolderName);
 
 			CreateNugetPackage(x64Components, x86Components, $@"{PackageDirectory}\NewRelic.Net.Agent.x64.nuspec");
 			CreateNugetPackage(x86Components, x86Components, $@"{PackageDirectory}\NewRelic.Net.Agent.nuspec");

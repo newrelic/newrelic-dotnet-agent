@@ -21,16 +21,6 @@ namespace ArtifactBuilder
 			}
 		}
 
-		public static void CopyFileWithNewSuffix(string filePath, string directory, string newSuffix)
-		{
-			Directory.CreateDirectory(directory);
-			var fileInfo = new System.IO.FileInfo(filePath);
-			var fileExtension = fileInfo.Extension; //Includes the '.'. Ex: "fileName.txt" -> ".txt"
-			var fileName = fileInfo.Name;
-			var fileNameWithoutExtension = fileInfo.Name.Substring(0, fileName.Length - fileExtension.Length);
-			System.IO.File.Copy(fileInfo.FullName, $@"{directory}\{fileNameWithoutExtension}{newSuffix}{fileExtension}", true);
-		}
-
 		public static void CopyAll(string sourceDir, string targetDir)
 		{
 			Directory.CreateDirectory(targetDir);

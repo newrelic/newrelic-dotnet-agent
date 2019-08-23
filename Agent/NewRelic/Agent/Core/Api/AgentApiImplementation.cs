@@ -1,5 +1,4 @@
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Core.DistributedTracing;
@@ -378,8 +377,8 @@ namespace NewRelic.Agent.Core.Api
 				var transaction = _agent.CurrentTransaction;
 				if (transaction != null)
 				{
-					transaction.SetUri(uri.AbsoluteUri);
-					transaction.SetOriginalUri(uri.AbsoluteUri);
+					transaction.SetUri(uri.AbsolutePath);
+					transaction.SetOriginalUri(uri.AbsolutePath);
 					transaction.SetWebTransactionNameFromPath(WebTransactionType.Custom, uri.AbsolutePath);
 				}
 			}

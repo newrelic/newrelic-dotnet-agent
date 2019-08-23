@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Core;
 using NewRelic.SystemInterfaces;
+using Newtonsoft.Json;
 #if NET45
 using System.Web;
 using Microsoft.Win32;
@@ -20,6 +23,9 @@ namespace NewRelic.Agent.Core
 #endif
 
 		public static bool IsWindows { get; }
+#if NET45
+		public static DotnetFrameworkVersion DotnetFrameworkVersion { get; }
+#endif
 		public static bool IsNetstandardPresent { get; }
 		public static bool IsNet46OrAbovePresent { get; }
 		public static string NewRelicHome { get; }
@@ -29,6 +35,7 @@ namespace NewRelic.Agent.Core
 		public static int ProcessId { get; }
 		public static string AppDomainName { get; }
 		public static string AppDomainAppVirtualPath { get; }
+		public static AgentInfo AgentInfo { get; }
 
 		static AgentInstallConfiguration()
 		{
@@ -50,7 +57,14 @@ namespace NewRelic.Agent.Core
 			{
 				AppDomainAppVirtualPath = HttpRuntime.AppDomainAppVirtualPath;
 			}
+
+			try
+			{
+				DotnetFrameworkVersion = DotnetVersion.GetDotnetFrameworkVersion();
+			}
+			catch { }
 #endif
+			AgentInfo = GetAgentInfo();
 		}
 
 		private static bool GetIsNetstandardPresent()
@@ -86,6 +100,24 @@ namespace NewRelic.Agent.Core
 			if (newRelicInstallPath != null && Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
 			newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicHomeEnvironmentVariable);
 			return newRelicInstallPath;
+		}
+
+		private static AgentInfo GetAgentInfo()
+		{
+			var agentInfoPath = $@"{NewRelicHome}\agentinfo.json";
+			if (File.Exists(agentInfoPath))
+			{
+				try
+				{
+					return JsonConvert.DeserializeObject<AgentInfo>(File.ReadAllText(agentInfoPath));
+				}
+				catch
+				{
+					// Fail silently
+				}
+			}
+
+			return null;
 		}
 	}
 }

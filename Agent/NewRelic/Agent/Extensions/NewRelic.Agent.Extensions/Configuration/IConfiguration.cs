@@ -134,6 +134,7 @@ namespace NewRelic.Agent.Configuration
 		string UtilizationBillingHost { get; }
 		bool DiagnosticsCaptureAgentTiming { get; }
 		bool UseResourceBasedNamingForWCFEnabled { get; }
+		bool EventListenerSamplersEnabled { get; set; }
 		int? SamplingTarget { get; }
 		uint SpanEventsMaxSamplesStored { get; }
 		int? SamplingTargetPeriodInSeconds { get; }

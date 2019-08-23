@@ -57,9 +57,6 @@ namespace NewRelic.Agent.Core.Configuration
 		[JsonProperty("messages")]
 		public IEnumerable<Message> Messages { get; set; }
 
-		[JsonProperty("product_level")]
-		public Int64? ProductLevel { get; set; }
-
 		[JsonProperty("sampling_rate")]
 		public Int32? SamplingRate { get; set; }
 

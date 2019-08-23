@@ -32,6 +32,34 @@ namespace ParsingTests
 		}
 
 		[Test]
+		public void SqlParserTest_Valid_Sqls_But_NotSupported()
+		{
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "mystoredprocedure'123'");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "mystoredprocedure\t'123'");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "mystoredprocedure\r\n'123'");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "[mystoredprocedure]123");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "\"mystoredprocedure\"abc");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "mystoredprocedure");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+		}
+
+		[Test]
 		public void SqlParserTest_TableDirectQueryParsed()
 		{
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.TableDirect, "MyAwesomeTable");
@@ -378,15 +406,6 @@ namespace ParsingTests
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "show stuff");
 			Assert.IsNotNull(parsedDatabaseStatement);
 			Assert.AreEqual("stuff/show", parsedDatabaseStatement.ToString());
-		}
-
-		[Test]
-		public void SqlParserTest_TestStoredProcedureDatabaseOffset()
-		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "dbo.AspNet_SqlCachePollingStoredProcedure");
-			Assert.IsNotNull(parsedDatabaseStatement);
-			Assert.AreEqual("ExecuteProcedure", parsedDatabaseStatement.Operation);
-			Assert.AreEqual("dbo.aspnet_sqlcachepollingstoredprocedure", parsedDatabaseStatement.Model);
 		}
 
 		[Test]

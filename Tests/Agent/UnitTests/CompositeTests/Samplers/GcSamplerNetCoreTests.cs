@@ -46,6 +46,8 @@ namespace NewRelic.Agent.Core.Samplers
 		public void Setup()
 		{
 			_compositeTestAgent = new CompositeTestAgent();
+			_compositeTestAgent.SetEventListenerSamplersEnabled(true);
+
 			_mockScheduler = Mock.Create<IScheduler>();
 
 			//Prevents the scheduler from actually running

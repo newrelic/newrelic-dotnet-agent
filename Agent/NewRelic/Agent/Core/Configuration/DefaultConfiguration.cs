@@ -53,6 +53,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private Dictionary<string, string> _newRelicAppSettings { get; }
 
 		public bool UseResourceBasedNamingForWCFEnabled { get; }
+		public bool EventListenerSamplersEnabled { get; set; }
 
 		/// <summary>
 		/// Default configuration constructor.  It will contain reasonable default values for everything and never anything more.
@@ -93,6 +94,7 @@ namespace NewRelic.Agent.Core.Configuration
 			_newRelicAppSettings = TransformAppSettings();
 
 			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
+			EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", false);
 		}
 
 		public IReadOnlyDictionary<string, string> GetAppSettings()
@@ -1394,17 +1396,8 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				var value = _configurationManagerStatic.GetAppSettingInt("NewRelic.Utilization.LogicalProcessors");
-
-				if (value == null)
-				{
-					var localValue = GetNullableIntValue(_localConfiguration.utilization.logicalProcessorsSpecified,
-						_localConfiguration.utilization.logicalProcessors);
-
-					value = EnvironmentOverrides(localValue, "NEW_RELIC_UTILIZATION_LOGICAL_PROCESSORS");
-				}
-
-				return value;
+				var localValue = GetNullableIntValue(_localConfiguration.utilization.logicalProcessorsSpecified, _localConfiguration.utilization.logicalProcessors);
+				return EnvironmentOverrides(localValue, "NEW_RELIC_UTILIZATION_LOGICAL_PROCESSORS");
 			}
 		}
 
@@ -1412,17 +1405,8 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				var value = _configurationManagerStatic.GetAppSettingInt("NewRelic.Utilization.TotalRamMib");
-
-				if (value == null)
-				{
-					var localValue = GetNullableIntValue(_localConfiguration.utilization.totalRamMibSpecified,
-						_localConfiguration.utilization.totalRamMib);
-
-					value = EnvironmentOverrides(localValue, "NEW_RELIC_UTILIZATION_TOTAL_RAM_MIB");
-				}
-
-				return value;
+				var localValue = GetNullableIntValue(_localConfiguration.utilization.totalRamMibSpecified, _localConfiguration.utilization.totalRamMib);
+				return EnvironmentOverrides(localValue, "NEW_RELIC_UTILIZATION_TOTAL_RAM_MIB");
 			}
 		}
 
@@ -1430,9 +1414,7 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				var value = _configurationManagerStatic.GetAppSetting("NewRelic.Utilization.BillingHost")
-					?? EnvironmentOverrides(_localConfiguration.utilization.billingHost, "NEW_RELIC_UTILIZATION_BILLING_HOSTNAME");
-
+				var value = EnvironmentOverrides(_localConfiguration.utilization.billingHost, "NEW_RELIC_UTILIZATION_BILLING_HOSTNAME");
 				return string.IsNullOrEmpty(value) ? null : value.Trim(); //Keeping IsNullOrEmpty just in case customer sets value to "".
 			}
 		}

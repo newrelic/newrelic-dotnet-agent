@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Newtonsoft;
 
 namespace ArtifactBuilder.Artifacts
 {
@@ -32,22 +33,26 @@ namespace ArtifactBuilder.Artifacts
 			var package = new NugetPackage(StagingDirectory, OutputDirectory);
 
 			frameworkAgentComponents.CopyComponents($@"{package.ContentDirectory}\newrelic");
-			FileHelpers.CopyFileWithNewSuffix(frameworkAgentX86Components.WindowsProfiler, $@"{package.ContentDirectory}\newrelic", ".x86");
+			FileHelpers.CopyFile(frameworkAgentX86Components.WindowsProfiler, $@"{package.ContentDirectory}\newrelic\x86");
 			Directory.CreateDirectory($@"{rootDirectory}\logs");
 			System.IO.File.Create($@"{rootDirectory}\logs\placeholder").Dispose();
 
 			frameworkAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "net45")}\newrelic");
-			FileHelpers.CopyFileWithNewSuffix(frameworkAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "net45")}\newrelic", ".x86");
+			FileHelpers.CopyFile(frameworkAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "net45")}\newrelic\x86");
 			Directory.CreateDirectory($@"{StagingDirectory}\contentFiles\any\net45\newrelic\logs");
 			System.IO.File.Create($@"{StagingDirectory}\contentFiles\any\net45\newrelic\logs\placeholder").Dispose();
 
 			coreAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic");
-			FileHelpers.CopyFileWithNewSuffix(coreAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic", ".x86");
+			FileHelpers.CopyFile(coreAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic\x86");
 			package.CopyToContentFiles(coreAgentComponents.LinuxProfiler, @"any\netstandard2.0\newrelic");
 			Directory.CreateDirectory($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs");
 			System.IO.File.Create($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs\placeholder").Dispose();
 
 			package.CopyAll(PackageDirectory);
+			var agentInfo = new AgentInfo
+			{
+				InstallType = "NugetAgent"
+			};
 
 			var newRelicConfigPaths = new[]
 			{
@@ -59,7 +64,8 @@ namespace ArtifactBuilder.Artifacts
 			foreach (var newRelicConfigPath in newRelicConfigPaths)
 			{
 				TransformNewRelicConfig(newRelicConfigPath);
-			} 
+				agentInfo.WriteToDisk(Path.GetDirectoryName(newRelicConfigPath));
+			}
 
 			package.SetVersion(frameworkAgentComponents.Version);
 

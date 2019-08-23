@@ -169,6 +169,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				var webException = protocolException?.InnerException as WebException;
 				if (webException != null)
 				{
+					// This is needed because the message inspector which normally handles CAT/DT headers doesn't run if there is a protocol exception
 					transaction.ProcessInboundResponse(webException.Response?.Headers?.ToDictionary(), segment);
 				}
 			}

@@ -249,7 +249,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			Log.InfoFormat("Your New Relic Application Name(s): {0}", string.Join(":", appNames.ToArray()));
 
 			var metadata = _environmentVariableHelper.GetEnvironmentVariablesWithPrefix("NEW_RELIC_METADATA_");
-						
+
 			return new ConnectModel(
 				_processStatic.GetCurrentProcess().Id,
 				"dotnet",
@@ -270,7 +270,9 @@ namespace NewRelic.Agent.Core.DataTransport
 				metadata ?? new Dictionary<string, string>(),
 				new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
 				_configuration.CollectorSendEnvironmentInfo ? _environment : null,
-				_configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null);
+				_configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null,
+				new EventHarvestConfigModel(_configuration)
+			);
 		}
 
 		private long GetAgentVersionTimestamp()
@@ -327,7 +329,8 @@ namespace NewRelic.Agent.Core.DataTransport
 				TransactionTracerThreshold = _configuration.TransactionTraceThreshold.TotalSeconds,
 				TransactionTracerRecordSql = _configuration.TransactionTracerRecordSql,
 				SlowSqlEnabled = _configuration.SlowSqlEnabled,
-				BrowserMonitoringAutoInstrument = _configuration.BrowserMonitoringAutoInstrument
+				BrowserMonitoringAutoInstrument = _configuration.BrowserMonitoringAutoInstrument,
+				TransactionEventMaxSamplesStored = _configuration.TransactionEventsMaxSamplesStored
 			};
 
 			try
@@ -344,7 +347,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		{
 			try
 			{
-				SendNonDataRequest<object>("shutdown");
+				SendDataOverWire<object>(_dataRequestWire, "shutdown");
 			}
 			catch (Exception ex)
 			{
