@@ -165,8 +165,7 @@ function CopyAgentInfo($agentInfoDestination)
 	try
 	{
 		$agentInfoDestinationFilePath = $agentInfoDestination + "\agentinfo.json"
-		$agentInfoFilePath = (Split-Path -Parent $PSCommandPath) + "\agentinfo.json"
-		$agentInfoJson = Get-Content "$agentInfoFilePath" -Raw | ConvertFrom-Json
+		$agentInfoJson = Get-Content "$agentInfoDestinationFilePath" -Raw | ConvertFrom-Json
 		$agentInfoJson | Add-Member -NotePropertyName "azure_site_extension" -NotePropertyValue $true -Force
 		$agentInfoJson | ConvertTo-Json -depth 32| set-content "$agentInfoDestinationFilePath"
 	}
