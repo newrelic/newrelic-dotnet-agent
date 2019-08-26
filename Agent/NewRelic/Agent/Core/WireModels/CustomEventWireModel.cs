@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.WireModels
 			IntrinsicAttributes = new Dictionary<String, Object>
 			{
 				{EventTypeKey, eventType},
-				{TimeStampKey, eventTimeStamp.ToUnixTime()},
+				{TimeStampKey, eventTimeStamp.ToUnixTimeSeconds()},
 			};
 
 			UserAttributes = userAttributes.ToDictionary();

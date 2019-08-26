@@ -31,7 +31,7 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="GitHash" />
     </Exec>
     <!-- Get last release version-->
-    <Exec Command="git describe --match v[0-9]* --abbrev=0 HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
+    <Exec Command="git describe --tags --match v[0-9]* --abbrev=0 HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitLatestTagVersion" />
     </Exec>
     <!-- Get get the number of commits between the release tag and current working branch-->
@@ -45,7 +45,7 @@
       <PackageVersion>$(GitVersion)</PackageVersion>
       <AssemblyFileVersion>$(GitVersion)</AssemblyFileVersion>
       <AssemblyVersion>$(GitVersion)</AssemblyVersion>
-      <GitBranchNameSanitized Condition="'$(GitBranchName)' != 'dev' And '$(GitBranchName)' != 'master'">.branch.$(GitBranchName.Replace('/','-'))</GitBranchNameSanitized>
+      <GitBranchNameSanitized Condition="'$(GitBranchName)' != '6.x-master'">.branch.$(GitBranchName.Replace('/','-'))</GitBranchNameSanitized>
       <InformationalVersion>$(GitVersion)+sha.$(GitHash)$(GitBranchNameSanitized)</InformationalVersion>
     </PropertyGroup>
   </Target>

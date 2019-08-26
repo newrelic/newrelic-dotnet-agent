@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
 				var expectedResult =
 					"["
-					+ _timestamp.ToUnixTime()
+					+ _timestamp.ToUnixTimeSeconds()
 					+ ".0,\"" + _path + "\",\""
 					+ _message + "\",\""
 					+ _exceptionClassName + "\",{"

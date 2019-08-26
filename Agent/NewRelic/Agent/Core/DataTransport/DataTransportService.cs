@@ -104,7 +104,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				return DataTransportResponseStatus.OtherError;
 			}
 
-			var response = TrySendDataRequest("metric_data", _configuration.AgentRunId, beginTime.ToUnixTime(), endTime.ToUnixTime(), metrics);
+			var response = TrySendDataRequest("metric_data", _configuration.AgentRunId, beginTime.ToUnixTimeSeconds(), endTime.ToUnixTimeSeconds(), metrics);
 
 			if (response.Status == DataTransportResponseStatus.RequestSuccessful)
 				_lastMetricSendTime = endTime;
@@ -131,6 +131,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 			catch (LicenseException ex)
 			{
+				Log.Error("The license key configured is invalid. Please check that a valid license key is configured. For customers in the European Union, this version of the agent is not supported. Please use the latest version of the New Relic .NET Agent.");
 				return Shutdown<T>(ex.Message);
 			}
 			catch (ForceDisconnectException ex)

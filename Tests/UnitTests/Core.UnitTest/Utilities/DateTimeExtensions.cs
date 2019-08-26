@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.Utilities
 		[Test]
 		public void DateTimeToUnixTime_ReturnsCorrectUnixTime()
 		{
-			var unixTime = new DateTime(1212, 12, 12, 12, 12, 12).ToUnixTime();
+			var unixTime = new DateTime(1212, 12, 12, 12, 12, 12).ToUnixTimeSeconds();
 
 			Assert.AreEqual(-23890247268d, unixTime);
 		}

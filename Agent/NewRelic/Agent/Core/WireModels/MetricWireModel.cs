@@ -388,6 +388,13 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region Supportability builders
 
+			public MetricWireModel TryBuildDotnetVersionMetric(string version)
+			{
+				var proposedName = MetricNames.GetSupportabilityDotnetVersion(version);
+				var data = MetricDataWireModel.BuildCountData();
+				return BuildMetric(_metricNameService, proposedName, null, data);
+			}
+
 			[CanBeNull]
 			public MetricWireModel TryBuildAgentVersionMetric(String agentVersion)
 			{

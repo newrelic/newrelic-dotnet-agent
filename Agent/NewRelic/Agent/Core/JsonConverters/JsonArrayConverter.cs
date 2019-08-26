@@ -193,7 +193,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 				return value;
 
 			var dateTime = (DateTime)value;
-			return dateTime.ToUnixTime();
+			return dateTime.ToUnixTimeSeconds();
 		}
 
 		[CanBeNull]

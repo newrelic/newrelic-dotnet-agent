@@ -1,0 +1,13 @@
+﻿<#@ template language="C#" #>
+<#
+	var dateTimeUtcNow = System.DateTime.UtcNow;
+#>
+namespace NewRelic.Agent.Core
+{
+	public static partial class AgentInstallConfiguration
+	{
+		// Sent on connect as agent_version_timestamp
+		// Current value <# WriteLine(dateTimeUtcNow.ToString("MM/dd/yyyy HH:mm:ss.fff")); #>
+		public static System.DateTime AgentVersionTimestamp { get; } = new System.DateTime(<# Write(dateTimeUtcNow.Ticks.ToString()); #>L, System.DateTimeKind.Utc);
+	}
+}

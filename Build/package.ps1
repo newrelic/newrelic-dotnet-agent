@@ -4,6 +4,8 @@ Param(
   [switch]$IncludeDownloadSite
 )
 
+.\generateBuildProperties -outputPath "BuildArtifacts\_buildProperties"
+
 $packagesToBuild = @(
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureWebSites $configuration x64",
     "dotnet run --project ArtifactBuilder\ArtifactBuilder.csproj NugetAzureWebSites $configuration x86",

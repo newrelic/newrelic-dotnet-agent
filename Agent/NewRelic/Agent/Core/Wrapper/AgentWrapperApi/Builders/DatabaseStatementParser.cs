@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		internal ParsedSqlStatement ParseDatabaseStatement(CommandType commandType, string sql)
 		{
 			var sqlToStatement = _typeToStatementCache.GetOrSetValue(commandType, () => new ConcurrentDictionary<string, ParsedSqlStatement>());
-			var cachedStatement = sqlToStatement.GetOrSetValue(sql, () => SqlParser.GetParsedDatabaseStatement(commandType, sql) ?? SqlParser.NullStatement);
+			var cachedStatement = sqlToStatement.GetOrSetValue(sql, () => SqlParser.GetParsedDatabaseStatement(commandType, sql));
 			return SqlParser.NullStatement == cachedStatement ? null : cachedStatement;
 		}
 	}

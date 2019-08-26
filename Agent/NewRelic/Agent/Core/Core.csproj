@@ -18,7 +18,18 @@
         <PackageReference Include="MoreLinq" Version="2.4.0" />
         <PackageReference Include="log4net" Version="2.0.8" />
     </ItemGroup>
-  
+
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <TransformOnBuild>true</TransformOnBuild>
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+    <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
+  </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
+
   <PropertyGroup>
     <ConfigurationCsPath>Config\Configuration.cs</ConfigurationCsPath>
     <ExtensionCsPath>NewRelic.Agent.Core.Extension\Extension.cs</ExtensionCsPath>
@@ -100,6 +111,11 @@
              first build attempt and then succeed on the second build attempt. These includes remedy this issue. -->
         <Compile Include="Config\Configuration.cs" Condition="!Exists('Config\Configuration.cs')" />
         <Compile Include="NewRelic.Agent.Core.Extension\Extension.cs" Condition="!Exists('NewRelic.Agent.Core.Extension\Extension.cs')" />
+        <Compile Include="AgentInstallConfiguration_Generated.cs" Condition="!Exists('AgentInstallConfiguration_Generated.cs')">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>AgentInstallConfiguration_Generated.tt</DependentUpon>
+        </Compile>
     </ItemGroup>
     <ItemGroup>
         <None Include="$(SolutionDir)NewRelicStrongNameKey.snk">
@@ -111,6 +127,15 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <SubType>Designer</SubType>
         </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+      <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Update="AgentInstallConfiguration_Generated.tt">
+        <Generator>TextTemplatingFileGenerator</Generator>
+        <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
+      </None>
     </ItemGroup>
     <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
 </Project>

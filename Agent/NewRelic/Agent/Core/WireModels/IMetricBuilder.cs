@@ -13,6 +13,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildCpuTimeRollupMetric(Boolean isWebTransaction, TimeSpan cpuTime);
 		MetricWireModel TryBuildCpuTimeMetric(TransactionMetricName transactionMetricName, TimeSpan cpuTime);
 
+		MetricWireModel TryBuildDotnetVersionMetric(string version);
 		MetricWireModel TryBuildAgentVersionMetric([NotNull] String agentVersion);
 		MetricWireModel TryBuildAgentVersionByHostMetric([NotNull] String hostName, [NotNull] String agentVersion);
 		MetricWireModel TryBuildMetricHarvestAttemptMetric();

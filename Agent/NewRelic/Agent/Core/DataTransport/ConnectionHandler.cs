@@ -183,6 +183,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				_dnsStatic.GetHostName(),
 				appNames,
 				AgentVersion.Version,
+				GetAgentVersionTimestamp(),
 				new SecuritySettingsModel
 					(
 					_configuration.CaptureRequestParameters,
@@ -194,6 +195,12 @@ namespace NewRelic.Agent.Core.DataTransport
 				GetJsAgentSettings(),
 				new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter).GetUtilizationSettings(),
 				_configuration.CollectorSendEnvironmentInfo ? _environment : null);
+		}
+
+		private long GetAgentVersionTimestamp()
+		{
+			var timestamp = AgentInstallConfiguration.AgentVersionTimestamp.ToUnixTimeMilliseconds();
+			return timestamp;
 		}
 
 		[NotNull]

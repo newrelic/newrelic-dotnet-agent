@@ -542,8 +542,15 @@ namespace NewRelic.Agent.Core.Metric
 		#region Supportability
 
 		public const String Supportability = "Supportability";
+		private const string SupportabilityDotnetPs = Supportability + PathSeparator + "Dotnet" + PathSeparator;
 
 		private const String SupportabilityAgentVersion = Supportability + PathSeparator + "AgentVersion";
+		private const string SupportabilityNetFrameworkVersionPs = SupportabilityDotnetPs + "NetFramework" + PathSeparator;
+
+		public static string GetSupportabilityDotnetVersion(string version)
+		{
+			return SupportabilityNetFrameworkVersionPs + version;
+		}
 
 		[NotNull]
 		public static String GetSupportabilityAgentVersion([NotNull] String version)

@@ -177,6 +177,11 @@ namespace NewRelic.Agent.Core
 			{
 				Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) for virtual path '{2}'", AgentVersion.Version, Process.GetCurrentProcess().Id, HttpRuntime.AppDomainAppVirtualPath);
 			}
+
+			if (AgentInstallConfiguration.IsClr4)
+			{
+				Log.Warn($"This version of the agent is primarily meant for monitoring .NET Framework 3.5 applications. This application is running on .NET CLR version {System.Environment.Version}. If you do not need to monitor any .NET Framework 3.5 applications on this server, please consider upgrading to the latest version of the New Relic .NET Agent which supports .NET Framework 4.5 and higher.");
+			}
 #endif
 		}
 

@@ -232,7 +232,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public static Attribute BuildTimeStampAttribute(DateTime startTime)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent;
-			return new Attribute("timestamp", startTime.ToUnixTime(), false, AttributeClassification.Intrinsics, destinations);
+			return new Attribute("timestamp", startTime.ToUnixTimeSeconds(), false, AttributeClassification.Intrinsics, destinations);
 		}
 
 		[NotNull]

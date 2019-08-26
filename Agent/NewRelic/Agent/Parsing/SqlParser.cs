@@ -97,9 +97,11 @@ namespace NewRelic.Parsing
 				// Remove comments.
 				var statement = CommentPattern.Replace(commandText, "").TrimStart();
 
-				return _statementParser(commandType, commandText, statement);
+				var parsedSqlStatement = _statementParser(commandType, commandText, statement);
+
+				return parsedSqlStatement ?? new ParsedSqlStatement(null, null);
 			} 
-			catch//
+			catch
 			{
 				// TODO: Add Wrapper logging
 				// Obfuscating SQL is expensive so only do it if we are actually going to write the log line
@@ -109,7 +111,7 @@ namespace NewRelic.Parsing
 				//	Log.FinestFormat("Unable to parse SQL, possibly due to a syntax error in the SQL. " + "Command text: \"{0}\". Error: {1}", obfuscatedSQL, e);
 				//	Log.Finest("SQL parsing error", e);
 				//}
-				return null;
+				return new ParsedSqlStatement(null, null);
 			}
 		}
 		
@@ -198,9 +200,6 @@ namespace NewRelic.Parsing
 				{
 					case CommandType.TableDirect:
 						return new ParsedSqlStatement(commandText, "select");
-					case CommandType.Text:
-						if (statement.IndexOf(' ') > 0) return null;
-						return new ParsedSqlStatement(StringsHelper.FixDatabaseObjectName(commandText), "ExecuteProcedure");
 					case CommandType.StoredProcedure:
 						return new ParsedSqlStatement(StringsHelper.FixDatabaseObjectName(commandText), "ExecuteProcedure");
 				}
@@ -228,6 +227,7 @@ namespace NewRelic.Parsing
 						splitIndex = index;
 					}
 				}
+
 				string keyword = statement.Substring(0, splitIndex).ToLower();
 				// hack for one of the stored procedure parsers
 				if (keyword.StartsWith("sp_"))

@@ -18,6 +18,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 {
 	public interface IAgentHealthReporter
 	{
+		void ReportDotnetVersion();
 		void ReportAgentVersion([NotNull] String agentVersion, [NotNull] String hostName);
 		void ReportTransactionEventReservoirResized(UInt32 newSize);
 		void ReportTransactionEventCollected();
@@ -95,6 +96,12 @@ namespace NewRelic.Agent.Core.AgentHealth
 					var timesOccurred = kvp.Value.Exchange(0);
 					Log.Info($"Event {agentHealthEvent} has occurred {timesOccurred} times in the last {TimeBetweenExecutions.TotalSeconds} seconds");
 				});
+		}
+
+		public void ReportDotnetVersion()
+		{
+			var metric = _metricBuilder.TryBuildDotnetVersionMetric(AgentInstallConfiguration.IsClr4 ? "CLR4" : "CLR2");
+			TrySend(metric);
 		}
 
 		public void ReportAgentVersion(String agentVersion, String hostName)

@@ -77,7 +77,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(8, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeSeconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeSeconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
@@ -162,7 +162,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeSeconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
@@ -205,7 +205,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeSeconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
@@ -251,7 +251,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(10, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual(expectedStartTime.ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual(expectedStartTime.ToUnixTimeSeconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(0.5, transactionAttributes["duration"]),
@@ -310,7 +310,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(33, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTimeSeconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),
@@ -388,7 +388,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(29, attributes.Count()),  // Assert that only these attributes are generated
 				() => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTime(), transactionAttributes["timestamp"]),
+				() => Assert.AreEqual((expectedStartTime + expectedDuration).ToUnixTimeSeconds(), transactionAttributes["timestamp"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
 				() => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
 				() => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["nr.guid"]),

@@ -26,6 +26,34 @@ namespace ParsingTests
 		}
 
 		[Test]
+		public void SqlParserTest_Valid_Sqls_But_NotSupported()
+		{
+			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "mystoredprocedure'123'");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "mystoredprocedure\t'123'");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "mystoredprocedure\r\n'123'");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "[mystoredprocedure]123");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "\"mystoredprocedure\"abc");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+
+			parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "mystoredprocedure");
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
+		}
+
+		[Test]
 		public void SqlParserTest_TableDirectQueryParsed()
 		{
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.TableDirect, "MyAwesomeTable");
@@ -37,7 +65,8 @@ namespace ParsingTests
 		public void SqlParserTest_InvalidTextCantBeParsed()
 		{
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "Lorem ipsum dolar sit amet");
-			Assert.IsNull(parsedDatabaseStatement);
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
 		}
 
 		[Test]
@@ -372,15 +401,6 @@ namespace ParsingTests
 		}
 
 		[Test]
-		public void SqlParserTest_TestStoredProcedureDatabaseOffset()
-		{
-			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "dbo.AspNet_SqlCachePollingStoredProcedure");
-			Assert.IsNotNull(parsedDatabaseStatement);
-			Assert.AreEqual("ExecuteProcedure", parsedDatabaseStatement.Operation);
-			Assert.AreEqual("dbo.aspnet_sqlcachepollingstoredprocedure", parsedDatabaseStatement.Model);
-		}
-
-		[Test]
 		public void SqlParserTest_TestShowLongName()
 		{
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, "show wow_this_is_a_really_long_name_isnt_it_cmon_man_it_s_crazy_no_way_bruh");
@@ -409,7 +429,8 @@ namespace ParsingTests
 			";
 
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
-			Assert.IsNull(parsedDatabaseStatement);
+			Assert.IsNull(parsedDatabaseStatement.Model);
+			Assert.AreEqual("other", parsedDatabaseStatement.Operation);
 		}
 
 		/// <summary>

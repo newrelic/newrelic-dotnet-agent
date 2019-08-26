@@ -28,7 +28,7 @@
 		public ParsedSqlStatement(string model, string operation)
 		{
 			Model = model;
-			Operation = operation;
+			Operation = operation ?? "other";
 		}
 
 		public override string ToString()

@@ -27,6 +27,12 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("agent_version")]
 		public readonly String AgentVersion;
 
+		[JsonProperty("agent_version_timestamp")]
+		public readonly long AgentVersionTimestamp;
+
+		[JsonProperty("build_timestamp")]
+		public readonly long BuildTimestamp;
+
 		[NotNull]
 		[JsonProperty("security_settings")]
 		public readonly SecuritySettingsModel SecuritySettings;
@@ -61,13 +67,15 @@ namespace NewRelic.Agent.Core.DataTransport
 		[JsonProperty("environment", NullValueHandling = NullValueHandling.Ignore)]
 		public readonly Environment Environment;
 
-		public ConnectModel(Int32 processId, [NotNull] String language, [NotNull] String hostName, [NotNull] IEnumerable<String> appNames, [NotNull] String agentVersion, [NotNull] SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, [NotNull] String identifier, [NotNull] IEnumerable<Label> labels, [NotNull] JavascriptAgentSettingsModel javascriptAgentSettings, [NotNull] UtilizationSettingsModel utilizationSettings, [CanBeNull] Environment environment)
+		public ConnectModel(Int32 processId, [NotNull] String language, [NotNull] String hostName, [NotNull] IEnumerable<String> appNames, [NotNull] String agentVersion, long agentVersionTimestamp, [NotNull] SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, [NotNull] String identifier, [NotNull] IEnumerable<Label> labels, [NotNull] JavascriptAgentSettingsModel javascriptAgentSettings, [NotNull] UtilizationSettingsModel utilizationSettings, [CanBeNull] Environment environment)
 		{
 			ProcessId = processId;
 			Language = language;
 			HostName = hostName;
 			AppNames = appNames;
 			AgentVersion = agentVersion;
+			AgentVersionTimestamp = agentVersionTimestamp;
+			BuildTimestamp = agentVersionTimestamp;
 			SecuritySettings = securitySettings;
 			HighSecurityModeEnabled = highSecurityModeEnabled;
 			Identifier = identifier;
