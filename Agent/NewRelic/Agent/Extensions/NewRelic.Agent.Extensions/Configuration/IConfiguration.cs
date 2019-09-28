@@ -70,6 +70,7 @@ namespace NewRelic.Agent.Configuration
 		uint ErrorsMaximumPerPeriod { get; }
 		IEnumerable<string> ExceptionsToIgnore { get; }
 		string EncodingKey { get; }
+		string EntityGuid { get; }
 		bool HighSecurityModeEnabled { get; }
 		bool CustomInstrumentationEditorEnabled { get; }
 		string CustomInstrumentationEditorEnabledSource { get; }
@@ -132,6 +133,8 @@ namespace NewRelic.Agent.Configuration
 		int? UtilizationLogicalProcessors { get;  }
 		int? UtilizationTotalRamMib { get; }
 		string UtilizationBillingHost { get; }
+		string UtilizationHostName { get; }
+		string UtilizationFullHostName { get; }
 		bool DiagnosticsCaptureAgentTiming { get; }
 		bool UseResourceBasedNamingForWCFEnabled { get; }
 		bool EventListenerSamplersEnabled { get; set; }

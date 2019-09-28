@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Web;
 using JetBrains.Annotations;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Api;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions.Collections;
 

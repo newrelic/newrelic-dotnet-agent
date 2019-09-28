@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.RestSharp

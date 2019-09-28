@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.HttpWebRequest

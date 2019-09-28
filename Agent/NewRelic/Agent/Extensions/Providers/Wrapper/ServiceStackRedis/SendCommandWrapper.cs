@@ -6,6 +6,7 @@ using NewRelic.SystemExtensions;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 {

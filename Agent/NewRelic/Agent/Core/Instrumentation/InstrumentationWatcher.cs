@@ -2,6 +2,7 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace NewRelic.Agent.Core.Instrumentation
@@ -10,18 +11,16 @@ namespace NewRelic.Agent.Core.Instrumentation
 	{
 		private const int RequestRejitDelayMilliseconds = 15000;
 
-		private readonly FileSystemWatcher _watcher;
 		private readonly IInstrumentationService _instrumentationService;
 		private readonly IWrapperService _wrapperService;
 
-		private readonly SignalableAction _action;
+		private List<FileSystemWatcher> _fileWatchers;
+		private SignalableAction _action;
 
 		public InstrumentationWatcher(IWrapperService wrapperService, IInstrumentationService instrumentationService)
 		{
 			_wrapperService = wrapperService;
 			_instrumentationService = instrumentationService;
-			_action = new SignalableAction(RequestRejit, RequestRejitDelayMilliseconds);
-			_watcher = new FileSystemWatcher();
 		}
 
 		public void Start()
@@ -32,16 +31,25 @@ namespace NewRelic.Agent.Core.Instrumentation
 				return;
 			}
 
+			_action = new SignalableAction(RequestRejit, RequestRejitDelayMilliseconds);
 			_action.Start();
 
-			_watcher.Path = AgentInstallConfiguration.HomeExtensionsDirectory;
-			_watcher.Filter = "*.xml";
-			_watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
-			_watcher.Changed += OnChanged;
-			_watcher.Created += OnChanged;
-			_watcher.Deleted += OnChanged;
-			_watcher.Renamed += OnRenamed;
-			_watcher.EnableRaisingEvents = true;
+			SetupFileWatcherForDirectory(AgentInstallConfiguration.HomeExtensionsDirectory);
+			SetupFileWatcherForDirectory(AgentInstallConfiguration.RuntimeHomeExtensionsDirectory);
+		}
+
+		private void SetupFileWatcherForDirectory(string path)
+		{
+			if (!Directory.Exists(path)) return;
+			var watcher = new FileSystemWatcher(path, "*.xml");
+			watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
+			watcher.Changed += OnChanged;
+			watcher.Created += OnChanged;
+			watcher.Deleted += OnChanged;
+			watcher.Renamed += OnRenamed;
+			watcher.EnableRaisingEvents = true;
+			if (_fileWatchers == null) _fileWatchers = new List<FileSystemWatcher>();
+			_fileWatchers.Add(watcher);
 		}
 
 		private void RequestRejit()
@@ -67,7 +75,10 @@ namespace NewRelic.Agent.Core.Instrumentation
 		public void Dispose()
 		{
 			_action?.Dispose();
-			_watcher?.Dispose();
+			if (_fileWatchers != null)
+			{
+				foreach (var watcher in _fileWatchers) watcher?.Dispose();
+			}
 		}
 	}
 }

@@ -1,5 +1,6 @@
 using JetBrains.Annotations;
 using MoreLinq;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Aggregators;

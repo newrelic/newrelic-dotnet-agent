@@ -56,13 +56,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 		);
 		overload1->_signature = std::make_shared<ByteVector>(signature2Bytes);
 
-		auto system = std::make_shared<MockSystemCalls>();
-		auto configuration = std::make_shared<Configuration::Configuration>();
 		auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
 		instrumentationSet->insert(overload1->GetInstrumentationPoint());
 		instrumentationSet->insert(overload2->GetInstrumentationPoint());
 		auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
-		auto methodRewriter = std::make_shared<MethodRewriter>(configuration, instrumentation, system);
+		auto methodRewriter = std::make_shared<MethodRewriter>(instrumentation, _X(""));
 
 		uint8_t overload1CallCount = 0;
 		overload1->_writeMethodHandler = [&overload1CallCount](const ByteVector&) {
@@ -81,47 +79,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 		// ASSERT
 		Assert::AreEqual((uint8_t)1, overload1CallCount, L"Function should have been instrumented 1 time!");
 		Assert::AreEqual((uint8_t)1, overload2CallCount, L"Function should have been instrumented 1 time!");
-	}
-
-	TEST_METHOD(netCore_dotnet_exe_invocations_not_instrumented)
-	{
-		auto system = std::make_shared<MockSystemCalls>();
-		auto configuration = std::make_shared<Configuration::Configuration>();
-		auto instrumentationSet = std::make_shared<Configuration::InstrumentationPointSet>();
-		auto instrumentation = std::make_shared<Configuration::InstrumentationConfiguration>(instrumentationSet);
-		auto methodRewriter = std::make_shared<MethodRewriter>(configuration, instrumentation, system);
-
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("DotNet Run")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exe run")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"dotnet.exe\" run")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"c:\\program files\\dotnet.exe\" run")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"c:\\program files\\dotnet.exe\"   run")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet publish")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet restore")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run -p c:\\test\\test.csproj")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run -p \"c:\\program files\\test.csproj\"")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run -p ~/test.csproj")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exe exec \"c:\\program files\\MSBuild.dll\" -maxcpucount")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exe exec c:\\test\\msbuild.dll")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet new console")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet new mvc")));
-
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnetXexe restore")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("\"c:\\program files\\dotnet.exe\"run")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec test.dll")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec publish.dll")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet publish.dll")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet run.dll")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet restore.dll")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet.exerun publish.dll")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("IpublishedThis.exe")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet new.dll")));
-		Assert::IsFalse(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec new.dll")));
-
-		//These will incorrectly not be instrumented, but they are edge cases.  We are documenting them here.
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("IpublishedThis.exe \"dotnet run \"")));
-		Assert::IsTrue(methodRewriter->ShouldNotInstrumentCommandNetCore(_X("dotnet exec IpublishedThis.dll \"dotnet run \"")));
 	}
 
 private:

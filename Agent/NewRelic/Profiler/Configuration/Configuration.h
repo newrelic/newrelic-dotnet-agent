@@ -4,6 +4,7 @@
 #include "Exceptions.h"
 #include "Strings.h"
 #include <memory>
+#include <regex>
 #include <set>
 #include <string>
 #include <utility>
@@ -114,6 +115,104 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 			return _agentEnabled;
 		}
 
+		void Tokenize(xstring_t const& str, std::vector<xstring_t>& out)
+		{
+			xstring_t const delims = _X(" ");
+
+			size_t start, end = 0;
+			while ((start = str.find_first_not_of(delims, end)) != std::string::npos) {
+				end = str.find_first_of(delims, start + 1);
+				out.push_back(str.substr(start, end - start));
+			}
+		}
+
+		// Does a case insensitive string comparison and returns true if the sourceString ends strictly with suffixString.
+		// The suffixString must start from beginning or after ' ', '"', '/', '\\' or '\'' character in the sourceString.
+		// For example: return true if sourceString = "c://program//dotnet.exe" and suffixString="dotnet.exe"
+		// return false if sourceString = "c://program//abcdotnet.exe" and suffixString="dotnet.exe"
+		bool EndsWithAnExactSubStringCaseInsensitive(xstring_t const& sourceString, xstring_t const& suffixString)
+		{
+			if (suffixString.size() > sourceString.size()) {
+				return false;
+			}
+
+			xchar_t c = '\0';
+
+			if (suffixString.size() < sourceString.size()) {
+				c = sourceString[sourceString.size() - suffixString.size() - 1];
+			}
+
+			//The variable c has the character right before the possibly suffixString that the sourceString ends with.
+			//We are checking if the suffixString starts from beginning or after ' ', '"', '/', '\\' or '\'' character in the sourceString by evaluating c.
+			if (c != '\0' && c != xchar_t(' ') && c != xchar_t('/') && c != xchar_t('\\') && c != xchar_t('\'') && c != xchar_t('"')) {
+				return false;
+			}
+
+			return std::equal(suffixString.rbegin(), suffixString.rend(), sourceString.rbegin(),
+				[](const xchar_t a, const xchar_t b) {
+					return tolower(a) == tolower(b);
+				});
+		}
+
+		bool ShouldInstrumentNetCore(xstring_t const& processName, xstring_t const& appPoolId, xstring_t const& commandLine)
+		{
+			LogInfo(L"Command line: ", commandLine);
+
+			//If it contains MsBuild, it is a build command and should not be profiled.
+			bool isMsBuildInvocation = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("MSBuild.dll"));
+
+			std::vector<xstring_t> out;
+			Tokenize(commandLine, out);
+
+			//Search for "dotnet run" or "dotnet publish" variations.
+			//If it is a hit, it should not instrument the invocation of dotnet.exe
+			//Example Hits:	dotnet run
+			//				dotnet.exe run -f netcoreapp2.2
+			//				"c\program files\dotnet.exe" run
+			//				f:\program files\dotnet.exe run -f netcoreapp2.2
+			//				all of the above with publish instead of run.
+
+			for (std::size_t i = 0; i < out.size(); i++) {
+
+				bool isDotNetProcess =	EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet\"")) || 
+					EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet'")) ||
+					EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet")) || 
+					EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe\"")) ||
+					EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe'")) ||
+					EndsWithAnExactSubStringCaseInsensitive(out[i], _X("dotnet.exe"));
+
+				if (isDotNetProcess && i < out.size() - 1) {
+					if (NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("run")) ||
+						NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("publish")) ||
+						NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("restore")) ||
+						NewRelic::Profiler::Strings::AreEqualCaseInsensitive(out[i + 1], _X("new"))) {
+
+						LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
+						return false;
+					} else {
+						break;
+					}
+				}
+			}
+
+			if (isMsBuildInvocation) {
+				LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
+				return false;
+			}
+
+			if (IsW3wpProcess(processName)) {
+				return ShouldInstrumentApplicationPool(appPoolId);
+			}
+
+			return true;
+		}
+
+		// test to see if we should instrument this application at all
+		bool ShouldInstrumentNetFramework(xstring_t const& processName, xstring_t const& appPoolId)
+		{
+			return ShouldInstrumentProcess(processName, appPoolId);
+		}
+
 		virtual bool ShouldInstrumentProcess(const xstring_t& processName, const xstring_t& appPoolId)
 		{
 			if (!_agentEnabled) {
@@ -136,8 +235,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 				return true;
 			}
 
-			if (Strings::EndsWith(processName, _X("W3WP.EXE"))) {
-				return ShouldInstrumentApplicationPool(appPoolId, _applicationPoolsWhiteList, _applicationPoolsBlackList, _applicationPoolsAreEnabledByDefault);
+			if (IsW3wpProcess(processName)) {
+				return ShouldInstrumentApplicationPool(appPoolId);
 			}
 
 			if (ShouldInstrumentDefaultProcess(processName)) {
@@ -367,14 +466,19 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 			return false;
 		}
 
-		static bool ShouldInstrumentApplicationPool(const xstring_t& appPoolId, const ApplicationPoolsPtr& whiteList, const ApplicationPoolsPtr& blackList, const bool& enabledByDefault)
+		bool IsW3wpProcess(const xstring_t& processName)
 		{
-			if (ApplicationPoolIsOnBlackList(appPoolId, blackList)) {
+			return Strings::EndsWith(processName, _X("W3WP.EXE"));
+		}
+
+		bool ShouldInstrumentApplicationPool(const xstring_t& appPoolId)
+		{
+			if (ApplicationPoolIsOnBlackList(appPoolId, _applicationPoolsBlackList)) {
 				LogInfo(_X("This application pool (") + appPoolId + _X(") is explicitly configured to NOT be instrumented."));
 				return false;
 			}
 
-			if (ApplicationPoolIsOnWhiteList(appPoolId, whiteList)) {
+			if (ApplicationPoolIsOnWhiteList(appPoolId, _applicationPoolsWhiteList)) {
 				LogInfo(_X("This application pool (") + appPoolId + _X(") is explicitly configured to be instrumented."));
 				return true;
 			}
@@ -385,7 +489,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 				return false;
 			}
 
-			if (enabledByDefault) {
+			if (_applicationPoolsAreEnabledByDefault) {
 				LogInfo(_X("This application pool (") + appPoolId + _X(") is not explicitly configured to be instrumented or not but application pools are set to be enabled by default."));
 				return true;
 			}

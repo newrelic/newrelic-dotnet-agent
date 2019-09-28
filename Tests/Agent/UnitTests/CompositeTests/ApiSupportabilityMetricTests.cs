@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Core;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -181,6 +182,28 @@ namespace CompositeTests
 
 
 			HarvestAndValidateMetric(expectedMetricName);
+		}
+
+		[Test]
+		public void TraceMetadataTest()
+		{
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters);
+
+			var traceMetadata = agentBridgeApi.TraceMetadata;
+
+			HarvestAndValidateMetric("TraceMetadata");
+		}
+
+		[Test]
+		public void GetLinkingMetadataTest()
+		{
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters);
+
+			var getLinkingMetadata = agentBridgeApi.GetLinkingMetadata();
+
+			HarvestAndValidateMetric("GetLinkingMetadata");
 		}
 	}
 }

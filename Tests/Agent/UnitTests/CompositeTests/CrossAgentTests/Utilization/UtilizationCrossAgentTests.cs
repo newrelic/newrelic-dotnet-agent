@@ -1,5 +1,5 @@
-﻿using NewRelic.Agent.Core.Utilization;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Utilization;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;

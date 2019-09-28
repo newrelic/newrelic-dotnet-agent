@@ -27,7 +27,6 @@ _NCrunch_*/
 # NuGet package files
 Agent/NewRelic/Tray/packages/
 Agent/packages/
-FunctionalTests/packages/
 PerformanceTests/packages/
 PhantomJSTests/packages/
 
@@ -128,3 +127,11 @@ Tests/Agent/PlatformTests/Applications/WindowsContainerApplication/packages
 
 /Tests/Benchmarking/BenchmarkDotNet.Artifacts
 *.dgml
+
+# Include built binaries so that building the profiler is not necessary when only doing managed agent work
+# The Home Builder picks up profiler binaries from this location
+Agent/_profilerBuild/**/*.exp
+Agent/_profilerBuild/**/*.iobj
+Agent/_profilerBuild/**/*.ipdb
+Agent/_profilerBuild/**/*.lib
+Agent/_profilerBuild/**/*.pdb

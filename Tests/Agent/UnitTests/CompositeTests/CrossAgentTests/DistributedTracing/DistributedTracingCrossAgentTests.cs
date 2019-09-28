@@ -1,4 +1,5 @@
 ﻿using Castle.Core.Internal;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;

@@ -1,11 +1,11 @@
 ﻿using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;

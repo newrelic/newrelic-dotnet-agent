@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
 {

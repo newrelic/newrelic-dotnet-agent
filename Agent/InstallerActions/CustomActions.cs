@@ -27,18 +27,13 @@ namespace InstallerActions
 		[CustomAction]
 		public static ActionResult SaveDeferredCustomActionData(Session session)
 		{
-			var installForAllApps = (session.Features["AllAppsEnvironmentFeature"].RequestState == InstallState.Local) ? "true" : "false";
-			var installForIis = (session.Features["IISRegistryFeature"].RequestState == InstallState.Local) ? "true" : "false";
-
 			var customActionData = new CustomActionData
 			{
-				{ "NETAGENTCOMMONFOLDER", session["NETAGENTCOMMONFOLDER"] },
-				{ "NETAGENTFOLDER", session["NETAGENTFOLDER"] },
-				{ "LOGSFOLDER", session["LOGSFOLDER"] },
-				{ "AppDataExtensionsFolder", session["AppDataExtensionsFolder"] },
 				{ "NR_LICENSE_KEY", session["NR_LICENSE_KEY"] },
-				{ "ALLAPPS_FEATURE_INSTALLED", installForAllApps },
-				{ "IIS_FEATURE_INSTALLED", installForIis }
+				{ "NETAGENTCOMMONFOLDER", session["NETAGENTCOMMONFOLDER"] },
+				{ "LOGSFOLDER", session["LOGSFOLDER"] },
+				{ "NETAGENTFOLDER", session["NETAGENTFOLDER"] },
+				{ "AppDataExtensionsFolder", session["FrameworkExtensionsFolder"] }
 			};
 
 			session.DoAction("MigrateConfiguration", customActionData);

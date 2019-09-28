@@ -12,6 +12,7 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 using System.Threading;
 using Newtonsoft.Json;
+using NewRelic.Agent.Api;
 
 namespace CompositeTests
 {

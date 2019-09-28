@@ -48,6 +48,9 @@ namespace NewRelic.Agent.Core.Configuration
 		[JsonProperty("encoding_key")]
 		public String EncodingKey { get; set; }
 
+		[JsonProperty("entity_guid")]
+		public String EntityGuid { get; set; }
+
 		[JsonProperty("high_security")]
 		public Boolean? HighSecurityEnabled { get; set; }
 

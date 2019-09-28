@@ -6,6 +6,7 @@ using NewRelic.Parsing.ConnectionString;
 using NewRelic.Agent.Extensions.Parsing;
 using System.Linq;
 using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {

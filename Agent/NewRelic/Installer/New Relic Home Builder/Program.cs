@@ -87,13 +87,7 @@ namespace NewRelic.Installer
 		{
 			get
 			{
-				var profilerPath = Path.Combine(SolutionPath, "NewRelic", "Profiler", "Profiler", "bin", $"{Bitness}", $"{Configuration}", "NewRelic.Profiler.dll");
-
-				if (!File.Exists(profilerPath))
-				{
-					profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Windows", $"{Bitness}", "NewRelic.Profiler.dll");
-				}
-
+				var profilerPath = Path.Combine(SolutionPath, "_profilerBuild", $"{Bitness}-Release", "NewRelic.Profiler.dll");
 				return profilerPath;
 			}
 		}
@@ -102,13 +96,7 @@ namespace NewRelic.Installer
 		{
 			get
 			{
-				var profilerPath = Path.Combine(SolutionPath, "NewRelic", "Profiler", ProfilerSoFileName);
-
-				if (!File.Exists(profilerPath))
-				{
-					profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux", ProfilerSoFileName);
-				}
-
+				var profilerPath = Path.Combine(SolutionPath, "_profilerBuild", "linux-release", ProfilerSoFileName);
 				return profilerPath;
 			}
 		}

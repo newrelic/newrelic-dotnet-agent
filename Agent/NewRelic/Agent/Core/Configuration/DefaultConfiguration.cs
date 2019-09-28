@@ -876,6 +876,8 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public virtual string EncodingKey { get { return _serverConfiguration.EncodingKey; } }
 
+		public virtual string EntityGuid { get { return _serverConfiguration.EntityGuid; } }
+
 		public virtual bool HighSecurityModeEnabled => _localConfiguration.highSecurity.enabled;
 
 
@@ -1418,6 +1420,9 @@ namespace NewRelic.Agent.Core.Configuration
 				return string.IsNullOrEmpty(value) ? null : value.Trim(); //Keeping IsNullOrEmpty just in case customer sets value to "".
 			}
 		}
+
+		public string UtilizationFullHostName => _dnsStatic.GetFullHostName();
+		public string UtilizationHostName => _dnsStatic.GetHostName();
 
 		#endregion
 

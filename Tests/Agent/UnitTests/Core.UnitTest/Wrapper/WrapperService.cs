@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Agent.Core.Wrapper
 {

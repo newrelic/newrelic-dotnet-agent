@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Web.Services.Protocols;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.WebServices

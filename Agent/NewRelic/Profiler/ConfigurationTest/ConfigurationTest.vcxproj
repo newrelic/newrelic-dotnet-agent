@@ -176,6 +176,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ShouldInstrumentTest.cpp" />
     <ClCompile Include="ConfigurationTest.cpp" />
     <ClCompile Include="InstrumentationConfigurationTest.cpp" />
     <ClCompile Include="InstrumentationPointTest.cpp" />

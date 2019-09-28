@@ -1,7 +1,8 @@
 using System;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -42,6 +43,60 @@ namespace NewRelic.Agent.Core.Api
 					return null;
 				}
 			}
+		}
+
+		public object TraceMetadata
+		{
+			get
+			{
+				try
+				{
+					using (new IgnoreWork())
+					{
+						_apiSupportabilityMetricCounters.Record(ApiMethod.TraceMetadata);
+						return _agent.TraceMetadata;
+					}
+				}
+				catch (Exception ex)
+				{
+					try
+					{
+						Log.ErrorFormat("Failed to get TraceMetadata: {0}", ex);
+					}
+					catch (Exception)
+					{
+						//Swallow the error
+					}
+					return null;
+				}
+
+			}
+		}
+
+		public Dictionary<string, string> GetLinkingMetadata()
+		{
+			try
+			{
+				using (new IgnoreWork())
+				{
+					_apiSupportabilityMetricCounters.Record(ApiMethod.GetLinkingMetadata);
+					return _agent.GetLinkingMetadata();
+				}
+			}
+			catch (Exception ex)
+			{
+				try
+				{
+					Log.ErrorFormat("Error in GetLinkingMetadata: {0}", ex);
+				}
+				catch (Exception)
+				{
+					//Swallow the error
+				}
+
+				return null;
+			}
+
 		}
 	}
 }

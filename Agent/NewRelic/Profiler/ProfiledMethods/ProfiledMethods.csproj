@@ -133,7 +133,7 @@
   </Target>
   <Target Name="MyCopyFiles" DependsOnTargets="MyCreateDirectories">
     <Copy SourceFiles="$(SolutionDir)MockCore\bin\$(Configuration)\net35\NewRelic.Agent.Core.dll" DestinationFolder="$(TestNewRelicHomeDirectory)" />
-    <Copy SourceFiles="$(SolutionDir)Profiler\bin\$(Platform)\$(Configuration)\NewRelic.Profiler.dll" DestinationFolder="$(TestNewRelicHomeDirectory)" />
+    <Copy SourceFiles="$(ProjectDir)\..\..\..\_profilerBuild\$(Platform)-$(Configuration)\NewRelic.Profiler.dll" DestinationFolder="$(TestNewRelicHomeDirectory)" />
     <Copy SourceFiles="$(OutDir)\Instrumentation.xml" DestinationFolder="$(TestNewRelicHomeExtensionsDirectory)" />
     <Copy SourceFiles="$(OutDir)\newrelic.config" DestinationFolder="$(TestNewRelicHomeDirectory)" />
     <Copy SourceFiles="debug-$(Platform).bat" DestinationFiles="$(OutDir)\debug.bat" />

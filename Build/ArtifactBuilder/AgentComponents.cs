@@ -41,6 +41,7 @@ namespace ArtifactBuilder
 		public IReadOnlyCollection<string> ExtensionDirectoryComponents { get; private set; }
 		public IReadOnlyCollection<string> WrapperXmlFiles { get; private set; }
 		public IReadOnlyCollection<string> RootInstallDirectoryComponents { get; private set; }
+		public IReadOnlyCollection<string> ConfigurationComponents { get; private set; }
 		public string AgentApiDll;
 		public string WindowsProfiler;
 		public string LinuxProfiler;
@@ -49,6 +50,7 @@ namespace ArtifactBuilder
 		public string NewRelicConfig;
 		public string NewRelicLicenseFile;
 		public string NewRelicThirdPartyNoticesFile;
+		public string AgentInfoJson;
 
 		private List<string> AllComponents
 		{
@@ -87,6 +89,11 @@ namespace ArtifactBuilder
 		protected abstract string SourceHomeBuilderPath { get; }
 		protected abstract List<string> IgnoredHomeBuilderFiles { get; }
 		protected abstract void CreateAgentComponents();
+
+		protected void SetConfigurationComponents(params string[] items)
+		{
+			ConfigurationComponents = new HashSet<string>(items);
+		}
 
 		protected void SetRootInstallDirectoryComponents(params string[] items)
 		{

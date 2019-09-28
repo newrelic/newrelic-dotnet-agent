@@ -18,7 +18,7 @@ namespace NewRelic { namespace Profiler {
 #ifdef PAL_STDCPP_COMPAT
 				  std::make_shared<SystemCalls>()
 #else
-				  std::make_shared<SystemCalls>(_X("CORECLR_NEWRELIC_HOME"), _X("CORECLR_NEWRELIC_INSTALL_PATH"))
+				  std::make_shared<SystemCalls>(_X("CORECLR_NEWRELIC_HOME"), _X("NEWRELIC_INSTALL_PATH"))
 #endif
 			  )
 		{
@@ -53,25 +53,19 @@ namespace NewRelic { namespace Profiler {
 			}
 		}
 
-		virtual bool ShouldInstrument() override
+		virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration) override
 		{
+			auto processPath = GetAndTransformProcessPath();
 			auto commandLine = _systemCalls->GetProgramCommandLine();
-
-			LogInfo(L"Command line: ", commandLine);
-			
-			auto shouldNotInstrument = _methodRewriter->ShouldNotInstrumentCommandNetCore(commandLine);
-
-			if (shouldNotInstrument) {
-
-				LogInfo(L"Unloading Profiler - Command line not identified as valid invocation for instrumentation.");
-				return false;
-			}
-
-			return true;
+			return configuration->ShouldInstrumentNetCore(processPath, GetAppPoolId(_systemCalls), commandLine);
 		}
 
-		virtual HRESULT
-		MinimumDotnetVersionCheck(IUnknown* pICorProfilerInfoUnk) override
+		virtual xstring_t GetRuntimeExtensionsDirectoryName() override
+		{
+			return _X("netcore");
+		}
+
+		virtual HRESULT MinimumDotnetVersionCheck(IUnknown* pICorProfilerInfoUnk) override
 		{
 			CComPtr<ICorProfilerInfo8> temp;
 			HRESULT result = pICorProfilerInfoUnk->QueryInterface(__uuidof(ICorProfilerInfo8), (void**)&temp);

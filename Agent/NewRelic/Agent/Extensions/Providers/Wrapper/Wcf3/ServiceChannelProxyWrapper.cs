@@ -4,6 +4,7 @@ using System.Net;
 using System.Reflection;
 using System.ServiceModel;
 using System.Threading.Tasks;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Helpers;
 using NewRelic.Reflection;

@@ -1,9 +1,9 @@
-﻿using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Core.Logging;
 using System;
@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 {
 	public interface IDistributedTracePayloadHandler
 	{
-		IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment);
+		IDistributedTracePayload TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment);
 
 		DistributedTracePayload TryDecodeInboundSerializedDistributedTracePayload(string serializedPayload);
 	}
@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		#region Outgoing/Create
 
-		public IDistributedTraceApiModel TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment = null)
+		public IDistributedTracePayload TryGetOutboundDistributedTraceApiModel(IInternalTransaction transaction, ISegment segment = null)
 		{
 			var accountId = _configurationService.Configuration.AccountId;
 			var appId = _configurationService.Configuration.PrimaryApplicationId;

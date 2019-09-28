@@ -6,6 +6,7 @@ using System.Text;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.WebServices
 {

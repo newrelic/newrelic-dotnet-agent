@@ -2,6 +2,7 @@
 using System.IO;
 using System.Web;
 using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 

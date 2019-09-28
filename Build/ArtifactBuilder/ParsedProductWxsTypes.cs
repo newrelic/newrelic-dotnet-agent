@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
@@ -57,6 +58,9 @@ namespace ArtifactBuilder
 	{
 		/// <remarks />
 		public WixFragmentComponentGroupComponentFile File { get; set; }
+
+		/// <remarks />
+		public WixFragmentComponentGroupComponentRegistryValue RegistryValue { get; set; }
 	}
 
 	/// <remarks />
@@ -80,5 +84,31 @@ namespace ArtifactBuilder
 		/// <remarks />
 		[XmlAttribute]
 		public string Source { get; set; }
+	}
+
+	/// <remarks />
+	[Serializable]
+	[DesignerCategory("code")]
+	[XmlType(AnonymousType = true, Namespace = "http://schemas.microsoft.com/wix/2006/wi")]
+	public class WixFragmentComponentGroupComponentRegistryValue
+	{
+		/// <remarks />
+		[XmlAttribute]
+		public string Root { get; set; }
+
+		/// <remarks />
+		[XmlAttribute]
+		public string Name { get; set; }
+
+		/// <remarks />
+		[XmlAttribute]
+		public string KeyPath { get; set; }
+
+		/// <remarks />
+		[XmlAttribute]
+		public string Key { get; set; }
+
+		[XmlElement(ElementName = "MultiStringValue", Namespace = "http://schemas.microsoft.com/wix/2006/wi")]
+		public List<string> MultiStringValue { get; set; }
 	}
 }

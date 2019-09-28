@@ -1,0 +1,9 @@
+version: "2"
+services:
+    smoketest: 
+        build: . 
+        command: /root/run.sh
+        volumes: 
+            - ./agent:/agent
+            - ./logs:/logs
+        working_dir: /root

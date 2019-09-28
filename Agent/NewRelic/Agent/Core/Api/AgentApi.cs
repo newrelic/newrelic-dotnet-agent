@@ -1,5 +1,5 @@
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;

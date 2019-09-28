@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Newtonsoft.Json;

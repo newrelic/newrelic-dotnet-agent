@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Core.Api;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
@@ -90,7 +91,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			Log.Debug("Tried to accept distributed trace payload, but there was no transaction");
 		}
 
-		public IDistributedTraceApiModel CreateDistributedTracePayload()
+		public IDistributedTracePayload CreateDistributedTracePayload()
 		{
 			Log.Debug("Tried to create distributed trace payload, but there was no transaction");
 

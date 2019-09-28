@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -408,6 +409,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				.Concat(Agent._catHeaderHandler.TryGetOutboundResponseHeaders(this, currentTransactionMetricName));
 		}
 
+
 		private void UpdatePathHash(TransactionMetricName transactionMetricName)
 		{
 			var pathHash = Agent._pathHashMaker.CalculatePathHash(transactionMetricName.PrefixedName, TransactionMetadata.CrossApplicationReferrerPathHash);
@@ -434,7 +436,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			TryProcessDistributedTraceRequestData(payload, transportType);
 		}
 
-		public IDistributedTraceApiModel CreateDistributedTracePayload()
+		public IDistributedTracePayload CreateDistributedTracePayload()
 		{
 			if (!Agent._configurationService.Configuration.DistributedTracingEnabled)
 			{

@@ -8,6 +8,7 @@ using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
 using NewRelic.Agent.Extensions.Parsing;
 using System.ServiceModel.Channels;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {
@@ -50,13 +51,20 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			if (methodInfo == null)
 				throw new NullReferenceException("methodInfo");
 
+			//Identify if we need to end the transaction in the after delegate.
+			//If it is synchronous or if it is EndInvoke, we need to end the transaction.
+			var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
+			var invocationEndsWCFCall = instrumentedMethodName.Equals(SyncMethodName, StringComparison.OrdinalIgnoreCase) || instrumentedMethodName.Equals(AsyncEndMethodName, StringComparison.OrdinalIgnoreCase);
+			var invocationStartsWCFCall = instrumentedMethodName.Equals(SyncMethodName, StringComparison.OrdinalIgnoreCase) || instrumentedMethodName.Equals(AsyncBeginMethodName, StringComparison.OrdinalIgnoreCase);
+
 			var parameters = GetParameters(instrumentedMethodCall.MethodCall, methodInfo, instrumentedMethodCall.MethodCall.MethodArguments, agent);
 
 			var uri = OperationContext.Current?.IncomingMessageHeaders?.To;
 
 			var name = GetTransactionName(agent, uri, methodInfo);
 
-			transaction = agent.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
+			var shouldNotIncrementUnitOfWorkCounter = invocationEndsWCFCall && !invocationStartsWCFCall;
+			transaction = agent.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", shouldNotIncrementUnitOfWorkCounter);
 
 			var requestPath = uri?.AbsolutePath;
 
@@ -65,45 +73,56 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				transaction.SetUri(requestPath);
 			}
 
-			transaction.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);
-			transaction.SetRequestParameters(parameters);
+			if (invocationStartsWCFCall)
+			{
+				transaction.SetWebTransactionName(WebTransactionType.WCF, name, TransactionNamePriority.FrameworkHigh);
+				transaction.SetRequestParameters(parameters);
+
+				var messageProperties = OperationContext.Current?.IncomingMessageProperties;
+				if (messageProperties != null && messageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
+				{
+					var httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
+					var retrievedHeaders = new List<KeyValuePair<string, string>>();
+
+					foreach (var headerName in httpRequestMessage.Headers.AllKeys)
+					{
+						retrievedHeaders.Add(new KeyValuePair<string, string>(headerName, httpRequestMessage.Headers[headerName]));
+					}
+
+					agent.ProcessInboundRequest(retrievedHeaders, TransportType.HTTP);
+				}
+			}
+
 			var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
-			var messageProperties = OperationContext.Current?.IncomingMessageProperties;
-			if (messageProperties != null && messageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
-			{
-				var httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
-				var retrievedHeaders = new List<KeyValuePair<string, string>>();
-
-				foreach (var headerName in httpRequestMessage.Headers.AllKeys)
-				{
-					retrievedHeaders.Add(new KeyValuePair<string, string>(headerName, httpRequestMessage.Headers[headerName]));
-				}
-
-				agent.ProcessInboundRequest(retrievedHeaders, TransportType.HTTP);
-			}
+			var encounteredException = false;
 
 			return Delegates.GetDelegateFor(
 				onFailure: exception =>
 				{
 					transaction.NoticeError(exception);
+					encounteredException = true;
 				},
 				onComplete: () =>
 				{
-					var headersToAttach = transaction.GetResponseMetadata();
-					foreach (var header in headersToAttach)
-					{
-						var outgoingMessageHeaders = OperationContext.Current?.OutgoingMessageHeaders;
-						if (outgoingMessageHeaders != null && outgoingMessageHeaders.MessageVersion.Envelope != EnvelopeVersion.None)
-						{
-							OperationContext.Current?.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
-						}
-
-						AddHeaderToHttpResponsePropertyForOutgoingMessage(header);
-					}
-
 					segment.End();
-					transaction.End();
+
+					if (invocationEndsWCFCall || encounteredException)
+					{
+						transaction.End();
+
+						var headersToAttach = transaction.GetResponseMetadata();
+						foreach (var header in headersToAttach)
+						{
+							var outgoingMessageHeaders = OperationContext.Current?.OutgoingMessageHeaders;
+							if (outgoingMessageHeaders != null && outgoingMessageHeaders.MessageVersion.Envelope != EnvelopeVersion.None)
+							{
+								OperationContext.Current?.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
+							}
+
+							AddHeaderToHttpResponsePropertyForOutgoingMessage(header);
+						}
+					}
 				});
 		}
 

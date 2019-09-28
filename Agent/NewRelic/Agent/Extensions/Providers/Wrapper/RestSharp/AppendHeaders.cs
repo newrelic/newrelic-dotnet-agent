@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.RestSharp

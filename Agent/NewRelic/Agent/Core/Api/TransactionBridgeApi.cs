@@ -1,4 +1,5 @@
 using System;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
@@ -75,7 +76,7 @@ namespace NewRelic.Agent.Core.Api
 				}
 			}
 		}
-
+		
 		private static TransportType GetTransportTypeValue(int transportType)
 		{
 			if (transportType >= 0 && transportType < TransportTypeMapping.Length)
@@ -85,5 +86,6 @@ namespace NewRelic.Agent.Core.Api
 
 			return TransportType.Unknown;
 		}
+
 	}
 }

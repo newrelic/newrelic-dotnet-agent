@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Configuration;
 using System.Threading;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Core;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

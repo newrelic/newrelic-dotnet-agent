@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions.Collections;
 

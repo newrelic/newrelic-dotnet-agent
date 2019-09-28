@@ -14,62 +14,39 @@ function ExitIfFailLastExitCode {
 # Profiler Build #
 ##################
 
-$profilerSolutionPath = "Agent\NewRelic\Profiler\NewRelic.Profiler.sln"
+$profilerBuildScript = "Agent\NewRelic\Profiler\build\build.ps1"
+& $profilerBuildScript
 
-Write-Host "-- Profiler build: Restoring NuGet packages"
-& $nugetPath restore $profilerSolutionPath -Source "https://www.nuget.org/api/v2"
-ExitIfFailLastExitCode
+#######################
+# Managed Agent Build #
+#######################
 
-Write-Host "-- Profiler build: Building x64 profiler"
-& $msBuildPathx64 /p:Platform=x64 /p:Configuration=Release $profilerSolutionPath
-ExitIfFailLastExitCode
-
-Write-Host "-- Profiler build: Building Win32 profiler"
-& "$msBuildPath" /p:Platform=Win32 /p:Configuration=Release $profilerSolutionPath
-ExitIfFailLastExitCode
-
-Write-Host "-- Profiler build: Building Linux profiler"
-& .\Agent\NewRelic\Profiler\build\scripts\build_linux.ps1
-ExitIfFailLastExitCode
-
-Remove-Item -Recurse -Force Agent\ProfilerBuildsForDevMachines
+$solutions = [Ordered]@{
+    "Agent\FullAgent.sln"                               = @("Configuration=Release;AllowUnsafeBlocks=true");
+    "Agent\MsiInstaller.sln"                            = @("Configuration=Release;Platform=x86;AllowUnsafeBlocks=true","Configuration=Release;Platform=x64;AllowUnsafeBlocks=true");
+    "IntegrationTests\IntegrationTests.sln"             = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
+    "IntegrationTests\UnboundedIntegrationTests.sln"    = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
+    "Tests\Agent\PlatformTests\PlatformTests.sln"       = @("Configuration=Release");
+}
 
 ###############
 # NuGet Restore #
 ###############
 
-$applicationsFull = @("Agent\FullAgent.sln", "FunctionalTests\FunctionalTests.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln", "Tests\Agent\PlatformTests\PlatformTests.sln")
-
 Write-Host "Restoring NuGet packages"
-foreach ($application in $applicationsFull) {
-    & $nugetPath restore $application -NoCache -Source "https://www.nuget.org/api/v2"
+foreach ($sln in $solutions.Keys) {
+    & $nugetPath restore $sln -NoCache -Source "https://www.nuget.org/api/v2"
 }
 
 #######
 # Build #
 #######
 
-$applicationsFull = [Ordered]@{"Agent\FullAgent.sln" = "Configuration=Release;Platform=x86;AllowUnsafeBlocks=true";
-    "FunctionalTests\FunctionalTests.sln"            = "Configuration=Release";
-    "IntegrationTests\IntegrationTests.sln"          = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
-    "IntegrationTests\UnboundedIntegrationTests.sln" = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
-	"Tests\Agent\PlatformTests\PlatformTests.sln"          = "Configuration=Release";
-}
-
-Write-Host "Building for full build"
-foreach ($applicationFull in $applicationsFull.Keys) {
-    Write-Host "-- Building $applicationFull"
-    Write-Host "-- Executing '. $msBuildPath /m /p:$($applicationsFull.Item($applicationFull)) $applicationFull'"
-    . $msBuildPath /m /p:$($applicationsFull.Item($applicationFull)) $applicationFull
-
-    if ($LastExitCode -ne 0) {
-        exit $LastExitCode
-    }
-
-    if ($applicationFull -eq "Agent\FullAgent.sln") {
-        Write-Host "-- Executing '. $msBuildPath /m /p:$($applicationsFull.Item($applicationFull).Replace("x86", "x64")) $applicationFull'"
-        . $msBuildPath /m /p:$($applicationsFull.Item($applicationFull).Replace("x86", "x64")) $applicationFull
-        
+Write-Host "Building solutions"
+foreach ($sln in $solutions.Keys) {
+    foreach ($config in $solutions.Item($sln)) {
+        Write-Host "-- Building $sln : '. $msBuildPath /m /p:$($config) $sln'"
+        . $msBuildPath /m /p:$($config) $sln
         if ($LastExitCode -ne 0) {
             exit $LastExitCode
         }

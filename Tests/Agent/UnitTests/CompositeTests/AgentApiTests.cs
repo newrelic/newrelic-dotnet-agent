@@ -1,11 +1,13 @@
 ﻿using JetBrains.Annotations;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
+using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
@@ -23,11 +25,27 @@ namespace CompositeTests
 		private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
 		private const string NoticeErrorPathOutsideTransaction = "NewRelic.Api.Agent.NoticeError API Call";
 		private const string ExceptionMessage = "This is a new exception.";
+		private IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+
+		private static readonly string _accountId = "acctid";
+		private static readonly string _appId = "appid";
+		private static readonly string _guid = "guid";
+		private static readonly float _priority = .3f;
+		private static readonly bool _sampled = false;
+		private static readonly string _traceId = "traceid";
+		private static readonly string _trustKey = "trustedkey";
+		private static readonly string _type = "typeapp";
+		private static readonly string _transactionId = "transactionId";
+		private static readonly DistributedTracePayload _distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(_type, _accountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
 
 		[SetUp]
 		public void SetUp()
 		{
 			_compositeTestAgent = new CompositeTestAgent();
+			_compositeTestAgent.ServerConfiguration.AccountId = _accountId;
+			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = _trustKey;
+			_compositeTestAgent.ServerConfiguration.PrimaryApplicationId = _appId;
+			_apiSupportabilityMetricCounters = _compositeTestAgent.Container.Resolve<IApiSupportabilityMetricCounters>();
 		}
 
 		[TearDown]
@@ -1715,5 +1733,136 @@ namespace CompositeTests
 
 		#endregion
 
+		#region TraceMetadata
+
+		[Test]
+		public void Test_TraceMetadataReturnsValidValues()
+		{
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+			dynamic traceMetadata = agentWrapperApi.TraceMetadata;
+			var traceId = traceMetadata.TraceId;
+			var spanId = traceMetadata.SpanId;
+			var isSampled = traceMetadata.IsSampled;
+
+			segment.End();
+			transaction.End();
+			_compositeTestAgent.Harvest();
+
+			var transactionEvent = _compositeTestAgent.TransactionEvents.First();
+			var transactionAttributes = transactionEvent.IntrinsicAttributes;
+
+			NrAssert.Multiple(
+				() => Assert.AreEqual(transactionAttributes["traceId"], traceId),
+				() => Assert.AreEqual(segment.SpanId, spanId),
+				() => Assert.AreEqual(transactionAttributes["sampled"], isSampled)
+			);
+		}
+
+		[Test]
+		public void TraceMetadataReturnsEmptyValuesIfDTDisabled()
+		{
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
+
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+			dynamic traceMetadata = agentWrapperApi.TraceMetadata;
+			var traceId = traceMetadata.TraceId;
+			var spanId = traceMetadata.SpanId;
+			var isSampled = traceMetadata.IsSampled;
+
+			NrAssert.Multiple(
+				() => Assert.AreEqual(string.Empty, traceId),
+				() => Assert.AreEqual(string.Empty, spanId),
+				() => Assert.AreEqual(false, isSampled)
+			);
+		}
+
+		[Test]
+		public void TraceMetadataReturnsNewValuesAfterAcceptDTPayload()
+		{
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+
+			dynamic traceMetadata = agentWrapperApi.TraceMetadata;
+			var traceIdBefore = traceMetadata.TraceId;
+			var spanIdBefore = traceMetadata.SpanId;
+			var isSampledBefore = traceMetadata.IsSampled;
+
+			transactionBridgeApi.AcceptDistributedTracePayload(_distributedTracePayload.ToJson(), 0);
+
+			traceMetadata = agentWrapperApi.TraceMetadata;
+			var traceIdAfter = traceMetadata.TraceId;
+			var spanIdAfter = traceMetadata.SpanId;
+			var isSampledAfter = traceMetadata.IsSampled;
+
+			NrAssert.Multiple(
+				() => Assert.AreNotEqual(traceIdAfter, traceIdBefore),
+				() => Assert.AreEqual(_traceId, traceIdAfter),
+				() => Assert.AreEqual(_sampled, isSampledAfter)
+			);
+		}
+
+		#endregion TraceMetadata
+
+		#region GetLinkingMetadata
+
+		[Test]
+		public void Test_GetLinkingMetadataOnlyReturnsExistingValues()
+		{
+			// traceId and spanId are not available if DistributedTracing is disabled
+			_compositeTestAgent.ServerConfiguration.EntityGuid = "entityguid";
+			_compositeTestAgent.PushConfiguration();
+
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+			Dictionary<string, string> linkingMetadata = agentWrapperApi.GetLinkingMetadata();
+
+			NrAssert.Multiple(
+				() => Assert.IsFalse(linkingMetadata.ContainsKey("trace.id"), "Key trace.id should not be found"),
+				() => Assert.IsFalse(linkingMetadata.ContainsKey("span.id"), "Key span.id should not be found"),
+				() => Assert.AreEqual(linkingMetadata["entity.type"], "SERVICE"),
+				() => Assert.AreEqual(linkingMetadata["entity.guid"], "entityguid"),
+				() => Assert.IsTrue(linkingMetadata.ContainsKey("hostname"), "Key hostname not found"),
+				() => Assert.IsNotEmpty(linkingMetadata["hostname"], "Key hostname was empty")
+			);
+		}
+
+		[Test]
+		public void Test_GetLinkingMetadataReturnsValidValuesIfDTEnabled()
+		{
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.ServerConfiguration.EntityGuid = "entityguid";
+			_compositeTestAgent.PushConfiguration();
+
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+			Dictionary<string, string> linkingMetadata = agentWrapperApi.GetLinkingMetadata();
+			
+			NrAssert.Multiple(
+				() => Assert.IsTrue(linkingMetadata.ContainsKey("trace.id"), "Key trace.id not found"),
+				() => Assert.IsNotEmpty(linkingMetadata["trace.id"]),
+				() => Assert.AreEqual(linkingMetadata["span.id"], segment.SpanId),
+				() => Assert.AreEqual(linkingMetadata["entity.type"], "SERVICE"),
+				() => Assert.AreEqual(linkingMetadata["entity.guid"], "entityguid"),
+				() => Assert.IsTrue(linkingMetadata.ContainsKey("hostname"), "Key hostname not found"),
+				() => Assert.IsNotEmpty(linkingMetadata["hostname"], "Key hostname is empty")
+			);
+		}
+
+		#endregion GetLinkingMetadata
 	}
 }

@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Config;
@@ -12,7 +13,6 @@ using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Diagnostics;

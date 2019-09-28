@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
@@ -178,6 +179,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<LiveInstrumentationServerConfigurationListener, LiveInstrumentationServerConfigurationListener>();
 
 			container.Register<IDatabaseStatementParser, DatabaseStatementParser>();
+			container.Register<ITraceMetadataFactory, TraceMetadataFactory>();
 
 			if (AgentInstallConfiguration.IsWindows)
 			{

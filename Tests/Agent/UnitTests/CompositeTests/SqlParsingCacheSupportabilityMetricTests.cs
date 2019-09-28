@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Api;
 
 namespace CompositeTests
 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 using NServiceBus.Pipeline.Contexts;

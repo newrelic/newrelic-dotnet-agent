@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Core.Utilities;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.DistributedTracing;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Web;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.Asp35.Shared;
 using NewRelic.SystemExtensions;

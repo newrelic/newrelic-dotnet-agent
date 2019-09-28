@@ -1,4 +1,6 @@
-﻿namespace NewRelic.Api.Agent
+﻿using System.Collections.Generic;
+
+namespace NewRelic.Api.Agent
 {
 	/// <summary>
 	/// Provides access to Agent artifacts and methods, such as the currently executing transaction.
@@ -15,5 +17,27 @@
 		/// </code>
 		/// </example>
 		ITransaction CurrentTransaction { get; }
+
+		/// <summary>
+		/// Provides access to Trace Metadata for details about the currently executing distributed trace.
+		/// </summary>
+		/// <example>
+		/// <code>
+		///   IAgent agent = GetAgent();
+		///   var traceMetadata = agent.TraceMetadata();
+		/// </code>
+		/// </example>
+		ITraceMetadata TraceMetadata { get; }
+
+		/// <summary>
+		/// Returns a list of key/value pairs that can be used to correlate this application in the New Relic backend.
+		/// </summary>
+		/// <example>
+		/// <code>
+		///   IAgent agent = GetAgent();
+		///   var linkingMetadata = agent.LinkingMetadata();
+		/// </code>
+		/// </example>
+		Dictionary<string, string> GetLinkingMetadata();
 	}
 }

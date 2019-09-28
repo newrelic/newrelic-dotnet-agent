@@ -1,4 +1,6 @@
-﻿namespace NewRelic.Agent.Extensions.Providers.Wrapper
+﻿using NewRelic.Agent.Api;
+
+namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
 	public interface IWrapper
 	{

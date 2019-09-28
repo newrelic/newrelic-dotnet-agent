@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using CompositeTests;
 using NBench;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace ConcurrentBenchmarking

@@ -16,6 +16,7 @@ using System.Globalization;
 using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Agent.Core.Api
 {

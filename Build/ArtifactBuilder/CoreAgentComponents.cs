@@ -86,6 +86,10 @@ namespace ArtifactBuilder
 			LinuxProfiler = Platform == "x64" 
 				? $@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libNewRelicProfiler.so"
 				: null;
+
+			AgentInfoJson = $@"{SourcePath}\Agent\Miscellaneous\{Platform}\agentinfo.json";
+
+			SetConfigurationComponents(NewRelicXsd, AgentInfoJson);
 		}
 	}
 }

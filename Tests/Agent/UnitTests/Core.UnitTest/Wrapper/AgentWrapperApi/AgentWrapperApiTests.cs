@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
@@ -113,7 +114,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			_distributedTracePayloadHandler = Mock.Create<DistributedTracePayloadHandler>(Behavior.CallOriginal, _configurationService, _agentHealthReporter, new AdaptiveSampler());
 
-			_agent = new Agent(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService);
+			_agent = new Agent(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, new TraceMetadataFactory(new AdaptiveSampler()));
 		}
 
 		private class CallStackManagerFactory : ICallStackManagerFactory
@@ -825,7 +826,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			SetupTransaction();
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
-			var distributedTraceHeaders = Mock.Create<IDistributedTraceApiModel>();
+			var distributedTraceHeaders = Mock.Create<IDistributedTracePayload>();
 			Mock.Arrange(() => distributedTraceHeaders.HttpSafe()).Returns("value1");
 
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<ISegment>())).Returns(distributedTraceHeaders);
@@ -936,7 +937,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
-			var distributedTraceHeaders = Mock.Create<IDistributedTraceApiModel>();
+			var distributedTraceHeaders = Mock.Create<IDistributedTracePayload>();
 			Mock.Arrange(() => distributedTraceHeaders.HttpSafe()).Returns("value1");
 
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<ISegment>())).Returns(distributedTraceHeaders);
@@ -955,7 +956,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
 
-			var distributedTraceHeaders = Mock.Create<IDistributedTraceApiModel>();
+			var distributedTraceHeaders = Mock.Create<IDistributedTracePayload>();
 			Mock.Arrange(() => distributedTraceHeaders.HttpSafe()).Returns("value1");
 
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(Arg.IsAny<IInternalTransaction>(), Arg.IsAny<ISegment>())).Returns(distributedTraceHeaders);
@@ -963,6 +964,39 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var payload = _agent.CurrentTransaction.CreateDistributedTracePayload();
 
 			Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
+		}
+
+		[Test]
+		public void TraceMetadata_ShouldReturnEmptyModel_IfDTConfigIsFalse()
+		{
+			SetupTransaction();
+
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
+
+			var traceMetadata = _agent.TraceMetadata;
+
+			Assert.AreEqual(TraceMetadata.EmptyModel, traceMetadata);
+		}
+
+		[Test]
+		public void TraceMetadata_ShouldReturnValidValues_IfDTConfigIsTrue()
+		{
+			const string testTraceId = "testTraceId";
+			const string testSpanId = "testSpanId";
+			const bool testIsSampled = true;
+
+			SetupTransaction();
+
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+
+			var traceMetadata = Mock.Create<ITraceMetadata>();
+			Mock.Arrange(() => traceMetadata.TraceId).Returns(testTraceId);
+			Mock.Arrange(() => traceMetadata.SpanId).Returns(testSpanId);
+			Mock.Arrange(() => traceMetadata.IsSampled).Returns(testIsSampled);
+
+			Assert.AreEqual(traceMetadata.TraceId, testTraceId);
+			Assert.AreEqual(traceMetadata.SpanId, testSpanId);
+			Assert.AreEqual(traceMetadata.IsSampled, testIsSampled);
 		}
 
 		private void SetupTransaction()

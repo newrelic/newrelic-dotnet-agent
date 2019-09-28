@@ -30,6 +30,7 @@ namespace NewRelic.Agent.Core.Utilization
 			Mock.Arrange(() => _dnsStatic.GetHostName()).Returns("Host-Name");
 			Mock.Arrange(() => _dnsStatic.GetFullHostName()).Returns("Host-Name.Domain");
 			Mock.Arrange(() => _dnsStatic.GetIpAddresses()).Returns(new List<string> { "127.0.0.1", "0.0.0.0"});
+
 		}
 
 		[Test]
@@ -56,7 +57,7 @@ namespace NewRelic.Agent.Core.Utilization
 		public void when_calling_utilization_hostname_is_set()
 		{
 			_configuration = Mock.Create<IConfiguration>();
-
+			Mock.Arrange(() => _configuration.UtilizationHostName).Returns("Host-Name");
 			var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
 			var settings = service.GetUtilizationSettings();
 
@@ -67,7 +68,7 @@ namespace NewRelic.Agent.Core.Utilization
 		public void when_calling_utilization_fullhostname_is_set()
 		{
 			_configuration = Mock.Create<IConfiguration>();
-
+			Mock.Arrange(() => _configuration.UtilizationFullHostName).Returns("Host-Name.Domain");
 			var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
 			var settings = service.GetUtilizationSettings();
 

@@ -4,3 +4,7 @@
 # Modern Windows knows how to deal with this, Linux can't handle CRLF
 # This will help with Docker-based testing of Linux containers on Windows
 * text eol=lf
+
+*.dll binary
+*.pdb binary
+*.so binary

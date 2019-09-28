@@ -1,6 +1,7 @@
 ﻿#if NET45
 using System;
 using System.Data.OleDb;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 

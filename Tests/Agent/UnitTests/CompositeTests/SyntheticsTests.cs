@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;

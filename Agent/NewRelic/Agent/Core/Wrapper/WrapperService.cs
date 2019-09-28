@@ -6,6 +6,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Agent.Core.Wrapper
 {

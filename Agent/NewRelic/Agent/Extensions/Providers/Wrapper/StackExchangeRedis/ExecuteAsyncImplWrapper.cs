@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Extensions.Parsing;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;

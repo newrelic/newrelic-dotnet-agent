@@ -1,8 +1,16 @@
-﻿namespace NewRelic.Api.Agent
+﻿using System.Collections.Generic;
+
+namespace NewRelic.Api.Agent
 {
 	internal class NoOpAgent : IAgent
 	{
 		private static ITransaction _noOpTransaction = new NoOpTransaction();
+		private static ITraceMetadata _noOpTraceMetadata = new NoOpTraceMetadata();
+
 		public ITransaction CurrentTransaction => _noOpTransaction;
+
+		ITraceMetadata IAgent.TraceMetadata => _noOpTraceMetadata;
+
+		public Dictionary<string, string> GetLinkingMetadata() => new Dictionary<string, string>();
 	}
 }

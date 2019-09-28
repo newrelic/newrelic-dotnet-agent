@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Microsoft.CSharp.RuntimeBinder;
 
 namespace NewRelic.Api.Agent
@@ -36,6 +37,51 @@ namespace NewRelic.Api.Agent
 
 				return _noOpAgent.CurrentTransaction;
 			}
+		}
+
+		private static bool _isTraceMetadataAvailable = true;
+		public ITraceMetadata TraceMetadata
+		{
+			get
+			{
+				if (!_isTraceMetadataAvailable) return _noOpAgent.TraceMetadata;
+
+				try
+				{
+					var wrappedTraceMetadata = _wrappedAgent.TraceMetadata;
+					if (wrappedTraceMetadata != null)
+					{
+						return new TraceMetadata(wrappedTraceMetadata);
+					}
+				}
+				catch (RuntimeBinderException)
+				{
+					_isTraceMetadataAvailable = false;
+				}
+
+				return _noOpAgent.TraceMetadata;
+			}
+		}
+
+		private static bool _isGetLinkingMetadataAvailable = true;
+		public Dictionary<string, string> GetLinkingMetadata()
+		{
+			if (!_isGetLinkingMetadataAvailable) return _noOpAgent.GetLinkingMetadata();
+
+			try
+			{
+				var wrappedLinkingMetadata = _wrappedAgent.GetLinkingMetadata();
+				if (wrappedLinkingMetadata != null)
+				{
+					return wrappedLinkingMetadata;
+				}
+			}
+			catch (RuntimeBinderException)
+			{
+				_isGetLinkingMetadataAvailable = false;
+			}
+
+			return new Dictionary<string, string>();
 		}
 	}
 }

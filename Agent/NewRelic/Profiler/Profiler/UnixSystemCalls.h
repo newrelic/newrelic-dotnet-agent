@@ -29,7 +29,7 @@ namespace NewRelic { namespace Profiler
 
 		virtual xstring_t GetNewRelicInstallPath() override
 		{
-			return _X("CORECLR_NEWRELIC_INSTALL_PATH");
+			return _X("NEWRELIC_INSTALL_PATH");
 		}
 
 		static std::string ToCharString(xstring_t str)

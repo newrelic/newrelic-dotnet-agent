@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.MongoDb
 {

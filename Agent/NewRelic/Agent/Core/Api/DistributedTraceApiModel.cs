@@ -1,11 +1,11 @@
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Api;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
 using System;
 
 namespace NewRelic.Agent.Core.Api
 {
-	public class DistributedTraceApiModel : IDistributedTraceApiModel
+	public class DistributedTraceApiModel : IDistributedTracePayload
 	{
 		public static readonly DistributedTraceApiModel EmptyModel = new DistributedTraceApiModel(string.Empty);
 

@@ -8,6 +8,7 @@ using System.Data.Odbc;
 using System.Data.OleDb;
 #endif
 using JetBrains.Annotations;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing

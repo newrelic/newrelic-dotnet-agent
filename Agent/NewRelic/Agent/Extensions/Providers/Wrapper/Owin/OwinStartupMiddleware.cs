@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Microsoft.Owin;
 using System.Linq;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.Owin
 {

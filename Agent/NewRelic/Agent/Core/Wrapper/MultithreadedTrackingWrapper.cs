@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 
 namespace NewRelic.Agent.Core.Wrapper

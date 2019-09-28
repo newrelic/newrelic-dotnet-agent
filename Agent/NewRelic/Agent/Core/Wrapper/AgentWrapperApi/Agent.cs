@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.DistributedTracing;
@@ -20,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -43,12 +45,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		internal readonly IAgentHealthReporter _agentHealthReporter;
 		internal readonly IAgentTimerService _agentTimerService;
 		internal readonly IMetricNameService _metricNameService;
+		internal readonly Api.ITraceMetadataFactory _traceMetadataFactory;
 		internal Extensions.Logging.ILogger _logger;
 
 		internal static Agent Instance;
 		private static readonly ITransaction NoOpTransaction = new NoOpTransaction();
 
-		public Agent(ITransactionService transactionService, ITimerFactory timerFactory, ITransactionTransformer transactionTransformer, IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, ICatHeaderHandler catHeaderHandler, IDistributedTracePayloadHandler distributedTracePayloadHandler, ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, IMetricNameService metricNameService)
+		public Agent(ITransactionService transactionService, ITimerFactory timerFactory, ITransactionTransformer transactionTransformer, IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, ICatHeaderHandler catHeaderHandler, IDistributedTracePayloadHandler distributedTracePayloadHandler, ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory)
 		{
 			_transactionService = transactionService;
 			_timerFactory = timerFactory;
@@ -66,6 +69,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agentHealthReporter = agentHealthReporter;
 			_agentTimerService = agentTimerService;
 			_metricNameService = metricNameService;
+			_traceMetadataFactory = traceMetadataFactory;
 
 			Instance = this;
 		}
@@ -129,6 +133,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		}
 
 		public ITransaction CurrentTransaction => _transactionService.GetCurrentInternalTransaction() ?? NoOpTransaction;
+
+		public ITraceMetadata TraceMetadata
+		{
+			get
+			{
+				if (_configurationService.Configuration.DistributedTracingEnabled && CurrentTransaction.IsValid)
+				{
+					return _traceMetadataFactory.CreateTraceMetadata((IInternalTransaction)CurrentTransaction);
+				}
+
+				return Api.TraceMetadata.EmptyModel;
+			}
+		}
 
 		public bool TryTrackAsyncWorkOnNewTransaction()
 		{
@@ -331,6 +348,50 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		}
 
 		#endregion Stream manipulation
+
+		#region GetLinkingMetadata
+
+		public Dictionary<string, string> GetLinkingMetadata()
+		{
+			Dictionary<string, string> metadata = new Dictionary<string, string>();
+
+			var traceMetadata = TraceMetadata;
+			var hostname = string.IsNullOrEmpty(Configuration.UtilizationFullHostName) ?Configuration.UtilizationFullHostName :
+				Configuration.UtilizationHostName;
+
+			if (!string.IsNullOrEmpty(traceMetadata.TraceId))
+			{
+				metadata.Add("trace.id", traceMetadata.TraceId);
+			}
+
+			if (!string.IsNullOrEmpty(traceMetadata.SpanId))
+			{
+				metadata.Add("span.id", traceMetadata.SpanId);
+			}
+
+			if (Configuration.ApplicationNames.Count() > 0)
+			{
+				var appName = Configuration.ApplicationNames.ElementAt(0);
+				if (!string.IsNullOrEmpty(appName))
+				metadata.Add("entity.name", appName);
+			}
+
+			metadata.Add("entity.type", "SERVICE");
+
+			if (!string.IsNullOrEmpty(Configuration.EntityGuid))
+			{
+				metadata.Add("entity.guid", Configuration.EntityGuid);
+			}
+
+			if (!string.IsNullOrEmpty(hostname))
+			{
+				metadata.Add("hostname", hostname);
+			}
+
+			return metadata;
+		}
+
+		#endregion GetLinkingMetadata
 
 		#region Helpers
 

@@ -16,11 +16,12 @@ namespace NewRelic.Agent.Core
 	{
 #if NETSTANDARD2_0
 		private const string NewRelicHomeEnvironmentVariable = "CORECLR_NEWRELIC_HOME";
-		private const string NewRelicInstallPathEnvironmentVariable = "CORECLR_NEWRELIC_INSTALL_PATH";
+		private const string RuntimeDirectoryName = "netcore";
 #else
 		private const string NewRelicHomeEnvironmentVariable = "NEWRELIC_HOME";
-		private const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
+		private const string RuntimeDirectoryName = "netframework";
 #endif
+		private const string NewRelicInstallPathEnvironmentVariable = "NEWRELIC_INSTALL_PATH";
 
 		public static bool IsWindows { get; }
 #if NET45
@@ -31,6 +32,7 @@ namespace NewRelic.Agent.Core
 		public static string NewRelicHome { get; }
 		public static string NewRelicInstallPath { get; }
 		public static string HomeExtensionsDirectory { get; }
+		public static string RuntimeHomeExtensionsDirectory { get; }
 		public static string InstallPathExtensionsDirectory { get; }
 		public static int ProcessId { get; }
 		public static string AppDomainName { get; }
@@ -47,6 +49,7 @@ namespace NewRelic.Agent.Core
 			NewRelicHome = GetNewRelicHome();
 			NewRelicInstallPath = GetNewRelicInstallPath();
 			HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
+			RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
 			IsNetstandardPresent = GetIsNetstandardPresent();
 			IsNet46OrAbovePresent = GetIsNet46OrAbovePresent();
@@ -73,6 +76,7 @@ namespace NewRelic.Agent.Core
 			var netstandardAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetName().Name == "netstandard");
 			return netstandardAssembly != null && netstandardAssembly.GetName().Version >= netstandard20Version;
 		}
+
 		private static bool GetIsNet46OrAbovePresent()
 		{
 #if NET45
@@ -97,7 +101,11 @@ namespace NewRelic.Agent.Core
 		private static string GetNewRelicInstallPath()
 		{
 			var newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicInstallPathEnvironmentVariable);
-			if (newRelicInstallPath != null && Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
+			if (newRelicInstallPath != null) {
+				newRelicInstallPath = Path.Combine(newRelicInstallPath, RuntimeDirectoryName);
+				if (Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
+			}
+
 			newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicHomeEnvironmentVariable);
 			return newRelicInstallPath;
 		}

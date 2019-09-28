@@ -190,15 +190,19 @@ namespace Profiler {
 
 				auto configuration = InitializeConfigAndSetLogLevel();
 
-				auto instrumentationConfiguration = InitializeInstrumentationConfig();
-
-				HRESULT methodRewriterInitResult = InitializeAndSetMethodRewriter(configuration, instrumentationConfiguration, _productName);
-				if (FAILED(methodRewriterInitResult))
-				{
-					return methodRewriterInitResult;
+				HRESULT corePathInitResult = InitializeAndSetAgentCoreDllPath(_productName);
+				if (FAILED(corePathInitResult)) {
+					return corePathInitResult;
 				}
 
-				if (!ShouldInstrument()) {
+				auto instrumentationConfiguration = InitializeInstrumentationConfig();
+				auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath);
+				this->SetMethodRewriter(methodRewriter);
+
+				LogTrace("Checking to see if we should instrument this process.");
+				auto forceProfiling = _systemCalls->TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
+				if (!forceProfiling && !ShouldInstrument(configuration)) {
+					LogInfo("This process should not be instrumented, unloading profiler.");
 					return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
 				}
 
@@ -224,9 +228,11 @@ namespace Profiler {
 			return eventMask;
 		}
 
-		virtual bool ShouldInstrument() = 0;
+		virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration) = 0;
 
 		virtual void ConfigureEventMask(IUnknown*) = 0;
+
+		virtual xstring_t GetRuntimeExtensionsDirectoryName() = 0;
 
 		virtual HRESULT MinimumDotnetVersionCheck(IUnknown*) = 0;
 
@@ -430,7 +436,7 @@ namespace Profiler {
 			auto oldMethodRewriter = GetMethodRewriter();
 			auto oldInstrumentationPoints = oldMethodRewriter->GetInstrumentationConfiguration()->GetInstrumentationPoints();
 
-			SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(oldMethodRewriter, instrumentationConfiguration, _systemCalls));
+			SetMethodRewriter(std::make_shared<MethodRewriter::MethodRewriter>(instrumentationConfiguration, _agentCoreDllPath));
 
 			auto oldInstrumentationByAssembly = GroupByAssemblyName(oldInstrumentationPoints);
 			auto newInstrumentationByAssembly = GroupByAssemblyName(instrumentationConfiguration->GetInstrumentationPoints());
@@ -647,6 +653,7 @@ namespace Profiler {
 			COR_PRF_MONITOR_JIT_COMPILATION | COR_PRF_MONITOR_MODULE_LOADS | COR_PRF_USE_PROFILE_IMAGES | COR_PRF_MONITOR_THREADS | COR_PRF_ENABLE_STACK_SNAPSHOT | COR_PRF_ENABLE_REJIT | (DWORD)COR_PRF_DISABLE_ALL_NGEN_IMAGES);
 
 		xstring_t _productName = _X("");
+		xstring_t _agentCoreDllPath = _X("");
 
 		MethodRewriter::MethodRewriterPtr GetMethodRewriter()
 		{
@@ -705,7 +712,7 @@ namespace Profiler {
 			return ReadFile(applicationConfigPath);
 		}
 
-		static Configuration::InstrumentationXmlSetPtr GetInstrumentationXmlsFromDisk(std::shared_ptr<SystemCalls> systemCalls)
+		Configuration::InstrumentationXmlSetPtr GetInstrumentationXmlsFromDisk(std::shared_ptr<SystemCalls> systemCalls)
 		{
 			Configuration::InstrumentationXmlSetPtr instrumentationXmls(new Configuration::InstrumentationXmlSet());
 
@@ -774,13 +781,25 @@ namespace Profiler {
 			throw ProfilerException();
 		}
 
-		static FilePaths GetXmlFilesInExtensionsDirectory(std::shared_ptr<SystemCalls> systemCalls)
+		FilePaths GetXmlFilesInExtensionsDirectory(std::shared_ptr<SystemCalls> systemCalls)
 		{
-			auto extensionsDirectory = GetNewRelicHomePath(systemCalls) + PATH_SEPARATOR + _X("extensions");
-			if (!systemCalls->DirectoryExists(extensionsDirectory)) {
-				LogWarn(L"Unable to find the New Relic Agent extensions directory (", extensionsDirectory, L").  No methods will be instrumented except those decorated with [Transaction] or [Trace] attributes in conjunction with the New Relic agent API.");
+			auto rootExtensionsDirectory = GetNewRelicHomePath(systemCalls) + PATH_SEPARATOR + _X("extensions");
+			if (!systemCalls->DirectoryExists(rootExtensionsDirectory)) {
+				LogWarn(L"Unable to find the New Relic Agent extensions directory (", rootExtensionsDirectory, L").  No methods will be instrumented except those decorated with [Transaction] or [Trace] attributes in conjunction with the New Relic agent API.");
+			} else {
+				LogInfo(L"Loading instrumentation from ", rootExtensionsDirectory);
 			}
-			return GetXmlFilesInDirectory(systemCalls, extensionsDirectory);
+
+			auto xmlFiles = GetXmlFilesInDirectory(systemCalls, rootExtensionsDirectory);
+
+			auto runtimeExtensionsDirectory = rootExtensionsDirectory + PATH_SEPARATOR + GetRuntimeExtensionsDirectoryName();
+			if (systemCalls->DirectoryExists(runtimeExtensionsDirectory)) {
+				LogInfo(L"Loading instrumentation from ", runtimeExtensionsDirectory);
+				auto runtimeExtensionsDirectoryXmlFiles = GetXmlFilesInDirectory(systemCalls, runtimeExtensionsDirectory);
+				xmlFiles.insert(runtimeExtensionsDirectoryXmlFiles.begin(), runtimeExtensionsDirectoryXmlFiles.end());
+			}
+
+			return xmlFiles;
 		}
 
 		static FilePaths GetXmlFilesInDirectory(std::shared_ptr<SystemCalls> systemCalls, xstring_t directoryPath)
@@ -870,19 +889,60 @@ namespace Profiler {
 			return instrumentationConfiguration;
 		}
 
-		HRESULT InitializeAndSetMethodRewriter(std::shared_ptr<Configuration::Configuration> configuration, std::shared_ptr<Configuration::InstrumentationConfiguration> instrumentationConfiguration, xstring_t expectedProductName)
+		HRESULT InitializeAndSetAgentCoreDllPath(xstring_t expectedProductName)
 		{
-			auto methodRewriter = std::make_shared<MethodRewriter::MethodRewriter>(configuration, instrumentationConfiguration, _systemCalls);
-			this->SetMethodRewriter(methodRewriter);
-			if (!_systemCalls->FileExists(methodRewriter->GetCorePath())) {
-				LogError(L"The New Relic Agent DLL is missing: ", methodRewriter->GetCorePath(), L" not found");
+			auto agentCoreDllPath = GetAgentCoreDllPath();
+			if (agentCoreDllPath == nullptr) {
+				LogError(L"The New Relic Agent DLL is missing.");
 				return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
 			}
-			if (!IsCorrectAgentProduct(methodRewriter->GetCorePath(), expectedProductName)) {
+			
+			if (!IsCorrectAgentProduct(*agentCoreDllPath, expectedProductName)) {
 				LogError(L"Incorrect agent product");
 				return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
 			}
+
+			_agentCoreDllPath = *agentCoreDllPath;
+
 			return S_OK;
+		}
+
+		std::unique_ptr<xstring_t> GetAgentCoreDllPath()
+		{
+			auto nrInstallPathEnvVar = _systemCalls->GetNewRelicInstallPath();
+			auto nrHomeEnvVar = _systemCalls->GetNewRelicHomePath();
+			auto runtimeDirectoryName = GetRuntimeExtensionsDirectoryName();
+
+			auto maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->TryGetEnvironmentVariable(nrInstallPathEnvVar), runtimeDirectoryName);
+			if (maybeCorePath != nullptr)
+				return maybeCorePath;
+
+			maybeCorePath = TryGetCorePathFromBasePath(_systemCalls->TryGetEnvironmentVariable(nrHomeEnvVar), runtimeDirectoryName);
+			if (maybeCorePath != nullptr)
+				return maybeCorePath;
+
+			LogError(L"Unable to find ", nrInstallPathEnvVar, L" or ", nrHomeEnvVar, L" environment variables.  Aborting instrumentation.");
+			return nullptr;
+		}
+
+		std::unique_ptr<xstring_t> TryGetCorePathFromBasePath(const std::unique_ptr<xstring_t> basePath, const xstring_t runtimeDirectoryName)
+		{
+			if (basePath == nullptr)
+				return nullptr;
+
+			auto installPath = *basePath + PATH_SEPARATOR + _X("NewRelic.Agent.Core.dll");
+			LogDebug(L"Searching for New Relic Agent DLL at: ", installPath);
+			if (_systemCalls->FileExists(installPath)) {
+				return std::unique_ptr<xstring_t>(new xstring_t(installPath));
+			}
+
+			installPath = *basePath + PATH_SEPARATOR + runtimeDirectoryName + PATH_SEPARATOR + _X("NewRelic.Agent.Core.dll");
+			LogDebug(L"Searching for New Relic Agent DLL at: ", installPath);
+			if (_systemCalls->FileExists(installPath)) {
+				return std::unique_ptr<xstring_t>(new xstring_t(installPath));
+			}
+
+			return nullptr;
 		}
 
 		// This method verifies that the dll specified by filePath has the correct Product Name.

@@ -37,8 +37,8 @@ namespace NewRelic.Agent.Core.Utilization
 		{
 			var totalMemory = _systemInfo.GetTotalPhysicalMemoryBytes();
 			var logicalProcessors = _systemInfo.GetTotalLogicalProcessors();
-			var hostname = _dnsStatic.GetHostName();
-			var fullHostName = _dnsStatic.GetFullHostName();
+			var hostname = _configuration.UtilizationHostName;
+			var fullHostName = _configuration.UtilizationFullHostName;
 			var ipAddress = _dnsStatic.GetIpAddresses();
 			var vendors = GetVendorSettings();
 			var bootIdResult = _systemInfo.GetBootId();

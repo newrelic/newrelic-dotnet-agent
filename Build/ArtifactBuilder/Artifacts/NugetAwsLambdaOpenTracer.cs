@@ -17,7 +17,7 @@ namespace ArtifactBuilder.Artifacts
 			var package = new NugetPackage(StagingDirectory, OutputDirectory);
 			package.CopyAll($@"{PackageDirectory}");
 			package.CopyToLib(component, "netstandard2.0");
-			package.SetVersionFromDll(component, "alpha");
+			package.SetVersionFromDll(component, "beta");
 			package.Pack();
 		}
 	}

@@ -38,21 +38,15 @@ namespace NewRelic { namespace Profiler
 		}
 #pragma warning (pop)
 
-		virtual bool ShouldInstrument() override
+		virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration) override
 		{
 			auto processPath = GetAndTransformProcessPath();
+			return configuration->ShouldInstrumentNetFramework(processPath, GetAppPoolId(_systemCalls));
+		}
 
-			if (_systemCalls->TryGetEnvironmentVariable(L"NEWRELIC_FORCE_PROFILING") != nullptr)
-			{
-				return true;
-			}
-
-			if (!_methodRewriter->ShouldInstrumentNetFramework(processPath, GetAppPoolId(_systemCalls)))
-			{
-				LogInfo("This process should not be instrumented, unloading profiler.");
-				return false;
-			}
-			return true;
+		virtual xstring_t GetRuntimeExtensionsDirectoryName() override
+		{
+			return _X("netframework");
 		}
 
 		virtual HRESULT MinimumDotnetVersionCheck(IUnknown* pICorProfilerInfoUnk) override

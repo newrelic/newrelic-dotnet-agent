@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using System.Web;
+using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.ScriptHandlerFactory
 {
