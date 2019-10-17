@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.Utilities
 				Log.Info($"The following assembly will be loaded on-demand: {x}");
 			});
 
-			if (!AgentInstallConfiguration.IsNet46OrAbovePresent)
+			if (!AgentInstallConfiguration.IsNet46OrAbove)
 			{
 				var asmPath = Path.Combine(_installPathExtensionsDirectory, "NewRelic.Providers.Storage.AsyncLocal.dll");
 				Log.Info($"The following assembly is not applicable based on installed Framework: {asmPath}");

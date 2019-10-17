@@ -45,11 +45,16 @@ namespace NewRelic.Agent.Core.Errors
 
 		public static ErrorData FromException(Exception exception, bool stripErrorMessage)
 		{
-			var message = stripErrorMessage ? _stripExceptionMessagesMessage : exception.GetBaseException().Message;
-			var exceptionTypeName = exception.GetType().FullName;
+			// this does more work than just getting the exception, so we want to do this just once.
+			var baseException = exception.GetBaseException();
+			var message = stripErrorMessage ? _stripExceptionMessagesMessage : baseException.Message;
+			var baseExceptionTypeName = baseException.GetType().FullName;
+			// We want the message from the base exception since that is the real exception.
+			// We want to show to the stacktace from theouter most excpetion since that will provide the most context for the base exception.
+			// See https://newrelic.atlassian.net/browse/DOTNET-4042 for example stacktraces
 			var stackTrace = ExceptionFormatter.FormatStackTrace(exception, stripErrorMessage);
 			var noticedAt = DateTime.UtcNow;
-			return new ErrorData(message, exceptionTypeName, stackTrace, noticedAt);
+			return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt);
 		}
 
 		public static ErrorData TryGetErrorData(ImmutableTransaction immutableTransaction, IConfigurationService configurationService)

@@ -3,13 +3,14 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
+using realWireModels = NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.WireModels
 {
 	[TestFixture]
 	public class MetricBuilderTests
 	{
-		private MetricWireModel.MetricBuilder _metricBuilder;
+		private realWireModels.IMetricBuilder _metricBuilder;
 
 		[SetUp]
 		public void SetUp()
@@ -17,118 +18,123 @@ namespace NewRelic.Agent.Core.WireModels
 			var metricNameService = Mock.Create<IMetricNameService>();
 			Mock.Arrange(() => metricNameService.RenameMetric(Arg.IsAny<string>()))
 				.Returns(metricName => metricName);
-
 			_metricBuilder = new MetricWireModel.MetricBuilder(metricNameService);
 		}
 
 		[Test]
 		public void BuildMemoryPhysicalMetric()
 		{
-			const int rawBytes = 1024;
-
-			var actualMetric = _metricBuilder.TryBuildMemoryPhysicalMetric(rawBytes);
-
+			const int RawBytes = 1024;
+			var actualMetric = _metricBuilder.TryBuildMemoryPhysicalMetric(RawBytes);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.MemoryPhysical, actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildByteData(rawBytes), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildByteData(RawBytes), actualMetric.Data)
 			);
 		}
 
 		[Test]
 		public void BuildMemoryWorkingSetMetric()
 		{
-			const int rawBytes = 1536;
-
-			var actualMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(rawBytes);
-
+			const int RawBytes = 1536;
+			var actualMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(RawBytes);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.MemoryWorkingSet, actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildByteData(rawBytes), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildByteData(RawBytes), actualMetric.Data)
 			);
 		}
 
 		[Test]
 		public void BuildThreadpoolUsageStatsMetric()
 		{
-			const int rawValue = 3;
+			const int RawValue = 3;
 			var threadType = Samplers.ThreadType.Worker;
 			var threadStatus = Samplers.ThreadStatus.Available;
-
-			var actualMetric = _metricBuilder.TryBuildThreadpoolUsageStatsMetric(threadType, threadStatus, rawValue);
-
+			var actualMetric = _metricBuilder.TryBuildThreadpoolUsageStatsMetric(threadType, threadStatus, RawValue);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.GetThreadpoolUsageStatsName(threadType, threadStatus), actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(rawValue), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.Data)
 			);
 		}
 
 		[Test]
 		public void BuildThreadpoolThroughputStatsMetric()
 		{
-			const int rawValue = 3;
+			const int RawValue = 3;
 			var throughputStatsType = Samplers.ThreadpoolThroughputStatsType.Started;
-
-			var actualMetric = _metricBuilder.TryBuildThreadpoolThroughputStatsMetric(throughputStatsType, rawValue);
-
+			var actualMetric = _metricBuilder.TryBuildThreadpoolThroughputStatsMetric(throughputStatsType, RawValue);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.GetThreadpoolThroughputStatsName(throughputStatsType), actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(rawValue), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.Data)
 			);
 		}
 
 		[Test]
 		public void BuildGCBytesMetric()
 		{
-			const long rawByteValue = 123456;
+			const long RawByteValue = 123456;
 			var gcSampleType = Samplers.GCSampleType.Gen0Size;
-
-			var actualMetric = _metricBuilder.TryBuildGCBytesMetric(gcSampleType, rawByteValue);
-
+			var actualMetric = _metricBuilder.TryBuildGCBytesMetric(gcSampleType, RawByteValue);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildByteData(rawByteValue), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildByteData(RawByteValue), actualMetric.Data)
 			);
 		}
 
 		[Test]
 		public void BuildGCCountMetric()
 		{
-			const int rawCountValue = 3;
+			const int RawCountValue = 3;
 			var gcSampleType = Samplers.GCSampleType.Gen0CollectionCount;
-
-			var actualMetric = _metricBuilder.TryBuildGCCountMetric(gcSampleType, rawCountValue);
-
+			var actualMetric = _metricBuilder.TryBuildGCCountMetric(gcSampleType, RawCountValue);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildCountData(rawCountValue), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildCountData(RawCountValue), actualMetric.Data)
 			);
 		}
 
 		[Test]
 		public void BuildGCPercentMetric()
 		{
-			const float rawPercentageValue = 0.8f;
+			const float RawPercentageValue = 0.8f;
 			var gcSampleType = Samplers.GCSampleType.PercentTimeInGc;
-
-			var actualMetric = _metricBuilder.TryBuildGCPercentMetric(gcSampleType, rawPercentageValue);
-
+			var actualMetric = _metricBuilder.TryBuildGCPercentMetric(gcSampleType, RawPercentageValue);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildPercentageData(rawPercentageValue), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildPercentageData(RawPercentageValue), actualMetric.Data)
 			);
 		}
 
 		[Test]
 		public void BuildGCGaugeMetric()
 		{
-			const float rawValue = 3000f;
+			const float RawValue = 3000f;
 			var gcSampleType = Samplers.GCSampleType.HandlesCount;
-
-			var actualMetric = _metricBuilder.TryBuildGCGaugeMetric(gcSampleType, rawValue);
-
+			var actualMetric = _metricBuilder.TryBuildGCGaugeMetric(gcSampleType, RawValue);
 			NrAssert.Multiple(
 				() => Assert.AreEqual(MetricNames.GetGCMetricName(gcSampleType), actualMetric.MetricName.Name),
-				() => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(rawValue), actualMetric.Data)
+				() => Assert.AreEqual(MetricDataWireModel.BuildGaugeValue(RawValue), actualMetric.Data)
+			);
+		}
+
+		[Test]
+		public void BuildSupportabilityCountMetric_DefuaultCount()
+		{
+			const string MetricName = "WCFClient/BindingType/BasicHttpBinding";
+			var actualMetric = _metricBuilder.TryBuildSupportabilityCountMetric(MetricName);
+			NrAssert.Multiple(
+				() => Assert.AreEqual(MetricNames.GetSupportabilityName(MetricName), actualMetric.MetricName.Name),
+				() => Assert.AreEqual(MetricDataWireModel.BuildCountData(1), actualMetric.Data)
+			);
+		}
+
+		[Test]
+		public void BuildSupportabilityCountMetric_SuppliedCount()
+		{
+			const string MetricName = "WCFClient/BindingType/BasicHttpBinding";
+			var actualMetric = _metricBuilder.TryBuildSupportabilityCountMetric(MetricName, 2);
+			NrAssert.Multiple(
+				() => Assert.AreEqual(MetricNames.GetSupportabilityName(MetricName), actualMetric.MetricName.Name),
+				() => Assert.AreEqual(MetricDataWireModel.BuildCountData(2), actualMetric.Data)
 			);
 		}
 	}

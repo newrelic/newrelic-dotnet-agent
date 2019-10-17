@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Samplers
 
 		private readonly IProcessStatic _processStatic;
 
-		private const int MemorySampleIntervalSeconds = 1;
+		private const int MemorySampleIntervalSeconds = 60;
 
 		public MemorySampler(IScheduler scheduler, IMemorySampleTransformer memorySampleTransformer, IProcessStatic processStatic)
 			: base(scheduler, TimeSpan.FromSeconds(MemorySampleIntervalSeconds))
@@ -23,6 +23,8 @@ namespace NewRelic.Agent.Core.Samplers
 
 		public override void Sample()
 		{
+			_processStatic.GetCurrentProcess().Refresh();
+
 			try
 			{
 				var immutableMemorySample = new ImmutableMemorySample(GetCurrentProcessPrivateMemorySize(), GetCurrentProcessWorkingSet());

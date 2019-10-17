@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.CallStack;
+﻿using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
@@ -20,7 +19,6 @@ namespace NewRelic.Agent.Core.Transactions
 		/// Returns the current internal transaction, if any.
 		/// </summary>
 		/// <returns></returns>
-		[CanBeNull]
 		IInternalTransaction GetCurrentInternalTransaction();
 
 		/// <summary>
@@ -28,10 +26,9 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <param name="initialTransactionName">The initial name to use if a transaction a created.</param>
 		/// <param name="onCreate">An action to perform if an internal transaction is created.</param>
-		/// <param name="mustBeRootTransaction">Whether or not the transaction must be root.</param>
+		/// <param name="doNotTrackAsUnitOfWork">Whether or not the transaction must be root.</param>
 		/// <returns></returns>
-		[CanBeNull]
-		IInternalTransaction GetOrCreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true);
+		IInternalTransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, bool doNotTrackAsUnitOfWork = true);
 
 		/// <summary>
 		/// Removes any outstanding internal transactions.
@@ -51,23 +48,13 @@ namespace NewRelic.Agent.Core.Transactions
 
 	public class TransactionService : ConfigurationBasedService, ITransactionService
 	{
-		private const String TransactionContextKey = "NewRelic.Transaction";
-		[NotNull]
+		private const string TransactionContextKey = "NewRelic.Transaction";
 		private readonly IEnumerable<IContextStorage<IInternalTransaction>> _sortedPrimaryContexts;
-
-		[CanBeNull]
 		private readonly IContextStorage<IInternalTransaction> _asyncContext;
-
-		[NotNull]
 		private readonly ITimerFactory _timerFactory;
-		[NotNull]
 		private readonly ICallStackManagerFactory _callStackManagerFactory;
-
-		[NotNull]
 		private readonly IDatabaseService _databaseService;
-
 		private readonly ITracePriorityManager _tracePriorityManager;
-
 		private IDatabaseStatementParser _databaseStatementParser;
 
 		public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser)
@@ -86,8 +73,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		#region Private Helpers
 
-		[NotNull]
-		private static IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts([NotNull] IEnumerable<IContextStorageFactory> factories)
+		private static IEnumerable<IContextStorage<IInternalTransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
 		{
 			var list = factories
 				.Where(factory => factory != null)
@@ -102,7 +88,7 @@ namespace NewRelic.Agent.Core.Transactions
 				.OrderByDescending(transactionContext => transactionContext.Priority).ToList();
 		}
 
-		private static IContextStorage<IInternalTransaction> GetAsyncTransactionContext([NotNull] IEnumerable<IContextStorageFactory> factories)
+		private static IContextStorage<IInternalTransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
 		{
 			return factories
 				.Where(factory => factory != null)
@@ -114,7 +100,6 @@ namespace NewRelic.Agent.Core.Transactions
 				.FirstOrDefault(); 
 		}
 
-		[CanBeNull]
 		private IInternalTransaction TryGetInternalTransaction(IContextStorage<IInternalTransaction> transactionContext)
 		{
 			try
@@ -145,7 +130,7 @@ namespace NewRelic.Agent.Core.Transactions
 			return null;
 		}
 
-		private IInternalTransaction CreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate)
+		private IInternalTransaction CreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate)
 		{
 			RemoveOutstandingInternalTransactions(true, true);
 
@@ -235,7 +220,7 @@ namespace NewRelic.Agent.Core.Transactions
 			return true;
 		}
 		
-		public IInternalTransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true)
+		public IInternalTransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, bool doNotTrackAsUnitOfWork = true)
 		{
 			var transaction = GetCurrentInternalTransaction();
 			if (transaction == null)
@@ -246,7 +231,7 @@ namespace NewRelic.Agent.Core.Transactions
 			var currentNestedTransactionAttempts = transaction.NoticeNestedTransactionAttempt();
 
 			// If the transaction does not need to be root, then it really is a unit of work inside the current transaction, so increment the work counter to make sure all work is finished before the current transaction ends
-			if (!mustBeRootTransaction)
+			if (!doNotTrackAsUnitOfWork)
 			{ 
 				transaction.NoticeUnitOfWorkBegins();
 			}

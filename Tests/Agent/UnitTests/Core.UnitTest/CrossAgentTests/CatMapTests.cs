@@ -73,8 +73,10 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			_configurationService = Mock.Create<IConfigurationService>();
 			Mock.Arrange(() => _configurationService.Configuration).Returns(() => _configuration);
 
+			var catSupportabilityCounters = Mock.Create<ICATSupportabilityMetricCounters>();
+
 			_pathHashMaker = new PathHashMaker(_configurationService);
-			_catHeaderHandler = new CatHeaderHandler(_configurationService);
+			_catHeaderHandler = new CatHeaderHandler(_configurationService, catSupportabilityCounters);
 			_syntheticsHeaderHandler = new SyntheticsHeaderHandler(_configurationService);
 
 			var metricNameService = Mock.Create<IMetricNameService>();
@@ -87,7 +89,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 			var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-			_agent = new Wrapper.AgentWrapperApi.Agent(transactionBuilderService, Mock.Create<ITimerFactory>(), Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()));
+			_agent = new Wrapper.AgentWrapperApi.Agent(transactionBuilderService, Mock.Create<ITimerFactory>(), Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters);
 
 			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 		}

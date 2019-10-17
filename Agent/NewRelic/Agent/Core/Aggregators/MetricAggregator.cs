@@ -28,8 +28,11 @@ namespace NewRelic.Agent.Core.Aggregators
 		private readonly IMetricBuilder _metricBuilder;
 		private readonly IMetricNameService _metricNameService;
 		private readonly ISqlParsingCacheSupportabilityMetricReporter _sqlParsingCacheSupportabilityMetricReporter;
+		private readonly ICATSupportabilityMetricCounters _catSupportabilityMetricCounters;
 
-		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, ISqlParsingCacheSupportabilityMetricReporter sqlParsingCacheSupportabilityMetricReporter) : base(dataTransportService, scheduler, processStatic)
+		// We are not sold on the pattern on adding additional counters to this constructor when we already pass in the agentHealthReporter, which is what eventually consumes the counters.
+		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, ISqlParsingCacheSupportabilityMetricReporter sqlParsingCacheSupportabilityMetricReporter, ICATSupportabilityMetricCounters catSupportabilityMetricCounters) 
+			: base(dataTransportService, scheduler, processStatic)
 		{
 			_metricBuilder = metricBuilder;
 			_metricNameService = metricNameService;
@@ -37,6 +40,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_dnsStatic = dnsStatic;
 			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
 			_sqlParsingCacheSupportabilityMetricReporter = sqlParsingCacheSupportabilityMetricReporter;
+			_catSupportabilityMetricCounters = catSupportabilityMetricCounters;
 
 			foreach (var source in outOfBandMetricSources)
 			{
@@ -77,6 +81,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_sqlParsingCacheSupportabilityMetricReporter.CollectMetrics();
 
 			_apiSupportabilityMetricCounters.CollectMetrics();
+			_catSupportabilityMetricCounters.CollectMetrics();
 
 			var oldMetrics = GetStatsEngineForHarvest();
 

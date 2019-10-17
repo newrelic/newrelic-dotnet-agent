@@ -10,13 +10,14 @@ namespace NewRelic.Agent.Core.Samplers
 {
 	public class ThreadStatsSampler : AbstractSampler
 	{
-		private readonly IThreadPoolStatic _threadPoolProxy;
+		public ISampledEventListener<ThreadpoolThroughputEventsSample> _listener;
+		private readonly Func<ISampledEventListener<ThreadpoolThroughputEventsSample>> _threadListenerFactory;
 		private readonly IThreadStatsSampleTransformer _transformer;
-		private readonly Func<IThreadEventsListener> _threadListenerFactory;
-		private IThreadEventsListener _listener;
+		private const int ThreadStatsSampleIntervalSeconds = 60;
+		private readonly IThreadPoolStatic _threadPoolProxy;
 
-		public ThreadStatsSampler(IScheduler scheduler, Func<IThreadEventsListener> threadEventListenerFactory, IThreadStatsSampleTransformer threadpoolStatsTransformer, IThreadPoolStatic threadpoolProxy) 
-		 : base(scheduler, TimeSpan.FromSeconds(1))
+		public ThreadStatsSampler(IScheduler scheduler, Func<ISampledEventListener<ThreadpoolThroughputEventsSample>> threadEventListenerFactory, IThreadStatsSampleTransformer threadpoolStatsTransformer, IThreadPoolStatic threadpoolProxy) 
+		 : base(scheduler, TimeSpan.FromSeconds(ThreadStatsSampleIntervalSeconds))
 		{
 			_threadPoolProxy = threadpoolProxy;
 			_threadListenerFactory = threadEventListenerFactory;
@@ -26,6 +27,11 @@ namespace NewRelic.Agent.Core.Samplers
 
 		public override void Sample()
 		{
+			if (_listener == null)
+			{
+				return;
+			}
+
 			try
 			{
 				_threadPoolProxy.GetMaxThreads(out int countWorkerThreadsMax, out int countCompletionThreadsMax);
@@ -35,16 +41,13 @@ namespace NewRelic.Agent.Core.Samplers
 				
 				_transformer.Transform(stats);
 
-				if (_listener != null)
-				{
-					var sample = _listener.Sample();
-					_transformer.Transform(sample);
-				}
+				var sample = _listener.Sample();
+				_transformer.Transform(sample);
 			}
 			catch(Exception ex)
 			{
 				Log.Error($"Unable to get Threadpool stats sample.  No .Net Threadpool metrics will be reported.  Error : {ex}");
-				Log.Error(ex);
+
 				Stop();
 			}
 		}
@@ -67,23 +70,28 @@ namespace NewRelic.Agent.Core.Samplers
 		protected override void Stop()
 		{
 			base.Stop();
+			_listener?.StopListening();
+			_listener?.Dispose();
+			_listener = null;
+		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			_listener?.StopListening();
 			_listener?.Dispose();
 			_listener = null;
 		}
 	}
 
-	public interface IThreadEventsListener : IDisposable
-	{
-		ThreadpoolThroughputEventsSample Sample();
-	}
-
-	public class ThreadEventsListener : EventListener, IThreadEventsListener
+	public class ThreadEventsListener : SampledEventListener<ThreadpoolThroughputEventsSample>
 	{
 		public static readonly Guid ClrEventSourceId = Guid.Parse("8e9f5090-2d75-4d03-8a81-e5afbf85daf1");
 		public static Guid EventSourceIdToMonitor = ClrEventSourceId; //We can't rely on the .ctor to initialize this because OnEventSourceCreated is called in the base .ctor before we have a chance to execute our .ctor
 		public const int EventId_ThreadPoolDequeue = 31;
 		public const int EventId_ThreadPoolEnqueue = 30;
 
+		private const int _threadpool_Keyword = 0x0002;
 		private int _countThreadRequestsQueued;
 		private int _countThreadRequestsDequeued;
 
@@ -94,8 +102,9 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			if (eventSource.Guid == EventSourceIdToMonitor)
 			{
-				//TODO:  Are we sure that we don't have any keywords to filter against?
-				EnableEvents(eventSource, EventLevel.LogAlways);
+				_eventSource = eventSource;
+
+				EnableEvents(eventSource, EventLevel.LogAlways, (EventKeywords)_threadpool_Keyword);
 
 				base.OnEventSourceCreated(eventSource);
 			}
@@ -117,7 +126,7 @@ namespace NewRelic.Agent.Core.Samplers
 			}
 		}
 
-		public ThreadpoolThroughputEventsSample Sample()
+		public override ThreadpoolThroughputEventsSample Sample()
 		{
 			//There is a small chance that the queue length can go below 0.
 			//This occurs when the the listener starts up after some thread requests

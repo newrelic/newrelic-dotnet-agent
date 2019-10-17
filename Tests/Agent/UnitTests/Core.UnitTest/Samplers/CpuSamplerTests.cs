@@ -47,5 +47,38 @@ namespace NewRelic.Agent.Core.Samplers
 			// Assert
 			Assert.NotNull(cpuSample);
 		}
+
+		[Test]
+		public void cpu_sample_values_increase_over_time()
+		{
+			// Arrange
+			var cpuSampleBefore = null as ImmutableCpuSample;
+			Mock.Arrange(() => _cpuSampleTransformer.Transform(Arg.IsAny<ImmutableCpuSample>()))
+				.DoInstead<ImmutableCpuSample>(sample => cpuSampleBefore = sample);
+
+			// Act
+			_sampleAction();
+
+			IncreaseUserProcessorTime(50);
+
+			// Arrange
+			var cpuSampleAfter = null as ImmutableCpuSample;
+			Mock.Arrange(() => _cpuSampleTransformer.Transform(Arg.IsAny<ImmutableCpuSample>()))
+				.DoInstead<ImmutableCpuSample>(sample => cpuSampleAfter = sample);
+
+			// Act
+			_sampleAction();
+
+			// Assert
+			Assert.IsTrue(cpuSampleBefore.CurrentUserProcessorTime < cpuSampleAfter.CurrentUserProcessorTime, "UserProcessorTime did not increase as expected");
+		}
+
+		private void IncreaseUserProcessorTime(int iterations)
+		{
+			for (int x = iterations; x > 0; x--)
+			{
+				GC.Collect();
+			}
+		}
 	}
 }

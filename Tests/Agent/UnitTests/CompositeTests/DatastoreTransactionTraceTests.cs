@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CompositeTests
 {
@@ -34,7 +34,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0;
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1");
 			segment.End();
 			tx.End();
@@ -55,7 +59,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.datastoreTracer.queryParameters.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var queryParameters = new Dictionary<string, IConvertible>
 			{
 				{"myKey1", "myValue1"},
@@ -88,7 +96,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.datastoreTracer.queryParameters.enabled = false;
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var queryParameters = new Dictionary<string, IConvertible>
 			{
 				{"myKey", "myValue"}
@@ -115,7 +127,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.datastoreTracer.queryParameters.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow("SELECT", DatastoreVendor.MSSQL, "Table1", "SELECT * FROM Table1");
 			segment.End();
 			tx.End();

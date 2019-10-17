@@ -16,6 +16,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public bool IsFinished => false;
 		public ISegment CurrentSegment => Segment.NoOpSegment;
 
+		private object _wrapperToken;
+
 		public void End(bool captureResponseTime = true)
 		{
 		}
@@ -205,6 +207,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor vendor, CommandType commandType, string sql)
 		{
 			return null;
+		}
+
+		public Dictionary<string, string> GetLinkingMetadata()
+		{
+			return null;
+		}
+
+		public object GetWrapperToken()
+		{
+			return _wrapperToken;
+		}
+
+		public void SetWrapperToken(object wrapperToken)
+		{
+			_wrapperToken = wrapperToken;
 		}
 	}
 }

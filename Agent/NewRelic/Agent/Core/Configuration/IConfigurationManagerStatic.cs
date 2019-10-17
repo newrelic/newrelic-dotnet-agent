@@ -33,14 +33,22 @@ namespace NewRelic.Agent.Core.Configuration
 
 	public class ConfigurationManagerStatic : IConfigurationManagerStatic
 	{
+		private bool localConfigChecksDisabled;
+
 		public string GetAppSetting(string key)
 		{
-			if (key == null)
+			if (localConfigChecksDisabled || key == null) return null;
+
+			try
 			{
+				return System.Configuration.ConfigurationManager.AppSettings.Get(key);
+			}
+			catch (Exception ex)
+			{
+				Log.Error($"Failed to read '{key}' using System.Configuration.ConfigurationManager.AppSettings. Reading New Relic configuration values using System.Configuration.ConfigurationManager.AppSettings will be disabled. Exception: {ex}");
+				localConfigChecksDisabled = true;
 				return null;
 			}
-
-			return System.Configuration.ConfigurationManager.AppSettings.Get(key);
 		}
 	}
 #else

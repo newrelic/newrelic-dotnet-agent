@@ -23,7 +23,10 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			var destType = RabbitMqHelper.GetBrokerDestinationType(routingKey);
 			var destName = RabbitMqHelper.ResolveDestinationName(destType, routingKey);
 
-			transaction = agent.CreateMessageBrokerTransaction(destType, RabbitMqHelper.VendorName, routingKey);
+			transaction = agent.CreateTransaction(
+				destinationType: destType,
+				brokerVendorName: RabbitMqHelper.VendorName,
+				destination: routingKey);
 
 			// ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
 			// If we implement newer versions of the API or new methods we'll need to re-evaluate.

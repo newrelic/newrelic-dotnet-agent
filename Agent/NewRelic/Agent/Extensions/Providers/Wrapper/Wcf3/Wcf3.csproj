@@ -14,6 +14,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Channels" />
+    <Reference Include="System.ServiceModel.Web" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj" />

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using CompositeTests;
+﻿using CompositeTests;
 using NBench;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System;
+using System.Diagnostics;
 
 namespace Benchmarking
 {
@@ -49,7 +49,11 @@ namespace Benchmarking
 
 		private void CreateTransactionAndSegments()
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 

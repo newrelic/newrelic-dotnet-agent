@@ -19,6 +19,13 @@ namespace NewRelic.Core
 		net48
 	}
 
+	public enum DotnetCoreVersion
+	{
+		LessThan30,
+		netcoreapp30,
+		GreaterThan30
+	}
+
 	public static class DotnetVersion
 	{
 #if NET45
@@ -66,6 +73,23 @@ namespace NewRelic.Core
 				// that 4.5 or later is installed.
 				return DotnetFrameworkVersion.LessThan45;
 			}
+		}
+#else
+		public static DotnetCoreVersion GetDotnetCoreVersion()
+		{
+			var envVer = System.Environment.Version;
+
+			if (envVer.Major == 3 && envVer.Minor == 0)
+			{
+				return DotnetCoreVersion.netcoreapp30;
+			}
+
+			if (envVer.Major == 4)
+			{
+				return DotnetCoreVersion.LessThan30;
+			}
+
+			return DotnetCoreVersion.GreaterThan30;
 		}
 #endif
 	}

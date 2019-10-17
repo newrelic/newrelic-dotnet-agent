@@ -1,26 +1,22 @@
-﻿using System;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core;
+using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Testing.Assertions;
+using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
-using NewRelic.Agent.Api;
-using NewRelic.Agent.Core;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Testing.Assertions;
-using NUnit.Framework;
 
 namespace CompositeTests
 {
 	[TestFixture]
 	public class TransactionTests
 	{
-		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
-		[NotNull]
 		private IAgent _agent;
 		
 		[SetUp]
@@ -40,7 +36,11 @@ namespace CompositeTests
 		[Test]
 		public void UnknownRequestUriInTransactionEvent()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -54,7 +54,11 @@ namespace CompositeTests
 		[Test]
 		public void RequestUriInTransactionEvent()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			tx.SetUri("myuri");
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
@@ -72,7 +76,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -88,7 +96,11 @@ namespace CompositeTests
 		[Test]
 		public void UnknownRequestUriInTransactionTrace()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -105,7 +117,11 @@ namespace CompositeTests
 		[Test]
 		public void RequestUriInTransactionTrace()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			tx.SetUri("myuri");
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
@@ -126,7 +142,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			tx.SetUri("myuri");
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
@@ -159,7 +179,11 @@ namespace CompositeTests
 		[Test]
 		public void UnknownRequestUriInErrorEventWithTransaction()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			tx.NoticeError(new Exception("test exception"));
 			segment.End();
@@ -174,7 +198,11 @@ namespace CompositeTests
 		[Test]
 		public void RequestUriInErrorEventWithTransaction()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			tx.SetUri("myuri");
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			tx.NoticeError(new Exception("test exception"));
@@ -193,7 +221,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			tx.NoticeError(new Exception("test exception"));
 			segment.End();
@@ -238,7 +270,11 @@ namespace CompositeTests
 		[Test]
 		public void RequestUriInErrorTrace()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			tx.SetUri("myuri");
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			tx.NoticeError(new Exception("test exception"));
@@ -257,7 +293,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.attributes.exclude = new List<string> { "request.uri" };
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			tx.NoticeError(new Exception("test exception"));
 			segment.End();
@@ -279,7 +319,11 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateOtherTransaction("TestCategory", "TestTransaction");
+			var tx = _agent.CreateTransaction(
+				isWeb: false,
+				category: "TestCategory",
+				transactionDisplayName: "TestTransaction",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartCustomSegmentOrThrow("TestSegment");
 
 			//The sleep ensures that the exception occurs after the transaction
@@ -317,7 +361,11 @@ namespace CompositeTests
 		[Test]
 		public void SimpleTransaction_CreatesTransactionTraceAndEvent()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -340,7 +388,11 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.RpmConfig.TransactionTracerThreshold = TimeSpan.FromSeconds(5);
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.StartTransactionSegmentOrThrow("segmentName").End();
 			tx.End();
 
@@ -355,7 +407,11 @@ namespace CompositeTests
 		[Test]
 		public void TransactionWithUnfinishedSegments_CreatesTraceAndEvent()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.StartTransactionSegmentOrThrow("segmentName");
 
 			// Finish the transaction without ending its unfinished segment
@@ -372,7 +428,11 @@ namespace CompositeTests
 		[Test]
 		public void TransactionWithNoSegments_DoesNotCreateTraceOrEvent()
 		{
-			_agent.CreateWebTransaction(WebTransactionType.Action, "name").End();
+			_agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true).End();
 
 			_compositeTestAgent.Harvest();
 
@@ -385,7 +445,11 @@ namespace CompositeTests
 		[Test]
 		public void ErrorTransaction_CreatesErrorTraceAndEvent()
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "rootSegmentMetricName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 
 			transaction.NoticeError(new Exception("Oh no!"));
@@ -410,7 +474,11 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.LocalConfiguration.diagnostics.captureAgentTiming = false;
 			_compositeTestAgent.PushConfiguration();
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "rootSegmentMetricName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			transaction.End();
@@ -424,7 +492,11 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.LocalConfiguration.diagnostics.captureAgentTiming = true;
 			_compositeTestAgent.PushConfiguration();
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "rootSegmentMetricName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			transaction.End();
@@ -438,7 +510,11 @@ namespace CompositeTests
 		{
 			//Setup a transaction where the response time and transaction duration are about the same
 			var upperBoundStopWatch = Stopwatch.StartNew();
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "rootSegmentMetricName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			var lowerBoundStopWatch = Stopwatch.StartNew();
 			Thread.Sleep(TimeSpan.FromSeconds(0.5));
@@ -462,7 +538,11 @@ namespace CompositeTests
 		{
 			//Setup a transaction where the response time and transaction duration are about the same
 			var upperBoundStopWatch = Stopwatch.StartNew();
-			var transaction = _agent.CreateOtherTransaction("category", "transactionName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: false,
+				category: "category",
+				transactionDisplayName: "transactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			var lowerBoundStopWatch = Stopwatch.StartNew();
 			Thread.Sleep(TimeSpan.FromSeconds(0.5));
@@ -486,7 +566,11 @@ namespace CompositeTests
 		{
 			//Setup a transaction where the response time and transaction duration are different
 			var stopWatch = Stopwatch.StartNew();
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "rootSegmentMetricName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			transaction.Hold();
 			transaction.End();
@@ -510,7 +594,11 @@ namespace CompositeTests
 		{
 			//Setup a transaction where the response time and transaction duration are different
 			var stopWatch = Stopwatch.StartNew();
-			var transaction = _agent.CreateOtherTransaction("category", "transactionName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: false,
+				category: "category",
+				transactionDisplayName: "transactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			transaction.Hold();
 			transaction.End();
@@ -538,7 +626,11 @@ namespace CompositeTests
 		{
 			//Setup a transaction where the response time and transaction duration are different
 			var upperBoundStopWatch = Stopwatch.StartNew();
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "rootSegmentMetricName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "rootSegmentMetricName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			var lowerBoundStopWatch = Stopwatch.StartNew();
 			transaction.Hold();
@@ -564,7 +656,11 @@ namespace CompositeTests
 		public void ResponseTimeShouldOnlyBeCapturedOnce()
 		{
 			var upperBoundStopWatch = Stopwatch.StartNew();
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Custom, "CustomWebTransaction");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Custom),
+				transactionDisplayName: "CustomWebTransaction",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			transaction.End();

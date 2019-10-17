@@ -26,9 +26,12 @@ namespace NewRelic.Agent.Core
 		public static bool IsWindows { get; }
 #if NET45
 		public static DotnetFrameworkVersion DotnetFrameworkVersion { get; }
+#else
+		public static DotnetCoreVersion DotnetCoreVersion { get; }
 #endif
 		public static bool IsNetstandardPresent { get; }
-		public static bool IsNet46OrAbovePresent { get; }
+		public static bool IsNet46OrAbove { get; }
+		public static bool IsNetCore30OrAbove { get; }
 		public static string NewRelicHome { get; }
 		public static string NewRelicInstallPath { get; }
 		public static string HomeExtensionsDirectory { get; }
@@ -52,7 +55,8 @@ namespace NewRelic.Agent.Core
 			RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
 			IsNetstandardPresent = GetIsNetstandardPresent();
-			IsNet46OrAbovePresent = GetIsNet46OrAbovePresent();
+			IsNet46OrAbove = GetIsNet46OrAbove();
+			IsNetCore30OrAbove = GetIsNetCore30OrAbove();
 			ProcessId = new ProcessStatic().GetCurrentProcess().Id;
 			AppDomainName = AppDomain.CurrentDomain.FriendlyName;
 #if NET45
@@ -66,6 +70,12 @@ namespace NewRelic.Agent.Core
 				DotnetFrameworkVersion = DotnetVersion.GetDotnetFrameworkVersion();
 			}
 			catch { }
+#else
+			try
+			{
+				DotnetCoreVersion = DotnetVersion.GetDotnetCoreVersion();
+			}
+			catch { }
 #endif
 			AgentInfo = GetAgentInfo();
 		}
@@ -77,12 +87,28 @@ namespace NewRelic.Agent.Core
 			return netstandardAssembly != null && netstandardAssembly.GetName().Version >= netstandard20Version;
 		}
 
-		private static bool GetIsNet46OrAbovePresent()
+		private static bool GetIsNet46OrAbove()
 		{
 #if NET45
 			var net46Version = new Version(4, 0, 30319, 42000);
 			return System.Environment.Version >= net46Version;
 #else
+			return true;
+#endif
+		}
+
+		private static bool GetIsNetCore30OrAbove()
+		{
+#if NET45
+			return false;
+#else
+			// System.Environment.Version changed with .Net Core 3.0.
+			// Reference: https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#improved-net-core-version-apis
+			var envVer = System.Environment.Version;
+			if ((envVer.Major < 3 || envVer.Major >= 4) && envVer.Major < 5)
+			{
+				return false;
+			}
 			return true;
 #endif
 		}

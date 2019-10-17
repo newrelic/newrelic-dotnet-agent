@@ -1,8 +1,9 @@
 $ErrorActionPreference = "Stop"
 
 $nugetPath = (Resolve-Path ".\Build\Tools\nuget.exe").Path
-$msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
-$msBuildPathx64 = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\amd64\MSBuild.exe"
+$msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
+$msBuildPathx64 = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\amd64\MSBuild.exe"
+
 
 function ExitIfFailLastExitCode {
     if ($LastExitCode -ne 0) {

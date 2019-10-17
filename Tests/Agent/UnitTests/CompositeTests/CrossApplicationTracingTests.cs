@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
@@ -13,10 +12,8 @@ namespace CompositeTests
 {
 	internal class CrossApplicationTracingTests
 	{
-		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
-		[NotNull]
 		private IAgent _agent;
 
 		[SetUp]
@@ -42,17 +39,21 @@ namespace CompositeTests
 			var clientTransactionGuid = "transaction guid";
 			var clientTripId = "trip id";
 			var clientPathHash = "path hash";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] {clientAccountId};
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
-			var newRelicIdHeader = new KeyValuePair<String, String>("X-NewRelic-ID", Strings.Base64Encode(crossProcessId, encodingKey));
-			var newRelicTransactionHeader = new KeyValuePair<String, String>("X-NewRelic-Transaction", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
-			var requestHeaders = new[] {newRelicIdHeader, newRelicTransactionHeader};
+			var newRelicIdHeader = new KeyValuePair<string, string>("X-NewRelic-ID", Strings.Base64Encode(crossProcessId, encodingKey));
+			var newRelicTransactionHeader = new KeyValuePair<string, string>("X-NewRelic-Transaction", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
+			var requestHeaders = new[] { newRelicIdHeader, newRelicTransactionHeader };
 
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
@@ -63,7 +64,7 @@ namespace CompositeTests
 
 
 			// ASSERT
-			var unexpectedEventAttributes = new List<String>
+			var unexpectedEventAttributes = new List<string>
 			{
 				"nr.alternatePathHashes"
 			};
@@ -105,13 +106,17 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
-			var newRelicIdHeader = new KeyValuePair<String, String>("x-NeWrElIc-Id", Strings.Base64Encode(crossProcessId, encodingKey));
-			var newRelicTransactionHeader = new KeyValuePair<String, String>("X-NeWrElIc-TranSACTion", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
+			var newRelicIdHeader = new KeyValuePair<string, string>("x-NeWrElIc-Id", Strings.Base64Encode(crossProcessId, encodingKey));
+			var newRelicTransactionHeader = new KeyValuePair<string, string>("X-NeWrElIc-TranSACTion", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
 			var requestHeaders = new[] { newRelicIdHeader, newRelicTransactionHeader };
 
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
@@ -121,7 +126,7 @@ namespace CompositeTests
 
 
 			// ASSERT
-			var unexpectedEventAttributes = new List<String>
+			var unexpectedEventAttributes = new List<string>
 			{
 				"nr.alternatePathHashes"
 			};
@@ -154,14 +159,18 @@ namespace CompositeTests
 		{
 			// ARRANGE
 			var encodingKey = "foo";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] {123};
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
-			_agent.ProcessInboundRequest(new KeyValuePair<String, String>[0], TransportType.HTTP);
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
+			_agent.ProcessInboundRequest(new KeyValuePair<string, string>[0], TransportType.HTTP);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -170,7 +179,7 @@ namespace CompositeTests
 
 
 			// ASSERT
-			var unexpectedEventAttributes = new List<String>
+			var unexpectedEventAttributes = new List<string>
 			{
 				"nr.referringPathHash",
 				"nr.referringTransactionGuid",
@@ -178,7 +187,7 @@ namespace CompositeTests
 				"nr.guid",
 				"nr.pathHash"
 			};
-			var unexpectedTraceAttributes = new List<String>
+			var unexpectedTraceAttributes = new List<string>
 			{
 				"client_cross_process_id",
 				"referring_transaction_guid",
@@ -197,13 +206,17 @@ namespace CompositeTests
 		{
 			// ARRANGE
 			var encodingKey = "foo";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] {123};
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -212,7 +225,7 @@ namespace CompositeTests
 
 
 			// ASSERT
-			var unexpectedEventAttributes = new List<String>
+			var unexpectedEventAttributes = new List<string>
 			{
 				"nr.referringPathHash",
 				"nr.referringTransactionGuid",
@@ -220,7 +233,7 @@ namespace CompositeTests
 				"nr.guid",
 				"nr.pathHash"
 			};
-			var unexpectedTraceAttributes = new List<String>
+			var unexpectedTraceAttributes = new List<string>
 			{
 				"client_cross_process_id",
 				"referring_transaction_guid",

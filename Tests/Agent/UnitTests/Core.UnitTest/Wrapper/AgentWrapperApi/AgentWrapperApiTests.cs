@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Timing;
@@ -111,10 +112,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 			_metricNameService = new MetricNameService();
+			var catMetrics = Mock.Create<ICATSupportabilityMetricCounters>();
 
 			_distributedTracePayloadHandler = Mock.Create<DistributedTracePayloadHandler>(Behavior.CallOriginal, _configurationService, _agentHealthReporter, new AdaptiveSampler());
 
-			_agent = new Agent(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, new TraceMetadataFactory(new AdaptiveSampler()));
+			_agent = new Agent(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, new TraceMetadataFactory(new AdaptiveSampler()), catMetrics);
 		}
 
 		private class CallStackManagerFactory : ICallStackManagerFactory

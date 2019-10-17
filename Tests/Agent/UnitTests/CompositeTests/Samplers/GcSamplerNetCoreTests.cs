@@ -1,7 +1,6 @@
 ﻿using CompositeTests;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -15,11 +14,11 @@ namespace NewRelic.Agent.Core.Samplers
 	{
 		private CompositeTestAgent _compositeTestAgent;
 		private IScheduler _mockScheduler;
-		private IGCEventsListener _mockEventListener;
-		private Func<IGCEventsListener> _mockEventListenerFactory;
+		private ISampledEventListener<Dictionary<GCSampleType, float>> _mockEventListener;
+		private Func<ISampledEventListener<Dictionary<GCSampleType, float>>> _mockEventListenerFactory;
 		private IGcSampleTransformer _mockTransformer;
 
-		private readonly static Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult> _fxSamplerValidForFrameworkOverride = ()=>new GCSamplerNetCore.SamplerIsApplicableToFrameworkResult(true);
+		private readonly static Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult> _fxSamplerValidForFrameworkOverride = () => new GCSamplerNetCore.SamplerIsApplicableToFrameworkResult(true);
 
 		/// <summary>
 		/// This list of sample types collected by the sampler
@@ -53,9 +52,9 @@ namespace NewRelic.Agent.Core.Samplers
 			//Prevents the scheduler from actually running
 			Mock.Arrange(() => _mockScheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoNothing();
-			
 
-			_mockEventListener = Mock.Create<IGCEventsListener>();
+
+			_mockEventListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 			_mockEventListenerFactory = () => _mockEventListener;
 			_mockTransformer = Mock.Create<IGcSampleTransformer>();
 		}
@@ -78,8 +77,8 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			var samplerWasStopped = false;
 			var listenerWasDisposed = false;
-			
-			var mockListener = Mock.Create<IGCEventsListener>();
+
+			var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 
 			Mock.Arrange(() => mockListener.Dispose())
 				.DoInstead(() => { listenerWasDisposed = true; });
@@ -89,7 +88,7 @@ namespace NewRelic.Agent.Core.Samplers
 			Mock.Arrange(() => mockListener.Sample())
 				.DoInstead(() => throw new Exception());
 
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				return mockListener;
 			};
@@ -123,12 +122,12 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			var listenerWasDisposed = false;
 
-			var mockListener = Mock.Create<IGCEventsListener>();
+			var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 
 			Mock.Arrange(() => mockListener.Dispose())
 				.DoInstead(() => { listenerWasDisposed = true; });
 
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				return mockListener;
 			};
@@ -148,7 +147,7 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			var wasStarted = false;
 
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				wasStarted = true;
 				return _mockEventListener;
@@ -166,7 +165,7 @@ namespace NewRelic.Agent.Core.Samplers
 		[Test]
 		public void ExceptionOnStartupIsHandled()
 		{
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				throw new Exception();
 			};
@@ -182,7 +181,7 @@ namespace NewRelic.Agent.Core.Samplers
 			var samplerWasStopped = false;
 			var sampleAttempted = false;
 
-			var mockListener = Mock.Create<IGCEventsListener>();
+			var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 
 			Mock.Arrange(() => mockListener.Sample())
 				.DoInstead(() =>
@@ -191,7 +190,7 @@ namespace NewRelic.Agent.Core.Samplers
 					throw new Exception();
 				});
 
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				return mockListener;
 			};
@@ -225,8 +224,8 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			//Arrange a way to capture result
 			var listenerWasStarted = false;
-			var mockListener = Mock.Create<IGCEventsListener>();
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				listenerWasStarted = true;
 				return mockListener;
@@ -245,8 +244,8 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			//Arrange a way to capture result
 			var listenerWasStarted = false;
-			var mockListener = Mock.Create<IGCEventsListener>();
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				listenerWasStarted = true;
 				return mockListener;
@@ -265,12 +264,12 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			var collectedSamples = new List<Dictionary<GCSampleType, float>>();
 
-			var mockListener = Mock.Create<IGCEventsListener>();
+			var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 
 			Mock.Arrange(() => mockListener.Sample())
 				.Returns(() => new Dictionary<GCSampleType, float>());
 
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				return mockListener;
 			};
@@ -292,16 +291,16 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			var collectedSamples = new List<Dictionary<GCSampleType, float>>();
 
-			var mockListener = Mock.Create<IGCEventsListener>();
+			var mockListener = Mock.Create<ISampledEventListener<Dictionary<GCSampleType, float>>>();
 
 			Mock.Arrange(() => mockListener.Sample())
 				.Returns(() => ExpectedSampleTypes.ToDictionary(x => x, x => 0f));
 
-			Func<IGCEventsListener> mockListenerFactory = () =>
+			Func<ISampledEventListener<Dictionary<GCSampleType, float>>> mockListenerFactory = () =>
 			{
 				return mockListener;
 			};
-			
+
 			var mockTransfomer = Mock.Create<IGcSampleTransformer>();
 			Mock.Arrange(() => mockTransfomer.Transform(Arg.IsAny<Dictionary<GCSampleType, float>>()))
 				.DoInstead<Dictionary<GCSampleType, float>>((sampleValues) => { collectedSamples.Add(sampleValues); });
@@ -311,15 +310,8 @@ namespace NewRelic.Agent.Core.Samplers
 			sampler.Start();
 			sampler.Sample();
 
-			Assert.AreEqual(1, collectedSamples.Count,"Only one sample should have been taken");
+			Assert.AreEqual(1, collectedSamples.Count, "Only one sample should have been taken");
 			Assert.That(collectedSamples[0].Keys.ToArray(), Is.EquivalentTo(ExpectedSampleTypes), $"Mismatch between the GSampleTypes returned from Sample to the expectedList");
 		}
-
 	}
 }
- 
- 
- 
- 
- 
- 

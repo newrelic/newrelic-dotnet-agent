@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core;
+﻿using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
@@ -19,7 +18,6 @@ namespace CompositeTests
 	[TestFixture]
 	public class AgentApiTests
 	{
-		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
 		private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
@@ -61,7 +59,7 @@ namespace CompositeTests
 		public void Test_RecordCustomEvent()
 		{
 			// ACT
-			AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<String, Object> { { "key1", "val1" }, { "key2", "val2" } });
+			AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<string, object> { { "key1", "val1" }, { "key2", "val2" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -84,7 +82,7 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			// ACT
-			AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<String, Object> { { "key1", "val1" }, { "key2", "val2" } });
+			AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<string, object> { { "key1", "val1" }, { "key2", "val2" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -97,7 +95,7 @@ namespace CompositeTests
 		public void Test_RecordCustomEvent_WithNullValuedAttribute()
 		{
 			// ACT
-			AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<String, Object> { { "key1", "val1" }, { "key2", null }, { "key3", "val3" } });
+			AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<string, object> { { "key1", "val1" }, { "key2", null }, { "key3", "val3" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -261,7 +259,11 @@ namespace CompositeTests
 		public void Test_NoticeError_WithException()
 		{
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.NoticeError(new Exception(ExceptionMessage));
@@ -297,7 +299,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.NoticeError(new Exception(ExceptionMessage));
@@ -334,7 +340,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.NoticeError(new Exception(ExceptionMessage));
@@ -446,9 +456,13 @@ namespace CompositeTests
 		public void Test_NoticeError_WithExceptionAndCustomParams()
 		{
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
-			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String> { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string> { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -458,7 +472,7 @@ namespace CompositeTests
 				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
 			};
 
-			var unexpectedNonErrorAttributes = new List<String>
+			var unexpectedNonErrorAttributes = new List<string>
 			{
 				"attribute1"
 			};
@@ -494,9 +508,13 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
-			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String> { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string> { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -506,7 +524,7 @@ namespace CompositeTests
 				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
 			};
 
-			var unexpectedNonErrorAttributes = new List<String>
+			var unexpectedNonErrorAttributes = new List<string>
 			{
 				"attribute1"
 			};
@@ -542,19 +560,23 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
-			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String> { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string> { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
-			var unexpectedErrorUserAttributes = new List<String>
+			var unexpectedErrorUserAttributes = new List<string>
 			{
 				"attribute1"
 			};
 
-			var unexpectedNonErrorAttributes = new List<String>
+			var unexpectedNonErrorAttributes = new List<string>
 			{
 				"attribute1"
 			};
@@ -587,7 +609,7 @@ namespace CompositeTests
 		public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams()
 		{
 			// ACT
-			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -618,7 +640,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -649,7 +671,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -677,10 +699,14 @@ namespace CompositeTests
 		public void Test_NoticeError_WithMessageAndCustomParams()
 		{
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -690,7 +716,7 @@ namespace CompositeTests
 				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
 			};
 
-			var unexpectedNonErrorAttributes = new List<String>
+			var unexpectedNonErrorAttributes = new List<string>
 			{
 				"attribute1"
 			};
@@ -726,10 +752,14 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -744,7 +774,7 @@ namespace CompositeTests
 				new ExpectedAttribute {Key = "request.uri", Value = "/Unknown"}
 			};
 
-			var unexpectedNonErrorAttributes = new List<String>
+			var unexpectedNonErrorAttributes = new List<string>
 			{
 				"attribute1"
 			};
@@ -775,10 +805,14 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -788,7 +822,7 @@ namespace CompositeTests
 				"attribute1"
 			};
 
-			var unexpectedNonErrorAttributes = new List<String>
+			var unexpectedNonErrorAttributes = new List<string>
 			{
 				"attribute1"
 			};
@@ -821,7 +855,7 @@ namespace CompositeTests
 		public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams()
 		{
 			// ACT
-			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -852,7 +886,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.stripExceptionMessages.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError("This is an exception string.", new Dictionary<string, string>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -883,7 +917,7 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.highSecurity.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			AgentApi.NoticeError(ExceptionMessage, new Dictionary<String, String>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
@@ -911,11 +945,15 @@ namespace CompositeTests
 		public void Test_NoticeError_ErrorMetrics()
 		{
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.NoticeError(new Exception("This is the first exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
-			AgentApi.NoticeError(new Exception("This is the second exception."), new Dictionary<String, String>() { { "attribute2", "value2" } });
+			AgentApi.NoticeError(new Exception("This is the first exception."), new Dictionary<string, string>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception("This is the second exception."), new Dictionary<string, string>() { { "attribute2", "value2" } });
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -942,7 +980,11 @@ namespace CompositeTests
 		public void Test_NoticeError_TransactionErrorAttributes()
 		{
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
 			AgentApi.NoticeError(new Exception(ExceptionMessage));
 			transaction.End();
@@ -974,7 +1016,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.AddCustomParameter("key1", "val1");
@@ -1011,12 +1057,16 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			for (var i = 1; i <= MaxNumCustomParams; i++)
 			{
-				AgentApi.AddCustomParameter(String.Format("key{0}", i), i);
+				AgentApi.AddCustomParameter(string.Format("key{0}", i), i);
 			}
 			transaction.End();
 			_compositeTestAgent.Harvest();
@@ -1027,7 +1077,7 @@ namespace CompositeTests
 			var expectedAttributes = new List<ExpectedAttribute> { };
 			for (var i = 1; i <= MaxNumCustomParams; i++)
 			{
-				expectedAttributes.Add(new ExpectedAttribute { Key = String.Format("key{0}", i), Value = String.Format("{0}", i) });
+				expectedAttributes.Add(new ExpectedAttribute { Key = string.Format("key{0}", i), Value = string.Format("{0}", i) });
 			}
 
 			TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
@@ -1042,12 +1092,16 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			for (var i = 1; i <= MaxNumCustomParams + 1; i++) // note the + 1
 			{
-				AgentApi.AddCustomParameter(String.Format("key{0}", i), i);
+				AgentApi.AddCustomParameter(string.Format("key{0}", i), i);
 			}
 			transaction.End();
 			_compositeTestAgent.Harvest();
@@ -1058,11 +1112,11 @@ namespace CompositeTests
 			var expectedAttributes = new List<ExpectedAttribute> { };
 			for (var i = 1; i <= MaxNumCustomParams; i++) // the + 1 does not appear here...anything over the max gets swallowed
 			{
-				expectedAttributes.Add(new ExpectedAttribute { Key = String.Format("key{0}", i), Value = String.Format("{0}", i) });
+				expectedAttributes.Add(new ExpectedAttribute { Key = string.Format("key{0}", i), Value = string.Format("{0}", i) });
 			}
-			var unexpectedAttributes = new List<String>
+			var unexpectedAttributes = new List<string>
 			{
-				String.Format("key{0}", MaxNumCustomParams + 1)
+				string.Format("key{0}", MaxNumCustomParams + 1)
 			};
 
 			TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
@@ -1083,7 +1137,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.AddCustomParameter("key1", "val1");
@@ -1094,7 +1152,7 @@ namespace CompositeTests
 			// ASSERT
 			var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
-			var unexpectedAttributes = new List<String> { "key1", "key2" };
+			var unexpectedAttributes = new List<string> { "key1", "key2" };
 
 			TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
 			TransactionEventAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, transactionEvent);
@@ -1108,7 +1166,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.AddCustomParameter("key1", null as String);
@@ -1119,7 +1181,7 @@ namespace CompositeTests
 			// ASSERT
 			var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
 			var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
-			var unexpectedAttributes = new List<String>
+			var unexpectedAttributes = new List<string>
 			{
 				"key1",
 				"key2"
@@ -1137,7 +1199,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.AddCustomParameter(null, "some value");
@@ -1161,7 +1227,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
@@ -1187,7 +1257,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			transaction.SetWebTransactionName(WebTransactionType.Action, "priority-1", (TransactionNamePriority)(-1));
@@ -1219,7 +1293,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			transaction.SetWebTransactionName(WebTransactionType.Action, "UserPriority", TransactionNamePriority.UserTransactionName);
@@ -1245,7 +1323,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
@@ -1272,7 +1354,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
@@ -1303,7 +1389,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetTransactionName("MyCategory", "MyTransaction");
@@ -1332,7 +1422,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			var firstUri = new Uri("http://localhost/first");
@@ -1365,7 +1459,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetUserParameters("MyUserName", "MyAccountName", "MyAppName");
@@ -1403,7 +1501,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.SetUserParameters("MyUserName", "MyAccountName", "MyAppName");
@@ -1444,7 +1546,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.IgnoreTransaction();
@@ -1474,7 +1580,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			AgentApi.IgnoreApdex();
@@ -1506,7 +1616,11 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			var browserHeader = AgentApi.GetBrowserTimingHeader();
@@ -1533,7 +1647,11 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			segment.End();
 
@@ -1544,9 +1662,9 @@ namespace CompositeTests
 			transaction.End();
 
 
-			Assert.AreNotEqual(String.Empty, firstHeader);
-			Assert.AreEqual(String.Empty, secondHeader);
-			Assert.AreEqual(String.Empty, thirdHeader);
+			Assert.AreNotEqual(string.Empty, firstHeader);
+			Assert.AreEqual(string.Empty, secondHeader);
+			Assert.AreEqual(string.Empty, thirdHeader);
 		}
 
 		#endregion
@@ -1561,7 +1679,11 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
 			AgentApi.DisableBrowserMonitoring(true);
 			var browserHeader = AgentApi.GetBrowserTimingHeader();
@@ -1633,7 +1755,11 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			var requestMetadata = AgentApi.GetRequestMetadata().ToDictionary(x => x.Key, x => x.Value);
 			segment.End();
@@ -1677,7 +1803,11 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			// ACT
-			var transaction = _compositeTestAgent.GetAgent().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _compositeTestAgent.GetAgent().CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetHttpResponseStatusCode(300);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			_compositeTestAgent.GetAgent().ProcessInboundRequest(AgentApi.GetRequestMetadata(), TransportType.HTTP); // we test this elsewhere

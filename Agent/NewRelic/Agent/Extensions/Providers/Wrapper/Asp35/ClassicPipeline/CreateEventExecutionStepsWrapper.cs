@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Web;
-using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.Asp35.Shared;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Web;
 
 namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 {
@@ -22,20 +21,17 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 		/// </summary>
 		private static class Statics
 		{
-			[NotNull]
 			private static readonly Type HttpApplicationType = typeof(HttpApplication);
 
-			[NotNull]
-			public static readonly Func<HttpApplication, EventHandler, Object> CreateSyncEventExecutionStep = VisibilityBypasser.Instance.GenerateTypeFactory<HttpApplication, EventHandler>("System.Web", "System.Web.HttpApplication+SyncEventExecutionStep");
+			public static readonly Func<HttpApplication, EventHandler, object> CreateSyncEventExecutionStep = VisibilityBypasser.Instance.GenerateTypeFactory<HttpApplication, EventHandler>("System.Web", "System.Web.HttpApplication+SyncEventExecutionStep");
 
-			#region private static readonly Dictionary<Object, String> EventIndexToString
+			#region private static readonly Dictionary<object, string> EventIndexToString
 
-			[NotNull]
-			public static readonly Dictionary<Object, String> EventIndexToString = GetEventIndexMappings();
+			public static readonly Dictionary<object, string> EventIndexToString = GetEventIndexMappings();
 
-			private static Dictionary<Object, String> GetEventIndexMappings()
+			private static Dictionary<object, string> GetEventIndexMappings()
 			{
-				var eventIndexMappings = new Dictionary<Object, String>
+				var eventIndexMappings = new Dictionary<object, string>
 				{
 					{GetHttpApplicationField("EventDisposed"), "Disposed"},
 					{GetHttpApplicationField("EventErrorRecorded"), "ErrorRecorded"},
@@ -74,16 +70,14 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 
 			#endregion
 
-
-			[NotNull]
-			private static Object GetHttpApplicationField([NotNull] String fieldName)
+			private static object GetHttpApplicationField(string fieldName)
 			{
 				var field = HttpApplicationType
 					.GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 				if (field == null)
 					throw new NullReferenceException("No HttpApplication field named " + fieldName);
 
-				return field.GetValue(null) ?? new Object();
+				return field.GetValue(null) ?? new object();
 			}
 		}
 
@@ -100,7 +94,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			if (httpApplication == null)
 				throw new NullReferenceException("invocationTarget");
 
-			var eventIndex = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<Object>(0);
+			var eventIndex = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<object>(0);
 			var steps = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<ArrayList>(1);
 
 			var eventName = Statics.EventIndexToString[eventIndex];
@@ -114,7 +108,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			return Delegates.GetDelegateFor(() => steps.Add(afterExecutionStep));
 		}
 
-		private void BeforeEvent(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private void BeforeEvent(MethodCall methodCall, IAgent agent, string eventName, HttpApplication httpApplication)
 		{
 			if (httpApplication == null)
 				throw new ArgumentNullException("httpApplication");
@@ -130,7 +124,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 				{
 					HttpContextActions.TransactionStartup(agent, httpContext);
 				};
-				transaction = agent.CreateWebTransaction(WebTransactionType.ASP, "Classic Pipeline", true, onCreate);
+
+				transaction = agent.CreateTransaction(
+					isWeb: true,
+					category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+					transactionDisplayName: "Classic Pipeline",
+					doNotTrackAsUnitOfWork: true,
+					wrapperOnCreate: onCreate);
 			}
 			else
 			{
@@ -141,7 +141,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			httpContext.Items[HttpContextActions.HttpContextSegmentKey] = segment;
 		}
 
-		private void AfterEvent(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private void AfterEvent(MethodCall methodCall, IAgent agent, string eventName, HttpApplication httpApplication)
 		{
 			if (httpApplication == null)
 				throw new ArgumentNullException("httpApplication");
@@ -161,8 +161,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			}
 		}
 
-		[NotNull]
-		private Object GetBeforeExecutionStep(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private object GetBeforeExecutionStep(MethodCall methodCall, IAgent agent, string eventName, HttpApplication httpApplication)
 		{
 			// ReSharper disable once AssignNullToNotNullAttribute
 			EventHandler beforePipelineEventHandler = (sender, args) => BeforeEvent(methodCall, agent, eventName, sender as HttpApplication);
@@ -175,8 +174,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			return beforePipelineEventExecutionStep;
 		}
 
-		[NotNull]
-		private Object GetAfterExecutionStep(MethodCall methodCall, [NotNull] IAgent agent, [NotNull] String eventName, [NotNull] HttpApplication httpApplication)
+		private object GetAfterExecutionStep(MethodCall methodCall, IAgent agent, string eventName, HttpApplication httpApplication)
 		{
 			// ReSharper disable once AssignNullToNotNullAttribute
 			EventHandler afterPipelineEventHandler = (sender, args) => AfterEvent(methodCall, agent, eventName, sender as HttpApplication);
@@ -189,8 +187,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 			return afterPipelineEventExecptionStep;
 		}
 
-		[NotNull, Pure]
-		private static EventHandler GetExceptionSafeEventHandler([NotNull] EventHandler eventHandler, [NotNull] IAgent agent)
+		private static EventHandler GetExceptionSafeEventHandler(EventHandler eventHandler, IAgent agent)
 		{
 			return (sender, args) =>
 			{

@@ -1,11 +1,10 @@
-﻿using System;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Providers.Wrapper.Asp35.Shared;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using JetBrains.Annotations;
-using NewRelic.Agent.Api;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Providers.Wrapper.Asp35.Shared;
 
 namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 {
@@ -17,9 +16,9 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 
 		public static class Statics
 		{
-			#region private static readonly IEnumerable<String> PossibleEvents
-			[NotNull]
-			public static readonly IEnumerable<String> PossibleEvents = new List<String>
+			#region private static readonly IEnumerable<string> PossibleEvents
+
+			public static readonly IEnumerable<string> PossibleEvents = new List<string>
 			{
 				"BeginRequest",
 				"AuthenticateRequest",
@@ -41,8 +40,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 			/// micah: Apparently, MyEnum.ToString() is an expensive operation that requires reflection, though not in the place you would expect.  
 			/// Now, a dictionary is created that contains all of the mappings so instead of doing reflection we just have to do a small dictionary lookup.
 			/// </summary>
-			[NotNull]
-			public static IDictionary<RequestNotification, String> RequestNotificationToStringMap
+			public static IDictionary<RequestNotification, string> RequestNotificationToStringMap
 			{
 				get
 				{
@@ -54,7 +52,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 					return _requestNotificationToString;
 				}
 			}
-			private static IDictionary<RequestNotification, String> _requestNotificationToString;
+			private static IDictionary<RequestNotification, string> _requestNotificationToString;
 		}
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -77,7 +75,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 				throw new NullReferenceException("httpContext");
 
 			var requestNotification = Statics.RequestNotificationToStringMap[httpContext.CurrentNotification];
-			var lastRequestNotification = httpContext.Items[HttpContextActions.HttpContextSegmentTypeKey] as String;
+			var lastRequestNotification = httpContext.Items[HttpContextActions.HttpContextSegmentTypeKey] as string;
 			if (requestNotification == lastRequestNotification)
 				return Delegates.NoOp;
 
@@ -96,7 +94,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 			return Delegates.NoOp;
 		}
 
-		private ITransaction TryCreateTransaction([NotNull] IAgent agent, [NotNull] HttpContext httpContext, String requestNotification)
+		private ITransaction TryCreateTransaction(IAgent agent, HttpContext httpContext, string requestNotification)
 		{
 			// MapRequestHandler is always called so if we make it past that without having already started a transaction then don't start one since we already missed too much.  This is likely to occur during startup when the transaction service spins up half way through a request.
 			var earlyEnoughInTransactionLifecycleToCreate = Statics.PossibleEvents
@@ -110,7 +108,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.IntegratedPipeline
 			{
 				HttpContextActions.TransactionStartup(agent, httpContext);
 			};
-			return agent.CreateWebTransaction(WebTransactionType.ASP, "Integrated Pipeline", true, onCreate);
+
+			return agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "Integrated Pipeline",
+				doNotTrackAsUnitOfWork: true,
+				wrapperOnCreate: onCreate);
 		}
 	}
 }

@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Samplers
 		private const string GCPerfCounterCategoryName = ".NET CLR Memory";
 
 		private readonly IGcSampleTransformer _transformer;
-		private const int GcSampleInterval = 1;
+		private const int GcSampleIntervalSeconds = 60;
 		private IPerformanceCounterProxyFactory _pcProxyFactory;
 		private readonly object _lockObj = new object();
 
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.Samplers
 		private float _PrevInducedCount = 0;
 
 		public GcSampler(IScheduler scheduler, IGcSampleTransformer gcSampleTransformer, IPerformanceCounterProxyFactory pcProxyFactory)
-		 : base(scheduler, TimeSpan.FromSeconds(GcSampleInterval))
+		 : base(scheduler, TimeSpan.FromSeconds(GcSampleIntervalSeconds))
 		{
 			_pcProxyFactory = pcProxyFactory;
 			_transformer = gcSampleTransformer;

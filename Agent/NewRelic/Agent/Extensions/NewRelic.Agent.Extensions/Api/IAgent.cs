@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace NewRelic.Agent.Api
 {
 	/// <summary>
 	/// The API that the agent provides to wrappers.
 	/// </summary>
-	public interface IAgent
+	public interface IAgent : IAgentExperimental
 	{
 		IConfiguration Configuration { get; }
 
@@ -27,47 +28,23 @@ namespace NewRelic.Agent.Api
 		/// <summary>
 		/// Create a new transaction for processing a request.
 		/// </summary>
-		/// <param name="isWeb"></param>
-		/// <param name="category"></param>
-		/// <param name="transactionDisplayName"></param>
-		/// <param name="mustBeRootTransaction"></param>
-		/// 
-		/// <returns></returns>
-		ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool mustBeRootTransaction);
-
-		/// <summary>
-		/// Create a new transaction for processing a web request.
-		/// </summary>
-		/// <param name="type">The type of web transaction.</param>
-		/// <param name="name">The name of the transaction. Must not be null.</param>
-		/// <param name="mustBeRootTransaction">Whether or not the transaction must be root.</param>
-		/// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
-		/// <exception cref="ArgumentNullException"></exception>
-		[Obsolete("Use the CreateTransaction() overrides instead")]
-		ITransaction CreateWebTransaction(WebTransactionType type, string name, bool mustBeRootTransaction = true, Action onCreate = null);
-
-		/// <summary>
-		/// Create a new transaction for processing a message received from a message queue.
-		/// </summary>
 		/// <param name="destinationType"></param>
 		/// <param name="brokerVendorName">The name of the message broker vendor. Must not be null.</param>
 		/// <param name="destination">The destination queue of the message being handled. Can be null.</param>
 		/// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
-		/// <exception cref="ArgumentNullException"></exception>
-		[Obsolete("Use the CreateTransaction() overrides instead")]
-		ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action onCreate = null);
+		/// <returns></returns>
+		ITransaction CreateTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action wrapperOnCreate = null);
 
 		/// <summary>
-		/// Create a new transaction for processing an arbitrary transaction.
+		/// Create a new transaction for processing a request.
 		/// </summary>
-		/// <param name="category">The general category of the transaction. Must not be null.</param>
-		/// <param name="name">The name of the transaction. Must not be null.</param>
-		/// <param name="mustBeRootTransaction">Whether or not the transaction can exist within another transaction</param>
-		/// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
-		/// <exception cref="ArgumentNullException"></exception>
-		[Obsolete("Use the CreateTransaction() overrides instead")]
-		ITransaction CreateOtherTransaction(string category, string name, bool mustBeRootTransaction = true, Action onCreate = null);
-
+		/// <param name="isWeb"></param>
+		/// <param name="category"></param>
+		/// <param name="transactionDisplayName"></param>
+		/// <param name="doNotTrackAsUnitOfWork"></param>
+		/// <param name="wrapperOnCreate"></param>
+		/// <returns></returns>
+		ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate = null);
 
 		/// <summary>
 		/// Instructs the Agent to try to track async work under a new transaction where there is a desire to track work spawned on a new thread as a separate transaction.

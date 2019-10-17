@@ -19,6 +19,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		string CrossApplicationReferrerPathHash { get; }
 		string CrossApplicationReferrerProcessId { get; }
 		string CrossApplicationReferrerTripId { get; }
+		string CrossApplicationReferrerTransactionGuid { get; }
 		float CrossApplicationResponseTimeInSeconds { get; }
 
 		string DistributedTraceType { get; set; }

@@ -21,6 +21,8 @@ namespace NewRelic.SystemInterfaces
 		long WorkingSet64 { get; }
 		System.Diagnostics.FileVersionInfo FileVersionInfo { get; }
 		TimeSpan UserProcessorTime { get; }
+
+		void Refresh();
 	}
 
 	public class ProcessStatic : IProcessStatic
@@ -61,5 +63,10 @@ namespace NewRelic.SystemInterfaces
 		public long WorkingSet64 => _process.WorkingSet64;
 		public System.Diagnostics.FileVersionInfo FileVersionInfo => _process.MainModule.FileVersionInfo;
 		public TimeSpan UserProcessorTime => _process.UserProcessorTime;
+
+		public void Refresh()
+		{
+			_process.Refresh();
+		}
 	}
 }

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
+using System;
+using System.Linq;
+using System.Threading;
 
 namespace CompositeTests
 {
@@ -64,7 +64,11 @@ namespace CompositeTests
 
 			void InstrumentationThatStartsATransaction()
 			{
-				_agent.CreateWebTransaction(WebTransactionType.Action, "name");
+				_agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 				_agent.CurrentTransaction.AttachToAsync();
 				_agent.CurrentTransaction.DetachFromPrimary();
 			}

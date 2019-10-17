@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.SystemInterfaces;
@@ -46,6 +48,44 @@ namespace NewRelic.Agent.Core.Samplers
 
 			// Assert
 			Assert.NotNull(memorySample);
+		}
+
+		[Test]
+		public void memory_values_increase_over_time()
+		{
+			// Arrange
+			var memorySampleBefore = null as ImmutableMemorySample;
+			Mock.Arrange(() => _memorySampleTransformer.Transform(Arg.IsAny<ImmutableMemorySample>()))
+				.DoInstead<ImmutableMemorySample>(sample => memorySampleBefore = sample);
+
+			// Act
+			_sampleAction();
+
+			// allocate some memory to increase .PrivateMemorySize64 and .WorkingSet64
+			var someBytes = IncreaseMemoryUsage();
+
+			// Arrange
+			var memorySampleAfter = null as ImmutableMemorySample;
+			Mock.Arrange(() => _memorySampleTransformer.Transform(Arg.IsAny<ImmutableMemorySample>()))
+				.DoInstead<ImmutableMemorySample>(sample => memorySampleAfter = sample);
+
+			// Act
+			_sampleAction();
+
+			// Assert
+			Assert.IsTrue(memorySampleBefore.MemoryPrivate < memorySampleAfter.MemoryPrivate, "PrivateMemorySize64 did not increase as expected");
+			Assert.IsTrue(memorySampleBefore.MemoryWorkingSet < memorySampleAfter.MemoryWorkingSet, "WorkingSet64 did not increase as expected");
+		}
+
+		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+		private byte[] IncreaseMemoryUsage()
+		{
+			var size = 10000000;
+			byte[] bytes = new byte[size];
+
+			Parallel.For(0, size, i => bytes[i] = 0x77);
+
+			return bytes;
 		}
 	}
 }

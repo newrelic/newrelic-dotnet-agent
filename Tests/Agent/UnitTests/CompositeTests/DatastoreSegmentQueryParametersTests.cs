@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace CompositeTests
 {
@@ -145,10 +143,10 @@ namespace CompositeTests
 			var queryParameters = new Dictionary<string, IConvertible>
 			{
 				{ "myint16", Int16.MaxValue },
-				{ "myInt32", Int32.MaxValue },
+				{ "myint", int.MaxValue },
 				{ "myInt64", Int64.MaxValue },
 				{ "myUInt16", UInt16.MaxValue },
-				{ "myUInt32", UInt32.MaxValue },
+				{ "myUint", uint.MaxValue },
 				{ "myUInt64", UInt64.MaxValue },
 				{ "mySByte", SByte.MaxValue },
 				{ "myByte", Byte.MaxValue },
@@ -164,10 +162,10 @@ namespace CompositeTests
 			CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
 			{
 				{ "myint16", Int16.MaxValue },
-				{ "myInt32", Int32.MaxValue },
+				{ "myint", int.MaxValue },
 				{ "myInt64", Int64.MaxValue },
 				{ "myUInt16", UInt16.MaxValue },
-				{ "myUInt32", UInt32.MaxValue },
+				{ "myUint", uint.MaxValue },
 				{ "myUInt64", UInt64.MaxValue },
 				{ "mySByte", SByte.MaxValue },
 				{ "myByte", Byte.MaxValue },
@@ -286,7 +284,11 @@ namespace CompositeTests
 
 		private TypedSegment<DatastoreSegmentData> CreateWebTransactionWithDatastoreSegment(IDictionary<string, IConvertible> queryParameters)
 		{
-			_agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			_agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			return (TypedSegment<DatastoreSegmentData>)_agent.StartDatastoreRequestSegmentOrThrow("INSERT", DatastoreVendor.MSSQL, "MyAwesomeTable", null, null, "HostName", "1433", "MyDatabase", queryParameters);
 		}
 

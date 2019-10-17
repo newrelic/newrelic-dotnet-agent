@@ -43,6 +43,9 @@ namespace CompositeTests
 	/// </summary>
 	public class CompositeTestAgent
 	{
+		private readonly object _harvestActionsLockObject = new object();
+		private readonly object _queuedCallbacksLockObject = new object();
+
 		[NotNull]
 		private readonly IContainer _container;
 
@@ -136,11 +139,11 @@ namespace CompositeTests
 			NativeMethods = Mock.Create<NewRelic.Agent.Core.ThreadProfiling.INativeMethods>();
 			_harvestActions = new List<Action>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestActions.Add(action));
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => { lock (_harvestActionsLockObject) { _harvestActions.Add(action); } });
 			var threadPoolStatic = Mock.Create<IThreadPoolStatic>();
 			_queuedCallbacks = new List<WaitCallback>();
 			Mock.Arrange(() => threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>()))
-				.DoInstead<WaitCallback>(callback => _queuedCallbacks.Add(callback));
+				.DoInstead<WaitCallback>(callback => { lock (_queuedCallbacksLockObject) { _queuedCallbacks.Add(callback); } });
 
 			var configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
 			Mock.Arrange(() => configurationManagerStatic.GetAppSetting("NewRelic.LicenseKey"))
@@ -159,6 +162,9 @@ namespace CompositeTests
 			_container.ReplaceRegistration(dataTransportService);
 			_container.ReplaceRegistration(scheduler);
 			_container.ReplaceRegistration(NativeMethods);
+
+			_container.ReplaceRegistration(Mock.Create<ICATSupportabilityMetricCounters>());
+
 
 			var generators = new List<IRuntimeInstrumentationGenerator>
 			{
@@ -180,6 +186,7 @@ namespace CompositeTests
 			DisableAgentInitializer();
 			InternalApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
 			AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
+			
 			// Update configuration (will also start services)
 			LocalConfiguration = GetDefaultTestLocalConfiguration();
 			ServerConfiguration = GetDefaultTestServerConfiguration();
@@ -287,7 +294,10 @@ namespace CompositeTests
 				ExecuteThreadPoolQueuedCallbacks();
 			}
 
-			_harvestActions.ForEach(action => action?.Invoke());
+			lock (_harvestActionsLockObject)
+			{
+				_harvestActions.ForEach(action => action?.Invoke());
+			}
 		}
 
 		public void ExecuteThreadPoolQueuedCallbacks()
@@ -297,7 +307,10 @@ namespace CompositeTests
 				throw new InvalidOperationException("When shouldAllowThreads is true, the thread pool will not be mocked or stubbed.");
 			}
 
-			_queuedCallbacks.ForEach(callback => callback?.Invoke(null));
+			lock (_queuedCallbacksLockObject)
+			{
+				_queuedCallbacks.ForEach(callback => callback?.Invoke(null));
+			}
 		}
 
 		/// <summary>

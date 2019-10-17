@@ -24,6 +24,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private EventSubscription<TransactionFinalizedEvent> _eventSubscription;
 		
 		private const float Priority = 0.5f;
+		private object _wrapperToken;
 
 		[SetUp]
 		public void SetUp()
@@ -36,6 +37,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
 			_publishedEvent = null;
 			_eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
+			_wrapperToken = new object();
 		}
 
 		[TearDown]
@@ -213,6 +215,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			//Second attempt to capture the response time
 			Assert.False(_transaction.TryCaptureResponseTime(), "ResponseTime should not be captured again, but it was.");
 			Assert.AreEqual(capturedResponseTime, _transaction.ResponseTime, "ResponseTime should still have the same value as the originally captured ResponseTime.");
+		}
+
+		[Test]
+		public void TransactionGetWrapperTokenEqualsPassedInToken()
+		{
+			_transaction.SetWrapperToken(_wrapperToken);
+			Assert.AreEqual(_wrapperToken, _transaction.GetWrapperToken());
 		}
 	}
 }

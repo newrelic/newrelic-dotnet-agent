@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers;
@@ -8,7 +9,7 @@ using NewRelic.Agent.Extensions.Providers;
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
 	[NeedSerializableContainer]
-	public interface IInternalTransaction : ITransaction
+	public interface IInternalTransaction : ITransaction, ITransactionExperimental
 	{
 		/// <summary>
 		/// Returns a list of the segments in the transaction.  The segment list is always

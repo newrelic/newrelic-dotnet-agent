@@ -46,5 +46,23 @@
 			</match>
 		</tracerFactory>
 
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.TaskMethodInvoker">
+				<exactMethodMatcher methodName="InvokeAsync" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Dispatcher.TaskMethodInvoker">
+				<exactMethodMatcher methodName="InvokeEnd" />
+			</match>
+		</tracerFactory>
+
+		<tracerFactory>
+			<match assemblyName="System.ServiceModel" className="System.ServiceModel.Description.DispatcherBuilder">
+				<exactMethodMatcher methodName="InitializeServiceHost" parameters="System.ServiceModel.Description.ServiceDescription,System.ServiceModel.ServiceHostBase" />
+			</match>
+		</tracerFactory>
+
 	</instrumentation>
 </extension>

@@ -1,17 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CompositeTests
 {
 	internal class KeyTransactionTracingTests
     {
-	    [NotNull] private static CompositeTestAgent _compositeTestAgent;
+	    private static CompositeTestAgent _compositeTestAgent;
 
-	    [NotNull] private IAgent _agent;
+	    private IAgent _agent;
 
 	    [SetUp]
 	    public void SetUp()
@@ -40,7 +39,11 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -67,7 +70,11 @@ namespace CompositeTests
 		    _compositeTestAgent.PushConfiguration();
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -93,7 +100,11 @@ namespace CompositeTests
 		    _compositeTestAgent.PushConfiguration();
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -122,12 +133,20 @@ namespace CompositeTests
 		    _compositeTestAgent.PushConfiguration();
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
 
-			tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name2");
+			tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name2",
+				doNotTrackAsUnitOfWork: true);
 			segment = _agent.StartTransactionSegmentOrThrow("segmentName2");
 			segment.End();
 			tx.End();

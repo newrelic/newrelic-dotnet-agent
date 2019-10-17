@@ -138,12 +138,12 @@ namespace NewRelic.Agent.Core.Samplers
 			}
 		}
 
-		private IThreadEventsListener CreateThreadEventsListener()
+		private ISampledEventListener<ThreadpoolThroughputEventsSample> CreateThreadEventsListener()
 		{
 			return new ThreadEventsListener();
 		}
 
-		private IThreadEventsListener CreateThreadEventsListenerForRealEventSource()
+		private ISampledEventListener<ThreadpoolThroughputEventsSample> CreateThreadEventsListenerForRealEventSource()
 		{
 			ThreadEventsListener.EventSourceIdToMonitor = ThreadEventsListener.ClrEventSourceId;
 			return CreateThreadEventsListener();

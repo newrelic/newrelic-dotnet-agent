@@ -1,9 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using NewRelic.Agent.Core.Tracer;
-using System.Reflection;
-using System.IO;
-using NewRelic.Agent.Core.Configuration;
 
 namespace NewRelic.Agent.Core
 {
@@ -14,31 +12,112 @@ namespace NewRelic.Agent.Core
 	/// </summary>
 	public class AgentShim
 	{
-		private static readonly log4net.ILog Log;
+		private static log4net.ILog Log;
 
-		static AgentShim()
+		static void Initialize()
 		{
 			AgentInitializer.InitializeAgent();
 			Log = log4net.LogManager.GetLogger(typeof(AgentShim));
 		}
+
+#if NETSTANDARD2_0
+		static AgentShim()
+		{
+			Initialize();
+		}
+#else
+		private static bool _initialized = false;
+		private static object _initLock = new object();
+
+		static bool TryInitialize(string method)
+		{
+			if (Monitor.IsEntered(_initLock)) return false;
+			if (DeferInitialization(method)) return false;
+
+			lock (_initLock)
+			{
+				if (!_initialized)
+				{
+					Initialize();
+					_initialized = true;
+				}
+
+				return true;
+			}
+		}
+
+		private static HashSet<string> _deferInitializationOnTheseMethods = new HashSet<string>
+		{
+			"System.Net.Http.HttpClient.SendAsync",
+			"System.Net.HttpWebRequest.SerializeHeaders"
+		};
+
+		private static HashSet<string> DeferInitializationOnTheseMethods
+		{
+			get
+			{
+				if (!_deferAgentInitMethodListInitialized)
+				{
+					InitializeDeferAgentInitMethodList();
+				}
+
+				return _deferInitializationOnTheseMethods;
+			}
+		}
+
+		private static bool _deferAgentInitMethodListInitialized = false;
+		private static object _methodListInitLock = new object();
+
+		private static void InitializeDeferAgentInitMethodList()
+		{
+			var methodsFromEnvVar = System.Environment.GetEnvironmentVariable("NEW_RELIC_DELAY_AGENT_INIT_METHOD_LIST");
+			var additionalMethods = !string.IsNullOrWhiteSpace(methodsFromEnvVar)
+				? methodsFromEnvVar.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+				: new string[] { };
+
+			lock (_methodListInitLock)
+			{
+				if (!_deferAgentInitMethodListInitialized)
+				{
+					foreach (var method in additionalMethods)
+					{
+						_deferInitializationOnTheseMethods.Add(method);
+					}
+					_deferAgentInitMethodListInitialized = true;
+				}
+			}
+		}
+
+		static bool DeferInitialization(string method)
+		{
+			return DeferInitializationOnTheseMethods.Contains(method);
+		}
+#endif
 
 		/// <summary>
 		/// Creates a tracer (if appropriate) and returns a delegate for the tracer's finish method.
 		/// This method is reflectively invoked from the injected bytecode if the CLR is greater than 2.0.
 		/// </summary>
 		public static Action<object, Exception> GetFinishTracerDelegate(
-			String tracerFactoryName,
-			UInt32 tracerArguments,
-			String metricName,
-			String assemblyName,
+			string tracerFactoryName,
+			uint tracerArguments,
+			string metricName,
+			string assemblyName,
 			Type type,
-			String typeName,
-			String methodName,
-			String argumentSignature,
-			Object invocationTarget,
-			Object[] args,
-			UInt64 functionId)
+			string typeName,
+			string methodName,
+			string argumentSignature,
+			object invocationTarget,
+			object[] args,
+			ulong functionId)
 		{
+#if NET45
+			if (!_initialized)
+			{
+				if (!TryInitialize($"{typeName}.{methodName}")) return NoOpFinishTracer;
+			}
+#endif
+
 			var tracer = GetTracer(
 				tracerFactoryName, 
 				tracerArguments, 
@@ -87,17 +166,17 @@ namespace NewRelic.Agent.Core
 		/// <paramref name="typeName"/>, <paramref name="methodName"/>, <paramref name="argumentSignature"/> or <paramref name="args"/> is null. 
 		/// This function is only called from the injected managed byte-code</exception>
 		public static ITracer GetTracer(
-			String tracerFactoryName,
-			UInt32 tracerArguments,
-			String metricName,
-			String assemblyName,
+			string tracerFactoryName,
+			uint tracerArguments,
+			string metricName,
+			string assemblyName,
 			Type type,
-			String typeName,
-			String methodName,
-			String argumentSignature,
-			Object invocationTarget,
-			Object[] args,
-			UInt64 functionId)
+			string typeName,
+			string methodName,
+			string argumentSignature,
+			object invocationTarget,
+			object[] args,
+			ulong functionId)
 		{
 			try
 			{
@@ -170,7 +249,7 @@ namespace NewRelic.Agent.Core
 		/// <param name="tracerObject"></param>
 		/// <param name="returnValue"></param>
 		/// <param name="exceptionObject"></param>
-		public static void FinishTracer(Object tracerObject, Object returnValue, Object exceptionObject)
+		public static void FinishTracer(object tracerObject, object returnValue, object exceptionObject)
 		{
 			try
 			{
@@ -252,7 +331,7 @@ namespace NewRelic.Agent.Core
 	public class IgnoreWork : IDisposable
 	{
 		[ThreadStatic]
-		public static UInt32 AgentDepth = 0;
+		public static uint AgentDepth = 0;
 
 		public IgnoreWork()
 		{
@@ -264,5 +343,4 @@ namespace NewRelic.Agent.Core
 			--AgentDepth;
 		}
 	}
-
 }

@@ -94,7 +94,8 @@ namespace NewRelic.Agent.Core.Configuration
 			_newRelicAppSettings = TransformAppSettings();
 
 			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
-			EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", false);
+
+			EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
 		}
 
 		public IReadOnlyDictionary<string, string> GetAppSettings()

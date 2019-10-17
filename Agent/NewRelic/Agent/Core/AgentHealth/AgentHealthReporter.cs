@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.SharedInterfaces;
+﻿using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
@@ -7,124 +6,38 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using NewRelic.Core.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
-	public interface IAgentHealthReporter
-	{
-		void ReportDotnetVersion();
-		void ReportAgentVersion([NotNull] string agentVersion, [NotNull] string hostName);
-		void ReportLibraryVersion(string assemblyName, string assemblyVersion);
-		void ReportTransactionEventReservoirResized(uint newSize);
-		void ReportTransactionEventCollected();
-		void ReportTransactionEventsRecollected(int count);
-		void ReportTransactionEventsSent(int count);
-		void ReportCustomEventReservoirResized(uint newSize);
-		void ReportCustomEventCollected();
-		void ReportCustomEventsRecollected(int count);
-		void ReportCustomEventsSent(int count);
-		void ReportErrorTraceCollected();
-		void ReportErrorTracesRecollected(int count);
-		void ReportErrorTracesSent(int count);
-		void ReportErrorEventSeen();
-		void ReportErrorEventsSent(int count);
-		void ReportSqlTracesRecollected(int count);
-		void ReportSqlTracesSent(int count);
-
-		void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, [NotNull] string lastStartedSegmentName, [NotNull] string lastFinishedSegmentName);
-
-		void ReportWrapperShutdown([NotNull] IWrapper wrapper, [NotNull] Method method);
-		void ReportIfHostIsLinuxOs();
-		void ReportBootIdError();
-		void ReportKubernetesUtilizationError();
-		void ReportAwsUtilizationError();
-		void ReportAzureUtilizationError();
-		void ReportPcfUtilizationError();
-		void ReportGcpUtilizationError();
-		void ReportAgentTimingMetric(string timerName, TimeSpan stopWatchElapsedMilliseconds);
-
-		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadSuccess();
-
-		/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadException();
-
-		/// <summary>Created when AcceptDistributedTracePayload had a parsing exception</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadParseException();
-
-		/// <summary>Created when AcceptDistributedTracePayload was ignored because CreatePayload had already been called</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept();
-
-		/// <summary>Created when AcceptDistributedTracePayload was ignored because AcceptPayload had already been called</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple();
-
-		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload's major version was greater than the agent's</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion();
-
-		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was null</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredNull();
-
-		/// <summary>Created when AcceptDistributedTracePayload was ignored because the payload was untrusted</summary>
-		void ReportSupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount();
-
-		/// <summary>Created when CreateDistributedTracePayload was called successfully</summary>
-		void ReportSupportabilityDistributedTraceCreatePayloadSuccess();
-
-		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
-		void ReportSupportabilityDistributedTraceCreatePayloadException();
-
-		void ReportSupportabilityCollectorErrorException(string endpointMethod, TimeSpan responseDuration, HttpStatusCode? statusCode);
-
-		void ReportSpanEventCollected(int count);
-		void ReportSpanEventsSent(int count);
-
-		void CollectDistributedTraceSuccessMetrics();
-
-		void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint);
-
-		void ReportAgentInfo();
-	}
-
 	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
 	{
-		private static readonly TimeSpan TimeBetweenExecutions = TimeSpan.FromMinutes(1);
+		private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(1);
 
-		[NotNull]
 		private readonly IMetricBuilder _metricBuilder;
-
-		[NotNull]
 		private readonly IScheduler _scheduler;
-
-		[CanBeNull]
-		private PublishMetricDelegate _publishMetricDelegate;
-
-		[NotNull]
 		private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
-
-		[NotNull]
 		private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
 
-		private InterlockedCounter payloadCreateSuccessCounter;
-		private InterlockedCounter payloadAcceptSuccessCounter;
+		private PublishMetricDelegate _publishMetricDelegate;
+		private InterlockedCounter _payloadCreateSuccessCounter;
+		private InterlockedCounter _payloadAcceptSuccessCounter;
 
-		public AgentHealthReporter([NotNull] IMetricBuilder metricBuilder, [NotNull] IScheduler scheduler)
+		public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
 		{
 			_metricBuilder = metricBuilder;
 			_scheduler = scheduler;
-			_scheduler.ExecuteEvery(LogRecurringLogs, TimeBetweenExecutions);
-
+			_scheduler.ExecuteEvery(LogRecurringLogs, _timeBetweenExecutions);
 			var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
 			foreach(var agentHealthEvent in agentHealthEvents)
 			{
 				_agentHealthEventCounters[agentHealthEvent] = new InterlockedCounter();
 			}
 
-			payloadCreateSuccessCounter = new InterlockedCounter();
-			payloadAcceptSuccessCounter = new InterlockedCounter();
+			_payloadCreateSuccessCounter = new InterlockedCounter();
+			_payloadAcceptSuccessCounter = new InterlockedCounter();
 		}
 
 		public override void Dispose()
@@ -146,17 +59,25 @@ namespace NewRelic.Agent.Core.AgentHealth
 				{
 					var agentHealthEvent = counter.Key;
 					var timesOccured = counter.Value.Exchange(0);
-					Log.Info($"Event {agentHealthEvent} has occurred {timesOccured} times in the last {TimeBetweenExecutions.TotalSeconds} seconds");
+					Log.Info($"Event {agentHealthEvent} has occurred {timesOccured} times in the last {_timeBetweenExecutions.TotalSeconds} seconds");
 				}
 			}
+		}
+
+		public void ReportSupportabilityCountMetric(string metricName, int count = 1)
+		{
+			var metric = _metricBuilder.TryBuildSupportabilityCountMetric(metricName, count);
+			TrySend(metric);
 		}
 
 		public void ReportDotnetVersion()
 		{
 #if NET45
 			var metric = _metricBuilder.TryBuildDotnetFrameworkVersionMetric(AgentInstallConfiguration.DotnetFrameworkVersion);
-			TrySend(metric);
+#else
+			var metric = _metricBuilder.TryBuildDotnetCoreVersionMetric(AgentInstallConfiguration.DotnetCoreVersion);
 #endif
+			TrySend(metric);
 		}
 
 		public void ReportAgentVersion(string agentVersion, string hostName)
@@ -178,7 +99,6 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void ReportTransactionEventReservoirResized(uint newSize)
 		{
 			TrySend(_metricBuilder.TryBuildTransactionEventReservoirResizedMetric());
-
 			Log.Warn("Resizing transaction event reservoir to " + newSize + " events.");
 		}
 
@@ -201,13 +121,13 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void ReportCustomEventReservoirResized(uint newSize)
 		{
 			TrySend(_metricBuilder.TryBuildCustomEventReservoirResizedMetric());
-
 			Log.Warn("Resizing custom event reservoir to " + newSize + " events.");
 		}
 
 		public void ReportCustomEventCollected()
 		{
 			TrySend(_metricBuilder.TryBuildCustomEventsCollectedMetric());
+
 			// Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
 			TrySend(_metricBuilder.TryBuildCustomEventsSeenMetric());
 		}
@@ -267,14 +187,12 @@ namespace NewRelic.Agent.Core.AgentHealth
 		{
 			var transactionName = transactionMetricName.PrefixedName;
 			Log.Debug($"Transaction was garbage collected without ever ending.\nTransaction Name: {transactionName}\nLast Started Segment: {lastStartedSegmentName}\nLast Finished Segment: {lastFinishedSegmentName}");
-
 			_agentHealthEventCounters[AgentHealthEvent.TransactionGarbageCollected]?.Increment();
 		}
 
 		public void ReportWrapperShutdown(IWrapper wrapper, Method method)
 		{
 			var wrapperName = wrapper.GetType().FullName;
-
 			var metrics = new[]
 			{
 				_metricBuilder.TryBuildAgentHealthEventMetric(AgentHealthEvent.WrapperShutdown, "all"),
@@ -288,13 +206,11 @@ namespace NewRelic.Agent.Core.AgentHealth
 			}
 
 			Log.Error($"Wrapper {wrapperName} is being disabled for {method.MethodName} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted.");
-
 			_recurringLogDatas.Add(new RecurringLogData(Log.Debug, $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
 		}
 
 		public void ReportIfHostIsLinuxOs()
 		{
-
 #if NETSTANDARD2_0
 
 			bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
@@ -320,8 +236,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 		/// <summary>Incremented when AcceptDistributedTracePayload was called successfully</summary>
 		public void ReportSupportabilityDistributedTraceAcceptPayloadSuccess()
 		{
-			payloadAcceptSuccessCounter.Increment();
+			_payloadAcceptSuccessCounter.Increment();
 		}
+
 		/// <summary>Created when AcceptDistributedTracePayload had a generic exception</summary>
 		public void ReportSupportabilityDistributedTraceAcceptPayloadException() =>
 			TrySend(_metricBuilder.TryBuildAcceptPayloadException);
@@ -353,7 +270,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 		/// <summary>Incremented when CreateDistributedTracePayload was called successfully</summary>
 		public void ReportSupportabilityDistributedTraceCreatePayloadSuccess()
 		{ 
-			payloadCreateSuccessCounter.Increment();
+			_payloadCreateSuccessCounter.Increment();
 		}
 
 		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
@@ -363,12 +280,12 @@ namespace NewRelic.Agent.Core.AgentHealth
 		/// <summary>Limits Collect calls to once per harvest per metric.</summary>
 		public void CollectDistributedTraceSuccessMetrics()
 		{
-			if(TryGetCount(payloadCreateSuccessCounter, out var createCount))
+			if(TryGetCount(_payloadCreateSuccessCounter, out var createCount))
 			{
 				TrySend(_metricBuilder.TryBuildCreatePayloadSuccess(createCount));
 			}
 
-			if (TryGetCount(payloadAcceptSuccessCounter, out var acceptCount))
+			if (TryGetCount(_payloadAcceptSuccessCounter, out var acceptCount))
 			{
 				TrySend(_metricBuilder.TryBuildAcceptPayloadSuccess(acceptCount));
 			}
@@ -424,15 +341,19 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
 		{
 			if (_publishMetricDelegate != null)
+			{
 				Log.Warn("Existing PublishMetricDelegate registration being overwritten.");
+			}
 
 			_publishMetricDelegate = publishMetricDelegate;
 		}
 
-		private void TrySend([CanBeNull] MetricWireModel metric)
+		private void TrySend(MetricWireModel metric)
 		{
 			if (metric == null)
+			{
 				return;
+			}
 
 			if (_publishMetricDelegate == null)
 			{
@@ -452,13 +373,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		private class RecurringLogData
 		{
-			[NotNull]
 			public readonly Action<string> LogAction;
-
-			[NotNull]
 			public readonly string Message;
 
-			public RecurringLogData([NotNull] Action<string> logAction, [NotNull] string message)
+			public RecurringLogData(Action<string> logAction, string message)
 			{
 				LogAction = logAction;
 				Message = message;

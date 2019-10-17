@@ -149,7 +149,11 @@ namespace CompositeTests
 
 		private void CallAgentApiMethodRequiringTransaction(Action apiMethod, string expectedMetricName)
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			apiMethod();
 			transaction.End();
 
@@ -171,7 +175,11 @@ namespace CompositeTests
 
 		private void CallTransactionApiBridgeMethod(Action<TransactionBridgeApi> apiMethod, string expectedMetricName)
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 

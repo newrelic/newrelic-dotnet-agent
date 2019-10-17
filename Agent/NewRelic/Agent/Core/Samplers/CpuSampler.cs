@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.Samplers
 		private DateTime _lastSampleTime;
 		private TimeSpan _lastProcessorTime;
 		private readonly IProcessStatic _processStatic;
-		private const int CpuSampleIntervalSeconds = 1;
+		private const int CpuSampleIntervalSeconds = 60;
 
 		public CpuSampler(IScheduler scheduler, ICpuSampleTransformer cpuSampleTransformer, IProcessStatic processStatic)
 			: base(scheduler, TimeSpan.FromSeconds(CpuSampleIntervalSeconds))
@@ -56,6 +56,7 @@ namespace NewRelic.Agent.Core.Samplers
 		private TimeSpan GetCurrentUserProcessorTime()
 		{
 			var process = _processStatic.GetCurrentProcess();
+			process.Refresh();
 			return process.UserProcessorTime;
 		}
 	}

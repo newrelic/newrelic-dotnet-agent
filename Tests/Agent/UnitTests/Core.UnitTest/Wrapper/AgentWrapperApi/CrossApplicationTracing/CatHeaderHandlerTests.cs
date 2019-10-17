@@ -2,6 +2,7 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -38,8 +39,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			Mock.Arrange(() => _configuration.CrossApplicationTracingEnabled).Returns(true);
 			var configurationService = Mock.Create<IConfigurationService>();
 			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
-
-			_catHeaderHandler = new CatHeaderHandler(configurationService);
+			var catMetrics = Mock.Create<ICATSupportabilityMetricCounters>();
+			_catHeaderHandler = new CatHeaderHandler(configurationService, catMetrics);
 		}
 
 		#region inbound CAT request - outbound CAT response

@@ -563,11 +563,18 @@ namespace NewRelic.Agent.Core.Config
 			if (log == null)
 				log = new configurationLog();
 
-			var enabledProvenance = ConfigurationLoader.GetConfigSetting("NewRelic.AgentEnabled");
-			if (enabledProvenance != null && enabledProvenance.Value != null && bool.Parse(enabledProvenance.Value) == false)
+			try
 			{
-				agentEnabled = false;
-				AgentEnabledAt = enabledProvenance.Provenance;
+				var enabledProvenance = ConfigurationLoader.GetConfigSetting("NewRelic.AgentEnabled");
+				if (enabledProvenance != null && enabledProvenance.Value != null && bool.Parse(enabledProvenance.Value) == false)
+				{
+					agentEnabled = false;
+					AgentEnabledAt = enabledProvenance.Provenance;
+				}
+			}
+			catch
+			{
+				Log.Error("Failed to read NewRelic.AgentEnabled from local config.");
 			}
 
 			return this;

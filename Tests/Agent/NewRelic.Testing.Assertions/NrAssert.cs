@@ -66,7 +66,7 @@ namespace NewRelic.Testing.Assertions
 				strings.Add($"{failureType} on line {lineNumberOrUnknown}: {exception.Message}");
 			}
 
-			return Environment.NewLine + String.Join(Environment.NewLine, strings.ToArray());
+			return Environment.NewLine + String.Join(Environment.NewLine + Environment.NewLine, strings.ToArray());
 		}
 	}
 

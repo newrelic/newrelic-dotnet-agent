@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
@@ -17,9 +16,9 @@ namespace CompositeTests
 {
 	internal class SyntheticsTests
 	{
-		[NotNull] private static CompositeTestAgent _compositeTestAgent;
+		private static CompositeTestAgent _compositeTestAgent;
 
-		[NotNull] private IAgent _agent;
+		private IAgent _agent;
 
 		[SetUp]
 		public void SetUp()
@@ -48,15 +47,19 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
-			var syntheticsHeader = new KeyValuePair<String, String>("X-NewRelic-Synthetics",
+			var syntheticsHeader = new KeyValuePair<string, string>("X-NewRelic-Synthetics",
 				Strings.Base64Encode(
-					String.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
+					string.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
 						monitorId), encodingKey));
 			var requestHeaders = new[] {syntheticsHeader};
 
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
@@ -66,7 +69,7 @@ namespace CompositeTests
 
 
 			// ASSERT
-			var unexpectedEventAttributes = new List<String>
+			var unexpectedEventAttributes = new List<string>
 			{
 				"nr.alternatePathHashes"
 			};
@@ -109,8 +112,12 @@ namespace CompositeTests
 
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
-			_agent.ProcessInboundRequest(new KeyValuePair<String, String>[0], TransportType.HTTP);
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
+			_agent.ProcessInboundRequest(new KeyValuePair<string, string>[0], TransportType.HTTP);
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
@@ -119,14 +126,14 @@ namespace CompositeTests
 
 
 			// ASSERT
-			var unexpectedEventAttributes = new List<String>
+			var unexpectedEventAttributes = new List<string>
 			{
 				"nr.guid",
 				"nr.syntheticsResourceId",
 				"nr.syntheticsJobId",
 				"nr.syntheticsMonitorId"
             };
-			var unexpectedTraceAttributes = new List<String>
+			var unexpectedTraceAttributes = new List<string>
 			{
 				"synthetics_resource_id",
 				"synthetics_job_id",
@@ -151,7 +158,11 @@ namespace CompositeTests
 
 
 			// ==== ACT ====
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.StartTransactionSegmentOrThrow("segmentName").End();
 			tx.End();
 			_compositeTestAgent.Harvest();
@@ -159,14 +170,14 @@ namespace CompositeTests
 
 
 			// ASSERT
-			var unexpectedEventAttributes = new List<String>
+			var unexpectedEventAttributes = new List<string>
 			{
 				"nr.guid",
 				"nr.syntheticsResourceId",
 				"nr.syntheticsJobId",
 				"nr.syntheticsMonitorId"
 			};
-			var unexpectedTraceAttributes = new List<String>
+			var unexpectedTraceAttributes = new List<string>
 			{
 				"synthetics_resource_id",
 				"synthetics_job_id",
@@ -195,15 +206,19 @@ namespace CompositeTests
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
-			var syntheticsHeader = new KeyValuePair<String, String>("X-NewRelic-Synthetics",
+			var syntheticsHeader = new KeyValuePair<string, string>("X-NewRelic-Synthetics",
 				Strings.Base64Encode(
-					String.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
+					string.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
 						monitorId), encodingKey));
 			var requestHeaders = new[] { syntheticsHeader };
 
 
 			// ==== ACT ====
-			_agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			_agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
 
 			var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
@@ -228,14 +243,18 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
-			var syntheticsHeader = new KeyValuePair<String, String>("X-NewRelic-Synthetics",
+			var syntheticsHeader = new KeyValuePair<string, string>("X-NewRelic-Synthetics",
 				Strings.Base64Encode(
-					String.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
+					string.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
 						monitorId), encodingKey));
 			var requestHeaders = new[] { syntheticsHeader };
-			
+
 			// ==== ACT ====
-			_agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			_agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
 
 			var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();

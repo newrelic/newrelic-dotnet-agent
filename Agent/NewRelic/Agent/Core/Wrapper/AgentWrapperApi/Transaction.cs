@@ -386,7 +386,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var headers = Enumerable.Empty<KeyValuePair<string, string>>();
 
 			// A CAT response header should only be sent if we had a valid CAT inbound request
-			if (TransactionMetadata.CrossApplicationReferrerProcessId == null)
+			if (TransactionMetadata.CrossApplicationReferrerProcessId == null || Ignored)
 			{
 				return headers;
 			}
@@ -409,6 +409,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 				.Concat(Agent._catHeaderHandler.TryGetOutboundResponseHeaders(this, currentTransactionMetricName));
 		}
 
+		public Dictionary<string, string> GetLinkingMetadata()
+		{
+			// todo: implementation
+			Dictionary<string, string> metadata = new Dictionary<string, string>()
+			{
+				{ "trace.id", "valTraceId" },
+				{ "span.id", "valSpanId" },
+				{ "entity.name", "valEntityName" },
+				{ "entity.type", "valEntityType" },
+				{ "entity.guid", "valEntityGuid" },
+				{ "hostname", "valHostname" },
+			};
+
+			return metadata;
+		}
 
 		private void UpdatePathHash(TransactionMetricName transactionMetricName)
 		{
@@ -712,6 +727,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private readonly SqlObfuscator _sqlObfuscator;
 		private readonly IDatabaseStatementParser _databaseStatementParser;
 
+		private object _wrapperToken;
+
 		public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
 			ITimer timer, DateTime startTime, ICallStackManager callStackManager, SqlObfuscator sqlObfuscator, float priority, IDatabaseStatementParser databaseStatementParser)
 		{
@@ -949,6 +966,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql)
 		{
 			return _databaseStatementParser.ParseDatabaseStatement(datastoreVendor, commandType, sql);
+		}
+
+		public object GetWrapperToken()
+		{
+			return _wrapperToken;
+		}
+
+		public void SetWrapperToken(object wrapperToken)
+		{
+			_wrapperToken = wrapperToken;
 		}
 	}
 }

@@ -4,6 +4,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
@@ -19,9 +20,9 @@ using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Linq;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -45,13 +46,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		internal readonly IAgentHealthReporter _agentHealthReporter;
 		internal readonly IAgentTimerService _agentTimerService;
 		internal readonly IMetricNameService _metricNameService;
+		internal readonly ICATSupportabilityMetricCounters _catMetricCounters;
 		internal readonly Api.ITraceMetadataFactory _traceMetadataFactory;
 		internal Extensions.Logging.ILogger _logger;
 
+		// Discussed with team, leaving this as Instance since that makes more sense than _instance in this case.
 		internal static Agent Instance;
-		private static readonly ITransaction NoOpTransaction = new NoOpTransaction();
+		private static readonly ITransaction _noOpTransaction = new NoOpTransaction();
 
-		public Agent(ITransactionService transactionService, ITimerFactory timerFactory, ITransactionTransformer transactionTransformer, IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, ICatHeaderHandler catHeaderHandler, IDistributedTracePayloadHandler distributedTracePayloadHandler, ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory)
+		public Agent(ITransactionService transactionService, ITimerFactory timerFactory, ITransactionTransformer transactionTransformer, 
+			IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, 
+			ICatHeaderHandler catHeaderHandler, IDistributedTracePayloadHandler distributedTracePayloadHandler, 
+			ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer, 
+			IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, 
+			IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService, 
+			IMetricNameService metricNameService, Api.ITraceMetadataFactory traceMetadataFactory, ICATSupportabilityMetricCounters catMetricCounters)
 		{
 			_transactionService = transactionService;
 			_timerFactory = timerFactory;
@@ -70,6 +79,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agentTimerService = agentTimerService;
 			_metricNameService = metricNameService;
 			_traceMetadataFactory = traceMetadataFactory;
+			_catMetricCounters = catMetricCounters;
 
 			Instance = this;
 		}
@@ -80,22 +90,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		#region Transaction management
 
-		private static void _noOpWrapperOnCreate() { }
-
-
-		private ITransaction CreateTransaction(TransactionName transactionName, bool mustBeRootTransaction, Action wrapperOnCreate)
+		private static void NoOpWrapperOnCreate()
 		{
-			return _transactionService.GetOrCreateInternalTransaction(transactionName, wrapperOnCreate ?? _noOpWrapperOnCreate, mustBeRootTransaction);
 		}
 
-		public ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool mustBeRootTransaction)
+		private ITransaction CreateTransaction(TransactionName transactionName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate)
 		{
-			#pragma warning disable CS0618 // Type or member is obsolete
-			return CreateTransaction(isWeb, category, transactionDisplayName, mustBeRootTransaction, _noOpWrapperOnCreate);
-			#pragma warning restore CS0618 // Type or member is obsolete
+			return _transactionService.GetOrCreateInternalTransaction(transactionName, wrapperOnCreate, doNotTrackAsUnitOfWork);
 		}
 
-		private ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool mustBeRootTransaction, Action wrapperOnCreate)
+		public ITransaction CreateTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
+		{
+			return CreateTransaction(TransactionName.ForBrokerTransaction(destinationType, brokerVendorName, destination), true, wrapperOnCreate ?? NoOpWrapperOnCreate);
+		}
+
+		public ITransaction CreateTransaction(bool isWeb, string category, string transactionDisplayName, bool doNotTrackAsUnitOfWork, Action wrapperOnCreate)
 		{
 			if (transactionDisplayName == null)
 			{
@@ -111,28 +120,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				? TransactionName.ForWebTransaction(category, transactionDisplayName) 
 				: TransactionName.ForOtherTransaction(category, transactionDisplayName);
 
-			return CreateTransaction(initialTransactionName, mustBeRootTransaction, wrapperOnCreate);
-		}
-		
-		[Obsolete("Use AgentWrapperAPI.CreateTransaction method instead")]
-		public ITransaction CreateWebTransaction(WebTransactionType type, string transactionDisplayName, bool mustBeRootTransaction, Action wrapperOnCreate)
-		{
-			return CreateTransaction(TransactionName.ForWebTransaction(type, transactionDisplayName), mustBeRootTransaction, wrapperOnCreate);
+			return CreateTransaction(initialTransactionName, doNotTrackAsUnitOfWork, wrapperOnCreate ?? NoOpWrapperOnCreate);
 		}
 
-		[Obsolete("Use AgentWrapperAPI.CreateTransaction method instead")]
-		public ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
-		{
-			return CreateTransaction(TransactionName.ForBrokerTransaction(destinationType, brokerVendorName, destination), true, wrapperOnCreate);
-		}
-
-		[Obsolete("Use AgentWrapperAPI.CreateTransaction method instead")]
-		public ITransaction CreateOtherTransaction(string category, string name, bool mustBeRootTransaction, Action wrapperOnCreate)
-		{
-			return CreateTransaction(false, category, name, mustBeRootTransaction, wrapperOnCreate);
-		}
-
-		public ITransaction CurrentTransaction => _transactionService.GetCurrentInternalTransaction() ?? NoOpTransaction;
+		public ITransaction CurrentTransaction => _transactionService.GetCurrentInternalTransaction() ?? _noOpTransaction;
 
 		public ITraceMetadata TraceMetadata
 		{
@@ -196,9 +187,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			// Ensure the condition is not called until after the segment is finished (to get accurate duration)
 			bool ShouldRunExplain()
 			{
-				var shouldRunExplainPlan = _configurationService.Configuration.SqlExplainPlansEnabled &&
-				                           datastoreSegment.Duration >= _configurationService.Configuration.SqlExplainPlanThreshold;
-
+				var shouldRunExplainPlan = _configurationService.Configuration.SqlExplainPlansEnabled && 
+					datastoreSegment.Duration >= _configurationService.Configuration.SqlExplainPlanThreshold;
 				if (!shouldRunExplainPlan)
 				{
 					return false;
@@ -250,7 +240,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public bool TryGetDistributedTracePayloadFromHeaders<T>(IEnumerable<KeyValuePair<string, T>> headers, out T payload) where T : class
 		{
 			payload = null;
-
 			if (headers != null)
 			{
 				foreach (var header in headers)
@@ -268,24 +257,37 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		private void TryProcessCatRequestData(IInternalTransaction transaction, IDictionary<string, string> headers, long? contentLength)
 		{
-			var referrerCrossApplicationProcessId = GetReferrerCrossApplicationProcessId(transaction, headers);
-			if (referrerCrossApplicationProcessId == null)
-				return;
+			try
+			{
+				var referrerCrossApplicationProcessId = GetReferrerCrossApplicationProcessId(transaction, headers);
+				if (referrerCrossApplicationProcessId == null)
+				{
+					return;
+				}
+					
+				UpdateReferrerCrossApplicationProcessId(transaction, referrerCrossApplicationProcessId);
+				var crossApplicationRequestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers);
+				if (crossApplicationRequestData == null)
+				{
+					return;
+				}
 
-			UpdateReferrerCrossApplicationProcessId(transaction, referrerCrossApplicationProcessId);
-
-			var crossApplicationRequestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers);
-			if (crossApplicationRequestData == null)
-				return;
-
-			UpdateTransactionMetadata(transaction, crossApplicationRequestData, contentLength);
+				UpdateTransactionMetadata(transaction, crossApplicationRequestData, contentLength);
+				_catMetricCounters.Record(CATSupportabilityCondition.Request_Accept_Success);
+			}
+			catch (Exception)
+			{
+				_catMetricCounters.Record(CATSupportabilityCondition.Request_Accept_Failure);
+			}
 		}
 
 		private void TryProcessSyntheticsData(IInternalTransaction transaction, IDictionary<string, string> headers)
 		{
 			var syntheticsRequestData = _syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(headers);
 			if (syntheticsRequestData == null)
+			{
 				return;
+			}
 
 			UpdateTransactionMetaData(transaction, syntheticsRequestData);
 		}
@@ -301,7 +303,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 			// ReSharper disable once HeuristicUnreachableCode
 			if (exception == null)
+			{
 				return;
+			}
 
 			Log.Error($"An exception occurred in a wrapper: {exception}");
 		}
@@ -313,37 +317,55 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath)
 		{
 			if (stream == null)
+			{
 				return null;
+			}
+			
 			if (encoding == null)
+			{
 				return null;
+			}
+
 			if (contentType == null)
+			{
 				return null;
+			}
+
 			if (requestPath == null)
+			{
 				return null;
+			}
 
 			try
 			{
 				var transaction = _transactionService.GetCurrentInternalTransaction();
 				if (transaction == null)
+				{
 					return null;
+				}
 
 				var shouldInject = _browserMonitoringPrereqChecker.ShouldAutomaticallyInject(transaction, requestPath, contentType);
 				if (!shouldInject)
+				{
 					return null;
+				}
 
 				// Once the transaction name is used for RUM it must be frozen
 				transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.AutoBrowserScriptInjection);
-
 				var script = _browserMonitoringScriptMaker.GetScript(transaction);
 				if (script == null)
+				{
 					return null;
+				}
 
 				return new BrowserMonitoringStreamInjector(() => script, stream, encoding);
 			}
 			catch (Exception ex)
 			{
 				Log.Error($"RUM: Failed to build Browser Monitoring agent script: {ex}");
-				return null;
+				{
+					return null;
+				}
 			}
 		}
 
@@ -353,12 +375,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		public Dictionary<string, string> GetLinkingMetadata()
 		{
-			Dictionary<string, string> metadata = new Dictionary<string, string>();
-
+			var hostname = string.IsNullOrEmpty(Configuration.UtilizationFullHostName) ? Configuration.UtilizationFullHostName : Configuration.UtilizationHostName;
+			var metadata = new Dictionary<string, string>();
 			var traceMetadata = TraceMetadata;
-			var hostname = string.IsNullOrEmpty(Configuration.UtilizationFullHostName) ?Configuration.UtilizationFullHostName :
-				Configuration.UtilizationHostName;
-
 			if (!string.IsNullOrEmpty(traceMetadata.TraceId))
 			{
 				metadata.Add("trace.id", traceMetadata.TraceId);
@@ -377,7 +396,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			}
 
 			metadata.Add("entity.type", "SERVICE");
-
 			if (!string.IsNullOrEmpty(Configuration.EntityGuid))
 			{
 				metadata.Add("entity.guid", Configuration.EntityGuid);
@@ -393,6 +411,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		#endregion GetLinkingMetadata
 
+		#region ExperimentalApi
+
+		public void RecordSupportabilityMetric(string metricName, int count)
+		{
+			_agentHealthReporter.ReportSupportabilityCountMetric(metricName, count);
+		}
+
+		#endregion
+
 		#region Helpers
 
 		private string GetReferrerCrossApplicationProcessId(IInternalTransaction transaction, IDictionary<string, string> headers)
@@ -400,6 +427,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var existingReferrerProcessId = transaction.TransactionMetadata.CrossApplicationReferrerProcessId;
 			if (existingReferrerProcessId != null)
 			{
+				_catMetricCounters.Record(CATSupportabilityCondition.Request_Accept_Multiple);
 				Log.Warn($"Already received inbound cross application request with referrer cross process id: {existingReferrerProcessId}");
 				return null;
 			}
@@ -415,14 +443,31 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		private void UpdateTransactionMetadata(IInternalTransaction transaction, CrossApplicationRequestData crossApplicationRequestData, long? contentLength)
 		{
+			if(transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid != null)
+			{
+				_catMetricCounters.Record(CATSupportabilityCondition.Request_Accept_Multiple);
+				//We don't return here to support legacy behavior.
+			}
+
 			if (crossApplicationRequestData.TripId != null)
+			{
 				transaction.TransactionMetadata.SetCrossApplicationReferrerTripId(crossApplicationRequestData.TripId);
+			}
+
 			if (contentLength != null && contentLength.Value > 0)
+			{
 				transaction.TransactionMetadata.SetCrossApplicationReferrerContentLength(contentLength.Value);
+			}
+
 			if (crossApplicationRequestData.PathHash != null)
+			{
 				transaction.TransactionMetadata.SetCrossApplicationReferrerPathHash(crossApplicationRequestData.PathHash);
+			}
+
 			if (crossApplicationRequestData.TransactionGuid != null)
+			{
 				transaction.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid(crossApplicationRequestData.TransactionGuid);
+			}
 		}
 
 		private void UpdateTransactionMetaData(IInternalTransaction transaction, SyntheticsHeader syntheticsHeader)

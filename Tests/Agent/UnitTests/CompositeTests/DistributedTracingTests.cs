@@ -43,7 +43,11 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
 
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow(null, DatastoreVendor.MSSQL, null, null, null,testHostName,testPort,testDBName);
@@ -86,7 +90,11 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			_agent.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
 
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow(null, DatastoreVendor.MSSQL, null, testCommand, null, testHostName, testPort, testDBName);
@@ -126,7 +134,10 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateMessageBrokerTransaction(MessageBrokerDestinationType.Queue, vendorName, routingKey);
+			var tx = _agent.CreateTransaction(
+				destinationType: MessageBrokerDestinationType.Queue,
+				brokerVendorName: vendorName,
+				destination: routingKey);
 			_agent.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
 			var segment = _agent.StartMessageBrokerSegmentOrThrow(vendorName, MessageBrokerDestinationType.Queue,
 				routingKey, MessageBrokerAction.Consume);

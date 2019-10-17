@@ -1,9 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using CompositeTests;
+﻿using CompositeTests;
 using NBench;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System;
+using System.Diagnostics;
 
 namespace ConcurrentBenchmarking
 {
@@ -37,7 +37,11 @@ namespace ConcurrentBenchmarking
 
 			while (stopWatch.ElapsedMilliseconds < PerIterationRunTime.TotalMilliseconds)
 			{
-				var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+				var tx = _agent.CreateTransaction(
+					isWeb: true,
+					category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+					transactionDisplayName: "name",
+					doNotTrackAsUnitOfWork: true);
 				_agent.StartTransactionSegmentOrThrow("segmentName").End();
 				tx.End();
 
@@ -61,7 +65,11 @@ namespace ConcurrentBenchmarking
 
 			while (stopWatch.ElapsedMilliseconds < PerIterationRunTime.TotalMilliseconds)
 			{
-				var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+				var tx = _agent.CreateTransaction(
+					isWeb: true,
+					category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+					transactionDisplayName: "name",
+					doNotTrackAsUnitOfWork: true);
 				for (var x = 0; x < 1000; x++)
 				{
 					var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
@@ -88,7 +96,11 @@ namespace ConcurrentBenchmarking
 
 			while (stopWatch.ElapsedMilliseconds < PerIterationRunTime.TotalMilliseconds)
 			{
-				var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+				var tx = _agent.CreateTransaction(
+					isWeb: true,
+					category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+					transactionDisplayName: "name",
+					doNotTrackAsUnitOfWork: true);
 				var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 
 				for (var x = 0; x < 500; x++)
@@ -123,7 +135,11 @@ namespace ConcurrentBenchmarking
 
 			while (stopWatch.ElapsedMilliseconds < PerIterationRunTime.TotalMilliseconds)
 			{
-				var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+				var tx = _agent.CreateTransaction(
+					isWeb: true,
+					category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+					transactionDisplayName: "name",
+					doNotTrackAsUnitOfWork: true);
 				var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 
 				for (var x = 0; x < 1000; x++)

@@ -76,7 +76,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IAgent, Wrapper.AgentWrapperApi.Agent>();
 			container.Register<CpuSampler, CpuSampler>();
 			container.Register<MemorySampler, MemorySampler>();
-			container.Register<Func<IThreadEventsListener>>(() => new ThreadEventsListener());
+			container.Register<Func<ISampledEventListener<ThreadpoolThroughputEventsSample>>>(() => new ThreadEventsListener());
 			container.Register<ThreadStatsSampler, ThreadStatsSampler>();
 			container.Register<IGcSampleTransformer, GcSampleTransformer>();
 #if NETFRAMEWORK
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IPerformanceCounterProxyFactory, PerformanceCounterProxyFactory>();
 			container.Register<GcSampler, GcSampler>();
 #else
-			container.Register<Func<IGCEventsListener>>(() => new GCEventsListener());
+			container.Register<Func<ISampledEventListener<Dictionary<GCSampleType, float>>>>(() => new GCEventsListener());
 			container.Register<Func<GCSamplerNetCore.SamplerIsApplicableToFrameworkResult>>(GCSamplerNetCore.FXsamplerIsApplicableToFrameworkDefault);
 			container.Register<GCSamplerNetCore, GCSamplerNetCore>();
 #endif
@@ -121,6 +121,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
 			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
 			container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
+			container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
 			container.Register<ISqlParsingCacheSupportabilityMetricReporter, IOutOfBandMetricSource, SqlParsingCacheSupportabilityMetricReporter>();
 			container.Register<IAgentTimerService, AgentTimerService>();
 #if NET45

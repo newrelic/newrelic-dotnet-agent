@@ -1,19 +1,16 @@
-﻿using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System.Linq;
 
 namespace CompositeTests
 {
 	[TestFixture]
 	public class TransactionNameTests
 	{
-		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
-		[NotNull]
 		private IAgent _agent;
 		
 		[SetUp]
@@ -34,7 +31,11 @@ namespace CompositeTests
 		[Test]
 		public void SetWebTransactionName_UpdatesTransactionNameCorrectly()
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetWebTransactionName(WebTransactionType.ASP, "foo", TransactionNamePriority.Route);
 			var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
 			segment.End();
@@ -57,7 +58,11 @@ namespace CompositeTests
 		[Test]
 		public void SetWebTransactionNameFromPath_UpdatesTransactionNameCorrectly()
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetWebTransactionNameFromPath(WebTransactionType.ASP, "foo");
 			_agent.StartTransactionSegmentOrThrow("simpleName").End();
 			transaction.End();
@@ -121,7 +126,11 @@ namespace CompositeTests
 		[Test]
 		public void SetOtherTransactionName_UpdatesTransactionNameCorrectly()
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetOtherTransactionName("cat", "foo", TransactionNamePriority.Route);
 			var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
 			segment.End();
@@ -144,7 +153,11 @@ namespace CompositeTests
 		[Test]
 		public void SetMessageBrokerTransactionName_UpdatesTransactionNameCorrectly()
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetMessageBrokerTransactionName(MessageBrokerDestinationType.Queue, "vendor", "dest", TransactionNamePriority.Route);
 			var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
 			segment.End();
@@ -167,7 +180,11 @@ namespace CompositeTests
 		[Test]
 		public void SetCustomTransactionName_UpdatesTransactionNameCorrectly_IfWebTransaction()
 		{
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetCustomTransactionName("foo", TransactionNamePriority.Route);
 			var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
 			segment.End();
@@ -190,7 +207,11 @@ namespace CompositeTests
 		[Test]
 		public void SetCustomTransactionName_UpdatesTransactionNameCorrectly_IfNonWebTransaction()
 		{
-			var transaction = _agent.CreateOtherTransaction("cat", "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: false,
+				category: "cat",
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetCustomTransactionName("foo", TransactionNamePriority.Route);
 			var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
 			segment.End();
@@ -212,7 +233,11 @@ namespace CompositeTests
 		[Test]
 		public void SetCustomTransactionName_UpdatesTransactionNameCorrectly_IfNameIsPrefixedWithCustom()
 		{
-			var transaction = _agent.CreateOtherTransaction("cat", "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: false,
+				category: "cat",
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			transaction.SetCustomTransactionName("Custom/foo", TransactionNamePriority.Route);
 			var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
 			segment.End();
@@ -245,7 +270,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+							isWeb: true,
+							category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+							transactionDisplayName: "name",
+							doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			transaction.SetWebTransactionName(WebTransactionType.Action, "priority0", 0);
@@ -271,7 +300,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			transaction.SetWebTransactionName(WebTransactionType.Action, "priority1", TransactionNamePriority.Uri);
@@ -297,7 +330,11 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 
 			// ACT
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
 			transaction.SetWebTransactionName(WebTransactionType.Action, "priority1", TransactionNamePriority.Uri);

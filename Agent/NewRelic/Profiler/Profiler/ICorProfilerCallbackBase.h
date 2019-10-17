@@ -991,10 +991,10 @@ namespace Profiler {
 								auto fileInfo = (VS_FIXEDFILEINFO*)block;
 
 								LogInfo(lpszBuf, L" v",
-									std::to_wstring(HIWORD(fileInfo->dwProductVersionMS)), '.',
-									std::to_wstring(LOWORD(fileInfo->dwProductVersionMS)), '.',
-									std::to_wstring(HIWORD(fileInfo->dwProductVersionLS)), '.',
-									std::to_wstring(LOWORD(fileInfo->dwProductVersionLS)));
+									std::to_wstring(HIWORD(fileInfo->dwFileVersionMS)), '.',
+									std::to_wstring(LOWORD(fileInfo->dwFileVersionMS)), '.',
+									std::to_wstring(HIWORD(fileInfo->dwFileVersionLS)), '.',
+									std::to_wstring(LOWORD(fileInfo->dwFileVersionLS)));
 							} else {
 								LogInfo(lpszBuf, L" vUNKNOWN");
 							}

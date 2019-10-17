@@ -13,13 +13,15 @@ namespace NewRelic.Agent.Core.Samplers
 	{
 		private ThreadStatsSampler _threadStatsSampler;
 
-		private IThreadEventsListener _threadEventsListener;
+		private ISampledEventListener<ThreadpoolThroughputEventsSample> _threadEventsListener;
 
 		private IThreadStatsSampleTransformer _threadStatsSampleTransformer;
 
 		private Action _sampleAction;
 
 		private CompositeTestAgent _compositeTestAgent;
+
+		private IScheduler _mockScheduler = Mock.Create<IScheduler>();
 
 		[SetUp]
 		public void SetUp()
@@ -28,12 +30,11 @@ namespace NewRelic.Agent.Core.Samplers
 			_compositeTestAgent = new CompositeTestAgent();
 			_compositeTestAgent.SetEventListenerSamplersEnabled(true);
 
-			var scheduler = Mock.Create<IScheduler>();
-			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+			Mock.Arrange(() => _mockScheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _sampleAction = action);
 			_threadStatsSampleTransformer = Mock.Create<IThreadStatsSampleTransformer>();
-			_threadEventsListener = Mock.Create<IThreadEventsListener>();
-			_threadStatsSampler = new ThreadStatsSampler(scheduler, GetThreadEventsListener, _threadStatsSampleTransformer, new ThreadPoolStatic());
+			_threadEventsListener = Mock.Create<ISampledEventListener<ThreadpoolThroughputEventsSample>>();
+			_threadStatsSampler = new ThreadStatsSampler(_mockScheduler, GetThreadEventsListener, _threadStatsSampleTransformer, new ThreadPoolStatic());
 			_threadStatsSampler.Start();
 		}
 
@@ -85,7 +86,7 @@ namespace NewRelic.Agent.Core.Samplers
 			Assert.NotNull(threadpoolThroughputStatsSample);
 		}
 
-		private IThreadEventsListener GetThreadEventsListener()
+		private ISampledEventListener<ThreadpoolThroughputEventsSample> GetThreadEventsListener()
 		{
 			return _threadEventsListener;
 		}

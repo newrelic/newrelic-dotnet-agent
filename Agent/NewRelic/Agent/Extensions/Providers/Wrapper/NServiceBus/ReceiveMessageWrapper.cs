@@ -36,7 +36,10 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
 			const string brokerVendorName = "NServiceBus";
 			var queueName = TryGetQueueName(logicalMessage);
-			transaction = agent.CreateMessageBrokerTransaction(MessageBrokerDestinationType.Queue, brokerVendorName, queueName);
+			transaction = agent.CreateTransaction(
+				destinationType: MessageBrokerDestinationType.Queue,
+				brokerVendorName: brokerVendorName,
+				destination: queueName);
 
 			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, brokerVendorName, queueName);
 

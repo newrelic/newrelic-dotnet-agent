@@ -64,7 +64,11 @@ namespace NewRelic.Providers.Wrapper.Owin
 			var path = request.Path.Value;
 			path = "/".Equals(path) ? "ROOT" : path.Substring(1);
 
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Custom, path);
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Custom),
+				transactionDisplayName: path,
+				doNotTrackAsUnitOfWork: true);
 
 			transaction.SetUri(string.IsNullOrEmpty(request.Path.Value) ? "/Unknown" : request.Path.Value);
 

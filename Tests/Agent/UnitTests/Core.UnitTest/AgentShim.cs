@@ -16,9 +16,6 @@ namespace NewRelic.Agent.Core.UnitTest
 		{
 			[NotNull]
 			private IAgentManager _agentManager;
-			
-			[NotNull]
-			private TestUtilities.Logging _logger;
 
 			[OneTimeSetUp]
 			public void TestFixtureSetUp()
@@ -30,7 +27,6 @@ namespace NewRelic.Agent.Core.UnitTest
 			[SetUp]
 			public void SetUp()
 			{
-				_logger = new TestUtilities.Logging();
 				_agentManager = Mock.Create<IAgentManager>(Behavior.Strict);
 				SetAgentInstance(_agentManager);
 			}
@@ -39,7 +35,6 @@ namespace NewRelic.Agent.Core.UnitTest
 			public void TearDown()
 			{
 				SetAgentInstance(null);
-				_logger.Dispose();
 			}
 
 			[Test]
@@ -166,32 +161,25 @@ namespace NewRelic.Agent.Core.UnitTest
 			}
 
 			[Test]
-			public void logs_error_and_returns_when_tracer_object_is_not_an_ITracer()
+			public void does_not_throw_when_tracer_object_is_not_an_ITracer()
 			{
-				// ARRANGE
 				Object tracer = new Object();
-
-				// ACT
-				AgentShim.FinishTracer(tracer, null, null);
-
-				// ASSERT
-				Assert.AreEqual(1, _logger.ErrorCount);
-				Assert.AreEqual(1, _logger.MessageCount);
+				Assert.DoesNotThrow(() => AgentShim.FinishTracer(tracer, null, null));
 			}
 
 			[Test]
-			public void logs_error_and_returns_when_exception_object_is_not_an_exception()
+			public void returns_without_calling_finish_when_exception_object_is_not_an_exception()
 			{
 				// ARRANGE
 				var tracer = Mock.Create<ITracer>(Behavior.Strict);
+				Mock.Arrange(() => tracer.Finish(Arg.AnyObject, Arg.IsAny<Exception>())).OccursNever();
 				var exception = new Object();
 
 				// ACT
 				AgentShim.FinishTracer(tracer, null, exception);
 
 				// ASSERT
-				Assert.AreEqual(1, _logger.ErrorCount);
-				Assert.AreEqual(1, _logger.MessageCount);
+				Mock.Assert(tracer);
 			}
 
 			[Test]
@@ -245,15 +233,9 @@ namespace NewRelic.Agent.Core.UnitTest
 			[Test]
 			public void Exception_does_not_bubble_up_when_thrown_from_FinishTracerImpl()
 			{
-				// ARRANGE
 				var tracer = Mock.Create<ITracer>(Behavior.Strict);
 				Mock.Arrange(() => tracer.Finish(null as Object, null as Exception)).Throws(new Exception());
-
-				// ACT
 				Assert.DoesNotThrow(() => AgentShim.FinishTracer(tracer, null, null));
-					
-				// ASSERT
-				Assert.AreEqual(1, _logger.DebugCount);
 			}
 		}
 

@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
 {
@@ -131,8 +131,12 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 		{
 			var path = request.Path.Value;
 			path = "/".Equals(path) ? "ROOT" : path.Substring(1);
-
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.ASP, path);
+			
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: path,
+				doNotTrackAsUnitOfWork: true);
 
 			transaction.SetUri(request.Path);
 

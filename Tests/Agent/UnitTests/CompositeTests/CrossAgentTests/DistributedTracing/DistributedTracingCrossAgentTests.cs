@@ -108,7 +108,11 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 		{
 			var testDataInboundPayloads = MakeHeaders(testData);
 
-			var transaction = testData.WebTransaction ? _agent.CreateWebTransaction(WebTransactionType.Action, "name") : _agent.CreateOtherTransaction("Other", "name");
+			var transaction = _agent.CreateTransaction(
+				isWeb: testData.WebTransaction,
+				category: testData.WebTransaction ? "Action" : "Other",
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 
 			AcceptPayloads(testDataInboundPayloads, testData);
 

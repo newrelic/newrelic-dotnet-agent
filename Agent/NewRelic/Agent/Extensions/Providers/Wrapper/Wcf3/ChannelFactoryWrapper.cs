@@ -1,15 +1,21 @@
 ﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using System;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
+using System.ServiceModel.MsmqIntegration;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {
 	public class ChannelFactoryWrapper : IWrapper
 	{
+		private static readonly List<Type> _bindingsSent = new List<Type>();
+		private static readonly object _bindingLock = new object();
+
 		public bool IsTransactionRequired => false;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo instrumentedMethodInfo)
@@ -30,14 +36,41 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			{
 				var channelFactory = instrumentedMethodCall.MethodCall.InvocationTarget as ChannelFactory;
 				channelFactory?.Endpoint.Behaviors.Add(new NewRelicEndpointBehavior(agent));
+				TrySendBindingMetric(channelFactory?.Endpoint.Binding.GetType(), agent);
 			});
+		}
+
+		private static void TrySendBindingMetric(Type bindingType, IAgent agent)
+		{
+			// this will work for both custom and MS bindings
+			var sendMetric = false;
+			lock (_bindingLock)
+			{
+				if (!_bindingsSent.Contains(bindingType))
+				{
+					_bindingsSent.Add(bindingType);
+					sendMetric = true;
+				}
+			}
+
+			if (sendMetric)
+			{
+				if (!SystemBindingTypes.Contains(bindingType))
+				{
+					agent.GetExperimentalApi().RecordSupportabilityMetric("WCFClient/BindingType/CustomBinding");
+				}
+				else
+				{
+					agent.GetExperimentalApi().RecordSupportabilityMetric($"WCFClient/BindingType/{bindingType.Name}");
+				}
+			}
 		}
 	}
 
 	public class NewRelicClientMessageInspector : IClientMessageInspector
 	{
-		private IAgent _agent;
 		private const string AppDataHttpHeader = "X-NewRelic-App-Data";
+		private IAgent _agent;
 
 		public NewRelicClientMessageInspector(IAgent agent)
 		{
@@ -47,7 +80,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		public void AfterReceiveReply(ref Message reply, object correlationState)
 		{
 			string headerValue = null;
-			
 			if(reply.Properties.TryGetValue(HttpResponseMessageProperty.Name, out var httpResponseObject))
 			{
 				var httpResponse = httpResponseObject as HttpResponseMessageProperty;
@@ -64,7 +96,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			if (correlationState != null && !string.IsNullOrEmpty(headerValue))
 			{
 				typedCorrelationState.Transaction.ProcessInboundResponse(new[] { new KeyValuePair<string, string>(AppDataHttpHeader, headerValue) }, typedCorrelationState?.Segment);
-
 				//TODO: Change the way WCF instrumentation ends segment so that it always end the external segment here to support TAP and EAP style calls. 
 			}
 		}
@@ -73,17 +104,14 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		{
 			var transactionWrapperApi = _agent.CurrentTransaction;
 			var correlationState = new CorrelationState(transactionWrapperApi, transactionWrapperApi.CurrentSegment);
-
 			if (!correlationState.Transaction.IsValid || !correlationState.Segment.IsExternal)
 			{
 				return null;
 			}
 
 			var headersToAdd = transactionWrapperApi.GetRequestMetadata();
-
 			HttpRequestMessageProperty httpRequestMessage;
-			object httpRequestMessageObject;
-			if (request.Properties.TryGetValue(HttpRequestMessageProperty.Name, out httpRequestMessageObject))
+			if (request.Properties.TryGetValue(HttpRequestMessageProperty.Name, out object httpRequestMessageObject))
 			{
 				httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
 			}

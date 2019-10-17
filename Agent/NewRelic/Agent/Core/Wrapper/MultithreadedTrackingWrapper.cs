@@ -27,9 +27,11 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			var name = $"{typeName}/{methodName}";
 
-			transaction = instrumentedMethodCall.StartWebTransaction ?
-				agent.CreateWebTransaction(WebTransactionType.Custom, name, false) :
-				agent.CreateOtherTransaction("Custom", name, mustBeRootTransaction: false);
+			transaction = agent.CreateTransaction(
+				isWeb: instrumentedMethodCall.StartWebTransaction,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Custom),
+				transactionDisplayName: name,
+				doNotTrackAsUnitOfWork: false);
 
 			transaction.AttachToAsync();
 

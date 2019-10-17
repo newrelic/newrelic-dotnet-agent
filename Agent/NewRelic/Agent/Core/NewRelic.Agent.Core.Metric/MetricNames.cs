@@ -38,6 +38,7 @@ namespace NewRelic.Agent.Core.Metric
 				hashCode = hashCode * 31 + segment.GetHashCode();
 				length += segment.Length;
 			}
+
 			return new MetricNameWithSegments(length, hashCode, prefix, segments);
 		}
 
@@ -48,6 +49,7 @@ namespace NewRelic.Agent.Core.Metric
 			{
 				segmentStrings[i] = segments[i]?.ToString() ?? string.Empty;
 			}
+
 			return Create(prefix, segmentStrings);
 		}
 		
@@ -82,7 +84,11 @@ namespace NewRelic.Agent.Core.Metric
 
 			public override bool Equals(object obj)
 			{
-				if (this == obj) return true;
+				if (this == obj)
+				{
+					return true;
+				}
+
 				return obj is SimpleMetricName name && _name.Equals(name._name);
 			}
 
@@ -129,6 +135,7 @@ namespace NewRelic.Agent.Core.Metric
 				{
 					stringBuilder.Append(MetricNames.PathSeparatorChar).Append(segment);
 				}
+
 				return stringBuilder.ToString();
 			}
 		}
@@ -140,91 +147,40 @@ namespace NewRelic.Agent.Core.Metric
 	public static class MetricNames
 	{
 		public const string PathSeparator = "/";
-		public static readonly char PathSeparatorChar = PathSeparator[0];
-		public static readonly char[] PathSeparatorCharArray = { PathSeparatorChar };
-
-		#region Apdex
-
-		// Apdex metrics spec: https://newrelic.atlassian.net/wiki/display/eng/OtherTransactions+as+Key+Transactions
-		public static readonly MetricName ApdexAll = MetricName.Create("ApdexAll");
-		public static readonly MetricName ApdexAllWeb = MetricName.Create("Apdex");
-		public static readonly MetricName ApdexAllOther = MetricName.Create("ApdexOther");
-
-		private static string Join(params string[] strings)
-		{
-			return string.Join(PathSeparator, strings);
-		}
-
-		public static MetricName GetApdexAllWebOrOther(Boolean isWebTransaction)
-		{
-			return isWebTransaction ? ApdexAllWeb : ApdexAllOther;
-		}
-
-		public const string ApdexWeb = "Apdex";
-		public const string ApdexOther = "ApdexOther/Transaction";
-
-		/// <summary>
-		/// Takes a transaction metric name and returns an appropriate apdex metric name. For example, WebTransaction/MVC/MyApp becomes Apdex/MVC/MyApp.
-		/// </summary>
-		/// <param name="transactionMetricName">The transaction metric name. Must be a valid transaction metric name.</param>
-		/// <returns>An apdex metric name.</returns>
-		public static string GetTransactionApdex(TransactionMetricName transactionMetricName)
-		{
-			var apdexPrefix = transactionMetricName.IsWebTransactionName ? ApdexWeb : ApdexOther;
-			return Join(apdexPrefix, transactionMetricName.UnPrefixedName);
-		}
-
-		#endregion Apdex
-
-		public static readonly MetricName Dispatcher = MetricName.Create("HttpDispatcher");
-
-		#region Errors
-
-		public const string Errors = "Errors";
-		public static readonly MetricName ErrorsAll = MetricName.Create(Errors + PathSeparator + All);
-		public static readonly MetricName ErrorsAllWeb = MetricName.Create(Errors + PathSeparator + AllWeb);
-		public static readonly MetricName ErrorsAllOther = MetricName.Create(Errors + PathSeparator + AllOther);
-
-		public static MetricName GetErrorTransaction(string transactionMetricName)
-		{
-			return MetricName.Create(Errors, transactionMetricName);
-		}
-
-		#endregion Errors
-
-		public const string OtherTransactionPrefix = "OtherTransaction";
-
-		public const string WebTransactionPrefix = "WebTransaction";
-
-		public static readonly MetricName RequestQueueTime = MetricName.Create("WebFrontend/QueueTime");
-
 		public const string Controller = "DotNetController";
 		public const string Uri = "Uri";
 		public const string NormalizedUri = "NormalizedUri";
-
 		public const string All = "all";
 		public const string AllWeb = "allWeb";
 		public const string AllOther = "allOther";
-
 		public const string Custom = "Custom";
+		public const string OtherTransactionPrefix = "OtherTransaction";
+		public const string WebTransactionPrefix = "WebTransaction";
+		public const string SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix = Supportability + PathSeparator + "DotNet/Collector" + PathSeparator + "MaxPayloadSizeLimit";
 
-		private static readonly Func<DatastoreVendor, MetricName> DatabaseVendorAll;
-		private static readonly Func<DatastoreVendor, MetricName> DatabaseVendorAllWeb;
-		private static readonly Func<DatastoreVendor, MetricName> DatabaseVendorAllOther;
-		private static readonly Func<DatastoreVendor, Func<string, MetricName>> DatabaseVendorOperations;
+		public static readonly char PathSeparatorChar = PathSeparator[0];
+		public static readonly char[] PathSeparatorCharArray = { PathSeparatorChar };
+
+		public static readonly MetricName Dispatcher = MetricName.Create("HttpDispatcher");
+		public static readonly MetricName RequestQueueTime = MetricName.Create("WebFrontend/QueueTime");
+
+		private static readonly Func<DatastoreVendor, MetricName> _databaseVendorAll;
+		private static readonly Func<DatastoreVendor, MetricName> _databaseVendorAllWeb;
+		private static readonly Func<DatastoreVendor, MetricName> _databaseVendorAllOther;
+		private static readonly Func<DatastoreVendor, Func<string, MetricName>> _databaseVendorOperations;
 
 		static MetricNames()
 		{
-			DatabaseVendorAll = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
+			_databaseVendorAll = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
 				MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + All));
-			DatabaseVendorAllWeb = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
+			_databaseVendorAllWeb = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
 				MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + AllWeb));
-			DatabaseVendorAllOther = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
+			_databaseVendorAllOther = GetEnumerationFunc<DatastoreVendor, MetricName>(vendor =>
 				MetricName.Create(Datastore + PathSeparator + EnumNameCache<DatastoreVendor>.GetName(vendor) + PathSeparator + AllOther));
 
 			var operations = new HashSet<string>(SqlParser.Operations);
 			operations.Add(DatastoreUnknownOperationName);
-			DatabaseVendorOperations = GetEnumerationFunc<DatastoreVendor, Func<string, MetricName>>(
+			_databaseVendorOperations = GetEnumerationFunc<DatastoreVendor, Func<string, MetricName>>(
 				vendor =>
 				{
 					var dict = new Dictionary<string, MetricName>(operations.Count);
@@ -240,6 +196,11 @@ namespace NewRelic.Agent.Core.Metric
 				});
 		}
 
+		public static MetricName GetCustom(string suffix)
+		{
+			return MetricName.Create(Custom, suffix);
+		}
+
 		/// <summary>
 		/// Returns a func that returns R for a given value of an enum E.
 		/// It uses the valueSupplier to compute the values of R and stores them
@@ -253,16 +214,59 @@ namespace NewRelic.Agent.Core.Metric
 			// we can cast the enum to an int
 			foreach (var key in keys)
 			{
-				array[(int) key] = valueSupplier.Invoke((TEnum) key);
+				array[(int)key] = valueSupplier.Invoke((TEnum)key);
 			}
 
-			return key => array[(int) (object) key];
+			return key => array[(int)(object)key];
 		}
 
-		public static MetricName GetCustom(string suffix)
+		#region Apdex
+
+		public const string ApdexWeb = "Apdex";
+		public const string ApdexOther = "ApdexOther/Transaction";
+
+		// Apdex metrics spec: https://newrelic.atlassian.net/wiki/display/eng/OtherTransactions+as+Key+Transactions
+		public static readonly MetricName ApdexAll = MetricName.Create("ApdexAll");
+		public static readonly MetricName ApdexAllWeb = MetricName.Create("Apdex");
+		public static readonly MetricName ApdexAllOther = MetricName.Create("ApdexOther");
+
+		private static string Join(params string[] strings)
 		{
-			return MetricName.Create(Custom, suffix);
+			return string.Join(PathSeparator, strings);
 		}
+
+		public static MetricName GetApdexAllWebOrOther(bool isWebTransaction)
+		{
+			return isWebTransaction ? ApdexAllWeb : ApdexAllOther;
+		}
+
+		/// <summary>
+		/// Takes a transaction metric name and returns an appropriate apdex metric name. For example, WebTransaction/MVC/MyApp becomes Apdex/MVC/MyApp.
+		/// </summary>
+		/// <param name="transactionMetricName">The transaction metric name. Must be a valid transaction metric name.</param>
+		/// <returns>An apdex metric name.</returns>
+		public static string GetTransactionApdex(TransactionMetricName transactionMetricName)
+		{
+			var apdexPrefix = transactionMetricName.IsWebTransactionName ? ApdexWeb : ApdexOther;
+			return Join(apdexPrefix, transactionMetricName.UnPrefixedName);
+		}
+
+		#endregion Apdex
+
+		#region Errors
+
+		public const string Errors = "Errors";
+
+		public static readonly MetricName ErrorsAll = MetricName.Create(Errors + PathSeparator + All);
+		public static readonly MetricName ErrorsAllWeb = MetricName.Create(Errors + PathSeparator + AllWeb);
+		public static readonly MetricName ErrorsAllOther = MetricName.Create(Errors + PathSeparator + AllOther);
+
+		public static MetricName GetErrorTransaction(string transactionMetricName)
+		{
+			return MetricName.Create(Errors, transactionMetricName);
+		}
+
+		#endregion Errors
 
 		#region DotNetInvocation
 
@@ -277,12 +281,6 @@ namespace NewRelic.Agent.Core.Metric
 
 		#region Transactions
 
-		public static readonly MetricName WebTransactionAll = MetricName.Create(WebTransactionPrefix);
-
-		public static readonly MetricName OtherTransactionAll = MetricName.Create(OtherTransactionPrefix + PathSeparator + All);
-
-		public const string Message = "Message";
-
 		public enum WebTransactionType
 		{
 			Action,
@@ -295,6 +293,11 @@ namespace NewRelic.Agent.Core.Metric
 			MonoRail,
 			OpenRasta
 		}
+
+		public const string Message = "Message";
+
+		public static readonly MetricName WebTransactionAll = MetricName.Create(WebTransactionPrefix);
+		public static readonly MetricName OtherTransactionAll = MetricName.Create(OtherTransactionPrefix + PathSeparator + All);
 
 		#region Total time
 
@@ -328,31 +331,6 @@ namespace NewRelic.Agent.Core.Metric
 
 		#region MessageBroker
 
-		public const string MessageBrokerPrefix = "MessageBroker";
-		public const string MessageBrokerNamed = "Named";
-		public const string MessageBrokerTemp = "Temp";
-
-		public const string Msmq = "MSMQ";
-
-		public static MetricName GetMessageBroker(MessageBrokerDestinationType type, MessageBrokerAction action,
-			string vendor, string queueName)
-		{
-			var normalizedType = NormalizeMessageBrokerDestinationTypeForMetricName(type);
-			return (queueName != null)
-				? MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerNamed, queueName)
-				: MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerTemp);
-		}
-
-		private static MessageBrokerDestinationType NormalizeMessageBrokerDestinationTypeForMetricName(
-			MessageBrokerDestinationType type)
-		{
-			if (type == MessageBrokerDestinationType.TempQueue)
-				return MessageBrokerDestinationType.Queue;
-			if (type == MessageBrokerDestinationType.TempTopic)
-				return MessageBrokerDestinationType.Topic;
-			return type;
-		}
-
 		public enum MessageBrokerDestinationType
 		{
 			Queue,
@@ -369,38 +347,70 @@ namespace NewRelic.Agent.Core.Metric
 			Purge,
 		}
 
+		public const string MessageBrokerPrefix = "MessageBroker";
+		public const string MessageBrokerNamed = "Named";
+		public const string MessageBrokerTemp = "Temp";
+		public const string Msmq = "MSMQ";
+
+		public static MetricName GetMessageBroker(MessageBrokerDestinationType type, MessageBrokerAction action,
+			string vendor, string queueName)
+		{
+			var normalizedType = NormalizeMessageBrokerDestinationTypeForMetricName(type);
+			return (queueName != null)
+				? MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerNamed, queueName)
+				: MetricName.Create(MessageBrokerPrefix, vendor, normalizedType, action, MessageBrokerTemp);
+		}
+
+		private static MessageBrokerDestinationType NormalizeMessageBrokerDestinationTypeForMetricName(
+			MessageBrokerDestinationType type)
+		{
+			if (type == MessageBrokerDestinationType.TempQueue)
+			{
+				return MessageBrokerDestinationType.Queue;
+			}
+
+			if (type == MessageBrokerDestinationType.TempTopic)
+			{
+				return MessageBrokerDestinationType.Topic;
+			}
+
+			return type;
+		}
+
 		#endregion MessageBroker
 
 		#region Datastore
 
 		private const string Datastore = "Datastore";
-		public static readonly MetricName DatastoreAll = MetricName.Create(Datastore + PathSeparator + All);
-		public static readonly MetricName DatastoreAllWeb = MetricName.Create(Datastore + PathSeparator + AllWeb);
-		public static readonly MetricName DatastoreAllOther = MetricName.Create(Datastore + PathSeparator + AllOther);
 		private const string DatastoreOperation = Datastore + PathSeparator + "operation";
 		private const string DatastoreStatement = Datastore + PathSeparator + "statement";
 		private const string DatastoreInstance = Datastore + PathSeparator + "instance";
+
 		public const string DatastoreUnknownOperationName = "other";
+
+		public static readonly MetricName DatastoreAll = MetricName.Create(Datastore + PathSeparator + All);
+		public static readonly MetricName DatastoreAllWeb = MetricName.Create(Datastore + PathSeparator + AllWeb);
+		public static readonly MetricName DatastoreAllOther = MetricName.Create(Datastore + PathSeparator + AllOther);
 
 		public static MetricName GetDatastoreVendorAll(this DatastoreVendor vendor)
 		{
-			return DatabaseVendorAll.Invoke(vendor);
+			return _databaseVendorAll.Invoke(vendor);
 		}
 
 		public static MetricName GetDatastoreVendorAllWeb(this DatastoreVendor vendor)
 		{
-			return DatabaseVendorAllWeb.Invoke(vendor);
+			return _databaseVendorAllWeb.Invoke(vendor);
 		}
 
 		public static MetricName GetDatastoreVendorAllOther(this DatastoreVendor vendor)
 		{
-			return DatabaseVendorAllOther.Invoke(vendor);
+			return _databaseVendorAllOther.Invoke(vendor);
 		}
 
 		public static MetricName GetDatastoreOperation(this DatastoreVendor vendor, string operation = null)
 		{
 			operation = operation ?? DatastoreUnknownOperationName;
-			return DatabaseVendorOperations.Invoke(vendor).Invoke(operation);
+			return _databaseVendorOperations.Invoke(vendor).Invoke(operation);
 		}
 
 		public static MetricName GetDatastoreStatement(DatastoreVendor vendor, string model,
@@ -415,12 +425,12 @@ namespace NewRelic.Agent.Core.Metric
 			return MetricName.Create(DatastoreInstance, EnumNameCache<DatastoreVendor>.GetName(vendor), host, portPathOrId);
 		}
 
-
 		#endregion Datastore
 
 		#region External
 
 		private const string External = "External";
+
 		public static readonly MetricName ExternalAll = MetricName.Create(External + PathSeparator + All);
 		public static readonly MetricName ExternalAllWeb = MetricName.Create(External + PathSeparator + AllWeb);
 		public static readonly MetricName ExternalAllOther = MetricName.Create(External + PathSeparator + AllOther);
@@ -464,18 +474,103 @@ namespace NewRelic.Agent.Core.Metric
 		private const string Supportability = "Supportability";
 		private const string SupportabilityDotnetPs = Supportability + PathSeparator + "Dotnet" + PathSeparator;
 		private const string SupportabilityPs = Supportability + PathSeparator;
-
 		private const string SupportabilityNetFrameworkVersionPs = SupportabilityDotnetPs + "NetFramework" + PathSeparator;
-		private const string SupportabilityAgentVersionPs = SupportabilityPs + "AgentVersion" + PathSeparator;
-		private const string SupportabilityLibraryVersionPs = SupportabilityPs + "Library" + PathSeparator;
+		private const string SupportabilityNetCoreVersionPs = SupportabilityDotnetPs + "NetCore" + PathSeparator;
 
+		// Metrics
+		// NOTE: This metric is REQUIRED by the collector (it is used as a heartbeat)
+		public const string SupportabilityMetricHarvestTransmit = SupportabilityPs + "MetricHarvest" + PathSeparator + "transmit";
 
-		private const string SupportabilityInstallTypePs = SupportabilityPs + "Dotnet/InstallType" + PathSeparator;
+		public static string GetSupportabilityAgentTimingMetric(string suffix)
+		{
+			return Supportability + PathSeparator + "AgentTiming" + PathSeparator + suffix;
+		}
+
+		// RUM
+		public const string SupportabilityRumHeaderRendered = SupportabilityPs + "RUM/Header";
+		public const string SupportabilityRumFooterRendered = SupportabilityPs + "RUM/Footer";
+		public const string SupportabilityHtmlPageRendered = SupportabilityPs + "RUM/HtmlPage";
+
+		// Thread Profiling
+		public const string SupportabilityThreadProfilingSampleCount = SupportabilityPs + "ThreadProfiling/SampleCount";
+
+		// Transaction Events
+		private const string SupportabilityTransactionEventsPs = SupportabilityPs + "AnalyticsEvents" + PathSeparator;
+
+		//  Note: these two metrics are REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
+		public const string SupportabilityTransactionEventsSent = SupportabilityTransactionEventsPs + "TotalEventsSent";
+		public const string SupportabilityTransactionEventsSeen = SupportabilityTransactionEventsPs + "TotalEventsSeen";
+
+		public const string SupportabilityTransactionEventsCollected = SupportabilityTransactionEventsPs + "TotalEventsCollected";
+		public const string SupportabilityTransactionEventsRecollected = SupportabilityTransactionEventsPs + "TotalEventsRecollected";
+		public const string SupportabilityTransactionEventsReservoirResize = SupportabilityTransactionEventsPs + "TryResizeReservoir";
+
+		// Custom Events
+		private const string SupportabilityEventsPs = SupportabilityPs + "Events" + PathSeparator;
+		private const string SupportabilityCustomEventsPs = SupportabilityEventsPs + "Customer" + PathSeparator;
+
+		// Error Events
+		private const string SupportabilityErrorEventsPs = SupportabilityEventsPs + "TransactionError" + PathSeparator;
+		public const string SupportabilityErrorEventsSent = SupportabilityErrorEventsPs + "Sent";
+		public const string SupportabilityErrorEventsSeen = SupportabilityErrorEventsPs + "Seen";
+
+		// Note: Though not required by APM like the transaction event supportability metrics, these metrics should still be created to maintain consistency
+		public const string SupportabilityCustomEventsSent = SupportabilityCustomEventsPs + "Sent";
+		public const string SupportabilityCustomEventsSeen = SupportabilityCustomEventsPs + "Seen";
+
+		public const string SupportabilityCustomEventsCollected = SupportabilityCustomEventsPs + "TotalEventsCollected";
+		public const string SupportabilityCustomEventsRecollected = SupportabilityCustomEventsPs + "TotalEventsRecollected";
+		public const string SupportabilityCustomEventsReservoirResize = SupportabilityCustomEventsPs + "TryResizeReservoir";
+
+		// SQL Trace
+		private const string SupportabilitySqlTracesPs = SupportabilityPs + "SqlTraces" + PathSeparator;
+		public const string SupportabilitySqlTracesSent = SupportabilitySqlTracesPs + "TotalSqlTracesSent";
+		public const string SupportabilitySqlTracesRecollected = SupportabilitySqlTracesPs + "TotalSqlTracesRecollected";
+		public const string SupportabilitySqlParsingCachePrefix = Supportability + PathSeparator + "SqlParsingCache";
+
+		public static readonly MetricName SupportabilitySqlTracesCollected =
+			MetricName.Create(SupportabilitySqlTracesPs + "TotalSqlTracesCollected");
+
+		// Error Traces
+		private const string SupportabilityErrorTracesPs = SupportabilityPs + "Errors" + PathSeparator;
+		public const string SupportabilityErrorTracesSent = SupportabilityErrorTracesPs + "TotalErrorsSent";
+		public const string SupportabilityErrorTracesCollected = SupportabilityErrorTracesPs + "TotalErrorsCollected";
+		public const string SupportabilityErrorTracesRecollected = SupportabilityErrorTracesPs + "TotalErrorsRecollected";
+
+		// Transaction GarbageCollected
+		private const string SupportabilityTransactionBuilderGarbageCollectedPs =
+			SupportabilityPs + "TransactionBuilderGarbageCollected" + PathSeparator;
+
+		public const string SupportabilityTransactionBuilderGarbageCollectedAll =
+			SupportabilityTransactionBuilderGarbageCollectedPs + All;
+
+		
+		public static string GetSupportabilityCATConditionMetricName(CATSupportabilityCondition condition)
+		{
+			if (_catMetricNames.TryGetValue(condition, out var metricName))
+			{
+				return metricName;
+			}
+
+			return SupportabilityCAT + EnumNameCache<CATSupportabilityCondition>.GetName(condition);
+		}
+
+		public static string GetSupportabilityName(string metricName)
+		{
+			return Supportability + PathSeparator + metricName;
+		}
 
 		public static string GetSupportabilityDotnetFrameworkVersion(DotnetFrameworkVersion version)
 		{
 			return SupportabilityNetFrameworkVersionPs + version;
 		}
+
+		public static string GetSupportabilityDotnetCoreVersion(DotnetCoreVersion version)
+		{
+			return SupportabilityNetCoreVersionPs + version;
+		}
+
+		private const string SupportabilityAgentVersionPs = SupportabilityPs + "AgentVersion" + PathSeparator;
 
 		public static string GetSupportabilityAgentVersion(string version)
 		{
@@ -487,32 +582,23 @@ namespace NewRelic.Agent.Core.Metric
 			return SupportabilityAgentVersionPs + host + PathSeparator + version;
 		}
 
+		private const string SupportabilityLibraryVersionPs = SupportabilityPs + "Library" + PathSeparator;
+
 		public static string GetSupportabilityLibraryVersion(string assemblyName, string assemblyVersion)
 		{
 			return SupportabilityLibraryVersionPs + assemblyName + PathSeparator + assemblyVersion;
 		}
 
-		public static string GetSupportabilityLinuxOs() => SupportabilityPs + "OS" + PathSeparator + "Linux";
-
+		// Utilization
 		private const string SupportabilityUtilizationPs = SupportabilityPs + "utilization" + PathSeparator;
+		private const string SupportabilityUtilizationBootIdError = SupportabilityUtilizationPs + "boot_id" + PathSeparator + "error";
+		private const string SupportabilityUtilizationKubernetesError = SupportabilityUtilizationPs + "kubernetes" + PathSeparator + "error";
+		private const string SupportabilityUtilizationAwsError = SupportabilityUtilizationPs + "aws" + PathSeparator + "error";
+		private const string SupportabilityUtilizationAzureError = SupportabilityUtilizationPs + "azure" + PathSeparator + "error";
+		private const string SupportabilityUtilizationGcpError = SupportabilityUtilizationPs + "gcp" + PathSeparator + "error";
+		private const string SupportabilityUtilizationPcfError = SupportabilityUtilizationPs + "pcf" + PathSeparator + "error";
 
-		private const string SupportabilityUtilizationBootIdError =
-			SupportabilityUtilizationPs + "boot_id" + PathSeparator + "error";
-
-		private const string SupportabilityUtilizationKubernetesError =
-			SupportabilityUtilizationPs + "kubernetes" + PathSeparator + "error";
-
-		private const string SupportabilityUtilizationAwsError =
-			SupportabilityUtilizationPs + "aws" + PathSeparator + "error";
-
-		private const string SupportabilityUtilizationAzureError =
-			SupportabilityUtilizationPs + "azure" + PathSeparator + "error";
-
-		private const string SupportabilityUtilizationGcpError =
-			SupportabilityUtilizationPs + "gcp" + PathSeparator + "error";
-
-		private const string SupportabilityUtilizationPcfError =
-			SupportabilityUtilizationPs + "pcf" + PathSeparator + "error";
+		public static string GetSupportabilityLinuxOs() => SupportabilityPs + "OS" + PathSeparator + "Linux";
 
 		public static string GetSupportabilityBootIdError() => SupportabilityUtilizationBootIdError;
 
@@ -530,80 +616,6 @@ namespace NewRelic.Agent.Core.Metric
 		{
 			return SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix + PathSeparator + endpoint;
 		}
-
-		public static string GetSupportabilityAgentTimingMetric(string suffix)
-		{
-			return Supportability + PathSeparator + "AgentTiming" + PathSeparator + suffix;
-		}
-
-		// Metrics
-		// NOTE: This metric is REQUIRED by the collector (it is used as a heartbeat)
-		public const string SupportabilityMetricHarvestTransmit =
-			SupportabilityPs + "MetricHarvest" + PathSeparator + "transmit";
-
-		// RUM
-		public const string SupportabilityRumHeaderRendered = SupportabilityPs + "RUM/Header";
-		public const string SupportabilityRumFooterRendered = SupportabilityPs + "RUM/Footer";
-		public const string SupportabilityHtmlPageRendered = SupportabilityPs + "RUM/HtmlPage";
-
-		// Thread Profiling
-		public const string SupportabilityThreadProfilingSampleCount = SupportabilityPs + "ThreadProfiling/SampleCount";
-
-		// Transaction Events
-		private const string SupportabilityTransactionEventsPs = SupportabilityPs + "AnalyticsEvents" + PathSeparator;
-
-		//  Note: these two metrics are REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
-		public const string SupportabilityTransactionEventsSent = SupportabilityTransactionEventsPs + "TotalEventsSent";
-		public const string SupportabilityTransactionEventsSeen = SupportabilityTransactionEventsPs + "TotalEventsSeen";
-
-		public const string SupportabilityTransactionEventsCollected =
-			SupportabilityTransactionEventsPs + "TotalEventsCollected";
-
-		public const string SupportabilityTransactionEventsRecollected =
-			SupportabilityTransactionEventsPs + "TotalEventsRecollected";
-
-		public const string SupportabilityTransactionEventsReservoirResize =
-			SupportabilityTransactionEventsPs + "TryResizeReservoir";
-
-		// Custom Events
-		private const string SupportabilityEventsPs = SupportabilityPs + "Events" + PathSeparator;
-		private const string SupportabilityCustomEventsPs = SupportabilityEventsPs + "Customer" + PathSeparator;
-
-		// Error Events
-		private const string SupportabilityErrorEventsPs = SupportabilityEventsPs + "TransactionError" + PathSeparator;
-
-		public const string SupportabilityErrorEventsSent = SupportabilityErrorEventsPs + "Sent";
-		public const string SupportabilityErrorEventsSeen = SupportabilityErrorEventsPs + "Seen";
-
-		// Note: Though not required by APM like the transaction event supportability metrics, these metrics should still be created to maintain consistency
-		public const string SupportabilityCustomEventsSent = SupportabilityCustomEventsPs + "Sent";
-		public const string SupportabilityCustomEventsSeen = SupportabilityCustomEventsPs + "Seen";
-
-		public const string SupportabilityCustomEventsCollected = SupportabilityCustomEventsPs + "TotalEventsCollected";
-		public const string SupportabilityCustomEventsRecollected = SupportabilityCustomEventsPs + "TotalEventsRecollected";
-		public const string SupportabilityCustomEventsReservoirResize = SupportabilityCustomEventsPs + "TryResizeReservoir";
-
-		// SQL Trace
-		private const string SupportabilitySqlTracesPs = SupportabilityPs + "SqlTraces" + PathSeparator;
-		public const string SupportabilitySqlTracesSent = SupportabilitySqlTracesPs + "TotalSqlTracesSent";
-
-		public static readonly MetricName SupportabilitySqlTracesCollected =
-			MetricName.Create(SupportabilitySqlTracesPs + "TotalSqlTracesCollected");
-
-		public const string SupportabilitySqlTracesRecollected = SupportabilitySqlTracesPs + "TotalSqlTracesRecollected";
-
-		// Error Traces
-		private const string SupportabilityErrorTracesPs = SupportabilityPs + "Errors" + PathSeparator;
-		public const string SupportabilityErrorTracesSent = SupportabilityErrorTracesPs + "TotalErrorsSent";
-		public const string SupportabilityErrorTracesCollected = SupportabilityErrorTracesPs + "TotalErrorsCollected";
-		public const string SupportabilityErrorTracesRecollected = SupportabilityErrorTracesPs + "TotalErrorsRecollected";
-
-		// Transaction GarbageCollected
-		private const string SupportabilityTransactionBuilderGarbageCollectedPs =
-			SupportabilityPs + "TransactionBuilderGarbageCollected" + PathSeparator;
-
-		public const string SupportabilityTransactionBuilderGarbageCollectedAll =
-			SupportabilityTransactionBuilderGarbageCollectedPs + All;
 
 		// Agent health events
 		public static string GetSupportabilityAgentHealthEvent(AgentHealthEvent agentHealthEvent,
@@ -628,6 +640,34 @@ namespace NewRelic.Agent.Core.Metric
 		{
 			return SupportabilityAgentApiPs + methodName;
 		}
+
+		// CAT
+		private const string SupportabilityCAT = SupportabilityPs + "CrossApplicationTracing" + PathSeparator;
+		private const string SupportabilityCATRequest = SupportabilityCAT + "Request" + PathSeparator;
+		private const string SupportabilityCATRequestCreate = SupportabilityCATRequest + "Create" + PathSeparator;
+		private const string SupportabilityCATRequestAccept = SupportabilityCATRequest + "Accept" + PathSeparator;
+		private const string SupportabilityCATResponse = SupportabilityCAT + "Response" + PathSeparator;
+		private const string SupportabilityCATResponseCreate = SupportabilityCATResponse + "Create" + PathSeparator;
+		private const string SupportabilityCATResponseAccept = SupportabilityCATResponse + "Accept" + PathSeparator;
+
+		private static readonly Dictionary<CATSupportabilityCondition, string> _catMetricNames = new Dictionary<CATSupportabilityCondition, string>()
+		{
+			{ CATSupportabilityCondition.Request_Create_Success,   SupportabilityCATRequestCreate + "Success" },
+			{ CATSupportabilityCondition.Request_Create_Failure,   SupportabilityCATRequestCreate + "Exception" },
+			{ CATSupportabilityCondition.Request_Create_Failure_XProcID, SupportabilityCATRequestCreate + "Exception/CrossProcessID" },
+ 			{ CATSupportabilityCondition.Request_Accept_Success,   SupportabilityCATRequestAccept + "Success" },
+			{ CATSupportabilityCondition.Request_Accept_Failure,   SupportabilityCATRequestAccept + "Exception" },
+			{ CATSupportabilityCondition.Request_Accept_Failure_NotTrusted,   SupportabilityCATRequestAccept + "Ignored/NotTrusted" },
+			{ CATSupportabilityCondition.Request_Accept_Failure_Decode, SupportabilityCATRequestAccept + "Ignored/UnableToDecode" },
+			{ CATSupportabilityCondition.Request_Accept_Multiple,  SupportabilityCATRequestAccept + "Warning" + PathSeparator + "MultipleAttempts" },
+			{ CATSupportabilityCondition.Response_Create_Success,  SupportabilityCATResponseCreate + "Success" },
+			{ CATSupportabilityCondition.Response_Create_Failure,  SupportabilityCATResponseCreate + "Exception" },
+			{ CATSupportabilityCondition.Response_Create_Failure_XProcID, SupportabilityCATResponseCreate + "Exception/CrossProcessID" },
+			{ CATSupportabilityCondition.Response_Accept_Success,  SupportabilityCATResponseAccept + "Success" },
+			{ CATSupportabilityCondition.Response_Accept_Failure,  SupportabilityCATResponseAccept + "Exception" },
+			{ CATSupportabilityCondition.Response_Accept_MultipleResponses, SupportabilityCATResponseAccept + "Ignored" + PathSeparator + "MultipleAttempts" }
+		};
+
 
 		///DistributedTracing
 
@@ -698,8 +738,11 @@ namespace NewRelic.Agent.Core.Metric
 			return Supportability + PathSeparator + "Agent/Collector" + PathSeparator + enpointMethod + PathSeparator + "Duration";
 		}
 
-		public const string SupportabilitySqlParsingCachePrefix = Supportability + PathSeparator + "SqlParsingCache";
 		
+
+		// Install Type
+		private const string SupportabilityInstallTypePs = SupportabilityPs + "Dotnet/InstallType" + PathSeparator;
+
 		public static string GetSupportabilityInstallType(string installType)
 		{
 			return SupportabilityInstallTypePs + installType;
@@ -737,8 +780,8 @@ namespace NewRelic.Agent.Core.Metric
 			string app,
 			string transport)
 		{
-			const int reserveCapacity = 100;
-			var sb = new StringBuilder(metricTag, reserveCapacity)
+			const int ReserveCapacity = 100;
+			var sb = new StringBuilder(metricTag, ReserveCapacity)
 				.Append(type ?? Unknown).Append(PathSeparatorChar)
 				.Append(accountId ?? Unknown).Append(PathSeparatorChar)
 				.Append(app ?? Unknown).Append(PathSeparatorChar)
@@ -826,6 +869,7 @@ namespace NewRelic.Agent.Core.Metric
 		#region Span Metrics
 
 		private const string SupportabilitySpanEventsPs = SupportabilityPs + "SpanEvent" + PathSeparator;
+
 		public const string SupportabilitySpanEventsSent = SupportabilitySpanEventsPs + "TotalEventsSent";
 		public const string SupportabilitySpanEventsSeen = SupportabilitySpanEventsPs + "TotalEventsSeen";
 
@@ -852,7 +896,7 @@ namespace NewRelic.Agent.Core.Metric
 			return DotNetPerfThreadpoolThroughput + EnumNameCache<ThreadpoolThroughputStatsType>.GetName(type);
 		}
 
-		private static readonly Dictionary<GCSampleType, string> GCMetricNames = new Dictionary<GCSampleType, string>
+		private static readonly Dictionary<GCSampleType, string> _gcMetricNames = new Dictionary<GCSampleType, string>
 		{
 			{ GCSampleType.HandlesCount , "GC/Handles" },
 			{ GCSampleType.InducedCount , "GC/Induced" },
@@ -876,11 +920,9 @@ namespace NewRelic.Agent.Core.Metric
 		
 		public static string GetGCMetricName(GCSampleType sampleType)
 		{
-			return GCMetricNames[sampleType];
+			return _gcMetricNames[sampleType];
 		}
 
 		#endregion Performance Metrics
-
-		public const string SupportabilityPayloadsDroppedDueToMaxPayloadLimitPrefix = Supportability + PathSeparator + "DotNet/Collector" + PathSeparator + "MaxPayloadSizeLimit";
 	}
 }

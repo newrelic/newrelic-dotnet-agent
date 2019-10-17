@@ -1,57 +1,85 @@
 ﻿using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Core;
 using System;
 using System.Net;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Agent.Core.Samplers;
-using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.WireModels
 {
 	public interface IMetricBuilder
 	{
 		MetricWireModel TryBuildMemoryPhysicalMetric(long memoryPhysical);
+
 		MetricWireModel TryBuildMemoryWorkingSetMetric(long memoryWorkingSet);
+
 		MetricWireModel TryBuildCpuUserTimeMetric(TimeSpan cpuTime);
+
 		MetricWireModel TryBuildCpuUserUtilizationMetric(float cpuUtilization);
+
 		MetricWireModel TryBuildCpuTimeRollupMetric(bool isWebTransaction, TimeSpan cpuTime);
+
 		MetricWireModel TryBuildCpuTimeMetric(TransactionMetricName transactionMetricName, TimeSpan cpuTime);
 
 		MetricWireModel TryBuildGCBytesMetric(GCSampleType sampleType, long value);
+
 		MetricWireModel TryBuildGCCountMetric(GCSampleType sampleType, int value);
+
 		MetricWireModel TryBuildGCPercentMetric(GCSampleType sampleType, float value);
+
 		MetricWireModel TryBuildGCGaugeMetric(GCSampleType sampleType, float value);
 
+		MetricWireModel TryBuildCATSupportabilityCountMetric(CATSupportabilityCondition conditionType, int count);
+
 		MetricWireModel TryBuildDotnetFrameworkVersionMetric(DotnetFrameworkVersion version);
+
+		MetricWireModel TryBuildDotnetCoreVersionMetric(DotnetCoreVersion version);
+
 		MetricWireModel TryBuildAgentVersionMetric(string agentVersion);
+
 		MetricWireModel TryBuildAgentVersionByHostMetric(string hostName, string agentVersion);
 
 		MetricWireModel TryBuildThreadpoolUsageStatsMetric(ThreadType type, ThreadStatus status, int countThreadpoolThreads);
+
 		MetricWireModel TryBuildThreadpoolThroughputStatsMetric(ThreadpoolThroughputStatsType type, int statsVal);
 
 		MetricWireModel TryBuildLibraryVersionMetric(string assemblyName, string assemblyVersion);
+
 		MetricWireModel TryBuildMetricHarvestAttemptMetric();
 
 		MetricWireModel TryBuildTransactionEventReservoirResizedMetric();
+
 		MetricWireModel TryBuildTransactionEventsRecollectedMetric(int eventsRecollected);
+
 		MetricWireModel TryBuildTransactionEventsSentMetric(int eventCount);
+
 		MetricWireModel TryBuildTransactionEventsSeenMetric();
+
 		MetricWireModel TryBuildTransactionEventsCollectedMetric();
 
 		MetricWireModel TryBuildCustomEventReservoirResizedMetric();
+
 		MetricWireModel TryBuildCustomEventsRecollectedMetric(int eventsRecollected);
+
 		MetricWireModel TryBuildCustomEventsSentMetric(int eventCount);
+
 		MetricWireModel TryBuildCustomEventsSeenMetric();
+
 		MetricWireModel TryBuildCustomEventsCollectedMetric();
 
 		MetricWireModel TryBuildErrorTracesCollectedMetric();
+
 		MetricWireModel TryBuildErrorTracesRecollectedMetric(int errorTracesRecollected);
+
 		MetricWireModel TryBuildErrorTracesSentMetric(int errorTraceCount);
 
 		MetricWireModel TryBuildErrorEventsSentMetric(int eventCount);
+
 		MetricWireModel TryBuildErrorEventsSeenMetric();
 
 		MetricWireModel TryBuildSqlTracesRecollectedMetric(int sqlTracesRecollected);
+
 		MetricWireModel TryBuildSqlTracesSentMetric(int sqlTraceCount);
 
 		MetricWireModel TryBuildAgentHealthEventMetric(AgentHealthEvent agentHealthEvent, string additionalData = null);
@@ -63,15 +91,23 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildAgentApiMetric(string methodName, int count);
 
 		MetricWireModel TryBuildCustomTimingMetric(string suffix, TimeSpan time);
+
 		MetricWireModel TryBuildCustomCountMetric(string suffix, int count = 1);
 
 		MetricWireModel TryBuildLinuxOsMetric(bool isLinux);
+
 		MetricWireModel TryBuildBootIdError();
+
 		MetricWireModel TryBuildKubernetesUsabilityError();
+
 		MetricWireModel TryBuildAwsUsabilityError();
+
 		MetricWireModel TryBuildAzureUsabilityError();
+
 		MetricWireModel TryBuildPcfUsabilityError();
+
 		MetricWireModel TryBuildGcpUsabilityError();
+
 		MetricWireModel TryBuildAgentTimingMetric(string suffix, TimeSpan time);
 
 		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
@@ -121,5 +157,7 @@ namespace NewRelic.Agent.Core.WireModels
 		MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1);
 
 		MetricWireModel TryBuildInstallTypeMetric(string installType);
+
+		MetricWireModel TryBuildSupportabilityCountMetric(string metricName, int count = 1);
 	}
 }

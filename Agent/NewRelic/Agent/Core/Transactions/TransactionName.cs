@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public static TransactionName ForWebTransaction(WebTransactionType type, string name)
 		{
-			var categoryName = Enum.GetName(typeof(WebTransactionType), type);
+			var categoryName = EnumNameCache<WebTransactionType>.GetName(type);
 			return ForWebTransaction(categoryName, name);
 		}
 		public static TransactionName ForWebTransaction(string type, string name)
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			var trxName = new StringBuilder(vendor)
 				.Append(MetricNames.PathSeparator)
-				.Append(Enum.GetName(typeof(MessageBrokerDestinationType), type))
+				.Append(EnumNameCache<MessageBrokerDestinationType>.GetName(type))
 				.Append(MetricNames.PathSeparator);
 
 			if (string.IsNullOrWhiteSpace(destination))

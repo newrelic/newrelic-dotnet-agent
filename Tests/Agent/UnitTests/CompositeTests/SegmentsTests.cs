@@ -1,18 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NUnit.Framework;
-using System.Threading.Tasks;
-using System.Threading;
 using Newtonsoft.Json;
-using NewRelic.Agent.Api;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CompositeTests
 {
@@ -41,7 +40,11 @@ namespace CompositeTests
 		[Test]
 		public void SingleAddedSegment_IsNestedBelowRootSegment()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("childSegment");
 			segment.End();
 			tx.End();
@@ -60,7 +63,11 @@ namespace CompositeTests
 		[Test]
 		public void SiblingSegments_AreNestedTogether()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("childSegment1");
 			segment.End();
 			segment = _agent.StartTransactionSegmentOrThrow("childSegment2");
@@ -84,7 +91,11 @@ namespace CompositeTests
 		[Test]
 		public void UnfinishedSegments_AreStillReported()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment1 = _agent.StartTransactionSegmentOrThrow("segmentName1");
 			segment1.End();
 
@@ -115,7 +126,11 @@ namespace CompositeTests
 		[Test]
 		public void EndingASegmentTwice_HasNoEffect()
 		{
-			var tx= _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("childSegment");
 			segment.End();
 			segment.End();
@@ -135,7 +150,11 @@ namespace CompositeTests
 		[Test]
 		public void EndingSegmentsInWrongOrder_DoesNotThrow()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment1 = _agent.StartTransactionSegmentOrThrow("childSegment1");
 			var segment2 = _agent.StartTransactionSegmentOrThrow("childSegment2");
 			segment1.End();
@@ -163,7 +182,11 @@ namespace CompositeTests
 		[Test]
 		public void SimpleSegment_HasCorrectTraceNameAndMetrics()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartTransactionSegmentOrThrow("simpleName");
 			segment.End();
 			tx.End();
@@ -206,7 +229,11 @@ namespace CompositeTests
 		[Test]
 		public void MethodSegment_HasCorrectTraceNameAndMetrics()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartMethodSegmentOrThrow("typeName", "methodName");
 			segment.End();
 			tx.End();
@@ -249,7 +276,11 @@ namespace CompositeTests
 		[Test]
 		public void CustomSegment_HasCorrectTraceNameAndMetrics()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartCustomSegmentOrThrow("customName");
 			segment.End();
 			tx.End();
@@ -292,7 +323,11 @@ namespace CompositeTests
 		[Test]
 		public void CustomSegment_HasCorrectMetrics_IfInputIsPrefixedWithCustom()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartCustomSegmentOrThrow("Custom/customName");
 			segment.End();
 			tx.End();
@@ -314,7 +349,11 @@ namespace CompositeTests
 		[Test]
 		public void ExternalSegment_HasCorrectTraceNameAndMetrics()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartExternalRequestSegmentOrThrow(new Uri("http://www.newrelic.com/test"), "POST");
 			segment.End();
 			tx.End();
@@ -353,7 +392,11 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
-			var transaction = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartExternalRequestSegmentOrThrow(new Uri("http://www.newrelic.com/test"), "POST");
 
 			var catResponseData = new CrossApplicationResponseData("123#456", "transactionName", 1.1f, 2.2f, 3, "guid");
@@ -361,9 +404,9 @@ namespace CompositeTests
 			{
 				{"X-NewRelic-App-Data", HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(catResponseData), encodingKey)}
 			};
-			transaction.ProcessInboundResponse(responseHeaders, segment);
+			tx.ProcessInboundResponse(responseHeaders, segment);
 			segment.End();
-			transaction.End();
+			tx.End();
 
 			_compositeTestAgent.Harvest();
 
@@ -424,7 +467,11 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.datastoreTracer.instanceReporting.enabled = true;
 			_compositeTestAgent.PushConfiguration();
 
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow("INSERT", DatastoreVendor.MSSQL, "MyAwesomeTable", null, null, "HostName", "1433", "MyDatabase");
 			segment.End();
 			tx.End();
@@ -463,7 +510,11 @@ namespace CompositeTests
 		public void DatastoreSegment_HasNoInstanceMetric_WhenInstanceReportingIsDisabled()
 		{
 			_compositeTestAgent.LocalConfiguration.datastoreTracer.instanceReporting.enabled = false;
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow("INSERT", DatastoreVendor.MSSQL, "MyAwesomeTable", null, null, "HostName", "1433", "MyDatabase");
 			segment.End();
 			tx.End();
@@ -502,7 +553,11 @@ namespace CompositeTests
 		[Test]
 		public void DatastoreSegment_HasCorrectTraceNameAndMetrics_WhenNullModel()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow("INSERT", DatastoreVendor.MSSQL, null);
 			segment.End();
 			tx.End();
@@ -538,7 +593,11 @@ namespace CompositeTests
 		[Test]
 		public void DatastoreSegment_HasCorrectTraceNameAndMetrics_WhenNullModelAndOperation()
 		{
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow(null, DatastoreVendor.MSSQL, null);
 
 			segment.End();
@@ -575,7 +634,10 @@ namespace CompositeTests
 		[Test]
 		public void MessageBrokerSegment_HasCorrectTraceNameAndMetrics()
 		{
-			var tx = _agent.CreateMessageBrokerTransaction(MessageBrokerDestinationType.Queue, "vendor1", "queueA");
+			var tx = _agent.CreateTransaction(
+				destinationType: MessageBrokerDestinationType.Queue,
+				brokerVendorName: "vendor1",
+				destination: "queueA");
 			var segment = _agent.StartMessageBrokerSegmentOrThrow("vendor1", MessageBrokerDestinationType.Queue, "queueA",
 				MessageBrokerAction.Consume);
 			segment.End();
@@ -626,7 +688,11 @@ namespace CompositeTests
 		[Test]
 		public void ChildDurationShouldNotCountTowardsParentsExclusiveTime()
 		{
-			var tx = _agent.CreateOtherTransaction("testing", "test");
+			var tx = _agent.CreateTransaction(
+				isWeb: false,
+				category: "testing",
+				transactionDisplayName: "test",
+				doNotTrackAsUnitOfWork: true);
 			var segment = (TypedSegment<CustomSegmentData>)_agent.StartCustomSegmentOrThrow("parentSegment");
 			//We need the child segment to run on a different thread than the parent
 			Task.Run(() =>
@@ -646,7 +712,11 @@ namespace CompositeTests
 		[Test]
 		public void ChildDurationShouldCountTowardsParentsExclusiveTime()
 		{
-			var tx = _agent.CreateOtherTransaction("testing", "test");
+			var tx = _agent.CreateTransaction(
+				isWeb: false,
+				category: "testing",
+				transactionDisplayName: "test",
+				doNotTrackAsUnitOfWork: true);
 			var segment = (TypedSegment<CustomSegmentData>)_agent.StartCustomSegmentOrThrow("parentSegment");
 			//We need the child segment to run on a different thread than the parent
 			Task.Run(() =>
@@ -664,7 +734,6 @@ namespace CompositeTests
 
 		#region Helper methods
 
-		[NotNull]
 		private static TransactionTraceSegment GetFirstSegmentOrThrow()
 		{
 			var trace = _compositeTestAgent.TransactionTraces.FirstOrDefault();

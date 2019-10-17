@@ -53,7 +53,11 @@ namespace CompositeTests
 		public void ShouldNotCreateDistributedTracePayload()
 		{
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			dynamic payload = transactionBridgeApi.CreateDistributedTracePayload();
@@ -70,7 +74,11 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			dynamic payload = transactionBridgeApi.CreateDistributedTracePayload();
@@ -87,7 +95,11 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
@@ -118,7 +130,11 @@ namespace CompositeTests
 		public void ShouldNotAcceptStringDistributedTracePayloadWhenDTNotEnabled()
 		{
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
@@ -153,7 +169,11 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
@@ -177,7 +197,11 @@ namespace CompositeTests
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
+				transactionDisplayName: "TransactionName",
+				doNotTrackAsUnitOfWork: true);
 			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");

@@ -1,10 +1,9 @@
-﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Data;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Api;
 
 namespace CompositeTests
 {
@@ -36,7 +35,11 @@ namespace CompositeTests
 		{
 			_databaseStatementParser.ResetCaches();
 
-			_agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			_agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 
 			_agent.StartDatastoreRequestSegmentOrThrow(DatastoreVendor.MSSQL, CommandType.Text, "SELECT * FROM Table1").End();
 			_agent.StartDatastoreRequestSegmentOrThrow(DatastoreVendor.MSSQL, CommandType.Text, "SELECT * FROM Table1").End();
@@ -85,7 +88,11 @@ namespace CompositeTests
 		{
 			_databaseStatementParser.ResetCaches();
 
-			_agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			_agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 
 			_agent.StartDatastoreRequestSegmentOrThrow(DatastoreVendor.MSSQL, CommandType.Text, "SELECT * FROM Table1").End();
 			_agent.StartDatastoreRequestSegmentOrThrow(DatastoreVendor.MSSQL, CommandType.Text, "SELECT * FROM Table1").End();

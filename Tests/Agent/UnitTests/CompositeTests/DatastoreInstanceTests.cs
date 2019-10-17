@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System.Linq;
 
 namespace CompositeTests
 {
@@ -142,13 +141,17 @@ namespace CompositeTests
 			);
 		}
 
-		private void CreateATransactionWithDatastoreSegmentAndHarvest(bool instanceReportingEnabled, bool databaseNameReportingEnabled, DatastoreVendor vendor = DatastoreVendor.MSSQL, String host = "myhost", String portPathOrId = "myport", String databaseName = "mydatabase")
+		private void CreateATransactionWithDatastoreSegmentAndHarvest(bool instanceReportingEnabled, bool databaseNameReportingEnabled, DatastoreVendor vendor = DatastoreVendor.MSSQL, string host = "myhost", string portPathOrId = "myport", string databaseName = "mydatabase")
 		{
 			_compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0;
 			_compositeTestAgent.LocalConfiguration.datastoreTracer.instanceReporting.enabled = instanceReportingEnabled;
 			_compositeTestAgent.LocalConfiguration.datastoreTracer.databaseNameReporting.enabled = databaseNameReportingEnabled;
 			_compositeTestAgent.PushConfiguration();
-			var tx = _agent.CreateWebTransaction(WebTransactionType.Action, "name");
+			var tx = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow("SELECT", vendor, "Table1", "SELECT * FROM Table1", null, host, portPathOrId, databaseName);
 			segment.End();
 			tx.End();

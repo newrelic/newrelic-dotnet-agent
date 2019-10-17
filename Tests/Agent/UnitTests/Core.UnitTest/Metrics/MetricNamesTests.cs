@@ -3,9 +3,11 @@ using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Metrics
 {
@@ -74,6 +76,48 @@ namespace NewRelic.Agent.Core.Metrics
 		}
 
 		#endregion
+
+		[Test]
+		public static void MetricNamesTest_CAT()
+		{
+
+			var testDic = new Dictionary<CATSupportabilityCondition, string>
+			{
+				{ CATSupportabilityCondition.Request_Create_Success,                "Supportability/CrossApplicationTracing/Request/Create/Success"},
+				{ CATSupportabilityCondition.Request_Create_Failure,                "Supportability/CrossApplicationTracing/Request/Create/Exception"},
+				{ CATSupportabilityCondition.Request_Create_Failure_XProcID,        "Supportability/CrossApplicationTracing/Request/Create/Exception/CrossProcessID"},
+
+				{ CATSupportabilityCondition.Request_Accept_Success,                "Supportability/CrossApplicationTracing/Request/Accept/Success"},
+				{ CATSupportabilityCondition.Request_Accept_Failure,                "Supportability/CrossApplicationTracing/Request/Accept/Exception"},
+				{ CATSupportabilityCondition.Request_Accept_Failure_NotTrusted,     "Supportability/CrossApplicationTracing/Request/Accept/Ignored/NotTrusted" },
+				{ CATSupportabilityCondition.Request_Accept_Failure_Decode,			"Supportability/CrossApplicationTracing/Request/Accept/Ignored/UnableToDecode" },
+				{ CATSupportabilityCondition.Request_Accept_Multiple,               "Supportability/CrossApplicationTracing/Request/Accept/Warning/MultipleAttempts"},
+
+				{ CATSupportabilityCondition.Response_Create_Success,               "Supportability/CrossApplicationTracing/Response/Create/Success"},
+				{ CATSupportabilityCondition.Response_Create_Failure,               "Supportability/CrossApplicationTracing/Response/Create/Exception"},
+				{ CATSupportabilityCondition.Response_Create_Failure_XProcID,       "Supportability/CrossApplicationTracing/Response/Create/Exception/CrossProcessID"},
+
+				{ CATSupportabilityCondition.Response_Accept_Success,               "Supportability/CrossApplicationTracing/Response/Accept/Success"},
+				{ CATSupportabilityCondition.Response_Accept_Failure,               "Supportability/CrossApplicationTracing/Response/Accept/Exception"},
+				{ CATSupportabilityCondition.Response_Accept_MultipleResponses,     "Supportability/CrossApplicationTracing/Response/Accept/Ignored/MultipleAttempts"}
+			};
+
+			var assertions = new List<Action>();
+			foreach (var d in testDic)
+			{
+				var catCond = d;
+				assertions.Add(() => Assert.AreEqual(catCond.Value, MetricNames.GetSupportabilityCATConditionMetricName(catCond.Key),$"Expected '{catCond.Value}', actual '{MetricNames.GetSupportabilityCATConditionMetricName(catCond.Key)}'"));
+			}
+
+			var countTests = testDic.Count;
+			var countEnumValues = Enum.GetValues(typeof(CATSupportabilityCondition)).Length;
+
+			assertions.Add(() => Assert.True(countTests == countEnumValues, $"Test Coverage - there are {countEnumValues - countTests} enums missing from this test"));
+
+			NrAssert.Multiple(assertions.ToArray());
+		}
+
+
 
 		[Test]
 		public static void MetricNamesTest_DistributedTracing()
@@ -242,6 +286,13 @@ namespace NewRelic.Agent.Core.Metrics
 			{
 				Assert.That(MetricNames.GetGCMetricName(sampleType.Key), Is.EqualTo(sampleType.Value));
 			}
+		}
+
+		[Test]
+		public static void MetricNamesTest_GetSupportabilityName()
+		{
+			const string metricName = "WCFClient/BindingType/BasicHttpBinding";
+			Assert.That(MetricNames.GetSupportabilityName(metricName), Is.EqualTo($"Supportability/{metricName}"));
 		}
 	}
 }

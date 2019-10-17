@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using MoreLinq;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Extensions.Providers;
-using NUnit.Framework;
-using Telerik.JustMock;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+﻿using MoreLinq;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Core.DistributedTracing;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Telerik.JustMock;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
@@ -20,13 +18,9 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 	[TestFixture]
 	public class TransactionBuilderServiceTests
 	{
-		[NotNull]
 		private TransactionService _transactionService;
-		[NotNull]
 		private IContextStorage<IInternalTransaction> _lowPriorityTransactionContext;
-		[NotNull]
 		private IContextStorage<IInternalTransaction> _highPriorityTransactionContext;
-		[NotNull]
 		private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
 
 		[SetUp]
@@ -131,7 +125,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 		}
 
 		[Test]
-		public void GetOrCreateTransactionBuilder_IncrementsUnitOfWorkCount_IfCurrentTransactionBuilderExistsAndMustBeRootTransactionIsFalse()
+		public void GetOrCreateTransactionBuilder_IncrementsUnitOfWorkCount_IfCurrentTransactionBuilderExistsAndDoNotTrackAsUnitOfWorkIsFalse()
 		{
 			// ARRANGE
 			var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
@@ -139,14 +133,14 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 			Assert.AreEqual(1, transaction.UnitOfWorkCount);
 
 			// ACT
-			_transactionService.GetOrCreateInternalTransaction(_initialTransactionName, mustBeRootTransaction: false);
+			_transactionService.GetOrCreateInternalTransaction(_initialTransactionName, doNotTrackAsUnitOfWork: false);
 
 			// ASSERT
 			Assert.AreEqual(2, transaction.UnitOfWorkCount);
 		}
 
 		[Test]
-		public void GetOrCreateTransactionBuilder_DoesNotIncrementsUnitOfWorkCount_IfCurrentTransactionBuilderExistsAndMustBeRootTransactionIsTrue()
+		public void GetOrCreateTransactionBuilder_DoesNotIncrementsUnitOfWorkCount_IfCurrentTransactionBuilderExistsAndDoNotTrackAsUnitOfWorkIsTrue()
 		{
 			// ARRANGE
 			var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
@@ -154,7 +148,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 			Assert.AreEqual(1, transaction.UnitOfWorkCount);
 
 			// ACT
-			_transactionService.GetOrCreateInternalTransaction(_initialTransactionName, mustBeRootTransaction: true);
+			_transactionService.GetOrCreateInternalTransaction(_initialTransactionName, doNotTrackAsUnitOfWork: true);
 
 			// ASSERT
 			Assert.AreEqual(1, transaction.UnitOfWorkCount);
@@ -229,9 +223,9 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 		private static void DictionaryTransactionContext(IContextStorage<IInternalTransaction> transactionContext)
 		{
 			const string key = "TEST";
-			var dictionary = new Dictionary<String, Object>();
+			var dictionary = new Dictionary<string, object>();
 			Mock.Arrange(() => transactionContext.CanProvide).Returns(true);
-			Mock.Arrange(() => transactionContext.SetData((IInternalTransaction)Arg.AnyObject)).DoInstead((Object value) =>
+			Mock.Arrange(() => transactionContext.SetData((IInternalTransaction)Arg.AnyObject)).DoInstead((object value) =>
 			{
 				dictionary[key] = value;
 			});
@@ -240,14 +234,13 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 				if (!dictionary.ContainsKey(key))
 					return null;
 
-				Object value;
+				object value;
 				dictionary.TryGetValue(key, out value);
 				return value as IInternalTransaction;
 
 			});
 		}
 
-		[NotNull]
 		private static IContextStorageFactory CreateFactoryForTransactionContext(IContextStorage<IInternalTransaction> transactionContext)
 		{
 			var transactionContextFactory = Mock.Create<IContextStorageFactory>();

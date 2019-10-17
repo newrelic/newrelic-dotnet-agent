@@ -9,7 +9,6 @@ namespace NewRelic.Agent.Core.Samplers
 	public abstract class AbstractSampler : ConfigurationBasedService
 	{
 		private readonly IScheduler _scheduler;
-
 		private readonly TimeSpan _frequency;
 
 		protected virtual bool Enabled
@@ -47,7 +46,8 @@ namespace NewRelic.Agent.Core.Samplers
 				return;
 			}
 
-			_scheduler.ExecuteEvery(Sample, _frequency);
+			// optionalInitialDelay of 1 second allows Samplers to run 1 second after startup
+			_scheduler.ExecuteEvery(Sample, _frequency, TimeSpan.FromSeconds(1));
 		}
 
 		protected virtual void Stop()

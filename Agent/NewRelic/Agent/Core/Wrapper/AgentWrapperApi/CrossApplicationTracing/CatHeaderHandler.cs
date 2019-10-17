@@ -1,4 +1,5 @@
 ﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -30,10 +31,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
 
 		private readonly IConfigurationService _configurationService;
+		private readonly ICATSupportabilityMetricCounters _supportabilityMetrics;
 
-		public CatHeaderHandler(IConfigurationService configurationService)
+		public CatHeaderHandler(IConfigurationService configurationService, ICATSupportabilityMetricCounters supportabilityMetricCounters)
 		{
 			_configurationService = configurationService;
+			_supportabilityMetrics = supportabilityMetricCounters;
 		}
 
 		public IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction)
@@ -47,11 +50,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				if (crossProcessId == null)
 				{
 					Log.Error("Failed to get cross process id for outbound request.");
+					_supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Failure_XProcID);
 					return Enumerable.Empty<KeyValuePair<string, string>>();
 				}
 
 				var encodedNewRelicId = GetEncodedNewRelicId(crossProcessId);
 				var encodedTransactionData = GetEncodedTransactionData(transaction);
+
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Success);
 
 				return new Dictionary<string, string>
 				{
@@ -62,6 +68,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			catch (Exception ex)
 			{
 				Log.Error($"Failed to get encoded CAT headers for outbound request: {ex}");
+
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Request_Create_Failure);
+
 				return Enumerable.Empty<KeyValuePair<string, string>>();
 			}
 		}
@@ -77,10 +86,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				if (refereeCrossProcessId == null)
 				{
 					Log.Error("Failed to get cross process id for outbound response.");
+					_supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Failure_XProcID);
 					return Enumerable.Empty<KeyValuePair<string, string>>();
 				}
 
 				var encodedAppData = GetEncodedAppData(transaction, transactionMetricName, refereeCrossProcessId);
+
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Success);
 
 				return new Dictionary<string, string>
 				{
@@ -90,6 +102,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			catch (Exception ex)
 			{
 				Log.Error($"Failed to get encoded CAT headers for outbound response: {ex}");
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Response_Create_Failure);
 				return Enumerable.Empty<KeyValuePair<string, string>>();
 			}
 		}
@@ -112,16 +125,35 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			var separatorIndex = responseHeader.IndexOf(",");
 			if (separatorIndex > 0)
 			{
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_MultipleResponses);
 				responseHeader = responseHeader.Substring(0, separatorIndex);
 			}
 
 			try
 			{
-				return HeaderEncoder.TryDecodeAndDeserialize <CrossApplicationResponseData>(responseHeader, _configurationService.Configuration.EncodingKey);
+				var result = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationResponseData>(responseHeader, _configurationService.Configuration.EncodingKey);
+
+				if(result == null)
+				{
+					_supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Failure);
+				}
+				else
+				{
+					_supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Success);
+				}
+				
+				return result;
 			}
-			catch (Newtonsoft.Json.JsonSerializationException)
+			catch (Exception ex)
 			{
-				return null;
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Response_Accept_Failure);
+
+				if (ex is Newtonsoft.Json.JsonSerializationException)
+				{
+					return null;
+				}
+
+				throw;
 			}
 		}
 
@@ -136,10 +168,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
 			var decodedCrossProcessId = TryDecodeNewRelicIdHttpHeader(encodedNewRelicIdHttpHeader);
 			if (decodedCrossProcessId == null)
+			{
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_Decode);
 				return null;
+			}
 
 			if (!IsTrustedCrossProcessAccountId(decodedCrossProcessId, _configurationService.Configuration.TrustedAccountIds))
+			{
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_NotTrusted);
 				return null;
+			}
 
 			return decodedCrossProcessId;
 		}
@@ -158,6 +196,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			}
 
 			var data = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encodedTransactionDataHttpHeader, _configurationService.Configuration.EncodingKey);
+
+			if (data == null)
+			{
+				_supportabilityMetrics.Record(CATSupportabilityCondition.Request_Accept_Failure_Decode);
+			}
 
 			return data;
 		}

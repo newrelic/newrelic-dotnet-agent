@@ -1,15 +1,17 @@
-﻿using System;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.ServiceModel;
-using System.Threading.Tasks;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Helpers;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
 using NewRelic.SystemExtensions.Collections;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.ServiceModel;
+using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {
@@ -20,7 +22,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		private const string ServiceChannelProxyType = "System.ServiceModel.Channels.ServiceChannelProxy";
 		private const string MethodDataType = "System.ServiceModel.Channels.ServiceChannelProxy+MethodData";
 		private const string AsyncResultType = "System.Runtime.AsyncResult";
-
 		private const string InvokeMethod = "Invoke";
 
 		public bool IsTransactionRequired => true;
@@ -51,6 +52,8 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		private static object _serviceEnum;
 		private static object _beginServiceEnum;
 		private static object _taskServiceEnum;
+		private static object _invocationLock = new object();
+		private static List<string> _invocationsSent = new List<string>();
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
@@ -64,24 +67,21 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 					new MethodSignature(InvokeMethod)
 				}
 			);
+
 			return new CanWrapResponse(canWrap);
 		}
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var serviceChannelProxy = instrumentedMethodCall.MethodCall.InvocationTarget;
-
 			var message = instrumentedMethodCall.MethodCall.MethodArguments[0] as System.Runtime.Remoting.Messaging.IMethodCallMessage;
-
 			var methodData = GetMethodDataMethod()(serviceChannelProxy, message);
-
 			if (_methodTypeMethodInfo == null)
 			{
 				_methodTypeMethodInfo = methodData.GetType().GetProperty("MethodType").GetMethod;
 			}
 
 			var methodType = _methodTypeMethodInfo.Invoke(methodData, null);
-
 			if (_serviceEnum == null || _beginServiceEnum == null || _taskServiceEnum == null)
 			{
 				var type = methodType.GetType();
@@ -97,7 +97,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 			var name = GetName(instrumentedMethodCall.MethodCall);
 			var uri = GetUri(instrumentedMethodCall);
-
 			var segment = transaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, name, isLeaf: true);
 
 			return Delegates.GetDelegateFor<System.Runtime.Remoting.Messaging.IMethodReturnMessage>(
@@ -113,11 +112,14 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 					{
 						HandleException(methodReturnMessage.Exception);
 					}
+
+					TrySendInvocationMetric("Sync", agent);
 					segment.End();
 				}
 				else if (methodType.Equals(_taskServiceEnum))
 				{
 					segment.RemoveSegmentFromCallStack();
+					transaction.Hold();
 					var task = (Task)methodReturnMessage.ReturnValue;
 					task.ContinueWith(ContinueWork);
 
@@ -127,14 +129,18 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 						var protocolException = aggregateException?.InnerExceptions.FirstOrDefault(IsProtocolException);
 						if (protocolException != null)
 						{
-							HandleException(t.Exception);
+							HandleException(protocolException);
 						}
+
+						TrySendInvocationMetric("TAP", agent);
 						segment.End();
+						transaction.Release();
 					}
 				}
 				else if (methodType.Equals(_beginServiceEnum))
 				{
 					segment.RemoveSegmentFromCallStack();
+					transaction.Hold();
 					var originalCallback = GetAsyncCallbackReadAccessor().Invoke(methodReturnMessage.ReturnValue);
 					SetAsyncCallbackWriteAccessor().Invoke(methodReturnMessage.ReturnValue, (AsyncCallback)WrappedAsyncCallback);
 
@@ -145,8 +151,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 						{
 							HandleException(exception);
 						}
+
+						TrySendInvocationMetric("APM", agent);
 						segment.End();
 						originalCallback?.Invoke(asyncResult);
+						transaction.Release();
 					}
 				}
 			}
@@ -160,7 +169,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			void HandleException(Exception exception)
 			{
 				var protocolException = exception as ProtocolException;
-
 				if (protocolException == null)
 				{
 					var aggregateException = exception as AggregateException;
@@ -192,7 +200,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 			// The type name is the full class name followed by a comma and the assembly info.  We need to cut off at the comma.
 			typeName = typeName.TrimAfterAChar(StringSeparators.CommaChar);
-
 			var methodName = methodCallMessage.MethodName;
 			if (methodName == null)
 			{
@@ -211,6 +218,24 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		private static bool IsProtocolException(Exception e)
 		{
 			return e is ProtocolException;
+		}
+
+		private static void TrySendInvocationMetric(string style, IAgent agent)
+		{
+			var sendMetric = false;
+			lock (_invocationLock)
+			{
+				if (!string.IsNullOrEmpty(style) && !_invocationsSent.Contains(style))
+				{
+					_invocationsSent.Add(style);
+					sendMetric = true;
+				}
+			}
+
+			if (sendMetric)
+			{
+				agent.GetExperimentalApi().RecordSupportabilityMetric($"WCFClient/InvocationStyle/{style}");
+			}
 		}
 	}
 }

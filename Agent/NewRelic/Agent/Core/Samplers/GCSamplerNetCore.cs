@@ -11,7 +11,6 @@ namespace NewRelic.Agent.Core.Samplers
 {
 	public class GCSamplerNetCore : AbstractSampler
 	{
-
 		public struct SamplerIsApplicableToFrameworkResult
 		{
 			public bool Result { get; set; }
@@ -22,21 +21,22 @@ namespace NewRelic.Agent.Core.Samplers
 			}
 		}
 
-		private IGCEventsListener _eventsListener;
-		private readonly Func<IGCEventsListener> _eventListenerFactory;
+		private ISampledEventListener<Dictionary<GCSampleType, float>> _listener;
+		private readonly Func<ISampledEventListener<Dictionary<GCSampleType, float>>> _eventListenerFactory;
 		private readonly IGcSampleTransformer _transformer;
+		private const int GCSampleNetCoreIntervalSeconds = 60;
 
-		protected override bool Enabled => base.Enabled 
-			&& (_configuration?.EventListenerSamplersEnabled).GetValueOrDefault(false) 
+		protected override bool Enabled => base.Enabled
+			// TODO: 'true' for testing; 'false' for merging to dev until config gets removed
+			&& (_configuration?.EventListenerSamplersEnabled).GetValueOrDefault(false)
 			&& _fxSamplerIsApplicableToFramework().Result;
 
 		/// <summary>
 		/// Method determines if the event source that we are interested in will be available on this framework (net-core vs. net-framework).
-		/// If the value is, false, this sampler should be disabled
+		/// If the value is false, this sampler should be disabled
 		/// </summary>
 		/// <returns></returns>
 		private Func<SamplerIsApplicableToFrameworkResult> _fxSamplerIsApplicableToFramework;
-
 
 		/// <summary>
 		/// Backing property for similarly named function.
@@ -55,23 +55,7 @@ namespace NewRelic.Agent.Core.Samplers
 				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
 			}
 
-			//Disable Event Listeners on Linux due to memory leak
-			if (!AgentInstallConfiguration.IsWindows)
-			{
-				_fxSamplerIsApplicableToFrameworkDefaultValue = false;
-				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
-			}
-
-			var spc = typeof(EventSource).Assembly;
-			if (spc == null)
-			{
-				_fxSamplerIsApplicableToFrameworkDefaultValue = false;
-				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
-			}
-
-			//This is the EventSource that we try to subscribe to
-			Type runtimeEventSourceType = spc.GetType("System.Diagnostics.Tracing.RuntimeEventSource");
-			if (runtimeEventSourceType == null)
+			if (!AgentInstallConfiguration.IsNetCore30OrAbove)
 			{
 				_fxSamplerIsApplicableToFrameworkDefaultValue = false;
 				return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
@@ -80,8 +64,8 @@ namespace NewRelic.Agent.Core.Samplers
 			_fxSamplerIsApplicableToFrameworkDefaultValue = true;
 			return new SamplerIsApplicableToFrameworkResult(_fxSamplerIsApplicableToFrameworkDefaultValue.Value);
 		}
-		
-		public GCSamplerNetCore(IScheduler scheduler, Func<IGCEventsListener> eventListenerFactory, IGcSampleTransformer transformer, Func<SamplerIsApplicableToFrameworkResult> fxSamplerIsApplicableToFramework) : base(scheduler, TimeSpan.FromSeconds(1))
+
+		public GCSamplerNetCore(IScheduler scheduler, Func<ISampledEventListener<Dictionary<GCSampleType, float>>> eventListenerFactory, IGcSampleTransformer transformer, Func<SamplerIsApplicableToFrameworkResult> fxSamplerIsApplicableToFramework) : base(scheduler, TimeSpan.FromSeconds(GCSampleNetCoreIntervalSeconds))
 		{
 			_eventListenerFactory = eventListenerFactory;
 			_transformer = transformer;
@@ -90,9 +74,14 @@ namespace NewRelic.Agent.Core.Samplers
 
 		public override void Sample()
 		{
+			if (_listener == null)
+			{
+				return;
+			}
+
 			try
 			{
-				var sampleValues = _eventsListener.Sample();
+				var sampleValues = _listener.Sample();
 				_transformer.Transform(sampleValues);
 			}
 			catch (Exception ex)
@@ -108,7 +97,7 @@ namespace NewRelic.Agent.Core.Samplers
 			{
 				if(!_fxSamplerIsApplicableToFramework().Result)
 				{
-					Log.Debug($"The GCSamplerNetCore sampler has been disabled because this is not a .Net Core 2.2+ application.");
+					Log.Debug($"The GCSamplerNetCore sampler has been disabled by configuration or because this is not a .Net Core 3.0+ application.");
 				}
 
 				base.Start();
@@ -118,7 +107,7 @@ namespace NewRelic.Agent.Core.Samplers
 					return;
 				}
 
-				_eventsListener = _eventsListener ?? _eventListenerFactory();
+				_listener = _listener ?? _eventListenerFactory();
 			}
 			catch(Exception ex)
 			{
@@ -130,25 +119,21 @@ namespace NewRelic.Agent.Core.Samplers
 		protected override void Stop()
 		{
 			base.Stop();
-			_eventsListener?.Dispose();
-			_eventsListener = null;
+			_listener?.StopListening();
+			_listener?.Dispose();
+			_listener = null;
 		}
 
 		public override void Dispose()
 		{
 			base.Dispose();
-			_eventsListener?.Dispose();
-			_eventsListener = null;
+			_listener?.StopListening();
+			_listener?.Dispose();
+			_listener = null;
 		}
-
 	}
 
-	public interface IGCEventsListener : IDisposable
-	{
-		Dictionary<GCSampleType, float> Sample();
-	}
-
-	public class GCEventsListener : EventListener, IGCEventsListener
+	public class GCEventsListener : SampledEventListener<Dictionary<GCSampleType, float>>
 	{
 		//The Microsoft EventID to listen to, corresponds to "Microsoft-Windows-DotNETRuntime"
 		public static readonly Guid DotNetEventSourceID = Guid.Parse("5e5bb766-bbfc-5662-0548-1d44fad9bb56");
@@ -190,6 +175,7 @@ namespace NewRelic.Agent.Core.Samplers
 		{
 			if (eventSource.Guid == EventSourceIDToMonitor)
 			{
+				_eventSource = eventSource;
 				EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)GCKeyword);
 				base.OnEventSourceCreated(eventSource);
 			}
@@ -218,16 +204,15 @@ namespace NewRelic.Agent.Core.Samplers
 			var reason = (uint)eventArgs.Payload[2];
 			if(reason == reasonID_Induced || reason == reasonID_InducedNotBlocking)
 			{
-				_inducedCount.Increment();
+					_inducedCount?.Increment();
 			}
 
 			//Update Collection Counters for each generation including and below the GC depth requested
 			var depth = (uint)eventArgs.Payload[1];
 			for(var i = 0; i <= depth; i++)
 			{
-				_collectionCountPerGen[i].Increment();
+				_collectionCountPerGen?[i]?.Increment();
 			}
-			
 		}
 
 		private void ProcessEvent_GCHeapStats(EventWrittenEventArgs eventArgs)
@@ -243,7 +228,7 @@ namespace NewRelic.Agent.Core.Samplers
 			Interlocked.Exchange(ref _handlesCount, eventArgs.Payload[12]);
 		}
 
-		public Dictionary<GCSampleType, float> Sample()
+		public override Dictionary<GCSampleType, float> Sample()
 		{
 			var inducedCount = _inducedCount.Exchange(0);
 			
@@ -268,8 +253,4 @@ namespace NewRelic.Agent.Core.Samplers
 			return result;
 		}
 	}
-
-
-
 }
-
