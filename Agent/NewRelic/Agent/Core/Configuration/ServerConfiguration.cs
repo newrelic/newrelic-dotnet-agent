@@ -192,9 +192,6 @@ namespace NewRelic.Agent.Core.Configuration
 			[JsonProperty("error_collector.ignore_errors")]
 			public IEnumerable<String> ErrorCollectorErrorsToIgnore { get; set; }
 
-			[JsonProperty("instrumentation.level")]
-			public Int32? InstrumentationLevel { get; set; }
-
 			[JsonProperty("ignored_params")]
 			public IEnumerable<String> ParametersToIgnore { get; set; }
 

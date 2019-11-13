@@ -77,7 +77,6 @@ namespace NewRelic.Agent.Configuration
 		bool StripExceptionMessages { get; }
 		string StripExceptionMessagesSource { get; }
 		bool InstanceReportingEnabled { get; }
-		int InstrumentationLevel { get; }
 		bool InstrumentationLoggingEnabled { get; }
 		string Labels { get; }
 		IEnumerable<RegexRule> MetricNameRegexRules { get; }

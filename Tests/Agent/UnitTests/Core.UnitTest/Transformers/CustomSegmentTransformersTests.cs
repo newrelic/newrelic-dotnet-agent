@@ -1,14 +1,12 @@
 ﻿using System;
 using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
-using NewRelic.Collections;
 
 
 namespace NewRelic.Agent.Core.Transformers

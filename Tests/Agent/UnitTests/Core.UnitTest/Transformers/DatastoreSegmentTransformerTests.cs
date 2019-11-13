@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
@@ -12,7 +9,6 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
-using NewRelic.Collections;
 using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Transformers

@@ -53,13 +53,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public readonly String UnPrefixedName;
 
 		/// <summary>
-		/// The prefixed name (e.g. "WebTranaction/Foo/Bar")
+		/// The prefixed name (e.g. "WebTransaction/Foo/Bar")
 		/// </summary>
 		[NotNull]
 		public readonly String PrefixedName;
 
 		/// <summary>
-		/// True iff this metric name's prefix is equal to MetricNames.WebTranasctionPrefix.
+		/// True iff this metric name's prefix is equal to MetricNames.WebTransactionPrefix.
 		/// </summary>
 		public readonly Boolean IsWebTransactionName;
 

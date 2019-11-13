@@ -354,9 +354,9 @@ namespace NewRelic.Agent.Core.Api
 
 				var transaction = GetCurrentInternalTransaction();
 
-				var currentTranasctionName = transaction.CandidateTransactionName.CurrentTransactionName;
+				var currentTransactionName = transaction.CandidateTransactionName.CurrentTransactionName;
 
-				var newTransactionName = currentTranasctionName.IsWeb
+				var newTransactionName = currentTransactionName.IsWeb
 					? TransactionName.ForWebTransaction(category, name)
 					: TransactionName.ForOtherTransaction(category, name);
 

@@ -9,7 +9,6 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -211,7 +210,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		#region Transaction metadata
 
 		[Test]
-		public void IgnoreTranasction_IgnoresTranaction()
+		public void IgnoreTransaction_IgnoresTransaction()
 		{
 			_agent.CurrentTransaction.Ignore();
 

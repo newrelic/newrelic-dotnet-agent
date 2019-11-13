@@ -17,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 		public const String InstrumentedTypeName = "System.Net.Http.HttpClient";
 
 		public bool IsTransactionRequired => true;
-
+      
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;

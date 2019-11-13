@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -196,7 +197,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		{
 			if (Log.IsFinestEnabled)
 			{
-				Log.Finest($"Trx Noop: {message}");
+				Log.Finest($"Trx Noop: (tid {Thread.CurrentThread.ManagedThreadId}) {message}");
 			}
 		}
 

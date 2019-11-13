@@ -6,7 +6,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;

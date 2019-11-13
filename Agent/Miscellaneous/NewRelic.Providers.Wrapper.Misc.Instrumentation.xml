@@ -6,5 +6,13 @@
         <exactMethodMatcher methodName="OnTick" />
       </match>
     </tracerFactory>
+    <tracerFactory name="NewRelic.Agent.Core.Wrapper.NoOpWrapper">
+      <match assemblyName="NewRelic.LogEnrichers.Serilog" className="NewRelic.LogEnrichers.Serilog.NewRelicEnricher">
+        <exactMethodMatcher methodName=".ctor" />
+      </match>
+      <match assemblyName="NewRelic.LogEnrichers.Serilog" className="NewRelic.LogEnrichers.Serilog.NewRelicFormatter">
+        <exactMethodMatcher methodName=".ctor" />
+      </match>
+    </tracerFactory>
   </instrumentation>
 </extension>

@@ -236,7 +236,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			}
 		}
 
-		private void GenerateAndCollectMetrics([NotNull] ImmutableTransaction immutableTransaction, Boolean isErrorTranasction, TimeSpan? apdexT, [NotNull] String transactionApdexMetricName, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
+		private void GenerateAndCollectMetrics([NotNull] ImmutableTransaction immutableTransaction, Boolean isErrorTransaction, TimeSpan? apdexT, [NotNull] String transactionApdexMetricName, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
 		{
 			foreach (var segment in immutableTransaction.Segments)
 			{
@@ -284,10 +284,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			if (apdexT != null && !immutableTransaction.IgnoreApdex)
 			{
-				GetApdexMetrics(immutableTransaction, isErrorTranasction, apdexT.Value, transactionApdexMetricName, txStats);
+				GetApdexMetrics(immutableTransaction, isErrorTransaction, apdexT.Value, transactionApdexMetricName, txStats);
 			}
 
-			if (isErrorTranasction)
+			if (isErrorTransaction)
 			{
 				MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats);
 				if (isDistributedTracingEnabled)
@@ -425,11 +425,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			segment.AddMetricStats(txStats, _configurationService);
 		}
 
-		private void GetApdexMetrics([NotNull] ImmutableTransaction immutableTransaction, Boolean isErrorTranasction, TimeSpan apdexT, [NotNull] String transactionApdexMetricName, TransactionMetricStatsCollection txStats)
+		private void GetApdexMetrics([NotNull] ImmutableTransaction immutableTransaction, Boolean isErrorTransaction, TimeSpan apdexT, [NotNull] String transactionApdexMetricName, TransactionMetricStatsCollection txStats)
 		{
 			var isWebTransaction = immutableTransaction.IsWebTransaction();
 
-			if (isErrorTranasction)
+			if (isErrorTransaction)
 			{
 				MetricBuilder.TryBuildFrustratedApdexMetrics(isWebTransaction, transactionApdexMetricName, txStats);
 			} else {

@@ -427,15 +427,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.CaptureBrowserMonitoringAttributes;
 		}
 
-		[TestCase(null, ExpectedResult = 3)]
-		[TestCase(42, ExpectedResult = 42)]
-		public int InstrumentationLevelServerOverridesDefault(int? server)
-		{
-			_serverConfig.RpmConfig.InstrumentationLevel = server;
-
-			return _defaultConfig.InstrumentationLevel;
-		}
-
 		[TestCase(true, null, ExpectedResult = true)]
 		[TestCase(false, null, ExpectedResult = false)]
 		[TestCase(true, true, ExpectedResult = true)]

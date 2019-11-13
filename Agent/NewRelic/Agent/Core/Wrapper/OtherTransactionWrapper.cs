@@ -114,7 +114,7 @@ namespace NewRelic.Agent.Core.Wrapper
 				{
 					agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Warning, method {name} is an async method, but does not have a return type of Task.  This may prevent downstream instrumentation from being captured correctly.  Consider revising the method to have a return-type of Task.");
 
-					// Since we cannot add a continuation, we have no other choice than to end the segment and tranaction here.
+					// Since we cannot add a continuation, we have no other choice than to end the segment and transaction here.
 					// This means we truncate the segment and potentially end the transaction prematurely preventing downstream instrumentation from being invoked.
 					segment.End();
 

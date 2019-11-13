@@ -1,7 +1,7 @@
 ﻿using MoreLinq;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Core.DistributedTracing;

@@ -749,8 +749,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			// ARRANGE
 			var priority = 0.5f;
-			var tranasctionBuilder = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
-			var transaction = tranasctionBuilder.ConvertToImmutableTransaction();
+			var transactionBuilder = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = transactionBuilder.ConvertToImmutableTransaction();
 
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 			var apdexT = TimeSpan.FromSeconds(2);

@@ -38,12 +38,13 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			_nonDefaultWrappers.Add(new AttachToAsyncWrapper());
 			_nonDefaultWrappers.Add(new DetachWrapper());
-
 			_nonDefaultWrappers.Add(new CustomSegmentWrapper());
 			_nonDefaultWrappers.Add(new IgnoreTransactionWrapper());
 			_nonDefaultWrappers.Add(new MultithreadedTrackingWrapper());
 			_nonDefaultWrappers.Add(new OtherTransactionWrapper());
 
+			// This allows instrumentation that does nothing other than to track the library version.
+			_nonDefaultWrappers.Add(noOpWrapper);
 
 			var defaultWrappers = new List<IDefaultWrapper> {defaultWrapper, new DefaultWrapperAsync()};
 
@@ -104,7 +105,7 @@ namespace NewRelic.Agent.Core.Wrapper
 				instrumentedMethodInfo.Method.Type.Assembly.FullName,
 				instrumentedMethodInfo.RequestedWrapperName);
 
-			return _noOpTrackedWrapper;
+			return GetNoOpWrapper();
 		}
 
 		private static bool CanWrap(InstrumentedMethodInfo instrumentedMethodInfo, IWrapper wrapper)

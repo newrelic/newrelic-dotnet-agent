@@ -72,6 +72,11 @@ namespace NewRelic.Agent.Core.Configuration
 			_configurationManagerStatic = configurationManagerStatic;
 			_dnsStatic = dnsStatic;
 
+			_utilizationFullHostName = new Lazy<string>(_dnsStatic.GetFullHostName);
+			_utilizationHostName = new Lazy<string>(_dnsStatic.GetHostName);
+
+
+
 			if (localConfiguration != null)
 			{
 				_localConfiguration = localConfiguration;
@@ -300,9 +305,9 @@ namespace NewRelic.Agent.Core.Configuration
 				_processHostDisplayName = string.IsNullOrWhiteSpace(_localConfiguration.processHost.displayName)
 					? _dnsStatic.GetHostName() : _localConfiguration.processHost.displayName;
 
-				_processHostDisplayName = EnvironmentOverrides(_processHostDisplayName,"NEW_RELIC_PROCESS_HOST_DISPLAY_NAME").Trim();
+				_processHostDisplayName = EnvironmentOverrides(_processHostDisplayName, "NEW_RELIC_PROCESS_HOST_DISPLAY_NAME").Trim();
 
-				return _processHostDisplayName; 
+				return _processHostDisplayName;
 			}
 		}
 
@@ -398,7 +403,7 @@ namespace NewRelic.Agent.Core.Configuration
 				return Memoizer.Memoize(ref _captureAttributesDefaultExcludes, () => new HashSet<string> { "identity.*" });
 			}
 		}
-		
+
 		public virtual bool CaptureTransactionEventsAttributes => ShouldCaptureTransactionEventAttributes();
 
 		public bool ShouldCaptureTransactionEventAttributes()
@@ -576,7 +581,7 @@ namespace NewRelic.Agent.Core.Configuration
 						{
 							includes.Add("identity.*");
 						}
-							
+
 						return includes;
 					});
 				}
@@ -721,7 +726,7 @@ namespace NewRelic.Agent.Core.Configuration
 			var deprecatedSpecified = _localConfiguration.parameterGroups.customParameters.enabledSpecified;
 
 			if ((_localConfiguration.customParameters.enabledSpecified == false)
-			    && (deprecatedSpecified == false))
+				&& (deprecatedSpecified == false))
 			{
 				return CaptureCustomParametersAttributesDefault;
 			}
@@ -918,7 +923,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 
 			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.CustomInstrumentationEditorPolicyName)
-			    && (_securityPoliciesConfiguration.CustomInstrumentationEditor.Enabled == false))
+				&& (_securityPoliciesConfiguration.CustomInstrumentationEditor.Enabled == false))
 			{
 				return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
 			}
@@ -964,7 +969,7 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 
 			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AllowRawExceptionMessagePolicyName)
-			    && (_securityPoliciesConfiguration.AllowRawExceptionMessage.Enabled == false))
+				&& (_securityPoliciesConfiguration.AllowRawExceptionMessage.Enabled == false))
 			{
 				return new BoolConfigurationItem(true, SecurityPolicyConfigSource);
 			}
@@ -972,7 +977,6 @@ namespace NewRelic.Agent.Core.Configuration
 			return new BoolConfigurationItem(_localConfiguration.stripExceptionMessages.enabled, LocalConfigSource);
 		}
 
-		public virtual int InstrumentationLevel { get { return ServerOverrides(_serverConfiguration.RpmConfig.InstrumentationLevel, 3); } }
 		public virtual bool InstrumentationLoggingEnabled { get { return _localConfiguration.instrumentation.log; } }
 
 		#region Labels
@@ -1022,7 +1026,8 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#region Sql
 
-		public bool SlowSqlEnabled {
+		public bool SlowSqlEnabled
+		{
 			get { return ServerOverrides(_serverConfiguration.RpmConfig.SlowSqlEnabled, _localConfiguration.slowSql.enabled); }
 		}
 
@@ -1112,7 +1117,7 @@ namespace NewRelic.Agent.Core.Configuration
 				return new BoolConfigurationItem(false, SecurityPolicyConfigSource);
 			}
 
-			if (_serverConfiguration.CustomEventCollectionEnabled.HasValue 
+			if (_serverConfiguration.CustomEventCollectionEnabled.HasValue
 				&& (_serverConfiguration.CustomEventCollectionEnabled.Value == false))
 			{
 				return new BoolConfigurationItem(false, ServerConfigSource);
@@ -1126,7 +1131,7 @@ namespace NewRelic.Agent.Core.Configuration
 			get
 			{
 				//if we have a specifed value, use it; otherwise, use our default
-				return _localConfiguration.customEvents.maximumSamplesStoredSpecified ? 
+				return _localConfiguration.customEvents.maximumSamplesStoredSpecified ?
 					_localConfiguration.customEvents.maximumSamplesStored : CustomEventsMaxSamplesStoredDefault;
 			}
 		}
@@ -1274,7 +1279,7 @@ namespace NewRelic.Agent.Core.Configuration
 				var mostRestrictiveConfiguration = new RecordSqlConfigurationItem(policyValue, SecurityPolicyConfigSource)
 					.ApplyIfMoreRestrictive(serverConfigRecordSql, ServerConfigSource)
 					.ApplyIfMoreRestrictive(localRecordSql, LocalConfigSource);
-				
+
 				return mostRestrictiveConfiguration;
 			}
 
@@ -1298,7 +1303,7 @@ namespace NewRelic.Agent.Core.Configuration
 			{
 				return new RecordSqlConfigurationItem(_serverConfiguration.RpmConfig.TransactionTracerRecordSql, ServerConfigSource);
 			}
-			
+
 			var localRecordSqlString = Enum.GetName(typeof(configurationTransactionTracerRecordSql), _localConfiguration.transactionTracer.recordSql);
 			return new RecordSqlConfigurationItem(localRecordSqlString, LocalConfigSource);
 		}
@@ -1422,8 +1427,11 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public string UtilizationFullHostName => _dnsStatic.GetFullHostName();
-		public string UtilizationHostName => _dnsStatic.GetHostName();
+		private readonly Lazy<string> _utilizationFullHostName;
+		public string UtilizationFullHostName => _utilizationFullHostName.Value;
+
+		private readonly Lazy<string> _utilizationHostName;
+		public string UtilizationHostName => _utilizationHostName.Value;
 
 		#endregion
 
@@ -1814,4 +1822,3 @@ namespace NewRelic.Agent.Core.Configuration
 		private const int MaxPayloadSizeInBytes = 1000000; // 1 MiB
 	}
 }
-

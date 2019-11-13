@@ -768,7 +768,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		public void LogFinest(string message)
 		{
-			if (Log.IsFinestEnabled) Log.Finest($"Trx {Guid}: (tid {Thread.CurrentThread.ManagedThreadId}) {message}");
+			if (Log.IsFinestEnabled)
+			{
+				Log.Finest($"Trx {Guid}: (tid {Thread.CurrentThread.ManagedThreadId}) {message}");
+			}
 		}
 
 		public void Ignore()
@@ -873,7 +876,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		#endregion
 
-		#region TranasctionBuilder finalization logic
+		#region TransactionBuilder finalization logic
 
 		public bool IsFinished { get; private set; } = false;
 
@@ -918,7 +921,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_forcedDuration = duration;
 		}
 
-		#endregion TranasctionBuilder finalization logic
+		#endregion TransactionBuilder finalization logic
 
 		public int CallStackPush(Segment segment)
 		{

@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedStartTime = DateTime.Now.AddSeconds(-50);
 			var transaction = BuildTestTransaction(startTime: expectedStartTime);
 			var segments = new[] {BuildNode()};
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedDuration = TimeSpan.FromSeconds(5);
 			var transaction = BuildTestTransaction(duration: expectedDuration);
 			var segments = new[] {BuildNode()};
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
@@ -124,7 +124,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedResponseTime = TimeSpan.FromSeconds(3);
 			var transaction = BuildTestTransaction(duration: expectedDuration, responseTime: expectedResponseTime);
 			var segments = new[] { BuildNode() };
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			const string inputUrl = "http://www.google.com/test?param=value";
 			var transaction = BuildTestTransaction(uri: inputUrl);
 			var segments = new[] {BuildNode()};
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
@@ -157,7 +157,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedGuid = Guid.NewGuid().ToString();
 			var transaction = BuildTestTransaction(guid: expectedGuid);
 			var segments = new[] {BuildNode()};
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			var transaction = BuildTestTransaction();
 			var segments = Enumerable.Empty<ImmutableSegmentTreeNode>();
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			Assert.Throws<ArgumentException>(() => _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes));
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedEndTimeDifference = TimeSpan.FromSeconds(10);
 			var transaction = BuildTestTransaction(duration: expectedEndTimeDifference);
 			var segments = new[] {BuildNode()};
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
@@ -220,7 +220,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var methodCallData = new MethodCallData(expectedClassName, expectedMethodName, 1);
 			var transaction = BuildTestTransaction(startTime: transactionStartTime);
 			var segments = new[] {BuildNode(transaction, startTime: segmentStartTime, duration: segmentDuration, name: expectedName, parameters: expectedParameters, methodCallData: methodCallData) };
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
@@ -250,7 +250,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var transaction = BuildTestTransaction();
 			var topLevelSegments = new[] {node1.Build(), node2.Build()};
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, topLevelSegments, transactionMetricName, attributes);
@@ -282,7 +282,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var transaction = BuildTestTransaction();
 			var topLevelSegments = new[] {node1.Build(), node2.Build()};
-			var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
+			var transactionMetricName = new TransactionMetricName("WebTransaction", "TrxName");
 			var attributes = new Attributes();
 
 			var trace = _transactionTraceMaker.GetTransactionTrace(transaction, topLevelSegments, transactionMetricName, attributes);
