@@ -79,6 +79,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		[TestCase("HttpException")]
 		[TestCase("SocketException")]
 		[TestCase("IOException")]
+		[TestCase("OperationCanceledException")]
 		public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs(string execeptionType)
 		{
 			Exception ex = null;
@@ -95,6 +96,9 @@ namespace NewRelic.Agent.Core.DataTransport
 					break;
 				case "IOException":
 					ex = new IOException();
+					break;
+				case "OperationCanceledException":
+					ex = new OperationCanceledException();
 					break;
 			}
 

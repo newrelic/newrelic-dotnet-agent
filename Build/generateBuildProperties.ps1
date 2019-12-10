@@ -24,6 +24,5 @@ $GitBranchName = git rev-parse --abbrev-ref HEAD
 Set-Content -Path "$outputPath\branchname.txt" -Value $GitBranchName
 Set-Content -Path "$outputPath\commithash.txt" -Value $GitCommitHash
 Set-Content -Path "$outputPath\version_agent.txt" -Value (getVersionFromTag "v")
-Set-Content -Path "$outputPath\version_lambdaopentracer.txt" -Value (getVersionFromTag "AwsLambdaOpenTracer_v")
-Set-Content -Path "$outputPath\version_lambdawrapper.txt" -Value (getVersionFromTag "AwsLambdaWrapper_v")
+Set-Content -Path "$outputPath\version_lambdaopentracer.txt" -Value (getVersionFromTag "AwsLambdaOpenTracer_v" -excludeCommitCount)
 Set-Content -Path "$outputPath\version_azuresiteextension.txt" -Value (getVersionFromTag "AzureSiteExtension_v" -excludeCommitCount)

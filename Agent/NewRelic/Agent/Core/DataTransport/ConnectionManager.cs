@@ -107,6 +107,11 @@ namespace NewRelic.Agent.Core.DataTransport
 			{
 				ScheduleRestart();
 			}
+			// Usually occurs when a request times out but did not get far enough along to trigger a timeout exception
+			catch (OperationCanceledException)
+			{
+				ScheduleRestart();
+			}
 			// This catch all is in place so that we avoid doing harm for all of the potentially destructive things that could happen during a connect.
 			// We want to error on the side of doing no harm to our customers
 			catch (Exception ex)

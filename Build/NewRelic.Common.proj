@@ -28,18 +28,23 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="GitLatestTagVersion" />
     </Exec>
     <!-- Get get the number of commits between the release tag and current working branch-->
-    <Exec Command="git rev-list $(GitLatestTagVersion)..$(GitBranchName) --count HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
+    <Exec Command="git rev-list $(GitLatestTagVersion)..$(GitBranchName) --count HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low" Condition="'$(GitCommitCount)' == ''">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitCommitCount" />
     </Exec>
     <PropertyGroup>
       <GitGitLatestTagVersionSanitized>$(GitLatestTagVersion.Replace('$(GitTagPrefix)',''))</GitGitLatestTagVersionSanitized>
       <GitVersion>$(GitGitLatestTagVersionSanitized).$(GitCommitCount).0</GitVersion>
-      <Version>$(GitVersion)</Version>
-      <PackageVersion>$(GitVersion)</PackageVersion>
-      <AssemblyFileVersion>$(GitVersion)</AssemblyFileVersion>
-      <AssemblyVersion>$(GitVersion)</AssemblyVersion>
-      <GitBranchNameSanitized Condition="'$(GitBranchName)' != 'dev' And '$(GitBranchName)' != 'master'">.branch.$(GitBranchName.Replace('/','-'))</GitBranchNameSanitized>
-      <InformationalVersion>$(GitVersion)+sha.$(GitHash)$(GitBranchNameSanitized)</InformationalVersion>
+      <MinorVersionStartIndex>$([MSBuild]::Add(1, $(GitGitLatestTagVersionSanitized.IndexOf('.'))))</MinorVersionStartIndex>
+
+      <Major>$(GitGitLatestTagVersionSanitized.Substring(0, $(GitGitLatestTagVersionSanitized.IndexOf('.'))))</Major>
+      <Minor>$(GitGitLatestTagVersionSanitized.Substring($(MinorVersionStartIndex)))</Minor>
+      <Build>$(GitCommitCount)</Build>
+      <Revision>0</Revision>
+
+      <Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
+      <PackageVersion>$(Major).$(Minor).$(Build)</PackageVersion>
+      <AssemblyVersion>$(Major).0.0.0</AssemblyVersion>
+      <FileVersion>$(Major).$(Minor).$(Build).$(Revision)</FileVersion>
     </PropertyGroup>
   </Target>
 </Project>

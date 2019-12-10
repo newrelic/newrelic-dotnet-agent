@@ -139,7 +139,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				var errorStatus = GetDataTransportResponseStatusByHttpStatusCode(ex.StatusCode);
 				return new DataTransportResponse<T>(errorStatus);
 			}
-			catch (Exception ex) when (ex is SocketException || ex is WebException)
+			catch (Exception ex) when (ex is SocketException || ex is WebException || ex is OperationCanceledException)
 			{
 				LogErrorResponse(ex, method, startTime, null);
 				return new DataTransportResponse<T>(DataTransportResponseStatus.Retain);

@@ -124,6 +124,17 @@ namespace NewRelic.Agent.Core.DataTransport
 		}
 
 		[Test]
+		public void SendXyz_ReturnsCorrectRetention_IfOperationCanceledException()
+		{
+			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+				.Throws(new OperationCanceledException());
+
+			var result = _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
+
+			Assert.AreEqual(DataTransportResponseStatus.Retain, result);
+		}
+
+		[Test]
 		public void SendXyz_ReturnsOtherError_IfOtherException()
 		{
 			Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))

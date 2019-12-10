@@ -57,44 +57,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			}
 		}
 
-		private readonly Dictionary<uint, bool[]> _testResult = new Dictionary<uint, bool[]>()
-		{
-			{ (100u<<16)+30u,
-				new []{ false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false }
-			},
-			{ (10u<<16)+10u,
-				new []{ true, true, true, true, true, true, true, true, true, true }
-			},
-			{ (20u<<16)+40u,
-				new []
-				{
-					false, true, true, true, false, false, false, false, false, true, true, false, false, false, false, true, false, false, false, true, false, false, true, false, 
-					true, true, false, false, false, false, false, false, true, false, false, true, false, false, false, true
-				}
-			},
-			{ (0u<<16)+20u,
-			new []
-			{
-				true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false
-			}
-		}
-		};
-
-		private static float Sanitize(float priority)
-		{
-			const uint sanitizeShiftDecimalPoint = 1000000;
-			//truncates to six digits to the right of the decimal point
-			return (float)(uint)(priority * sanitizeShiftDecimalPoint) / sanitizeShiftDecimalPoint;
-		}
-
 		[Test]
-		[TestCase(100u, 30u)]
-		[TestCase(10u, 10u)]
-		[TestCase(20u, 40u)]
-		[TestCase(0u, 20u)]
-		public void ComputeSampled_SecondHarvest(uint firstHarvestTransactionCount, uint secondHarvestTransactionCount)
+		[TestCase(100, 30)]
+		[TestCase(10, 10)]
+		[TestCase(20, 40)]
+		[TestCase(0, 20)]
+		public void ComputeSampled_SecondHarvest(int firstHarvestTransactionCount, int secondHarvestTransactionCount)
 		{
-			var testKey = ((firstHarvestTransactionCount & ushort.MaxValue) << 16) + (secondHarvestTransactionCount & ushort.MaxValue);
+			var testCaseName = MakeTestCaseName(firstHarvestTransactionCount, secondHarvestTransactionCount);
 			// Arrange
 			for (var i = 0; i < firstHarvestTransactionCount; ++i)
 			{
@@ -105,9 +75,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			_adaptiveSampler.EndOfSamplingInterval();
 
 			var rand = new Random();
-			var sampleSequence = _testResult[testKey];
+			var sampleSequence = _expectedSampleSequences[testCaseName];
 
-			Assert.That(sampleSequence.Length, Is.EqualTo(secondHarvestTransactionCount), $"testKey {testKey:X8} firstHarvestTransactionCount {firstHarvestTransactionCount} secondHarvestTransactionCount {secondHarvestTransactionCount}");
+			Assert.That(sampleSequence.Length, Is.EqualTo(secondHarvestTransactionCount), $"testCaseName {testCaseName} firstHarvestTransactionCount {firstHarvestTransactionCount} secondHarvestTransactionCount {secondHarvestTransactionCount}");
 			// Act
 			for (var callCounter = 0; callCounter < secondHarvestTransactionCount; ++callCounter)
 			{
@@ -132,5 +102,41 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				}
 			}
 		}
+
+		private readonly Dictionary<string, bool[]> _expectedSampleSequences = new Dictionary<string, bool[]>()
+		{
+			{ MakeTestCaseName(100, 30),
+				new []{ false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false }
+			},
+			{ MakeTestCaseName(10, 10),
+				new []{ true, true, true, true, true, true, true, true, true, true }
+			},
+			{ MakeTestCaseName(20, 40),
+				new []
+				{
+					false, true, true, true, false, false, false, false, false, true, true, false, false, false, false, true, false, false, false, true, false, false, true, false, 
+					true, true, false, false, false, false, false, false, true, false, false, true, false, false, false, true
+				}
+			},
+			{ MakeTestCaseName(0, 20),
+			new []
+			{
+				true,true,true,true,true,true,true,true,true,true,true,false,false,false,false,false,false,false,false,false
+			}
+		}
+		};
+
+		private static float Sanitize(float priority)
+		{
+			const uint sanitizeShiftDecimalPoint = 1000000;
+			//truncates to six digits to the right of the decimal point
+			return (float)(uint)(priority * sanitizeShiftDecimalPoint) / sanitizeShiftDecimalPoint;
+		}
+
+		private static string MakeTestCaseName(int firstHarvestTransactionCount, int secondHarvestTransactionCount)
+		{
+			return $"{firstHarvestTransactionCount}_{secondHarvestTransactionCount}";
+		}
+
 	}
 }

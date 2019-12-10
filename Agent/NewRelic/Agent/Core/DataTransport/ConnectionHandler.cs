@@ -139,7 +139,10 @@ namespace NewRelic.Agent.Core.DataTransport
 		{
 			_connectionInfo = new ConnectionInfo(_configuration);
 
-			var payload = new Dictionary<string, object>();
+			var payload = new Dictionary<string, object>
+			{
+				{ "high_security", _configuration.HighSecurityModeEnabled }
+			};
 
 			if (_configuration.SecurityPoliciesTokenExists)
 			{

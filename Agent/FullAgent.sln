@@ -195,12 +195,22 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions.UnitTests", "..\Tests\Agent\UnitTests\NewRelic.Testing.Assertions.UnitTests\NewRelic.Testing.Assertions.UnitTests.csproj", "{A6AE0190-AEAB-4B3A-B671-95C2D5123BF9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenTracing.AmazonLambda", "OpenTracing.AmazonLambda", "{1E00C1B7-95EC-4B2D-9AC6-A629AE03D132}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wrapper", "..\AwsLambda\AwsLambdaWrapper\Wrapper.csproj", "{F8BDD570-CB31-454B-BDEB-4D6264152730}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tracer", "..\AwsLambda\AwsLambdaOpenTracer\Tracer.csproj", "{84D9ED9A-2022-4C9B-BDED-DD9933A19CE5}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agent", "Agent", "{E5B988C0-5D19-407E-8210-71FFB90C579A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AwsLambda", "AwsLambda", "{F617061F-24DF-4C57-8147-84CAB336DD4E}"
 	ProjectSection(SolutionItems) = preProject
-		
+		..\Tests\AwsLambda\UnitTests\settings.runsettings = ..\Tests\AwsLambda\UnitTests\settings.runsettings
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsLambdaWrapperTests", "..\Tests\AwsLambda\UnitTests\AwsLambdaWrapperTests\AwsLambdaWrapperTests.csproj", "{470B20D2-B3CA-49CC-98EB-9EBD55071049}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AwsLambdaOpenTracerTests", "..\Tests\AwsLambda\UnitTests\AwsLambdaOpenTracerTests\AwsLambdaOpenTracerTests.csproj", "{E487774C-2805-4642-B173-63D8F2D05D39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -424,6 +434,22 @@ Global
 		{A6AE0190-AEAB-4B3A-B671-95C2D5123BF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A6AE0190-AEAB-4B3A-B671-95C2D5123BF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A6AE0190-AEAB-4B3A-B671-95C2D5123BF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8BDD570-CB31-454B-BDEB-4D6264152730}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8BDD570-CB31-454B-BDEB-4D6264152730}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8BDD570-CB31-454B-BDEB-4D6264152730}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8BDD570-CB31-454B-BDEB-4D6264152730}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84D9ED9A-2022-4C9B-BDED-DD9933A19CE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84D9ED9A-2022-4C9B-BDED-DD9933A19CE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84D9ED9A-2022-4C9B-BDED-DD9933A19CE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84D9ED9A-2022-4C9B-BDED-DD9933A19CE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{470B20D2-B3CA-49CC-98EB-9EBD55071049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{470B20D2-B3CA-49CC-98EB-9EBD55071049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{470B20D2-B3CA-49CC-98EB-9EBD55071049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{470B20D2-B3CA-49CC-98EB-9EBD55071049}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E487774C-2805-4642-B173-63D8F2D05D39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E487774C-2805-4642-B173-63D8F2D05D39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E487774C-2805-4642-B173-63D8F2D05D39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E487774C-2805-4642-B173-63D8F2D05D39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -489,7 +515,13 @@ Global
 		{5637B339-04C4-498D-AB09-404D70693331} = {E5B988C0-5D19-407E-8210-71FFB90C579A}
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C} = {E5B988C0-5D19-407E-8210-71FFB90C579A}
 		{A6AE0190-AEAB-4B3A-B671-95C2D5123BF9} = {E5B988C0-5D19-407E-8210-71FFB90C579A}
+		{1E00C1B7-95EC-4B2D-9AC6-A629AE03D132} = {E3DAC9C6-AE41-4B37-A253-C621E568590E}
+		{F8BDD570-CB31-454B-BDEB-4D6264152730} = {1E00C1B7-95EC-4B2D-9AC6-A629AE03D132}
+		{84D9ED9A-2022-4C9B-BDED-DD9933A19CE5} = {1E00C1B7-95EC-4B2D-9AC6-A629AE03D132}
 		{E5B988C0-5D19-407E-8210-71FFB90C579A} = {BADDAE10-27A9-4452-9432-BFDBC3C62E87}
+		{F617061F-24DF-4C57-8147-84CAB336DD4E} = {BADDAE10-27A9-4452-9432-BFDBC3C62E87}
+		{470B20D2-B3CA-49CC-98EB-9EBD55071049} = {F617061F-24DF-4C57-8147-84CAB336DD4E}
+		{E487774C-2805-4642-B173-63D8F2D05D39} = {F617061F-24DF-4C57-8147-84CAB336DD4E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
