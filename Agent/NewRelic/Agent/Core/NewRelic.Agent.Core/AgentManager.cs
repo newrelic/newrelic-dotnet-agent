@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Commands;
@@ -15,29 +14,20 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Core.Logging;
 using System;
-using System.Diagnostics;
-using System.Web;
 
 namespace NewRelic.Agent.Core
 {
 	public static class AgentVersion
 	{
 		// put in a separate class to avoid the static initializer on Agent being hit in testing
-		[NotNull] public static readonly String Version = typeof(AgentVersion).Assembly.GetName().Version.ToString();
+		public static readonly string Version = typeof(AgentVersion).Assembly.GetName().Version.ToString();
 	}
 
 	sealed public class AgentManager : IAgentManager, IDisposable
 	{
-		[NotNull]
 		private readonly IContainer _container;
-
-		[NotNull]
 		private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
-
-		[NotNull]
 		private readonly static IAgentManager DisabledAgentManager = new DisabledAgentManager();
-
-		[NotNull]
 		private readonly static AgentSingleton Singleton = new AgentSingleton();
 
 		private sealed class AgentSingleton : Singleton<IAgentManager>
@@ -45,12 +35,22 @@ namespace NewRelic.Agent.Core
 			public AgentSingleton() : base(DisabledAgentManager) { }
 
 			// Called by Singleton::Singleton
-			[NotNull]
 			protected override IAgentManager CreateInstance()
 			{
 				try
 				{
-					return new AgentManager();
+					var agentManager = new AgentManager();
+
+					//If the AgentManager received a shutdown event by the time the .ctor completes it means that the agent
+					//was unable to start correctly. The shutdown process cannot switch the Singleton to use
+					//the DisabledAgentManager because the Singleton is still being created so we need to do that here.
+					if (agentManager._shutdownEventReceived)
+					{
+						agentManager.Shutdown(false);
+						return DisabledAgentManager;
+					}
+
+					return agentManager;
 				}
 				catch (Exception exception)
 				{
@@ -83,16 +83,12 @@ namespace NewRelic.Agent.Core
 			}
 		}
 
-		[NotNull]
 		private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
-
 		private ThreadProfilingService _threadProfilingService;
-
-		[NotNull]
 		private readonly IWrapperService _wrapperService;
 
-		private volatile AgentState _agentState = AgentState.Uninitialized;
-		public AgentState State { get { return _agentState; } }
+		private volatile bool _shutdownEventReceived;
+		private volatile bool _isInitialized;
 
 		/// <summary> 
 		/// Creates an instance of the <see cref="AgentManager"/> class./>
@@ -103,8 +99,6 @@ namespace NewRelic.Agent.Core
 		/// </remarks>
 		private AgentManager()
 		{
-			_agentState = AgentStateHelper.Transition(_agentState, AgentState.Starting);
-
 			_container = AgentServices.GetContainer();
 			AgentServices.RegisterServices(_container);
 
@@ -132,13 +126,14 @@ namespace NewRelic.Agent.Core
 			AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
 			Initialize();
+			_isInitialized = true;
 		}
 
-		private void AssertAgentEnabled([NotNull] configuration config)
+		private void AssertAgentEnabled(configuration config)
 		{
 			// TODO: migrate all of these settings to the new new config system so that we can just use IConfiguration
 			if (!Configuration.AgentEnabled)
-				throw new Exception(String.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
+				throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
 
 			if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
 				throw new Exception("Please set your license key.");
@@ -168,8 +163,6 @@ namespace NewRelic.Agent.Core
 
 			StartServices();
 			LogInitialized();
-
-			_agentState = AgentStateHelper.Transition(_agentState, AgentState.Started);
 		}
 
 		private void LogInitialized()
@@ -219,7 +212,7 @@ namespace NewRelic.Agent.Core
 		/// <param name="arguments"></param>
 		/// <returns>Returns an ITracer, although it is given as the much simpler Object;
 		/// an Object is the preferred type because it has a trival type signature.</returns>
-		public ITracer GetTracerImpl(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] arguments, UInt64 functionId)
+		public ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId)
 		{
 			try
 			{
@@ -240,14 +233,18 @@ namespace NewRelic.Agent.Core
 			Shutdown(true);
 		}
 
-		private void Shutdown(Boolean cleanShutdown)
+		private void Shutdown(bool cleanShutdown)
 		{
-			Singleton.SetInstance(DisabledAgentManager);
+			//Not every call to Shutdown will have access to the AgentSingleton, because some of the calls to Shutdown
+			//will occur while the Singleton is being created. In those scenarios, the AgentSingleton will handle
+			//Swapping out the AgentManager for the DisabledAgentManager.
+			Singleton?.SetInstance(DisabledAgentManager);
 
 			try
 			{
-				_agentState = AgentStateHelper.Transition(_agentState, AgentState.Stopping);
 				Log.Debug("Starting the shutdown process for the .NET Agent.");
+
+				AgentInitializer.OnExit -= ProcessExit;
 
 				if (cleanShutdown)
 				{
@@ -266,7 +263,6 @@ namespace NewRelic.Agent.Core
 			finally
 			{
 				Dispose();
-				_agentState = AgentState.Stopped; // don't use the state helper - we don't want this transition to throw
 				log4net.LogManager.Shutdown();
 			}
 		}
@@ -279,9 +275,15 @@ namespace NewRelic.Agent.Core
 
 #region Event handlers
 
-		private void OnShutdownAgent([NotNull] KillAgentEvent eventData)
+		private void OnShutdownAgent(KillAgentEvent eventData)
 		{
-			Shutdown(false);
+			_shutdownEventReceived = true;
+
+			//If the AgentManager is not initialized yet, we do not want to execute the shutdown process,
+			//because the AgentManager is still in the middle of initializing itself. In this scenario,
+			//the AgentSingleton will check to see if a shutdownEvent was received, and call Shutdown
+			//appropriately.
+			if (_isInitialized) Shutdown(false);
 		}
 
 #endregion Event handlers

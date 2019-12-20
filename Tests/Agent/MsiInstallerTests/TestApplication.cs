@@ -107,15 +107,15 @@ namespace FunctionalTests
 			{
 				case LogEntry.fullyConnected:
 					action = "Fully connected";
-					lookFor = " NewRelic INFO: Agent fully connected.";
+					lookFor = " Agent fully connected.";
 					break;
 				case LogEntry.harvestComplete:
 					action = "Harvest finished";
-					lookFor = " NewRelic DEBUG: Metric harvest finished.";
+					lookFor = " Metric harvest finished.";
 					break;
 				case LogEntry.transactionTraceData:
 					action = "Transaction trace data";
-					lookFor = " NewRelic DEBUG: TransactionTraceData: ";
+					lookFor = " TransactionTraceData: ";
 					break;
 				default:
 					break;

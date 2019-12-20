@@ -238,8 +238,8 @@ namespace NewRelic.Agent.Core.Configuration
 				return _localConfiguration.application.name;
 			}
 
-			appName = _environment.GetEnvironmentVariable("APP_POOL_ID");
-			if (appName != null)
+			appName = GetAppPoolId();
+			if (!string.IsNullOrWhiteSpace(appName))
 			{
 				Log.Info("Application name from Application Pool name.");
 				return appName.Split(StringSeparators.Comma);
@@ -252,6 +252,34 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 
 			throw new Exception("An application name must be provided");
+		}
+
+		private string GetAppPoolId()
+		{
+			var appPoolId = _environment.GetEnvironmentVariable("APP_POOL_ID");
+			if (!string.IsNullOrEmpty(appPoolId)) return appPoolId;
+
+			var isW3wp = _processStatic.GetCurrentProcess().ProcessName?.Equals("w3wp", StringComparison.InvariantCultureIgnoreCase);
+			if (!isW3wp.HasValue || !isW3wp.Value) return appPoolId;
+
+			var commandLineArgs = _environment.GetCommandLineArgs();
+			const string appPoolCommandLineArg = "-ap";
+			for (var i = 0; i < commandLineArgs.Length - 1; ++i)
+			{
+				if (commandLineArgs[i].Equals(appPoolCommandLineArg))
+				{
+					appPoolId = commandLineArgs[i + 1];
+					if (appPoolId.Length >= 3 && appPoolId[0] == '"')
+					{
+						appPoolId = appPoolId.Substring(1, appPoolId.Length - 2);
+					}
+
+					Log.Info($"Found application pool name from command line: {appPoolId}");
+					return appPoolId;
+				}
+			}
+
+			return appPoolId;
 		}
 
 		public bool AutoStartAgent { get { return _localConfiguration.service.autoStart; } }

@@ -197,7 +197,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		{
 			if (Log.IsFinestEnabled)
 			{
-				Log.Finest($"Trx Noop: (tid {Thread.CurrentThread.ManagedThreadId}) {message}");
+				Log.Finest($"Trx Noop: {message}");
 			}
 		}
 

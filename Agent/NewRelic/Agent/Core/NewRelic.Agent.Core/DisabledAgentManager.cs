@@ -9,7 +9,5 @@ namespace NewRelic.Agent.Core
 		{
 			return null;
 		}
-
-		public AgentState State => AgentState.Stopped;
 	}
 }

@@ -66,6 +66,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		[NotNull] private IAgentHealthReporter _agentHealthReporter;
 
+		private ITraceMetadataFactory _traceMetadataFactory;
+
 		private IAgentTimerService _agentTimerService;
 		private IMetricNameService _metricNameService;
 
@@ -114,8 +116,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var catMetrics = Mock.Create<ICATSupportabilityMetricCounters>();
 
 			_distributedTracePayloadHandler = Mock.Create<DistributedTracePayloadHandler>(Behavior.CallOriginal, _configurationService, _agentHealthReporter, new AdaptiveSampler());
+			_traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
 
-			_agent = new Agent(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, new TraceMetadataFactory(new AdaptiveSampler()), catMetrics);
+			_agent = new Agent(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, catMetrics);
 		}
 
 		private class CallStackManagerFactory : ICallStackManagerFactory
@@ -1121,6 +1124,236 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		}
 
 		#endregion Distributed Trace
+
+		#region TraceMetadata
+
+		[Test]
+		public void TraceMetadata_ReturnsEmptyTraceMetadata_WhenDistributedTracingDisabled()
+		{
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
+
+			var actualTraceMetadata = _agent.TraceMetadata;
+
+			Assert.AreEqual(TraceMetadata.EmptyModel, actualTraceMetadata);
+		}
+
+		[Test]
+		public void TraceMetadata_ReturnsEmptyTraceMetadata_WhenTransactionNotAvailable()
+		{
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
+			Mock.Arrange(() => _transaction.IsValid).Returns(false);
+
+			var actualTraceMetadata = _agent.TraceMetadata;
+
+			Assert.AreEqual(TraceMetadata.EmptyModel, actualTraceMetadata);
+		}
+
+		[Test]
+		public void TraceMetadata_ReturnsTraceMetadata_DTAndTransactionAreAvailable()
+		{
+			var expectedTraceMetadata = new TraceMetadata("traceId", "spanId", true);
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(expectedTraceMetadata);
+
+			var actualTraceMetadata = _agent.TraceMetadata;
+
+			Assert.AreEqual(expectedTraceMetadata, actualTraceMetadata);
+		}
+
+		#endregion TraceMetadata
+
+		#region GetLinkingMetadata
+
+		[Test]
+		public void GetLinkingMetadata_ReturnsAllData_WhenAllDataIsAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { "AppName1", "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			var expectedLinkingMetadata = new Dictionary<string, string>
+			{
+				{ "trace.id", "traceId" },
+				{ "span.id", "spanId" },
+				{ "entity.name", "AppName1" },
+				{ "entity.type", "SERVICE" },
+				{ "entity.guid", "EntityGuid" },
+				{ "hostname", "FullHostName" }
+			};
+
+			CollectionAssert.AreEquivalent(expectedLinkingMetadata, actualLinkingMetadata);
+		}
+
+		[Test]
+		public void GetLinkingMetadata_DoesNotIncludeTraceId_WhenTraceIdIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata(string.Empty, "spanId", true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { "AppName1", "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			Assert.False(actualLinkingMetadata.ContainsKey("trace.id"));
+		}
+
+		[Test]
+		public void GetLinkingMetadata_DoesNotIncludeSpanId_WhenSpanIdIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", string.Empty, true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { "AppName1", "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			Assert.False(actualLinkingMetadata.ContainsKey("span.id"));
+		}
+
+		[Test]
+		public void GetLinkingMetadata_DoesNotIncludeSpanIdOrTraceId_WhenTraceMetadataIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { "AppName1", "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			CollectionAssert.IsNotSupersetOf(actualLinkingMetadata.Keys, new[] { "trace.id", "span.id" });
+		}
+
+		[Test]
+		public void GetLinkingMetadata_DoesNotIncludeEntityName_WhenFirstAppNameIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { string.Empty, "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			Assert.False(actualLinkingMetadata.ContainsKey("entity.name"));
+		}
+
+		[Test]
+		public void GetLinkingMetadata_DoesNotIncludeEntityName_WhenAppNameIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new string[0]);
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			Assert.False(actualLinkingMetadata.ContainsKey("entity.name"));
+		}
+
+		[Test]
+		public void GetLinkingMetadata_DoesNotIncludeEntityGuid_WhenEntityGuidIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns("FullHostName");
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { "AppName1", "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns(string.Empty);
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			Assert.False(actualLinkingMetadata.ContainsKey("entity.guid"));
+		}
+
+		[Test]
+		public void GetLinkingMetadata_IncludesHostName_WhenFullHostNameIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns(string.Empty);
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns("HostName");
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { "AppName1", "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			Assert.AreEqual(actualLinkingMetadata["hostname"], "HostName");
+		}
+
+		[Test]
+		public void GetLinkingMetadata_DoesNotIncludeHostName_WhenHostNameIsNotAvailable()
+		{
+			//TraceMetadata
+			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			Mock.Arrange(() => _transaction.IsValid).Returns(true);
+			Mock.Arrange(() => _traceMetadataFactory.CreateTraceMetadata(_transaction)).Returns(new TraceMetadata("traceId", "spanId", true));
+			//HostName
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationFullHostName).Returns(string.Empty);
+			Mock.Arrange(() => _configurationService.Configuration.UtilizationHostName).Returns(string.Empty);
+			//ApplicationName
+			Mock.Arrange(() => _configurationService.Configuration.ApplicationNames).Returns(new[] { "AppName1", "AppName2", "AppName3" });
+			//EntityGuid
+			Mock.Arrange(() => _configurationService.Configuration.EntityGuid).Returns("EntityGuid");
+
+			var actualLinkingMetadata = _agent.GetLinkingMetadata();
+
+			Assert.False(actualLinkingMetadata.ContainsKey("hostname"));
+		}
+
+		#endregion GetLinkingMetadata
 	}
 }
 

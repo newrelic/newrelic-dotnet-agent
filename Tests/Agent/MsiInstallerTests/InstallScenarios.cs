@@ -312,9 +312,9 @@ namespace FunctionalTests
 			installTestApp.WaitForLog(TestApplication.LogEntry.fullyConnected);
 			installTestApp.TServer.IISCommand("Stop");
 
-			var expectedLogMessageConnected = String.Format(" NewRelic INFO: Reporting to: https://staging.newrelic.com/accounts/{0}/applications/", installTestApp.AccountId);
+			var expectedLogMessageConnected = String.Format(" Reporting to: https://staging.newrelic.com/accounts/{0}/applications/", installTestApp.AccountId);
 			Assert.IsTrue(installTestApp.AgentLog.Contains(expectedLogMessageConnected), "Application is not connected.");
-			Assert.IsTrue(Regex.IsMatch(installTestApp.AgentLog, "NewRelic DEBUG: Received : {\"return_value\":{\"redirect_host\":\"staging-collector-[0-9]+\\.newrelic\\.com\"}}"), "Did not receive a successful response from the collector proxy.");
+			Assert.IsTrue(Regex.IsMatch(installTestApp.AgentLog, " Received : {\"return_value\":{\"redirect_host\":\"staging-collector-[0-9]+\\.newrelic\\.com\"}}"), "Did not receive a successful response from the collector proxy.");
 		}
 
 		[Test]
@@ -332,7 +332,7 @@ namespace FunctionalTests
 			installTestApp.WaitForLog(TestApplication.LogEntry.fullyConnected);
 			installTestApp.TServer.IISCommand("Stop");
 
-			var expected = String.Format(" NewRelic INFO: Reporting to: https://staging.newrelic.com/accounts/{0}/applications/", Common.StagingAccountId);
+			var expected = String.Format(" Reporting to: https://staging.newrelic.com/accounts/{0}/applications/", Common.StagingAccountId);
 			Assert.IsTrue(installTestApp.AgentLog.Contains(expected), "Agent is not connected.");
 		}
 	}

@@ -190,12 +190,17 @@ namespace NewRelic.Agent.Core.Utilities
 
 					foreach (var ex in result.Exceptions)
 					{
-						Log.Warn($"An exception occurred while loading an extension: {ex}");
+						Log.Warn($"An exception occurred while loading an extension from assembly {assemblyPath}: {ex}");
 					}
 
 					wrappers = result.Instances.ToArray();
 
 					_dynamicLoadAssemblyStatus[assemblyPath.ToLower()] = wrappers;
+
+					if (Log.IsFinestEnabled)
+					{
+						Log.Finest($"Dynamically loaded wrappers from assembly {assemblyPath}: {string.Join(", ", (IEnumerable<IWrapper>)wrappers)}");
+					}
 				}
 
 				return wrappers;

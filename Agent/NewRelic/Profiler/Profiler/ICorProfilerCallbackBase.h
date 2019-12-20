@@ -27,6 +27,7 @@
 #include "UnixSystemCalls.h"
 #else
 #include "SystemCalls.h"
+#include <shellapi.h>
 #endif
 
 namespace NewRelic {
@@ -201,7 +202,11 @@ namespace Profiler {
 
 				LogTrace("Checking to see if we should instrument this process.");
 				auto forceProfiling = _systemCalls->TryGetEnvironmentVariable(_X("NEWRELIC_FORCE_PROFILING")) != nullptr;
-				if (!forceProfiling && !ShouldInstrument(configuration)) {
+				auto processPath = GetAndTransformProcessPath();
+				auto commandLine = _systemCalls->GetProgramCommandLine();
+				auto appPoolId = GetAppPoolId(_systemCalls);
+				LogInfo(L"Command line: ", commandLine);
+				if (!forceProfiling && !ShouldInstrument(configuration, processPath, commandLine, appPoolId)) {
 					LogInfo("This process should not be instrumented, unloading profiler.");
 					return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
 				}
@@ -228,7 +233,7 @@ namespace Profiler {
 			return eventMask;
 		}
 
-		virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration) = 0;
+		virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId) = 0;
 
 		virtual void ConfigureEventMask(IUnknown*) = 0;
 
@@ -727,6 +732,15 @@ namespace Profiler {
 
 		static xstring_t GetAppPoolId(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
 		{
+			auto appPoolId = TryGetAppPoolIdFromEnvironmentVariable(systemCalls);
+			if (appPoolId.empty()) {
+				appPoolId = TryGetAppPoolIdFromCommandLine();
+			}
+			return appPoolId;
+		}
+
+		static xstring_t TryGetAppPoolIdFromEnvironmentVariable(std::shared_ptr<MethodRewriter::ISystemCalls> systemCalls)
+		{
 			//This will pull the app pool name out of instances of IIS > 5.1
 			//For more information see http://msdn.microsoft.com/en-us/library/ms524602(v=vs.90).aspx
 			auto appPoolId = systemCalls->TryGetEnvironmentVariable(_X("APP_POOL_ID"));
@@ -736,6 +750,38 @@ namespace Profiler {
 				LogInfo("The Profiler will use the environment variable APP_POOL_ID as the application name when white/black listing applications pools for profiling.");
 				return *appPoolId;
 			}
+		}
+
+		static xstring_t TryGetAppPoolIdFromCommandLine()
+		{
+#ifdef PAL_STDCPP_COMPAT
+			return _X("");
+#else
+			int argc = 0;
+			auto commandLineArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
+			if (argc < 3) {
+				if (commandLineArgv != nullptr) LocalFree(commandLineArgv);
+				return _X("");
+			}
+
+			xstring_t appPoolId = _X("");
+			auto appPoolCommandLineArg = _X("-ap");
+			for (int i = 0; i < argc; ++i) {
+				xstring_t arg = commandLineArgv[i];
+				if (arg.compare(appPoolCommandLineArg) == 0) {
+					appPoolId = commandLineArgv[i + 1];
+					if (appPoolId.length() >= 3 && appPoolId [0] == '"') {
+						appPoolId = appPoolId.substr(1, appPoolId.length() - 2);
+					}
+					LogInfo("The Profiler will use the application pool ID from the command line as the application name when white/black listing applications pools for profiling.");
+					return appPoolId;
+				}
+			}
+
+			LocalFree(commandLineArgv);
+			return appPoolId;
+#endif
 		}
 
 		static xstring_t ReadFile(xstring_t filePath)

@@ -197,10 +197,8 @@ namespace NewRelic.Agent.Core
 					return null;
 
 				var agent = AgentManager.Instance;
-				if (agent == null || agent.State != AgentState.Started)
-					return null;
 
-				return agent.GetTracerImpl(
+				return agent?.GetTracerImpl(
 					tracerFactoryName,
 					tracerArguments,
 					metricName,

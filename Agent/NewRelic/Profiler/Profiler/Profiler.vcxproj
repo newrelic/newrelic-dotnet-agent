@@ -116,7 +116,6 @@
       <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>$(MSBuildProgramFiles32)\Windows Kits\NETFXSDK\4.7.2\Lib\um\x86</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -143,7 +142,6 @@
       <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>$(MSBuildProgramFiles32)\Windows Kits\NETFXSDK\4.7.2\Lib\um\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -176,7 +174,6 @@
       <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>$(MSBuildProgramFiles32)\Windows Kits\NETFXSDK\4.7.2\Lib\um\x86</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -207,7 +204,6 @@
       <AdditionalDependencies>$(SolutionDir)Sicily\bin\$(PlatformTarget)\$(Configuration)\Sicily.lib;%(AdditionalDependencies);format.lib;version.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
       <ModuleDefinitionFile>Profiler.def</ModuleDefinitionFile>
-      <AdditionalLibraryDirectories>$(MSBuildProgramFiles32)\Windows Kits\NETFXSDK\4.7.2\Lib\um\x64</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>

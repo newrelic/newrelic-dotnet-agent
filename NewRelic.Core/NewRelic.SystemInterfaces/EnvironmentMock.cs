@@ -5,26 +5,27 @@ namespace NewRelic.SystemInterfaces
 {
 	public class EnvironmentMock : IEnvironment
 	{
-		private readonly Func<string, string> _getEnvironmentVariable;
-
-		public EnvironmentMock(Func<string, string> getEnvironmentVariable = null)
+		private static string[] _emptyCommandLineArgs = new string[0];
+		private static Dictionary<string, string> _emptyEnvVarDictionary = new Dictionary<string, string>();
+		
+		public string[] GetCommandLineArgs()
 		{
-			_getEnvironmentVariable = getEnvironmentVariable ?? (variable => null);
+			return _emptyCommandLineArgs;
 		}
 
 		public string GetEnvironmentVariable(string variable)
 		{
-			return _getEnvironmentVariable(variable);
+			return null;
 		}
 
 		public string GetEnvironmentVariable(string variable, EnvironmentVariableTarget environmentVariableTarget)
 		{
-			return _getEnvironmentVariable(variable);
+			return null;
 		}
 
 		public Dictionary<string, string> GetEnvironmentVariablesWithPrefix(string prefix)
 		{
-			throw new NotImplementedException();
+			return _emptyEnvVarDictionary;
 		}
 	}
 }

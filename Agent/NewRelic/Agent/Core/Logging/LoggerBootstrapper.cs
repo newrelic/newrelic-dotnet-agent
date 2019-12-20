@@ -7,6 +7,7 @@ using log4net.Layout;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Core.Logging;
+using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,7 +63,8 @@ namespace NewRelic.Agent.Core
 
 		// Watch out!  If you change the time format that the agent puts into its log files, other log parsers may fail.
 		// See, specifically, the orion IIS QA package, file lib/qa-tools-utils/dotnet_agent_log_parser.rb
-		private static ILayout Layout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
+		private static ILayout AuditLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %level: %message\r\n");
+		private static ILayout FileLogLayout = new PatternLayout("%utcdate{yyyy-MM-dd HH:mm:ss,fff} NewRelic %6level: [pid: %property{pid}, tid: %thread] %message\r\n");
 
 		private static ILayout eventLoggerLayout = new PatternLayout("%level: %message");
 
@@ -77,6 +79,8 @@ namespace NewRelic.Agent.Core
 
 			// initially we will log to console and event log so it should only log items that need action
 			logger.Level = Level.Info;
+
+			GlobalContext.Properties["pid"] = new ProcessStatic().GetCurrentProcess().Id;
 
 			SetupStartupLogAppender(logger);
 			SetupConsoleLogAppender(logger);
@@ -245,7 +249,7 @@ namespace NewRelic.Agent.Core
 		{
 			var startupAppender = new MemoryAppender();
 			startupAppender.Name = STARTUP_APPENDER_NAME;
-			startupAppender.Layout = LoggerBootstrapper.Layout;
+			startupAppender.Layout = LoggerBootstrapper.FileLogLayout;
 			startupAppender.ActivateOptions();
 
 			logger.AddAppender(startupAppender);
@@ -301,7 +305,7 @@ namespace NewRelic.Agent.Core
 #if DEBUG
 			// Create the debug appender and connect it to our logger.
 			var debugAppender = new DebugAppender();
-			debugAppender.Layout = Layout;
+			debugAppender.Layout = FileLogLayout;
 			debugAppender.AddFilter(GetNoAuditFilter());
 			logger.AddAppender(debugAppender);
 #endif
@@ -316,7 +320,7 @@ namespace NewRelic.Agent.Core
 		{
 			var appender = new ConsoleAppender();
 			appender.Name = ConsoleLogAppenderName;
-			appender.Layout = Layout;
+			appender.Layout = FileLogLayout;
 			appender.Threshold = Level.Warn;
 			appender.AddFilter(GetNoAuditFilter());
 			appender.ActivateOptions();
@@ -336,7 +340,7 @@ namespace NewRelic.Agent.Core
 
 			try
 			{
-				var appender = SetupRollingFileAppender(config, logFileName, "FileLog");
+				var appender = SetupRollingFileAppender(config, logFileName, "FileLog", FileLogLayout);
 				appender.AddFilter(GetNoAuditFilter());
 				appender.ActivateOptions();
 				logger.AddAppender(appender);
@@ -361,7 +365,7 @@ namespace NewRelic.Agent.Core
 
 			try
 			{
-				var appender = SetupRollingFileAppender(config, logFileName, AuditLogAppenderName);
+				var appender = SetupRollingFileAppender(config, logFileName, AuditLogAppenderName, AuditLogLayout);
 				appender.AddFilter(GetAuditFilter());
 				appender.AddFilter(new DenyAllFilter());
 				appender.ActivateOptions();
@@ -378,7 +382,7 @@ namespace NewRelic.Agent.Core
 		/// <param name="fileName">The name of the file this appender will write to.</param>
 		/// <param name="appenderName">The name of this appender.</param>
 		/// <remarks>This does not call appender.ActivateOptions or add the appender to the logger.</remarks>
-		private static RollingFileAppender SetupRollingFileAppender(ILogConfig config, String fileName, String appenderName)
+		private static RollingFileAppender SetupRollingFileAppender(ILogConfig config, String fileName, String appenderName, ILayout layout)
 		{
 			var log = log4net.LogManager.GetLogger(typeof(AgentManager));
 
@@ -398,7 +402,7 @@ namespace NewRelic.Agent.Core
 				var appender = new RollingFileAppender();
 				
 				appender.LockingModel = GetFileLockingModel(config);
-				appender.Layout = Layout;
+				appender.Layout = layout;
 				appender.File = fileName;
 				appender.Encoding = System.Text.Encoding.UTF8;
 				appender.AppendToFile = true;

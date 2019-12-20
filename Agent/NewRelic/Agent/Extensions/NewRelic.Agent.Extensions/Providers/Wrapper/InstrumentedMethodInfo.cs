@@ -37,5 +37,10 @@
 			var otherMethod = (InstrumentedMethodInfo)other;
 			return _functionId == otherMethod._functionId;
 		}
+
+		public override string ToString()
+		{
+			return $"Method: {Method}, RequestedWrapperName: {RequestedWrapperName}, IsAsync: {IsAsync}, RequestedMetricName: {RequestedMetricName}, RequestedTransactionNamePriority: {RequestedTransactionNamePriority}, StartWebTransaction: {StartWebTransaction}";
+		}
 	}
 }

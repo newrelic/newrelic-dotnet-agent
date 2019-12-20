@@ -13,6 +13,25 @@ using System.ServiceModel.Channels;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {
+
+	/// <summary>
+    /// The table below illustrates the various invocation types, the methods that are instrumented, and which aspects of
+    /// the transaction are accomplished during instrumentation.
+    ///
+    /// Invocation    Instrumented        Start        Inbound      Start       End         End       Outbound
+    /// Method        Method              Trx          CAT/DT       Segment     Seg         Trx       CAT/DT
+    ///---------------------------------------------------------------------------------------------------------------------------
+    /// Sync          Invoke              Yes*         Yes*         Yes         Yes         Yes       Yes            Segment #1
+    ///
+    /// Begin/End     InvokeBegin         Yes*         Yes*         Yes         Yes         Error     Error          Segment #1
+    ///               InvokeEnd           No           No           Yes         Yes         Yes       Yes            Segment #2
+    ///
+    /// TAP Async     InvokeAsync         Yes*         Yes*         Yes         Yes         No        No             Segment #1
+    ///               EndInvoke           No           No           No          No          Yes       Yes            n/a
+    /// 
+    /// Yes*     =   Perform action if not already performed by an upstream wrapper
+    /// Error    =   Perform in the case of an errror, but otherwise not
+    /// </summary>
 	public class MethodInvokerWrapper : IWrapper
 	{
 		private static readonly object _wrapperToken = new object();
@@ -52,9 +71,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			{ InvokeAsyncMethodName, "TAP" }
 		};
 
+		private readonly string[] _methodNamesStart = new[] { SyncMethodName, InvokeBeginMethodName, InvokeAsyncMethodName };
+		private readonly string[] _methodNamesEndTrx = new[] { SyncMethodName, InvokeEndMethodName };
+
 		private readonly List<string> _rptSupMetric_InvocType = new List<string>();
 		private readonly object _rptSupMetric_InvocType_Lock = new object();
-
 
 		public bool IsTransactionRequired => false;
 
@@ -73,21 +94,30 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var transactionAlreadyExists = transaction.IsValid;
+			
 			var methodInfo = TryGetMethodInfo(instrumentedMethodCall);
 			if (methodInfo == null)
 			{
 				throw new NullReferenceException("methodInfo");
 			}
 
-			//Identify if we need to end the transaction in the after delegate.
-			//If it is synchronous or if it is EndInvoke, we need to end the transaction.
 			var instrumentedMethodName = instrumentedMethodCall.MethodCall.Method.MethodName;
 			var parameters = GetParameters(instrumentedMethodCall.MethodCall, methodInfo, instrumentedMethodCall.MethodCall.MethodArguments, agent);
+
+			ReportSupportabilityMetric_InvocationMethod(agent, instrumentedMethodName);
+
+			var isTAP = instrumentedMethodCall.InstrumentedMethodInfo.Method.Type.Name == TAPTypeNameShort;
+			var shouldTryProcessInboundCatOrDT = _methodNamesStart.Contains(instrumentedMethodName);
+			var shouldTryEndTransaction = _methodNamesEndTrx.Contains(instrumentedMethodName);
 
 			var uri = OperationContext.Current?.IncomingMessageHeaders?.To;
 
 			var transactionName = GetTransactionName(agent, uri, methodInfo);
 
+			// In all cases, we should record this work in a transaction.
+			// either create it or use the one that is already there
+			// For InvokeEnd, we expect a transaction to be there, but create it
+			// just in case.
 			if (!transactionAlreadyExists)
 			{
 				transaction = agent.CreateTransaction(
@@ -100,21 +130,20 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			}
 
 			var requestPath = uri?.AbsolutePath;
-
-			ReportSupportabilityMetric_InvocationMethod(agent, instrumentedMethodName);
-
 			if (!string.IsNullOrEmpty(requestPath))
 			{
 				transaction.SetUri(requestPath);
 			}
 
-			//Don't set transaction name when InvokeEnd is called. Only on the Invoke, InvokeAsync or InvokeBegin should we name the transaction
-			if (!instrumentedMethodName.Equals(InvokeEndMethodName, StringComparison.OrdinalIgnoreCase))
+			// For InvokeBegin, Invoke, or InvokeAsync, Set the transaction name and process
+			// CAT or DT request information.
+			if (shouldTryProcessInboundCatOrDT)
 			{
 				transaction.SetWebTransactionName(WebTransactionType.WCF, transactionName, TransactionNamePriority.FrameworkHigh);
 				transaction.SetRequestParameters(parameters);
 
 				var messageProperties = OperationContext.Current?.IncomingMessageProperties;
+
 				if (!transactionAlreadyExists && messageProperties != null && messageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
 				{
 					var httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
@@ -129,68 +158,119 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				}
 			}
 
-			var isTAP = instrumentedMethodCall.InstrumentedMethodInfo.Method.Type.Name == TAPTypeNameShort;
-			var isInstrumentingTAPInvokeEndCall = instrumentedMethodName.Equals(InvokeEndMethodName, StringComparison.OrdinalIgnoreCase) && isTAP;
-			var isInstrumentingTAPInvokeAsyncCall = instrumentedMethodCall.MethodCall.Method.MethodName == InvokeAsyncMethodName;
+			// Don't create a segment to cover the EndInvoke on TAP Invocation
+			// but we need to instrument the EndInvoke so that we can close the
+			// transaction and send the CAT Response.  The continuation that
+			// is used for TAP will not reliably have access to the OperationContext
+			ISegment segment = null;
+			if (!isTAP || _methodNamesStart.Contains(instrumentedMethodName))
+			{
+				segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, transactionName);
+			}
 
-			var segmentName = transactionName;
+			Guid? wrapperExecutionID = null;
+			void WriteLogMessage(string message)
+			{
+				if (agent.Logger.IsEnabledFor(Agent.Extensions.Logging.Level.Finest))
+				{
+					return;
+				}
 
-			//don't create segment when TaskMethodInvoker.InvokeEnd() is called. 
-			var segment = isInstrumentingTAPInvokeEndCall ? null : transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, segmentName);
+				if(wrapperExecutionID == null)
+				{
+					wrapperExecutionID = Guid.NewGuid();
+				}
 
-			var encounteredException = false;
+				transaction.LogFinest($"Execution {wrapperExecutionID} - {instrumentedMethodName}: {message}");
+			}
+
+
+			var handledException = false;
+			var isTAPContinuation = false;
+
+			// This continuation method is meant for TAP Async only (InvokeAsync)
+			// We don't end the transaction at this point because we dont
+			// have access to the OperationContext.  We rely on the (InvokeEnd)
+			// to handle this part.
+			void HandleContinuation(System.Threading.Tasks.Task t)
+			{
+				WriteLogMessage("Continuation");
+
+				if (t.IsFaulted)
+				{
+					WriteLogMessage("Continuation - Notice Exception");
+					transaction.NoticeError(t.Exception);
+				}
+
+				if (segment != null)
+				{
+					WriteLogMessage("Continuation - End Segment");
+					segment.End();
+				}
+			}
 
 			return Delegates.GetDelegateFor(
-				
-				onFailure: exception =>
-				{
-					transaction.NoticeError(exception);
-					encounteredException = true;
-				},
 
+				// This could occur on the Invoke, InvokeBegin, InvokeEnd
+				onFailure: (Exception ex) =>
+				{
+					WriteLogMessage("OnFailure");
+
+					transaction.NoticeError(ex);
+					handledException = true;
+				},
+				
+				// This will get called on both Begin/End and TAP (InvokeAsync)
 				onSuccess: (System.Threading.Tasks.Task result) =>
 				{
-					result.ContinueWith(ContinueWork);
-
-					void ContinueWork(System.Threading.Tasks.Task t)
+					// If it is TAP, need to wait until the async work is done.
+					// attach continuation to determine if exception has occurred and
+					// to end the segment.  For Begin/End, there is nothing to do
+					// in the continuation.
+					if (isTAP)
 					{
-						//This only apply for TAP call. Segment will be ended in the task continuation.
-						if (instrumentedMethodCall.MethodCall.Method.MethodName == InvokeAsyncMethodName)
-						{
-							segment.End();
-						}
+						WriteLogMessage("OnSuccess - Schedule Continuation");
+						isTAPContinuation = true;
+						result.ContinueWith(HandleContinuation);
 					}
 				},
 
 				onComplete: () =>
 				{
-
-					//For TAP call, segment will be ended in the task continuation. For other calls, segment will be ended here.
-					if (!isTAP)
+					// If this is the TAP InvokeAsync, there is nothing to do here
+					// The continuation has been set up and it will determine if there 
+					// are any problems and to end the segment.
+					if (isTAPContinuation)
 					{
+						WriteLogMessage("OnComplete - NoOp wait for continuation");
+						return;
+					}
+
+					// In all cases, there is a segment, we want to end it.
+					// The only case where we wouldn't have a segment would be
+					// in the InvokeEnd for TAP
+					if (segment != null)
+					{
+						WriteLogMessage("OnComplete - End Segment");
 						segment.End();
 					}
 
-					//Don't end transaction yet when InvokeBegin and InvokeAsync are called. Unless an exception was encountered.
-					var allowToEndTransaction = !instrumentedMethodName.Equals(InvokeBeginMethodName, StringComparison.OrdinalIgnoreCase) &&
-												!instrumentedMethodName.Equals(InvokeAsyncMethodName, StringComparison.OrdinalIgnoreCase) ||
-												encounteredException;
-
-					if (allowToEndTransaction)
+					// If an exception has occurred or if this is Invoke or InvokeEnd,
+					// the transaction should be closed and CAT Response prepared.
+					if (handledException || shouldTryEndTransaction)
 					{
-						EndTransaction(transaction);
-					}
+						var wcfStartedTransaction = transaction.GetExperimentalApi().GetWrapperToken() == _wrapperToken;
 
-					//Process response if the agent is not instrumenting BeginInvoke and InvokeAsync.
-					var allowToProcessResponse = !instrumentedMethodName.Equals(InvokeBeginMethodName, StringComparison.OrdinalIgnoreCase) && !isInstrumentingTAPInvokeAsyncCall || encounteredException;
+						if (wcfStartedTransaction)
+						{
+							WriteLogMessage("OnComplete - End transaction");
+							transaction.End();
 
-					if (allowToProcessResponse)
-					{
-						ProcessResponse(transaction, OperationContext.Current);
+							ProcessResponse(transaction, OperationContext.Current);
+						}
 					}
 				});
 		}
-
 
 		/// <summary>
 		/// Records supportability metric for the type of invocation.
@@ -198,7 +278,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 		/// </summary>
 		private void ReportSupportabilityMetric_InvocationMethod(IAgent agent, string methodName)
 		{
-
 			//Since we share EndInvoke for both TAP and Begin/End Async, it is not 
 			//contained in the dictionary
 			if (!_methodNameInvocationTypesDic.TryGetValue(methodName, out string invocationTypeName))
@@ -223,16 +302,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			}
 		}
 
-
-		//End transaction only if this wrapper is the one created it.
-		private void EndTransaction(ITransaction transaction)
-		{
-			var wcfStartedTransaction = transaction.GetExperimentalApi().GetWrapperToken() == _wrapperToken;
-			if (wcfStartedTransaction)
-			{
-				transaction.End();
-			}
-		}
 
 		private void ProcessResponse(ITransaction transaction, OperationContext context)
 		{

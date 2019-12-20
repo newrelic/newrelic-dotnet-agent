@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
 			if (Log.IsFinestEnabled)
 			{
-				transaction.LogFinest($"Attempting to execute {wrapper}");
+				transaction.LogFinest($"Attempting to execute {wrapper} found from InstrumentedMethodInfo: {instrumentedMethodInfo}");
 			}
 
 			if (transaction.IsFinished)

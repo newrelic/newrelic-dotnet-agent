@@ -770,7 +770,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		{
 			if (Log.IsFinestEnabled)
 			{
-				Log.Finest($"Trx {Guid}: (tid {Thread.CurrentThread.ManagedThreadId}) {message}");
+				Log.Finest($"Trx {Guid}: {message}");
 			}
 		}
 

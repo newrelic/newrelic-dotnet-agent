@@ -53,11 +53,9 @@ namespace NewRelic { namespace Profiler {
 			}
 		}
 
-		virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration) override
+		virtual bool ShouldInstrument(std::shared_ptr<Configuration::Configuration> configuration, xstring_t processPath, xstring_t commandLine, xstring_t appPoolId) override
 		{
-			auto processPath = GetAndTransformProcessPath();
-			auto commandLine = _systemCalls->GetProgramCommandLine();
-			return configuration->ShouldInstrumentNetCore(processPath, GetAppPoolId(_systemCalls), commandLine);
+			return configuration->ShouldInstrumentNetCore(processPath, appPoolId, commandLine);
 		}
 
 		virtual xstring_t GetRuntimeExtensionsDirectoryName() override

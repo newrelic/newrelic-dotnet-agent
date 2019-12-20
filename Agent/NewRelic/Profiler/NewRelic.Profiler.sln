@@ -49,22 +49,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProfiledMethods", "Profiled
 		{DD9D2763-2E4F-48AA-BDFD-E23ABB9822AB} = {DD9D2763-2E4F-48AA-BDFD-E23ABB9822AB}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet Package Generator", "NuGet Package Generator\NuGet Package Generator.csproj", "{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DD9D2763-2E4F-48AA-BDFD-E23ABB9822AB} = {DD9D2763-2E4F-48AA-BDFD-E23ABB9822AB}
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{52E09723-220D-4594-8228-CDE69E6BBE67}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\packages.config = .nuget\packages.config
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{10F9D9C5-E027-4B9B-93B4-2B2A42DCF180}"
-	ProjectSection(SolutionItems) = preProject
-		common.proj = common.proj
-		NewRelic.Dotnet.Agent.targets = NewRelic.Dotnet.Agent.targets
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -225,14 +209,6 @@ Global
 		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|Win32.Build.0 = Release|x86
 		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|x64.ActiveCfg = Release|x64
 		{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}.Release|x64.Build.0 = Release|x64
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Debug|Win32.Build.0 = Debug|Any CPU
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Debug|x64.Build.0 = Debug|Any CPU
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Release|Win32.ActiveCfg = Release|Any CPU
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Release|Win32.Build.0 = Release|Any CPU
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Release|x64.ActiveCfg = Release|Any CPU
-		{1875FB23-8E54-4FC1-B8EF-61490EF93D3A}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

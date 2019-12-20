@@ -1,18 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net35</TargetFrameworks>
     <RootNamespace>NewRelic.Agent.Core</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core</AssemblyName>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="8.0.5.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AgentApi.cs" />
-    <Compile Include="AgentShim.cs" />
-  </ItemGroup>
-  <Import Project="$(SolutionDir)common.proj" Condition="Exists('$(SolutionDir)common.proj')" />
 </Project>

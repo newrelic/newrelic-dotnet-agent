@@ -1690,6 +1690,31 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 				);
 		}
 
+		[TestCase("AppPoolId", "w3wp.exe -ap AppPoolId")]
+		[TestCase("AppPoolId", "w3wp.exe -ap \"AppPoolId\"")]
+		[TestCase("W3WP", "w3wp.exe -app \"NotAnAppPool\"")]
+		[TestCase("W3WP", "w3wp.exe -ap")]
+		[TestCase("W3WP", "w3wp.exe -ap ")]
+		[TestCase("AppPoolId", "w3wp.exe -firstArg -ap \"AppPoolId\" -thirdArg")]
+		public void ApplicationNamesPullsSingleNameFromAppPoolIdFromCommandLine(string expected, string commandLine)
+		{
+			_runTimeConfig.ApplicationNames = new List<string>();
+
+			//Sets to default return null for all calls unless overriden by later arrange.
+			Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
+
+			Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
+
+			_localConfig.application.name = new List<string>();
+			Mock.Arrange(() => _environment.GetCommandLineArgs()).Returns(commandLine.Split(new[] { ' ' }));
+			Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns<string>(null);
+			Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("W3WP");
+
+			NrAssert.Multiple(
+				() => Assert.AreEqual(expected, _defaultConfig.ApplicationNames.FirstOrDefault())
+			);
+		}
+
 		[Test]
 		public void ApplicationNamesPullsNameFromProcessIdIfAppDomainAppVirtualPathIsNull()
 		{

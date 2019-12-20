@@ -375,7 +375,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		public Dictionary<string, string> GetLinkingMetadata()
 		{
-			var hostname = string.IsNullOrEmpty(Configuration.UtilizationFullHostName) ? Configuration.UtilizationFullHostName : Configuration.UtilizationHostName;
+			var hostname = !string.IsNullOrEmpty(Configuration.UtilizationFullHostName) 
+				? Configuration.UtilizationFullHostName 
+				: Configuration.UtilizationHostName;
+
 			var metadata = new Dictionary<string, string>();
 			var traceMetadata = TraceMetadata;
 			if (!string.IsNullOrEmpty(traceMetadata.TraceId))

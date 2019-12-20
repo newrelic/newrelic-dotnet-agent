@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
@@ -20,6 +19,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 	{
 		private readonly RequestDelegate _next;
 		private readonly IAgent _agent;
+		private volatile bool _inspectingHttpContextForErrorsIsEnabled = true;
 
 		public WrapPipelineMiddleware(RequestDelegate next, IAgent agent)
 		{
@@ -91,12 +91,20 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 					//because that appears to be handled at the  web host level or server (kestrel) level 
 					responseStatusCode = 500;
 				}
-				else
+				else if (_inspectingHttpContextForErrorsIsEnabled)
 				{
-					var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
-					if (exceptionHandlerFeature != null)
+					try
 					{
-						transaction.NoticeError(exceptionHandlerFeature.Error);
+						Statics.NoticeErrorFromContextIfAvailable(context, transaction);
+					}
+					catch (Exception e)
+					{
+						//We need to catch and handle exceptions here so that the transaction and segment can still end appropriately
+
+						_inspectingHttpContextForErrorsIsEnabled = false;
+
+						_agent.Logger.Log(Agent.Extensions.Logging.Level.Info, "Inspecting errors from the IExceptionHandlerFeature is disabled, usually because that AspNetCore feature is not available.  Debug Level logs will contain more information.");
+						_agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Error when requesting IExceptionHandlerFeature: {e}");
 					}
 				}
 
@@ -179,6 +187,22 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 			catch (Exception ex)
 			{
 				_agent.SafeHandleException(ex);
+			}
+		}
+
+		private static class Statics
+		{
+			public static void NoticeErrorFromContextIfAvailable(HttpContext context, ITransaction transaction)
+			{
+				//The IExceptionHandlerFeature type is not always available in an AspNetCore app. We need to guard its access
+				//here to prevent the middleware from crashing when this type needs to be resolved. The type needs to be
+				//fully qualified so that the middleware class does not get an error because of the using statement for
+				//Microsoft.AspNetCore.Diagnostics.
+				var exceptionHandlerFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+				if (exceptionHandlerFeature != null)
+				{
+					transaction.NoticeError(exceptionHandlerFeature.Error);
+				}
 			}
 		}
 	}

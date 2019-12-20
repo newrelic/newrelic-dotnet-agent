@@ -15,6 +15,8 @@
   </PropertyGroup>
 
   <Target Name="CreateGitVersion">
+    <Error Condition="'$(GitTagPrefix)' == ''" Text="In order to use our automatic versioning from git tags, you must specify the 'GitTagPrefix' property in your project file." />
+    
     <!-- Get current working branch-->
     <Exec Command="git rev-parse --abbrev-ref HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitBranchName" />

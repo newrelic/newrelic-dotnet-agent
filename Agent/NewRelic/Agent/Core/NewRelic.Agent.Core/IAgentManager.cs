@@ -25,10 +25,5 @@ namespace NewRelic.Agent.Core
 		/// <param name="arguments"></param>
 		/// <returns>Returns an ITracer as an Object, since that built-in type is much easier to use in call-point type signatures</returns>
 		ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId);
-
-		/// <summary>
-		/// The agent's current state.  It manages an orderly startup sequence.
-		/// </summary>
-		AgentState State { get; }
 	}
 }
