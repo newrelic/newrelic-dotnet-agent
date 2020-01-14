@@ -5,8 +5,10 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -24,28 +26,56 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
-		// Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
+		private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
+
 		private ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> _customEvents = new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(0);
 
 		public CustomEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
-			ResetCollections(_configuration.CustomEventsMaxSamplesStored);
+			GetAndResetCollection(_configuration.CustomEventsMaxSamplesStored);
 		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			_readerWriterLockSlim.Dispose();
+		}
+
+		protected override TimeSpan HarvestCycle => _configuration.CustomEventsHarvestCycle;
+		protected override bool IsEnabled => _configuration.CustomEventsEnabled;
 
 		public override void Collect(CustomEventWireModel customEventWireModel)
 		{
 			_agentHealthReporter.ReportCustomEventCollected();
-			_customEvents.Add(new PrioritizedNode<CustomEventWireModel>(customEventWireModel));
+
+			_readerWriterLockSlim.EnterReadLock();
+			try
+			{
+				_customEvents.Add(new PrioritizedNode<CustomEventWireModel>(customEventWireModel));
+			}
+			finally
+			{
+				_readerWriterLockSlim.ExitReadLock();
+			}
 		}
 
 		protected override void Harvest()
 		{
-			// create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
-			var customEvents = _customEvents.Where(node => node != null).Select(node => node.Data).ToList();
+			ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> originalCustomEvents;
 
-			ResetCollections(_customEvents.Size);
+			_readerWriterLockSlim.EnterWriteLock();
+			try
+			{
+				originalCustomEvents = GetAndResetCollection(_customEvents.Size);
+			}
+			finally
+			{
+				_readerWriterLockSlim.ExitWriteLock();
+			}
+
+			var customEvents = originalCustomEvents.Where(node => node != null).Select(node => node.Data).ToList();
 
 			// if we don't have any events to publish then don't
 			if (customEvents.Count <= 0)
@@ -61,12 +91,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
 			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-			ResetCollections(_configuration.CustomEventsMaxSamplesStored);
+			GetAndResetCollection(_configuration.CustomEventsMaxSamplesStored);
 		}
 
-		private void ResetCollections(uint customEventCollectionCapacity)
+		private ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> GetAndResetCollection(uint customEventCollectionCapacity)
 		{
-			_customEvents = new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(customEventCollectionCapacity);
+			return Interlocked.Exchange(ref _customEvents, new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(customEventCollectionCapacity));
 		}
 
 		private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<CustomEventWireModel> customEvents)

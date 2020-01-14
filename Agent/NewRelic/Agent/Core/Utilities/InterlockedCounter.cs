@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -8,10 +7,10 @@ namespace NewRelic.Agent.Core.Utilities
 	/// </summary>
 	public class InterlockedCounter
 	{
-		private Int32 _value;
-		public Int32 Value => _value;
+		private int _value;
+		public int Value => _value;
 
-		public InterlockedCounter(Int32 initialValue = 0)
+		public InterlockedCounter(int initialValue = 0)
 		{
 			_value = initialValue;
 		}
@@ -26,22 +25,22 @@ namespace NewRelic.Agent.Core.Utilities
 			Interlocked.Decrement(ref _value);
 		}
 
-		public void Add(Int32 value)
+		public void Add(int value)
 		{
 			Interlocked.Add(ref _value, value);
 		}
 
-		public Int32 Exchange(Int32 value)
+		public int Exchange(int value)
 		{
 			return Interlocked.Exchange(ref _value, value);
 		}
 
-		public Int32 CompareExchange(Int32 value, Int32 comparand)
+		public int CompareExchange(int value, int comparand)
 		{
 			return Interlocked.CompareExchange(ref _value, value, comparand);
 		}
 
-		public void Set(Int32 value)
+		public void Set(int value)
 		{
 			_value = value;
 		}

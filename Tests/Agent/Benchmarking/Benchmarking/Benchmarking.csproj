@@ -7,7 +7,6 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
     <PackageReference Include="NBench" Version="0.3.4.0" />
     <PackageReference Include="NBench.Runner" Version="0.3.4.0" />
   </ItemGroup>

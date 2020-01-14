@@ -8,7 +8,6 @@
     <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
     <PackageReference Include="Microsoft.Owin" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>

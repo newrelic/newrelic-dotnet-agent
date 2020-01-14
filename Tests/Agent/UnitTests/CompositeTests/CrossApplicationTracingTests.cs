@@ -4,7 +4,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -39,7 +38,7 @@ namespace CompositeTests
 			var clientTransactionGuid = "transaction guid";
 			var clientTripId = "trip id";
 			var clientPathHash = "path hash";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
@@ -102,7 +101,7 @@ namespace CompositeTests
 			var clientTransactionGuid = "transaction guid";
 			var clientTripId = "trip id";
 			var clientPathHash = "path hash";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
@@ -159,7 +158,7 @@ namespace CompositeTests
 		{
 			// ARRANGE
 			var encodingKey = "foo";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { 123 };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
@@ -206,7 +205,7 @@ namespace CompositeTests
 		{
 			// ARRANGE
 			var encodingKey = "foo";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { 123 };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 

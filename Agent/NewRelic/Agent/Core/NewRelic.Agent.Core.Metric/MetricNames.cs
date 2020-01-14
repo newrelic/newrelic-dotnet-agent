@@ -544,7 +544,17 @@ namespace NewRelic.Agent.Core.Metric
 		public const string SupportabilityTransactionBuilderGarbageCollectedAll =
 			SupportabilityTransactionBuilderGarbageCollectedPs + All;
 
-		
+		//Faster Event Harvest
+		//These metric names are used in conjunction with GetSupportabilityName to build the full name
+		public const string SupportabilityEventHarvestPs = "EventHarvest" + PathSeparator;
+		public const string SupportabilityEventHarvestReportPeriod = SupportabilityEventHarvestPs + "ReportPeriod";
+		private const string SupportabilityEventHarvestHarvestLimit = PathSeparator + "HarvestLimit";
+		public const string SupportabilityEventHarvestErrorEventHarvestLimit = SupportabilityEventHarvestPs + "ErrorEventData" + SupportabilityEventHarvestHarvestLimit;
+		public const string SupportabilityEventHarvestCustomEventHarvestLimit = SupportabilityEventHarvestPs + "CustomEventData" + SupportabilityEventHarvestHarvestLimit;
+		public const string SupportabilityEventHarvestTransactionEventHarvestLimit = SupportabilityEventHarvestPs + "AnalyticEventData" + SupportabilityEventHarvestHarvestLimit;
+		public const string SupportabilityEventHarvestSpanEventHarvestLimit = SupportabilityEventHarvestPs + "SpanEventData" + SupportabilityEventHarvestHarvestLimit;
+
+
 		public static string GetSupportabilityCATConditionMetricName(CATSupportabilityCondition condition)
 		{
 			if (_catMetricNames.TryGetValue(condition, out var metricName))

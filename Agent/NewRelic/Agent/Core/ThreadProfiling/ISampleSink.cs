@@ -1,11 +1,8 @@
-﻿using JetBrains.Annotations;
-
-namespace NewRelic.Agent.Core.ThreadProfiling
+﻿namespace NewRelic.Agent.Core.ThreadProfiling
 {
-    public interface ISampleSink
-    {
-		void SampleAcquired([NotNull]ThreadSnapshot[] threadSnapshots);
-
+	public interface ISampleSink
+	{
+		void SampleAcquired(ThreadSnapshot[] threadSnapshots);
 		void SamplingComplete();
 	}
 }

@@ -1,23 +1,15 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Remoting;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Utilities;
+﻿using System.Threading.Tasks;
 using NewRelic.Providers.Storage.CallContext;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using Telerik.JustMock;
 using NewRelic.Agent.Core.CallStack;
 
 namespace NewRelic.Providers.CallStack.AsyncLocalTests
 {
-	
+
 	[TestFixture]
 	public class CallStackTrackerTests
 	{
-		[NotNull]
 		private ICallStackManager _tracker;
 
 		[SetUp]

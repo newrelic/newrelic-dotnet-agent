@@ -12,7 +12,7 @@ namespace NewRelic.TypeInstantiation.UnitTests
 		/// <param name="assemblyResolver">Can be null. A static ResolveEventHandler that will be used to resolve assembly load failures.</param>
 		/// <param name="inputData">The parameter to be passed to the action if it takes a parameter.</param>
 		/// <returns>The return value from the function or null if the function doesn't return anything.</returns>
-		public static Object IsolateMethodInAppDomain(Delegate method, params Object[] inputData)
+		public static object IsolateMethodInAppDomain(Delegate method, params object[] inputData)
 		{
 			var appDomain = CreateIsolatedDomain();
 			var crossAppDomainObject = CreateCrossAppDomainObject(appDomain);
@@ -45,7 +45,7 @@ namespace NewRelic.TypeInstantiation.UnitTests
 		}
 
 
-		private static Object ExecuteAction(CrossAppDomainObject crossAppDomainObject, Delegate method, params Object[] input)
+		private static object ExecuteAction(CrossAppDomainObject crossAppDomainObject, Delegate method, params object[] input)
 		{
 			crossAppDomainObject.Execute(method, input);
 
@@ -58,9 +58,9 @@ namespace NewRelic.TypeInstantiation.UnitTests
 
 		private class CrossAppDomainObject : MarshalByRefObject
 		{
-			public Object Result { get; private set; }
+			public object Result { get; private set; }
 
-			public void Execute(Delegate action, params Object[] input)
+			public void Execute(Delegate action, params object[] input)
 			{
 				try
 				{

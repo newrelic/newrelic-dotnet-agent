@@ -1,10 +1,8 @@
-﻿using System.Linq.Expressions;
-using System.Net;
+﻿using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing.ConnectionString;
 
 
 namespace NewRelic.Providers.Wrapper.MongoDb26
@@ -41,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true,
 				connectionInfo: connectionInfo);
 
-			if (!instrumentedMethodCall.IsAsync)
+			if (!operation.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
 			{
 				return Delegates.GetDelegateFor(segment);
 			}

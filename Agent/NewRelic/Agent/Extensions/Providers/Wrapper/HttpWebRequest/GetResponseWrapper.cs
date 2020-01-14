@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions.Collections;
@@ -39,7 +38,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 				);
 		}
 
-		private static void TryProcessResponse([CanBeNull] WebResponse response, [NotNull] ITransaction transaction, [CanBeNull] ISegment segment)
+		private static void TryProcessResponse(WebResponse response, ITransaction transaction, ISegment segment)
 		{
 			if (segment == null)
 			{

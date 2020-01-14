@@ -13,6 +13,9 @@
       <match assemblyName="NewRelic.LogEnrichers.Serilog" className="NewRelic.LogEnrichers.Serilog.NewRelicFormatter">
         <exactMethodMatcher methodName=".ctor" />
       </match>
+      <match assemblyName="NewRelic.LogEnrichers.NLog" className="NewRelic.LogEnrichers.NLog.NewRelicJsonLayout">
+        <exactMethodMatcher methodName=".ctor" />
+      </match>
     </tracerFactory>
   </instrumentation>
 </extension>

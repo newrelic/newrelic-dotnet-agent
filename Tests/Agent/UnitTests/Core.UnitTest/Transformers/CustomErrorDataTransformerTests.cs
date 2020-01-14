@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
@@ -16,25 +14,18 @@ namespace NewRelic.Agent.Core.Transformers
 	[TestFixture]
 	public class CustomErrorDataTransformerTests
 	{
-		[NotNull]
 		private CustomErrorDataTransformer _customErrorDataTransformer;
 
-		[NotNull]
 		private IConfiguration _configuration;
 
-		[NotNull]
 		private IAttributeService _attributeService;
 
-		[NotNull]
 		private IErrorTraceMaker _errorTraceMaker;
 
-		[NotNull]
 		private IErrorTraceAggregator _errorTraceAggregator;
 
-		[NotNull]
 		private IErrorEventMaker _errorEventMaker;
 
-		[NotNull]
 		private IErrorEventAggregator _errorEventAggregator;
 
 		[SetUp]
@@ -103,7 +94,7 @@ namespace NewRelic.Agent.Core.Transformers
 				.DoInstead<Attributes, ErrorData>((attributes, _) => attributesPassedToErrorTraceMaker = attributes);
 
 			// ACT
-			var inputAttributes = new Dictionary<String, String>
+			var inputAttributes = new Dictionary<string, string>
 			{
 				{"key1", "value1"},
 				{"key2", "value2"}

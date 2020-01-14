@@ -1,26 +1,18 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
-using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.SharedInterfaces;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
-using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
@@ -116,7 +108,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			_customEventAggregator = Mock.Create<ICustomEventAggregator>();
 
 			_agentTimerService = Mock.Create<IAgentTimerService>();
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService);
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>());
 			_customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator);
 		}
 
@@ -207,16 +199,16 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 		public class TestCase
 		{
-			[JsonProperty(PropertyName = "test_name"), NotNull, UsedImplicitly]
+			[JsonProperty(PropertyName = "test_name")]
 			public readonly string TestName;
 
-			[JsonProperty(PropertyName = "connect_response"), NotNull, UsedImplicitly]
+			[JsonProperty(PropertyName = "connect_response")]
 			public readonly IDictionary<string, bool> ConnectResponse;
 
-			[JsonProperty(PropertyName = "expected_data_seen"), NotNull, UsedImplicitly]
+			[JsonProperty(PropertyName = "expected_data_seen")]
 			public readonly IList<IDictionary<string, object>> ExpectedDataSeen;
 
-			[JsonProperty(PropertyName = "expected_endpoint_calls"), NotNull, UsedImplicitly]
+			[JsonProperty(PropertyName = "expected_endpoint_calls")]
 			public readonly IList<IDictionary<string, object>> ExpectedEndpointCalls;
 
 			public override string ToString()

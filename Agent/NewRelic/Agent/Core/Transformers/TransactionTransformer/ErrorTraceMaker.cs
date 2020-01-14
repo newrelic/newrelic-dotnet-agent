@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
@@ -14,25 +12,21 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <summary>
 		/// Returns the best possible error trace for a given transaction.
 		/// </summary>
-		[NotNull]
-		ErrorTraceWireModel GetErrorTrace([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes transactionAttributes, TransactionMetricName transactionMetricName, ErrorData errorData);
+		ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, Attributes transactionAttributes, TransactionMetricName transactionMetricName, ErrorData errorData);
 
 		/// <summary>
 		/// Returns an error trace for the given custom error data. 
 		/// </summary>
-		[NotNull]
-		ErrorTraceWireModel GetErrorTrace([NotNull] Attributes customAttributes, ErrorData errorData);
+		ErrorTraceWireModel GetErrorTrace(Attributes customAttributes, ErrorData errorData);
 	}
 
 	public class ErrorTraceMaker : IErrorTraceMaker
 	{
-		[NotNull]
 		private readonly IConfigurationService _configurationService;
 
-		[NotNull]
 		private readonly IAttributeService _attributeService;
 
-		public ErrorTraceMaker([NotNull] IConfigurationService configurationService, [NotNull] IAttributeService attributeService)
+		public ErrorTraceMaker(IConfigurationService configurationService, IAttributeService attributeService)
 		{
 			_configurationService = configurationService;
 			_attributeService = attributeService;
@@ -50,7 +44,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <param name="customAttributes"></param>
 		/// <param name="errorData"></param>
 		/// <returns></returns>
-		public ErrorTraceWireModel GetErrorTrace([NotNull] Attributes customAttributes, [NotNull] ErrorData errorData)
+		public ErrorTraceWireModel GetErrorTrace(Attributes customAttributes, ErrorData errorData)
 		{
 			var stackTrace = GetFormattedStackTrace(errorData);
 
@@ -78,7 +72,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <param name="transactionMetricName"></param>
 		/// <param name="errorData"></param>
 		/// <returns></returns>
-		public ErrorTraceWireModel GetErrorTrace([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes transactionAttributes, [NotNull] TransactionMetricName transactionMetricName, [NotNull] ErrorData errorData)
+		public ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, Attributes transactionAttributes, TransactionMetricName transactionMetricName, ErrorData errorData)
 		{
 			var stackTrace = GetFormattedStackTrace(errorData);
 
@@ -103,7 +97,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return stackTrace;
 		}
 
-		[NotNull]
 		private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(Attributes attributes, IList<string> stackTrace)
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(attributes, AttributeDestinations.ErrorTrace);

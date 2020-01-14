@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Helpers;
@@ -10,14 +9,13 @@ namespace NewRelic.Agent.Core.Metrics
 {
 	public static class RegexRuleExtensions
 	{
-		[Pure]
-		public static RuleResult ApplyTo(this RegexRule regexRule, [CanBeNull] String url)
+		public static RuleResult ApplyTo(this RegexRule regexRule, string url)
 		{
 			// Break the URL in chunks based on the rule configuration
 			var chunks = GetChunks(url, regexRule);
 
 			// Apply the rule to each chunk
-			Boolean anyChunkUpdated;
+			bool anyChunkUpdated;
 			var updatedChunks = ApplyRuleToChunks(regexRule, chunks, out anyChunkUpdated);
 
 			// If the rule didn't apply to any chunk then return a NoMatch result
@@ -29,31 +27,29 @@ namespace NewRelic.Agent.Core.Metrics
 				return RuleResult.Ignore;
 
 			// Otherwise return a successful result with the updated URL
-			var path = String.Join(MetricNames.PathSeparator, updatedChunks.ToArray());
+			var path = string.Join(MetricNames.PathSeparator, updatedChunks.ToArray());
 			return new RuleResult(true, path);
 		}
 
-		[NotNull]
-		private static IEnumerable<String> GetChunks([CanBeNull] String url, RegexRule regexRule)
+		private static IEnumerable<string> GetChunks(string url, RegexRule regexRule)
 		{
 			if (url == null)
-				return new List<String>();
+				return new List<string>();
 
 			// If each_segment is false, just return the whole URL as one chunk
 			if (!regexRule.EachSegment)
-				return new List<String> { url };
+				return new List<string> { url };
 
 			// Otherwise return each segment as a chunk
 			return url.Split(StringSeparators.PathSeparator);
 		}
 
-		[NotNull, Pure]
-		private static IEnumerable<String> ApplyRuleToChunks(RegexRule regexRule, [CanBeNull] IEnumerable<String> chunks, out Boolean anyChunkUpdated)
+		private static IEnumerable<string> ApplyRuleToChunks(RegexRule regexRule, IEnumerable<string> chunks, out bool anyChunkUpdated)
 		{
 			if (chunks == null)
 			{
 				anyChunkUpdated = false;
-				return new List<String>();
+				return new List<string>();
 			}
 
 			var wasChunkUpdated = false;
@@ -75,9 +71,9 @@ namespace NewRelic.Agent.Core.Metrics
 			return updatedChunks;
 		}
 
-		private static RuleResult ApplyRuleToChunk([CanBeNull] String chunk, RegexRule regexRule)
+		private static RuleResult ApplyRuleToChunk(string chunk, RegexRule regexRule)
 		{
-			if (String.IsNullOrEmpty(chunk) || !regexRule.MatchRegex.IsMatch(chunk))
+			if (string.IsNullOrEmpty(chunk) || !regexRule.MatchRegex.IsMatch(chunk))
 				return RuleResult.NoMatch;
 
 			if(regexRule.Ignore)
@@ -98,12 +94,11 @@ namespace NewRelic.Agent.Core.Metrics
 			public readonly static RuleResult NoMatch = new RuleResult(false, null);
 			public readonly static RuleResult Ignore = new RuleResult(true, null);
 
-			public readonly Boolean IsMatch;
+			public readonly bool IsMatch;
 
-			[CanBeNull]
-			public readonly String Replacement;
+			public readonly string Replacement;
 
-			public RuleResult(Boolean isMatch, [CanBeNull] String replacement)
+			public RuleResult(bool isMatch, string replacement)
 			{
 				IsMatch = isMatch;
 				Replacement = replacement;

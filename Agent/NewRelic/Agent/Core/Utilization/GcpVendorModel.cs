@@ -1,9 +1,8 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilization
 {
-    public class GcpVendorModel : IVendorModel
+	public class GcpVendorModel : IVendorModel
 	{
 		private readonly string _id;
 		private readonly string _machineType;

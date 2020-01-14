@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Metric;
@@ -21,15 +20,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 	[TestFixture]
 	public class CatHeaderHandlerTests
 	{
-		private const String NewRelicIdHttpHeader = "X-NewRelic-ID";
-		private const String AppDataHttpHeader = "X-NewRelic-App-Data";
-		private const String TransactionDataHttpHeader = "X-NewRelic-Transaction";
+		private const string NewRelicIdHttpHeader = "X-NewRelic-ID";
+		private const string AppDataHttpHeader = "X-NewRelic-App-Data";
+		private const string TransactionDataHttpHeader = "X-NewRelic-Transaction";
 		private const float ExpectedResponseTimeInSeconds = 0.5f;
 
-		[NotNull]
 		private CatHeaderHandler _catHeaderHandler;
 
-		[NotNull]
 		private IConfiguration _configuration;
 
 		[SetUp]
@@ -49,7 +46,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void TryDecodeInboundRequestHeaders_ReturnsNull_IfCatIsDisabled()
 		{
 			Mock.Arrange(() => _configuration.CrossApplicationTracingEnabled).Returns(false);
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{TransactionDataHttpHeader, Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
@@ -62,7 +59,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsNull_IfUsingIncorrectKey()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{"WRONG KEY", Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
@@ -75,7 +72,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsNull_IfDataIsNotEncoded()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{TransactionDataHttpHeader, "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]"}
 			};
@@ -88,7 +85,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsNull_IfDataIsNotFormattedCorrectly()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{"X-NewRelic-ID", Strings.Base64Encode("123")},
 				{"X-NewRelic-Transaction", "unexpectedValue"}
@@ -102,7 +99,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsRequestData_IfHeadersAreValid()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{"X-NewRelic-ID", Strings.Base64Encode("123")},
 				{"X-NewRelic-Transaction", Strings.Base64Encode(@"[""guid"", ""false"", ""tripId"", ""pathHash""]")}
@@ -239,7 +236,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		public void TryDecodeInboundResponseHeaders_ReturnsNull_IfCatIsDisabled()
 		{
 			Mock.Arrange(() => _configuration.CrossApplicationTracingEnabled).Returns(false);
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{AppDataHttpHeader, Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
@@ -252,7 +249,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundResponseHeaders_ReturnsNull_IfUsingIncorrectKey()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{"WRONG KEY", Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
@@ -265,7 +262,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundResponseHeaders_ReturnsNull_IfDataIsNotEncoded()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{AppDataHttpHeader, "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]"}
 			};
@@ -278,7 +275,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundResponseHeaders_ReturnsNull_IfDataIsNotFormattedCorrectly()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{AppDataHttpHeader, Strings.Base64Encode("[1]")}
 			};
@@ -291,7 +288,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		[Test]
 		public void TryDecodeInboundResponseHeaders_ReturnsResponseData_IfHeadersAreValid()
 		{
-			var headers = new Dictionary<String, String>
+			var headers = new Dictionary<string, string>
 			{
 				{AppDataHttpHeader, Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,\"guid\",false]")}
 			};
@@ -333,15 +330,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
 		#region helpers
 
-		[NotNull]
-		private IInternalTransaction BuildTestTransaction( String pathHash = null, IEnumerable<String> alternatePathHashes = null, String referrerGuid = null, String referrerTripId = null, String referrerPathHash = null, String referrerCrossProcessId = null, String syntheticsResourceId = null, String syntheticsJobId = null, String syntheticsMonitorId = null, Boolean isSynthetics = false, Boolean hasCatResponseHeaders = false)
+		private IInternalTransaction BuildTestTransaction(string pathHash = null, IEnumerable<string> alternatePathHashes = null, string referrerGuid = null, string referrerTripId = null, string referrerPathHash = null, string referrerCrossProcessId = null, string syntheticsResourceId = null, string syntheticsJobId = null, string syntheticsMonitorId = null, bool isSynthetics = false, bool hasCatResponseHeaders = false)
 		{
 			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var startTime = DateTime.Now;
 			var duration = TimeSpan.FromSeconds(1);
 			pathHash = pathHash ?? "pathHash";
 			referrerPathHash = referrerPathHash ?? "referrerPathHash";
-			alternatePathHashes = alternatePathHashes ?? Enumerable.Empty<String>();
+			alternatePathHashes = alternatePathHashes ?? Enumerable.Empty<string>();
 			referrerGuid = referrerGuid ?? Guid.NewGuid().ToString();
 			ITimer timer = Mock.Create<ITimer>();
 			Mock.Arrange(() => timer.Duration).Returns(duration);

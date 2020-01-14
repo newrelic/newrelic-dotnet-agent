@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Tracer;
 using NUnit.Framework;
 using System;
@@ -14,7 +13,6 @@ namespace NewRelic.Agent.Core.UnitTest
 		[TestFixture, Category("JustMock"), Category("MockingProfiler")]
 		public class Method_FinishTracer
 		{
-			[NotNull]
 			private TestUtilities.Logging _logger;
 
 			[OneTimeSetUp]
@@ -44,7 +42,7 @@ namespace NewRelic.Agent.Core.UnitTest
 			public void returns_null_when_tracer_object_is_null()
 			{
 				// ARRANGE
-				Object tracer = null;
+				object tracer = null;
 
 				// ACT
 				AgentShim.FinishTracer(tracer, null, null);
@@ -56,7 +54,7 @@ namespace NewRelic.Agent.Core.UnitTest
 			[Test]
 			public void does_not_throw_when_tracer_object_is_not_an_ITracer()
 			{
-				Object tracer = new Object();
+				object tracer = new object();
 				Assert.DoesNotThrow(() => AgentShim.FinishTracer(tracer, null, null));
 			}
 
@@ -66,7 +64,7 @@ namespace NewRelic.Agent.Core.UnitTest
 				// ARRANGE
 				var tracer = Mock.Create<ITracer>(Behavior.Strict);
 				Mock.Arrange(() => tracer.Finish(Arg.AnyObject, Arg.IsAny<Exception>())).OccursNever();
-				var exception = new Object();
+				var exception = new object();
 
 				// ACT
 				AgentShim.FinishTracer(tracer, null, exception);
@@ -80,7 +78,7 @@ namespace NewRelic.Agent.Core.UnitTest
 			{
 				// ARRANGE
 				var tracer = Mock.Create<ITracer>(Behavior.Strict);
-				var retrn = null as Object;
+				var retrn = null as object;
 				var exception = null as Exception;
 				Mock.Arrange(() => tracer.Finish(retrn, exception)).OccursOnce();
 
@@ -96,7 +94,7 @@ namespace NewRelic.Agent.Core.UnitTest
 			{
 				// ARRANGE
 				var tracer = Mock.Create<ITracer>(Behavior.Strict);
-				var retrn = new Object();
+				var retrn = new object();
 				var exception = null as Exception;
 				Mock.Arrange(() => tracer.Finish(retrn, exception)).OccursOnce();
 
@@ -112,7 +110,7 @@ namespace NewRelic.Agent.Core.UnitTest
 			{
 				// ARRANGE
 				var tracer = Mock.Create<ITracer>(Behavior.Strict);
-				var retrn = null as Object;
+				var retrn = null as object;
 				var exception = new Exception();
 				Mock.Arrange(() => tracer.Finish(retrn, exception)).OccursOnce();
 
@@ -127,7 +125,7 @@ namespace NewRelic.Agent.Core.UnitTest
 			public void Exception_does_not_bubble_up_when_thrown_from_FinishTracerImpl()
 			{
 				var tracer = Mock.Create<ITracer>(Behavior.Strict);
-				Mock.Arrange(() => tracer.Finish(null as Object, null as Exception)).Throws(new Exception());
+				Mock.Arrange(() => tracer.Finish(null as object, null as Exception)).Throws(new Exception());
 				Assert.DoesNotThrow(() => AgentShim.FinishTracer(tracer, null, null));
 			}
 		}

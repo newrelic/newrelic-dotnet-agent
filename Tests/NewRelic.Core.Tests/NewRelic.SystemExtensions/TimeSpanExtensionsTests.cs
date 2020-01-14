@@ -32,7 +32,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		public void nullable_double_to_time_span()
 		{
 			var expected = TimeSpan.FromSeconds(3.5);
-			Double? inputFloat = 3.5;
+			double? inputFloat = 3.5;
 
 			var actual = TimeSpanExtensions.FromSeconds(inputFloat);
 
@@ -42,7 +42,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[Test]
 		public void null_double_to_time_span()
 		{
-			Double? inputFloat = null;
+			double? inputFloat = null;
 
 			var actual = TimeSpanExtensions.FromSeconds(inputFloat);
 

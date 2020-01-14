@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core
 {
@@ -16,7 +15,7 @@ namespace NewRelic.Agent.Core
 		/// </summary>
 		/// <param name="fromUser">The string given to the API from the user; may be nefariously constructed.</param>
 		/// <returns>fromUser or a copy thereof, appropriately modified</returns>
-		[NotNull] public static String ClampLength([NotNull] String fromUser)
+		public static string ClampLength(string fromUser)
 		{
 			return ClampLength(fromUser, CLAMPED_STRING_LENGTH);
 		}
@@ -27,7 +26,7 @@ namespace NewRelic.Agent.Core
 		/// </summary>
 		/// <param name="fromUser">The exception given to the API from the user; may be nefariously constructed.</param>
 		/// <returns>fromUser or a copy thereof, appropriately modified</returns>
-		[NotNull] public static Exception ClampLength([NotNull] Exception fromUser)
+		public static Exception ClampLength(Exception fromUser)
 		{
 			return ClampLength(fromUser, CLAMPED_EXCEPTION_LENGTH);
 		}
@@ -38,7 +37,7 @@ namespace NewRelic.Agent.Core
 		/// <param name="fromUser">The string given to use from the user, which may be nefariously constructed.</param>
 		/// <param name="maxLength">The maximum length allowable, in characters.</param>
 		/// <returns>fromUser if it is small enough, or a copy of fromUser retaining only the prefix of length maxLength characters.</returns>
-		[NotNull] public static String ClampLength([NotNull] String fromUser, int maxLength)
+		public static string ClampLength(string fromUser, int maxLength)
 		{
 			if (fromUser.Length > maxLength)
 			{
@@ -66,7 +65,7 @@ namespace NewRelic.Agent.Core
 			// Measure the total length, and return the given dictionary if it is small enough.
 			{
 				int totalLength = 0;
-				foreach (KeyValuePair<String, String> kvp in fromUser)
+				foreach (KeyValuePair<string, string> kvp in fromUser)
 				{
 					totalLength += (kvp.Key != null) ? kvp.Key.Length : 0;
 					totalLength += (kvp.Value != null) ? kvp.Value.Length : 0;
@@ -85,7 +84,7 @@ namespace NewRelic.Agent.Core
 			{
 				IDictionary<string, string> clamped = new Dictionary<string, string>();
 				int totalLength = 0;
-				foreach (KeyValuePair<String, String> kvp in fromUser)
+				foreach (KeyValuePair<string, string> kvp in fromUser)
 				{
 					totalLength += (kvp.Key != null) ? kvp.Key.Length : 0;
 					totalLength += (kvp.Value != null) ? kvp.Value.Length : 0;
@@ -105,7 +104,7 @@ namespace NewRelic.Agent.Core
 		/// <param name="fromUser">The exception given to use from the user, which may be nefariously constructed.</param>
 		/// <param name="maxLength">The maximum length allowable, in characters.</param>
 		/// <returns>fromUser, appropriate modified</returns>
-		[NotNull] public static Exception ClampLength([NotNull] Exception fromUser, int maxLength)
+		public static Exception ClampLength(Exception fromUser, int maxLength)
 		{
 			{
 				int totalLength = 0;

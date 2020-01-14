@@ -1,5 +1,4 @@
 ﻿using NewRelic.Core;
-using System;
 using System.Text;
 
 namespace NewRelic.Agent.Core.Utils
@@ -75,7 +74,7 @@ namespace NewRelic.Agent.Core.Utils
 		private bool _hasLeadingExtraBytes = false;
 		private bool _hasTrailingExtraBytes = false;
 
-		private static int GetLeadingBytesCount(Encoding encoding, Byte[] buffer, Int32 offset, Int32 count)
+		private static int GetLeadingBytesCount(Encoding encoding, byte[] buffer, int offset, int count)
 		{
 			var result = 0;
 

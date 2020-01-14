@@ -1,18 +1,15 @@
 ﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.SystemExtensions;
-using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Metric
 {
 	public static class ApdexStats
 	{
-		private const String ApdexPerfZoneSatisfying = "S";
-		private const String ApdexPerfZoneTolerating = "T";
-		private const String ApdexPerfZoneFrustrating = "F";
+		private const string ApdexPerfZoneSatisfying = "S";
+		private const string ApdexPerfZoneTolerating = "T";
+		private const string ApdexPerfZoneFrustrating = "F";
 
-		public static String GetApdexPerfZoneOrNull(TimeSpan? responseTime, TimeSpan? apdexT)
+		public static string GetApdexPerfZoneOrNull(TimeSpan? responseTime, TimeSpan? apdexT)
 		{
 			if (responseTime == null || apdexT == null)
 				return null;

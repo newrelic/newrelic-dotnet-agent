@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
@@ -12,14 +11,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 	{
 		public const string WrapperName = "Asp35.FilterTracer";
 
-		private const String BrowerAgentInjectedKey = "NewRelic.BrowerAgentInjected";
+		private const string BrowerAgentInjectedKey = "NewRelic.BrowerAgentInjected";
 
 		public bool IsTransactionRequired => false;
 
 		private static class Statics
 		{
-			[NotNull]
-			public static readonly Func<HttpWriter, Boolean> IgnoringFurtherWrites = VisibilityBypasser.Instance.GeneratePropertyAccessor<HttpWriter, Boolean>("IgnoringFurtherWrites");
+			public static readonly Func<HttpWriter, bool> IgnoringFurtherWrites = VisibilityBypasser.Instance.GeneratePropertyAccessor<HttpWriter, bool>("IgnoringFurtherWrites");
 		}
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
@@ -61,8 +59,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			return Delegates.NoOp;
 		}
 
-		[CanBeNull]
-		private static Stream TryGetStreamInjector([NotNull] IAgent agent, [NotNull] HttpContext httpContext)
+		private static Stream TryGetStreamInjector(IAgent agent, HttpContext httpContext)
 		{
 			var currentFilter = httpContext.Response.Filter;
 			var contentEncoding = httpContext.Response.ContentEncoding;

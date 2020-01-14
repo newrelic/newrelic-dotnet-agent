@@ -8,9 +8,6 @@
         <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
-    </ItemGroup>
-    <ItemGroup>
         <Reference Include="System.Web" />
     </ItemGroup>
     <ItemGroup>

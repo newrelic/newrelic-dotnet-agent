@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -17,11 +16,11 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 	public class SqlParsingCrossAgentTest
 	{
 		[TestCaseSource("GetSqlParsingTestCases")]
-		public void SqlParsingTest([NotNull] String inputSql, [NotNull] String expectedOperation, [NotNull] String expectedTable)
+		public void SqlParsingTest(string inputSql, string expectedOperation, string expectedTable)
 		{
 			var parsed = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, inputSql);
-			Assert.AreEqual(expectedOperation.ToLower(), parsed.Operation, String.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
-			Assert.AreEqual(expectedTable?.ToLower(), parsed.Model, String.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
+			Assert.AreEqual(expectedOperation.ToLower(), parsed.Operation, string.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
+			Assert.AreEqual(expectedTable?.ToLower(), parsed.Model, string.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
 		}
 
 
@@ -82,10 +81,10 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 		public class SqlParsingTestCase
 		{
 			[JsonProperty(PropertyName = "input")]
-			public String Input;
+			public string Input;
 
 			[JsonProperty(PropertyName = "operation")]
-			public String ExpectedOperation;
+			public string ExpectedOperation;
 
 			[JsonProperty(PropertyName = "table")]
 			public string ExpectedTable;

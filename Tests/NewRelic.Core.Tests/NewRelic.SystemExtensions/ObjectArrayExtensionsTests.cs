@@ -19,15 +19,15 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[Test]
 		public void ExtractAs_Throws_IfSourceIsNull()
 		{
-			Assert.Throws<NullReferenceException>(() => ((Object[])null).ExtractAs<String>(1));
+			Assert.Throws<NullReferenceException>(() => ((object[])null).ExtractAs<string>(1));
 		}
 
 		[Test]
 		public void ExtractAs_Throws_IfSourceIsEmpty()
 		{
-			var objects = new Object[0];
+			var objects = new object[0];
 
-			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractAs<String>(0));
+			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractAs<string>(0));
 		}
 
 		[Test]
@@ -35,7 +35,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		{
 			var objects = new object[] { "banana" };
 
-			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractAs<String>(5));
+			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractAs<string>(5));
 		}
 
 		[Test]
@@ -43,15 +43,15 @@ namespace NewRelic.SystemExtensions.UnitTests
 		{
 			var objects = new object[] { 1 };
 
-			Assert.Throws<InvalidCastException>(() => objects.ExtractAs<String>(0));
+			Assert.Throws<InvalidCastException>(() => objects.ExtractAs<string>(0));
 		}
 
 		[Test]
 		public void ExtractAs_ReturnsValue_IfValueOfExpectedTypeExists()
 		{
-			var objects = new Object[] { 1, "banana" };
+			var objects = new object[] { 1, "banana" };
 
-			var result = objects.ExtractAs<String>(1);
+			var result = objects.ExtractAs<string>(1);
 
 			Assert.AreEqual("banana", result);
 		}
@@ -60,7 +60,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		public void ExtractAs_ReturnsValue_IfValueCanBeCastToExpectedType()
 		{
 			var fooBar = new FooBar();
-			var objects = new Object[] { fooBar };
+			var objects = new object[] { fooBar };
 
 			var result = objects.ExtractAs<Foo>(0);
 
@@ -70,9 +70,9 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[Test]
 		public void ExtractAs_ReturnsNull_IfValueWasNull()
 		{
-			var objects = new Object[] { null };
+			var objects = new object[] { null };
 
-			var result = objects.ExtractAs<String>(0);
+			var result = objects.ExtractAs<string>(0);
 
 			Assert.Null(result);
 		}
@@ -84,15 +84,15 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[Test]
 		public void ExtractNotNullAs_Throws_IfSourceIsNull()
 		{
-			Assert.Throws<NullReferenceException>(() => ((Object[])null).ExtractNotNullAs<String>(1));
+			Assert.Throws<NullReferenceException>(() => ((object[])null).ExtractNotNullAs<string>(1));
 		}
 
 		[Test]
 		public void ExtractNotNullAs_Throws_IfSourceIsEmpty()
 		{
-			var objects = new Object[0];
+			var objects = new object[0];
 
-			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractNotNullAs<String>(0));
+			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractNotNullAs<string>(0));
 		}
 
 		[Test]
@@ -100,7 +100,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		{
 			var objects = new object[] { "banana" };
 
-			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractNotNullAs<String>(5));
+			Assert.Throws<IndexOutOfRangeException>(() => objects.ExtractNotNullAs<string>(5));
 		}
 
 		[Test]
@@ -108,15 +108,15 @@ namespace NewRelic.SystemExtensions.UnitTests
 		{
 			var objects = new object[] { 1 };
 
-			Assert.Throws<InvalidCastException>(() => objects.ExtractNotNullAs<String>(0));
+			Assert.Throws<InvalidCastException>(() => objects.ExtractNotNullAs<string>(0));
 		}
 
 		[Test]
 		public void ExtractNotNullAs_ReturnsValue_IfValueOfExpectedTypeExists()
 		{
-			var objects = new Object[] { 1, "banana" };
+			var objects = new object[] { 1, "banana" };
 
-			var result = objects.ExtractNotNullAs<String>(1);
+			var result = objects.ExtractNotNullAs<string>(1);
 
 			Assert.AreEqual("banana", result);
 		}
@@ -125,7 +125,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		public void ExtractNotNullAs_ReturnsValue_IfValueCanBeCastToExpectedType()
 		{
 			var fooBar = new FooBar();
-			var objects = new Object[] { fooBar };
+			var objects = new object[] { fooBar };
 
 			var result = objects.ExtractNotNullAs<Foo>(0);
 
@@ -135,9 +135,9 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[Test]
 		public void ExtractNotNullAs_Throws_IfValueWasNull()
 		{
-			var objects = new Object[] { null };
+			var objects = new object[] { null };
 
-			Assert.Throws<NullReferenceException>(() => objects.ExtractNotNullAs<String>(0));
+			Assert.Throws<NullReferenceException>(() => objects.ExtractNotNullAs<string>(0));
 		}
 
 		#endregion ExtractNotNullAs

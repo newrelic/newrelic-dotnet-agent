@@ -1,36 +1,32 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.ThreadProfiling;
+﻿using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Core.Logging;
-using System;
 using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands
 {
 	public class StopThreadProfilerCommand : AbstractCommand
 	{
-		[NotNull]
 		public IThreadProfilingSessionControl ThreadProfilingService { get; set; }
 		
-		public StopThreadProfilerCommand([NotNull] IThreadProfilingSessionControl threadProfilingService)
+		public StopThreadProfilerCommand(IThreadProfilingSessionControl threadProfilingService)
 		{
 			Name = "stop_profiler";
 			ThreadProfilingService = threadProfilingService;
 		}
 
-		public override Object Process(IDictionary<String, Object> arguments)
+		public override object Process(IDictionary<string, object> arguments)
 		{
 			var errorMessage = StopThreadProfilingSessions(arguments);
 			if (errorMessage == null)
-				return new Dictionary<String, Object>();
+				return new Dictionary<string, object>();
 
-			return new Dictionary<String, Object>
+			return new Dictionary<string, object>
 			{
 				{"error", errorMessage}
 			};
 		}
 
-		[CanBeNull]
-		private String StopThreadProfilingSessions(IDictionary<String, Object> arguments)
+		private string StopThreadProfilingSessions(IDictionary<string, object> arguments)
 		{
 			if (arguments == null)
 				return "No arguments sent with stop_profiler command.";

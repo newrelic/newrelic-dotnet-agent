@@ -10,7 +10,7 @@ namespace NewRelic.SystemExtensions
 		/// <summary>
 		/// Tries to extract an object from the given array at the given index as the given type. Will throw if any condition makes that situation impossible (e.g. index is out of bounds, object at given index can not be cast to given type, etc).
 		/// </summary>
-		public static T ExtractAs<T>(this Object[] objects, Int32 index) where T : class
+		public static T ExtractAs<T>(this object[] objects, int index) where T : class
 		{
 			if (objects == null)
 			{
@@ -41,7 +41,7 @@ namespace NewRelic.SystemExtensions
 		/// <summary>
 		/// Tries to extract an object from the given array at the given index as the given type. Will throw if any condition makes that situation impossible (e.g. index is out of bounds, object at given index can not be cast to given type, etc) or if the extracted value is null.
 		/// </summary>
-		public static T ExtractNotNullAs<T>(this Object[] objects, Int32 index) where T : class
+		public static T ExtractNotNullAs<T>(this object[] objects, int index) where T : class
 		{
 			var value = ExtractAs<T>(objects, index);
 			if (value != null)

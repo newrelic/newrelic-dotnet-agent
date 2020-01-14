@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using NUnit.Framework;
@@ -11,7 +10,7 @@ namespace NewRelic.Reflection.UnitTests
 	{
 		public class Foo
 		{
-			public Int32 _int32Field = 7;
+			public int _int32Field = 7;
 		}
 
 		[Test]
@@ -32,7 +31,7 @@ namespace NewRelic.Reflection.UnitTests
 
 
 			// setup
-			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<Foo, Int32>(fieldName);
+			var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldReadAccessor<Foo, int>(fieldName);
 			// warm up
 			for (var i = 0; i < 1000; ++i)
 				DoSomething(fieldAccessor(foo));
@@ -56,7 +55,7 @@ namespace NewRelic.Reflection.UnitTests
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static void DoSomething(Object thing)
+		public static void DoSomething(object thing)
 		{
 
 		}

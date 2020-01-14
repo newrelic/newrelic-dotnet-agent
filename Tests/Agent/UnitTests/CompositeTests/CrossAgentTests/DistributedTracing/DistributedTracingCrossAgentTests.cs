@@ -2,6 +2,8 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
@@ -102,6 +104,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 			_compositeTestAgent.ServerConfiguration.PrimaryApplicationId = "primaryApplicationId";
 
 			_compositeTestAgent.PushConfiguration();
+			//SpanEvents were not enabled when the aggregators were first started so we need to start them here.
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		void MakeTransaction(DistributedTraceTestData testData)

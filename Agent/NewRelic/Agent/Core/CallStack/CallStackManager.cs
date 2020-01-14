@@ -1,7 +1,5 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Extensions.Providers;
+﻿using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Core.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -37,7 +35,7 @@ namespace NewRelic.Agent.Core.CallStack
 		bool AttachToAsync();
 	}
 
-	public delegate void CallStackPop(Object uniqueObject, Object uniqueParent);
+	public delegate void CallStackPop(object uniqueObject, object uniqueParent);
 
 	public interface ICallStackManagerFactory
 	{
@@ -181,7 +179,6 @@ namespace NewRelic.Agent.Core.CallStack
 
 	public class CallStackManager : BaseCallStackManager
 	{
-		[NotNull]
 		private readonly IEnumerable<IContextStorage<int?>> _parentTrackers;
 
 		public CallStackManager(List<IContextStorage<int?>> parentTrackers)

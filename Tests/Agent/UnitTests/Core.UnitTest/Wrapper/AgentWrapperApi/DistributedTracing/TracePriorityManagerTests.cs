@@ -1,6 +1,4 @@
-﻿using System;
-using NUnit.Framework;
-using NewRelic.Agent.Core.DistributedTracing;
+﻿using NUnit.Framework;
 using NewRelicCore = NewRelic.Core;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing

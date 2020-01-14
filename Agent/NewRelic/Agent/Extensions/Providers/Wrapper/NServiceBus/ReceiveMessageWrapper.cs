@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -54,8 +53,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 				});
 		}
 
-		[CanBeNull]
-		private static string TryGetQueueName([NotNull] LogicalMessage logicalMessage)
+		private static string TryGetQueueName(LogicalMessage logicalMessage)
 		{
 			if (logicalMessage.MessageType == null)
 				return null;

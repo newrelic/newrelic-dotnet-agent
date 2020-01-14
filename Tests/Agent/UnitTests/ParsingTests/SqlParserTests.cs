@@ -99,7 +99,7 @@ namespace ParsingTests
 		[TestCase("SELECT name FROM user WHERE name like 'semi ; colon';", ExpectedResult = false)]
 		[TestCase("/* This is just a comment but for some reason I put a semicolon in it; I hope this doesn't ruin anything */ SELECT name FROM user;", ExpectedResult = false)]
 
-		public static bool SqlParserTest_TestIsSingleSqlStatement(String sql)
+		public static bool SqlParserTest_TestIsSingleSqlStatement(string sql)
 		{
 			return SqlParser.IsSingleSqlStatement(sql);
 		}
@@ -501,7 +501,7 @@ namespace ParsingTests
 				foreach (string s in prefixes)
 				{
 					StringBuilder sb = new StringBuilder();
-					string[] splits = s.Split(new Char[] { '%' });
+					string[] splits = s.Split(new char[] { '%' });
 					for (int i = 0; i < splits.Length; i++)
 					{
 						string substring = splits[i];
@@ -596,16 +596,16 @@ namespace ParsingTests
 		}
 
 		private readonly Random _rng = new Random();
-		private const String _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-		private String RandomString(int size)
+		private string RandomString(int size)
 		{
 			char[] buffer = new char[size];
 			for (int i = 0; i < size; i++)
 			{
 				buffer[i] = _chars[_rng.Next(_chars.Length)];
 			}
-			return new String(buffer);
+			return new string(buffer);
 		}
 	}
 }

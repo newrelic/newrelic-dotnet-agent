@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
@@ -572,7 +571,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 		#region helpers
 
-		[NotNull]
 		private static IInternalTransaction BuildMockTransaction(bool hasIncomingPayload = false)
 		{
 			var transaction = Mock.Create<IInternalTransaction>();

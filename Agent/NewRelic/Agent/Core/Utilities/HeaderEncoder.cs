@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.Utilities
 		/// <param name="data">The data to encode. Must not be null.</param>
 		/// <param name="encodingKey">The encoding key. Can be null.</param>
 		/// <returns>The serialized and encoded data.</returns>
-		public static String SerializeAndEncode(object data, string encodingKey)
+		public static string SerializeAndEncode(object data, string encodingKey)
 		{
 			var serializedData = JsonConvert.SerializeObject(data);
 			if (serializedData == null)

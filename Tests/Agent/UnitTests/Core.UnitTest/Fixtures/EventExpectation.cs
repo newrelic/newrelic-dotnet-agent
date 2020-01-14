@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 
@@ -7,9 +6,8 @@ namespace NewRelic.Agent.Core.Fixtures
 {
 	public class EventExpectation<T> : IDisposable
 	{
-		[NotNull]
 		private readonly EventSubscription<T> _subscription;
-		private Boolean _eventWasFired;
+		private bool _eventWasFired;
 
 		public EventExpectation()
 		{

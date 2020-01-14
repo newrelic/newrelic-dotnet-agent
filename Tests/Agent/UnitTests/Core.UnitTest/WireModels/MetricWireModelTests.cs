@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Aggregators;
+﻿using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
@@ -13,9 +12,9 @@ namespace NewRelic.Agent.Core.WireModels
 	[TestFixture]
 	public class MetricWireModelTests
 	{
-		[NotNull] private readonly IMetricBuilder _metricBuilder = Utilities.GetSimpleMetricBuilder();
+		private readonly IMetricBuilder _metricBuilder = Utilities.GetSimpleMetricBuilder();
 
-		[NotNull] private readonly IMetricNameService _metricNameService = Mock.Create<IMetricNameService>();
+		private readonly IMetricNameService _metricNameService = Mock.Create<IMetricNameService>();
 
 		[SetUp]
 		public void SetUp()

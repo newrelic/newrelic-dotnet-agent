@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.ServiceModel;
-using JetBrains.Annotations;
 
 namespace NewRelic.Providers.Storage.OperationContext
 {
@@ -18,13 +16,11 @@ namespace NewRelic.Providers.Storage.OperationContext
 	/// </remarks>
 	public class OperationContextExtension : IExtension<System.ServiceModel.OperationContext>
 	{
-		[NotNull]
 		private readonly IDictionary _items = new Hashtable();
 
 		///<summary>
 		/// <see cref="IDictionary"/> stored in current instance context.
 		///</summary>
-		[NotNull]
 		public IDictionary Items { get { return _items; } }
 
 		///<summary>
@@ -48,7 +44,7 @@ namespace NewRelic.Providers.Storage.OperationContext
 			}
 		}
 
-		public static Boolean CanProvide { get { return System.ServiceModel.OperationContext.Current != null; } }
+		public static bool CanProvide { get { return System.ServiceModel.OperationContext.Current != null; } }
 
 		/// <summary>
 		/// <see cref="IExtension{T}"/> Attach() method

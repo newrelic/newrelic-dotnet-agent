@@ -1,6 +1,5 @@
 using System;
 using NUnit.Framework;
-using NewRelic.Agent.Core.UnitTest;
 
 namespace NewRelic.Agent.Core.Config
 {

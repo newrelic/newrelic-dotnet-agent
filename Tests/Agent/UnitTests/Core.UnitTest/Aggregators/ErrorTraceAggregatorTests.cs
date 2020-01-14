@@ -24,7 +24,9 @@ namespace NewRelic.Agent.Core.Aggregators
 		private IAgentHealthReporter _agentHealthReporter;
 		private IProcessStatic _processStatic;
 		private ConfigurationAutoResponder _configurationAutoResponder;
+		private IScheduler _scheduler;
 		private Action _harvestAction;
+		private TimeSpan? _harvestCycle;
 
 		[SetUp]
 		public void SetUp()
@@ -35,13 +37,15 @@ namespace NewRelic.Agent.Core.Aggregators
 			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
-			var scheduler = Mock.Create<IScheduler>();
-			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
+			_scheduler = Mock.Create<IScheduler>();
+			Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
 			_processStatic = Mock.Create<IProcessStatic>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-			_errorTraceAggregator = new ErrorTraceAggregator(_dataTransportService, scheduler, _processStatic, _agentHealthReporter);
+			_errorTraceAggregator = new ErrorTraceAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -49,6 +53,27 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			_errorTraceAggregator.Dispose();
 			_configurationAutoResponder.Dispose();
+		}
+
+		[Test]
+		public void When_error_traces_disabled_harvest_is_not_scheduled()
+		{
+			_configurationAutoResponder.Dispose();
+			_errorTraceAggregator.Dispose();
+			var configuration = Mock.Create<IConfiguration>();
+			Mock.Arrange(() => configuration.ErrorCollectorEnabled).Returns(false);
+			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+			_errorTraceAggregator = new ErrorTraceAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
+		}
+
+		[Test]
+		public void Harvest_cycle_should_match_default_cycle()
+		{
+			Assert.AreEqual(TimeSpan.FromMinutes(1), _harvestCycle);
 		}
 
 		#region Conifiguration
@@ -270,8 +295,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportErrorTraceCollected(), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportErrorTracesRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportErrorTracesSent(Arg.IsAny<Int32>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportErrorTracesRecollected(Arg.IsAny<int>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportErrorTracesSent(Arg.IsAny<int>()), Occurs.Never());
 		}
 
 		#endregion

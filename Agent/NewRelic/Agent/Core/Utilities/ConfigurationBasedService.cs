@@ -1,6 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Requests;
@@ -12,13 +10,11 @@ namespace NewRelic.Agent.Core.Utilities
 	/// </summary>
 	public abstract class ConfigurationBasedService : DisposableService
 	{
-		[NotNull]
 		private readonly EventSubscription<ConfigurationUpdatedEvent> _configurationUpdatedEventSubscription;
 
 		/// <summary>
 		/// The most up-to-date configuration available.
 		/// </summary>
-		[NotNull]
 		protected IConfiguration _configuration { get; private set; }
 
 		protected ConfigurationBasedService()
@@ -34,7 +30,7 @@ namespace NewRelic.Agent.Core.Utilities
 		/// </summary>
 		protected abstract void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource);
 
-		protected void OnConfigurationUpdatedInternal([NotNull] ConfigurationUpdatedEvent eventData)
+		protected void OnConfigurationUpdatedInternal(ConfigurationUpdatedEvent eventData)
 		{
 			if (eventData.Configuration.ConfigurationVersion <= _configuration.ConfigurationVersion)
 				return;

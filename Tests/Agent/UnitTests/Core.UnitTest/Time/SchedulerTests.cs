@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Fixtures;
 using NUnit.Framework;
 
@@ -9,7 +8,6 @@ namespace NewRelic.Agent.Core.Time
 	[TestFixture]
 	public class SchedulerTests
 	{
-		[NotNull]
 		private Scheduler _scheduler;
 
 		[SetUp]
@@ -113,7 +111,7 @@ namespace NewRelic.Agent.Core.Time
 			AssertEventuallyTrue(() => wasExecuted);
 		}
 
-		private static void AssertEventuallyTrue([NotNull] Func<Boolean> wasExecutedFunc)
+		private static void AssertEventuallyTrue(Func<bool> wasExecutedFunc)
 		{
 			Assertions.Eventually(wasExecutedFunc, TimeSpan.FromSeconds(5));
 		}

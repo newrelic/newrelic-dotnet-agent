@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Utilities;
@@ -10,21 +9,17 @@ namespace NewRelic.Agent.Core.Utilization
 {
 	public class UtilizationStore
 	{
-		[NotNull]
 		private readonly ISystemInfo _systemInfo;
 
-		[NotNull]
 		private readonly IDnsStatic _dnsStatic;
 
-		[CanBeNull]
 		private readonly IConfiguration _configuration;
 
-		[NotNull]
 		private readonly IAgentHealthReporter _agentHealthReporter;
 
 		private const int MaxBootIdLength = 128;
 
-		public UtilizationStore([NotNull] ISystemInfo systemInfo, [NotNull] IDnsStatic dnsStatic, [CanBeNull] IConfiguration configuration, [NotNull]IAgentHealthReporter agentHealthReporter)
+		public UtilizationStore(ISystemInfo systemInfo, IDnsStatic dnsStatic, IConfiguration configuration, IAgentHealthReporter agentHealthReporter)
 		{
 			_systemInfo = systemInfo;
 			_dnsStatic = dnsStatic;
@@ -32,7 +27,6 @@ namespace NewRelic.Agent.Core.Utilization
 			_agentHealthReporter = agentHealthReporter;
 		}
 
-		[NotNull]
 		public UtilizationSettingsModel GetUtilizationSettings()
 		{
 			var totalMemory = _systemInfo.GetTotalPhysicalMemoryBytes();
@@ -59,14 +53,12 @@ namespace NewRelic.Agent.Core.Utilization
 			return bootId?.Length > maxLength ? bootId.Substring(0, maxLength) : bootId;
 		}
 
-		[NotNull]
 		public IDictionary<string, IVendorModel> GetVendorSettings()
 		{
 			var vendorInfo = new VendorInfo(_configuration, _agentHealthReporter, new SystemInterfaces.Environment(), new VendorHttpApiRequestor());
 			return vendorInfo.GetVendors();
 		}
 
-		[CanBeNull]
 		private UtilitizationConfig GetUtilitizationConfig()
 		{
 			if (_configuration == null)

@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Timing;
@@ -19,19 +18,14 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 	[TestFixture]
 	public class BrowserMonitoringScriptMakerTests
 	{
-		[NotNull]
 		private BrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
 
-		[NotNull]
 		private IConfiguration _configuration;
 
-		[NotNull]
 		private ITransactionMetricNameMaker _transactionMetricNameMaker;
 
-		[NotNull]
 		private ITransactionAttributeMaker _transactionAttributeMaker;
 
-		[NotNull]
 		private IAttributeService _attributeService;
 
 		[SetUp]
@@ -60,7 +54,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
 			var script = _browserMonitoringScriptMaker.GetScript(transaction);
 
-			const String expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
+			const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":1000,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
 			Assert.AreEqual(expectedScript, script);
 		}
 
@@ -71,7 +65,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
 			var script = _browserMonitoringScriptMaker.GetScript(transaction);
 
-			const String expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":0,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
+			const string expectedScript = @"<script type=""text/javascript"">window.NREUM||(NREUM={});NREUM.info = {""beacon"":"""",""errorBeacon"":"""",""licenseKey"":"""",""applicationID"":"""",""transactionName"":""HBsGAwcLSlMeAx8FEQ=="",""queueTime"":0,""applicationTime"":2000,""agent"":"""",""atts"":""""}</script><script type=""text/javascript"">the agent</script>";
 			Assert.AreEqual(expectedScript, script);
 		}
 
@@ -114,7 +108,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		public void GetScript_ReturnsNull_IfBrowserMonitoringJavaScriptAgentIsNull()
 		{
 			var transaction = BuildTestTransaction();
-			Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(null as String);
+			Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(null as string);
 
 			var script = _browserMonitoringScriptMaker.GetScript(transaction);
 
@@ -124,7 +118,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_ReturnsNull_IfBrowserMonitoringJavaScriptAgentIsEmpty()
 		{
-			Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(String.Empty);
+			Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgent).Returns(string.Empty);
 			var transaction = BuildTestTransaction();
 
 			var script = _browserMonitoringScriptMaker.GetScript(transaction);
@@ -135,7 +129,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_Throws_IfAgentLicenseKeyIsNull()
 		{
-			Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(null as String);
+			Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(null as string);
 			var transaction = BuildTestTransaction();
 
 			Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
@@ -144,7 +138,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_Throws_IfAgentLicenseKeyIsEmpty()
 		{
-			Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(String.Empty);
+			Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(string.Empty);
 			var transaction = BuildTestTransaction();
 
 			Assert.Throws<Exception>(() => _browserMonitoringScriptMaker.GetScript(transaction));
@@ -153,7 +147,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_Throws_IfBrowserMonitoringBeaconAddressIsNull()
 		{
-			Mock.Arrange(() => _configuration.BrowserMonitoringBeaconAddress).Returns(null as String);
+			Mock.Arrange(() => _configuration.BrowserMonitoringBeaconAddress).Returns(null as string);
 			var transaction = BuildTestTransaction();
 
 			Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
@@ -162,7 +156,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_Throws_IfBrowserMonitoringErrorBeaconAddressIsNull()
 		{
-			Mock.Arrange(() => _configuration.BrowserMonitoringErrorBeaconAddress).Returns(null as String);
+			Mock.Arrange(() => _configuration.BrowserMonitoringErrorBeaconAddress).Returns(null as string);
 			var transaction = BuildTestTransaction();
 
 			Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
@@ -171,7 +165,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_Throws_IfBrowserMonitoringKeyIsNull()
 		{
-			Mock.Arrange(() => _configuration.BrowserMonitoringKey).Returns(null as String);
+			Mock.Arrange(() => _configuration.BrowserMonitoringKey).Returns(null as string);
 			var transaction = BuildTestTransaction();
 
 			Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
@@ -180,7 +174,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_Throws_IfBrowserMonitoringApplicationIdIsNull()
 		{
-			Mock.Arrange(() => _configuration.BrowserMonitoringApplicationId).Returns(null as String);
+			Mock.Arrange(() => _configuration.BrowserMonitoringApplicationId).Returns(null as string);
 			var transaction = BuildTestTransaction();
 
 			Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
@@ -189,13 +183,12 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_Throws_IfBrowserMonitoringJavaScriptAgentFileIsNull()
 		{
-			Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentFile).Returns(null as String);
+			Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentFile).Returns(null as string);
 			var transaction = BuildTestTransaction();
 
 			Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
 		}
 
-		[NotNull]
 		private IInternalTransaction BuildTestTransaction(TimeSpan? queueTime = null, TimeSpan? applicationTime = null)
 		{
 			var name = TransactionName.ForWebTransaction("foo", "bar");

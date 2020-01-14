@@ -3,7 +3,6 @@ using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
-using NewRelic.SystemExtensions;
 using System;
 using System.IO;
 using System.Net;
@@ -47,7 +46,10 @@ namespace NewRelic.Agent.Core.DataTransport
 #if NET45
 			_subscriptions.Add<CleanShutdownEvent>(OnCleanShutdown);
 #endif
+		}
 
+		public void AttemptAutoStart()
+		{
 			if (_configuration.AutoStartAgent)
 				Start();
 		}

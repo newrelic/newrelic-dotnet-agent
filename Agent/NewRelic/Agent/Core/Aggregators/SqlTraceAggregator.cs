@@ -28,6 +28,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter = agentHealthReporter;
 		}
 
+		protected override bool IsEnabled => _configuration.SlowSqlEnabled;
+
 		public override void Collect(SqlTraceStatsCollection sqlTraceStats)
 		{
 			lock (_sqlTraceLock)

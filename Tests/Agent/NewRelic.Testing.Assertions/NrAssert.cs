@@ -48,9 +48,9 @@ namespace NewRelic.Testing.Assertions
 			throw new TestFailureException(details);
 		}
 
-		private static String FormatExceptions(IEnumerable<Exception> exceptions)
+		private static string FormatExceptions(IEnumerable<Exception> exceptions)
 		{
-			var strings = new List<String>();
+			var strings = new List<string>();
 
 			foreach (var exception in exceptions)
 			{
@@ -66,12 +66,12 @@ namespace NewRelic.Testing.Assertions
 				strings.Add($"{failureType} on line {lineNumberOrUnknown}: {exception.Message}");
 			}
 
-			return Environment.NewLine + String.Join(Environment.NewLine + Environment.NewLine, strings.ToArray());
+			return Environment.NewLine + string.Join(Environment.NewLine + Environment.NewLine, strings.ToArray());
 		}
 	}
 
 	public class TestFailureException : Exception
 	{
-		public TestFailureException(String message) : base(message) { }
+		public TestFailureException(string message) : base(message) { }
 	}
 }

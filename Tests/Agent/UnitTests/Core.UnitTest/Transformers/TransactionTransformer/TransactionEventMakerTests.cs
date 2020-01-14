@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -19,7 +18,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 	[TestFixture]
 	public class TransactionEventMakerTests
 	{
-		[NotNull] private TransactionEventMaker _transactionEventMaker;
+		private TransactionEventMaker _transactionEventMaker;
 
 		private static ITimerFactory _timerFactory;
 		private IConfiguration _configuration;
@@ -68,7 +67,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			Assert.IsTrue(transactionEvent.IsSynthetics());
 		}
 
-		private static IInternalTransaction BuildTestTransaction(Boolean isWebTransaction = true, String uri = null, String referrerUri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, Boolean includeUserAttributes = false)
+		private static IInternalTransaction BuildTestTransaction(bool isWebTransaction = true, string uri = null, string referrerUri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, bool isSynthetics = true, bool isCAT = true, bool includeUserAttributes = false)
 		{
 			var name = isWebTransaction
 				? TransactionName.ForWebTransaction(transactionCategory, transactionName)
@@ -90,7 +89,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			return internalTransaction;
 		}
 
-		private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, String referrerUri = null, Boolean includeUserAttributes = false)
+		private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeUserAttributes = false)
 		{
 			if (uri != null)
 				metadata.SetUri(uri);

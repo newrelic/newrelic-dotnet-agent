@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Testing.Assertions;
+﻿using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -11,7 +10,7 @@ namespace NewRelic.Agent.Core.Commands
 		[Test]
 		public void deserializes_correctly()
 		{
-			const String json = @"[1, {""name"": ""some name"", ""arguments"": {""arg"": ""value""}}]";
+			const string json = @"[1, {""name"": ""some name"", ""arguments"": {""arg"": ""value""}}]";
 
 			var commandModel = JsonConvert.DeserializeObject<CommandModel>(json);
 			

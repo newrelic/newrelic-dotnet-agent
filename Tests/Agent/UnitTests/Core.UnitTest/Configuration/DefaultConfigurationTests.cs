@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.SystemInterfaces;
@@ -18,7 +17,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
 	internal class TestableDefaultConfiguration : DefaultConfiguration
 	{
-		public TestableDefaultConfiguration([NotNull] IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+		public TestableDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
 	}
 
 	[TestFixture, Category("Configuration")]
@@ -190,19 +189,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		}
 
 		[Test]
-		public void TransactionEventsMaxSamplesPerMinuteIsCappedAt10000()
-		{
-
-			Assert.AreEqual(10000, _defaultConfig.TransactionEventsMaxSamplesPerMinute);
-
-			_localConfig.transactionEvents.maximumSamplesPerMinute = 10001;
-			Assert.AreEqual(10000, _defaultConfig.TransactionEventsMaxSamplesPerMinute);
-
-			_localConfig.transactionEvents.maximumSamplesPerMinute = 9999;
-			Assert.AreEqual(9999, _defaultConfig.TransactionEventsMaxSamplesPerMinute);
-		}
-
-		[Test]
 		public void TransactionEventsMaxSamplesStoredPassesThroughToLocalConfig()
 		{
 			Assert.AreEqual(10000, _defaultConfig.TransactionEventsMaxSamplesStored);
@@ -212,6 +198,39 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 			_localConfig.transactionEvents.maximumSamplesStored = 9999;
 			Assert.AreEqual(9999, _defaultConfig.TransactionEventsMaxSamplesStored);
+		}
+
+		[Test]
+		public void TransactionEventsMaxSamplesStoredOverriddenByEventHarvestConfig()
+		{
+			_localConfig.transactionEvents.maximumSamplesStored = 10001;
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
+			};
+
+			Assert.AreEqual(10, _defaultConfig.TransactionEventsMaxSamplesStored);
+		}
+
+		[Test]
+		public void TransactionEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
+		{
+			Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.TransactionEventsHarvestCycle);
+
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
+			};
+			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.TransactionEventsHarvestCycle);
+		}
+
+		[Test]
+		public void TransactionEventsMaxSamplesOf0ShouldDisableTransactionEvents()
+		{
+			_localConfig.transactionEvents.maximumSamplesStored = 0;
+			Assert.IsFalse(_defaultConfig.TransactionEventsEnabled);
 		}
 
 		[TestCase(true, null, null, ExpectedResult = true)]
@@ -416,6 +435,39 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public uint ErrorCollectorMaxNumberEventSamplesDefaultFromLocal()
 		{
 			return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
+		}
+
+		[Test]
+		public void ErrorEventsMaxSamplesStoredOverriddenByEventHarvestConfig()
+		{
+			_localConfig.errorCollector.maxEventSamplesStored = 10001;
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
+			};
+
+			Assert.AreEqual(10, _defaultConfig.ErrorCollectorMaxEventSamplesStored);
+		}
+
+		[Test]
+		public void ErrorEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
+		{
+			Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.ErrorEventsHarvestCycle);
+
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
+			};
+			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.ErrorEventsHarvestCycle);
+		}
+
+		[Test]
+		public void ErrorEventsMaxSamplesOf0ShouldDisableErrorEvents()
+		{
+			_localConfig.errorCollector.maxEventSamplesStored = 0;
+			Assert.IsFalse(_defaultConfig.ErrorCollectorCaptureEvents);
 		}
 
 		[TestCase(true, ExpectedResult = true)]
@@ -1257,7 +1309,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestCase("\\1\\2", "$1$2")]
 		[TestCase("\\2banana\\1", "$2banana$1")]
 		[TestCase("\\s", "\\s")]
-		public void UrlRegexRulesUpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] string input, [NotNull] string expectedOutput)
+		public void UrlRegexRulesUpdatesReplaceRegexBackreferencesToDotNetStyle(string input, string expectedOutput)
 		{
 			_serverConfig.UrlRegexRules = new List<ServerConfiguration.RegexRule>
 			{
@@ -1321,7 +1373,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestCase("\\1\\2", "$1$2")]
 		[TestCase("\\2banana\\1", "$2banana$1")]
 		[TestCase("\\s", "\\s")]
-		public void MetricNameRegexRulesUpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] string input, [NotNull] string expectedOutput)
+		public void MetricNameRegexRulesUpdatesReplaceRegexBackreferencesToDotNetStyle(string input, string expectedOutput)
 		{
 			_serverConfig.MetricNameRegexRules = new List<ServerConfiguration.RegexRule>
 			{
@@ -1385,7 +1437,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestCase("\\1\\2", "$1$2")]
 		[TestCase("\\2banana\\1", "$2banana$1")]
 		[TestCase("\\s", "\\s")]
-		public void TransactionNameRegexRulesUpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] string input, [NotNull] string expectedOutput)
+		public void TransactionNameRegexRulesUpdatesReplaceRegexBackreferencesToDotNetStyle(string input, string expectedOutput)
 		{
 			_serverConfig.TransactionNameRegexRules = new List<ServerConfiguration.RegexRule>
 			{
@@ -1949,6 +2001,42 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.SpanEventsEnabled;
 		}
 
+		[Test]
+		public void SpanEventsMaxSamplesStoredOverriddenByEventHarvestConfig()
+		{
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
+			};
+
+			Assert.AreEqual(10, _defaultConfig.SpanEventsMaxSamplesStored);
+		}
+
+		[Test]
+		public void SpanEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
+		{
+			Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.SpanEventsHarvestCycle);
+
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
+			};
+			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.SpanEventsHarvestCycle);
+		}
+
+		[Test]
+		public void SpanEventsMaxSamplesOf0ShouldDisableSpanEvents()
+		{
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.SpanEventHarvestLimitKey, 0 } }
+			};
+			Assert.IsFalse(_defaultConfig.SpanEventsEnabled);
+		}
+
 		#endregion
 
 		#region Utilization
@@ -2252,6 +2340,40 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_localConfig.customEvents.maximumSamplesStored = 9999;
 			Assert.That(_defaultConfig.CustomEventsMaxSamplesStored, Is.EqualTo(9999));
 		}
+
+		[Test]
+		public void CustomEventsMaxSamplesStoredOverriddenByEventHarvestConfig()
+		{
+			_localConfig.customEvents.maximumSamplesStored = 10001;
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
+			};
+
+			Assert.AreEqual(10, _defaultConfig.CustomEventsMaxSamplesStored);
+		}
+
+		[Test]
+		public void CustomEventsHarvestCycleUsesDefaultOrEventHarvestConfig()
+		{
+			Assert.AreEqual(TimeSpan.FromMinutes(1), _defaultConfig.CustomEventsHarvestCycle);
+
+			_serverConfig.EventHarvestConfig = new EventHarvestConfig
+			{
+				ReportPeriodMs = 5000,
+				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
+			};
+			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.CustomEventsHarvestCycle);
+		}
+
+		[Test]
+		public void CustomEventsMaxSamplesOf0ShouldDisableCustomEvents()
+		{
+			_localConfig.customEvents.maximumSamplesStored = 0;
+			Assert.IsFalse(_defaultConfig.CustomEventsEnabled);
+		}
+
 		#endregion
 
 		#region SecurityPolicies

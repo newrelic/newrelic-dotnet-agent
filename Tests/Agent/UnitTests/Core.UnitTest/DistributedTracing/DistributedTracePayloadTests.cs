@@ -148,9 +148,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				var transactionContext = Mock.Create<IContextStorage<IInternalTransaction>>();
 
 				const string key = "TEST";
-				var dictionary = new Dictionary<String, Object>();
+				var dictionary = new Dictionary<string, object>();
 				Mock.Arrange(() => transactionContext.CanProvide).Returns(true);
-				Mock.Arrange(() => transactionContext.SetData((IInternalTransaction)Arg.AnyObject)).DoInstead((Object value) =>
+				Mock.Arrange(() => transactionContext.SetData((IInternalTransaction)Arg.AnyObject)).DoInstead((object value) =>
 				{
 					dictionary[key] = value;
 				});
@@ -159,7 +159,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 					if (!dictionary.ContainsKey(key))
 						return null;
 
-					Object value;
+					object value;
 					dictionary.TryGetValue(key, out value);
 					return value as IInternalTransaction;
 

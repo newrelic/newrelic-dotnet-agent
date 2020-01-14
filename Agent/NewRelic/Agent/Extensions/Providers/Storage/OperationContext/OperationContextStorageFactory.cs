@@ -27,7 +27,7 @@ namespace NewRelic.Providers.Storage.OperationContext
 
 		ContextStorageType IContextStorageFactory.Type => ContextStorageType.OperationContext;
 
-		IContextStorage<T> IContextStorageFactory.CreateContext<T>(String key)
+		IContextStorage<T> IContextStorageFactory.CreateContext<T>(string key)
 		{
 			return new OperationContextStorage<T>(key);
 		}

@@ -27,7 +27,9 @@ namespace NewRelic.Agent.Core.Aggregators
 		private ITransactionCollector _transactionCollector2;
 		private IDnsStatic _dnsStatic;
 		private IProcessStatic _processStatic;
+		private IScheduler _scheduler;
 		private Action _harvestAction;
+		private TimeSpan? _harvestCycle;
 		private ConfigurationAutoResponder _configurationAutoResponder;
 
 		[SetUp]
@@ -36,6 +38,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			var configuration = Mock.Create<IConfiguration>();
 			Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
 			Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
+			Mock.Arrange(() => configuration.TransactionTracerEnabled).Returns(true);
 			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
@@ -46,10 +49,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			_transactionCollector2 = Mock.Create<ITransactionCollector>();
 			_transactionCollectors = new[] { _transactionCollector1, _transactionCollector2 };
 
-			var scheduler = Mock.Create<IScheduler>();
-			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, scheduler, _processStatic, _transactionCollectors);
+			_scheduler = Mock.Create<IScheduler>();
+			Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+			_transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, _scheduler, _processStatic, _transactionCollectors);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -104,6 +109,8 @@ namespace NewRelic.Agent.Core.Aggregators
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
 			_transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, scheduler, _processStatic, transactionCollectors);
 
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
 			var sentTraces = Enumerable.Empty<TransactionTraceWireModel>();
 			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()))
 				.Returns<IEnumerable<TransactionTraceWireModel>>(traces =>
@@ -133,6 +140,27 @@ namespace NewRelic.Agent.Core.Aggregators
 			EventBus<PreCleanShutdownEvent>.Publish(new PreCleanShutdownEvent());
 
 			Mock.Assert(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<TransactionTraceWireModel>>()), Occurs.Once());
+		}
+
+		[Test]
+		public void When_transaction_traces_disabled_harvest_is_not_scheduled()
+		{
+			_configurationAutoResponder.Dispose();
+			_transactionTraceAggregator.Dispose();
+			var configuration = Mock.Create<IConfiguration>();
+			Mock.Arrange(() => configuration.TransactionTracerEnabled).Returns(false);
+			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+			_transactionTraceAggregator = new TransactionTraceAggregator(_dataTransportService, _scheduler, _processStatic, _transactionCollectors);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
+		}
+
+		[Test]
+		public void Harvest_cycle_should_match_default_cycle()
+		{
+			Assert.AreEqual(TimeSpan.FromMinutes(1), _harvestCycle);
 		}
 	}
 }

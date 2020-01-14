@@ -5,7 +5,6 @@ using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Agent.Extensions.Parsing;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 
 namespace NewRelic.Providers.Wrapper.Sql
@@ -79,7 +78,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 			if (sqlCommand == null)
 				return Delegates.NoOp;
 
-			var sql = sqlCommand.CommandText ?? String.Empty;
+			var sql = sqlCommand.CommandText ?? string.Empty;
 			var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
 			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
 			var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);

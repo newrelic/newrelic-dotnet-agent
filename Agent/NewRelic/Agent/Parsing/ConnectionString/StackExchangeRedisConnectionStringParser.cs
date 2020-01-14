@@ -1,5 +1,4 @@
 ﻿using NewRelic.Agent.Extensions.Parsing;
-using System;
 using System.Linq;
 using NewRelic.Agent.Helpers;
 
@@ -7,9 +6,9 @@ namespace NewRelic.Parsing.ConnectionString
 {
 	public class StackExchangeRedisConnectionStringParser : IConnectionStringParser
 	{
-		private readonly String _connectionString;
+		private readonly string _connectionString;
 
-		public StackExchangeRedisConnectionStringParser(String connectionString)
+		public StackExchangeRedisConnectionStringParser(string connectionString)
 		{
 			_connectionString = connectionString;
 		}

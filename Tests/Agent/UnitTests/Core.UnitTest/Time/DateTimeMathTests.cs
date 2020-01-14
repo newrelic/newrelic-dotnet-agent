@@ -10,7 +10,7 @@ namespace NewRelic.Agent.Core.Time
 		[TestCase(1, 1, 1)]
 		[TestCase(2, 3, 2)]
 		[TestCase(3, 2, 2)]
-		public void Min_ReturnsMinTime(Int32 seconds1, Int32 seconds2, Int32 expectedSeconds)
+		public void Min_ReturnsMinTime(int seconds1, int seconds2, int expectedSeconds)
 		{
 			var baseTime = DateTime.Now;
 			var time1 = baseTime.AddSeconds(seconds1);
@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Time
 		[TestCase(1, 1, 1)]
 		[TestCase(2, 3, 3)]
 		[TestCase(3, 2, 3)]
-		public void Max_ReturnsMaxTime(Int32 seconds1, Int32 seconds2, Int32 expectedSeconds)
+		public void Max_ReturnsMaxTime(int seconds1, int seconds2, int expectedSeconds)
 		{
 			var baseTime = DateTime.Now;
 			var time1 = baseTime.AddSeconds(seconds1);

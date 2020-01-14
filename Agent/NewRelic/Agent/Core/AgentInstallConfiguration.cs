@@ -102,14 +102,14 @@ namespace NewRelic.Agent.Core
 #if NET45
 			return false;
 #else
-			// System.Environment.Version changed with .Net Core 3.0.
-			// Reference: https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#improved-net-core-version-apis
-			var envVer = System.Environment.Version;
-			if ((envVer.Major < 3 || envVer.Major >= 4) && envVer.Major < 5)
-			{
-				return false;
-			}
-			return true;
+			var version = System.Environment.Version;
+
+			// Prior to .NET Core 3.0 System.Environment.Version returned 4.0.30319.42000.
+			// Therefore, the next major version beyond 3.0 will be 5.0.
+			// See: https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#improved-net-core-version-apis
+			if (version.Major == 4) return false;
+
+			return version.Major >= 3;
 #endif
 		}
 

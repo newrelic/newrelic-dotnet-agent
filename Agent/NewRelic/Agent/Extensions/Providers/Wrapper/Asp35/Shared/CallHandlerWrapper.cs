@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
@@ -11,13 +10,11 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 	{
 		public const string WrapperName = "Asp35.CallHandlerTracer";
 
-		[NotNull]
-		public Func<Object, HttpApplication> GetHttpApplication { get { return _getHttpApplication ?? (_getHttpApplication = VisibilityBypasser.Instance.GenerateFieldReadAccessor<HttpApplication>("System.Web", "System.Web.HttpApplication+CallHandlerExecutionStep", "_application")); } }
+		public Func<object, HttpApplication> GetHttpApplication { get { return _getHttpApplication ?? (_getHttpApplication = VisibilityBypasser.Instance.GenerateFieldReadAccessor<HttpApplication>("System.Web", "System.Web.HttpApplication+CallHandlerExecutionStep", "_application")); } }
 
 		public bool IsTransactionRequired => true;
 
-		[CanBeNull]
-		private Func<Object, HttpApplication> _getHttpApplication;
+		private Func<object, HttpApplication> _getHttpApplication;
 
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{

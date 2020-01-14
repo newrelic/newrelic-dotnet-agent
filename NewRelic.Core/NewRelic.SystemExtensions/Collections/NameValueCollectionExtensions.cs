@@ -14,13 +14,13 @@ namespace NewRelic.SystemExtensions.Collections
 		/// <param name="equalityComparer"></param>
 		/// <returns></returns>
 
-		public static IDictionary<String, String> ToDictionary(this NameValueCollection nameValueCollection, IEqualityComparer<String> equalityComparer = null)
+		public static IDictionary<string, string> ToDictionary(this NameValueCollection nameValueCollection, IEqualityComparer<string> equalityComparer = null)
 		{
 			equalityComparer = equalityComparer ?? StringComparer.CurrentCultureIgnoreCase;
 
 			return nameValueCollection
 				.Keys
-				.Cast<String>()
+				.Cast<string>()
 				.Where(key => key != null)
 				.ToDictionary(key => key, key => nameValueCollection[key], equalityComparer);
 		}

@@ -1,9 +1,7 @@
 #pragma once
-
-#ifndef PAL_STDCPP_COMPAT
 #include <mutex>
 #include <atomic>
-#include <atlcomcli.h>
+#include <thread>
 
 #include <cor.h>
 
@@ -13,9 +11,7 @@
 #pragma warning(pop)
 
 #include "namecache.h"
-#include "..\Logging\Logger.h"
-
-#endif
+#include "../Logging/Logger.h"
 
 #include <corprof.h>
 
@@ -82,21 +78,6 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 		ThreadProfilerBase& operator=(ThreadProfilerBase&&) = delete;
 	};
 
-#ifdef PAL_STDCPP_COMPAT
-	class ThreadProfiler : public ThreadProfilerBase
-	{
-	public:
-		ThreadProfiler() = default;
-
-		~ThreadProfiler() override = default;
-
-		ThreadProfiler(const ThreadProfiler&) = delete;
-		ThreadProfiler(ThreadProfiler&&) = delete;
-		ThreadProfiler& operator=(const ThreadProfiler&) = delete;
-		ThreadProfiler& operator=(ThreadProfiler&&) = delete;
-	};
-#else
-
 	using waitlock = std::unique_lock<std::mutex>;
 
 	static void Signal(std::condition_variable& conditionvariable, std::atomic_bool& flag) noexcept
@@ -123,9 +104,14 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 		void Init(ICorProfilerInfo4* corProfilerInfo) noexcept override
 		{
 			// initialize the thread profiler
-			LogTrace(L"Initializing ThreadProfiler");
+			LogInfo(L"Initializing ThreadProfiler");
 
 			_corProfilerInfo = corProfilerInfo;
+
+			HRESULT corProfilerInfoInitResult = corProfilerInfo->QueryInterface(__uuidof(ICorProfilerInfo10), (void**)&_corProfilerInfo10);
+			if (SUCCEEDED(corProfilerInfoInitResult)) {
+				LogInfo(L"ICorProfilerInfo10 available");
+			}
 		}
 
 		//Start the worker thread (if not already running; it will be terminated by calling Shutdown()).  Signal the worker thread that we are requesting profiling.
@@ -143,7 +129,7 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 
 			if (!_marshaledProfiles.empty())
 			{
-				return E_ILLEGAL_METHOD_CALL;
+				return E_FAIL;
 			}
 
 			if (!_corProfilerInfo)
@@ -154,6 +140,12 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 
 			try
 			{
+#ifdef PAL_STDCPP_COMPAT
+			if (!_corProfilerInfo10) {
+				LogDebug(L"TP: ", __func__, L" called without proper initialization. (corProfilerInfo10)");
+				return E_UNEXPECTED;
+			}
+#endif
 				Start();
 
 				SignalProfileRequested();
@@ -433,6 +425,7 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 
 		//interface to CLR execution engine and metadata services.  Provided during the Initialize call to the profiler.
 		CComPtr<ICorProfilerInfo4> _corProfilerInfo;
+		CComPtr<ICorProfilerInfo10> _corProfilerInfo10;
 
 		//cache of type and method names.
 		//NEVER update this cache during the snapshot callback as it's memory is dynamically allocated. 
@@ -648,7 +641,13 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 						break;
 					}
 
+#ifdef PAL_STDCPP_COMPAT
+					_corProfilerInfo10->SuspendRuntime();
+#endif
 					ProfileAllThreads();
+#ifdef PAL_STDCPP_COMPAT
+					_corProfilerInfo10->ResumeRuntime();
+#endif
 
 					SignalProfileCompleted();
 				}
@@ -661,9 +660,8 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 			LogTrace(L"TP: profile thread terminating");
 		}
 
-		static HRESULT __stdcall StaticStackFrameCallback(uintptr_t functionId, uintptr_t instructionPointer, uintptr_t frameInfo, uint32_t contextSize, uint8_t context[], void * clientData)
+		static HRESULT __stdcall StaticStackFrameCallback(uintptr_t functionId, uintptr_t /* instructionPointer */, uintptr_t /* frameInfo */, uint32_t /* contextSize */, uint8_t[] /* context */, void * clientData)
 		{
-			instructionPointer; frameInfo; contextSize; context;
 			try
 			{
 				const HRESULT StackTooDeep = S_FALSE; // HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
@@ -729,5 +727,4 @@ namespace NewRelic { namespace Profiler { namespace ThreadProfiler
 		}
 #pragma endregion
 	};
-#endif
 }}}

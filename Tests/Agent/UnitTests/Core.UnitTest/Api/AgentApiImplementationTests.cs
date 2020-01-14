@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NUnit.Framework;
 using Telerik.JustMock;
 

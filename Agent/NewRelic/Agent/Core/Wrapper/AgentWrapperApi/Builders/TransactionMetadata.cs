@@ -38,13 +38,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		string SyntheticsJobId { get; }
 		string SyntheticsMonitorId { get; }
 		string LatestCrossApplicationPathHash { get; }
-		void SetUri(String uri);
+		void SetUri(string uri);
 		void SetOriginalUri(string uri);
 		void SetReferrerUri(string uri);
 		void SetQueueTime(TimeSpan queueTime);
 		void AddRequestParameter(string key, string value);
-		void AddUserAttribute(string key, Object value);
-		void AddUserErrorAttribute(string key, Object value);
+		void AddUserAttribute(string key, object value);
+		void AddUserErrorAttribute(string key, object value);
 		void SetHttpResponseStatusCode(int statusCode, int? subStatusCode);
 		void AddExceptionData(ErrorData errorData);
 		void AddCustomErrorData(ErrorData errorData);
@@ -118,7 +118,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		//This is a timeSpan? struct
 		private volatile Func<TimeSpan> _timeSpanQueueTime = null;
 		//This is a Int32? struct
-		private volatile int _httpResponseStatusCode = Int32.MinValue;
+		private volatile int _httpResponseStatusCode = int.MinValue;
 
 		private volatile string _uri;
 		private volatile string _originalUri;
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private readonly IList<ErrorData> _customErrorDatas = new ConcurrentList<ErrorData>();
 		private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
 
-		private volatile int _httpResponseSubStatusCode = Int32.MinValue;
+		private volatile int _httpResponseSubStatusCode = int.MinValue;
 		private volatile bool _hasResponseCatHeaders;
 		private volatile float _priority;
 
@@ -219,7 +219,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode)
 		{
 			_httpResponseStatusCode = statusCode;
-			_httpResponseSubStatusCode = (subStatusCode.HasValue ? ((int)subStatusCode) : Int32.MinValue);
+			_httpResponseSubStatusCode = (subStatusCode.HasValue ? ((int)subStatusCode) : int.MinValue);
 		}
 
 		public void AddExceptionData(ErrorData errorData)
@@ -381,9 +381,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 		private TimeSpan? GetTimeSpan() => _timeSpanQueueTime?.Invoke();
 
-		public int? HttpResponseStatusCode => (_httpResponseStatusCode == Int32.MinValue) ? default(Int32?) : _httpResponseStatusCode;
+		public int? HttpResponseStatusCode => (_httpResponseStatusCode == int.MinValue) ? default(int?) : _httpResponseStatusCode;
 
-		private int? HttpResponseSubStatusCode => (_httpResponseSubStatusCode == Int32.MinValue) ? default(Int32?) : _httpResponseSubStatusCode;
+		private int? HttpResponseSubStatusCode => (_httpResponseSubStatusCode == int.MinValue) ? default(int?) : _httpResponseSubStatusCode;
 
 		public KeyValuePair<string, string>[] RequestParameters => _requestParameters.ToArray();
 		public KeyValuePair<string, object>[] UserAttributes => _userAttributes.ToArray();

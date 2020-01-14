@@ -1,9 +1,8 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilization
 {
-    public class DockerVendorModel : IVendorModel
+	public class DockerVendorModel : IVendorModel
 	{
 		private readonly string _id;
 		

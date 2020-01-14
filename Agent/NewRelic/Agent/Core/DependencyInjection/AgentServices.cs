@@ -20,7 +20,6 @@ using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.SharedInterfaces;
-using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;

@@ -10,7 +10,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 	[TestFixture]
 	public class ExternalSegmentTests
 	{
-		private const String TransactionGuidSegmentParameterKey = "transaction_guid";
+		private const string TransactionGuidSegmentParameterKey = "transaction_guid";
 
 		[Test]
 		public void Build_IncludesCatParameter_IfCatResponseDataIsSet()

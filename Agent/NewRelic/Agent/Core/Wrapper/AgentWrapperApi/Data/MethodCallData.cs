@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
+﻿namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
 {
 	public class MethodCallData
 	{

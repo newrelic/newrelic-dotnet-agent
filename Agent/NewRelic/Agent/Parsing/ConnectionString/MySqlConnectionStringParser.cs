@@ -1,5 +1,4 @@
 ﻿using NewRelic.Agent.Extensions.Parsing;
-using System;
 using System.Collections.Generic;
 using System.Data.Common;
 
@@ -7,13 +6,13 @@ namespace NewRelic.Parsing.ConnectionString
 {
 	public class MySqlConnectionStringParser : IConnectionStringParser
 	{
-		private static readonly List<String> _hostKeys = new List<String> { "network address", "server", "data source" };
-		private static readonly List<String> _databaseNameKeys = new List<String> { "database" };
-		private static readonly List<String> _portKeys = new List<String> { "port" };
+		private static readonly List<string> _hostKeys = new List<string> { "network address", "server", "data source" };
+		private static readonly List<string> _databaseNameKeys = new List<string> { "database" };
+		private static readonly List<string> _portKeys = new List<string> { "port" };
 
 		private readonly DbConnectionStringBuilder _connectionStringBuilder;
 
-		public MySqlConnectionStringParser(String connectionString)
+		public MySqlConnectionStringParser(string connectionString)
 		{
 			_connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
 		}

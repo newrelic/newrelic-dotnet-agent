@@ -28,6 +28,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			_transactionCollectors = transactionCollectors;
 		}
 
+		protected override bool IsEnabled => _configuration.TransactionTracerEnabled;
+
 		public override void Collect(TransactionTraceWireModelComponents transactionTraceWireModel)
 		{
 			foreach(var transactionCollector in _transactionCollectors)

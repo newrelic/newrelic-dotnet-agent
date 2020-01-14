@@ -1,5 +1,3 @@
-using System;
-
 namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 {
 	public static class SqlParsingCrossAgentTestJson
@@ -10,7 +8,7 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 		//   {""input"":""SELECT * FROM(SELECT * FROM foobar) WHERE x > y"",        ""operation"":""select"", ""table"":""(subquery)""}
 
 
-		public const String TestCases =
+		public const string TestCases =
 @"[
   {""input"":""SELECT * FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},
   {""input"":""SELECT F FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},

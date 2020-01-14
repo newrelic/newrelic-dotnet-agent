@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -14,10 +11,10 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 {
 	public class SendAsync : IWrapper
 	{
-		public const String InstrumentedTypeName = "System.Net.Http.HttpClient";
+		public const string InstrumentedTypeName = "System.Net.Http.HttpClient";
 
 		public bool IsTransactionRequired => true;
-      
+
 		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
 		{
 			var method = methodInfo.Method;
@@ -99,8 +96,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 		}
 
-		[CanBeNull]
-		private static Uri TryGetAbsoluteUri([NotNull] HttpRequestMessage httpRequestMessage, [NotNull] System.Net.Http.HttpClient httpClient)
+		private static Uri TryGetAbsoluteUri(HttpRequestMessage httpRequestMessage, System.Net.Http.HttpClient httpClient)
 		{
 			// If RequestUri is specified and it is an absolute URI then we should use it
 			if (httpRequestMessage.RequestUri?.IsAbsoluteUri == true)
@@ -118,7 +114,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			return null;
 		}
 
-		private static void TryAttachHeadersToRequest([NotNull] IAgent agent, [NotNull] HttpRequestMessage httpRequestMessage)
+		private static void TryAttachHeadersToRequest(IAgent agent, HttpRequestMessage httpRequestMessage)
 		{
 			try
 			{
@@ -138,7 +134,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 		}
 
-		private static void TryProcessResponse([NotNull] IAgent agent, [CanBeNull] Task<HttpResponseMessage> response, [NotNull] ITransaction transaction, [CanBeNull] ISegment segment)
+		private static void TryProcessResponse(IAgent agent, Task<HttpResponseMessage> response, ITransaction transaction, ISegment segment)
 		{
 			try
 			{
@@ -161,20 +157,20 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 		}
 
-		private static Boolean ValidTaskResponse([CanBeNull] Task<HttpResponseMessage> response)
+		private static bool ValidTaskResponse(Task<HttpResponseMessage> response)
 		{
 			return (response?.Status == TaskStatus.RanToCompletion);
 		}
 
-		private static KeyValuePair<String, String> Flatten(KeyValuePair<String, IEnumerable<String>> header)
+		private static KeyValuePair<string, string> Flatten(KeyValuePair<string, IEnumerable<string>> header)
 		{
 			var key = header.Key;
-			var values = header.Value ?? Enumerable.Empty<String>();
+			var values = header.Value ?? Enumerable.Empty<string>();
 
 			// According to RFC 2616 (http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2), multi-valued headers can be represented as a single comma-delimited list of values
-			var flattenedValues = String.Join(",", values);
+			var flattenedValues = string.Join(",", values);
 
-			return new KeyValuePair<String, String>(key, flattenedValues);
+			return new KeyValuePair<string, string>(key, flattenedValues);
 		}
 	}
 }

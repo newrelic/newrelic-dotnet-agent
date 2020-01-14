@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Asp35.Shared
@@ -11,14 +10,13 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		// the validation warning, this function instead accesses the backing method.  If it's unavailable, it's safe to assume the System.Web version 
 		// is 2.0, and can get Request.Path directly.
 
-		[CanBeNull]
-		private static readonly Func<HttpRequest, String> GetUnvalidatedRequestPath;
+		private static readonly Func<HttpRequest, string> GetUnvalidatedRequestPath;
 
 		static RequestPathRetriever()
 		{
 			try
 			{
-				GetUnvalidatedRequestPath = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<HttpRequest, String>("GetUnvalidatedPath");
+				GetUnvalidatedRequestPath = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<HttpRequest, string>("GetUnvalidatedPath");
 			}
 			catch
 			{
@@ -26,8 +24,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 		}
 
-		[CanBeNull]
-		public static String TryGetRequestPath([NotNull] HttpRequest request)
+		public static string TryGetRequestPath(HttpRequest request)
 		{
 			try
 			{

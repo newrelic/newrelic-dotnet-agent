@@ -4,13 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Castle.MicroKernel.ModelBuilder.Inspectors;
 using Castle.MicroKernel.Registration;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
 	public class WindsorContainer : IContainer
 	{
-		[NotNull]
 		private readonly Castle.Windsor.WindsorContainer _windsorContainer;
 
 		public WindsorContainer()

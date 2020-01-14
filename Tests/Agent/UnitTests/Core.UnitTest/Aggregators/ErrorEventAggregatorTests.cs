@@ -26,7 +26,10 @@ namespace NewRelic.Agent.Core.Aggregators
 		private ErrorEventAggregator _errorEventAggregator;
 		private IProcessStatic _processStatic;
 		private ConfigurationAutoResponder _configurationAutoResponder;
+		private IScheduler _scheduler;
 		private Action _harvestAction;
+		private TimeSpan? _harvestCycle;
+		private static readonly TimeSpan ConfiguredHarvestCycle = TimeSpan.FromSeconds(5);
 
 		private const string TimeStampKey = "timestamp";
 		private readonly static Dictionary<string, object> _emptyAttributes = new Dictionary<string, object>();
@@ -38,16 +41,19 @@ namespace NewRelic.Agent.Core.Aggregators
 			var configuration = GetDefaultConfiguration();
 			Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
 			Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
+			Mock.Arrange(() => configuration.ErrorEventsHarvestCycle).Returns(ConfiguredHarvestCycle);
 			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_processStatic = Mock.Create<IProcessStatic>();
 
-			var scheduler = Mock.Create<IScheduler>();
-			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_errorEventAggregator = new ErrorEventAggregator(_dataTransportService, scheduler, _processStatic, _agentHealthReporter);
+			_scheduler = Mock.Create<IScheduler>();
+			Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+			_errorEventAggregator = new ErrorEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -354,6 +360,27 @@ namespace NewRelic.Agent.Core.Aggregators
 			_harvestAction();
 
 			Assert.AreEqual(expectedReservoirSize, actualReservoirSize);
+		}
+
+		[Test]
+		public void When_error_events_disabled_harvest_is_not_scheduled()
+		{
+			_configurationAutoResponder.Dispose();
+			_errorEventAggregator.Dispose();
+			var configuration = Mock.Create<IConfiguration>();
+			Mock.Arrange(() => configuration.ErrorCollectorCaptureEvents).Returns(false);
+			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+			_errorEventAggregator = new ErrorEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
+		}
+
+		[Test]
+		public void Harvest_cycle_should_match_configured_cycle()
+		{
+			Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
 		}
 
 		#region Helpers

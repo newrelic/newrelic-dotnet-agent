@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Utils
 	{
 		[Test]
 		public static void TestParseStackTrace() {
-			ICollection<String> stack = StackTraces.ParseStackTrace(String.Join(System.Environment.NewLine,
+			ICollection<string> stack = StackTraces.ParseStackTrace(string.Join(System.Environment.NewLine,
 						new string[] {
 					   "  at Microsoft.ServiceModel.Samples.CalculatorService.Add(Double n1, Double n2)",
 			           "  at SyncInvokeAdd(Object , Object[] , Object[] )",
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Utils
 		[Test]
 		public static void TestScrubAndTruncate()
 		{
-			ICollection<string> stack = StackTraces.ScrubAndTruncate(String.Join(System.Environment.NewLine,
+			ICollection<string> stack = StackTraces.ScrubAndTruncate(string.Join(System.Environment.NewLine,
 						new string[] {
 					   "  at NewRelic.Agent.Dude()",
 					   "  at Microsoft.ServiceModel.Samples.CalculatorService.Add(Double n1, Double n2)",
@@ -47,15 +47,15 @@ namespace NewRelic.Agent.Core.Utils
 		[Test]
 		public static void TestScrubNullString ()
 		{
-			ICollection<String> frames = StackTraces.ScrubAndTruncate((String)null, 300);
+			ICollection<string> frames = StackTraces.ScrubAndTruncate((string)null, 300);
 			Assert.AreEqual(0, frames.Count);
 		}
 
 		[Test]
 		public static void TestScrubBadString ()
 		{
-			ICollection<String> frames = StackTraces.ScrubAndTruncate(
-			                     String.Join(System.Environment.NewLine, new string[] {"","",null,""}), 300);
+			ICollection<string> frames = StackTraces.ScrubAndTruncate(
+								 string.Join(System.Environment.NewLine, new string[] {"","",null,""}), 300);
 			Assert.AreEqual(4, frames.Count);
 		}
 
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Utils
 		[Test]
 		public static void TestMethodToStringNoParameters() {
 			MethodInfo method = typeof(StackTrace).GetMethod("GetFrames");
-			String str = StackTraces.MethodToString(method);
+			string str = StackTraces.MethodToString(method);
 
 			Assert.AreEqual("System.Diagnostics.StackTrace.GetFrames()", str);
 		}
@@ -88,15 +88,15 @@ namespace NewRelic.Agent.Core.Utils
 		[Test]
 		public static void TestMethodToStringsOneParameter() {
 			MethodInfo method = typeof(StackTrace).GetMethod("GetFrame");
-			String str = StackTraces.MethodToString(method);
+			string str = StackTraces.MethodToString(method);
 
 			Assert.AreEqual("System.Diagnostics.StackTrace.GetFrame(System.Int32 index)", str);
 		}
 
 		[Test]
 		public static void TestMethodToStringTwoParameters() {
-			MethodBase method = typeof(StackTrace).GetConstructor(new Type[] {typeof(Exception), typeof(Int32)});
-			String str = StackTraces.MethodToString(method);
+			MethodBase method = typeof(StackTrace).GetConstructor(new Type[] {typeof(Exception), typeof(int) });
+			string str = StackTraces.MethodToString(method);
 
 			Assert.AreEqual("System.Diagnostics.StackTrace..ctor(System.Exception e,System.Int32 skipFrames)", str);
 		}
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.Utils
 		public static void TestToString ()
 		{
 			StackFrame frame = new StackFrame("dude", 6, 6);
-			String str = StackTraces.ToString(frame);
+			string str = StackTraces.ToString(frame);
 			Assert.AreEqual("NewRelic.Agent.Core.Utils.StackTracesTest.TestToString(dude:6)", str);
 		}
 
@@ -121,9 +121,9 @@ namespace NewRelic.Agent.Core.Utils
 		public static void TestListToString ()
 		{	
 			StackFrame frame = new StackFrame("dude", 6, 6);
-			ICollection<String> strings = StackTraces.ToStringList(new StackFrame[] {frame});
+			ICollection<string> strings = StackTraces.ToStringList(new StackFrame[] {frame});
 			Assert.AreEqual(1, strings.Count);
-			IEnumerator<String> en = strings.GetEnumerator();
+			IEnumerator<string> en = strings.GetEnumerator();
 			Assert.That(en.MoveNext());
 			Assert.AreEqual(StackTraces.ToString(frame), en.Current);
 		}

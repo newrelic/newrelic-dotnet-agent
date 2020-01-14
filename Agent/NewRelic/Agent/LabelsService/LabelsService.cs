@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
 using NewRelic.SystemExtensions;
@@ -20,7 +19,7 @@ namespace NewRelic.Agent
 		// TODO: we should memoize this and reset it to null every time the configuration is updated
 		public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration(); } }
 
-		public LabelsService([NotNull] IConfigurationService configurationService)
+		public LabelsService(IConfigurationService configurationService)
 		{
 			_configurationService = configurationService;
 		}
@@ -28,7 +27,7 @@ namespace NewRelic.Agent
 		private IEnumerable<Label> GetLabelsFromConfiguration()
 		{
 			var labelsString = _configurationService.Configuration.Labels;
-			if (String.IsNullOrEmpty(labelsString))
+			if (string.IsNullOrEmpty(labelsString))
 				return Enumerable.Empty<Label>();
 
 			try
@@ -55,7 +54,7 @@ namespace NewRelic.Agent
 			}
 		}
 
-		private static Label CreateLabelFromString([NotNull] string typeAndValueString)
+		private static Label CreateLabelFromString(string typeAndValueString)
 		{
 			if (typeAndValueString == null)
 				throw new ArgumentNullException("typeAndValueString");
@@ -86,7 +85,7 @@ namespace NewRelic.Agent
 			return new Label(typeTruncated, valueTruncated);
 		}
 
-		private static string Truncate([NotNull] string value)
+		private static string Truncate(string value)
 		{
 			var result = value.TruncateUnicodeStringByLength(MaxLength);
 			if (result.Length != value.Length)

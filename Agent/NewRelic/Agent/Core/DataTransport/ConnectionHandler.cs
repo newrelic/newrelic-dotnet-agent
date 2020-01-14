@@ -2,6 +2,7 @@
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utilization;
 using NewRelic.Core;
@@ -89,9 +90,12 @@ namespace NewRelic.Agent.Core.DataTransport
 				EventBus<ServerConfigurationUpdatedEvent>.Publish(new ServerConfigurationUpdatedEvent(serverConfiguration));
 
 				LogSecurityPolicySettingsOnceAllSettingsResolved();
+				GenerateFasterEventHarvestConfigMetrics(serverConfiguration.EventHarvestConfig);
 
 				_dataRequestWire = _collectorWireFactory.GetCollectorWire(_configuration, serverConfiguration.RequestHeadersMap, _agentHealthReporter);
 				SendAgentSettings();
+
+				EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 				Log.Info("Agent fully connected.");
 			}
 
@@ -344,6 +348,50 @@ namespace NewRelic.Agent.Core.DataTransport
 			{
 				Log.Error(ex);
 			}
+		}
+
+		private void GenerateFasterEventHarvestConfigMetrics(EventHarvestConfig eventHarvestConfig)
+		{
+			if (eventHarvestConfig == null) return;
+
+			if (!eventHarvestConfig.ReportPeriodMs.HasValue) return;
+
+			_agentHealthReporter.ReportSupportabilityCountMetric(MetricNames.SupportabilityEventHarvestReportPeriod, eventHarvestConfig.ReportPeriodMs.Value);
+
+			var fasterEventHarvestEnabledTypes = new List<string>();
+
+			if (GenerateHarvestLimitMetricIfAvailable(MetricNames.SupportabilityEventHarvestErrorEventHarvestLimit, eventHarvestConfig.ErrorEventHarvestLimit()))
+			{
+				fasterEventHarvestEnabledTypes.Add("Error events");
+			}
+
+			if (GenerateHarvestLimitMetricIfAvailable(MetricNames.SupportabilityEventHarvestCustomEventHarvestLimit, eventHarvestConfig.CustomEventHarvestLimit()))
+			{
+				fasterEventHarvestEnabledTypes.Add("Custom events");
+			}
+
+			if (GenerateHarvestLimitMetricIfAvailable(MetricNames.SupportabilityEventHarvestTransactionEventHarvestLimit, eventHarvestConfig.TransactionEventHarvestLimit()))
+			{
+				fasterEventHarvestEnabledTypes.Add("Transaction events");
+			}
+
+			if (GenerateHarvestLimitMetricIfAvailable(MetricNames.SupportabilityEventHarvestSpanEventHarvestLimit, eventHarvestConfig.SpanEventHarvestLimit()))
+			{
+				fasterEventHarvestEnabledTypes.Add("Span events");
+			}
+
+			if (fasterEventHarvestEnabledTypes.Count > 0)
+			{
+				Log.InfoFormat("The following events will be harvested every {1}ms: {0}", string.Join(", ", fasterEventHarvestEnabledTypes), eventHarvestConfig.ReportPeriodMs);
+			}
+		}
+
+		private bool GenerateHarvestLimitMetricIfAvailable(string metricName, uint? harvestLimit)
+		{
+			if (!harvestLimit.HasValue) return false;
+
+			_agentHealthReporter.ReportSupportabilityCountMetric(metricName, unchecked((int)harvestLimit.Value));
+			return true;
 		}
 
 		private void SendShutdownCommand()

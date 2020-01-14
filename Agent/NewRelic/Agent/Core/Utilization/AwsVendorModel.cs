@@ -1,30 +1,29 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilization
 {
 	public class AwsVendorModel : IVendorModel
 	{
-		private readonly String _availabilityZone;
-		private readonly String _instanceId;
-		private readonly String _instanceType;
+		private readonly string _availabilityZone;
+		private readonly string _instanceId;
+		private readonly string _instanceType;
 
-		public AwsVendorModel(String availabilityZone, String instanceId, String instanceType)
+		public AwsVendorModel(string availabilityZone, string instanceId, string instanceType)
 		{
 			_availabilityZone = availabilityZone;
 			_instanceId = instanceId;
 			_instanceType = instanceType;
 		}
 
-		public String VendorName { get { return "aws"; } }
+		public string VendorName { get { return "aws"; } }
 
 		[JsonProperty("availabilityZone", NullValueHandling = NullValueHandling.Ignore)]
-		public String AvailabilityZone { get { return _availabilityZone; } }
+		public string AvailabilityZone { get { return _availabilityZone; } }
 
 		[JsonProperty("instanceId", NullValueHandling = NullValueHandling.Ignore)]
-		public String InstanceId { get { return _instanceId; } }
+		public string InstanceId { get { return _instanceId; } }
 
 		[JsonProperty("instanceType", NullValueHandling = NullValueHandling.Ignore)]
-		public String InstanceType { get { return _instanceType; } }
+		public string InstanceType { get { return _instanceType; } }
 	}
 }

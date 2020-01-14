@@ -35,6 +35,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		private IProcessStatic _processStatic;
 		private Action _harvestAction;
 		private ConfigurationAutoResponder _configurationAutoResponder;
+		private TimeSpan? _harvestCycle;
 
 		[SetUp]
 		public void SetUp()
@@ -59,8 +60,10 @@ namespace NewRelic.Agent.Core.Aggregators
 			var sqlParsingCacheSupportabilityMetricReporter = Mock.Create<ISqlParsingCacheSupportabilityMetricReporter>();
 			
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
 			_metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, new[] { _outOfBandMetricSource }, _agentHealthReporter, _dnsStatic, _processStatic, scheduler, apiSupportabilityMetricCounters, sqlParsingCacheSupportabilityMetricReporter, catSupportabilityMetricCounters);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -144,6 +147,8 @@ namespace NewRelic.Agent.Core.Aggregators
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
 			_metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, agentHealthReporter, dnsStatic, processStatic, scheduler, apiSupportabilityMetricCounters, sqlParsingCacheSupportabilityMetricReporter, catSupportabilityMetricCounters);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var sentMetrics = Enumerable.Empty<MetricWireModel>();
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<IEnumerable<MetricWireModel>>()))
@@ -362,6 +367,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			Assert.IsTrue(unsentMetrics.Any(_=> _.MetricName.Name == "DotNet/metric1" && _.Data.Value0 == 1));
 			Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "DotNet/metric2" && _.Data.Value0 == 1));
 			Assert.IsTrue(unsentMetrics.Any(_ => _.MetricName.Name == "Supportability/MetricHarvest/transmit" && _.Data.Value0 == 2));
+		}
+
+		[Test]
+		public void Harvest_cycle_should_match_default_cycle()
+		{
+			Assert.AreEqual(TimeSpan.FromMinutes(1), _harvestCycle);
 		}
 	}
 }

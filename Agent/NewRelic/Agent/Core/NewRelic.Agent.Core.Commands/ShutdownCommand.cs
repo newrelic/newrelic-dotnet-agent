@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -15,7 +14,7 @@ namespace NewRelic.Agent.Core.Commands
 			Name = "shutdown";
 		}
 
-		public override object Process(IDictionary<String, Object> arguments)
+		public override object Process(IDictionary<string, object> arguments)
 		{
 			EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
 			return null;

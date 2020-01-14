@@ -1,5 +1,4 @@
 using NewRelic.Agent.Extensions.Parsing;
-using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -79,7 +78,7 @@ namespace NewRelic.Parsing.ConnectionString
 			return null;
 		}
 
-		private String ParsePortPathOrId()
+		private string ParsePortPathOrId()
 		{
 			var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
 			if (host == null) return null;

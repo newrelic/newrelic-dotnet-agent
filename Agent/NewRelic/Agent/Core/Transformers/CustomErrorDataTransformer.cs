@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
@@ -12,32 +10,26 @@ namespace NewRelic.Agent.Core.Transformers
 {
 	public interface ICustomErrorDataTransformer
 	{
-		void Transform(ErrorData errorData, [CanBeNull] IEnumerable<KeyValuePair<String, String>> customAttributes, float priority);
+		void Transform(ErrorData errorData, IEnumerable<KeyValuePair<string, string>> customAttributes, float priority);
 	}
 
 	public class CustomErrorDataTransformer : ICustomErrorDataTransformer
 	{
-		[NotNull]
 		private readonly IConfigurationService _configurationService;
 
-		[NotNull]
 		private readonly IAttributeService _attributeService;
 
-		[NotNull]
 		private readonly IErrorTraceMaker _errorTraceMaker;
 
-		[NotNull]
 		private readonly IErrorEventMaker _errorEventMaker;
 
-		[NotNull]
 		private readonly IErrorTraceAggregator _errorTraceAggregator;
 
-		[NotNull]
 		private readonly IErrorEventAggregator _errorEventAggregator;
 
-		public CustomErrorDataTransformer([NotNull] IConfigurationService configurationService, [NotNull] IAttributeService attributeService, 
-			[NotNull] IErrorTraceMaker errorTraceMaker, [NotNull] IErrorTraceAggregator errorTraceAggregator,
-			[NotNull] IErrorEventMaker errorEventMaker, [NotNull] IErrorEventAggregator errorEventAggregator)
+		public CustomErrorDataTransformer(IConfigurationService configurationService, IAttributeService attributeService, 
+			IErrorTraceMaker errorTraceMaker, IErrorTraceAggregator errorTraceAggregator,
+			IErrorEventMaker errorEventMaker, IErrorEventAggregator errorEventAggregator)
 		{
 			_configurationService = configurationService;
 			_attributeService = attributeService;

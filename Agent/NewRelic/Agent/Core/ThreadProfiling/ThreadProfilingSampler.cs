@@ -1,8 +1,6 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Core.Logging;
+﻿using NewRelic.Core.Logging;
 using System;
-using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
@@ -12,27 +10,25 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 	/// </summary>
 	public class ThreadProfilingSampler : IThreadProfilingSampler
 	{
-		#region Background Sampling Worker Thread
-
 		/// <summary>
 		/// Tracks the state of the background sampling worker.  1: worker has been scheduled/is running.  0: no worker has been scheduled.
 		/// </summary>
-		private Int32 _workerRunning = 0;
+		private int _workerRunning = 0;
 
 		/// <summary>
 		/// Used to signal the background thread to terminate and stop sampling
 		/// </summary>
-		[NotNull]
 		private ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
 		private Thread _samplingWorker = null;
-		#endregion
+		private INativeMethods _nativeMethods;
 
-		public ThreadProfilingSampler()
+		public ThreadProfilingSampler(INativeMethods nativeMethods)
 		{
+			_nativeMethods = nativeMethods;
 		}
 
-		public bool Start(UInt32 frequencyInMsec, UInt32 durationInMsec, [NotNull]ISampleSink sampleSink, [NotNull] INativeMethods nativeMethods)
+		public bool Start(uint frequencyInMsec, uint durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
 		{
 			_shutdownEvent.Reset();
 
@@ -68,33 +64,18 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			}
 		}
 
-		#region Private Workers
-
 		/// <summary>
 		/// Polls for profiled threads.
 		/// </summary>
-		private void InternalPolling_WaitCallback(UInt32 frequencyInMsec, UInt32 durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
+		private void InternalPolling_WaitCallback(uint frequencyInMsec, uint durationInMsec, ISampleSink sampleSink, INativeMethods nativeMethods)
 		{
-			Stopwatch sw = Stopwatch.StartNew();
-
-			//drift calculation support
-			int intervalMilliseconds = (int)frequencyInMsec;
-			//if the time used to profile and update tree was more than this percentage of the sampling freq, count it in samplesExceedingThreshold
-			const double ReportDriftThreshold = 0.1;  
-			int reportingThresholdMilliseconds = (int)Math.Truncate(intervalMilliseconds * ReportDriftThreshold);
-
-			int samplesExceedingThreshold = 0;
 			int samples = 0;
 
 			var lastTickOfSamplingPeriod = DateTime.UtcNow.AddMilliseconds(durationInMsec).Ticks;
 			try
 			{
-				// Accounting for drift
-				int elapsedMilliseconds = 0;
-				while (!_shutdownEvent.Wait(intervalMilliseconds - elapsedMilliseconds))
+				while (!_shutdownEvent.Wait((int)frequencyInMsec))
 				{
-					long startTick = sw.ElapsedTicks;
-
 					if (DateTime.UtcNow.Ticks > lastTickOfSamplingPeriod)
 					{
 						_shutdownEvent.Set();
@@ -104,7 +85,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
 					try
 					{
-						var threadSnapshots = nativeMethods.GetProfileWithRelease(out int result);
+						var threadSnapshots = GetProfileWithRelease(out int result);
 						if (result >= 0)
 						{
 							++samples;
@@ -114,19 +95,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 						{
 							Log.Error($"Thread Profile sampling failed. ({result:X})");
 						}
-
 					}
 					catch (Exception ex)
 					{
 						Log.Error(ex);
-					}
-
-					//drift
-					var ticksUsed = sw.ElapsedTicks - startTick;
-					elapsedMilliseconds = Math.Min((int)(ticksUsed / TimeSpan.TicksPerMillisecond), intervalMilliseconds);
-					if (elapsedMilliseconds >= reportingThresholdMilliseconds)
-					{
-						++samplesExceedingThreshold;
 					}
 				}
 			}
@@ -136,7 +108,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			}
 			finally
 			{
-				Log.Info($"samples ({samples}) exceeding threshold: {samplesExceedingThreshold}");
+				Log.Info($"samples ({samples})");
 
 				sampleSink.SamplingComplete();
 
@@ -144,6 +116,71 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 				_workerRunning = 0;
 			}
 		}
-		#endregion
+
+		private ThreadSnapshot[] GetProfileWithRelease(out int hresult)
+		{
+			ThreadSnapshot[] threadSnapshots = null;
+			try
+			{
+				threadSnapshots = GetProfile(out hresult);
+				//hresult is passed to caller to know if there was an error
+			}
+			finally
+			{
+				_nativeMethods.ReleaseProfile();
+			}
+			return threadSnapshots;
+		}
+
+
+		private static UIntPtr ReadUIntPtr(IntPtr address)
+		{
+			return (UIntPtr.Size == sizeof(uint)) ?
+				new UIntPtr(unchecked((uint)Marshal.ReadInt32(address))) :
+				new UIntPtr(unchecked((ulong)Marshal.ReadInt64(address)));
+		}
+
+		private ThreadSnapshot[] GetProfile(out int hresult)
+		{
+			hresult = _nativeMethods.RequestProfile(out IntPtr nativeSnapshots, out int snapshotLength);
+			if (hresult >= 0 && IntPtr.Zero != nativeSnapshots && snapshotLength > 0)
+			{
+				var marshalledSnapshots = new ThreadSnapshot[snapshotLength];
+				for (int indx = 0; indx != snapshotLength; ++indx)
+				{
+					var marshalled = new ThreadSnapshot();
+					marshalled.ThreadId = ReadUIntPtr(nativeSnapshots);
+					nativeSnapshots += UIntPtr.Size;
+					marshalled.ErrorCode = Marshal.ReadInt32(nativeSnapshots);
+					nativeSnapshots += sizeof(int);
+					// did we get stack walk? nominally 0 or 1 if the stack was too deep
+					if (marshalled.ErrorCode >= 0)
+					{
+						var countOfSnapshots = Marshal.ReadInt32(nativeSnapshots);
+						nativeSnapshots += sizeof(int);
+						marshalled.FunctionIDs = new UIntPtr[countOfSnapshots];
+						if (countOfSnapshots > 0)
+						{
+							var FunctionIDPointer = Marshal.ReadIntPtr(nativeSnapshots);
+							for (int fidx = 0; fidx != countOfSnapshots; ++fidx, FunctionIDPointer += IntPtr.Size)
+							{
+								marshalled.FunctionIDs[fidx] = ReadUIntPtr(FunctionIDPointer);
+							}
+						}
+						nativeSnapshots += IntPtr.Size;
+					}
+					else
+					{
+						nativeSnapshots += sizeof(int) + IntPtr.Size;
+					}
+					marshalledSnapshots[indx] = marshalled;
+				}
+				return marshalledSnapshots;
+			}
+			else
+			{
+				return new ThreadSnapshot[0];
+			}
+		}
 	}
 }

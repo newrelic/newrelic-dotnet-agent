@@ -59,13 +59,13 @@ namespace NewRelic.Agent.Core.Wrapper
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(() => new TrackedWrapper(Mock.Create<IWrapper>()));
 
 			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
-			_wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
+			_wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 
-			var method = new Method(type, methodName, String.Empty);
+			var method = new Method(type, methodName, string.Empty);
 			var expectedMethodCall = new MethodCall(method, target, arguments);
 			var instrumetedMethodInfo = new InstrumentedMethodInfo(0, expectedMethodCall.Method, tracerFactoryName, false, null, null, false);
 
@@ -75,19 +75,19 @@ namespace NewRelic.Agent.Core.Wrapper
 		[Test]
 		public void BeforeWrappedMethod_ReturnsSomethingSimilarToResultOfLazyMap()
 		{
-			var result = null as String;
+			var result = null as string;
 
 			var wrapper = Mock.Create<IWrapper>();
 			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
 
 			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
 
-			var action = _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+			var action = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 			action(null, null);
 
 			Assert.AreEqual("foo", result);
@@ -96,21 +96,21 @@ namespace NewRelic.Agent.Core.Wrapper
 		[Test]
 		public void BeforeWrappedMethod_UsesDefaultWrapper_IfNoMatchingWrapper_ButDefaultWrapperCanWrapReturnsTrue()
 		{
-			var result = null as String;
+			var result = null as string;
 			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
 
 			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(true));
 			Mock.Arrange(() => _defaultWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
 
 			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
 
 			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agent, _agentHealthReporter, _agentTimerService);
 
-			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+			var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 			action(null, null);
 
 			Assert.AreEqual("foo", result);
@@ -125,14 +125,14 @@ namespace NewRelic.Agent.Core.Wrapper
 			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(false));
 
 			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
 
 			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agent, _agentHealthReporter, _agentTimerService);
 
-			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+			var action = wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 			action(null, null);
 
 			Assert.AreEqual("foo", result);
@@ -147,12 +147,12 @@ namespace NewRelic.Agent.Core.Wrapper
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
 
 			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
 
-			Assert.Throws<Exception>(() => _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0));
+			Assert.Throws<Exception>(() => _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0));
 
 			Mock.Assert(_wrapperMap);
 		}
@@ -170,12 +170,12 @@ namespace NewRelic.Agent.Core.Wrapper
 			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgent>(), Arg.IsAny<ITransaction>())).OccursOnce();
 
 			var type = typeof(System.Web.HttpApplication);
-			const String methodName = "ExecuteStep";
-			const String tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
-			var invocationTarget = new Object();
-			var arguments = new Object[2];
+			const string methodName = "ExecuteStep";
+			const string tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
+			var invocationTarget = new object();
+			var arguments = new object[2];
 			var argumentSignature = "IExecutionStep,System.Boolean&";
-			var metricName = String.Empty;
+			var metricName = string.Empty;
 
 			var method = new Method(type, methodName, argumentSignature);
 			var methodCall = new MethodCall(method, invocationTarget, arguments);
@@ -198,12 +198,12 @@ namespace NewRelic.Agent.Core.Wrapper
 			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
 
 			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+			const string methodName = "MyMethod";
+			const string tracerFactoryName = "MyTracer";
+			var target = new object();
+			var arguments = new object[0];
 
-			var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+			var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, string.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 			Assert.Throws<Exception>(() => afterWrappedMethod(null, null));
 
 			Mock.Assert(_wrapperMap);
@@ -221,12 +221,12 @@ namespace NewRelic.Agent.Core.Wrapper
 			Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(1);
 
 			var type = typeof(System.Web.HttpApplication);
-			const String methodName = "ExecuteStep";
-			const String tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
-			var invocationTarget = new Object();
-			var arguments = new Object[2];
+			const string methodName = "ExecuteStep";
+			const string tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
+			var invocationTarget = new object();
+			var arguments = new object[2];
 			var argumentSignature = "IExecutionStep,System.Boolean&";
-			var metricName = String.Empty;
+			var metricName = string.Empty;
 
 			var method = new Method(type, methodName, argumentSignature);
 			var methodCall = new MethodCall(method, invocationTarget, arguments);

@@ -55,6 +55,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		public MetricStatsEngineQueue StatsEngineQueue => _metricStatsEngineQueue;
 
+		protected override bool IsEnabled => true;
+
 		#region interface and abstract override required methods
 
 		public override void Collect(IAllMetricStatsCollection metric)

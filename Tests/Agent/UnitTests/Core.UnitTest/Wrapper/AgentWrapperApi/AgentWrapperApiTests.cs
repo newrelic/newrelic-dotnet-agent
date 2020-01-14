@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
@@ -36,35 +35,35 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 	[TestFixture]
 	public class AgentWrapperApiTests
 	{
-		[NotNull] private IInternalTransaction _transaction;
+		private IInternalTransaction _transaction;
 
-		[NotNull] private ITransactionService _transactionService;
+		private ITransactionService _transactionService;
 
-		[NotNull] private IAgent _agent;
+		private IAgent _agent;
 
-		[NotNull] private ITransactionTransformer _transactionTransformer;
+		private ITransactionTransformer _transactionTransformer;
 
-		[NotNull] private ICallStackManager _callStackManager;
+		private ICallStackManager _callStackManager;
 
-		[NotNull] private ITransactionMetricNameMaker _transactionMetricNameMaker;
+		private ITransactionMetricNameMaker _transactionMetricNameMaker;
 
-		[NotNull] private IPathHashMaker _pathHashMaker;
+		private IPathHashMaker _pathHashMaker;
 
-		[NotNull] private ICatHeaderHandler _catHeaderHandler;
-		[NotNull] private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
+		private ICatHeaderHandler _catHeaderHandler;
+		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
 
 
-		[NotNull] private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
+		private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
 
-		[NotNull] private ITransactionFinalizer _transactionFinalizer;
+		private ITransactionFinalizer _transactionFinalizer;
 
-		[NotNull] private IBrowserMonitoringPrereqChecker _browserMonitoringPrereqChecker;
+		private IBrowserMonitoringPrereqChecker _browserMonitoringPrereqChecker;
 
-		[NotNull] private IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
+		private IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
 
-		[NotNull] private IConfigurationService _configurationService;
+		private IConfigurationService _configurationService;
 
-		[NotNull] private IAgentHealthReporter _agentHealthReporter;
+		private IAgentHealthReporter _agentHealthReporter;
 
 		private ITraceMetadataFactory _traceMetadataFactory;
 
@@ -98,8 +97,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var threadPoolStatic = Mock.Create<IThreadPoolStatic>();
 			Mock.Arrange(() => threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>()))
 				.DoInstead<WaitCallback>(callback => callback(null));
-			Mock.Arrange(() => threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>(), Arg.IsAny<Object>()))
-				.DoInstead<WaitCallback, Object>((callback, state) => callback(state));
+			Mock.Arrange(() => threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>(), Arg.IsAny<object>()))
+				.DoInstead<WaitCallback, object>((callback, state) => callback(state));
 
 			_transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
 			_pathHashMaker = Mock.Create<IPathHashMaker>();
@@ -379,9 +378,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var expectedParentId = 1;
 			Mock.Arrange(() => _callStackManager.TryPeek()).Returns(expectedParentId);
 
-			var invocationTarget = new Object();
+			var invocationTarget = new object();
 			var method = new Method(typeof(string), "methodName", "parameterTypeNames");
-			var methodCall = new MethodCall(method, invocationTarget, new Object[0]);
+			var methodCall = new MethodCall(method, invocationTarget, new object[0]);
 			var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(methodCall, "foo");
 			Assert.NotNull(opaqueSegment);
 
@@ -404,11 +403,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			SetupTransaction();
 
-			var pushedUniqueId = (Object)null;
+			var pushedUniqueId = (object)null;
 			Mock.Arrange(() => _callStackManager.Push(Arg.IsAny<int>()))
-				.DoInstead<Object>(pushed => pushedUniqueId = pushed);
+				.DoInstead<object>(pushed => pushedUniqueId = pushed);
 
-			var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), "foo");
+			var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0]), "foo");
 			Assert.NotNull(opaqueSegment);
 
 			var segment = opaqueSegment as TypedSegment<SimpleSegmentData>;
@@ -423,7 +422,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			SetupTransaction();
 			var uri = new Uri("/test", UriKind.Relative);
-			NrAssert.Throws<ArgumentException>(() => _agent.CurrentTransaction.StartExternalRequestSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), uri, "GET"));
+			NrAssert.Throws<ArgumentException>(() => _agent.CurrentTransaction.StartExternalRequestSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0]), uri, "GET"));
 		}
 
 		#endregion Segments
@@ -435,7 +434,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			SetupTransaction();
 
-			var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new Object[0]), "foo");
+			var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0]), "foo");
 			var segment = opaqueSegment as Segment;
 			var expectedUniqueId = segment.UniqueId;
 			var expectedParentId = segment.ParentUniqueId;
@@ -1362,8 +1361,7 @@ namespace NotNewRelic
 {
 	public static class ExceptionBuilder
 	{
-		[NotNull]
-		public static Exception BuildException([NotNull] string message)
+		public static Exception BuildException(string message)
 		{
 			try
 			{

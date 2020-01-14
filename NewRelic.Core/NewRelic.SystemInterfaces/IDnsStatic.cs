@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 
@@ -7,10 +6,10 @@ namespace NewRelic.SystemInterfaces
 {
 	public interface IDnsStatic
 	{
-		String GetHostName();
+		string GetHostName();
 
 
-		IPHostEntry GetHostEntry(String hostNameOrAddres);
+		IPHostEntry GetHostEntry(string hostNameOrAddres);
 
 		string GetFullHostName();
 
@@ -29,12 +28,12 @@ namespace NewRelic.SystemInterfaces
 			_regex = new Regex(Ipv6ScopeIDPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		}
 
-		public String GetHostName()
+		public string GetHostName()
 		{
 			return Dns.GetHostName();
 		}
 
-		public IPHostEntry GetHostEntry(String hostNameOrAddres)
+		public IPHostEntry GetHostEntry(string hostNameOrAddres)
 		{
 			return Dns.GetHostEntry(hostNameOrAddres);
 		}

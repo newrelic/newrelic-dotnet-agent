@@ -1,7 +1,6 @@
 using NewRelic.Agent.Core.Config;
 using NewRelic.Core.Logging;
 using NUnit.Framework;
-using System;
 
 namespace NewRelic.Agent.Core
 {
@@ -81,7 +80,7 @@ namespace NewRelic.Agent.Core
 
 		static private ILogConfig GetLogConfig(string logLevel)
 		{
-			var xml = String.Format(
+			var xml = string.Format(
 				"<configuration xmlns=\"urn:newrelic-config\">" +
 				"   <service licenseKey=\"dude\"/>" +
 				"   <application>" +
@@ -96,7 +95,7 @@ namespace NewRelic.Agent.Core
 
 		static private ILogConfig LogConfigFixtureWithAuditLogEnabled(string logLevel)
 		{
-			var xml = String.Format(
+			var xml = string.Format(
 				"<configuration xmlns=\"urn:newrelic-config\">" +
 				"   <service licenseKey=\"dude\"/>" +
 				"   <application>" +

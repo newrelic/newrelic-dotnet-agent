@@ -7,7 +7,6 @@ using NewRelic.Core;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Telerik.JustMock;
@@ -43,7 +42,7 @@ namespace CompositeTests
 			var resourceId = "resourceId";
 			var jobId = "jobId";
 			var monitorId = "monitorId";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] {clientAccountId};
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] {clientAccountId};
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
@@ -106,7 +105,7 @@ namespace CompositeTests
 		{
 			// ARRANGE
 			var encodingKey = "foo";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] {123};
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] {123};
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
@@ -152,7 +151,7 @@ namespace CompositeTests
 		{
 			// ARRANGE
 			var encodingKey = "foo";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { 123 };
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
@@ -201,7 +200,7 @@ namespace CompositeTests
 			var resourceId = "resourceId";
 			var jobId = "jobId";
 			var monitorId = "monitorId";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
 			_compositeTestAgent.ServerConfiguration.CatId = "123#456";
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
@@ -238,7 +237,7 @@ namespace CompositeTests
 			var resourceId = "resourceId";
 			var jobId = "jobId";
 			var monitorId = "monitorId";
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
 			_compositeTestAgent.ServerConfiguration.CatId = "123#456";
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();

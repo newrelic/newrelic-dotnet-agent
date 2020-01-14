@@ -1,21 +1,21 @@
 ﻿using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
 	public interface ITransactionEventAggregator
 	{
 		void Collect(TransactionEventWireModel transactionEventWireModel);
-		IAdaptiveSampler AdaptiveSampler { get; }
 	}
 
 	/// <summary>
@@ -24,6 +24,7 @@ namespace NewRelic.Agent.Core.Aggregators
 	public class TransactionEventAggregator : AbstractAggregator<TransactionEventWireModel>, ITransactionEventAggregator
 	{
 		private readonly IAgentHealthReporter _agentHealthReporter;
+		private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
 
 		// Note that synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
 		private IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> _transactionEvents = new ConcurrentPriorityQueue<PrioritizedNode< TransactionEventWireModel>>(0);
@@ -32,41 +33,63 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private const double ReservoirReductionSizeMultiplier = 0.5;
 
-		public IAdaptiveSampler AdaptiveSampler { get; }
-
-		public TransactionEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter, IAdaptiveSampler adaptiveSampler)
+		public TransactionEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
-			AdaptiveSampler = adaptiveSampler;
 			ResetCollections(_configuration.TransactionEventsMaxSamplesStored);
+		}
+
+		protected override TimeSpan HarvestCycle => _configuration.TransactionEventsHarvestCycle;
+		protected override bool IsEnabled => _configuration.TransactionEventsEnabled;
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			_readerWriterLock.Dispose();
 		}
 
 		public override void Collect(TransactionEventWireModel transactionEventWireModel)
 		{
 			_agentHealthReporter.ReportTransactionEventCollected();
-			AddEventToCollection(transactionEventWireModel);
+
+			_readerWriterLock.EnterReadLock();
+			try
+			{
+				AddEventToCollection(transactionEventWireModel);
+			}
+			finally
+			{
+				_readerWriterLock.ExitReadLock();
+			}
 		}
 
 		protected override void Harvest()
 		{
-			// create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
-			var transactionEvents = _transactionEvents.Where(node => node != null).Select(node => node.Data).ToList();
-			var syntheticsTransactionEvents = _syntheticsTransactionEvents;
-			var aggregatedEvents = transactionEvents.Union(syntheticsTransactionEvents).ToList();
+			IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> originalTransactionEvents;
+			ConcurrentList<TransactionEventWireModel> originalSyntheticsTransactionEvents;
+			_readerWriterLock.EnterWriteLock();
+			try
+			{
+				originalTransactionEvents = GetAndResetRegularTransactionEvents(_transactionEvents.Size);
+				originalSyntheticsTransactionEvents = GetAndResetSyntheticsTransactionEvents();
+			}
+			finally
+			{
+				_readerWriterLock.ExitWriteLock();
+			}
+
+			var transactionEvents = originalTransactionEvents.Where(node => node != null).Select(node => node.Data).ToList();
+			var aggregatedEvents = transactionEvents.Union(originalSyntheticsTransactionEvents).ToList();
 
 			// EventHarvestData is required for extrapolation in the UI.
-			var eventHarvestData = new EventHarvestData(_transactionEvents.Size, (uint)_transactionEvents.GetAddAttemptsCount());
-
-			ResetCollections(GetReservoirSize());
+			var eventHarvestData = new EventHarvestData(originalTransactionEvents.Size, (uint)originalTransactionEvents.GetAddAttemptsCount());
 
 			// if we don't have any events to publish then don't
 			if (aggregatedEvents.Count <= 0)
 				return;
 
 			var responseStatus = DataTransportService.Send(eventHarvestData, aggregatedEvents);
-
-			AdaptiveSampler.EndOfSamplingInterval();
 
 			HandleResponse(responseStatus, aggregatedEvents);
 		}
@@ -81,8 +104,18 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(uint transactionEventCollectionCapacity)
 		{
-			_transactionEvents = new ConcurrentPriorityQueue<PrioritizedNode<TransactionEventWireModel>>(transactionEventCollectionCapacity);
-			_syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
+			GetAndResetRegularTransactionEvents(transactionEventCollectionCapacity);
+			GetAndResetSyntheticsTransactionEvents();
+		}
+
+		private IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> GetAndResetRegularTransactionEvents(uint transactionEventCollectionCapacity)
+		{
+			return Interlocked.Exchange(ref _transactionEvents, new ConcurrentPriorityQueue<PrioritizedNode<TransactionEventWireModel>>(transactionEventCollectionCapacity));
+		}
+
+		private ConcurrentList<TransactionEventWireModel> GetAndResetSyntheticsTransactionEvents()
+		{
+			return Interlocked.Exchange(ref _syntheticsTransactionEvents, new ConcurrentList<TransactionEventWireModel>());
 		}
 
 		private void AddEventToCollection(TransactionEventWireModel transactionEvent)

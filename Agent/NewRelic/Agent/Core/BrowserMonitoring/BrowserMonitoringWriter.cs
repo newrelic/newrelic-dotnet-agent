@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Core;
+﻿using NewRelic.Core;
 using System;
 using System.Text.RegularExpressions;
 
@@ -7,13 +6,12 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
 	public class BrowserMonitoringWriter
 	{
-		[NotNull]
-		private readonly Func<String> _getJsScript;
+		private readonly Func<string> _getJsScript;
 
 		private static readonly Regex XUaCompatibleFilter = new Regex(@"(<\s*meta[^>]+http-equiv[\s]*=[\s]*['""]x-ua-compatible['""][^>]*>)", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
 		private static readonly Regex CharsetFilter = new Regex(@"(<\s*meta[^>]+charset\s*=[^>]*>)", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
-		public BrowserMonitoringWriter([NotNull] Func<String> getJsScript)
+		public BrowserMonitoringWriter(Func<string> getJsScript)
 		{
 			_getJsScript = getJsScript;
 		}
@@ -77,7 +75,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
 			// The <HEAD> tag may be malformed or simply be another type of tag, if so do not use it
 			if (!(indexOfEndHeadOpeningTag > openingHeadTagIndex))
-				return String.Empty;
+				return string.Empty;
 
 			// Get the whole open HEAD tag string
 			var headOpeningTag = content.Substring(openingHeadTagIndex.Value, (indexOfEndHeadOpeningTag - openingHeadTagIndex.Value) + 1);

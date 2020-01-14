@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 using NewRelic.Collections;
 

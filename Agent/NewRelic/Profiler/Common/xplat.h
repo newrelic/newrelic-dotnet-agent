@@ -9,6 +9,17 @@
 
 // We use _X for most string literals.
 
+// From palclr.h:
+// This macro is used to standardize the wide character string literals between UNIX and Windows.
+// Unix L"" is UTF32, and on windows it's UTF16.  Because of built-in assumptions on the size
+// of string literals, it's important to match behaviour between Unix and Windows.  Unix will be defined
+// as u"" (char16_t)
+#ifdef PLATFORM_UNIX
+#define W(str) u##str
+#else // PLATFORM_UNIX
+#define W(str) L##str
+#endif // PLATFORM_UNIX
+
 #ifdef PAL_STDCPP_COMPAT
 
 #if defined(__llvm__)
@@ -73,9 +84,9 @@ inline xstring_t ToWideString(const char* const buf)
 }
 
 // implementations of windows apis
-inline int wcscmp(const xstring_t& s1, const std::wstring& s2)
+inline int wcscmp(const xstring_t& s1, const xstring_t& s2)
 {
-	return std::wstring(s1.begin(), s1.end()) == s2;
+	return s1.compare(s2) == 0;
 }
 
 inline int gmtime_s(struct tm* _tm, const time_t* time)

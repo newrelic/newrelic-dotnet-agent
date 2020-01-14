@@ -1,6 +1,4 @@
-﻿using System;
-using System.Web;
-using NewRelic.Agent.Extensions.Providers;
+﻿using NewRelic.Agent.Extensions.Providers;
 
 namespace NewRelic.Providers.Storage.HttpContext
 {
@@ -10,19 +8,19 @@ namespace NewRelic.Providers.Storage.HttpContext
 	/// </summary>
 	public class HttpContextStorage<T> : IContextStorage<T>
 	{
-		private readonly String _key;
+		private readonly string _key;
 
 		/// <summary>
 		/// Dude.
 		/// </summary>
-		public HttpContextStorage(String key)
+		public HttpContextStorage(string key)
 		{
 			_key = key;
 		}
 
-		Byte IContextStorage<T>.Priority { get { return 10; } }
+		byte IContextStorage<T>.Priority { get { return 10; } }
 
-		Boolean IContextStorage<T>.CanProvide { get { return System.Web.HttpContext.Current != null; } }
+		bool IContextStorage<T>.CanProvide { get { return System.Web.HttpContext.Current != null; } }
 
 		T IContextStorage<T>.GetData()
 		{

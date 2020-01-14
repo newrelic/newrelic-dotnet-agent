@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -23,10 +24,11 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			return new CanWrapResponse(canWrap);
 		}
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgent agent, [CanBeNull] ITransaction transaction)
+		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
-			operation = operation.EndsWith("Async") ? "LinqQueryAsync" : "LinqQuery";
+			var isAsync = operation.EndsWith("Async", StringComparison.OrdinalIgnoreCase);
+			operation = isAsync ? "LinqQueryAsync" : "LinqQuery";
 
 			var caller = instrumentedMethodCall.MethodCall.InvocationTarget;
 
@@ -40,7 +42,33 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);
 
-			return Delegates.GetDelegateFor(segment);
+			if (!isAsync)
+			{
+				return Delegates.GetDelegateFor(segment);
+			}
+
+			return Delegates.GetDelegateFor<Task>(
+				onFailure: segment.End,
+				onSuccess: AfterWrapped
+			);
+
+			void AfterWrapped(Task task)
+			{
+				segment.RemoveSegmentFromCallStack();
+
+				transaction.Hold();
+
+				if (task == null)
+				{
+					return;
+				}
+
+				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
+				{
+					segment.End();
+					transaction.Release();
+				}));
+			}
 		}
 	}
 }

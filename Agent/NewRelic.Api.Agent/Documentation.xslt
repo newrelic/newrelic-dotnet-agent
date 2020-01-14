@@ -17,7 +17,7 @@
 			<BODY>
 				<xsl:apply-templates select="//assembly"/>
 				<div class="copyright">
-					<p>©2008-2019 New Relic, Inc. All rights reserved.</p>
+					<p>©2008-2020 New Relic, Inc. All rights reserved.</p>
 				</div>
 			</BODY>			
 		</HTML>

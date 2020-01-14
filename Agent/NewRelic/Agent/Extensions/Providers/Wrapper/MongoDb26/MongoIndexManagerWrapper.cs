@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -47,7 +48,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall,
 				new ParsedSqlStatement(DatastoreVendor.MongoDB, model, operation), isLeaf: true, connectionInfo: connectionInfo);
 
-			if (!instrumentedMethodCall.IsAsync)
+			if (!operation.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
 			{
 				return Delegates.GetDelegateFor(segment);
 			}

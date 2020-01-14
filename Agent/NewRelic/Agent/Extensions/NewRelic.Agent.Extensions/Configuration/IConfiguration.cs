@@ -59,6 +59,7 @@ namespace NewRelic.Agent.Configuration
 		bool CrossApplicationTracingEnabled { get; }
 		bool DistributedTracingEnabled { get; }
 		bool SpanEventsEnabled { get; }
+		TimeSpan SpanEventsHarvestCycle { get; }
 		string PrimaryApplicationId { get; }
 		string TrustedAccountKey { get; }
 		string AccountId { get; }
@@ -67,6 +68,7 @@ namespace NewRelic.Agent.Configuration
 		bool ErrorCollectorEnabled { get; }
 		bool ErrorCollectorCaptureEvents { get; }
 		uint ErrorCollectorMaxEventSamplesStored { get; }
+		TimeSpan ErrorEventsHarvestCycle { get; }
 		uint ErrorsMaximumPerPeriod { get; }
 		IEnumerable<string> ExceptionsToIgnore { get; }
 		string EncodingKey { get; }
@@ -100,11 +102,12 @@ namespace NewRelic.Agent.Configuration
 		bool CustomEventsEnabled { get; }
 		string CustomEventsEnabledSource { get; }
 		uint CustomEventsMaxSamplesStored { get; }
+		TimeSpan CustomEventsHarvestCycle { get; }
 		bool DisableSamplers { get; }
 		bool ThreadProfilingEnabled { get; }
 		bool TransactionEventsEnabled { get; }
-		uint TransactionEventsMaxSamplesPerMinute { get; }
 		uint TransactionEventsMaxSamplesStored { get; }
+		TimeSpan TransactionEventsHarvestCycle { get; }
 		bool TransactionEventsTransactionsEnabled { get; }
 		IEnumerable<RegexRule> TransactionNameRegexRules { get; }
 		IDictionary<string,IEnumerable<string>> TransactionNameWhitelistRules { get; }

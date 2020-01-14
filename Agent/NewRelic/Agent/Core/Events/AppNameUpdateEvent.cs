@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Events
 {
 	public class AppNameUpdateEvent
 	{
-		[NotNull]
 		public readonly IEnumerable<string> AppNames;
 
-		public AppNameUpdateEvent([NotNull] IEnumerable<String> appNames)
+		public AppNameUpdateEvent(IEnumerable<string> appNames)
 		{
 			AppNames = appNames;
 		}

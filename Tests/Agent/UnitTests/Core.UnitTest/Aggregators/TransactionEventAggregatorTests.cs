@@ -2,7 +2,6 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
@@ -25,9 +24,11 @@ namespace NewRelic.Agent.Core.Aggregators
 		private IAgentHealthReporter _agentHealthReporter;
 		private TransactionEventAggregator _transactionEventAggregator;
 		private IProcessStatic _processStatic;
-		private IAdaptiveSampler _adaptiveSampler;
 		private ConfigurationAutoResponder _configurationAutoResponder;
+		private IScheduler _scheduler;
 		private Action _harvestAction;
+		private TimeSpan? _harvestCycle;
+		private static readonly TimeSpan ConfiguredHarvestCycle = TimeSpan.FromSeconds(5);
 
 		private const string TimeStampKey = "timestamp";
 		private readonly static Dictionary<string, object> _emptyAttributes = new Dictionary<string, object>();
@@ -40,17 +41,19 @@ namespace NewRelic.Agent.Core.Aggregators
 			var configuration = GetDefaultConfiguration();
 			Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
 			Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
+			Mock.Arrange(() => configuration.TransactionEventsHarvestCycle).Returns(ConfiguredHarvestCycle);
 			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_processStatic = Mock.Create<IProcessStatic>();
-			_adaptiveSampler = Mock.Create<IAdaptiveSampler>();
 
-			var scheduler = Mock.Create<IScheduler>();
-			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_transactionEventAggregator = new TransactionEventAggregator(_dataTransportService, scheduler, _processStatic, _agentHealthReporter, _adaptiveSampler);
+			_scheduler = Mock.Create<IScheduler>();
+			Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+			_transactionEventAggregator = new TransactionEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -328,9 +331,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventCollected(), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<UInt32>()), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(Arg.IsAny<int>()), Occurs.Never());
 		}
 
 		[Test]
@@ -356,6 +359,27 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(3));
+		}
+
+		[Test]
+		public void When_transaction_events_disabled_harvest_is_not_scheduled()
+		{
+			_configurationAutoResponder.Dispose();
+			_transactionEventAggregator.Dispose();
+			var configuration = Mock.Create<IConfiguration>();
+			Mock.Arrange(() => configuration.TransactionEventsEnabled).Returns(false);
+			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+			_transactionEventAggregator = new TransactionEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
+		}
+
+		[Test]
+		public void Harvest_cycle_should_match_configured_cycle()
+		{
+			Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
 		}
 
 		#region Helpers

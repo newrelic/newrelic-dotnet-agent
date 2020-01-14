@@ -1,20 +1,17 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent
 {
 	public class Label
 	{
-		[NotNull]
 		[JsonProperty(PropertyName = "label_type")]
-		public readonly String Type;
+		public readonly string Type;
 
-		[NotNull]
 		[JsonProperty(PropertyName = "label_value")]
-		public readonly String Value;
+		public readonly string Value;
 
-		public Label([NotNull] String labelType, [NotNull] String labelValue)
+		public Label(string labelType, string labelValue)
 		{
 			if (labelType == null)
 				throw new ArgumentNullException("labelType");

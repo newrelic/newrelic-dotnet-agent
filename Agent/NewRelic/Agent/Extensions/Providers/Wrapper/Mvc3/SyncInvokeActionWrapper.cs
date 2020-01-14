@@ -1,5 +1,4 @@
-﻿using System;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -23,7 +22,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 			var controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
 			var actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
-			var transactionName = String.Format("{0}/{1}", controllerName, actionName);
+			var transactionName = string.Format("{0}/{1}", controllerName, actionName);
 			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 			
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);

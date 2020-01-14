@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -17,7 +16,6 @@ namespace NewRelic.Agent.Core.Transformers
 	public class DatastoreSegmentTransformerTests
 	{
 
-		[NotNull]
 		private IConfigurationService _configurationService;
 
 		[SetUp]
@@ -65,8 +63,8 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(1, scoped.Count);
 			Assert.AreEqual(6, unscoped.Count);
 
-			const String statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
-			const String operationMetric = "Datastore/operation/MSSQL/INSERT";
+			const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
+			const string operationMetric = "Datastore/operation/MSSQL/INSERT";
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
@@ -83,7 +81,7 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(5, data.Value3);
 			Assert.AreEqual(5, data.Value4);
 
-			var unscopedMetricsWithExclusiveTime = new String[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb"};
+			var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb"};
 
 			foreach (var current in unscopedMetricsWithExclusiveTime)
 			{
@@ -117,8 +115,8 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(1, scoped.Count);
 			Assert.AreEqual(6, unscoped.Count);
 
-			const String statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
-			const String operationMetric = "Datastore/operation/MSSQL/INSERT";
+			const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
+			const string operationMetric = "Datastore/operation/MSSQL/INSERT";
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
@@ -135,7 +133,7 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(5, data.Value3);
 			Assert.AreEqual(5, data.Value4);
 
-			var unscopedMetricsWithExclusiveTime = new String[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
+			var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
 
 			foreach (var current in unscopedMetricsWithExclusiveTime)
 			{
@@ -152,7 +150,7 @@ namespace NewRelic.Agent.Core.Transformers
 		public void TransformSegment_CreatesNullModelSegmentMetrics()
 		{
 			var wrapperVendor = Extensions.Providers.Wrapper.DatastoreVendor.MSSQL;
-			var model = null as String;
+			var model = null as string;
 			var operation = "INSERT";
 
 			var segment = GetSegment(wrapperVendor, operation, model, 5);
@@ -170,8 +168,8 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(5, unscoped.Count);
 
 			//no statement metric for null model
-			const String statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
-			const String operationMetric = "Datastore/operation/MSSQL/INSERT";
+			const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
+			const string operationMetric = "Datastore/operation/MSSQL/INSERT";
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/allWeb"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
@@ -188,7 +186,7 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(5, data.Value3);
 			Assert.AreEqual(5, data.Value4);
 
-			var unscopedMetricsWithExclusiveTime = new String[] { operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb" };
+			var unscopedMetricsWithExclusiveTime = new string[] { operationMetric, "Datastore/all", "Datastore/allWeb", "Datastore/MSSQL/all", "Datastore/MSSQL/allWeb" };
 
 			foreach (var current in unscopedMetricsWithExclusiveTime)
 			{
@@ -225,9 +223,9 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(1, scoped.Count);
 			Assert.AreEqual(7, unscoped.Count);
 
-			const String statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
-			const String operationMetric = "Datastore/operation/MSSQL/INSERT";
-			const String instanceMetric = "Datastore/instance/MSSQL/HOST/8080";
+			const string statementMetric = "Datastore/statement/MSSQL/MY_TABLE/INSERT";
+			const string operationMetric = "Datastore/operation/MSSQL/INSERT";
+			const string instanceMetric = "Datastore/instance/MSSQL/HOST/8080";
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/all"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/allOther"));
 			Assert.IsTrue(unscoped.ContainsKey("Datastore/MSSQL/all"));
@@ -245,7 +243,7 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.AreEqual(5, data.Value3);
 			Assert.AreEqual(5, data.Value4);
 
-			var unscopedMetricsWithExclusiveTime = new String[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
+			var unscopedMetricsWithExclusiveTime = new string[] { statementMetric, operationMetric, "Datastore/all", "Datastore/allOther", "Datastore/MSSQL/all", "Datastore/MSSQL/allOther" };
 
 			foreach (var current in unscopedMetricsWithExclusiveTime)
 			{
@@ -266,15 +264,13 @@ namespace NewRelic.Agent.Core.Transformers
 		}
 		#endregion Transform
 
-		[NotNull]
-		private static Segment GetSegment([NotNull] DatastoreVendor vendor, [NotNull] String operation, [NotNull] String model, [CanBeNull] CrossApplicationResponseData catResponseData = null)
+		private static Segment GetSegment(DatastoreVendor vendor, string operation, string model, CrossApplicationResponseData catResponseData = null)
 		{
 			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, operation));
 			return new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), data);
 		}
 
-		[NotNull]
-		private static TypedSegment<DatastoreSegmentData> GetSegment([NotNull] DatastoreVendor vendor, [NotNull] String operation, [NotNull] String model, double duration, [CanBeNull] CrossApplicationResponseData catResponseData = null, [CanBeNull] String host = null, [CanBeNull] String portPathOrId = null)
+		private static TypedSegment<DatastoreSegmentData> GetSegment(DatastoreVendor vendor, string operation, string model, double duration, CrossApplicationResponseData catResponseData = null, string host = null, string portPathOrId = null)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
 			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, operation), null, new ConnectionInfo(host, portPathOrId, null));

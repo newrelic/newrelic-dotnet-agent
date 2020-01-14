@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent;
 using Newtonsoft.Json;
 
@@ -10,59 +8,50 @@ namespace AttributeFilterTests.Models
 	public class Configuration
 	{
 		[JsonProperty(PropertyName = "attributes.enabled")]
-		public Boolean AttributesEnabled = true;
+		public bool AttributesEnabled = true;
 
 		[JsonProperty(PropertyName = "browser_monitoring.attributes.enabled")]
-		public Boolean BrowserMonitoringAttributesEnabled = false;
+		public bool BrowserMonitoringAttributesEnabled = false;
 
 		[JsonProperty(PropertyName = "error_collector.attributes.enabled")]
-		public Boolean ErrorCollectorAttributesEnabled = true;
+		public bool ErrorCollectorAttributesEnabled = true;
 
 		[JsonProperty(PropertyName = "transaction_events.attributes.enabled")]
-		public Boolean TransactionEventsAttributesEnabled = true;
+		public bool TransactionEventsAttributesEnabled = true;
 
 		[JsonProperty(PropertyName = "transaction_tracer.attributes.enabled")]
-		public Boolean TransactionTracerAttributesEnabled = true;
+		public bool TransactionTracerAttributesEnabled = true;
 
 		[JsonProperty(PropertyName = "attributes.include")]
-		public IEnumerable<String> AttributesInclude = Enumerable.Empty<String>();
+		public IEnumerable<string> AttributesInclude = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "attributes.exclude")]
-		public IEnumerable<String> AttributesExclude = Enumerable.Empty<String>();
+		public IEnumerable<string> AttributesExclude = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "browser_monitoring.attributes.exclude")]
-		[NotNull]
-		public IEnumerable<String> BrowserMonitoringAttributeExcludes = Enumerable.Empty<String>();
+		public IEnumerable<string> BrowserMonitoringAttributeExcludes = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "browser_monitoring.attributes.include")]
-		[NotNull]
-		public IEnumerable<String> BrowserMonitoringAttributeIncludes = Enumerable.Empty<String>();
+		public IEnumerable<string> BrowserMonitoringAttributeIncludes = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "error_collector.attributes.exclude")]
-		[NotNull]
-		public IEnumerable<String> ErrorCollectorAttributeExcludes = Enumerable.Empty<String>();
+		public IEnumerable<string> ErrorCollectorAttributeExcludes = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "error_collector.attributes.include")]
-		[NotNull]
-		public IEnumerable<String> ErrorCollectorAttributeIncludes = Enumerable.Empty<String>();
+		public IEnumerable<string> ErrorCollectorAttributeIncludes = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "transaction_events.attributes.exclude")]
-		[NotNull]
-		public IEnumerable<String> TransactionEventsAttributeExcludes = Enumerable.Empty<String>();
+		public IEnumerable<string> TransactionEventsAttributeExcludes = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "transaction_events.attributes.include")]
-		[NotNull]
-		public IEnumerable<String> TransactionEventsAttributeIncludes = Enumerable.Empty<String>();
+		public IEnumerable<string> TransactionEventsAttributeIncludes = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "transaction_tracer.attributes.exclude")]
-		[NotNull]
-		public IEnumerable<String> TransactionTracerAttributeExcludes = Enumerable.Empty<String>();
+		public IEnumerable<string> TransactionTracerAttributeExcludes = Enumerable.Empty<string>();
 
 		[JsonProperty(PropertyName = "transaction_tracer.attributes.include")]
-		[NotNull]
-		public IEnumerable<String> TransactionTracerAttributeIncludes = Enumerable.Empty<String>();
+		public IEnumerable<string> TransactionTracerAttributeIncludes = Enumerable.Empty<string>();
 
-		[NotNull]
 		public AttributeFilter<Attribute>.Settings ToAttributeFilterSettings()
 		{
 			return new AttributeFilter<Attribute>.Settings

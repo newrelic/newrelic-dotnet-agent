@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Api;
@@ -27,9 +26,9 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 			return Delegates.GetDelegateFor(segment);
 		}
 
-		private String GetCollectionName(MethodCall methodCall)
+		private string GetCollectionName(MethodCall methodCall)
 		{
-			return methodCall.MethodArguments.ExtractNotNullAs<String>(0);
+			return methodCall.MethodArguments.ExtractNotNullAs<string>(0);
 		}
 	}
 }

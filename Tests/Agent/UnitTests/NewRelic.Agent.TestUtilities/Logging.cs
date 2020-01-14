@@ -51,7 +51,7 @@ namespace NewRelic.Agent.TestUtilities
 			Logger.RemoveAllAppenders();
 		}
 
-		public override String ToString()
+		public override string ToString()
 		{
 			var builder = new StringBuilder();
 			var logEvents = MemoryAppender.GetEvents();
@@ -148,7 +148,7 @@ namespace NewRelic.Agent.TestUtilities
 
 		}
 
-		public IEnumerable<String> ErrorMessages
+		public IEnumerable<string> ErrorMessages
 		{
 			get
 			{

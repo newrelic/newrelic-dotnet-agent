@@ -1,8 +1,10 @@
 ﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core;
 using NewRelic.SystemInterfaces;
@@ -20,7 +22,11 @@ namespace NewRelic.Agent.Core.Aggregators
 		private IAgentHealthReporter _agentHealthReporter;
 		private SpanEventAggregator _spanEventAggregator;
 		private ConfigurationAutoResponder _configurationAutoResponder;
+		private IProcessStatic _processStatic;
+		private IScheduler _scheduler;
 		private Action _harvestAction;
+		private TimeSpan? _harvestCycle;
+		private static readonly TimeSpan ConfiguredHarvestCycle = TimeSpan.FromSeconds(5);
 
 		private const string TimeStampKey = "timestamp";
 		private const string PriorityKey = "priority";
@@ -58,16 +64,19 @@ namespace NewRelic.Agent.Core.Aggregators
 			var configuration = GetDefaultConfiguration();
 			Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
 			Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
+			Mock.Arrange(() => configuration.SpanEventsHarvestCycle).Returns(ConfiguredHarvestCycle);
 			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-			var processStatic = Mock.Create<IProcessStatic>();
+			_processStatic = Mock.Create<IProcessStatic>();
 
-			var scheduler = Mock.Create<IScheduler>();
-			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_spanEventAggregator = new SpanEventAggregator(_dataTransportService, scheduler, processStatic, _agentHealthReporter);
+			_scheduler = Mock.Create<IScheduler>();
+			Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+			_spanEventAggregator = new SpanEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -326,5 +335,25 @@ namespace NewRelic.Agent.Core.Aggregators
 			Mock.Assert(() => _agentHealthReporter.ReportSpanEventsSent(eventCount));
 		}
 
+		[Test]
+		public void When_span_events_disabled_harvest_is_not_scheduled()
+		{
+			_configurationAutoResponder.Dispose();
+			_spanEventAggregator.Dispose();
+			var configuration = Mock.Create<IConfiguration>();
+			Mock.Arrange(() => configuration.SpanEventsEnabled).Returns(false);
+			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+			_spanEventAggregator = new SpanEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
+		}
+
+		[Test]
+		public void Harvest_cycle_should_match_configured_cycle()
+		{
+			Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
+		}
 	}
 }

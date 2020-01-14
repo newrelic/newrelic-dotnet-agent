@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -11,7 +10,7 @@ namespace NewRelic.Agent.Core.Utilities
 	{
 		private class TestConfigurationBasedService : ConfigurationBasedService
 		{
-			public UInt32 ConfigUpdateCount { get; private set; }
+			public uint ConfigUpdateCount { get; private set; }
 			public IConfiguration Configuration { get { return _configuration; } }
 
 			protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)

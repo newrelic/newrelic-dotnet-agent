@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -23,30 +22,23 @@ namespace NewRelic.Agent.Core.Configuration
 			CustomInstrumentationEditorPolicyName
 		};
 
-		[NotNull]
 		private readonly Dictionary<string, SecurityPolicy> _policies = new Dictionary<string, SecurityPolicy>();
 
-		[CanBeNull]
 		public SecurityPolicy RecordSql => _policies.ContainsKey(RecordSqlPolicyName) ? _policies[RecordSqlPolicyName] : null;
 
-		[CanBeNull]
 		public SecurityPolicy AttributesInclude => _policies.ContainsKey(AttributesIncludePolicyName) ? _policies[AttributesIncludePolicyName] : null;
 
-		[CanBeNull]
 		public SecurityPolicy AllowRawExceptionMessage => _policies.ContainsKey(AllowRawExceptionMessagePolicyName) ? _policies[AllowRawExceptionMessagePolicyName] : null;
 
-		[CanBeNull]
 		public SecurityPolicy CustomEvents => _policies.ContainsKey(CustomEventsPolicyName) ? _policies[CustomEventsPolicyName] : null;
 
-		[CanBeNull]
 		public SecurityPolicy CustomParameters => _policies.ContainsKey(CustomParametersPolicyName) ? _policies[CustomParametersPolicyName] : null;
 
-		[CanBeNull]
 		public SecurityPolicy CustomInstrumentationEditor => _policies.ContainsKey(CustomInstrumentationEditorPolicyName) ? _policies[CustomInstrumentationEditorPolicyName] : null;
 
 		public SecurityPoliciesConfiguration() {}
 
-		public SecurityPoliciesConfiguration([NotNull]Dictionary<string, SecurityPolicyState> policies)
+		public SecurityPoliciesConfiguration(Dictionary<string, SecurityPolicyState> policies)
 		{
 			foreach(var policy in policies)
 			{

@@ -1,5 +1,3 @@
-using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
@@ -12,15 +10,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// Builds a metric name from a ITransactionName.
 		/// </summary>
 		/// <param name="transactionName">The original transaction name.</param>
-		TransactionMetricName GetTransactionMetricName([NotNull] ITransactionName transactionName);
+		TransactionMetricName GetTransactionMetricName(ITransactionName transactionName);
 	}
 
 	public class TransactionMetricNameMaker : ITransactionMetricNameMaker
 	{
-		[NotNull]
 		private readonly IMetricNameService _metricNameService;
 
-		public TransactionMetricNameMaker([NotNull] IMetricNameService metricNameService)
+		public TransactionMetricNameMaker(IMetricNameService metricNameService)
 		{
 			_metricNameService = metricNameService;
 		}
@@ -43,35 +40,32 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <summary>
 		/// The prefix name (e.g. "WebTransaction")
 		/// </summary>
-		[NotNull]
-		public readonly String Prefix;
+		public readonly string Prefix;
 
 		/// <summary>
 		/// The unprefixed name (e.g. "Foo/Bar")
 		/// </summary>
-		[NotNull]
-		public readonly String UnPrefixedName;
+		public readonly string UnPrefixedName;
 
 		/// <summary>
 		/// The prefixed name (e.g. "WebTransaction/Foo/Bar")
 		/// </summary>
-		[NotNull]
-		public readonly String PrefixedName;
+		public readonly string PrefixedName;
 
 		/// <summary>
 		/// True iff this metric name's prefix is equal to MetricNames.WebTransactionPrefix.
 		/// </summary>
-		public readonly Boolean IsWebTransactionName;
+		public readonly bool IsWebTransactionName;
 
 		/// <summary>
 		/// True iff a transaction with this name should be ignored.
 		/// </summary>
-		public readonly Boolean ShouldIgnore;
+		public readonly bool ShouldIgnore;
 
 		/// <summary>
 		/// Builds a new transaction metric name using a prefix and an unprefixed name. The Prefixed name will be $"{prefix}/{unprefixedName}".
 		/// </summary>
-		public TransactionMetricName([NotNull] String prefix, [NotNull] String unprefixedName, Boolean shouldIgnore = false)
+		public TransactionMetricName(string prefix, string unprefixedName, bool shouldIgnore = false)
 		{
 			Prefix = prefix;
 			UnPrefixedName = unprefixedName;
@@ -80,7 +74,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			ShouldIgnore = shouldIgnore;
 		}
 
-		public override String ToString()
+		public override string ToString()
 		{
 			return PrefixedName;
 		}

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 
@@ -20,22 +19,16 @@ namespace NewRelic.Agent.Core.Transactions
 		public TimeSpan? QueueTime { get; }
 		public int? HttpResponseStatusCode { get; }
 
-		[NotNull]
 		public IEnumerable<ErrorData> TransactionExceptionDatas { get; }
 
-		[NotNull]
 		public IEnumerable<ErrorData> CustomErrorDatas { get; }
 
-		[NotNull]
 		public IEnumerable<string> CrossApplicationAlternatePathHashes { get; }
 
-		[CanBeNull]
 		public string CrossApplicationReferrerTransactionGuid { get; }
 
-		[CanBeNull]
 		public string CrossApplicationReferrerPathHash { get; }
 
-		[CanBeNull]
 		public string CrossApplicationPathHash { get; }
 
 		public string CrossApplicationReferrerProcessId { get; }

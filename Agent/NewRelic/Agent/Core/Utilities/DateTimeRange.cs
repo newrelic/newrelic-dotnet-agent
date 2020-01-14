@@ -18,7 +18,7 @@ namespace NewRelic.Agent.Core.Utilities
 			this.EndTime = endTime;
 		}
 
-		public Boolean Overlaps(DateTimeRange other)
+		public bool Overlaps(DateTimeRange other)
 		{
 			return StartTime <= other.EndTime && other.StartTime <= EndTime;
 		}

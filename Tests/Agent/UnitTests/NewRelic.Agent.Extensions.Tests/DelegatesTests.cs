@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 
@@ -29,11 +26,11 @@ namespace Agent.Extensions.Tests
 		public void GetDelegateFor_RunsOnSuccessWithValue_IfNoException()
 		{
 			// Arrange
-			const String expectedValue = "expectedValue";
-            var passedValue = null as String;
+			const string expectedValue = "expectedValue";
+            var passedValue = null as string;
 
 			// Act
-			var myDelegate = Delegates.GetDelegateFor<String>(onSuccess: value => passedValue = value);
+			var myDelegate = Delegates.GetDelegateFor<string>(onSuccess: value => passedValue = value);
 			myDelegate(result: expectedValue, exception: null);
 
 			Assert.AreEqual(expectedValue, passedValue);
@@ -46,7 +43,7 @@ namespace Agent.Extensions.Tests
 			var called = false;
 
 			// Act
-			var myDelegate = Delegates.GetDelegateFor<String>(onSuccess: _ => called = true);
+			var myDelegate = Delegates.GetDelegateFor<string>(onSuccess: _ => called = true);
 			myDelegate(result: 42, exception: null);
 
 			Assert.False(called);
@@ -135,7 +132,7 @@ namespace Agent.Extensions.Tests
 		{
 			// Arrange
 			var expectedThingsCalled = new[] {"onSuccess", "onComplete"};
-			var thingsCalled = new List<String>();
+			var thingsCalled = new List<string>();
 
 			// Act
 			var myDelegate = Delegates.GetDelegateFor(
@@ -152,7 +149,7 @@ namespace Agent.Extensions.Tests
 		{
 			// Arrange
 			var expectedThingsCalled = new[] { "onFailure", "onComplete" };
-			var thingsCalled = new List<String>();
+			var thingsCalled = new List<string>();
 
 			// Act
 			var myDelegate = Delegates.GetDelegateFor(

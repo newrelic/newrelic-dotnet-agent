@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.TestUtilities
 {
@@ -10,7 +9,7 @@ namespace NewRelic.Agent.TestUtilities
 		/// <summary>
 		/// Takes in a predicate that is watched for timeout duration.  If the predicate is set to true during that time then Wait returns true.  If the timeout is reached then it returns false.
 		/// </summary>
-		public static Boolean Wait(ref Boolean predicate, TimeSpan timeout, TimeSpan? timeBetween = null)
+		public static bool Wait(ref bool predicate, TimeSpan timeout, TimeSpan? timeBetween = null)
 		{
 			if (timeBetween == null)
 				timeBetween = TimeSpan.FromMilliseconds(1);
@@ -28,7 +27,7 @@ namespace NewRelic.Agent.TestUtilities
 			return true;
 		}
 
-		public static Boolean Wait<T>(ref T predicate, TimeSpan timeout, TimeSpan? timeBetween = null) where T : class
+		public static bool Wait<T>(ref T predicate, TimeSpan timeout, TimeSpan? timeBetween = null) where T : class
 		{
 			if (timeBetween == null)
 				timeBetween = TimeSpan.FromMilliseconds(1);
@@ -46,7 +45,7 @@ namespace NewRelic.Agent.TestUtilities
 			return true;
 		}
 
-		public static Boolean Wait([NotNull] Func<Boolean> predicate, TimeSpan timeout, TimeSpan? timeBetween = null)
+		public static bool Wait(Func<bool> predicate, TimeSpan timeout, TimeSpan? timeBetween = null)
 		{
 			if (timeBetween == null)
 				timeBetween = TimeSpan.FromMilliseconds(1);

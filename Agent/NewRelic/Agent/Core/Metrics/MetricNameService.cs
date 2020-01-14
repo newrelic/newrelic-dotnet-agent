@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metric;
@@ -21,13 +20,12 @@ namespace NewRelic.Agent.Core.Metrics
 	{
 		private static readonly TransactionMetricName NormalizedWebTransactionMetricName = new TransactionMetricName(MetricNames.WebTransactionPrefix, "Normalized/*");
 		private static readonly TransactionMetricName NormalizedOtherTransactionMetricName = new TransactionMetricName(MetricNames.OtherTransactionPrefix, "Normalized/*");
-	
-		[NotNull]
-		private readonly Utils.HashSet<String> _transactionNames = new Utils.HashSet<String>();
+
+		private readonly Utils.HashSet<string> _transactionNames = new Utils.HashSet<string>();
 
 		#region Public API
 		
-		public string NormalizeUrl(String url)
+		public string NormalizeUrl(string url)
 		{
 			ITimer timer = new Timer();
 			try
@@ -43,7 +41,7 @@ namespace NewRelic.Agent.Core.Metrics
 			}
 		}
 
-		public TimeSpan? TryGetApdex_t(String transactionName)
+		public TimeSpan? TryGetApdex_t(string transactionName)
 		{
 			if (_configuration.WebTransactionsApdex.TryGetValue(transactionName, out double apdexT))
 			{
@@ -55,7 +53,7 @@ namespace NewRelic.Agent.Core.Metrics
 		public TransactionMetricName RenameTransaction(TransactionMetricName proposedTransactionName)
 		{
 			var shouldIgnore = false;
-			String newPrefixedTransactionName;
+			string newPrefixedTransactionName;
 			try
 			{
 				newPrefixedTransactionName = RenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules);
@@ -78,7 +76,7 @@ namespace NewRelic.Agent.Core.Metrics
 			return newTransactionName;
 		}
 
-		public String RenameMetric(String metricName)
+		public string RenameMetric(string metricName)
 		{
 			if (metricName == null)
 				return null;
@@ -110,7 +108,7 @@ namespace NewRelic.Agent.Core.Metrics
 		/// <summary>
 		/// Takes a proposed prefixed transaction name as a string (e.g. "WebTransaction/Foo/Bar"), as well as an original transaction metric name, and returns a new TransactionMetricName. The proposed prefixed name will be converted to a metric name and returned iff it starts with the same prefix as the original metric name; otherwise, the original metric name will be returned.
 		/// </summary>
-		private static TransactionMetricName GetTransactionMetricName([NotNull] String proposedPrefixedTransactionName, TransactionMetricName originalTransactionMetricName, Boolean shouldIgnore)
+		private static TransactionMetricName GetTransactionMetricName(string proposedPrefixedTransactionName, TransactionMetricName originalTransactionMetricName, bool shouldIgnore)
 		{
 			if (!proposedPrefixedTransactionName.StartsWith($"{originalTransactionMetricName.Prefix}{MetricNames.PathSeparator}"))
 				return new TransactionMetricName(originalTransactionMetricName.Prefix, originalTransactionMetricName.UnPrefixedName, shouldIgnore);
@@ -120,8 +118,7 @@ namespace NewRelic.Agent.Core.Metrics
 			return new TransactionMetricName(originalTransactionMetricName.Prefix, proposedUnprefixedTransactionName, shouldIgnore);
 		}
 
-		[NotNull]
-		private static String StripParameters([NotNull] String url)
+		private static string StripParameters(string url)
 		{
 			int index;
 			if ((index = url.IndexOf('?')) > 0)
@@ -129,9 +126,8 @@ namespace NewRelic.Agent.Core.Metrics
 
 			return url;
 		}
-		
-		[NotNull]
-		private static String RenameUsingRegexRules([NotNull] String input, [NotNull] IEnumerable<RegexRule> rules)
+
+		private static string RenameUsingRegexRules(string input, IEnumerable<RegexRule> rules)
 		{
 			foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
 			{
@@ -154,8 +150,7 @@ namespace NewRelic.Agent.Core.Metrics
 			return input;
 		}
 
-		[NotNull]
-		private static string RenameUsingWhitelistRules([NotNull] string metricName, [NotNull] IDictionary<string, IEnumerable<string>> whitelistRules)
+		private static string RenameUsingWhitelistRules(string metricName, IDictionary<string, IEnumerable<string>> whitelistRules)
 		{
 			if (!whitelistRules.Any())
 				return metricName;
@@ -175,11 +170,10 @@ namespace NewRelic.Agent.Core.Metrics
 				.Unless((previous, current) => previous == "*" && current == "*");
 
 			var allSegments = originalSegments.Take(2).Concat(transformedSegments);
-			return String.Join(MetricNames.PathSeparator, allSegments.ToArray());
+			return string.Join(MetricNames.PathSeparator, allSegments.ToArray());
 		}
 
-		[CanBeNull]
-		private static String FilterSegment([CanBeNull] String segment, [NotNull] IEnumerable<String> allowedSegments)
+		private static string FilterSegment(string segment, IEnumerable<string> allowedSegments)
 		{
 			if (allowedSegments.Contains(segment))
 				return segment;
@@ -194,7 +188,7 @@ namespace NewRelic.Agent.Core.Metrics
 		/// </summary>
 		/// <param name="metricName"></param>
 		/// <returns>True if the name is on (or is added to) the whitelist, else false</returns>
-		private Boolean IsMetricNameAllowed(String metricName)
+		private bool IsMetricNameAllowed(string metricName)
 		{
 			lock (_transactionNames)
 			{

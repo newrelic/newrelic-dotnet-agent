@@ -33,6 +33,8 @@ namespace NewRelic.Parsing
 		private static readonly ParseStatement _statementParser;
 		private static readonly ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement> _nullParsedStatementStore = new ConcurrentDictionary<DatastoreVendor, ParsedSqlStatement>();
 
+		private const string SqlParamPrefix = "@";
+
 		// Regex Phrases
 		private const string SelectPhrase = @"(?=^\bset\b.*;\s*\bselect\b|^\bselect\b).*?\s+";
 		private const string InsertPhrase = @"^insert\s+into\s+";
@@ -359,12 +361,12 @@ namespace NewRelic.Parsing
 			dbParams.Sort(new ParameterComparer());
 
 			string sql = command.CommandText;
-			foreach (Object parameter in dbParams)
+			foreach (object parameter in dbParams)
 			{
 				IDbDataParameter dbParam = (IDbDataParameter)parameter;
 				//DebugParam(dbParam, sqlObfuscator);
 				DbType type = dbParam.DbType;
-				Object value = dbParam.Value;
+				object value = dbParam.Value;
 				if (quotableTypes.Contains(type.ToString()))  // the TypeCode for Strings is Int32 for some reason
 				{
 					value = QuoteString(value.ToString());
@@ -374,7 +376,15 @@ namespace NewRelic.Parsing
 					value = ((bool)value) ? 1 : 0;
 				}
 
-				sql = sql.Replace(dbParam.ParameterName, value.ToString());
+				// Parameter names can be supplied with the prefix @ or without
+				// if not supplied, add the @ to the beginning of the param name
+				var paramName = dbParam.ParameterName;
+				if (!paramName.StartsWith(SqlParamPrefix))
+				{
+					paramName = SqlParamPrefix + paramName;
+				}
+
+				sql = sql.Replace(paramName, value.ToString());
 			}
 
 			command.CommandText = sql;

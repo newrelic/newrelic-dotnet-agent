@@ -1,7 +1,5 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -12,15 +10,12 @@ using System.Linq;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Telerik.JustMock;
-using NewRelic.Collections;
-using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public static class TestTransactions
 	{
-		[NotNull]
 		public static IConfiguration GetDefaultConfiguration()
 		{
 			var configuration = Mock.Create<IConfiguration>();
@@ -37,8 +32,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return configuration;
 		}
 
-		[NotNull]
-		public static IInternalTransaction CreateDefaultTransaction(Boolean isWebTransaction = true, String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null, bool sampled = false)
+		public static IInternalTransaction CreateDefaultTransaction(bool isWebTransaction = true, string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null, bool sampled = false)
 		{
 			var name = isWebTransaction
 				? TransactionName.ForWebTransaction(transactionCategory, transactionName)
@@ -69,7 +63,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return internalTransaction;
 		}
 
-		[NotNull]
 		public static ImmutableTransaction CreateTestTransactionWithSegments(IEnumerable<Segment> segments)
 		{
 			var uri = "sqlTrace/Uri";
@@ -85,8 +78,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return transaction;
 		}
 
-		[NotNull]
-		public static TypedSegment<DatastoreSegmentData> BuildSegment(ITransactionSegmentState txSegmentState, DatastoreVendor vendor, String model, String commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null, String host = null, String portPathOrId = null, String databaseName = null)
+		public static TypedSegment<DatastoreSegmentData> BuildSegment(ITransactionSegmentState txSegmentState, DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
 		{
 			if (txSegmentState == null)
 				txSegmentState = Mock.Create<ITransactionSegmentState>();
@@ -95,7 +87,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return new TypedSegment<DatastoreSegmentData>(startTime, duration, 
 				new TypedSegment<DatastoreSegmentData>(txSegmentState, methodCallData, data, false));
 		}
-		private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, bool sampled = false)
+		private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, bool sampled = false)
 		{
 			if (uri != null)
 				metadata.SetUri(uri);

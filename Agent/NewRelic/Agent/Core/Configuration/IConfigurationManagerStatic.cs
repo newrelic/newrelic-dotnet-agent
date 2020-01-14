@@ -16,14 +16,14 @@ namespace NewRelic.Agent.Core.Configuration
 	// sdaubin : Why do we have a mock in the agent code?  This is a code smell.
 	public class ConfigurationManagerStaticMock : IConfigurationManagerStatic
 	{
-		private readonly Func<String, String> _getAppSetting;
+		private readonly Func<string, string> _getAppSetting;
 
-		public ConfigurationManagerStaticMock(Func<String, String> getAppSetting = null)
+		public ConfigurationManagerStaticMock(Func<string, string> getAppSetting = null)
 		{
 			_getAppSetting = getAppSetting ?? (variable => null);
 		}
 
-		public String GetAppSetting(String variable)
+		public string GetAppSetting(string variable)
 		{
 			return _getAppSetting(variable);
 		}

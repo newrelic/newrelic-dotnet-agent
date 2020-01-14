@@ -6,7 +6,7 @@ namespace NewRelic.Agent.Core.Fixtures
 {
 	public static class Assertions
 	{
-		public static void Eventually(Func<Boolean> predicate, TimeSpan timeout)
+		public static void Eventually(Func<bool> predicate, TimeSpan timeout)
 		{
 			var giveUpTime = DateTime.Now + timeout;
 			while (!predicate() && DateTime.Now < giveUpTime)

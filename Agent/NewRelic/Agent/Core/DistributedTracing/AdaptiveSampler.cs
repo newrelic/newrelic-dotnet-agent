@@ -11,7 +11,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 	public interface IAdaptiveSampler
 	{
 		bool ComputeSampled(ref float priority);
-		void EndOfSamplingInterval();
 	}
 
 
@@ -22,6 +21,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			private const int DoneWithFirstIntervalSentinel = -1;
 			private const double BackOffExponent = 0.5d;
 
+			private readonly object _intervalLockObject = new object();
 			private readonly object _sync = new object();
 			private readonly Random _rand;
 
@@ -29,6 +29,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			private readonly List<int> _ceilingValuesForBackoff;
 
 			public int TargetSamplesPerInterval { get; }
+
+			public TimeSpan TargetSamplesInterval { get; }
 
 			//down counter for the first interval...
 			//initialized to TargetSamplesPerInterval
@@ -38,19 +40,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			private int _candidatesSeenLastInterval;
 			private int _candidatesSampledCurrentInterval;
 
-			public AdaptiveSamplerState(int targetSamplesPerInterval, Random rand)
+			private DateTimeOffset? _nextIntervalStartTime;
+
+			public AdaptiveSamplerState(int targetSamplesPerInterval, TimeSpan targetSamplesInterval, Random rand)
 			{
 				_rand = rand;
 				_firstIntervalSamples = targetSamplesPerInterval;
 				TargetSamplesPerInterval = targetSamplesPerInterval;
+				TargetSamplesInterval = targetSamplesInterval;
 				_ceilingValuesForBackoff = ComputeCeilingValuesForBackOff(targetSamplesPerInterval);
 			}
 
-			public AdaptiveSamplerState(int targetSamplesPerInterval, AdaptiveSamplerState state) : this(targetSamplesPerInterval, state._rand)
+			public AdaptiveSamplerState(int targetSamplesPerInterval, TimeSpan targetSamplesInterval, AdaptiveSamplerState state) : this(targetSamplesPerInterval, targetSamplesInterval, state._rand)
 			{
 				_candidatesSeenCurrentInterval = state._candidatesSeenCurrentInterval;
 				_candidatesSeenLastInterval = state._candidatesSeenLastInterval;
 				_candidatesSampledCurrentInterval = state._candidatesSampledCurrentInterval;
+				_nextIntervalStartTime = DateTimeOffset.UtcNow + TargetSamplesInterval;
 			}
 
 			private int RandomNext(int max)
@@ -81,8 +87,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				return ceilingIndex < _ceilingValuesForBackoff.Count ? _ceilingValuesForBackoff[ceilingIndex] : 0;
 			}
 
-			public void EndOfSamplingInterval()
+			private void EndOfSamplingInterval(DateTimeOffset newNextIntervalStartTime)
 			{
+				_nextIntervalStartTime = newNextIntervalStartTime;
 				_candidatesSeenLastInterval = _candidatesSeenCurrentInterval;
 				_candidatesSeenCurrentInterval = 0;
 				_candidatesSampledCurrentInterval = 0;
@@ -114,6 +121,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			public bool ShouldSample()
 			{
+				CheckAndUpdateIntervalIfNecessary();
+
 				//account for seeing this candidate.  we will subtract one from this count for the duration of the method to get the correct count prior to 
 				// accounting for this candidate
 				Interlocked.Increment(ref _candidatesSeenCurrentInterval);
@@ -168,6 +177,28 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				}
 				return sampled;
 			}
+
+			private void CheckAndUpdateIntervalIfNecessary()
+			{
+				var now = DateTimeOffset.UtcNow;
+
+				if (!_nextIntervalStartTime.HasValue)
+				{
+					//Not locking here because it's not a big deal if this happens more than once.
+					_nextIntervalStartTime = now + TargetSamplesInterval;
+				}
+
+				if (now >= _nextIntervalStartTime)
+				{
+					lock (_intervalLockObject)
+					{
+						if (now >= _nextIntervalStartTime)
+						{
+							EndOfSamplingInterval(now + TargetSamplesInterval);
+						}
+					}
+				}
+			}
 		}
 
 		public int TargetSamplesPerInterval => _state.TargetSamplesPerInterval;
@@ -175,10 +206,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		private const int MinTargetSamplesPerInterval = 1;
 		private const float PriorityBoost = 1.0f;
 		public const int DefaultTargetSamplesPerInterval = 10;
+		public const int DefaultTargetSamplingIntervalInSeconds = 60;
 
 		private AdaptiveSamplerState _state;
 
-		public AdaptiveSampler(int targetSamplesPerInterval = DefaultTargetSamplesPerInterval, int? seed = null)
+		public AdaptiveSampler(int targetSamplesPerInterval = DefaultTargetSamplesPerInterval, int targetSamplingIntervalInSeconds = DefaultTargetSamplingIntervalInSeconds, int? seed = null)
 		{
 			if (targetSamplesPerInterval < MinTargetSamplesPerInterval)
 			{
@@ -188,7 +220,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			}
 
 			var rand = (seed.HasValue) ? new Random(seed.Value) : new Random();
-			_state = new AdaptiveSamplerState(targetSamplesPerInterval, rand);
+
+			//This .ctor does not trigger the start of the sampling interval timer
+			_state = new AdaptiveSamplerState(targetSamplesPerInterval, TimeSpan.FromSeconds(targetSamplingIntervalInSeconds), rand);
 		}
 
 		/// <summary>
@@ -223,11 +257,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			return sampled;
 		}
 
-		public void EndOfSamplingInterval()
-		{
-			_state.EndOfSamplingInterval();
-		}
-
 		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
 		{
 			if (configurationUpdateSource != ConfigurationUpdateSource.Server
@@ -238,10 +267,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			}
 
 			var samplingTarget = _configuration.SamplingTarget.Value;
-			if (_state.TargetSamplesPerInterval == samplingTarget)
-			{
-				return;
-			}
 
 			if (samplingTarget < MinTargetSamplesPerInterval)
 			{
@@ -250,7 +275,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				samplingTarget = DefaultTargetSamplesPerInterval;
 			}
 
-			_state = new AdaptiveSamplerState(samplingTarget, _state);
+			var samplingInterval = TimeSpan.FromSeconds(_configuration.SamplingTargetPeriodInSeconds ?? DefaultTargetSamplingIntervalInSeconds);
+
+			//This .ctor will force the start of the sampling interval timer if it wasn't started previously
+			_state = new AdaptiveSamplerState(samplingTarget, samplingInterval, _state);
 		}
 	}
 }

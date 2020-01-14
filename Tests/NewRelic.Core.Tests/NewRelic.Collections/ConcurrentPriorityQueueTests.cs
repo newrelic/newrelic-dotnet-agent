@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.WireModels;
+﻿using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core;
 using NUnit.Framework;
 using System;
@@ -206,7 +205,7 @@ namespace NewRelic.Collections.UnitTests
 		}
 
 		// ReSharper disable RedundantAssignment
-		private static void ExerciseFullApi([NotNull] IResizableCappedCollection<PrioritizedNode<T>> concurrentPriorityQueue, [NotNull] PrioritizedNode<T>[] eventsToAdd, int countOfThreads)
+		private static void ExerciseFullApi(IResizableCappedCollection<PrioritizedNode<T>> concurrentPriorityQueue, PrioritizedNode<T>[] eventsToAdd, int countOfThreads)
 		{
 			// Add the new events
 			foreach (var evt in eventsToAdd)

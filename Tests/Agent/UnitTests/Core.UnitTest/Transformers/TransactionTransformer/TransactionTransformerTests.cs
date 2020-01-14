@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Errors;
@@ -17,72 +16,53 @@ using System.Linq;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Utilities;
 using Telerik.JustMock;
-
+using NewRelic.Agent.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	[TestFixture]
 	public class TransactionTransformerTests
 	{
-		[NotNull]
 		private TransactionTransformer _transactionTransformer;
 
-		[NotNull]
 		private ITransactionMetricNameMaker _transactionMetricNameMaker;
 
-		[NotNull]
 		private ISegmentTreeMaker _segmentTreeMaker;
 
-		[NotNull]
 		private IMetricBuilder _metricBuilder;
 
-		[NotNull]
 		private IMetricNameService _metricNameService;
 
-		[NotNull]
 		private IMetricAggregator _metricAggregator;
 
-		[NotNull]
 		private IConfigurationService _configurationService;
 
-		[NotNull]
 		private IConfiguration _configuration;
 
-		[NotNull]
 		private ITransactionTraceAggregator _transactionTraceAggregator;
 
-		[NotNull]
 		private ITransactionTraceMaker _transactionTraceMaker;
 
-		[NotNull]
 		private ITransactionEventAggregator _transactionEventAggregator;
 
-		[NotNull]
 		private ITransactionEventMaker _transactionEventMaker;
 
 		private ISpanEventAggregator _spanEventAggregator;
 
 		private ISpanEventMaker _spanEventMaker;
 
-		[NotNull]
 		private ITransactionAttributeMaker _transactionAttributeMaker;
 
-		[NotNull]
 		private IErrorTraceAggregator _errorTraceAggregator;
 
-		[NotNull]
 		private IErrorTraceMaker _errorTraceMaker;
 
-		[NotNull]
 		private IErrorEventAggregator _errorEventAggregator;
 
-		[NotNull]
 		private IErrorEventMaker _errorEventMaker;
 
-		[NotNull]
 		private ISqlTraceAggregator _sqlTraceAggregator;
 
-		[NotNull]
 		private ISqlTraceMaker _sqlTraceMaker;
 
 		private ITransactionSegmentState _transactionSegmentState;
@@ -126,14 +106,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_spanEventMaker = Mock.Create<ISpanEventMaker>();
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService);
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>());
 		}
 
-		[NotNull]
 		public IMetricBuilder GetSimpleMetricBuilder()
 		{
 			_metricNameService = Mock.Create<IMetricNameService>();
-			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
+			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 			return new MetricWireModel.MetricBuilder(_metricNameService);
 		}
 
@@ -394,7 +373,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _segmentTreeMaker.BuildSegmentTrees(Arg.IsAny<IEnumerable<Segment>>()))
 				.Returns(new[] { node1.Build() });
 
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
@@ -402,9 +381,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_transactionTransformer.Transform(transaction);
 
 			//check the total time metrics
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"OtherTransactionTotalTime", "OtherTransactionTotalTime/TransactionName"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsTrue(generatedMetrics.TryGetValue(current, out MetricDataWireModel data));
 				Assert.AreEqual(1, data.Value0);
@@ -481,7 +460,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void QueueTimeMetricIsGenerated_IfQueueTimeIsNotNull()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
@@ -493,10 +472,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_transactionTransformer.Transform(transaction);
 
 			//check for webfrontend queue time (and a few others). This is not the entire list of unscoped.
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"WebFrontend/QueueTime", "HttpDispatcher", "WebTransaction",
 			"WebTransactionTotalTime"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsTrue(generatedMetrics.ContainsKey(current));
 				var data = generatedMetrics[current];
@@ -507,18 +486,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void ApdexRollupMetricIsGenerated_IfApdexTIsNotNullAndIsNotErrorTransaction()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<String>())).Returns(TimeSpan.FromSeconds(1));
+			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
 
 			var transaction = TestTransactions.CreateDefaultTransaction();
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"ApdexAll", "Apdex", "Apdex/TransactionName"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsTrue(generatedMetrics.ContainsKey(current));
 				var data = generatedMetrics[current];
@@ -536,7 +515,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<String>())).Returns(TimeSpan.FromSeconds(1));
+			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
 
 			var immutableTransaction = new ImmutableTransactionBuilder()
@@ -563,7 +542,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<String>())).Returns(TimeSpan.FromSeconds(1));
+			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
 
 			var immutableTransaction = new ImmutableTransactionBuilder()
@@ -589,18 +568,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void FrustratedApdexRollupMetricIsGenerated_IfApdexTIsNotNullAndIsErrorTransaction()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<String>())).Returns(TimeSpan.FromSeconds(1));
+			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(GetError());
 
 			var transaction = TestTransactions.CreateDefaultTransaction(statusCode: 404);
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"ApdexAll", "Apdex", "Apdex/TransactionName"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsTrue(generatedMetrics.ContainsKey(current));
 				var data = generatedMetrics[current];
@@ -616,18 +595,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void FrustratedApdexRollupMetricIsNotGenerated_IfApdexTIsNullAndIsErrorTransaction()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<String>())).Returns((TimeSpan?)null);
+			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns((TimeSpan?)null);
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(GetError());
 
 			var transaction = TestTransactions.CreateDefaultTransaction(false);
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"ApdexAll", "Apdex", "Apdex/TransactionName"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsFalse(generatedMetrics.ContainsKey(current));
 			}
@@ -636,7 +615,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void ErrorsAllMetricIsGenerated_IfIsErrorTransaction()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
@@ -645,9 +624,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transaction = TestTransactions.CreateDefaultTransaction(statusCode: 404);
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"Errors/all", "Errors/allWeb", "Errors/WebTransaction/TransactionName"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric is not contained: " + current);
 				Assert.AreEqual(1, generatedMetrics[current].Value0);
@@ -657,7 +636,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void ErrorsAllMetricIsGenerated_OtherTransaction()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
@@ -666,9 +645,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transaction = TestTransactions.CreateDefaultTransaction(false, statusCode: 404);
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric is not contained: " + current);
 				Assert.AreEqual(1, generatedMetrics[current].Value0);
@@ -678,7 +657,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void ErrorsAllMetricIsNotGenerated_IfIsNotErrorTransaction()
 		{
-			var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
@@ -687,9 +666,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transaction = TestTransactions.CreateDefaultTransaction(false);
 			_transactionTransformer.Transform(transaction);
 
-			String[] unscoped = new String[] {
+			string[] unscoped = new string[] {
 				"Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
-			foreach (String current in unscoped)
+			foreach (string current in unscoped)
 			{
 				Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric is contained: " + current);
 			}
@@ -1114,7 +1093,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			);
 		}
 
-		[NotNull]
 		private ImmutableSegmentTreeNode BuildNode(TimeSpan startTime = new TimeSpan(), TimeSpan duration = new TimeSpan())
 		{
 			return new SegmentTreeNodeBuilder(
@@ -1122,44 +1100,39 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				Build();
 		}
 
-		[NotNull]
 		private SegmentTreeNodeBuilder GetNodeBuilder(TimeSpan startTime = new TimeSpan(), TimeSpan duration = new TimeSpan())
 		{
 			return new SegmentTreeNodeBuilder(
 				GetSegment("MyOtherMockedRootNode", duration.TotalSeconds, startTime));
 		}
 
-		[NotNull]
-		private SegmentTreeNodeBuilder GetNodeBuilder(String name, TimeSpan startTime = new TimeSpan(), TimeSpan duration = new TimeSpan())
+		private SegmentTreeNodeBuilder GetNodeBuilder(string name, TimeSpan startTime = new TimeSpan(), TimeSpan duration = new TimeSpan())
 		{
 			return new SegmentTreeNodeBuilder(
 				GetSegment(name, duration.TotalSeconds, startTime));
 		}
 
-		[NotNull]
-		private Segment GetSegment([NotNull] String name)
+		private Segment GetSegment(string name)
 		{
 			var builder = new TypedSegment<SimpleSegmentData>(_transactionSegmentState, new MethodCallData("foo", "bar", 1), new SimpleSegmentData(name));
 			builder.End();
 			return builder;
 		}
 
-		public TypedSegment<SimpleSegmentData> GetSegment([NotNull] String name, double duration, TimeSpan start = new TimeSpan())
+		public TypedSegment<SimpleSegmentData> GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
 		{
 			return new TypedSegment<SimpleSegmentData>(start, TimeSpan.FromSeconds(duration), GetSegment(name));
 		}
 
-		[NotNull]
 		public static IConfiguration GetDefaultConfiguration()
 		{
 			return TestTransactions.GetDefaultConfiguration();
 		}
 
-		[NotNull]
 		private static ErrorTraceWireModel GetError()
 		{
 			var attributes = new Dictionary<string, object>();
-			var stackTrace = new List<String>();
+			var stackTrace = new List<string>();
 			var errorTraceAttributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(attributes, attributes, attributes, stackTrace);
 			return new ErrorTraceWireModel(DateTime.Now, "path", "message", "exceptionClassName", errorTraceAttributes, "guid");
 		}

@@ -471,7 +471,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
 				bytes->push_back(numberOfArguments);
 				for (uint8_t i = 0; i < numberOfArguments; i++)
 				{
-					bytes->push_back(NewRelic::Profiler::CorElementType::ELEMENT_TYPE_VAR);
+					bytes->push_back(CorElementType::ELEMENT_TYPE_VAR);
 					bytes->push_back(i);
 				}
 			}

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -10,66 +9,66 @@ namespace NewRelic.Agent.Core.Configuration
 	public class ReportedConfiguration
 	{
 		[JsonProperty("apdex_t")]
-		public Double? ApdexT { get; set; }
+		public double? ApdexT { get; set; }
 
 		[JsonProperty("cross_process_id")]
-		public String CatId { get; set; }
+		public string CatId { get; set; }
 
 		[JsonProperty("encoding_key")]
-		public String EncodingKey { get; set; }
+		public string EncodingKey { get; set; }
 
 		[JsonProperty("trusted_account_ids")]
-		public IEnumerable<Int64> TrustedAccountIds { get; set; }
+		public IEnumerable<long> TrustedAccountIds { get; set; }
 
 		[JsonProperty("max_stack_trace_lines")]
-		public Int32 MaxStackTraceLines { get; set; }
+		public int MaxStackTraceLines { get; set; }
 
 		[JsonProperty("using_server_side_config")]
-		public Boolean UsingServerSideConfig { get; set; }
+		public bool UsingServerSideConfig { get; set; }
 
 		[JsonProperty("thread_profiler.enabled")]
-		public Boolean ThreadProfilerEnabled { get; set; }
+		public bool ThreadProfilerEnabled { get; set; }
 
 		[JsonProperty("cross_application_tracer.enabled")]
-		public Boolean CrossApplicationTracerEnabled { get; set; }
+		public bool CrossApplicationTracerEnabled { get; set; }
 
 		[JsonProperty("error_collector.enabled")]
-		public Boolean ErrorCollectorEnabled { get; set; }
+		public bool ErrorCollectorEnabled { get; set; }
 
 		[JsonProperty("error_collector.ignore_status_codes")]
-		public IEnumerable<String> ErrorCollectorIgnoreStatusCodes { get; set; }
+		public IEnumerable<string> ErrorCollectorIgnoreStatusCodes { get; set; }
 
 		[JsonProperty("error_collector.ignore_errors")]
-		public IEnumerable<String> ErrorCollectorIgnoreErrors { get; set; }
+		public IEnumerable<string> ErrorCollectorIgnoreErrors { get; set; }
 
 		[JsonProperty("transaction_tracer.stack_trace_threshold")]
-		public Double TransactionTracerStackThreshold { get; set; }
+		public double TransactionTracerStackThreshold { get; set; }
 
 		[JsonProperty("transaction_tracer.explain_enabled")]
-		public Boolean TransactionTracerExplainEnabled { get; set; }
+		public bool TransactionTracerExplainEnabled { get; set; }
 
 		[JsonProperty("transaction_tracer.max_sql_statements")]
-		public UInt32 MaxSqlStatements { get; set; }
+		public uint MaxSqlStatements { get; set; }
 
 		[JsonProperty("transaction_tracer.max_explain_plans")]
-		public Int32 MaxExplainPlans { get; set; }
+		public int MaxExplainPlans { get; set; }
 
 		[JsonProperty("transaction_tracer.explain_threshold")]
-		public Double TransactionTracerExplainThreshold { get; set; }
+		public double TransactionTracerExplainThreshold { get; set; }
 
 		[JsonProperty("transaction_tracer.transaction_threshold")]
-		public Double TransactionTracerThreshold { get; set; }
+		public double TransactionTracerThreshold { get; set; }
 
 		[JsonProperty("transaction_tracer.record_sql")]
-		public String TransactionTracerRecordSql { get; set; }
+		public string TransactionTracerRecordSql { get; set; }
 
 		[JsonProperty("slow_sql.enabled")]
-		public Boolean SlowSqlEnabled { get; set; }
+		public bool SlowSqlEnabled { get; set; }
 
 		[JsonProperty("browser_monitoring.auto_instrument")]
-		public Boolean BrowserMonitoringAutoInstrument { get; set; }
+		public bool BrowserMonitoringAutoInstrument { get; set; }
 
 		[JsonProperty("transaction_event.max_samples_stored")]
-		public UInt32 TransactionEventMaxSamplesStored { get; set; }
+		public uint TransactionEventMaxSamplesStored { get; set; }
 	}
 }

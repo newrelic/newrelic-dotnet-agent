@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
@@ -11,8 +10,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface ISegmentTreeMaker
 	{
-		[NotNull]
-		IEnumerable<ImmutableSegmentTreeNode> BuildSegmentTrees([NotNull] IEnumerable<Segment> segments);
+		IEnumerable<ImmutableSegmentTreeNode> BuildSegmentTrees(IEnumerable<Segment> segments);
 	}
 
 	public class SegmentTreeMaker : ISegmentTreeMaker
@@ -96,7 +94,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			}
 		}
 
-		private static void CombineSimilarChildren([NotNull] SegmentTreeNodeBuilder node)
+		private static void CombineSimilarChildren(SegmentTreeNodeBuilder node)
 		{
 			// Look for duplicate neighbors
 			for (var index = 0; index < node.Children.Count - 1; index++)
@@ -134,7 +132,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			}
 		}
 
-		private static SegmentTreeNodeBuilder GetCombinedNode([NotNull] IEnumerable<SegmentTreeNodeBuilder> nodes)
+		private static SegmentTreeNodeBuilder GetCombinedNode(IEnumerable<SegmentTreeNodeBuilder> nodes)
 		{
 			var nodeList = nodes.Where(node => node != null).ToList();
 
@@ -164,18 +162,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 	public class SegmentTreeNodeBuilder
 	{
-		[NotNull]
 		public readonly Segment Segment;
 
-		[NotNull]
 		public readonly IList<SegmentTreeNodeBuilder> Children = new List<SegmentTreeNodeBuilder>();
 
-		public SegmentTreeNodeBuilder([NotNull] Segment segment)
+		public SegmentTreeNodeBuilder(Segment segment)
 		{
 			Segment = segment;
 		}
 
-		[NotNull]
 		public ImmutableSegmentTreeNode Build()
 		{
 			var childrenNodes = Children.Select(child => child.Build());
@@ -186,15 +181,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 	public class ImmutableSegmentTreeNode
 	{
 		// This class tries to be mostly read-only, but it has to make several concessions due to the nature of the way it is constructed. When a node is built we don't necessarily know all of its children right away, thus we cannot make Children an IEnumerable.
-		[NotNull]
 		public readonly Segment Segment;
 
-		[NotNull]
 		public readonly IEnumerable<ImmutableSegmentTreeNode> Children;
 
 		public readonly TimeSpan TotalChildDuration;
 
-		public ImmutableSegmentTreeNode([NotNull] Segment segment, [NotNull] IEnumerable<ImmutableSegmentTreeNode> children)
+		public ImmutableSegmentTreeNode(Segment segment, IEnumerable<ImmutableSegmentTreeNode> children)
 		{
 			Segment = segment;
 			Children = children;

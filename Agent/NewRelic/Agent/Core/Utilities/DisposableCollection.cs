@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -12,7 +11,7 @@ namespace NewRelic.Agent.Core.Utilities
 	/// </summary>
 	public class DisposableCollection : IDisposable, ICollection<IDisposable>
 	{
-		[NotNull] private readonly ICollection<IDisposable> _disposables = new Collection<IDisposable>();
+		private readonly ICollection<IDisposable> _disposables = new Collection<IDisposable>();
 
 		#region Implementation of IDisposable
 

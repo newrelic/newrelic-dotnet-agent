@@ -1,30 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utilities
 {
 	public static class IEnumerableExtensions
 	{
-		[NotNull] public static Boolean IsEmpty<T>([NotNull] this IEnumerable<T> enumerable)
+		public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
 		{
 			return !enumerable.Any();
 		}
 
-		[Pure]
-		[NotNull] public static IEnumerable<T> NotNull<T>([NotNull] this IEnumerable<T> @this)
+		public static IEnumerable<T> NotNull<T>(this IEnumerable<T> @this)
 		{
 			return @this.Where(x => x != null);
 		}
 
-		[NotNull]
-		public static ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>([NotNull] this IEnumerable<KeyValuePair<TKey, TValue>> source)
+		public static ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source)
 		{
 			return source.ToReadOnlyDictionary(item => item.Key, item => item.Value);
 		}
 
-		[NotNull] public static ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TSource, TKey, TValue>([NotNull] this IEnumerable<TSource> source, [NotNull] Func<TSource, TKey> keySelector, [NotNull] Func<TSource, TValue> valueSelector)
+		public static ReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TSource, TKey, TValue>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TSource, TValue> valueSelector)
 		{
 			var dictionary = new Dictionary<TKey, TValue>();
 			foreach (var item in source)
@@ -46,8 +43,7 @@ namespace NewRelic.Agent.Core.Utilities
 
 		// TODO: Find a good way to make this method work for [int16, int32, int64, uint16, uint32, uint64] without writing it six times
 		// Some relevant discussion found here: http://stackoverflow.com/questions/32664/is-there-a-constraint-that-restricts-my-generic-method-to-numeric-types
-		[Pure]
-		public static Boolean IsSequential(this IEnumerable<UInt32> sequence)
+		public static bool IsSequential(this IEnumerable<uint> sequence)
 		{
 			// Null is inherently sequential... sort of. I mean, it's not NOT sequential, right?
 			if (sequence == null)
@@ -70,14 +66,12 @@ namespace NewRelic.Agent.Core.Utilities
 			return true;
 		}
 
-		[Pure]
-		public static TimeSpan Sum<T>([NotNull] this IEnumerable<T> source, [NotNull] Func<T, TimeSpan> selector)
+		public static TimeSpan Sum<T>(this IEnumerable<T> source, Func<T, TimeSpan> selector)
 		{
 			return source.Aggregate(TimeSpan.Zero, (runningTotal, nextItem) => runningTotal + selector(nextItem));
 		}
 
-		[Pure]
-		public static Boolean IsSequential<T>(this IEnumerable<T> enumerable, [NotNull] Func<T, UInt32> predicate)
+		public static bool IsSequential<T>(this IEnumerable<T> enumerable, Func<T, uint> predicate)
 		{
 			if (enumerable == null)
 				return true;

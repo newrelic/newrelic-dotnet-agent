@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -27,7 +25,7 @@ namespace NewRelic.Agent.Core.Utilization
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-			var expectedObject = new Dictionary<String, Object>
+			var expectedObject = new Dictionary<string, object>
 			{
 				{"metadata_version", 5},
 				{"logical_processors", 4},
@@ -36,7 +34,7 @@ namespace NewRelic.Agent.Core.Utilization
 				{"full_hostname", "lo-calhost.domain.com"},
 				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
-					"config",  new Dictionary<String, Object>
+					"config",  new Dictionary<string, object>
 					{
 						{"hostname", "loc-alhost"},
 						{"logical_processors", 2},
@@ -44,10 +42,10 @@ namespace NewRelic.Agent.Core.Utilization
 					}
 				},
 				{
-					"vendors", new Dictionary<String, Object>
+					"vendors", new Dictionary<string, object>
 					{
 						{
-							"aws", new Dictionary<String, Object>
+							"aws", new Dictionary<string, object>
 							{
 								{"availabilityZone", "myZone"},
 								{"instanceId", "myInstanceId"},
@@ -55,7 +53,7 @@ namespace NewRelic.Agent.Core.Utilization
 							}
 						},
 						{
-							"azure", new Dictionary<String,Object>
+							"azure", new Dictionary<string,object>
 							{
 								{"location", "myLocation" },
 								{"name", "myName" },
@@ -64,7 +62,7 @@ namespace NewRelic.Agent.Core.Utilization
 							}
 						},
 						{
-							"gcp", new Dictionary<String,Object>
+							"gcp", new Dictionary<string,object>
 							{
 								{"id", "myId" },
 								{"machineType", "myMachineType" },
@@ -73,7 +71,7 @@ namespace NewRelic.Agent.Core.Utilization
 							}
 						},
 						{
-							"pcf", new Dictionary<String,Object>
+							"pcf", new Dictionary<string,object>
 							{
 								{"cf_instance_guid", "myInstanceGuid" },
 								{"cf_instance_ip", "myInstanceIp" },
@@ -81,13 +79,13 @@ namespace NewRelic.Agent.Core.Utilization
 							}
 						},
 						{
-							"docker", new Dictionary<String,Object>
+							"docker", new Dictionary<string,object>
 							{
 								{"id", "myBootId" }
 							}
 						},
 						{
-							"kubernetes", new Dictionary<String,Object>
+							"kubernetes", new Dictionary<string,object>
 							{
 								{"kubernetes_service_host", "10.96.0.1" }
 							}
@@ -96,7 +94,7 @@ namespace NewRelic.Agent.Core.Utilization
 				}
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
-			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+			Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 		}
 
 		[Test]
@@ -116,7 +114,7 @@ namespace NewRelic.Agent.Core.Utilization
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-			var expectedObject = new Dictionary<String, Object>
+			var expectedObject = new Dictionary<string, object>
 			{
 				{"metadata_version", 5},
 				{"logical_processors", 4},
@@ -125,7 +123,7 @@ namespace NewRelic.Agent.Core.Utilization
 				{"full_hostname", "lo-calhost.domain.com"},
 				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
-					"config",  new Dictionary<String, Object>
+					"config",  new Dictionary<string, object>
 					{
 						{"hostname", "loc-alhost"},
 						{"logical_processors", 2},
@@ -133,17 +131,17 @@ namespace NewRelic.Agent.Core.Utilization
 					}
 				},
 				{
-					"vendors", new Dictionary<String, Object>
+					"vendors", new Dictionary<string, object>
 					{
 						{
-							"aws", new Dictionary<String, Object>
+							"aws", new Dictionary<string, object>
 							{
 								{"instanceId", "myInstanceId"},
 								{"instanceType", "myInstanceType"}
 							}
 						},
 						{
-							"azure", new Dictionary<String,Object>
+							"azure", new Dictionary<string,object>
 							{
 								{"location", "myLocation" },
 								{"vmId", "myVmId" },
@@ -151,7 +149,7 @@ namespace NewRelic.Agent.Core.Utilization
 							}
 						},
 						{
-							"gcp", new Dictionary<String,Object>
+							"gcp", new Dictionary<string,object>
 							{
 								{"id", "myId" },
 								{"machineType", "myMachineType" },
@@ -159,14 +157,14 @@ namespace NewRelic.Agent.Core.Utilization
 							}
 						},
 						{
-							"pcf", new Dictionary<String,Object>
+							"pcf", new Dictionary<string,object>
 							{
 								{"cf_instance_guid", "myInstanceGuid" },
 								{"memory_limit", "myMemoryLimit" }
 							}
 						},
 						{
-							"docker", new Dictionary<String,Object>
+							"docker", new Dictionary<string,object>
 							{
 								{"id", "myBootId" }
 							}
@@ -175,7 +173,7 @@ namespace NewRelic.Agent.Core.Utilization
 				}
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
-			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+			Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 		}
 
 		[Test]
@@ -188,7 +186,7 @@ namespace NewRelic.Agent.Core.Utilization
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-			var expectedObject = new Dictionary<String, Object>
+			var expectedObject = new Dictionary<string, object>
 			{
 				{"metadata_version", 5},
 				{"logical_processors", 4},
@@ -197,7 +195,7 @@ namespace NewRelic.Agent.Core.Utilization
 				{"full_hostname", "lo-calhost.domain.com"},
 				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
-					"config",  new Dictionary<String, Object>
+					"config",  new Dictionary<string, object>
 					{
 						{"hostname", "loc-alhost"},
 						{"logical_processors", 2},
@@ -206,7 +204,7 @@ namespace NewRelic.Agent.Core.Utilization
 				}
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
-			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+			Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 
 		}
 
@@ -220,7 +218,7 @@ namespace NewRelic.Agent.Core.Utilization
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-			var expectedObject = new Dictionary<String, Object>
+			var expectedObject = new Dictionary<string, object>
 			{
 				{"metadata_version", 5},
 				{"logical_processors", 4},
@@ -230,7 +228,7 @@ namespace NewRelic.Agent.Core.Utilization
 				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }}
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
-			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+			Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 		}
 
 		[Test]
@@ -243,7 +241,7 @@ namespace NewRelic.Agent.Core.Utilization
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-			var expectedObject = new Dictionary<String, Object>
+			var expectedObject = new Dictionary<string, object>
 			{
 				{"metadata_version", 5},
 				{"logical_processors", 4},
@@ -253,7 +251,7 @@ namespace NewRelic.Agent.Core.Utilization
 				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
-			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+			Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 		}
 
 		[Test]
@@ -266,7 +264,7 @@ namespace NewRelic.Agent.Core.Utilization
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-			var expectedObject = new Dictionary<String, Object>
+			var expectedObject = new Dictionary<string, object>
 			{
 				{"metadata_version", 5},
 				{"logical_processors", 4},
@@ -275,7 +273,7 @@ namespace NewRelic.Agent.Core.Utilization
 				{"full_hostname", "lo-calhost.domain.com"},
 				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
-					"config",  new Dictionary<String, Object>
+					"config",  new Dictionary<string, object>
 					{
 						{"hostname", "loc-alhost"},
 						{"logical_processors", 2},
@@ -284,7 +282,7 @@ namespace NewRelic.Agent.Core.Utilization
 				}
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
-			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+			Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 		}
 
 		[Test]
@@ -297,7 +295,7 @@ namespace NewRelic.Agent.Core.Utilization
 			// ACT
 			var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-			var expectedObject = new Dictionary<String, Object>
+			var expectedObject = new Dictionary<string, object>
 			{
 				{"metadata_version", 5},
 				{"logical_processors", 4},
@@ -306,14 +304,14 @@ namespace NewRelic.Agent.Core.Utilization
 				{"full_hostname", "lo-calhost.domain.com"},
 				{"ip_address", new[] { "1.2.3.4","5.6.7.8" }},
 				{
-					"config",  new Dictionary<String, Object>
+					"config",  new Dictionary<string, object>
 					{
 						{"total_ram_mib", 2048}
 					}
 				}
 			};
 			var expectedJson = JsonConvert.SerializeObject(expectedObject);
-			Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+			Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 		}
 
 		//Same method used in main code, except this one take the config vs having it be global.
@@ -324,7 +322,7 @@ namespace NewRelic.Agent.Core.Utilization
 				return null;
 			}
 
-			if (String.IsNullOrEmpty(configuration.UtilizationBillingHost)
+			if (string.IsNullOrEmpty(configuration.UtilizationBillingHost)
 			    && configuration.UtilizationLogicalProcessors == null
 			    && configuration.UtilizationTotalRamMib == null)
 			{
@@ -337,7 +335,7 @@ namespace NewRelic.Agent.Core.Utilization
 		//Same method used in main code, except this one take the config vs having it be global.
 		private UtilitizationConfig GetUtilitizationConfig(string billingHost, int? logicalProcessors, int? totalRamMib)
 		{
-			if (String.IsNullOrEmpty(billingHost)
+			if (string.IsNullOrEmpty(billingHost)
 			    && logicalProcessors == null
 			    && totalRamMib == null)
 			{

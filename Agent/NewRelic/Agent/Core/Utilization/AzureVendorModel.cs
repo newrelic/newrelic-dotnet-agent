@@ -1,9 +1,8 @@
 ﻿using Newtonsoft.Json;
-using System;
 
 namespace NewRelic.Agent.Core.Utilization
 {
-    public class AzureVendorModel : IVendorModel
+	public class AzureVendorModel : IVendorModel
     {
 
 		private readonly string _location;
@@ -12,13 +11,13 @@ namespace NewRelic.Agent.Core.Utilization
 		private readonly string _vmSize;
 
 		[JsonProperty("location", NullValueHandling = NullValueHandling.Ignore)]
-		public String Location { get { return _location; } }
+		public string Location { get { return _location; } }
 		[JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
-		public String Name { get { return _name; } }
+		public string Name { get { return _name; } }
 		[JsonProperty("vmId", NullValueHandling = NullValueHandling.Ignore)]
-		public String VmId { get { return _vmId; } }
+		public string VmId { get { return _vmId; } }
 		[JsonProperty("vmSize", NullValueHandling = NullValueHandling.Ignore)]
-		public String VmSize { get { return _vmSize; } }
+		public string VmSize { get { return _vmSize; } }
 
 		public string VendorName { get { return "azure"; }}
 

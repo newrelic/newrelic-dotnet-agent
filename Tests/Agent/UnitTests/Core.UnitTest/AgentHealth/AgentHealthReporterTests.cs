@@ -47,7 +47,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 		[Test]
 		public void ReportWrapperShutdown_SendsExpectedMetrics()
 		{
-			_agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(String), "FooMethod", "FooParam"));
+			_agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(string), "FooMethod", "FooParam"));
 			Assert.AreEqual(3, _publishedMetrics.Count);
 			var metric0 = _publishedMetrics.ElementAt(0);
 			var metric1 = _publishedMetrics.ElementAt(1);

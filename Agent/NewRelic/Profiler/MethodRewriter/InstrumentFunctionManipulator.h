@@ -37,7 +37,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 		{
 			// set the stack size required to handle these instructions (remember that we push all of this functions arguments onto the stack to recursively call)
 			auto originalStackSize = GetHeader()->GetMaxStack();
-			uint16_t maxStackSize = std::max<uint16_t>(std::max<uint16_t>(originalStackSize, 10), uint16_t(_methodSignature->_parameters->size() + 1));
+			unsigned maxStackSize = std::max<unsigned>(std::max<unsigned>(originalStackSize, 10), unsigned(_methodSignature->_parameters->size() + 1));
 			GetHeader()->SetMaxStack(maxStackSize);
 
 			AppendDefaultLocals();

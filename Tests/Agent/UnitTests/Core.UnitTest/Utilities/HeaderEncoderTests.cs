@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Utilities
 		[Test]
 		public void TryDecodeAndDeserialize_ReturnsCorrectDeserializedObject_IfNullEncodingKey()
 		{
-			const String encoded = "WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==";
+			const string encoded = "WyJndWlkIixmYWxzZSwidHJpcElkIiwicGF0aEhhc2giXQ==";
 
 			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, null);
 			Assert.NotNull(deserialized);
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Utilities
 		[Test]
 		public void TryDecodeAndDeserialize_ReturnsCorrectDeserializedObject_IfNonNullEncodingKey()
 		{
-			const String encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
+			const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
 			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
 			Assert.NotNull(deserialized);
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Utilities
 		[Test]
 		public void TryDecodeAndDeserialize_ReturnsNull_IfIncorrectEncodingKey()
 		{
-			const String encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
+			const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
 			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded,"wrong!");
 
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Utilities
 		[Test]
 		public void TryDecodeAndDeserialize_ReturnsNull_IfInvalidString()
 		{
-			const String encoded = "not a valid base64 encoded string";
+			const string encoded = "not a valid base64 encoded string";
 
 			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<CrossApplicationRequestData>(encoded, "encodingKey");
 
@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Core.Utilities
 		[Test]
 		public void TryDecodeAndDeserialize_ReturnsNull_IfObjectCannotBeDeserializedAsExpectedType()
 		{
-			const String encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
+			const string encoded = "PkwEGg0NTEstBBUWC09NEBsHFwIBW0lMEw4QASYGOA1bOA==";
 
 			var deserialized = HeaderEncoder.TryDecodeAndDeserialize<MetricWireModel>(encoded, "encodingKey");
 			Assert.Null(deserialized);

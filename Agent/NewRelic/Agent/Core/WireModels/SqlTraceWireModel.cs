@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.WireModels
@@ -20,13 +16,13 @@ namespace NewRelic.Agent.Core.WireModels
 		/// ex. WebTransaction/ASP/post.aspx
 		/// </summary>
 		[JsonArrayIndex(Index = 0)]
-		[NotNull] public virtual string TransactionName { get; }
+		public virtual string TransactionName { get; }
 
 		/// <summary>
 		/// ex. http://localhost:8080/post.aspx
 		/// </summary>
 		[JsonArrayIndex(Index = 1)]
-		[NotNull] public virtual string Uri { get; }
+		public virtual string Uri { get; }
 
 		/// <summary>
 		/// The hash code of the obfuscated sql string.
@@ -40,14 +36,14 @@ namespace NewRelic.Agent.Core.WireModels
 		/// ex. DELETE FROM be_DataStoreSettings WHERE ExtensionType = @type AND ExtensionId = @id; 
 		/// </summary>        
 		[JsonArrayIndex(Index = 3)]
-		[NotNull] public virtual string Sql { get; }
+		public virtual string Sql { get; }
 
 		/// <summary>
 		/// The name of the database metric that this sql statement is associated with.
 		/// ex. Datastore/statement/MySQL/be_DataStoreSettings/DELETE
 		/// </summary>
 		[JsonArrayIndex(Index = 4)]
-		[NotNull] public virtual string DatastoreMetricName { get; }
+		public virtual string DatastoreMetricName { get; }
 
 		/// <summary>
 		/// Total call count ex. 1

@@ -7,7 +7,6 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
-using System.ServiceModel.MsmqIntegration;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {

@@ -73,6 +73,7 @@ namespace CompositeTests
 		public void ShouldCreateDistributedTracePayload()
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -94,6 +95,7 @@ namespace CompositeTests
 		public void ShouldAcceptStringDistributedTracePayloadWhenDTEnabled()
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -168,6 +170,7 @@ namespace CompositeTests
 		public void ShouldNotAcceptEmptyStringDistributedTracePayload()
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -196,6 +199,7 @@ namespace CompositeTests
 		public void ShouldNotAcceptBadStringDistributedTracePayload()
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,

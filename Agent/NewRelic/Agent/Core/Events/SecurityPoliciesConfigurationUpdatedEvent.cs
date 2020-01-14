@@ -1,15 +1,13 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Configuration;
+﻿using NewRelic.Agent.Core.Configuration;
 
 
 namespace NewRelic.Agent.Core.Events
 {
-    public class SecurityPoliciesConfigurationUpdatedEvent
-    {
-		[NotNull]
+	public class SecurityPoliciesConfigurationUpdatedEvent
+	{
 		public readonly SecurityPoliciesConfiguration Configuration;
 
-		public SecurityPoliciesConfigurationUpdatedEvent([NotNull] SecurityPoliciesConfiguration configuration)
+		public SecurityPoliciesConfigurationUpdatedEvent(SecurityPoliciesConfiguration configuration)
 		{
 			Configuration = configuration;
 		}

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using MoreLinq;
-using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;

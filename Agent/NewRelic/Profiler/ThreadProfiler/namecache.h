@@ -60,24 +60,24 @@ namespace NewRelic {
 
 				bool has_fid(FunctionID fid) const
 				{
-					return find_fid(fid) != std::cend(fidNameMap);
+					return find_fid(fid) != std::end(fidNameMap);
 				}
 
 				bool has_typedef(mdTypeDef typeDef) const
 				{
-					return find_typedef(typeDef) != std::cend(typedefNameMap);
+					return find_typedef(typeDef) != std::end(typedefNameMap);
 				}
 
 				const TypeAndMethodNames& operator[](FunctionID fid) const
 				{
 					const auto itr = find_fid(fid);
-					return itr != std::cend(fidNameMap) ? itr->second : TypeAndMethodNames::GetUnknownTypeAndMethodNames();
+					return itr != std::end(fidNameMap) ? itr->second : TypeAndMethodNames::GetUnknownTypeAndMethodNames();
 				}
 
 				const std::shared_ptr<xstring_t> typename_for(mdTypeDef typeDef) const
 				{
 					const auto itr = find_typedef(typeDef);
-					return itr != std::cend(typedefNameMap) ? itr->second : TypeAndMethodNames::GetUnknownTypeName();
+					return itr != std::end(typedefNameMap) ? itr->second : TypeAndMethodNames::GetUnknownTypeName();
 				}
 
 				void clear() noexcept
@@ -91,7 +91,7 @@ namespace NewRelic {
 					//PreallocTypeName/PreallocMethodName  .second is the actual length of the strings INCLUDING THE NULL terminator.  
 					//   .second-1 to exclude the null from the xstring_t
 					auto itr = find_typedef(typeDef);
-					if (std::cend(typedefNameMap) == itr)
+					if (std::end(typedefNameMap) == itr)
 					{
 						itr = typedefNameMap.emplace(std::end(typedefNameMap), std::piecewise_construct, std::forward_as_tuple(typeDef), std::forward_as_tuple(std::make_shared<xstring_t>(typeName.first.data(), typeName.second - 1)));
 					}
@@ -102,13 +102,13 @@ namespace NewRelic {
 
 				FidNameMap::const_iterator find_fid(FunctionID fid) const
 				{
-					return std::find_if(std::cbegin(fidNameMap), std::cend(fidNameMap),
+					return std::find_if(std::begin(fidNameMap), std::end(fidNameMap),
 						[=](const FidNameMap::value_type& pr) noexcept { return pr.first == fid; });
 				}
 
 				TypedefNameMap::const_iterator find_typedef(mdTypeDef typeDef) const
 				{
-					return std::find_if(std::cbegin(typedefNameMap), std::cend(typedefNameMap),
+					return std::find_if(std::begin(typedefNameMap), std::end(typedefNameMap),
 						[=](const TypedefNameMap::value_type& pr) noexcept { return pr.first == typeDef; });
 				}
 

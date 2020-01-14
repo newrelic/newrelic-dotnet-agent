@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
@@ -8,50 +7,30 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 #pragma warning disable 649 // Unassigned fields. This should be removed when we support thread profiling in the NETSTANDARD2_0 build.
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
-	#region Delegates for PInvoke calls to unmanaged thread profiler
-	/// <summary>
-	/// Delegate for a callback with an unmanaged class and method name associated with <paramref name="functionId"/>.
-	/// </summary>
-	/// <param name="functionId">A function identifier.</param>
-	/// <param name="className">The class name associated with <paramref name="functionId"/>.</param>
-	/// <param name="methodName">The method name associated with <paramref name="functionId"/>.</param>
-	public delegate void RequestFunctionNameCallback(IntPtr functionId, IntPtr className, IntPtr methodName);
-	#endregion
-
 	public class ThreadProfilingService : ConfigurationBasedService, IThreadProfilingSessionControl, IThreadProfilingProcessing, ISampleSink
 	{
-		private const Int32 InvalidSessionId = 0;
-		#region PInvoke Targets
-		[NotNull]
+		private const int InvalidSessionId = 0;
 		private readonly INativeMethods _nativeMethods;
-		#endregion
-
-		[NotNull]
 		private readonly IDataTransportService _dataTransportService;
-
 		private ThreadProfilingSampler _sampler;
-
-		private Int32 _profileSessionId;
+		private int _profileSessionId;
 		private DateTime _startSessionTime;
 		private DateTime _stopSessionTime;
-
-		[NotNull]
 		private readonly Dictionary<UIntPtr, ClassMethodNames> _functionNames = new Dictionary<UIntPtr, ClassMethodNames>();
-		[NotNull]
-		private readonly Object _syncObjFunctionNames = new Object();
-
-		private readonly Int32 _maxAggregatedNodes;
+		private readonly object _syncObjFunctionNames = new object();
+		private readonly int _maxAggregatedNodes;
 
 		/// <summary>
 		/// This is incremented every time a sample is acquired.
 		/// </summary>
-		private Int32 _numberSamplesInSession = 0;
+		private int _numberSamplesInSession = 0;
 
 		/// <summary>
 		/// Passed to the profiling session via the StopThreadProfilerCommand. When profiling is started this value is defaulted to true.
@@ -60,10 +39,8 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		private volatile bool _reportData = true;
 
 		// i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
-		[NotNull]
-		private readonly Dictionary<UIntPtr, Int32> _managedThreadsFromProfiler = new Dictionary<UIntPtr, Int32>();
+		private readonly Dictionary<UIntPtr, int> _managedThreadsFromProfiler = new Dictionary<UIntPtr, int>();
 
-		[NotNull]
 		private readonly ThreadProfilingBucket _threadProfilingBucket;
 
 		// The pruning list maintains a reference to all TreeNodes created. 
@@ -74,26 +51,22 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
 		// Sync object used to serialize access to the three thread lists. Don't expect access to occur
 		// often enough to warrant three separate synchronization objects. Optimize later if necessary.
-		[NotNull]
-		private readonly Object _syncObjFailedProfiles = new Object();
+		private readonly object _syncObjFailedProfiles = new object();
 
 		/// <summary>
 		/// Count by thread Id of failed thread profiles received from unmanaged thread profiler.
 		/// </summary>
-		[NotNull]
-		private readonly Dictionary<UIntPtr, UInt32> _failedThreads = new Dictionary<UIntPtr, UInt32>();
-		[NotNull]
-		private readonly Dictionary<UIntPtr, Int32> _failedThreadErrorCodes = new Dictionary<UIntPtr, Int32>();
+		private readonly Dictionary<UIntPtr, uint> _failedThreads = new Dictionary<UIntPtr, uint>();
+		private readonly Dictionary<UIntPtr, int> _failedThreadErrorCodes = new Dictionary<UIntPtr, int>();
 
 		/// <summary>
 		/// List of thread ids where the stack trace was large (greater than 2000)
 		/// </summary>
-		[NotNull]
 		private readonly List<UIntPtr> _largeStackOverflows = new List<UIntPtr>();
 
 		#region Construction and Initializations
 
-		public ThreadProfilingService([NotNull] IDataTransportService dataTransportService, [NotNull] INativeMethods nativeMethods, Int32 maxAggregatedNodes = 20000)
+		public ThreadProfilingService(IDataTransportService dataTransportService, INativeMethods nativeMethods, int maxAggregatedNodes = 20000)
 		{
 			_dataTransportService = dataTransportService;
 			_maxAggregatedNodes = maxAggregatedNodes;
@@ -148,16 +121,16 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		/// <param name="frequencyInMsec">The sampling interval.</param>
 		/// <param name="durationInMsec">The total time for the thread profiling session.</param>
 		/// <returns>true if a new thread profiling session is started. false if one already exists.</returns>
-		public Boolean StartThreadProfilingSession(Int32 profileSessionId, UInt32 frequencyInMsec, UInt32 durationInMsec)
+		public bool StartThreadProfilingSession(int profileSessionId, uint frequencyInMsec, uint durationInMsec)
 		{
-			Log.Info("Starting a thread profiling session");
+			Log.Info($"Starting a thread profiling session {{ SessionId: {profileSessionId}, SamplePeriodMs: {frequencyInMsec}, DurationMs: {durationInMsec} }}");
 			var startedNewSession = false;
 
 			try
 			{
 				if (_sampler == null)
 				{
-					_sampler = new ThreadProfilingSampler();
+					_sampler = new ThreadProfilingSampler(_nativeMethods);
 				}
 
 				// Remove existing data in tree and cache buffers
@@ -182,7 +155,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			return startedNewSession;
 		}
 
-		public Boolean StopThreadProfilingSession(Int32 profileId, Boolean reportData = true)
+		public bool StopThreadProfilingSession(int profileId, bool reportData = true)
 		{
 			if (_sampler == null)
 				return false;
@@ -202,14 +175,14 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
 			return true;
 		}
-		public void SampleAcquired([NotNull]ThreadSnapshot[] threadSnapshots)
+		public void SampleAcquired(ThreadSnapshot[] threadSnapshots)
 		{
 
 			foreach (var snapshot in threadSnapshots)
 			{
 				int errorCode = snapshot.ErrorCode;
 				var threadId = snapshot.ThreadId;
-				string branchDescription = String.Empty;
+				string branchDescription = string.Empty;
 				try
 				{
 					if (errorCode == 1)
@@ -315,7 +288,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			}
 		}
 
-		public void AddNodeToPruningList([NotNull] ProfileNode node)
+		public void AddNodeToPruningList(ProfileNode node)
 		{
 			PruningList.Add(node);
 		}
@@ -382,10 +355,9 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
 		#endregion
 
-		[NotNull]
 		private IEnumerable<ThreadProfilingModel> SerializeData()
 		{
-			var samples = new Dictionary<String, Object>();
+			var samples = new Dictionary<string, object>();
 			if (_threadProfilingBucket.Tree.Root.Children.Count > 0)
 				samples.Add("OTHER", _threadProfilingBucket.Tree.Root.Children);
 
@@ -442,7 +414,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 		{
 			try
 			{
-				var typeMethodNames = _nativeMethods.GetFunctionInfo(functionIds);
+				var typeMethodNames = GetFunctionInfo(functionIds);
 
 				foreach (var ftm in typeMethodNames)
 				{
@@ -473,7 +445,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			UpdateRunnableCounts(_threadProfilingBucket.Tree.Root, nonRunnableLeafNodes);
 		}
 
-		private static void UpdateRunnableCounts([NotNull] ProfileNode node, [NotNull] IEnumerable<String> nonRunnableLeafNodes)
+		private static void UpdateRunnableCounts(ProfileNode node, IEnumerable<string> nonRunnableLeafNodes)
 		{
 			if (node == null)
 				throw new ArgumentNullException("node");
@@ -484,7 +456,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 				UpdateRunnableCountsForNodeChildren(node, nonRunnableLeafNodes);
 		}
 
-		private static void UpdateRunnableCountsForLeafNode([NotNull] ProfileNode node, [NotNull] IEnumerable<String> nonRunnableLeafNodes)
+		private static void UpdateRunnableCountsForLeafNode(ProfileNode node, IEnumerable<string> nonRunnableLeafNodes)
 		{
 			var combinedClassMethodName = node.Details.ClassName + ":" + node.Details.MethodName;
 
@@ -495,7 +467,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			node.RunnableCount = 0;
 		}
 
-		private static void UpdateRunnableCountsForNodeChildren([NotNull] ProfileNode node, [NotNull] IEnumerable<String> nonRunnableLeafNodes)
+		private static void UpdateRunnableCountsForNodeChildren(ProfileNode node, IEnumerable<string> nonRunnableLeafNodes)
 		{
 			if (node == null)
 				throw new ArgumentNullException("node");
@@ -538,19 +510,24 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			}
 		}
 
-	}
-
-	public class ClassMethodNames
-	{
-		[NotNull]
-		public readonly String Class;
-		[NotNull]
-		public readonly String Method;
-
-		public ClassMethodNames([NotNull] String @class, [NotNull] String method)
+		private FidTypeMethodName[] GetFunctionInfo(UIntPtr[] functionIDs)
 		{
-			Class = @class;
-			Method = method;
+			//get these once and not each iteration of the loop
+			var typeOfFidTypeMethodName = typeof(FidTypeMethodName);
+			var sizeOfFidTypeMethodName = Marshal.SizeOf(typeOfFidTypeMethodName);
+
+			var result = _nativeMethods.RequestFunctionNames(functionIDs, functionIDs.Length, out IntPtr functionInfo);
+			if (result == 0)
+			{
+				var typeMethodNames = new FidTypeMethodName[functionIDs.Length];
+				for (int idx = 0; idx != typeMethodNames.Length; ++idx)
+				{
+					typeMethodNames[idx] = (FidTypeMethodName)Marshal.PtrToStructure(functionInfo, typeOfFidTypeMethodName);
+					functionInfo += sizeOfFidTypeMethodName;
+				}
+				return typeMethodNames;
+			}
+			return new FidTypeMethodName[0];
 		}
 	}
 }

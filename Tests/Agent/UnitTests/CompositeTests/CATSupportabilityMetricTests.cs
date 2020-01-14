@@ -49,7 +49,7 @@ namespace CompositeTests
 			var reqData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
 			_reqDataEncoded = HeaderEncoder.SerializeAndEncode(reqData, _agent.Configuration.EncodingKey);
 
-			_compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { _accountId };
+			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { _accountId };
 		}
 
 

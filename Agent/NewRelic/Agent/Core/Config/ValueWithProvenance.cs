@@ -1,4 +1,3 @@
-using System;
 namespace NewRelic.Agent.Core.Config
 {
 	/// <summary>
@@ -9,9 +8,9 @@ namespace NewRelic.Agent.Core.Config
 	public class ValueWithProvenance<T>
 	{
 		public T Value { get; private set; }
-		public String Provenance { get; private set; }
+		public string Provenance { get; private set; }
 
-		public ValueWithProvenance(T Value, String Provenance)
+		public ValueWithProvenance(T Value, string Provenance)
 		{
 			this.Value = Value;
 			this.Provenance = Provenance;

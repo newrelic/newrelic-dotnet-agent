@@ -119,6 +119,9 @@ namespace NewRelic.Agent.Core
 			// Resolve all services once we've ensured that the agent is enabled
 			_wrapperService = _container.Resolve<IWrapperService>();
 
+			//We need to attempt to auto start the agent once all services have resolved
+			_container.Resolve<IConnectionManager>().AttemptAutoStart();
+
 			AgentServices.StartServices(_container);
 
 			// Setup the internal API first so that AgentApi can use it.
@@ -156,7 +159,7 @@ namespace NewRelic.Agent.Core
 			commandService.AddCommands(
 				new RestartCommand(),
 				new ShutdownCommand(),
-				new StartThreadProfilerCommand(_threadProfilingService, AgentInstallConfiguration.IsWindows),
+				new StartThreadProfilerCommand(_threadProfilingService),
 				new StopThreadProfilerCommand(_threadProfilingService),
 				new InstrumentationUpdateCommand(instrumentationService)
 			);

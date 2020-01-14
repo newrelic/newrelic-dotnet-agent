@@ -1,4 +1,5 @@
 ﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -37,11 +38,13 @@ namespace CompositeTests
 			var testHostName = "myHost";
 			var testPort = "myPort";
 			var testDBName = "myDatabase";
-			
+
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
 			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
+			//SpanEvents were not enabled when the aggregators were first started so we need to start them here.
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var tx = _agent.CreateTransaction(
 				isWeb: true,
@@ -89,6 +92,8 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
+			//SpanEvents were not enabled when the aggregators were first started so we need to start them here.
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var tx = _agent.CreateTransaction(
 				isWeb: true,
@@ -133,6 +138,8 @@ namespace CompositeTests
 			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
+			//SpanEvents were not enabled when the aggregators were first started so we need to start them here.
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var tx = _agent.CreateTransaction(
 				destinationType: MessageBrokerDestinationType.Queue,

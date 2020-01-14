@@ -18,6 +18,24 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup>
+    <CoreClrRepo>https://github.com/dotnet/coreclr.git</CoreClrRepo>
+    <CoreClrBranch>release/3.0</CoreClrBranch>
+    <CloneCoreClr Condition="'$(CORECLR_PATH)' == ''">true</CloneCoreClr>
+    <CORECLR_PATH Condition="'$(CORECLR_PATH)' == ''">$(SolutionDir)..\..\..\..\coreclr</CORECLR_PATH>
+  </PropertyGroup>
+  <Choose>
+    <When Condition="Exists('$(CORECLR_PATH)')">
+      <PropertyGroup>
+        <GitCoreClr>git --git-dir="$(CORECLR_PATH)\.git" --work-tree="$(CORECLR_PATH)" fetch --tags --all &amp;&amp; git --git-dir="$(CORECLR_PATH)\.git" --work-tree="$(CORECLR_PATH)" checkout $(CoreClrBranch)</GitCoreClr>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <GitCoreClr>git clone --branch $(CoreClrBranch) $(CoreClrRepo) "$(CORECLR_PATH)"</GitCoreClr>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD9D2763-2E4F-48AA-BDFD-E23ABB9822AB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -54,7 +72,6 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -74,28 +91,28 @@
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\NETFXSDK\4.7.2@KitsInstallationFolder)\Include\um;$(IncludePath)</IncludePath>
+    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\NETFXSDK\4.7.2@KitsInstallationFolder)\Include\um;$(IncludePath)</IncludePath>
+    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\NETFXSDK\4.7.2@KitsInstallationFolder)\Include\um;$(IncludePath)</IncludePath>
+    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)\..\..\..\_profilerBuild\$(PlatformTarget)-$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(PlatformTarget)\$(Configuration)\</IntDir>
     <TargetName>NewRelic.Profiler</TargetName>
-    <IncludePath>$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\NETFXSDK\4.7.2@KitsInstallationFolder)\Include\um;$(IncludePath)</IncludePath>
+    <IncludePath>$(CORECLR_PATH)\src\pal\prebuilt\inc;$(CORECLR_PATH)\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -233,7 +250,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EntryPoint.cpp" />
-    <ClCompile Include="ETWTracer\CorProfilerTracer.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -242,29 +258,23 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="AssemblyInfo.rc">
-      <AdditionalIncludeDirectories>ETWTracer</AdditionalIncludeDirectories>
-    </ResourceCompile>
+    <ResourceCompile Include="AssemblyInfo.rc" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="ETWTracer\StubX64.asm">
-      <ExcludedFromBuild Condition="'$(Platform)'=='Win32'">true</ExcludedFromBuild>
-    </MASM>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="ETWTracer\ETWClrProfiler.man">
-      <ExcludedFromBuild>false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <Command>mc.exe -W winmeta.xml  -r ETWTracer -um -b "%(Identity)"</Command>
-      <Outputs>%(Filename).h;%(Filename).rc;%(Filename)TEMP.BIN;%(Filename)_MSG00001.bin;%(Outputs)</Outputs>
-      <LinkObjects>false</LinkObjects>
-      <Command>mc.exe -W winmeta.xml -h %(RelativeDir) -r %(RelativeDir) -um -b "%(Identity)"</Command>
-      <Message>Compiling manifest - producing %(Outputs)</Message>
-    </CustomBuild>
     <None Include="Profiler.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
+  <Target Name="CheckCoreClrPath" Condition="'$(CloneCoreClr)' == 'true'">
+    <Message Importance="high" Text="Executing '$(GitCoreClr)'" />
+    <Message Importance="high" Text="CORECLR_PATH=$(CORECLR_PATH)" />
+    <Exec Command="$(GitCoreClr)" />
+  </Target>
+  <PropertyGroup>
+    <BuildDependsOn>
+      CheckCoreClrPath;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
 </Project>

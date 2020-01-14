@@ -142,17 +142,17 @@ namespace CompositeTests
 
 			var queryParameters = new Dictionary<string, IConvertible>
 			{
-				{ "myint16", Int16.MaxValue },
+				{ "myint16", short.MaxValue },
 				{ "myint", int.MaxValue },
-				{ "myInt64", Int64.MaxValue },
-				{ "myUInt16", UInt16.MaxValue },
+				{ "myInt64", long.MaxValue },
+				{ "myUInt16", ushort.MaxValue },
 				{ "myUint", uint.MaxValue },
-				{ "myUInt64", UInt64.MaxValue },
-				{ "mySByte", SByte.MaxValue },
-				{ "myByte", Byte.MaxValue },
-				{ "mySingle", Single.MaxValue },
-				{ "myDouble", Double.MaxValue },
-				{ "myDecimal", Decimal.MaxValue }
+				{ "myUInt64", ulong.MaxValue },
+				{ "mySByte", sbyte.MaxValue },
+				{ "myByte", byte.MaxValue },
+				{ "mySingle", float.MaxValue },
+				{ "myDouble", double.MaxValue },
+				{ "myDecimal", decimal.MaxValue }
 			};
 
 			var segment = CreateWebTransactionWithDatastoreSegment(queryParameters);
@@ -161,17 +161,17 @@ namespace CompositeTests
 
 			CollectionAssert.AreEquivalent(segmentData.QueryParameters, new Dictionary<string, IConvertible>
 			{
-				{ "myint16", Int16.MaxValue },
+				{ "myint16", short.MaxValue },
 				{ "myint", int.MaxValue },
-				{ "myInt64", Int64.MaxValue },
-				{ "myUInt16", UInt16.MaxValue },
+				{ "myInt64", long.MaxValue },
+				{ "myUInt16", ushort.MaxValue },
 				{ "myUint", uint.MaxValue },
-				{ "myUInt64", UInt64.MaxValue },
-				{ "mySByte", SByte.MaxValue },
-				{ "myByte", Byte.MaxValue },
-				{ "mySingle", Single.MaxValue },
-				{ "myDouble", Double.MaxValue },
-				{ "myDecimal", Decimal.MaxValue }
+				{ "myUInt64", ulong.MaxValue },
+				{ "mySByte", sbyte.MaxValue },
+				{ "myByte", byte.MaxValue },
+				{ "mySingle", float.MaxValue },
+				{ "myDouble", double.MaxValue },
+				{ "myDecimal", decimal.MaxValue }
 			});
 		}
 

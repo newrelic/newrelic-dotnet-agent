@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
@@ -11,7 +10,6 @@ namespace NewRelic.Agent.Core.Database.UnitTest
 		[TestFixture, Category("JustMock")]
 		public class Request_GetObfuscatedSql
 		{
-			[NotNull]
 			private DatabaseService _databaseService;
 
 			[SetUp]

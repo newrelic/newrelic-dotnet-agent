@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using NewRelic.Agent.Core.Configuration;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
@@ -12,7 +11,6 @@ namespace CompositeTests
 	[TestFixture]
 	public class CustomInstrumentationEditorTests
 	{
-		[NotNull]
 		private static CompositeTestAgent _compositeTestAgent;
 
 		[SetUp]

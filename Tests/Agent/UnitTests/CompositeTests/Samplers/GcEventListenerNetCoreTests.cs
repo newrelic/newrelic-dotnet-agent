@@ -222,11 +222,11 @@ namespace NewRelic.Agent.Core.Samplers
 
 			[Event(GCEventsListener.EventID_GCStart, Level = EventLevel.Informational)]
 			public void GCStart_V1(
-				UInt32 count,
-				UInt32 depth,
-				UInt32 reason,
-				UInt32 type,
-				UInt32 clrInstanceID)
+				uint count,
+				uint depth,
+				uint reason,
+				uint type,
+				uint clrInstanceID)
 			{
 				WriteEvent(1, count, depth, reason, type, clrInstanceID);
 			}

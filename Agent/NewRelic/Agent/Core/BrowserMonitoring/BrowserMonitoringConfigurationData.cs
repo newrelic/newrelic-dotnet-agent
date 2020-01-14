@@ -1,13 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Core.Requests;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
@@ -32,46 +23,39 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
 		[JsonProperty("beacon")]
-		[NotNull]
-		public String Beacon { get; }
+		public string Beacon { get; }
 
 		[JsonProperty("errorBeacon")]
-		[NotNull]
-		public String ErrorBeacon { get; }
+		public string ErrorBeacon { get; }
 
 		[JsonProperty("licenseKey")]
-		[NotNull]
-		public String BrowserLicenseKey { get; }
+		public string BrowserLicenseKey { get; }
 
 		[JsonProperty("applicationID")]
-		[NotNull]
-		public String ApplicationId { get; }
+		public string ApplicationId { get; }
 
 		[JsonProperty("transactionName")]
-		[NotNull]
-		public String ObfuscatedTransactionName { get; }
+		public string ObfuscatedTransactionName { get; }
 
 		[JsonProperty("queueTime")]
-		public Int32 QueueTimeMilliseconds => (Int32)_queueTime.TotalMilliseconds;
+		public int QueueTimeMilliseconds => (int)_queueTime.TotalMilliseconds;
 		private readonly TimeSpan _queueTime;
 
 		[JsonProperty("applicationTime")]
-		public Int32 ApplicationTimeMilliseconds => (Int32)_applicationTime.TotalMilliseconds;
+		public int ApplicationTimeMilliseconds => (int)_applicationTime.TotalMilliseconds;
 		private readonly TimeSpan _applicationTime;
 
 		[JsonProperty("agent")]
-		[NotNull]
-		public String Agent { get; }
+		public string Agent { get; }
 
 		[JsonProperty("atts")]
-		[CanBeNull]
-		public String ObfuscatedUserAttributes { get; }
+		public string ObfuscatedUserAttributes { get; }
 
 		[JsonProperty("sslForHttp", NullValueHandling = NullValueHandling.Ignore)]
-		public String SslForHttp => _sslForHttp ? "true" : null;
-		private readonly Boolean _sslForHttp;
+		public string SslForHttp => _sslForHttp ? "true" : null;
+		private readonly bool _sslForHttp;
 
-		public BrowserMonitoringConfigurationData([NotNull] String licenseKey, [NotNull] String beacon, [NotNull] String errorBeacon, [NotNull] String browserMonitoringKey, [NotNull] String applicationId, [NotNull] String obfuscatedTransactionName, TimeSpan queueTime, TimeSpan applicationTime, [NotNull] String jsAgentPayloadFile, [CanBeNull] String obfuscatedFormattedAttributes, Boolean sslForHttp)
+		public BrowserMonitoringConfigurationData(string licenseKey, string beacon, string errorBeacon, string browserMonitoringKey, string applicationId, string obfuscatedTransactionName, TimeSpan queueTime, TimeSpan applicationTime, string jsAgentPayloadFile, string obfuscatedFormattedAttributes, bool sslForHttp)
 		{
 			Beacon = beacon;
 			ErrorBeacon = errorBeacon;
@@ -81,11 +65,11 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			_queueTime = queueTime;
 			_applicationTime = applicationTime;
 			Agent = jsAgentPayloadFile;
-			ObfuscatedUserAttributes = obfuscatedFormattedAttributes ?? String.Empty;
+			ObfuscatedUserAttributes = obfuscatedFormattedAttributes ?? string.Empty;
 			_sslForHttp = sslForHttp;
 		}
 
-		public String ToJsonString()
+		public string ToJsonString()
 		{
 			
 			return JsonConvert.SerializeObject(this, Formatting.None, _jsonSettings);

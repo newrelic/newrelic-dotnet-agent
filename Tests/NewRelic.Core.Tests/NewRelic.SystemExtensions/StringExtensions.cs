@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using NUnit.Framework;
 
 namespace NewRelic.SystemExtensions.UnitTests
@@ -16,7 +15,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[Test]
 		public void when_null_then_throws_exception()
 		{
-			Assert.Throws<ArgumentNullException>(() => (null as String).TruncateUnicodeStringByLength(0));
+			Assert.Throws<ArgumentNullException>(() => (null as string).TruncateUnicodeStringByLength(0));
 		}
 
 		[TestCase("foo", 4, "foo")]
@@ -25,7 +24,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[TestCase("foo", 0, "")]
 		[TestCase("€€€", 3, "€€€")]
 		[TestCase("€€€", 2, "€€")]
-		public void TruncationByLength(String inputString, Int32 maxLength, String expectedResult)
+		public void TruncationByLength(string inputString, int maxLength, string expectedResult)
 		{
 			var actualResult = inputString.TruncateUnicodeStringByLength(maxLength);
 
@@ -47,9 +46,9 @@ namespace NewRelic.SystemExtensions.UnitTests
 			Assert.AreEqual(expectedResult, actualResult);
 		}
 
-		[TestCase(null, false, new String[] {})]
+		[TestCase(null, false, new string[] {})]
 		[TestCase(null, false, new[] {"baz"})]
-		[TestCase("foo", false, new String[] {})]
+		[TestCase("foo", false, new string[] {})]
 		[TestCase("foo", false, new[] {"bar"})]
 		[TestCase("foo", true, new[] {"foo"})]
 		[TestCase("foo", true, new[] {"FOO"})]
@@ -57,7 +56,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[TestCase("foobar", true, new[] {"foo"})]
 		[TestCase("foobar", true, new[] {"FOO"})]
 		[TestCase("foobar", true, new[] {"foo", "baz"})]
-		public void ContainsAny_ReturnsTrue_IfSourceStringContainsAnyOfTargetStrings_WhileIgnoringCase(String source, Boolean expectedResult, params String[] searchTargets)
+		public void ContainsAny_ReturnsTrue_IfSourceStringContainsAnyOfTargetStrings_WhileIgnoringCase(string source, bool expectedResult, params string[] searchTargets)
 		{
 			// ReSharper disable once RedundantArgumentDefaultValue
 			var result = source.ContainsAny(searchTargets, StringComparison.InvariantCultureIgnoreCase);
@@ -65,9 +64,9 @@ namespace NewRelic.SystemExtensions.UnitTests
 			Assert.AreEqual(expectedResult, result);
 		}
 
-		[TestCase(null, false, new String[] { })]
+		[TestCase(null, false, new string[] { })]
 		[TestCase(null, false, new[] { "baz" })]
-		[TestCase("foo", false, new String[] { })]
+		[TestCase("foo", false, new string[] { })]
 		[TestCase("foo", false, new[] { "bar" })]
 		[TestCase("foo", true, new[] { "foo" })]
 		[TestCase("foo", false, new[] { "FOO" })]
@@ -75,7 +74,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[TestCase("foobar", true, new[] { "foo" })]
 		[TestCase("foobar", false, new[] { "FOO" })]
 		[TestCase("foobar", true, new[] { "foo", "baz" })]
-		public void ContainsAny_ReturnsTrue_IfSourceStringContainsAnyOfTargetStrings_WhileRespectingCase(String source, Boolean expectedResult, params String[] searchTargets)
+		public void ContainsAny_ReturnsTrue_IfSourceStringContainsAnyOfTargetStrings_WhileRespectingCase(string source, bool expectedResult, params string[] searchTargets)
 		{
 			Assert.AreEqual(expectedResult, source.ContainsAny(searchTargets, StringComparison.InvariantCulture));
 		}
@@ -103,7 +102,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[TestCase("abc123", '3', 5, "abc12")]
 		[TestCase("abc333", '3', 1, "abc33")]
 		[TestCase("abc333", '3', 3, "abc")]
-		public void TrimEnd(String source, Char trimChar, Int32 maxCharactersToTrim, String expectedResult)
+		public void TrimEnd(string source, char trimChar, int maxCharactersToTrim, string expectedResult)
 		{
 			if (source == null)
 				throw new ArgumentNullException("source");
@@ -117,7 +116,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[TestCase("barfoo", "bar", "barfoo")]
 		[TestCase("arfoo", "bar", "bararfoo")]
 		[TestCase("foo", null, "foo")]
-		public void EnsureLeading(String source, String leading, String expectedResult)
+		public void EnsureLeading(string source, string leading, string expectedResult)
 		{
 			var actualResult = source.EnsureLeading(leading);
 
@@ -128,7 +127,7 @@ namespace NewRelic.SystemExtensions.UnitTests
 		[TestCase("foobar", "bar", "foobar")]
 		[TestCase("fooba", "bar", "foobabar")]
 		[TestCase("foo", null, "foo")]
-		public void EnsureTrailing(String source, String trailing, String expectedResult)
+		public void EnsureTrailing(string source, string trailing, string expectedResult)
 		{
 			var actualResult = source.EnsureTrailing(trailing);
 

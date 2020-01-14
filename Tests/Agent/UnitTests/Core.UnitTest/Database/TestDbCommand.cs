@@ -5,13 +5,13 @@ namespace NewRelic.Agent.Core.Database
 {
 	public class TestDatabaseCommand : IDbCommand, ICloneable
 	{
-		public TestDatabaseCommand(String sql)
+		public TestDatabaseCommand(string sql)
 			: this(sql, CommandType.Text)
 		{
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
-		public TestDatabaseCommand (String sql, CommandType commandType)
+		public TestDatabaseCommand (string sql, CommandType commandType)
 		{
 			this.CommandText = sql;
 			this.CommandType = commandType;

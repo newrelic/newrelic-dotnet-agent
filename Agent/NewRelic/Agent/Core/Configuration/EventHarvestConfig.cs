@@ -1,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
+namespace NewRelic.Agent.Core.Configuration
+{
+	public class EventHarvestConfig
+	{
+		public const string ErrorEventHarvestLimitKey = "error_event_data";
+		public const string CustomEventHarvestLimitKey = "custom_event_data";
+		public const string TransactionEventHarvestLimitKey = "analytic_event_data";
+		public const string SpanEventHarvestLimitKey = "span_event_data";
+
+		[JsonProperty("report_period_ms")]
+		public int? ReportPeriodMs { get; set; }
+
+		[JsonProperty("harvest_limits")]
+		public Dictionary<string, uint> HarvestLimits { get; set; }
+
+		public uint? ErrorEventHarvestLimit()
+		{
+			return GetEventHarvestLimitFor(ErrorEventHarvestLimitKey);
+		}
+
+		public TimeSpan? ErrorEventHarvestCycle()
+		{
+			return GetEventHarvestCycleFor(ErrorEventHarvestLimitKey);
+		}
+
+		public uint? CustomEventHarvestLimit()
+		{
+			return GetEventHarvestLimitFor(CustomEventHarvestLimitKey);
+		}
+
+		public TimeSpan? CustomEventHarvestCycle()
+		{
+			return GetEventHarvestCycleFor(CustomEventHarvestLimitKey);
+		}
+
+		public uint? TransactionEventHarvestLimit()
+		{
+			return GetEventHarvestLimitFor(TransactionEventHarvestLimitKey);
+		}
+
+		public TimeSpan? TransactionEventHarvestCycle()
+		{
+			return GetEventHarvestCycleFor(TransactionEventHarvestLimitKey);
+		}
+
+		public uint? SpanEventHarvestLimit()
+		{
+			return GetEventHarvestLimitFor(SpanEventHarvestLimitKey);
+		}
+
+		public TimeSpan? SpanEventHarvestCycle()
+		{
+			return GetEventHarvestCycleFor(SpanEventHarvestLimitKey);
+		}
+
+		private uint? GetEventHarvestLimitFor(string eventType)
+		{
+			if (HarvestLimits == null || !ReportPeriodMs.HasValue || !HarvestLimits.ContainsKey(eventType)) return null;
+
+			return HarvestLimits[eventType];
+		}
+
+		private TimeSpan? GetEventHarvestCycleFor(string eventType)
+		{
+			var harvestLimit = GetEventHarvestLimitFor(eventType);
+			return harvestLimit.HasValue && harvestLimit > 0 ? TimeSpan.FromMilliseconds(ReportPeriodMs.Value) : null as TimeSpan?;
+		}
+	}
+}

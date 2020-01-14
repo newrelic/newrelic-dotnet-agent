@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -35,7 +33,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 			return Delegates.GetDelegateFor(segment);
 		}
 
-		private static void AttachCatHeaders([NotNull] IAgent agent, [NotNull] LogicalMessage logicalMessage)
+		private static void AttachCatHeaders(IAgent agent, LogicalMessage logicalMessage)
 		{
 			if (logicalMessage.Headers == null)
 				return;
@@ -55,8 +53,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 		/// </summary>
 		/// <param name="logicalMessage"></param>
 		/// <returns></returns>
-		[CanBeNull]
-		private static string TryGetQueueName([NotNull] LogicalMessage logicalMessage)
+		private static string TryGetQueueName(LogicalMessage logicalMessage)
 		{
 			if (logicalMessage.MessageType == null)
 				return null;

@@ -27,7 +27,7 @@ namespace NewRelic.Providers.Storage.HttpContext
 
 		ContextStorageType IContextStorageFactory.Type => ContextStorageType.HttpContext;
 
-		IContextStorage<T> IContextStorageFactory.CreateContext<T>(String key)
+		IContextStorage<T> IContextStorageFactory.CreateContext<T>(string key)
 		{
 			return new HttpContextStorage<T>(key);
 		}

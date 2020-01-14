@@ -1173,7 +1173,7 @@ namespace CompositeTests
 				doNotTrackAsUnitOfWork: true);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			segment.End();
-			AgentApi.AddCustomParameter("key1", null as String);
+			AgentApi.AddCustomParameter("key1", null as string);
 			AgentApi.AddCustomParameter("key2", null as IConvertible);
 			transaction.End();
 			_compositeTestAgent.Harvest();
@@ -1797,7 +1797,7 @@ namespace CompositeTests
 		{
 			var AppDataHttpHeader = "X-NewRelic-App-Data";
 
-			var trustedAccount = Int64.Parse(_compositeTestAgent.ServerConfiguration.CatId.Split(new []{'#'})[0]);
+			var trustedAccount = long.Parse(_compositeTestAgent.ServerConfiguration.CatId.Split(new []{'#'})[0]);
 			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] {trustedAccount};
 			_compositeTestAgent.ServerConfiguration.EncodingKey = "foo";
 			_compositeTestAgent.PushConfiguration();
@@ -1869,6 +1869,7 @@ namespace CompositeTests
 		public void Test_TraceMetadataReturnsValidValues()
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.PushConfiguration();
 
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
@@ -1897,6 +1898,7 @@ namespace CompositeTests
 		public void TraceMetadataReturnsEmptyValuesIfDTDisabled()
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
+			_compositeTestAgent.PushConfiguration();
 
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
@@ -1918,6 +1920,7 @@ namespace CompositeTests
 		public void TraceMetadataReturnsNewValuesAfterAcceptDTPayload()
 		{
 			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");

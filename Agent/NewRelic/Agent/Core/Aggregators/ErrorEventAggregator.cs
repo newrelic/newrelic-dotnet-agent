@@ -6,8 +6,10 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -22,6 +24,7 @@ namespace NewRelic.Agent.Core.Aggregators
 	public class ErrorEventAggregator : AbstractAggregator<ErrorEventWireModel>, IErrorEventAggregator
 	{
 		private readonly IAgentHealthReporter _agentHealthReporter;
+		private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
 
 		private ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> _errorEvents = new ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>(0);
 
@@ -38,24 +41,51 @@ namespace NewRelic.Agent.Core.Aggregators
 			ResetCollections(_configuration.ErrorCollectorMaxEventSamplesStored);
 		}
 
+		protected override TimeSpan HarvestCycle => _configuration.ErrorEventsHarvestCycle;
+		protected override bool IsEnabled => _configuration.ErrorCollectorCaptureEvents;
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			_readerWriterLock.Dispose();
+		}
+
 		public override void Collect(ErrorEventWireModel errorEventWireModel)
 		{
 			_agentHealthReporter.ReportErrorEventSeen();
 
-			AddEventToCollection(errorEventWireModel);
+			_readerWriterLock.EnterReadLock();
+			try
+			{
+				AddEventToCollection(errorEventWireModel);
+			}
+			finally
+			{
+				_readerWriterLock.ExitReadLock();
+			}
 		}
 
 		protected override void Harvest()
 		{
-			// create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
-			var errorEvents = _errorEvents.Where(node => node != null).Select(node => node.Data).ToList();
-			var syntheticErrorEvents = _syntheticsErrorEvents;
-			var aggregatedEvents = errorEvents.Union(syntheticErrorEvents).ToList();
+			ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> originalErrorEvents;
+			ConcurrentList<ErrorEventWireModel> originalSyntheticsErrorEvents;
+
+			_readerWriterLock.EnterWriteLock();
+			try
+			{
+				originalErrorEvents = GetAndResetErrorEvents(GetReservoirSize());
+				originalSyntheticsErrorEvents = GetAndResetSyntheticsErrorEvents();
+			}
+			finally
+			{
+				_readerWriterLock.ExitWriteLock();
+			}
+
+			var errorEvents = originalErrorEvents.Where(node => node != null).Select(node => node.Data).ToList();
+			var aggregatedEvents = errorEvents.Union(originalSyntheticsErrorEvents).ToList();
 
 			// Retrieve the number of add attempts before resetting the collection.
-			var eventHarvestData = new EventHarvestData(_errorEvents.Size, (uint)_errorEvents.GetAddAttemptsCount());
-
-			ResetCollections(GetReservoirSize());
+			var eventHarvestData = new EventHarvestData(originalErrorEvents.Size, (uint)originalErrorEvents.GetAddAttemptsCount());
 
 			// if we don't have any events to publish then don't
 			if (aggregatedEvents.Count <= 0)
@@ -78,10 +108,20 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		private void ResetCollections(uint errorEventCollectionCapacity)
 		{
-			_errorEvents = new ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>(errorEventCollectionCapacity);
-			_syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
-
+			GetAndResetErrorEvents(errorEventCollectionCapacity);
+			GetAndResetSyntheticsErrorEvents();
 		}
+
+		private ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> GetAndResetErrorEvents(uint errorEventCollectionCapacity)
+		{
+			return Interlocked.Exchange(ref _errorEvents, new ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>(errorEventCollectionCapacity));
+		}
+
+		private ConcurrentList<ErrorEventWireModel> GetAndResetSyntheticsErrorEvents()
+		{
+			return Interlocked.Exchange(ref _syntheticsErrorEvents, new ConcurrentList<ErrorEventWireModel>());
+		}
+
 		private void AddEventToCollection(ErrorEventWireModel errorEvent)
 		{
 			if (errorEvent.IsSynthetics() && _syntheticsErrorEvents.Count < SyntheticsHeader.MaxEventCount)

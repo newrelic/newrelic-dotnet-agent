@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 
@@ -55,7 +54,7 @@ namespace NewRelic.Agent.Core.Utils
 			}
 		}
 
-		private static IEnumerable<Object[]> TrimmedEncodedBufferTestData()
+		private static IEnumerable<object[]> TrimmedEncodedBufferTestData()
 		{
 			yield return new object[] { Encoding.UTF8, 0, TOTAL_BYTES_LENGTH, new byte[] {}, new byte[] {}, "Buffer with no trimming needed" };
 			yield return new object[] { Encoding.UTF8, 0, TOTAL_BYTES_LENGTH - 1, new byte[] {}, new byte[] { 0xD0 }, "Buffer with partial multi-byte character at the end" };
@@ -73,11 +72,11 @@ namespace NewRelic.Agent.Core.Utils
 
 		private static IEnumerable<object[]> LeadingBytesCountTestData()
 		{
-			yield return new Object[] {Encoding.UTF8, 0, 1, 1, new byte[] {0x80}, "Just one byte"};
-			yield return new Object[] {Encoding.UTF8, 2, 2, 2, new byte[] {0x01, 0x01, 0x80, 0x80, 0x80}, "offset > 0, read only 2 bytes"};
-			yield return new Object[] {Encoding.UTF8, 2, 6, 3, new byte[] {0x01, 0x01, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80}, "offset > 0, buffer 6 bytes, but only reads at most 3 leading bytes for UTF-8"};
+			yield return new object[] {Encoding.UTF8, 0, 1, 1, new byte[] {0x80}, "Just one byte"};
+			yield return new object[] {Encoding.UTF8, 2, 2, 2, new byte[] {0x01, 0x01, 0x80, 0x80, 0x80}, "offset > 0, read only 2 bytes"};
+			yield return new object[] {Encoding.UTF8, 2, 6, 3, new byte[] {0x01, 0x01, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80}, "offset > 0, buffer 6 bytes, but only reads at most 3 leading bytes for UTF-8"};
 
-			yield return new Object[] {Encoding.Unicode, 0, 1, 0, new byte[] {0x80}, "We only compute leading byte count for UTF-8"};
+			yield return new object[] {Encoding.Unicode, 0, 1, 0, new byte[] {0x80}, "We only compute leading byte count for UTF-8"};
 		}
 	}
 }

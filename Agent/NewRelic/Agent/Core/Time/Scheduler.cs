@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Utilities;
+﻿using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
 using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -14,13 +13,10 @@ namespace NewRelic.Agent.Core.Time
 		// The System.Threading.Timer class uses -1 milliseconds as a magic "off" value
 		private static readonly TimeSpan DisablePeriodicExecution = TimeSpan.FromMilliseconds(-1);
 
-		[NotNull]
-		private readonly Object _lock = new Object();
+		private readonly object _lock = new object();
 
-		[NotNull]
 		private readonly DisposableCollection<TimerStatus> _oneTimeTimers = new DisposableCollection<TimerStatus>();
 		
-		[NotNull]
 		private readonly IDictionary<Action, Timer> _recurringTimers = new Dictionary<Action, Timer>();
 
 		#region Public API
@@ -197,9 +193,8 @@ namespace NewRelic.Agent.Core.Time
 
 		private class TimerStatus : IDisposable
 		{
-			[CanBeNull, UsedImplicitly]
 			public Timer Timer;
-			public Boolean HasRun;
+			public bool HasRun;
 			
 			public void Dispose()
 			{

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands
@@ -7,6 +6,6 @@ namespace NewRelic.Agent.Core.Commands
 	{
 		public string Name { get; protected set; }
 
-		public abstract object Process(IDictionary<String, object> arguments);
+		public abstract object Process(IDictionary<string, object> arguments);
 	}
 }

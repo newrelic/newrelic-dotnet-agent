@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.SystemExtensions.Collections.Generic;
 
@@ -8,8 +6,8 @@ namespace CompositeTests
 {
 	public class TestTransactionContext<T> : IContextStorage<T>
 	{
-		private readonly String _key = "TEST";
-		[NotNull]
+		private readonly string _key = "TEST";
+
 		private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
 
 		public T GetData()

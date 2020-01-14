@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using NewRelic.Collections;
 using NewRelic.Core.NewRelic.Cache;
 using NUnit.Framework;
 

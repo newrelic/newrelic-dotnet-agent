@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utils
 {
@@ -10,26 +8,26 @@ namespace NewRelic.Agent.Core.Utils
 	[System.SerializableAttribute()]
 	public class HashSet<T> : ICollection<T>
 	{
-		private readonly Object exists = new Object();
-		private readonly IDictionary<T, Object> map;
+		private readonly object exists = new object();
+		private readonly IDictionary<T, object> map;
 
 		public HashSet()
 		{
-			map = new Dictionary<T, Object>();
+			map = new Dictionary<T, object>();
 		}
 
 		public HashSet(ICollection<T> set)
 		{
-			map = new Dictionary<T, Object>(set.Count);
+			map = new Dictionary<T, object>(set.Count);
 			foreach (T obj in set)
 			{
 				Add(obj);
 			}
 		}
 
-		public HashSet([NotNull] IEnumerable<T> source)
+		public HashSet(IEnumerable<T> source)
 		{
-			map = new Dictionary<T, Object>();
+			map = new Dictionary<T, object>();
 			foreach (var item in source)
 			{
 				Add(item);
@@ -38,7 +36,7 @@ namespace NewRelic.Agent.Core.Utils
 
 		public HashSet(int initialCapacity)
 		{
-			map = new Dictionary<T, Object>(initialCapacity);
+			map = new Dictionary<T, object>(initialCapacity);
 		}
 
 		public void Add(T item)

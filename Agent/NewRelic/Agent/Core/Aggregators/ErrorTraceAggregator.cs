@@ -7,6 +7,7 @@ using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -17,6 +18,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
 	public class ErrorTraceAggregator : AbstractAggregator<ErrorTraceWireModel>, IErrorTraceAggregator
 	{
+		private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
+
 		private ICollection<ErrorTraceWireModel> _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
 
 		private uint _errorTraceCollectionMaximum;
@@ -26,19 +29,45 @@ namespace NewRelic.Agent.Core.Aggregators
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
-			ResetCollections();
+			GetAndResetCollection();
 		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			_readerWriterLock.Dispose();
+		}
+
+		protected override bool IsEnabled => _configuration.ErrorCollectorEnabled;
 
 		public override void Collect(ErrorTraceWireModel errorTraceWireModel)
 		{
 			_agentHealthReporter.ReportErrorTraceCollected();
-			AddToCollection(errorTraceWireModel);
+
+			_readerWriterLock.EnterReadLock();
+			try
+			{
+				AddToCollection(errorTraceWireModel);
+			}
+			finally
+			{
+				_readerWriterLock.ExitReadLock();
+			}
 		}
 
 		protected override void Harvest()
 		{
-			var errorTraceWireModels = _errorTraceWireModels;
-			ResetCollections();
+			ICollection<ErrorTraceWireModel> errorTraceWireModels;
+
+			_readerWriterLock.EnterWriteLock();
+			try
+			{
+				errorTraceWireModels = GetAndResetCollection();
+			}
+			finally
+			{
+				_readerWriterLock.ExitWriteLock();
+			}
 
 			if (errorTraceWireModels.Count <= 0)
 				return;
@@ -53,14 +82,13 @@ namespace NewRelic.Agent.Core.Aggregators
 			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
 			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-			ResetCollections();
+			GetAndResetCollection();
 		}
 
-		private void ResetCollections()
+		private ICollection<ErrorTraceWireModel> GetAndResetCollection()
 		{
-			_errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
 			_errorTraceCollectionMaximum = _configuration.ErrorsMaximumPerPeriod;
-			// TODO: Add collection for synthetics once synthetics is implemented
+			return Interlocked.Exchange(ref _errorTraceWireModels, new ConcurrentList<ErrorTraceWireModel>());
 		}
 
 		private void AddToCollection(ErrorTraceWireModel errorTraceWireModel)
@@ -77,8 +105,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_agentHealthReporter.ReportErrorTracesRecollected(errorTraceWireModels.Count());
 
 			// It is possible, but unlikely, to lose incoming error traces here due to a race condition
-			var savedErrorTraceWireModels = _errorTraceWireModels;
-			ResetCollections();
+			var savedErrorTraceWireModels = GetAndResetCollection();
 
 			// It is possible that newer, incoming error traces will be added to our collection before we add the retained and saved ones.
 			foreach(var model in errorTraceWireModels)

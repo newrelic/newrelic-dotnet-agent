@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -15,44 +13,44 @@ namespace NewRelic.Agent.Core.Configuration
 	public class ServerConfiguration
 	{
 		[JsonProperty(PropertyName = "agent_run_id", Required = Required.Always)]
-		public Object AgentRunId { get; set; }
+		public object AgentRunId { get; set; }
 
 		[JsonProperty("apdex_t")]
-		public Double? ApdexT { get; set; }
+		public double? ApdexT { get; set; }
 
 		[JsonProperty("collect_error_events")]
-		public Boolean? ErrorEventCollectionEnabled { get; set; }
+		public bool? ErrorEventCollectionEnabled { get; set; }
 
 		[JsonProperty("collect_analytics_events")]
-		public Boolean? AnalyticsEventCollectionEnabled { get; set; }
+		public bool? AnalyticsEventCollectionEnabled { get; set; }
 
 		[JsonProperty("collect_span_events")]
-		public Boolean? SpanEventCollectionEnabled { get; set; }
+		public bool? SpanEventCollectionEnabled { get; set; }
 
 		[JsonProperty("collect_custom_events")]
-		public Boolean? CustomEventCollectionEnabled { get; set; }
+		public bool? CustomEventCollectionEnabled { get; set; }
 
 		[JsonProperty("collect_errors")]
-		public Boolean? ErrorCollectionEnabled { get; set; }
+		public bool? ErrorCollectionEnabled { get; set; }
 
 		[JsonProperty("collect_traces")]
-		public Boolean? TraceCollectionEnabled { get; set; }
+		public bool? TraceCollectionEnabled { get; set; }
 
 		[JsonProperty("data_report_period")]
-		public Int64? DataReportPeriod { get; set; }
+		public long? DataReportPeriod { get; set; }
 
 		[JsonProperty("max_payload_size_in_bytes")]
 		// Making it int per the agent spec. 
 		public int? MaxPayloadSizeInBytes { get; set; }
 
 		[JsonProperty("encoding_key")]
-		public String EncodingKey { get; set; }
+		public string EncodingKey { get; set; }
 
 		[JsonProperty("entity_guid")]
-		public String EntityGuid { get; set; }
+		public string EntityGuid { get; set; }
 
 		[JsonProperty("high_security")]
-		public Boolean? HighSecurityEnabled { get; set; }
+		public bool? HighSecurityEnabled { get; set; }
 
 		[JsonProperty("instrumentation")]
 		public IEnumerable<InstrumentationConfig> Instrumentation { get; set; }
@@ -61,13 +59,13 @@ namespace NewRelic.Agent.Core.Configuration
 		public IEnumerable<Message> Messages { get; set; }
 
 		[JsonProperty("sampling_rate")]
-		public Int32? SamplingRate { get; set; }
+		public int? SamplingRate { get; set; }
 
 		[JsonProperty("web_transactions_apdex")]
-		public IDictionary<String, Double> WebTransactionsApdex { get; set; }
+		public IDictionary<string, double> WebTransactionsApdex { get; set; }
 
 		[JsonProperty("trusted_account_ids")]
-		public IEnumerable<Int64> TrustedIds { get; set; }
+		public IEnumerable<long> TrustedIds { get; set; }
 
 		[JsonProperty("request_headers_map")]
 		public Dictionary<string, string> RequestHeadersMap { get; set; }
@@ -75,16 +73,22 @@ namespace NewRelic.Agent.Core.Configuration
 
 		// Server Side Config
 
-		public Boolean UsingServerSideConfig { get; private set; }
+		public bool UsingServerSideConfig { get; private set; }
 
 		[JsonProperty("agent_config")]
-		[NotNull] public AgentConfig RpmConfig { get; set; }
+		public AgentConfig RpmConfig { get; set; }
+
+
+		// Faster Event Harvest
+
+		[JsonProperty("event_harvest_config")]
+		public EventHarvestConfig EventHarvestConfig { get; set; }
 
 
 		// CAT
 
 		[JsonProperty("cross_process_id")]
-		public String CatId { get; set; }
+		public string CatId { get; set; }
 
 
 		// DISTRIBUTED TRACE
@@ -107,43 +111,43 @@ namespace NewRelic.Agent.Core.Configuration
 		// RUM
 
 		[JsonProperty("application_id")]
-		public String RumSettingsApplicationId { get; set; }
+		public string RumSettingsApplicationId { get; set; }
 
 		[JsonProperty("beacon")]
-		public String RumSettingsBeacon { get; set; }
+		public string RumSettingsBeacon { get; set; }
 
 		[JsonProperty("browser_key")]
-		public String RumSettingsBrowserKey { get; set; }
+		public string RumSettingsBrowserKey { get; set; }
 
 		[JsonProperty("browser_monitoring.loader")]
-		public String RumSettingsBrowserMonitoringLoader { get; set; }
+		public string RumSettingsBrowserMonitoringLoader { get; set; }
 
 		[JsonProperty("browser_monitoring.loader_debug")]
-		public String RumSettingsBrowserMonitoringLoaderDebug { get; set; }
+		public string RumSettingsBrowserMonitoringLoaderDebug { get; set; }
 
 		[JsonProperty("browser_monitoring.loader_version")]
-		public String RumSettingsBrowserMonitoringLoaderVersion { get; set; }
+		public string RumSettingsBrowserMonitoringLoaderVersion { get; set; }
 
 		[JsonProperty("episodes_url")]
-		public String RumSettingsEpisodesUrl { get; set; }
+		public string RumSettingsEpisodesUrl { get; set; }
 
 		[JsonProperty("episodes_file")]
-		public String RumSettingsEpisodesFile { get; set; }
+		public string RumSettingsEpisodesFile { get; set; }
 
 		[JsonProperty("error_beacon")]
-		public String RumSettingsErrorBeacon { get; set; }
+		public string RumSettingsErrorBeacon { get; set; }
 
 		[JsonProperty("js_agent_file")]
-		public String RumSettingsJavaScriptAgentFile { get; set; }
+		public string RumSettingsJavaScriptAgentFile { get; set; }
 
 		[JsonProperty("js_agent_loader")]
-		public String RumSettingsJavaScriptAgentLoader { get; set; }
+		public string RumSettingsJavaScriptAgentLoader { get; set; }
 
 		[JsonProperty("js_agent_loader_version")]
-		public String RumSettingsJavaScriptAgentLoaderVersion { get; set; }
+		public string RumSettingsJavaScriptAgentLoaderVersion { get; set; }
 
 		[JsonProperty("js_errors_beta")]
-		public String RumSettingsJavaScriptErrorsBeta { get; set; }
+		public string RumSettingsJavaScriptErrorsBeta { get; set; }
 
 
 		// rules
@@ -165,7 +169,6 @@ namespace NewRelic.Agent.Core.Configuration
 			RpmConfig = new AgentConfig();
 		}
 
-		[NotNull]
 		public static ServerConfiguration GetDefault() => new ServerConfiguration
 		{
 			RpmConfig =
@@ -181,52 +184,52 @@ namespace NewRelic.Agent.Core.Configuration
 		public class AgentConfig
 		{
 			[JsonProperty("cross_application_tracer.enabled")]
-			public Boolean? CrossApplicationTracerEnabled { get; set; }
+			public bool? CrossApplicationTracerEnabled { get; set; }
 
 			[JsonProperty("error_collector.enabled")]
-			public Boolean? ErrorCollectorEnabled { get; set; }
+			public bool? ErrorCollectorEnabled { get; set; }
 
 			[JsonProperty("error_collector.ignore_status_codes")]
-			public IEnumerable<String> ErrorCollectorStatusCodesToIgnore { get; set; }
+			public IEnumerable<string> ErrorCollectorStatusCodesToIgnore { get; set; }
 
 			[JsonProperty("error_collector.ignore_errors")]
-			public IEnumerable<String> ErrorCollectorErrorsToIgnore { get; set; }
+			public IEnumerable<string> ErrorCollectorErrorsToIgnore { get; set; }
 
 			[JsonProperty("ignored_params")]
-			public IEnumerable<String> ParametersToIgnore { get; set; }
+			public IEnumerable<string> ParametersToIgnore { get; set; }
 
 			[JsonProperty("slow_sql.enabled")]
-			public Boolean? SlowSqlEnabled { get; set; }
+			public bool? SlowSqlEnabled { get; set; }
 
 			[JsonProperty("transaction_tracer.enabled")]
-			public Boolean? TransactionTracerEnabled { get; set; }
+			public bool? TransactionTracerEnabled { get; set; }
 
 			[JsonProperty("transaction_tracer.explain_enabled")]
-			public Boolean? TransactionTracerExplainEnabled { get; set; }
+			public bool? TransactionTracerExplainEnabled { get; set; }
 
 			[JsonProperty("transaction_tracer.explain_threshold")]
-			public Double? TransactionTracerExplainThreshold { get; set; }
+			public double? TransactionTracerExplainThreshold { get; set; }
 
 			[JsonProperty("transaction_tracer.record_sql")]
-			public String TransactionTracerRecordSql { get; set; }
+			public string TransactionTracerRecordSql { get; set; }
 
 			[JsonProperty("transaction_tracer.stack_trace_threshold")]
-			public Double? TransactionTracerStackThreshold { get; set; }
+			public double? TransactionTracerStackThreshold { get; set; }
 
 			[JsonProperty("transaction_tracer.transaction_threshold")]
-			public Object TransactionTracerThreshold { get; set; }
+			public object TransactionTracerThreshold { get; set; }
 
 			[JsonProperty("capture_params")]
-			public Boolean? CaptureParametersEnabled { get; set; }
+			public bool? CaptureParametersEnabled { get; set; }
 		}
 
 		public class InstrumentationConfig
 		{		
 			[JsonProperty("config")]		
-			public String Config { get; set; }
+			public string Config { get; set; }
 
 			[JsonProperty("name")]
-			public String Name { get; set; }
+			public string Name { get; set; }
 
 			public InstrumentationConfig()
 			{
@@ -237,45 +240,44 @@ namespace NewRelic.Agent.Core.Configuration
 		public class Message
 		{
 			[JsonProperty("message")]
-			public String Text { get; set; }
+			public string Text { get; set; }
 			[JsonProperty("level")]
-			public String Level { get; set; }
+			public string Level { get; set; }
 		}
 
 		public class RegexRule
 		{
 			[JsonProperty("match_expression")]
-			public String MatchExpression { get; set; }
+			public string MatchExpression { get; set; }
 
 			[JsonProperty("replacement")]
-			public String Replacement { get; set; }
+			public string Replacement { get; set; }
 
 			[JsonProperty("ignore")]
-			public Boolean? Ignore { get; set; }
+			public bool? Ignore { get; set; }
 
 			[JsonProperty("eval_order")]
-			public Int64? EvaluationOrder { get; set; }
+			public long? EvaluationOrder { get; set; }
 
 			[JsonProperty("terminate_chain")]
-			public Boolean? TerminateChain { get; set; }
+			public bool? TerminateChain { get; set; }
 
 			[JsonProperty("each_segment")]
-			public Boolean? EachSegment { get; set; }
+			public bool? EachSegment { get; set; }
 
 			[JsonProperty("replace_all")]
-			public Boolean? ReplaceAll { get; set; }
+			public bool? ReplaceAll { get; set; }
 		}
 
 		public class WhitelistRule
 		{
 			[JsonProperty("prefix")]
-			public String Prefix { get; set; }
+			public string Prefix { get; set; }
 			[JsonProperty("terms")]
-			public IEnumerable<String> Terms { get; set; }
+			public IEnumerable<string> Terms { get; set; }
 		}
 
-		[NotNull]
-		public static ServerConfiguration FromJson([NotNull] String json)
+		public static ServerConfiguration FromJson(string json)
 		{
 			var serverConfiguration = JsonConvert.DeserializeObject<ServerConfiguration>(json);
 			Debug.Assert(serverConfiguration != null);
@@ -285,17 +287,16 @@ namespace NewRelic.Agent.Core.Configuration
 			return serverConfiguration;
 		}
 
-		public static Boolean JsonContainsNonNullProperty([NotNull] String json, [NotNull] String propertyName)
+		public static bool JsonContainsNonNullProperty(string json, string propertyName)
 		{
-			var dictionary = JsonConvert.DeserializeObject<IDictionary<String, Object>>(json);
+			var dictionary = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
 			Debug.Assert(dictionary != null);
 
 			return dictionary.ContainsKey(propertyName)
 				&& dictionary[propertyName] != null;
 		}
 
-		[NotNull]
-		public static ServerConfiguration FromDeserializedReturnValue(Object deserializedJson)
+		public static ServerConfiguration FromDeserializedReturnValue(object deserializedJson)
 		{
 			var json = JsonConvert.SerializeObject(deserializedJson);
 			return FromJson(json);

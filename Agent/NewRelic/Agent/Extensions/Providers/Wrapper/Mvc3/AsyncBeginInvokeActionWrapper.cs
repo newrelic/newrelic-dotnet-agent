@@ -8,7 +8,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 {
 	public class AsyncBeginInvokeActionWrapper : IWrapper
 	{
-		public const String HttpContextSegmentKey = "NewRelic.Mvc.HttpContextSegmentKey";
+		public const string HttpContextSegmentKey = "NewRelic.Mvc.HttpContextSegmentKey";
 
 		public bool IsTransactionRequired => true;
 
@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
 			if (httpContext == null)
 				throw new NullReferenceException("httpContext");
 
-			var transactionName = String.Format("{0}/{1}", controllerName, actionName);
+			var transactionName = string.Format("{0}/{1}", controllerName, actionName);
 			transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);

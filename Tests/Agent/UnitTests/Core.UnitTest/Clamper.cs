@@ -24,7 +24,7 @@ namespace NewRelic.Agent.Core
 		[Test]
 		public void when_ClampDictionary_with_maxlength_equal_to_dict_dict_is_unchanged()
 		{
-			var dict = new Dictionary<String, String> { { "foo", "bar" } };
+			var dict = new Dictionary<string, string> { { "foo", "bar" } };
 			var ndict = Clamper.ClampLength(dict, 6);
 			Assert.AreEqual(1, ndict.Count);
 			Assert.AreEqual("bar", ndict["foo"]);
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core
 		[Test]
 		public void when_ClampDictionary_with_maxlength_greaterthan_dict_dict_is_unchanged()
 		{
-			var dict = new Dictionary<String, String> { {"foo", "bar"} };
+			var dict = new Dictionary<string, string> { {"foo", "bar"} };
 			var ndict = Clamper.ClampLength(dict, 7);
 			Assert.AreEqual(1, ndict.Count);
 			Assert.AreEqual("bar", ndict["foo"]);
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core
 		[Test]
 		public void when_ClampDictionary_with_maxlength_lessthan_dict_dict_is_trimmed()
 		{
-			var dict = new Dictionary<String, String> { { "foo", "bar" } };
+			var dict = new Dictionary<string, string> { { "foo", "bar" } };
 			var ndict = Clamper.ClampLength(dict, 5);
 			Assert.AreEqual(0, ndict.Count);
 		}
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core
 		[Test]
 		public void when_input_dictionary_is_null_output_dictionary_is_null()
 		{
-			var actualResult = Clamper.ClampLength(null as IDictionary<String, String>, 0);
+			var actualResult = Clamper.ClampLength(null as IDictionary<string, string>, 0);
 			Assert.AreEqual(null, actualResult);
 		}
 

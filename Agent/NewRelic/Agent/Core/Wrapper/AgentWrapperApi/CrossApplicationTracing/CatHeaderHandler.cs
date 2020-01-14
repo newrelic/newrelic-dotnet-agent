@@ -239,10 +239,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			return HeaderEncoder.EncodeSerializedData(JsonConvert.SerializeObject(transactionData), _configurationService.Configuration.EncodingKey);
 		}
 
-		private Boolean IsTrustedCrossProcessAccountId(string accountId, IEnumerable<Int64> trustedAccountIds)
+		private bool IsTrustedCrossProcessAccountId(string accountId, IEnumerable<long> trustedAccountIds)
 		{
-			Int64 requestAccountId;
-			if (!Int64.TryParse(accountId.Split(StringSeparators.Hash)[0], out requestAccountId))
+			long requestAccountId;
+			if (!long.TryParse(accountId.Split(StringSeparators.Hash)[0], out requestAccountId))
 			{
 				return false;
 			}

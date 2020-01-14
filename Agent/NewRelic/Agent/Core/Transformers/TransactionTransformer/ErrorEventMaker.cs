@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Errors;
+﻿using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
@@ -8,19 +7,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface IErrorEventMaker
 	{
-		[NotNull]
-		ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] ImmutableTransaction immutableTransaction,
-			[NotNull] Attributes transactionAttributes);
+		ErrorEventWireModel GetErrorEvent(ErrorData errorData, ImmutableTransaction immutableTransaction,
+			Attributes transactionAttributes);
 
-		[NotNull]
-		ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes, float priority);
+		ErrorEventWireModel GetErrorEvent(ErrorData errorData, Attributes customAttributes, float priority);
 	}
 
 	public class ErrorEventMaker : IErrorEventMaker
 	{
-		[NotNull] private readonly IAttributeService _attributeService;
+		private readonly IAttributeService _attributeService;
 
-		public ErrorEventMaker([NotNull] IAttributeService attributeService)
+		public ErrorEventMaker(IAttributeService attributeService)
 		{
 			_attributeService = attributeService;
 		}
@@ -32,7 +29,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return CreateErrorEvent(immutableTransaction, filteredAttributes);
 		}
 
-		public ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes, float priority)
+		public ErrorEventWireModel GetErrorEvent(ErrorData errorData, Attributes customAttributes, float priority)
 		{
 			// These attributes are for an ErrorEvent outside of a transaction
 
@@ -56,8 +53,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		#region Private Helpers
 
-		[NotNull]
-		private ErrorEventWireModel CreateErrorEvent([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes filteredAttributes)
+		private ErrorEventWireModel CreateErrorEvent(ImmutableTransaction immutableTransaction, Attributes filteredAttributes)
 		{
 			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();
 			var intrinsicAttributes = filteredAttributes.GetIntrinsicsDictionary();
@@ -70,7 +66,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, isSynthetics, priority);
 		}
 
-		private ErrorEventWireModel CreateErrorEvent([NotNull] Attributes customAttributes, float  priority)
+		private ErrorEventWireModel CreateErrorEvent(Attributes customAttributes, float  priority)
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(customAttributes, AttributeDestinations.ErrorEvent);
 			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();

@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Utilization;
+﻿using NewRelic.Agent.Core.Utilization;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
@@ -18,7 +17,7 @@ namespace NewRelic.Agent.Core.Utilities
 		private const int AsciiMaxValue = 127;
 
 
-		public SystemInfo([NotNull] IDnsStatic dnsStatic)
+		public SystemInfo(IDnsStatic dnsStatic)
 		{
 			_dnsStatic = dnsStatic;
 		}
@@ -106,15 +105,15 @@ namespace NewRelic.Agent.Core.Utilities
 		[StructLayout(LayoutKind.Sequential)]
 		private struct MemoryStatus
 		{
-			public Int32 length;
-			private readonly Int32 memoryLoad;
-			public readonly UInt64 totalPhys;
-			private readonly UInt64 availPhys;
-			private readonly UInt64 totalPageFile;
-			private readonly UInt64 availPageFile;
-			private readonly UInt64 totalVirtual;
-			private readonly UInt64 availVirtual;
-			private readonly UInt64 availExtendedVirtual;
+			public int length;
+			private readonly int memoryLoad;
+			public readonly ulong totalPhys;
+			private readonly ulong availPhys;
+			private readonly ulong totalPageFile;
+			private readonly ulong availPageFile;
+			private readonly ulong totalVirtual;
+			private readonly ulong availVirtual;
+			private readonly ulong availExtendedVirtual;
 		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]

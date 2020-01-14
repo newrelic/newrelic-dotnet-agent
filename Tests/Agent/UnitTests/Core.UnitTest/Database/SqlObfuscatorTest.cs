@@ -1,4 +1,3 @@
-using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 

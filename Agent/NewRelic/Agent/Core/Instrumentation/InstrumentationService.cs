@@ -1,5 +1,4 @@
-﻿using NewRelic.Agent.Core.ThreadProfiling;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;

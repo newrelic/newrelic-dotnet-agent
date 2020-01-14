@@ -5,6 +5,7 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -21,8 +22,12 @@ namespace NewRelic.Agent.Core.Aggregators
 	{
 		private const double ReservoirReductionSizeMultiplier = 0.5;
 		private readonly IAgentHealthReporter _agentHealthReporter;
+		private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
 
 		private ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>> _spanEvents = new ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>>(0);
+
+		protected override TimeSpan HarvestCycle => _configuration.SpanEventsHarvestCycle;
+		protected override bool IsEnabled => _configuration.SpanEventsEnabled;
 
 		/// <summary>
 		/// Atomically set a new ConcurrentPriorityQueue to _spanEvents and return the previous ConcurrentPriorityQueue reference;
@@ -48,25 +53,57 @@ namespace NewRelic.Agent.Core.Aggregators
 			GetAndResetCollection();
 		}
 
+		public override void Dispose()
+		{
+			base.Dispose();
+			_readerWriterLockSlim.Dispose();
+		}
+
 		public override void Collect(SpanEventWireModel wireModel)
 		{
 			_agentHealthReporter.ReportSpanEventCollected(1);
-			_spanEvents.Add(new PrioritizedNode<SpanEventWireModel>(wireModel));
+
+			_readerWriterLockSlim.EnterReadLock();
+			try
+			{
+				_spanEvents.Add(new PrioritizedNode<SpanEventWireModel>(wireModel));
+			}
+			finally
+			{
+				_readerWriterLockSlim.ExitReadLock();
+			}
 		}
 
 		public void Collect(IEnumerable<SpanEventWireModel> wireModels)
 		{
-			var added = AddWireModels(wireModels);
+			int added;
+			_readerWriterLockSlim.EnterReadLock();
+			try
+			{
+				added = AddWireModels(wireModels);
+			}
+			finally
+			{
+				_readerWriterLockSlim.ExitReadLock();
+			}
 			_agentHealthReporter.ReportSpanEventCollected(added);
 		}
 
 		protected override void Harvest()
 		{
-			// Retrieve the number of add attempts before resetting the collection.
-			var eventHarvestData = new EventHarvestData(_spanEvents.Size, (uint)_spanEvents.GetAddAttemptsCount());
+			ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>> spanEventsPriorityQueue;
 
-			//get the list of span events and reset the CPQ atomically
-			var spanEventsPriorityQueue = GetAndResetCollection();
+			_readerWriterLockSlim.EnterWriteLock();
+			try
+			{
+				spanEventsPriorityQueue = GetAndResetCollection();
+			}
+			finally
+			{
+				_readerWriterLockSlim.ExitWriteLock();
+			}
+
+			var eventHarvestData = new EventHarvestData(spanEventsPriorityQueue.Size, (uint)spanEventsPriorityQueue.GetAddAttemptsCount());
 			var wireModels = spanEventsPriorityQueue.Where(node => null != node).Select(node => node.Data).ToList();
 
 			// if we don't have any events to publish then don't

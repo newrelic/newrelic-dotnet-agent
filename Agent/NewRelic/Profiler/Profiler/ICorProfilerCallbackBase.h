@@ -21,8 +21,6 @@
 #include <thread>
 #include <utility>
 
-#include "ETWTracer/CorProfilerTracer.h"
-
 #ifdef PAL_STDCPP_COMPAT
 #include "UnixSystemCalls.h"
 #else
@@ -64,8 +62,6 @@ namespace Profiler {
 	typedef std::set<xstring_t> FilePaths;
 
 	class ICorProfilerCallbackBase : public ICorProfilerCallback4 {
-
-		ETWTRACER_IMPL(_etwTracer)
 
 	private:
 		std::atomic<int> _referenceCount;
@@ -123,6 +119,9 @@ namespace Profiler {
 		virtual HRESULT __stdcall RuntimeResumeFinished() override { return S_OK; }
 		virtual HRESULT __stdcall RuntimeThreadSuspended(ThreadID threadId) override { return S_OK; }
 		virtual HRESULT __stdcall RuntimeThreadResumed(ThreadID threadId) override { return S_OK; }
+		virtual HRESULT __stdcall MovedReferences(ULONG cMovedObjectIDRanges, ObjectID oldObjectIDRangeStart[], ObjectID newObjectIDRangeStart[], ULONG cObjectIDRangeLength[]) override { return S_OK; }
+		virtual HRESULT __stdcall ObjectAllocated(ObjectID objectId, ClassID classId) override { return S_OK; }
+		virtual HRESULT __stdcall ObjectReferences(ObjectID objectId, ClassID classId, ULONG cObjectRefs, ObjectID objectRefIds[]) override { return S_OK; }
 		virtual HRESULT __stdcall ObjectsAllocatedByClass(ULONG cClassCount, ClassID classIds[], ULONG cObjects[]) override { return S_OK; }
 		virtual HRESULT __stdcall RootReferences(ULONG cRootRefs, ObjectID rootRefIds[]) override { return S_OK; }
 		virtual HRESULT __stdcall ExceptionThrown(ObjectID thrownObjectId) override { return S_OK; }
@@ -145,6 +144,13 @@ namespace Profiler {
 		virtual HRESULT __stdcall ExceptionCLRCatcherExecute() override { return S_OK; }
 
 		// Unimplemented ICorProfilerCallback2
+		virtual HRESULT __stdcall FinalizeableObjectQueued(DWORD finalizerFlags, ObjectID objectID) override { return S_OK; }
+		virtual HRESULT __stdcall GarbageCollectionFinished(void) override { return S_OK; }
+		virtual HRESULT __stdcall GarbageCollectionStarted(int cGenerations, BOOL generationCollected[], COR_PRF_GC_REASON reason) override { return S_OK; }
+		virtual HRESULT __stdcall HandleCreated(GCHandleID handleId, ObjectID initialObjectId) override { return S_OK; }
+		virtual HRESULT __stdcall HandleDestroyed(GCHandleID handleId) override { return S_OK; }
+		virtual HRESULT __stdcall RootReferences2(ULONG cRootRefs, ObjectID rootRefIds[], COR_PRF_GC_ROOT_KIND rootKinds[], COR_PRF_GC_ROOT_FLAGS rootFlags[], UINT_PTR rootIds[]) override { return S_OK; }
+		virtual HRESULT __stdcall SurvivingReferences(ULONG cSurvivingObjectIDRanges, ObjectID objectIDRangeStart[], ULONG cObjectIDRangeLength[]) override { return S_OK; }
 		virtual HRESULT __stdcall ThreadNameChanged(ThreadID threadId, ULONG cchName, _In_reads_opt_(cchName) WCHAR name[]) override { return S_OK; }
 
 		// Unimplemented ICorProfilerCallback3
@@ -216,8 +222,6 @@ namespace Profiler {
 				ConfigureEventMask(pICorProfilerInfoUnk);
 
 				LogRuntimeInfo();
-
-				InitializeETWTracerIfEnabled(pICorProfilerInfoUnk);
 
 				LogInfo(L"Profiler initialized");
 				return S_OK;
@@ -361,13 +365,6 @@ namespace Profiler {
 		{
 			LogInfo(L"Profiler shutting down");
 			_threadProfiler.Shutdown();
-
-#ifndef PAL_STDCPP_COMPAT
-			if (_etwTracerEnabled) {
-				_etwTracer.Shutdown();
-			}
-#endif
-
 			LogInfo(L"Profiler shutdown");
 			return S_OK;
 		}
@@ -642,10 +639,6 @@ namespace Profiler {
 		}
 
 	protected:
-#ifndef PAL_STDCPP_COMPAT
-		CorProfilerTracer _etwTracer;
-		bool _etwTracerEnabled;
-#endif
 		MethodRewriter::MethodRewriterPtr _methodRewriter;
 		CComPtr<ICorProfilerInfo4> _corProfilerInfo4;
 		std::shared_ptr<ILTracker> _ilTracker;
@@ -1058,18 +1051,6 @@ namespace Profiler {
 			}
 			LogError(L"Expected Agent product to be ", expectedProductName, L", but none was found.");
 			return false;
-#endif
-		}
-
-		void InitializeETWTracerIfEnabled(IUnknown* pICorProfilerInfoUnk)
-		{
-#ifndef PAL_STDCPP_COMPAT
-			auto etwEnabledStr_ptr = _systemCalls->TryGetEnvironmentVariable(L"NEWRELIC_PROFILER_ENABLE_ETW");
-			_etwTracerEnabled = etwEnabledStr_ptr && *etwEnabledStr_ptr == L"1";
-			if (_etwTracerEnabled) {
-				LogInfo(L"Initializing ETW Tracer");
-				_etwTracer.InitializeForAttach(pICorProfilerInfoUnk, nullptr, (UINT)-1);
-			}
 #endif
 		}
 

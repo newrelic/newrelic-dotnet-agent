@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;

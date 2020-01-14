@@ -1,9 +1,8 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilization
 {
-    public class PcfVendorModel : IVendorModel
+	public class PcfVendorModel : IVendorModel
 	{
 		private readonly string _cfInstanceGuid;
 		private readonly string _cfInstanceIp;

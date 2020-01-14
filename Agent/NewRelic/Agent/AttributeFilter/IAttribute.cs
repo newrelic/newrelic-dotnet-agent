@@ -1,15 +1,10 @@
-﻿using System;
-using JetBrains.Annotations;
-
-namespace NewRelic.Agent
+﻿namespace NewRelic.Agent
 {
 	public interface IAttribute
 	{
-		[NotNull]
-		String Key { get; }
+		string Key { get; }
 
-		[NotNull]
-		Object Value { get; }
+		object Value { get; }
 
 		AttributeDestinations DefaultDestinations { get; }
 	}

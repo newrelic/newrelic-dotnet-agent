@@ -1,7 +1,6 @@
 ﻿#if NETSTANDARD2_0
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 
 using System.Linq;
@@ -12,7 +11,7 @@ using NewRelic.Core.Logging;
 namespace NewRelic.Agent.Core.DependencyInjection
 {
 	public class CoreContainer : IContainer
-    {
+	{
 
 		private readonly ContainerBuilder builder;
 		private Autofac.IContainer container;
@@ -64,14 +63,12 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			throw new NotImplementedException();
 		}
 
-		[NotNull]
 		public T Resolve<T>()
 		{
 			Check(typeof(T));
 			return container.Resolve<T>();
 		}
 
-		[NotNull]
 		public IEnumerable<T> ResolveAll<T>()
 		{
 			Check(typeof(T));

@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Requests;
@@ -133,7 +132,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestFixture, Category("Configuration")]
 		public class Request_GetCurrentConfiguration
 		{
-			[NotNull]
 			private ConfigurationService _configurationService;
 
 			[SetUp]

@@ -10,7 +10,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
@@ -101,8 +100,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			}
 			catch (Exception exception)
 			{
-				Log.DebugFormat("Unable to retrieve resources for explain plan: \"{0}\", error: {1}",
-					((IDbCommand)_explainPlanResources)?.CommandText, exception);
+				Log.DebugFormat("Unable to retrieve resources for explain plan: {0}", exception);
 			}
 			return null;
 		}
@@ -113,7 +111,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			// Don't re-run an explain plan if one already exists
 			if (_explainPlan != null)
 				return;
-
+			
 			try
 			{
 				// Using invoke for thread safety, DoExplainPlanCondition is nullable
@@ -136,8 +134,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			}
 			catch (Exception exception)
 			{
-				Log.DebugFormat("Unable to execute explain plan: \"{0}\", error: {1}",
-					((IDbCommand)_explainPlanResources)?.CommandText, exception);
+				Log.DebugFormat("Unable to execute explain plan: {0}", exception);
 			}
 		}
 

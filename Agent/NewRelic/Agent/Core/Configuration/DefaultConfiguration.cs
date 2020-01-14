@@ -844,8 +844,21 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
+				if (SpanEventsMaxSamplesStored == 0)
+				{
+					return false;
+				}
+
 				var enabled = ServerCanDisable(_serverConfiguration.SpanEventCollectionEnabled, EnvironmentOverrides(_localConfiguration.spanEvents.enabled, "NEW_RELIC_SPAN_EVENTS_ENABLED"));
 				return DistributedTracingEnabled && enabled;
+			}
+		}
+
+		public TimeSpan SpanEventsHarvestCycle
+		{
+			get
+			{
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestCycle(), TimeSpan.FromMinutes(1));
 			}
 		}
 
@@ -869,7 +882,7 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 
-		public uint SpanEventsMaxSamplesStored => DefaultSpanEventsMaxSamplesStored;
+		public uint SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestLimit(), DefaultSpanEventsMaxSamplesStored);
 		public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
 		public bool PayloadSuccessMetricsEnabled => _localConfiguration.distributedTracing.enableSuccessMetrics;
@@ -891,6 +904,10 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
+				if (ErrorCollectorMaxEventSamplesStored == 0)
+				{
+					return false;
+				}
 				return ServerCanDisable(_serverConfiguration.ErrorEventCollectionEnabled, _localConfiguration.errorCollector.captureEvents);
 			}
 		}
@@ -899,7 +916,15 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				return (uint)_localConfiguration.errorCollector.maxEventSamplesStored;
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestLimit(), (uint)_localConfiguration.errorCollector.maxEventSamplesStored);
+			}
+		}
+
+		public TimeSpan ErrorEventsHarvestCycle
+		{
+			get
+			{
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestCycle(), TimeSpan.FromMinutes(1));
 			}
 		}
 
@@ -1151,6 +1176,11 @@ namespace NewRelic.Agent.Core.Configuration
 				return new BoolConfigurationItem(false, ServerConfigSource);
 			}
 
+			if (CustomEventsMaxSamplesStored == 0)
+			{
+				return new BoolConfigurationItem(false, $"{nameof(CustomEventsMaxSamplesStored)} set to 0");
+			}
+
 			return new BoolConfigurationItem(_localConfiguration.customEvents.enabled, LocalConfigSource);
 		}
 
@@ -1159,8 +1189,17 @@ namespace NewRelic.Agent.Core.Configuration
 			get
 			{
 				//if we have a specifed value, use it; otherwise, use our default
-				return _localConfiguration.customEvents.maximumSamplesStoredSpecified ?
+				var localValue = _localConfiguration.customEvents.maximumSamplesStoredSpecified ?
 					_localConfiguration.customEvents.maximumSamplesStored : CustomEventsMaxSamplesStoredDefault;
+				return ServerOverrides((uint?)_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), localValue);
+			}
+		}
+
+		public TimeSpan CustomEventsHarvestCycle
+		{
+			get
+			{
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestCycle(), TimeSpan.FromMinutes(1));
 			}
 		}
 
@@ -1182,24 +1221,10 @@ namespace NewRelic.Agent.Core.Configuration
 				if (_localConfiguration.analyticsEvents.enabledSpecified)
 					return ServerCanDisable(_serverConfiguration.AnalyticsEventCollectionEnabled, _localConfiguration.analyticsEvents.enabled);
 
+				if (TransactionEventsMaxSamplesStored == 0)
+					return false;
+
 				return ServerCanDisable(_serverConfiguration.AnalyticsEventCollectionEnabled, TransactionEventsEnabledDefault);
-			}
-		}
-		public virtual uint TransactionEventsMaxSamplesPerMinute
-		{
-			get
-			{
-				uint maxValue = TransactionEventsMaxSamplesPerMinuteDefault;
-				if (_localConfiguration.transactionEvents.maximumSamplesPerMinuteSpecified)
-				{
-					maxValue = Math.Min(_localConfiguration.transactionEvents.maximumSamplesPerMinute, 10000);
-				}
-				if (_localConfiguration.analyticsEvents.maximumSamplesPerMinuteSpecified)
-				{
-					LogDeprecatedPropertyUse("analyticsEvents.maximumSamplesPerMinute", "transactionEvents.maximumSamplesPerMinute");
-					maxValue = Math.Min(_localConfiguration.analyticsEvents.maximumSamplesPerMinute, 10000);
-				}
-				return maxValue;
 			}
 		}
 
@@ -1217,7 +1242,15 @@ namespace NewRelic.Agent.Core.Configuration
 					LogDeprecatedPropertyUse("analyticsEvents.maximumSamplesStored", "transactionEvents.maximumSamplesStored");
 					maxValue = _localConfiguration.analyticsEvents.maximumSamplesStored;
 				}
-				return maxValue;
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestLimit(), maxValue);
+			}
+		}
+
+		public TimeSpan TransactionEventsHarvestCycle
+		{
+			get
+			{
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.TransactionEventHarvestCycle(), TimeSpan.FromMinutes(1));
 			}
 		}
 

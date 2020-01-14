@@ -1,20 +1,16 @@
-﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent;
+﻿using NewRelic.Agent;
 
 namespace AttributeFilterTests.Models
 {
 	public class Attribute : IAttribute
 	{
-		[NotNull]
-		public String Key { get; private set; }
+		public string Key { get; private set; }
 
-		[NotNull]
-		public Object Value { get; private set; }
+		public object Value { get; private set; }
 
 		public AttributeDestinations DefaultDestinations { get; private set; }
 
-		public Attribute(AttributeDestinations defaultDestinations, [NotNull] String key, [NotNull] String value)
+		public Attribute(AttributeDestinations defaultDestinations, string key, string value)
 		{
 			DefaultDestinations = defaultDestinations;
 			Key = key;

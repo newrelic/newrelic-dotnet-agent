@@ -4,27 +4,38 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
+namespace CompositeTests
 {
 	[TestFixture]
 	[Parallelizable(ParallelScope.None)]
 	public class AdaptiveSamplerTests
 	{
+		private CompositeTestAgent _compositeTestAgent;
 		private AdaptiveSampler _adaptiveSampler;
 		private const float DefaultPriority = 0.5f;
 		private const float PriorityBoost = 1.0f;  //must be the same as in the AdaptiveSampler
 		private const float Epsilon = 1e-6f;
 		private const int DefaultSeedForTesting = 6351;
+		private const int DefaultSamplingTargetIntervalInSecondsForTesting = 5;
 
 		[SetUp]
 		public void BeforeEachTest()
 		{
-			_adaptiveSampler = new AdaptiveSampler(AdaptiveSampler.DefaultTargetSamplesPerInterval, DefaultSeedForTesting);
+			_compositeTestAgent = new CompositeTestAgent();
+
+			_adaptiveSampler = new AdaptiveSampler(AdaptiveSampler.DefaultTargetSamplesPerInterval, DefaultSamplingTargetIntervalInSecondsForTesting, DefaultSeedForTesting);
+
+			//This will simulate that the agent has connected and force a sampling interval to start
+			_compositeTestAgent.ServerConfiguration.SamplingTarget = AdaptiveSampler.DefaultTargetSamplesPerInterval;
+			_compositeTestAgent.ServerConfiguration.SamplingTargetPeriodInSeconds = DefaultSamplingTargetIntervalInSecondsForTesting;
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true; 
+			_compositeTestAgent.PushConfiguration();
 		}
 
 		[TearDown]
 		public void AfterEachTest()
 		{
+			_compositeTestAgent.Dispose();
 			_adaptiveSampler = null;
 		}
 
@@ -72,7 +83,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				_adaptiveSampler.ComputeSampled(ref pr);
 			}
 			//end of Harvest
-			_adaptiveSampler.EndOfSamplingInterval();
+			System.Threading.Thread.Sleep(TimeSpan.FromSeconds(DefaultSamplingTargetIntervalInSecondsForTesting));
 
 			var rand = new Random();
 			var sampleSequence = _expectedSampleSequences[testCaseName];

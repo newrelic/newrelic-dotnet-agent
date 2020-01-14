@@ -40,20 +40,21 @@ namespace NewRelic.Agent.Core.DataTransport
 		}
 
 		[Test]
-		public void Constructor_CallsConnectSynchronously_IfAutoStartAndSyncStartupIsOn()
+		public void AttemptAutoStart_CallsConnectSynchronously_IfAutoStartAndSyncStartupIsOn()
 		{
 			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
 			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
+			// Act
+			using (var connectionManager = new ConnectionManager(_connectionHandler, _scheduler))
 			{
+				connectionManager.AttemptAutoStart();
 				Mock.Assert(() => _connectionHandler.Connect());
 			}
 		}
 
 		[Test]
-		public void Constructor_SchedulesConnectAsynchronously_IfAutoStartIsOnAndSyncStartupIsOff()
+		public void AttemptAutoStart_SchedulesConnectAsynchronously_IfAutoStartIsOnAndSyncStartupIsOff()
 		{
 			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(false);
 			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
@@ -62,9 +63,11 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
 				.DoInstead<Action, TimeSpan>((action, timespan) => scheduledAction = action);
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
+			// Act
+			using (var connectionManager = new ConnectionManager(_connectionHandler, _scheduler))
 			{
+				connectionManager.AttemptAutoStart();
+
 				// Connect shouldn't occur until scheduled action is invoked
 				Mock.Assert(() => _connectionHandler.Connect(), Occurs.Never());
 
@@ -80,7 +83,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		[TestCase("SocketException")]
 		[TestCase("IOException")]
 		[TestCase("OperationCanceledException")]
-		public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs(string execeptionType)
+		public void AttemptAutoStart_SchedulesReconnect_IfCertainExceptionOccurs(string execeptionType)
 		{
 			Exception ex = null;
 			switch (execeptionType)
@@ -113,9 +116,11 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
 				.DoInstead<Action, TimeSpan>((action, timespan) => scheduledAction = action);
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
+			// Act
+			using (var connectionManager = new ConnectionManager(_connectionHandler, _scheduler))
 			{
+				connectionManager.AttemptAutoStart();
+
 				Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
 
 				scheduledAction();
@@ -124,7 +129,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		}
 
 		[TestCaseSource(typeof(ConnectionManagerTests), nameof(ShutdownScenarios))]
-		public void Constructor_PublishesShutdownAgentEvent_IfCertainExceptionsOccur(Exception testData)
+		public void AttemptAutoStart_PublishesShutdownAgentEvent_IfCertainExceptionsOccur(Exception testData)
 		{
 			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
 			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
@@ -132,10 +137,11 @@ namespace NewRelic.Agent.Core.DataTransport
 			Mock.Arrange(() => _connectionHandler.Connect())
 				.Throws(testData);
 
-			// Act (construct ConnectionManager)
+			// Act
 			using (new EventExpectation<KillAgentEvent>())
-			using (new ConnectionManager(_connectionHandler, _scheduler))
+			using (var connectionManager = new ConnectionManager(_connectionHandler, _scheduler))
 			{
+				connectionManager.AttemptAutoStart();
 			}
 		}
 
@@ -153,7 +159,7 @@ namespace NewRelic.Agent.Core.DataTransport
 		}
 
 		[Test]
-		public void Constructor_DoublesReconnectTimeForEachReconnect_UntilHittingFiveMinutes()
+		public void AttemptAutoStart_DoublesReconnectTimeForEachReconnect_UntilHittingFiveMinutes()
 		{
 			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
 			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
@@ -170,9 +176,11 @@ namespace NewRelic.Agent.Core.DataTransport
 					scheduledTime = time;
 				});
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
+			// Act
+			using (var connectionManager = new ConnectionManager(_connectionHandler, _scheduler))
 			{
+				connectionManager.AttemptAutoStart();
+
 				Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
 				Assert.AreEqual(15, scheduledTime.TotalSeconds);
 

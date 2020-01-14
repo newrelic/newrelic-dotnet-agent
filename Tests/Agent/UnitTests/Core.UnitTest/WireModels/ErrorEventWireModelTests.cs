@@ -15,17 +15,17 @@ namespace NewRelic.Agent.Core.WireModels
 		public void All_attribute_value_types_in_an_event_do_serialize_correctly()
 		{
 			// ARRANGE
-			var userAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+			var userAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
 				{
 					{"identity.user", "samw"},
 					{"identity.product", "product"}
 				});
-			var agentAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+			var agentAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
 				{
 					{"Foo", "Bar"},
 					{"Baz", 42},
 				});
-			var intrinsicAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+			var intrinsicAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
 				{
 					{"databaseCallCount", 10 },
 					{"errormessage", "This is the error message"},
@@ -51,9 +51,9 @@ namespace NewRelic.Agent.Core.WireModels
 		public void Is_synthetics_set_correctly()
 		{
 			// Arrange
-			var userAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
-			var agentAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
-			var intrinsicAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
+			var userAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+			var agentAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+			var intrinsicAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
 			var isSyntheticsEvent = true;
 
 			// Act
@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.WireModels
 		{
 			var priority = 0.5f;
 			var emptyDictionary = new Dictionary<string, object>();
-			var intrinsicAttributes = new Dictionary<String, Object> { { TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds() } };
+			var intrinsicAttributes = new Dictionary<string, object> { { TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds() } };
 			var object1 = new ErrorEventWireModel(emptyDictionary, intrinsicAttributes, emptyDictionary, false, priority);
 
 			Assert.That(priority == object1.Priority);

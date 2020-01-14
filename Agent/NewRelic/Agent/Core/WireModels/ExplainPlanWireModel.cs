@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Newtonsoft.Json;
@@ -14,13 +11,13 @@ namespace NewRelic.Agent.Core.WireModels
 		private readonly ExplainPlan _explainPlan;
 
 		[JsonArrayIndex(Index = 0)]
-		public IEnumerable<String> ExplainPlanHeaders
+		public IEnumerable<string> ExplainPlanHeaders
 		{
 			get { return _explainPlan.ExplainPlanHeaders; }
 		}
 
 		[JsonArrayIndex(Index = 1)]
-		public List<List<Object>> ExplainPlanDatas
+		public List<List<object>> ExplainPlanDatas
 		{
 			get { return _explainPlan.ExplainPlanDatas; }
 		}

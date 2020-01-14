@@ -24,7 +24,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 			return Delegates.GetDelegateFor(segment);
 		}
 
-		private String GetOperationName(MethodCall methodCall)
+		private string GetOperationName(MethodCall methodCall)
 		{
 			if (methodCall.Method.MethodName == "Insert")
 				return "BulkWriteOperation Insert";

@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
@@ -14,8 +13,6 @@ using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Requests;
-using NewRelic.Agent.Core.SharedInterfaces;
-using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -46,42 +43,32 @@ namespace CompositeTests
 		private readonly object _harvestActionsLockObject = new object();
 		private readonly object _queuedCallbacksLockObject = new object();
 
-		[NotNull]
 		private readonly IContainer _container;
 
-		[NotNull]
 		private readonly ICollection<Action> _harvestActions;
 
-		[NotNull]
 		private readonly ICollection<WaitCallback> _queuedCallbacks;
 
 		private IContextStorage<IInternalTransaction> _primaryTransactionContextStorage = new TestTransactionContext<IInternalTransaction>();
-		[NotNull]
+
 		public List<MetricWireModel> Metrics { get; } = new List<MetricWireModel>();
 
-		[NotNull]
 		public List<CustomEventWireModel> CustomEvents { get; } = new List<CustomEventWireModel>();
 
-		[NotNull]
 		public List<TransactionTraceWireModel> TransactionTraces { get; } = new List<TransactionTraceWireModel>();
 
-		[NotNull]
 		public List<TransactionEventWireModel> TransactionEvents { get; } = new List<TransactionEventWireModel>();
 
-		[NotNull]
 		public List<ErrorTraceWireModel> ErrorTraces { get; } = new List<ErrorTraceWireModel>();
 
 		public EventHarvestData AdditionalHarvestData { get; } = new EventHarvestData();
 
-		[NotNull]
 		public List<ErrorEventWireModel> ErrorEvents { get; } = new List<ErrorEventWireModel>();
 
 		public List<SpanEventWireModel> SpanEvents { get; } = new List<SpanEventWireModel>();
 
-		[NotNull]
 		public configuration LocalConfiguration { get; }
 
-		[NotNull]
 		public ServerConfiguration ServerConfiguration { get; }
 
 		public IConfiguration CurrentConfiguration { get; private set; }
@@ -109,7 +96,6 @@ namespace CompositeTests
 			SpanEvents.Clear();
 		}
 
-		[NotNull]
 		public List<SqlTraceWireModel> SqlTraces { get; } = new List<SqlTraceWireModel>();
 
 		public CompositeTestAgent() : this(shouldAllowThreads: false, includeAsyncLocalStorage: false)
@@ -136,7 +122,7 @@ namespace CompositeTests
 			var mockEnvironment = Mock.Create<IEnvironment>();
 			var dataTransportService = Mock.Create<IDataTransportService>();
 			var scheduler = Mock.Create<IScheduler>();
-			NativeMethods = Mock.Create<NewRelic.Agent.Core.ThreadProfiling.INativeMethods>();
+			NativeMethods = Mock.Create<INativeMethods>();
 			_harvestActions = new List<Action>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => { lock (_harvestActionsLockObject) { _harvestActions.Add(action); } });
@@ -212,6 +198,7 @@ namespace CompositeTests
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
 
+			EnableAggregators();
 		}
 
 		/// <summary>
@@ -224,7 +211,7 @@ namespace CompositeTests
 			propInfo.SetValue(null, new Action(() => { }));
 		}
 
-		private static Func<IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>([NotNull] List<T> dataBucket)
+		private static Func<IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(List<T> dataBucket)
 		{
 			return datas =>
 			{
@@ -237,7 +224,7 @@ namespace CompositeTests
 			};
 		}
 
-		private static Func<EventHarvestData, IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(EventHarvestData additions, [NotNull] List<T> dataBucket)
+		private static Func<EventHarvestData, IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(EventHarvestData additions, List<T> dataBucket)
 		{
 			return (_, datas) =>
 			{
@@ -253,7 +240,6 @@ namespace CompositeTests
 			_container.Dispose();
 		}
 
-		[NotNull]
 		public IAgent GetAgent()
 		{
 			return _container.Resolve<IAgent>();
@@ -339,13 +325,16 @@ namespace CompositeTests
 			CurrentConfiguration.EventListenerSamplersEnabled = enable;
 		}
 
-		[NotNull]
+		private void EnableAggregators()
+		{
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+		}
+
 		private static configuration GetDefaultTestLocalConfiguration()
 		{
 			return new configuration();
 		}
 
-		[NotNull]
 		private static ServerConfiguration GetDefaultTestServerConfiguration()
 		{
 			return new ServerConfiguration
@@ -360,7 +349,6 @@ namespace CompositeTests
 			};
 		}
 
-		[NotNull]
 		private static SecurityPoliciesConfiguration GetDefaultSecurityPoliciesConfiguration()
 		{
 			return new SecurityPoliciesConfiguration();

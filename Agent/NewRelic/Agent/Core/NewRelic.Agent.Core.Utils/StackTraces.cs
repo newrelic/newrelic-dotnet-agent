@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Utils
 {
 	public static class StackTraces
 	{
-		[NotNull] public static ICollection<string> ScrubAndTruncate(Exception exception, int maxDepth)
+		public static ICollection<string> ScrubAndTruncate(Exception exception, int maxDepth)
 		{
 			if (null == exception)
 			{
 				return new List<string>(0);
 			}
-			var frames = new List<String>(maxDepth);
+			var frames = new List<string>(maxDepth);
 
 			// TODO: This code could be made much simpler by just calling ToString() on the original exception (which will handle digging into the InnerExceptions recursively)
 			var exceptions = new List<Exception>(5);
@@ -32,7 +31,7 @@ namespace NewRelic.Agent.Core.Utils
 			exceptions.Reverse();
 			foreach (Exception ex in exceptions)
 			{
-				frames.Add(String.Format("[{0}: {1}]", ex.GetType().Name, ex.Message));
+				frames.Add(string.Format("[{0}: {1}]", ex.GetType().Name, ex.Message));
 				ICollection<string> exFrames = ScrubAndTruncate(ex.StackTrace, maxDepth - frames.Count);
 				frames.AddRange(exFrames);
 
@@ -47,12 +46,12 @@ namespace NewRelic.Agent.Core.Utils
 			return frames;
 		}
 
-		public static String MethodToString(MethodBase method)
+		public static string MethodToString(MethodBase method)
 		{
-			return String.Format("{0}.{1}({2})", method.DeclaringType.FullName, method.Name, FormatMethodParameters(method.GetParameters()));
+			return string.Format("{0}.{1}({2})", method.DeclaringType.FullName, method.Name, FormatMethodParameters(method.GetParameters()));
 		}
 
-		private static String FormatMethodParameters(ParameterInfo[] parameterInfo)
+		private static string FormatMethodParameters(ParameterInfo[] parameterInfo)
 		{
 			StringBuilder builder = new StringBuilder();
 			for (int i = 0; i < parameterInfo.Length; i++)
@@ -69,10 +68,10 @@ namespace NewRelic.Agent.Core.Utils
 
 		public static IList<string> ScrubAndTruncate(string stackTrace, int maxDepth)
 		{
-			String[] stackTraces = ParseStackTrace(stackTrace);
+			string[] stackTraces = ParseStackTrace(stackTrace);
 
-			var list = new List<String>(stackTraces.Length);
-			foreach (String line in stackTraces)
+			var list = new List<string>(stackTraces.Length);
+			foreach (string line in stackTraces)
 			{
 				if (line != null && line.IndexOf("at NewRelic.Agent", 0, Math.Min(20, line.Length)) < 0)
 				{
@@ -87,11 +86,11 @@ namespace NewRelic.Agent.Core.Utils
 			return list;
 		}
 
-		public static String[] ParseStackTrace(String stackTrace)
+		public static string[] ParseStackTrace(string stackTrace)
 		{
 			if (null == stackTrace)
 			{
-				return new String[0];
+				return new string[0];
 			}
 			return stackTrace.Split(StringSeparators.StringNewLine, StringSplitOptions.None);
 		}
@@ -113,22 +112,22 @@ namespace NewRelic.Agent.Core.Utils
 			return list;
 		}
 
-		public static String ToString(StackFrame frame)
+		public static string ToString(StackFrame frame)
 		{
 			MethodBase method = frame.GetMethod();
-			String typeName = method.DeclaringType == null ? "null" : method.DeclaringType.FullName;
-			return String.Format("{0}.{1}({2}:{3})", typeName, method.Name, frame.GetFileName(), frame.GetFileLineNumber());
+			string typeName = method.DeclaringType == null ? "null" : method.DeclaringType.FullName;
+			return string.Format("{0}.{1}({2}:{3})", typeName, method.Name, frame.GetFileName(), frame.GetFileLineNumber());
 		}
 
-		public static ICollection<String> ToStringList(ICollection<StackFrame> stackFrames)
+		public static ICollection<string> ToStringList(ICollection<StackFrame> stackFrames)
 		{
-			List<String> stringList = new List<String>(stackFrames.Count);
+			List<string> stringList = new List<string>(stackFrames.Count);
 			foreach (StackFrame frame in stackFrames)
 				stringList.Add(ToString(frame));
 			return stringList;
 		}
 
-		public static Object ToJson(Exception ex)
+		public static object ToJson(Exception ex)
 		{
 			IDictionary<string, string> exception = new Dictionary<string, string>();
 			exception.Add("message", ex.Message);

@@ -26,7 +26,10 @@ namespace NewRelic.Agent.Core.Aggregators
 		private CustomEventAggregator _customEventAggregator;
 		private IProcessStatic _processStatic;
 		private ConfigurationAutoResponder _configurationAutoResponder;
+		private IScheduler _scheduler;
 		private Action _harvestAction;
+		private TimeSpan? _harvestCycle;
+		private static readonly TimeSpan ConfiguredHarvestCycle = TimeSpan.FromSeconds(5);
 
 		[SetUp]
 		public void SetUp()
@@ -34,16 +37,19 @@ namespace NewRelic.Agent.Core.Aggregators
 			var configuration = GetDefaultConfiguration();
 			Mock.Arrange(() => configuration.CollectorSendDataOnExit).Returns(true);
 			Mock.Arrange(() => configuration.CollectorSendDataOnExitThreshold).Returns(0);
+			Mock.Arrange(() => configuration.CustomEventsHarvestCycle).Returns(ConfiguredHarvestCycle);
 			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_processStatic = Mock.Create<IProcessStatic>();
 
-			var scheduler = Mock.Create<IScheduler>();
-			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_customEventAggregator = new CustomEventAggregator(_dataTransportService, scheduler, _processStatic, _agentHealthReporter);
+			_scheduler = Mock.Create<IScheduler>();
+			Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+			_customEventAggregator = new CustomEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -330,9 +336,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportCustomEventCollected(), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<UInt32>()), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(Arg.IsAny<int>()), Occurs.Never());
 		}
 
 		[Test]
@@ -358,6 +364,27 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(3));
+		}
+
+		[Test]
+		public void When_custom_events_disabled_harvest_is_not_scheduled()
+		{
+			_configurationAutoResponder.Dispose();
+			_customEventAggregator.Dispose();
+			var configuration = Mock.Create<IConfiguration>();
+			Mock.Arrange(() => configuration.CustomEventsEnabled).Returns(false);
+			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
+			_customEventAggregator = new CustomEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
+		}
+
+		[Test]
+		public void Harvest_cycle_should_match_configured_cycle()
+		{
+			Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
 		}
 
 		#region Helpers

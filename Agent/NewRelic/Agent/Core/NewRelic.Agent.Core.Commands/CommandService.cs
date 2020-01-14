@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
@@ -12,16 +11,13 @@ namespace NewRelic.Agent.Core.Commands
 {
 	public class CommandService : DisposableService
 	{
-		[NotNull]
-		private readonly IDictionary<String, ICommand> _knownCommands = new Dictionary<String, ICommand>();
+		private readonly IDictionary<string, ICommand> _knownCommands = new Dictionary<string, ICommand>();
 
-		[NotNull]
 		private readonly IDataTransportService _dataTransportService;
 
-		[NotNull]
 		private readonly IScheduler _scheduler;
 
-		public CommandService([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler)
+		public CommandService(IDataTransportService dataTransportService, IScheduler scheduler)
 		{
 			_dataTransportService = dataTransportService;
 			_scheduler = scheduler;
@@ -34,7 +30,7 @@ namespace NewRelic.Agent.Core.Commands
 			_scheduler.StopExecuting(GetAndExecuteAgentCommands);
 		}
 
-		public void AddCommands([NotNull] params ICommand[] commands)
+		public void AddCommands(params ICommand[] commands)
 		{
 			foreach(var command in commands)
 			{
@@ -55,10 +51,9 @@ namespace NewRelic.Agent.Core.Commands
 			_dataTransportService.SendCommandResults(commandResults);
 		}
 
-		[NotNull]
-		public IDictionary<String, Object> ProcessCommands([CanBeNull] IEnumerable<CommandModel> commandModels)
+		public IDictionary<string, object> ProcessCommands(IEnumerable<CommandModel> commandModels)
 		{
-			var results = new Dictionary<String, Object>();
+			var results = new Dictionary<string, object>();
 
 			if (commandModels == null)
 				return results;

@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		protected readonly IDataTransportService DataTransportService;
 		private readonly IScheduler _scheduler;
 		private readonly IProcessStatic _processStatic;
-		private readonly TimeSpan _harvestCycle = TimeSpan.FromMinutes(1);
+		protected readonly TimeSpan DefaultHarvestCycle = TimeSpan.FromMinutes(1);
 
 		protected AbstractAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic)
 		{
@@ -20,8 +20,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			_scheduler = scheduler;
 			_processStatic = processStatic;
 
-			_scheduler.ExecuteEvery(Harvest, _harvestCycle);
-
+			_subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
 			_subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
 		}
 
@@ -29,11 +28,27 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		protected abstract void Harvest();
 
+		protected abstract bool IsEnabled { get; }
+
+		protected virtual TimeSpan HarvestCycle => DefaultHarvestCycle;
+
+		private void OnAgentConnected(AgentConnectedEvent _)
+		{
+			if (IsEnabled)
+			{
+				_scheduler.ExecuteEvery(Harvest, HarvestCycle);
+			}
+			else
+			{
+				_scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+			}
+		}
+
 		private void OnPreCleanShutdown(PreCleanShutdownEvent obj)
 		{
 			_scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
 
-			if (!_configuration.CollectorSendDataOnExit)
+			if (!_configuration.CollectorSendDataOnExit || !IsEnabled)
 				return;
 
 			var uptime = DateTime.Now - _processStatic.GetCurrentProcess().StartTime;

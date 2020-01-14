@@ -3,7 +3,6 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
-using System;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

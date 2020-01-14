@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core;
 using NewRelic.Core.NewRelic.Cache;
@@ -52,8 +51,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return TryParameterizedConstruct(type, jArray, jsonInfos) ?? DefaultConstruct(type, jArray, jsonInfos);
 		}
 
-		[CanBeNull]
-		private static object TryParameterizedConstruct([NotNull] Type type, [NotNull] IList<JToken> jArray, [NotNull] IList<JsonMemberInfo> orderedJsonMemberInfos)
+		private static object TryParameterizedConstruct(Type type, IList<JToken> jArray, IList<JsonMemberInfo> orderedJsonMemberInfos)
 		{
 			// If the source JSON array has a larger number of values than the number of members with JsonArrayIndexAttribute then it is unlikely that we'll be able to find an appropriate constructor
 			if (jArray.Count > orderedJsonMemberInfos.Count)
@@ -72,8 +70,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return TryConstruct(constructor, jArrayValues);
 		}
 
-		[CanBeNull]
-		private static object MemberJsonInfoToObject([NotNull] IList<JToken> jArray, [NotNull] JsonMemberInfo info)
+		private static object MemberJsonInfoToObject(IList<JToken> jArray, JsonMemberInfo info)
 		{
 			if (info.Index >= jArray.Count)
 				return null;
@@ -85,8 +82,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return jToken.ToObject(info.MemberType);
 		}
 
-		[NotNull]
-		private static object DefaultConstruct([NotNull] Type type, [NotNull] IList<JToken> jArray, [NotNull] IList<JsonMemberInfo> orderedJsonMemberInfos)
+		private static object DefaultConstruct(Type type, IList<JToken> jArray, IList<JsonMemberInfo> orderedJsonMemberInfos)
 		{
 			// Find a default constructor
 			var constructor = type.GetConstructor(Type.EmptyTypes);
@@ -107,8 +103,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return deserializedObject;
 		}
 
-		[CanBeNull]
-		private static object TryConstruct([NotNull] ConstructorInfo constructor, [CanBeNull] object[] parameterValues)
+		private static object TryConstruct(ConstructorInfo constructor, object[] parameterValues)
 		{
 			try
 			{
@@ -207,8 +202,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return timeSpan.TotalSeconds;
 		}
 
-		[CanBeNull]
-		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] FieldInfo fieldInfo, [CanBeNull] object instance)
+		private static JsonMemberInfo TryGetJsonMemberInfo(FieldInfo fieldInfo, object instance)
 		{
 			if (fieldInfo == null)
 				return null;
@@ -219,8 +213,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return TryGetJsonMemberInfo(fieldInfo, valueGetter, fieldInfo.FieldType, valueSetter);
 		}
 
-		[CanBeNull]
-		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] PropertyInfo propertyInfo, [CanBeNull] object instance)
+		private static JsonMemberInfo TryGetJsonMemberInfo(PropertyInfo propertyInfo, object instance)
 		{
 			if (propertyInfo == null)
 				return null;
@@ -231,8 +224,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return TryGetJsonMemberInfo(propertyInfo, valueGetter, propertyInfo.PropertyType, valueSetter);
 		}
 
-		[CanBeNull]
-		private static JsonMemberInfo TryGetJsonMemberInfo([CanBeNull] MemberInfo memberInfo, [CanBeNull] Func<object> getValue, [CanBeNull] Type type, [CanBeNull] Action<object, object> valueSetter)
+		private static JsonMemberInfo TryGetJsonMemberInfo(MemberInfo memberInfo, Func<object> getValue, Type type, Action<object, object> valueSetter)
 		{
 			if (memberInfo == null)
 				return null;
@@ -279,7 +271,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			return new JsonMemberInfo(index, existingValue, memberInfo, type, valueSetter);
 		}
 
-		private static void TrySetValue([CanBeNull] object targetObject, [CanBeNull] IEnumerable<JsonMemberInfo> jsonInfos, [CanBeNull] IList<JToken> jTokens, int tokenIndex)
+		private static void TrySetValue(object targetObject, IEnumerable<JsonMemberInfo> jsonInfos, IList<JToken> jTokens, int tokenIndex)
 		{
 			if (targetObject == null)
 				return;
@@ -304,8 +296,7 @@ namespace NewRelic.Agent.Core.JsonConverters
 			relevantJsonMemberInfo.SetObjectValue(targetObject, value);
 		}
 
-		[CanBeNull]
-		private static object GetTokenValue([NotNull] MemberInfo memberInfo, [NotNull] Type type, [NotNull] JToken jToken)
+		private static object GetTokenValue(MemberInfo memberInfo, Type type, JToken jToken)
 		{
 			// Non-numeric values don't need to be specially transformed
 			if (jToken.Type != JTokenType.Float && jToken.Type != JTokenType.Integer)
@@ -326,17 +317,13 @@ namespace NewRelic.Agent.Core.JsonConverters
 		private class JsonMemberInfo
 		{
 			public readonly uint Index;
-			[CanBeNull]
 			public readonly object ExistingValue;
-			[NotNull]
 			public readonly MemberInfo MemberInfo;
-			[NotNull]
 			public readonly Type MemberType;
 
-			[NotNull]
 			private readonly Action<object, object> _valueSetter;
 
-			public JsonMemberInfo(uint index, [CanBeNull] object existingValue, [NotNull] MemberInfo memberInfo, [NotNull] Type memberType, [NotNull] Action<object, object> valueSetter)
+			public JsonMemberInfo(uint index, object existingValue, MemberInfo memberInfo, Type memberType, Action<object, object> valueSetter)
 			{
 				Index = index;
 				ExistingValue = existingValue;

@@ -686,7 +686,7 @@
 						<xs:attribute name="maximumSamplesPerMinute" type="xs:unsignedInt" use="optional">
 							<xs:annotation>
 								<xs:documentation>
-									The maximum number of samples to send per minute.	It is possible that fewer events will be sent, but never more.	Default is 10000.
+									Deprecated: The maximum number of samples to send per minute.	It is possible that fewer events will be sent, but never more.	Default is 10000.
 								</xs:documentation>
 							</xs:annotation>
 						</xs:attribute>

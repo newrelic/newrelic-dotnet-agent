@@ -3,7 +3,6 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
 using Telerik.JustMock;
 
@@ -24,7 +23,7 @@ namespace NewRelic.Agent.Core.Utilization
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
 			Mock.Arrange(() => _systemInfo.GetTotalLogicalProcessors()).Returns(6);
-			Mock.Arrange(() => _systemInfo.GetTotalPhysicalMemoryBytes()).Returns((UInt64)16000 * 1024 * 1024);
+			Mock.Arrange(() => _systemInfo.GetTotalPhysicalMemoryBytes()).Returns((ulong)16000 * 1024 * 1024);
 
 			_dnsStatic = Mock.Create<IDnsStatic>();
 			Mock.Arrange(() => _dnsStatic.GetHostName()).Returns("Host-Name");
@@ -40,7 +39,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
 			var settings = service.GetUtilizationSettings();
 
-			Assert.AreEqual(6, settings.LogicalProcessors, String.Format("Expected {0}, but was {1}", 8, settings.LogicalProcessors));
+			Assert.AreEqual(6, settings.LogicalProcessors, string.Format("Expected {0}, but was {1}", 8, settings.LogicalProcessors));
 		}
 
 		[Test]
@@ -50,7 +49,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
 			var settings = service.GetUtilizationSettings();
 
-			Assert.AreEqual(16000, settings.TotalRamMebibytes, String.Format("Expected {0}, but was {1}", 16000, settings.TotalRamMebibytes));
+			Assert.AreEqual(16000, settings.TotalRamMebibytes, string.Format("Expected {0}, but was {1}", 16000, settings.TotalRamMebibytes));
 		}
 
 		[Test]
@@ -61,7 +60,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
 			var settings = service.GetUtilizationSettings();
 
-			Assert.AreEqual("Host-Name", settings.Hostname, String.Format("Expected {0}, but was {1}", "Host-Name", settings.Hostname));
+			Assert.AreEqual("Host-Name", settings.Hostname, string.Format("Expected {0}, but was {1}", "Host-Name", settings.Hostname));
 		}
 
 		[Test]
@@ -72,7 +71,7 @@ namespace NewRelic.Agent.Core.Utilization
 			var service = new UtilizationStore(_systemInfo, _dnsStatic, _configuration, _agentHealthReporter);
 			var settings = service.GetUtilizationSettings();
 
-			Assert.AreEqual("Host-Name.Domain", settings.FullHostName, String.Format("Expected {0}, but was {1}", "Host-Name.Domain", settings.FullHostName));
+			Assert.AreEqual("Host-Name.Domain", settings.FullHostName, string.Format("Expected {0}, but was {1}", "Host-Name.Domain", settings.FullHostName));
 		}
 
 		[Test]
@@ -84,8 +83,8 @@ namespace NewRelic.Agent.Core.Utilization
 			var settings = service.GetUtilizationSettings();
 
 			Assert.AreEqual(settings.IpAddress.Count, 2);
-			Assert.AreEqual("127.0.0.1", settings.IpAddress[0], String.Format("Expected {0}, but was {1}", "127.0.0.1", settings.IpAddress[0]));
-			Assert.AreEqual("0.0.0.0", settings.IpAddress[1], String.Format("Expected {0}, but was {1}", "0.0.0.0", settings.IpAddress[1]));
+			Assert.AreEqual("127.0.0.1", settings.IpAddress[0], string.Format("Expected {0}, but was {1}", "127.0.0.1", settings.IpAddress[0]));
+			Assert.AreEqual("0.0.0.0", settings.IpAddress[1], string.Format("Expected {0}, but was {1}", "0.0.0.0", settings.IpAddress[1]));
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
 			NrAssert.Multiple(
 				() => Assert.AreEqual("Oh no!", errorData.ErrorMessage),
 				() => Assert.AreEqual("System.Exception", errorData.ErrorTypeName),
-				() => Assert.IsFalse(String.IsNullOrEmpty(errorData.StackTrace)),
+				() => Assert.IsFalse(string.IsNullOrEmpty(errorData.StackTrace)),
 				() => Assert.IsTrue(errorData.NoticedAt > now.AddMinutes(-1) && errorData.NoticedAt < now.AddMinutes(1))
 			);
 		}

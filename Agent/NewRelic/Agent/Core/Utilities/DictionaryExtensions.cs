@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Core;
+﻿using NewRelic.Core;
 using System;
 using System.Collections.Generic;
 
@@ -7,7 +6,7 @@ namespace NewRelic.Agent.Core.Utilities
 {
 	public static class DictionaryExtensions
 	{
-		public static void Merge<TKey, TValue>([NotNull] this IDictionary<TKey, TValue> me, IDictionary<TKey, TValue> merge)
+		public static void Merge<TKey, TValue>(this IDictionary<TKey, TValue> me, IDictionary<TKey, TValue> merge)
 		{
 			if (merge == null)
 				return;
@@ -26,12 +25,12 @@ namespace NewRelic.Agent.Core.Utilities
 		/// <typeparam name="T">A type that is castable to Object (i.e., anything).</typeparam>
 		/// <param name="source">The enumerable (dictionary) that you want to downcast construct.</param>
 		/// <returns>A dictionary containing all of the items in the source dictionary, but cast to Objects.</returns>
-		[NotNull] public static IDictionary<String, Object> DowncastCopyConstruct<T>([NotNull] this IEnumerable<KeyValuePair<String, T>> source)
+		public static IDictionary<string, object> DowncastCopyConstruct<T>(this IEnumerable<KeyValuePair<string, T>> source)
 		{
 			if (source == null)
 				throw new ArgumentNullException("source");
 
-			var destination = new Dictionary<String, Object>();
+			var destination = new Dictionary<string, object>();
 			foreach (var item in source)
 			{
 				if (item.Key == null)
@@ -43,7 +42,7 @@ namespace NewRelic.Agent.Core.Utilities
 			return destination;
 		}
 
-		public static void AddIfNotNull<T, U>([NotNull] this IDictionary<T, U> dictionary, [NotNull] T key, U value) where U : class
+		public static void AddIfNotNull<T, U>(this IDictionary<T, U> dictionary, T key, U value) where U : class
 		{
 			if (value != null)
 			{
@@ -51,15 +50,15 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 		}
 
-		public static void AddStringIfNotNullOrEmpty<T>([NotNull] this IDictionary<T, Object> dictionary, [NotNull] T key, String value)
+		public static void AddStringIfNotNullOrEmpty<T>(this IDictionary<T, object> dictionary, T key, string value)
 		{
-			if (!String.IsNullOrEmpty(value))
+			if (!string.IsNullOrEmpty(value))
 			{
 				dictionary.Add(key, value);
 			}
 		}
 
-		public static void AddTimespanIfNotNull<T>([NotNull] this IDictionary<T, Object> dictionary, [NotNull] T key, TimeSpan? value, TimeUnit timeUnit)
+		public static void AddTimespanIfNotNull<T>(this IDictionary<T, object> dictionary, T key, TimeSpan? value, TimeUnit timeUnit)
 		{
 			if (value == null)
 				return;
@@ -87,12 +86,12 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 		}
 
-		[NotNull] public static ReadOnlyDictionary<TKey, TValue> WrapInReadOnly<TKey, TValue>([NotNull] this IDictionary<TKey, TValue> source)
+		public static ReadOnlyDictionary<TKey, TValue> WrapInReadOnly<TKey, TValue>(this IDictionary<TKey, TValue> source)
 		{
 			return new ReadOnlyDictionary<TKey, TValue>(source);
 		}
 
-		[NotNull] public static ReadOnlyDictionary<TKey, TValue> CopyToReadOnly<TKey, TValue>([NotNull] this IDictionary<TKey, TValue> source)
+		public static ReadOnlyDictionary<TKey, TValue> CopyToReadOnly<TKey, TValue>(this IDictionary<TKey, TValue> source)
 		{
 			return new ReadOnlyDictionary<TKey, TValue>(new Dictionary<TKey, TValue>(source));
 		}

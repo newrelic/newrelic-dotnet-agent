@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Api;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions.Collections;
@@ -22,10 +21,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 	/// </summary>
 	public static class QueryStringRetriever
 	{
-		[CanBeNull]
 		private static readonly Func<HttpRequest, NameValueCollection> EnsureQueryString;
 
-		[CanBeNull]
 		private static readonly Func<HttpRequest, NameValueCollection> GetQueryStringBackingField;
 
 		static QueryStringRetriever()
@@ -49,8 +46,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			}
 		}
 
-		[CanBeNull]
-		private static NameValueCollection TryGetQueryString([NotNull] HttpRequest request, [NotNull] IAgent agent)
+		private static NameValueCollection TryGetQueryString(HttpRequest request, IAgent agent)
 		{
 			if (EnsureQueryString != null)
 				return EnsureQueryString(request);
@@ -64,8 +60,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 			return null;
 		}
 
-		[CanBeNull]
-		public static IDictionary<String, String> TryGetQueryStringAsDictionary([NotNull] HttpRequest request, [NotNull] IAgent agent)
+		public static IDictionary<string, string> TryGetQueryStringAsDictionary(HttpRequest request, IAgent agent)
 		{
 			try
 			{

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Config;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
@@ -16,37 +15,28 @@ namespace NewRelic.Agent.Core.CrossAgentTests.DataTransport
 {
 	internal class TestDefaultConfiguration : DefaultConfiguration
 	{
-		public TestDefaultConfiguration([NotNull] IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
+		public TestDefaultConfiguration(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, SecurityPoliciesConfiguration _securityPoliciesConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic, IDnsStatic dnsStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, _securityPoliciesConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic, dnsStatic) { }
 	}
 
 	[TestFixture]
 	public class CollectorHostNameTests
     {
-		[NotNull]
 		private IEnvironment _environment;
 
-		[NotNull]
 		private IProcessStatic _processStatic;
 
-		[NotNull]
 		private IHttpRuntimeStatic _httpRuntimeStatic;
 
-		[NotNull]
 		private IConfigurationManagerStatic _configurationManagerStatic;
 
-		[NotNull]
 		private configuration _localConfig;
 
-		[NotNull]
 		private ServerConfiguration _serverConfig;
 
-		[NotNull]
 		private RunTimeConfiguration _runTimeConfig;
 
-		[NotNull]
 		private DefaultConfiguration _defaultConfig;
 
-		[NotNull]
 		private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
 
 		private IDnsStatic _dnsStatic;

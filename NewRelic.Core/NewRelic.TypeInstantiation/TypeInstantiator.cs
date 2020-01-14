@@ -21,7 +21,7 @@ namespace NewRelic.TypeInstantiation
 			};
 		}
 
-		private static Assembly AssemblyFromPath(String path)
+		private static Assembly AssemblyFromPath(string path)
 		{
 			if (path == null)
 				return null;
@@ -60,7 +60,7 @@ namespace NewRelic.TypeInstantiation
 			}
 		}
 
-		private static Boolean TypeIsInstantiatable(Type type)
+		private static bool TypeIsInstantiatable(Type type)
 		{
 			if (type == null)
 				return false;
@@ -73,7 +73,7 @@ namespace NewRelic.TypeInstantiation
 			return true;
 		}
 
-		private static Boolean TypeImplements<T>(Type type)
+		private static bool TypeImplements<T>(Type type)
 		{
 			return type != null
 				&& typeof(T).IsAssignableFrom(type);
@@ -87,7 +87,7 @@ namespace NewRelic.TypeInstantiation
 			}
 			catch (Exception ex)
 			{
-				var message = String.Format("An exception was thrown while constructing an instance of type {0}", type.FullName);
+				var message = string.Format("An exception was thrown while constructing an instance of type {0}", type.FullName);
 				throw new Exception(message, ex);
 			}
 		}

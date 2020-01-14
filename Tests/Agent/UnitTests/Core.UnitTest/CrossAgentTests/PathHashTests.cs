@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
@@ -19,10 +18,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 	[TestFixture]
 	public class PathHashTests
 	{
-		[NotNull]
 		private IConfiguration _configuration;
 
-		[NotNull]
 		private IPathHashMaker _pathHashMaker;
 
 		[SetUp]
@@ -44,7 +41,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 		[Test]
 		[TestCaseSource(typeof(PathHashTests), nameof(TestCases))]
-		public void Test([NotNull] TestCase testCase)
+		public void Test(TestCase testCase)
 		{
 			Mock.Arrange(() => _configuration.ApplicationNames).Returns(new[] { testCase.ApplicationName });
 
@@ -53,8 +50,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			Assert.AreEqual(testCase.ExpectedPathHash, newPathHash);
 		}
 
-		[NotNull]
-		private static ITransactionName GetTransactionNameFromString([NotNull] String transactionName)
+		private static ITransactionName GetTransactionNameFromString(string transactionName)
 		{
 			var transactionNamePieces = transactionName.Split(MetricNames.PathSeparatorChar);
 			if (transactionNamePieces.Length < 2)
@@ -63,11 +59,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 				throw new TestFailureException($"Don't know how to create a transaction name that starts with {transactionNamePieces[0]}");
 
 			var transactionNameCategory = transactionNamePieces[1];
-			var transactionNameTail = String.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
+			var transactionNameTail = string.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
 			return TransactionName.ForWebTransaction(transactionNameCategory, transactionNameTail);
 		}
 
-		private static void SetGuid(Transaction transaction, String transactionGuid)
+		private static void SetGuid(Transaction transaction, string transactionGuid)
 		{
 			// We have to set the guid via reflection because it is set up as an auto-generated value in Transaction
 			var fieldInfo = typeof(Transaction).GetField("_guid", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -80,18 +76,18 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 		#region JSON test case data
 		public class TestCase
 		{
-			[JsonProperty(PropertyName = "name"), NotNull, UsedImplicitly]
-			public readonly String Name;
-			[JsonProperty(PropertyName = "applicationName"), NotNull, UsedImplicitly]
-			public readonly String ApplicationName;
-			[JsonProperty(PropertyName = "transactionName"), NotNull, UsedImplicitly]
-			public readonly String TransactionName;
-			[JsonProperty(PropertyName = "referringPathHash"), CanBeNull, UsedImplicitly]
-			public readonly String ReferringPathHash;
-			[JsonProperty(PropertyName = "expectedPathHash"), NotNull, UsedImplicitly]
-			public readonly String ExpectedPathHash;
+			[JsonProperty(PropertyName = "name")]
+			public readonly string Name;
+			[JsonProperty(PropertyName = "applicationName")]
+			public readonly string ApplicationName;
+			[JsonProperty(PropertyName = "transactionName")]
+			public readonly string TransactionName;
+			[JsonProperty(PropertyName = "referringPathHash")]
+			public readonly string ReferringPathHash;
+			[JsonProperty(PropertyName = "expectedPathHash")]
+			public readonly string ExpectedPathHash;
 
-			public override String ToString()
+			public override string ToString()
 			{
 				return Name;
 			}
@@ -109,7 +105,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			}
 		}
 
-		private const String JsonTestCaseData = @"
+		private const string JsonTestCaseData = @"
 [
   {
     ""name"": ""no referring path hash"",

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Transactions
@@ -10,11 +9,8 @@ namespace NewRelic.Agent.Core.Transactions
 	{
 		public const int UserAttributeClamp = 64;
 
-		[NotNull]
 		private readonly List<Attribute> _agentAttributes = new List<Attribute>();
-		[NotNull]
 		private readonly List<Attribute> _userAttributes = new List<Attribute>();
-		[NotNull]
 		private readonly List<Attribute> _intrinsics = new List<Attribute>(); 
 
 		public virtual int Count()
@@ -22,7 +18,6 @@ namespace NewRelic.Agent.Core.Transactions
 			return _agentAttributes.Count + _userAttributes.Count + _intrinsics.Count;
 		}
 
-		[NotNull]
 		public virtual IDictionary<string, object> GetAgentAttributesDictionary()
 		{
 			return _agentAttributes
@@ -31,7 +26,6 @@ namespace NewRelic.Agent.Core.Transactions
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
-		[NotNull]
 		public virtual IDictionary<string, object> GetUserAttributesDictionary()
 		{
 			return _userAttributes
@@ -40,7 +34,6 @@ namespace NewRelic.Agent.Core.Transactions
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
-		[NotNull]
 		public virtual IDictionary<string, object> GetIntrinsicsDictionary()
 		{
 			return _intrinsics
@@ -49,30 +42,27 @@ namespace NewRelic.Agent.Core.Transactions
 				.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 		}
 
-		[NotNull]
 		public virtual IList<Attribute> GetAgentAttributes()
 		{
 			return _agentAttributes;
 		}
 
-		[NotNull]
 		public virtual IList<Attribute> GetUserAttributes()
 		{
 			return _userAttributes;
 		}
 
-		[NotNull]
 		public virtual IList<Attribute> GetIntrinsics()
 		{
 			return _intrinsics;
 		}
 
-		public virtual void Add([NotNull] Attribute attribute)
+		public virtual void Add(Attribute attribute)
 		{
 			GetListForAttributeClassification(attribute.Classification).Add(attribute);
 		}
 
-		public virtual void Add([NotNull] IEnumerable<Attribute> attributes)
+		public virtual void Add(IEnumerable<Attribute> attributes)
 		{
 			foreach (var attr in attributes)
 			{
@@ -83,7 +73,7 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 		}
 
-		public virtual void TryAdd<T>([NotNull] Func<T, Attribute> attributeBuilder, [CanBeNull] T value)
+		public virtual void TryAdd<T>(Func<T, Attribute> attributeBuilder, T value)
 		{
 			if (value == null)
 				return;
@@ -91,7 +81,7 @@ namespace NewRelic.Agent.Core.Transactions
 			Add(attribute);
 		}
 
-		public virtual void TryAdd<T>([NotNull] Func<T, Attribute> attributeBuilder, [CanBeNull] T? value) where T : struct
+		public virtual void TryAdd<T>(Func<T, Attribute> attributeBuilder, T? value) where T : struct
 		{
 			if (value == null)
 				return;
@@ -99,7 +89,7 @@ namespace NewRelic.Agent.Core.Transactions
 			Add(attribute);
 		}
 
-		public virtual void TryAddAll<T>([NotNull] Func<T, IEnumerable<Attribute>> attributeBuilder, [CanBeNull] T value)
+		public virtual void TryAddAll<T>(Func<T, IEnumerable<Attribute>> attributeBuilder, T value)
 		{
 			if (value == null)
 				return;
@@ -107,7 +97,7 @@ namespace NewRelic.Agent.Core.Transactions
 			Add(attribute);
 		}
 
-		public virtual void TryAddAll<T>([NotNull] Func<T, IEnumerable<Attribute>> attributeBuilder, [CanBeNull] T? value) where T : struct
+		public virtual void TryAddAll<T>(Func<T, IEnumerable<Attribute>> attributeBuilder, T? value) where T : struct
 		{
 			if (value == null)
 				return;
@@ -115,7 +105,7 @@ namespace NewRelic.Agent.Core.Transactions
 			Add(attribute);
 		}
 
-		private List<Attribute> GetListForAttributeClassification([NotNull] AttributeClassification classification)
+		private List<Attribute> GetListForAttributeClassification(AttributeClassification classification)
 		{
 			switch (classification)
 			{

@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Api;
+﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
@@ -16,12 +15,11 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 
 		private static class Statics
 		{
-			private static Func<Object, string> _propertyConfiguration;
+			private static Func<object, string> _propertyConfiguration;
 
-			[NotNull]
-			public static readonly Func<Object, string> GetPropertyConfiguration = AssignPropertyConfiguration();
+			public static readonly Func<object, string> GetPropertyConfiguration = AssignPropertyConfiguration();
 
-			private static Func<Object, string> AssignPropertyConfiguration()
+			private static Func<object, string> AssignPropertyConfiguration()
 			{
 				return _propertyConfiguration ??
 					(_propertyConfiguration =
@@ -62,8 +60,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			return Delegates.GetDelegateFor(segment);
 		}
 
-		[CanBeNull]
-		private static string TryGetPropertyName([NotNull] string propertyName, [NotNull] Object contextObject)
+		private static string TryGetPropertyName(string propertyName, object contextObject)
 		{
 			if (propertyName == PropertyConfiguration)
 			{
