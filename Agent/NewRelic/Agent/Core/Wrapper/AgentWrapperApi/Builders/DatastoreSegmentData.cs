@@ -108,8 +108,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			}
 			catch (Exception exception)
 			{
-				Log.DebugFormat("Unable to retrieve resources for explain plan: \"{0}\", error: {1}",
-					((IDbCommand)_explainPlanResources)?.CommandText, exception);
+				Log.DebugFormat("Unable to retrieve resources for explain plan: {0}", exception);
 			}
 			return null;
 		}
@@ -143,8 +142,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			}
 			catch (Exception exception)
 			{
-				Log.DebugFormat("Unable to execute explain plan: \"{0}\", error: {1}",
-					((IDbCommand)_explainPlanResources)?.CommandText, exception);
+				Log.DebugFormat("Unable to generate explain plan: {0}", exception);
 			}
 		}
 
