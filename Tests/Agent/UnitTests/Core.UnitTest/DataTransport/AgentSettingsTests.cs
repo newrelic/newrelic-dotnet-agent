@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Configuration
 		const string TransactionTracerRecordSql = "obfuscate";
 		const bool SlowSqlEnabled = false;
 		const bool BrowserMonitoringAutoInstrument = true;
-		const uint TransactionEventMaxSamplesStored = 10000;
+		const int TransactionEventMaxSamplesStored = 10000;
 
 		[Test]
 		public void serializes_correctly()
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.Core.Configuration
 			Mock.Arrange(() => configuration.TransactionTracerRecordSql).Returns(TransactionTracerRecordSql);
 			Mock.Arrange(() => configuration.SlowSqlEnabled).Returns(SlowSqlEnabled);
 			Mock.Arrange(() => configuration.BrowserMonitoringAutoInstrument).Returns(BrowserMonitoringAutoInstrument);
-			Mock.Arrange(() => configuration.TransactionEventsMaxSamplesStored).Returns(TransactionEventMaxSamplesStored);
+			Mock.Arrange(() => configuration.TransactionEventsMaximumSamplesStored).Returns(TransactionEventMaxSamplesStored);
 
 			var agentSettings = new ReportedConfiguration
 			{
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.Core.Configuration
 				TransactionTracerRecordSql = configuration.TransactionTracerRecordSql,
 				SlowSqlEnabled = configuration.SlowSqlEnabled,
 				BrowserMonitoringAutoInstrument = configuration.BrowserMonitoringAutoInstrument,
-				TransactionEventMaxSamplesStored = configuration.TransactionEventsMaxSamplesStored
+				TransactionEventMaxSamplesStored = configuration.TransactionEventsMaximumSamplesStored
 			};
 
 			var json = JsonConvert.SerializeObject(agentSettings);

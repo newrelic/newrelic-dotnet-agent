@@ -1,5 +1,6 @@
-﻿using NewRelic.Agent.Api;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -10,18 +11,25 @@ namespace CompositeTests
 	[TestFixture]
 	public class SqlParsingCacheSupportabilityMetricTests
 	{
-		private const string SupportabilityMetricPrefix = "Supportability/SqlParsingCache";
+		private const string SqlParsingCacheMetricPrefix = "Supportability/Cache/SqlParsingCache";
+		private const string SqlObfuscationMetricPrefix = "Supportability/Cache/SqlObfuscationCache";
 
 		private static CompositeTestAgent _compositeTestAgent;
 		private IAgent _agent;
-		private IDatabaseStatementParser _databaseStatementParser;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_compositeTestAgent = new CompositeTestAgent();
 			_agent = _compositeTestAgent.GetAgent();
-			_databaseStatementParser = _compositeTestAgent.GetDatabaseStatementParser();
+
+			// Span events of type datastore include obfuscated SQL.
+			// This configuration ensures that we generate datastore spans that will exercise
+			// the SQL obfuscation cache.
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]
@@ -33,9 +41,7 @@ namespace CompositeTests
 		[Test]
 		public void SqlParsingCacheMetricsAreGenerated()
 		{
-			_databaseStatementParser.ResetCaches();
-
-			_agent.CreateTransaction(
+			var transaction = _agent.CreateTransaction(
 				isWeb: true,
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
 				transactionDisplayName: "name",
@@ -50,6 +56,7 @@ namespace CompositeTests
 			_agent.StartDatastoreRequestSegmentOrThrow(DatastoreVendor.IBMDB2, CommandType.Text, "SELECT * FROM Table1").End();
 			_agent.StartDatastoreRequestSegmentOrThrow(DatastoreVendor.IBMDB2, CommandType.Text, "SELECT * FROM Table1").End();
 
+			transaction.End();
 
 			_compositeTestAgent.Harvest();
 
@@ -58,25 +65,42 @@ namespace CompositeTests
 			// ASSERT
 			var expectedMetrics = new List<ExpectedMetric>
 			{
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Hits", CallCount = 3},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Misses", CallCount = 2},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Ejections", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Size", CallCount = 1, Total = 2},
 
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Hits", CallCount = 3},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Misses", CallCount = 2},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Ejections", CallCount = 0},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Size", CallCount = 1, Total = 2},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Hits", CallCount = 1},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Misses", CallCount = 1},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Ejections", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Size", CallCount = 1, Total = 1},
 
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Hits", CallCount = 1},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Misses", CallCount = 1},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Ejections", CallCount = 0},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Size", CallCount = 1, Total = 1}
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MSSQL/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MSSQL/Hits", CallCount = 3},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MSSQL/Misses", CallCount = 2},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MSSQL/Ejections", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MSSQL/Size", CallCount = 1, Total = 2},
+
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/IBMDB2/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/IBMDB2/Hits", CallCount = 1},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/IBMDB2/Misses", CallCount = 1},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/IBMDB2/Ejections", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/IBMDB2/Size", CallCount = 1, Total = 1}
 			};
 
 			var unexpectedMetrics = new List<ExpectedMetric>
 			{
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MongoDB/Hits"},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MongoDB/Misses"},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MongoDB/Ejections"},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MongoDB/Size"}
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MongoDB/Hits"},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MongoDB/Misses"},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MongoDB/Ejections"},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MongoDB/Size"},
+
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MongoDB/Hits"},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MongoDB/Misses"},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MongoDB/Ejections"},
+				new ExpectedCountMetric {Name =  SqlObfuscationMetricPrefix + "/MongoDB/Size"}
 			};
 
 			MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
@@ -86,8 +110,6 @@ namespace CompositeTests
 		[Test]
 		public void SqlParsingCacheMetricsAreResetBetweenHarvests()
 		{
-			_databaseStatementParser.ResetCaches();
-
 			_agent.CreateTransaction(
 				isWeb: true,
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
@@ -108,17 +130,17 @@ namespace CompositeTests
 			// ASSERT
 			var expectedMetrics = new List<ExpectedMetric>
 			{
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Hits", CallCount = 3},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Misses", CallCount = 2},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Ejections", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Size", CallCount = 1, Total = 2},
 
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Hits", CallCount = 3},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Misses", CallCount = 2},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Ejections", CallCount = 0},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Size", CallCount = 1, Total = 2},
-
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Hits", CallCount = 1},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Misses", CallCount = 1},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Ejections", CallCount = 0},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/IBMDB2/Size", CallCount = 1, Total = 1}
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Hits", CallCount = 1},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Misses", CallCount = 1},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Ejections", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/IBMDB2/Size", CallCount = 1, Total = 1}
 			};
 
 			_compositeTestAgent.Harvest();
@@ -130,22 +152,17 @@ namespace CompositeTests
 
 			expectedMetrics = new List<ExpectedMetric>
 			{
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/Capacity", CallCount = 1, Total = defaultCapactity},
-
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Hits", CallCount = 2},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Misses", CallCount = 0},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Ejections", CallCount = 0},
-				new ExpectedCountMetric {Name =  SupportabilityMetricPrefix + "/MSSQL/Size", CallCount = 1, Total = 2}
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Capacity", CallCount = 1, Total = defaultCapactity},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Hits", CallCount = 2},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Misses", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Ejections", CallCount = 0},
+				new ExpectedCountMetric {Name =  SqlParsingCacheMetricPrefix + "/MSSQL/Size", CallCount = 1, Total = 2}
 			};
 
 			_compositeTestAgent.ResetHarvestData();
 			_compositeTestAgent.Harvest();
 
 			MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
-
-
-
 		}
-
 	}
 }

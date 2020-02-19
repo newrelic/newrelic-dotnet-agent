@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			var aggregatedEvents = errorEvents.Union(originalSyntheticsErrorEvents).ToList();
 
 			// Retrieve the number of add attempts before resetting the collection.
-			var eventHarvestData = new EventHarvestData(originalErrorEvents.Size, (uint)originalErrorEvents.GetAddAttemptsCount());
+			var eventHarvestData = new EventHarvestData(originalErrorEvents.Size, originalErrorEvents.GetAddAttemptsCount());
 
 			// if we don't have any events to publish then don't
 			if (aggregatedEvents.Count <= 0)
@@ -106,13 +106,13 @@ namespace NewRelic.Agent.Core.Aggregators
 
 		#region Private Helpers
 
-		private void ResetCollections(uint errorEventCollectionCapacity)
+		private void ResetCollections(int errorEventCollectionCapacity)
 		{
 			GetAndResetErrorEvents(errorEventCollectionCapacity);
 			GetAndResetSyntheticsErrorEvents();
 		}
 
-		private ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> GetAndResetErrorEvents(uint errorEventCollectionCapacity)
+		private ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>> GetAndResetErrorEvents(int errorEventCollectionCapacity)
 		{
 			return Interlocked.Exchange(ref _errorEvents, new ConcurrentPriorityQueue<PrioritizedNode<ErrorEventWireModel>>(errorEventCollectionCapacity));
 		}
@@ -134,12 +134,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private uint GetReservoirSize()
+		private int GetReservoirSize()
 		{
 			return _errorEvents.Size;
 		}
 
-		private void ReduceReservoirSize(uint newSize)
+		private void ReduceReservoirSize(int newSize)
 		{
 			if (newSize >= GetReservoirSize())
 				return;
@@ -158,7 +158,7 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(errorEvents);
 					break;
 				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
-					ReduceReservoirSize((uint)(errorEvents.Count * ReservoirReductionSizeMultiplier));
+					ReduceReservoirSize((int)(errorEvents.Count * ReservoirReductionSizeMultiplier));
 					RetainEvents(errorEvents);
 					break;
 				case DataTransportResponseStatus.Discard:

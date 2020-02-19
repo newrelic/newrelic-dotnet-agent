@@ -13,7 +13,9 @@ using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Requests;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper;
@@ -237,6 +239,11 @@ namespace CompositeTests
 
 		public void Dispose()
 		{
+			//Force the created transaction to finish if necessary so that it won't be garbage collected and harvested
+			//by another test.
+			var transaction = _primaryTransactionContextStorage.GetData();
+			transaction?.Finish();
+
 			_container.Dispose();
 		}
 

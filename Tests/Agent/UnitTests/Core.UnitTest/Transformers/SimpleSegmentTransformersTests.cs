@@ -1,11 +1,12 @@
 ﻿using System;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -62,20 +63,20 @@ namespace NewRelic.Agent.Core.Transformers
 			Assert.IsTrue(scoped.ContainsKey(metricName));
 			Assert.IsTrue(unscoped.ContainsKey(metricName));
 
-            var data = scoped[metricName];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
+			var data = scoped[metricName];
+			Assert.AreEqual(1, data.Value0);
+			Assert.AreEqual(5, data.Value1);
+			Assert.AreEqual(3, data.Value2);
+			Assert.AreEqual(5, data.Value3);
+			Assert.AreEqual(5, data.Value4);
 
-            data = unscoped[metricName];
-            Assert.AreEqual(1, data.Value0);
-            Assert.AreEqual(5, data.Value1);
-            Assert.AreEqual(3, data.Value2);
-            Assert.AreEqual(5, data.Value3);
-            Assert.AreEqual(5, data.Value4);
-        }
+			data = unscoped[metricName];
+			Assert.AreEqual(1, data.Value0);
+			Assert.AreEqual(5, data.Value1);
+			Assert.AreEqual(3, data.Value2);
+			Assert.AreEqual(5, data.Value3);
+			Assert.AreEqual(5, data.Value4);
+		}
 
 		[Test]
 		public void TransformSegment_TwoTransformCallsSame()
@@ -165,15 +166,15 @@ namespace NewRelic.Agent.Core.Transformers
 
 		private static Segment GetSegment(string name)
 		{
-			var builder = new TypedSegment<SimpleSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new SimpleSegmentData(name));
+			var builder = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			builder.SetSegmentData(new SimpleSegmentData(name));
 			builder.End();
 			return builder;
 		}
 
-        public static TypedSegment<SimpleSegmentData> GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
-        {
-            var methodCallData = new MethodCallData("foo", "bar", 1);
-            return new TypedSegment<SimpleSegmentData>(start, TimeSpan.FromSeconds(duration), GetSegment(name));
-        }
-    }
+		public static Segment GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
+		{
+			return new Segment(start, TimeSpan.FromSeconds(duration), GetSegment(name), null);
+		}
+	}
 }

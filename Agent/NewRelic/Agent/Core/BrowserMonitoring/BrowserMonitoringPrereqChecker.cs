@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring

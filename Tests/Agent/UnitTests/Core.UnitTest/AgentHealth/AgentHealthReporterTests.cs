@@ -1,6 +1,7 @@
-﻿using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.SystemInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
@@ -21,7 +22,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void SetUp()
 		{
 			var metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
-			_agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>());
+			_agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IDnsStatic>());
 			_publishedMetrics = new List<MetricWireModel>();
 			_agentHealthReporter.RegisterPublishMetricHandler(metric => _publishedMetrics.Add(metric));
 		}
@@ -104,6 +105,17 @@ namespace NewRelic.Agent.Core.AgentHealth
 			NrAssert.Multiple(
 				() => Assert.AreEqual($"Supportability/{MetricName}", _publishedMetrics[0].MetricName.Name),
 				() => Assert.AreEqual(2, _publishedMetrics[0].Data.Value0)
+			);
+		}
+
+		[Test]
+		public void CollectMetrics_ReportsAgentVersion()
+		{
+			var agentVersion = AgentVersion.Version;
+			_agentHealthReporter.CollectMetrics();
+			NrAssert.Multiple(
+				() => Assert.AreEqual($"Supportability/AgentVersion/{agentVersion}", _publishedMetrics[0].MetricName.Name),
+				() => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0)
 			);
 		}
 	}

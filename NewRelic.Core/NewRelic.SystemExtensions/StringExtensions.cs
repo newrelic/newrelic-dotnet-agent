@@ -35,19 +35,28 @@ namespace NewRelic.SystemExtensions
 
 		public static string TruncateUnicodeStringByBytes(this string value, uint maxBytes)
 		{
+			TruncateUnicodeStringByBytes(value, maxBytes, out var result);
+			return result;
+		}
+
+		public static bool TruncateUnicodeStringByBytes(this string value, uint maxBytes, out string resultValue)
+		{
+			resultValue = value;
+
 			if (string.IsNullOrEmpty(value))
 			{
-				return value;
+				return false;
 			}
 
 			if (maxBytes == 0)
 			{
-				return string.Empty;
+				resultValue = string.Empty;
+				return value.Length > 0;
 			}
 
 			if (Encoding.UTF8.GetByteCount(value) <= maxBytes)
 			{
-				return value;
+				return false;
 			}
 
 			var bytes = new byte[maxBytes];
@@ -56,16 +65,18 @@ namespace NewRelic.SystemExtensions
 			try
 			{
 				Encoding.UTF8.GetEncoder().Convert(chars, 0, chars.Length,
-					bytes, 0, (int) maxBytes,
+					bytes, 0, (int)maxBytes,
 					true, out int charsUsed, out int _, out bool _);
-				return new string(chars, 0, charsUsed);
+				resultValue = new string(chars, 0, charsUsed);
+				return true;
 			}
 			//In the case when maxBytes is less than the size of the first character in the input string,
 			//the Encoder.Convert() method will throw buffer is too small exception. In this case, we want
 			//the method to return an empty string instead.
 			catch (ArgumentException)
 			{
-				return string.Empty;
+				resultValue = string.Empty;
+				return value.Length > 0;
 			}
 		}
 

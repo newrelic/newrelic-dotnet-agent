@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -45,7 +46,12 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 			
 			var method = (httpRequestMessage.Method != null ? httpRequestMessage.Method.Method : "<unknown>") ?? "<unknown>";
-			var segment = agent.CurrentTransaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
+
+			var transactionExperimental = transaction.GetExperimentalApi();
+
+			var externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
+			var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
+			segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
 
 			if (agent.Configuration.ForceSynchronousTimingCalculationHttpClient)
 			{
@@ -89,7 +95,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 				//in recording time waiting for the current unit of work on the sync context to finish.
 				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
 				{
-					TryProcessResponse(agent, responseTask, transaction, segment);
+					TryProcessResponse(agent, responseTask, transaction, segment, externalSegmentData);
 					segment.End();
 					transaction.Release();
 				}));
@@ -134,7 +140,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			}
 		}
 
-		private static void TryProcessResponse(IAgent agent, Task<HttpResponseMessage> response, ITransaction transaction, ISegment segment)
+		private static void TryProcessResponse(IAgent agent, Task<HttpResponseMessage> response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
 		{
 			try
 			{
@@ -143,7 +149,15 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 					return;
 				}
 
-				var headers = response?.Result?.Headers?.ToList();
+				var result = response?.Result;
+
+				var httpStatusCode = result?.StatusCode;
+				if (httpStatusCode.HasValue)
+				{
+					externalSegmentData.SetHttpStatusCode((int)httpStatusCode);
+				}
+
+				var headers = result?.Headers?.ToList();
 				if (headers == null)
 					return;
 

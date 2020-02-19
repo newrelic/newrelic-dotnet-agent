@@ -150,9 +150,9 @@ namespace NewRelic.Agent.Core.WireModels
 
 		MetricWireModel TryBuildSpanEventsSentMetric(int count);
 
-		MetricWireModel TryBuildSqlParsingCacheCountMetric(string name, int count);
+		MetricWireModel TryBuildCacheCountMetric(string name, int count);
 
-		MetricWireModel TryBuildSqlParsingCacheSizeMetric(string name, int size);
+		MetricWireModel TryBuildCacheSizeMetric(string name, int size);
 
 		MetricWireModel TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(string endpoint, int count = 1);
 

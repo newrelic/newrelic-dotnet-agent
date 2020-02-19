@@ -526,7 +526,8 @@ namespace NewRelic.Agent.Core.Metric
 		private const string SupportabilitySqlTracesPs = SupportabilityPs + "SqlTraces" + PathSeparator;
 		public const string SupportabilitySqlTracesSent = SupportabilitySqlTracesPs + "TotalSqlTracesSent";
 		public const string SupportabilitySqlTracesRecollected = SupportabilitySqlTracesPs + "TotalSqlTracesRecollected";
-		public const string SupportabilitySqlParsingCachePrefix = Supportability + PathSeparator + "SqlParsingCache";
+
+		public const string SupportabilityCachePrefix = SupportabilityPs + "Cache" + PathSeparator;
 
 		public static readonly MetricName SupportabilitySqlTracesCollected =
 			MetricName.Create(SupportabilitySqlTracesPs + "TotalSqlTracesCollected");

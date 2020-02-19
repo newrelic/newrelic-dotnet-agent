@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Timing;
@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core.Transactions
 				return null;
 			}
 			var priority = _tracePriorityManager.Create();
-			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService.SqlObfuscator, priority, _databaseStatementParser);
+			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority, _databaseStatementParser);
 
 			try
 			{

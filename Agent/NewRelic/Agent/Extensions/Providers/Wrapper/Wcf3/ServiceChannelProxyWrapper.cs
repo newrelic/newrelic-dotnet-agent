@@ -95,9 +95,15 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				return Delegates.NoOp;
 			}
 
+			var transactionExperimental = transaction.GetExperimentalApi();
+
 			var name = GetName(instrumentedMethodCall.MethodCall);
 			var uri = GetUri(instrumentedMethodCall);
-			var segment = transaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, name, isLeaf: true);
+			var externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, name);
+			var segment = transactionExperimental.StartSegment(instrumentedMethodCall.MethodCall);
+			segment.GetExperimentalApi()
+				.SetSegmentData(externalSegmentData)
+				.MakeLeaf();
 
 			return Delegates.GetDelegateFor<System.Runtime.Remoting.Messaging.IMethodReturnMessage>(
 				onSuccess: OnSuccess,
@@ -179,7 +185,16 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				if (webException != null)
 				{
 					// This is needed because the message inspector which normally handles CAT/DT headers doesn't run if there is a protocol exception
-					transaction.ProcessInboundResponse(webException.Response?.Headers?.ToDictionary(), segment);
+					var response = webException.Response;
+					var httpResponse = response as HttpWebResponse;
+
+					var statusCode = httpResponse?.StatusCode;
+					if (statusCode.HasValue)
+					{
+						externalSegmentData.SetHttpStatusCode((int)statusCode.Value);
+					}
+
+					transaction.ProcessInboundResponse(response?.Headers?.ToDictionary(), segment);
 				}
 			}
 		}

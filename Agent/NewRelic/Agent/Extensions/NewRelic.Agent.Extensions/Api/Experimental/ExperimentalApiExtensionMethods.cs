@@ -14,5 +14,10 @@
 		{
 			return agent as IAgentExperimental;
 		}
+
+		public static ISegmentExperimental GetExperimentalApi(this ISegment segment)
+		{
+			return segment as ISegmentExperimental;
+		}
 	}
 }

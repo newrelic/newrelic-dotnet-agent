@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -29,9 +29,9 @@ namespace NewRelic.Agent.Configuration
 		IEnumerable<string> CaptureAttributesIncludes { get; }
 		IEnumerable<string> CaptureAttributesExcludes { get; }
 		IEnumerable<string> CaptureAttributesDefaultExcludes { get; }
-		bool CaptureTransactionEventsAttributes { get; }
-		IEnumerable<string> CaptureTransactionEventAttributesIncludes { get; }
-		IEnumerable<string> CaptureTransactionEventAttributesExcludes { get; }
+		bool TransactionEventsAttributesEnabled { get; }
+		HashSet<string> TransactionEventsAttributesInclude { get; }
+		HashSet<string> TransactionEventsAttributesExclude { get; }
 		bool CaptureTransactionTraceAttributes { get; }
 		IEnumerable<string> CaptureTransactionTraceAttributesIncludes { get; }
 		IEnumerable<string> CaptureTransactionTraceAttributesExcludes { get; }
@@ -60,6 +60,9 @@ namespace NewRelic.Agent.Configuration
 		bool DistributedTracingEnabled { get; }
 		bool SpanEventsEnabled { get; }
 		TimeSpan SpanEventsHarvestCycle { get; }
+		bool SpanEventsAttributesEnabled { get; }
+		HashSet<string> SpanEventsAttributesInclude { get; }
+		HashSet<string> SpanEventsAttributesExclude { get; }
 		string PrimaryApplicationId { get; }
 		string TrustedAccountKey { get; }
 		string AccountId { get; }
@@ -67,7 +70,7 @@ namespace NewRelic.Agent.Configuration
 		bool DatastoreTracerQueryParametersEnabled { get; }
 		bool ErrorCollectorEnabled { get; }
 		bool ErrorCollectorCaptureEvents { get; }
-		uint ErrorCollectorMaxEventSamplesStored { get; }
+		int ErrorCollectorMaxEventSamplesStored { get; }
 		TimeSpan ErrorEventsHarvestCycle { get; }
 		uint ErrorsMaximumPerPeriod { get; }
 		IEnumerable<string> ExceptionsToIgnore { get; }
@@ -101,12 +104,15 @@ namespace NewRelic.Agent.Configuration
 		IEnumerable<string> ThreadProfilingIgnoreMethods { get; }
 		bool CustomEventsEnabled { get; }
 		string CustomEventsEnabledSource { get; }
-		uint CustomEventsMaxSamplesStored { get; }
+		bool CustomEventsAttributesEnabled { get; }
+		HashSet<string> CustomEventsAttributesInclude { get; }
+		HashSet<string> CustomEventsAttributesExclude { get; }
+		int CustomEventsMaximumSamplesStored { get; }
 		TimeSpan CustomEventsHarvestCycle { get; }
 		bool DisableSamplers { get; }
 		bool ThreadProfilingEnabled { get; }
 		bool TransactionEventsEnabled { get; }
-		uint TransactionEventsMaxSamplesStored { get; }
+		int TransactionEventsMaximumSamplesStored { get; }
 		TimeSpan TransactionEventsHarvestCycle { get; }
 		bool TransactionEventsTransactionsEnabled { get; }
 		IEnumerable<RegexRule> TransactionNameRegexRules { get; }
@@ -141,11 +147,12 @@ namespace NewRelic.Agent.Configuration
 		bool UseResourceBasedNamingForWCFEnabled { get; }
 		bool EventListenerSamplersEnabled { get; set; }
 		int? SamplingTarget { get; }
-		uint SpanEventsMaxSamplesStored { get; }
+		int SpanEventsMaxSamplesStored { get; }
 		int? SamplingTargetPeriodInSeconds { get; }
 		bool PayloadSuccessMetricsEnabled { get; }
 		string ProcessHostDisplayName { get; }
-		uint DatabaseStatementCacheCapcity { get; }
+		int DatabaseStatementCacheCapcity { get; }
 		bool ForceSynchronousTimingCalculationHttpClient { get; }
+		bool ExcludeNewrelicHeader { get; }
 	}
 }

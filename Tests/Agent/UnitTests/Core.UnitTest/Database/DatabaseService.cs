@@ -1,4 +1,7 @@
-﻿using NUnit.Framework;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NUnit.Framework;
+using Telerik.JustMock;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
@@ -15,7 +18,7 @@ namespace NewRelic.Agent.Core.Database.UnitTest
 			[SetUp]
 			public void Setup()
 			{
-				_databaseService = new DatabaseService();
+				_databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
 			}
 
 			[TearDown]
@@ -31,7 +34,7 @@ namespace NewRelic.Agent.Core.Database.UnitTest
 				const string unobfuscatedSql = "select foo from bar where credit_card=123456789";
 
 				// ACT
-				var obfuscatedSql = _databaseService.SqlObfuscator.GetObfuscatedSql(unobfuscatedSql);
+				var obfuscatedSql = _databaseService.GetObfuscatedSql(unobfuscatedSql, DatastoreVendor.MSSQL);
 
 				// ASSERT
 				Assert.IsNotNull(obfuscatedSql);

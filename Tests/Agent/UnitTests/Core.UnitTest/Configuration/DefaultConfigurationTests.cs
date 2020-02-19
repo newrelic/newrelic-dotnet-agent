@@ -60,37 +60,27 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			Assert.IsFalse(_defaultConfig.AgentEnabled);
 		}
 
-		[TestCase(null, null, null, ExpectedResult = true)]
 		[TestCase(null, null, true, ExpectedResult = true)]
 		[TestCase(null, null, false, ExpectedResult = false)]
-		[TestCase(null, true, null, ExpectedResult = true)]
 		[TestCase(null, true, true, ExpectedResult = true)]
 		[TestCase(null, true, false, ExpectedResult = false)]
-		[TestCase(null, false, null, ExpectedResult = false)]
-		[TestCase(null, false, true, ExpectedResult = true)]
+		[TestCase(null, false, true, ExpectedResult = false)]
 		[TestCase(null, false, false, ExpectedResult = false)]
-		[TestCase(true, null, null, ExpectedResult = true)]
 		[TestCase(true, null, true, ExpectedResult = true)]
 		[TestCase(true, null, false, ExpectedResult = false)]
-		[TestCase(true, true, null, ExpectedResult = true)]
 		[TestCase(true, true, true, ExpectedResult = true)]
 		[TestCase(true, true, false, ExpectedResult = false)]
-		[TestCase(true, false, null, ExpectedResult = false)]
-		[TestCase(true, false, true, ExpectedResult = true)]
+		[TestCase(true, false, true, ExpectedResult = false)]
 		[TestCase(true, false, false, ExpectedResult = false)]
-		[TestCase(false, null, null, ExpectedResult = false)]
 		[TestCase(false, null, true, ExpectedResult = false)]
 		[TestCase(false, null, false, ExpectedResult = false)]
-		[TestCase(false, true, null, ExpectedResult = false)]
 		[TestCase(false, true, true, ExpectedResult = false)]
 		[TestCase(false, true, false, ExpectedResult = false)]
-		[TestCase(false, false, null, ExpectedResult = false)]
 		[TestCase(false, false, true, ExpectedResult = false)]
 		[TestCase(false, false, false, ExpectedResult = false)]
-		public bool TransactionEventsCanBeDisbledByServer(bool? server, bool? legacyLocal, bool? local)
+		public bool TransactionEventsCanBeDisbledByServer(bool? server, bool? legacyLocal, bool local)
 		{
-			_localConfig.transactionEvents.enabled = local ?? default(bool);
-			_localConfig.transactionEvents.enabledSpecified = local.HasValue;
+			_localConfig.transactionEvents.enabled = local;
 
 			_localConfig.analyticsEvents.enabled = legacyLocal ?? default(bool);
 			_localConfig.analyticsEvents.enabledSpecified = legacyLocal.HasValue;
@@ -191,13 +181,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void TransactionEventsMaxSamplesStoredPassesThroughToLocalConfig()
 		{
-			Assert.AreEqual(10000, _defaultConfig.TransactionEventsMaxSamplesStored);
+			Assert.AreEqual(10000, _defaultConfig.TransactionEventsMaximumSamplesStored);
 
 			_localConfig.transactionEvents.maximumSamplesStored = 10001;
-			Assert.AreEqual(10001, _defaultConfig.TransactionEventsMaxSamplesStored);
+			Assert.AreEqual(10001, _defaultConfig.TransactionEventsMaximumSamplesStored);
 
 			_localConfig.transactionEvents.maximumSamplesStored = 9999;
-			Assert.AreEqual(9999, _defaultConfig.TransactionEventsMaxSamplesStored);
+			Assert.AreEqual(9999, _defaultConfig.TransactionEventsMaximumSamplesStored);
 		}
 
 		[Test]
@@ -207,10 +197,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
 			};
 
-			Assert.AreEqual(10, _defaultConfig.TransactionEventsMaxSamplesStored);
+			Assert.AreEqual(10, _defaultConfig.TransactionEventsMaximumSamplesStored);
 		}
 
 		[Test]
@@ -221,7 +211,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.TransactionEventHarvestLimitKey, 10 } }
 			};
 			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.TransactionEventsHarvestCycle);
 		}
@@ -425,14 +415,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		}
 
 		[TestCase(50, ExpectedResult = 50)]
-		public uint ErrorCollectorMaxNumberEventSamplesSetFromLocal(int local)
+		public int ErrorCollectorMaxNumberEventSamplesSetFromLocal(int local)
 		{
 			_localConfig.errorCollector.maxEventSamplesStored = local;
 			return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
 		}
 
 		[TestCase(ExpectedResult = 100)]
-		public uint ErrorCollectorMaxNumberEventSamplesDefaultFromLocal()
+		public int ErrorCollectorMaxNumberEventSamplesDefaultFromLocal()
 		{
 			return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
 		}
@@ -444,7 +434,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
 			};
 
 			Assert.AreEqual(10, _defaultConfig.ErrorCollectorMaxEventSamplesStored);
@@ -458,7 +448,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.ErrorEventHarvestLimitKey, 10 } }
 			};
 			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.ErrorEventsHarvestCycle);
 		}
@@ -1090,18 +1080,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			Assert.IsTrue(_defaultConfig.CaptureTransactionTraceAttributes);
 		}
 
-		[TestCase(true, false, ExpectedResult = true)]
-		[TestCase(true, true, ExpectedResult = true)]
-		[TestCase(false, false, ExpectedResult = false)]
-		[TestCase(false, true, ExpectedResult = false)]
-		public bool TransactionEventOverridesDeprecatedValue(bool propertyEnabled, bool deprecatedEnabled)
-		{
-			_localConfig.analyticsEvents.captureAttributes = deprecatedEnabled;
-			_localConfig.transactionEvents.attributes.enabled = propertyEnabled;
-
-			return _defaultConfig.CaptureTransactionEventsAttributes;
-		}
-
 		[TestCase(true, ExpectedResult = true)]
 		[TestCase(false, ExpectedResult = false)]
 		public bool AnalyticsEventDeprecatedValueOverridesDefault(bool deprecatedEnabled)
@@ -1109,23 +1087,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_localConfig.analyticsEvents.captureAttributesSpecified = false;
 			_localConfig.transactionEvents.attributes.enabled = deprecatedEnabled;
 
-			return _defaultConfig.CaptureTransactionEventsAttributes;
+			return _defaultConfig.TransactionEventsAttributesEnabled;
 		}
 
 		[Test]
 		public void TransactionEventUsesDefaultWhenNoConfigValues()
 		{
 			_localConfig.analyticsEvents.captureAttributesSpecified = false;
-			_localConfig.transactionEvents.attributes.enabledSpecified = false;
 
-			Assert.IsTrue(_defaultConfig.CaptureTransactionEventsAttributes);
+			Assert.IsTrue(_defaultConfig.TransactionEventsAttributesEnabled);
 		}
 
 		[Test]
 		public void DeprecatedIgnoreIdentityParametersValueBecomesExclude()
 		{
 			_localConfig.parameterGroups.identityParameters.ignore = new List<string>() {"foo"};
-			_localConfig.transactionEvents.attributes.enabledSpecified = false;
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.foo"));
 		}
@@ -1134,7 +1110,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void DeprecatedIgnoreCustomParametersValueBecomesExclude()
 		{
 			_localConfig.parameterGroups.customParameters.ignore = new List<string>() {"foo"};
-			_localConfig.transactionEvents.attributes.enabledSpecified = false;
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("foo"));
 		}
@@ -1143,7 +1118,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void DeprecatedIgnoreResponseHeaderParametersValueBecomesExclude()
 		{
 			_localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() {"foo"};
-			_localConfig.transactionEvents.attributes.enabledSpecified = false;
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.foo"));
 		}
@@ -1152,7 +1126,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void DeprecatedIgnoreRequestHeaderParametersValueBecomesExclude()
 		{
 			_localConfig.parameterGroups.requestHeaderParameters.ignore = new List<string>() {"foo"};
-			_localConfig.transactionEvents.attributes.enabledSpecified = false;
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.headers.foo"));
 		}
@@ -1161,7 +1134,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void Property_deprecated_ignore_requestParameters_value_becomes_exclude()
 		{
 			_localConfig.requestParameters.ignore = new List<string>() {"foo"};
-			_localConfig.transactionEvents.attributes.enabledSpecified = false;
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.parameters.foo"));
 		}
@@ -2007,7 +1979,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
 			};
 
 			Assert.AreEqual(10, _defaultConfig.SpanEventsMaxSamplesStored);
@@ -2021,7 +1993,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.SpanEventHarvestLimitKey, 10 } }
 			};
 			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.SpanEventsHarvestCycle);
 		}
@@ -2032,9 +2004,48 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.SpanEventHarvestLimitKey, 0 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.SpanEventHarvestLimitKey, 0 } }
 			};
 			Assert.IsFalse(_defaultConfig.SpanEventsEnabled);
+		}
+
+		[TestCase(false, false, false)]
+		[TestCase(false, true, false)]
+		[TestCase(true, true, true)]
+		[TestCase(true, false, false)]
+		public void SpanEventsAttributesEnabled(bool globalAttributes, bool localAttributes, bool expectedResult)
+		{
+			_localConfig.attributes.enabled = globalAttributes;
+			_localConfig.spanEvents.attributes.enabled = localAttributes;
+			Assert.AreEqual(expectedResult, _defaultConfig.SpanEventsAttributesEnabled);
+		}
+
+		[TestCase(true, true, new[] { "att1", "att2" }, new string[] { })]
+		[TestCase(true, false, new[] { "att1", "att2" }, new string[] { })]
+		[TestCase(false, false, new[] { "att1", "att2" }, new string[] { })]
+		[TestCase(false, true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
+		public void SpanEventsAttributesInclude(bool highSecurity, bool localAttributesEnabled, string[] attributes, string[] expectedResult)
+		{
+			_localConfig.highSecurity.enabled = highSecurity;
+			_localConfig.spanEvents.attributes.enabled = localAttributesEnabled;
+			_localConfig.spanEvents.attributes.include = new List<string>(attributes);
+			Assert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesInclude.Count());
+		}
+
+		[TestCase(false, new[] { "att1", "att2" }, new string[] { })]
+		[TestCase(true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
+		public void SpanEventsAttributesIncludeClearedBySecurityPolicy(bool securityPolicyEnabled, string[] attributes, string[] expectedResult)
+		{
+			SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
+			_localConfig.spanEvents.attributes.include = new List<string>(attributes);
+			Assert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesInclude.Count());
+		}
+
+		[TestCase(new[] { "att1", "att2" }, new[] { "att1", "att2" })]
+		public void SpanEventsAttributesExclude(string[] attributes, string[] expectedResult)
+		{
+			_localConfig.spanEvents.attributes.exclude = new List<string>(attributes);
+			Assert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesExclude.Count());
 		}
 
 		#endregion
@@ -2155,7 +2166,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		{
 			_localConfig.attributes.enabled = globalAttributes;
 			_localConfig.transactionEvents.attributes.enabled = localAttributes;
-			Assert.AreEqual(expectedResult, _defaultConfig.CaptureTransactionEventsAttributes);
+			Assert.AreEqual(expectedResult, _defaultConfig.TransactionEventsAttributesEnabled);
 		}
 
 
@@ -2169,7 +2180,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_localConfig.transactionEvents.attributes.enabled = localAttributesEnabled;
 			_localConfig.transactionEvents.attributes.include = new List<string>(attributes);
 
-			Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureTransactionEventAttributesIncludes.Count());
+			Assert.AreEqual(expectedResult.Length, _defaultConfig.TransactionEventsAttributesInclude.Count());
 		}
 
 		[TestCase(false, new[] { "att1", "att2" }, new string[] { })]
@@ -2179,7 +2190,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			SetupNewConfigsWithSecurityPolicy("attributes_include", securityPolicyEnabled);
 			_localConfig.transactionEvents.attributes.include = new List<string>(attributes);
 
-			Assert.AreEqual(expectedResult.Length, _defaultConfig.CaptureTransactionEventAttributesIncludes.Count());
+			Assert.AreEqual(expectedResult.Length, _defaultConfig.TransactionEventsAttributesInclude.Count());
 		}
 
 		[TestCase(false, false, false)]
@@ -2332,13 +2343,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void CustomEventsMaxSamplesStoredPassesThroughToLocalConfig()
 		{
-			Assert.That(_defaultConfig.CustomEventsMaxSamplesStored, Is.EqualTo(10000));
+			Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(10000));
 
 			_localConfig.customEvents.maximumSamplesStored = 10001;
-			Assert.That(_defaultConfig.CustomEventsMaxSamplesStored, Is.EqualTo(10001));
+			Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(10001));
 
 			_localConfig.customEvents.maximumSamplesStored = 9999;
-			Assert.That(_defaultConfig.CustomEventsMaxSamplesStored, Is.EqualTo(9999));
+			Assert.That(_defaultConfig.CustomEventsMaximumSamplesStored, Is.EqualTo(9999));
 		}
 
 		[Test]
@@ -2348,10 +2359,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
 			};
 
-			Assert.AreEqual(10, _defaultConfig.CustomEventsMaxSamplesStored);
+			Assert.AreEqual(10, _defaultConfig.CustomEventsMaximumSamplesStored);
 		}
 
 		[Test]
@@ -2362,7 +2373,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.EventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, uint> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.CustomEventHarvestLimitKey, 10 } }
 			};
 			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.CustomEventsHarvestCycle);
 		}

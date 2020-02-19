@@ -5,7 +5,6 @@ using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;

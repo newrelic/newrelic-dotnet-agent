@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Requests;
@@ -7,8 +7,6 @@ using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using Telerik.JustMock;
 
 // ReSharper disable InconsistentNaming
@@ -21,13 +19,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestFixture, Category("Configuration")]
 		public class Event_ConfigurationDeserialized
 		{
-			private DatabaseStatementParser _databaseStatementParser;
 			private ConfigurationService _configurationService;
 
 			[SetUp]
 			public void SetUp()
 			{
-				_databaseStatementParser = new DatabaseStatementParser();
 				_configurationService = new ConfigurationService(Mock.Create<IEnvironment>(), Mock.Create<IProcessStatic>(),
 					Mock.Create<IHttpRuntimeStatic>(), Mock.Create<IConfigurationManagerStatic>(), Mock.Create<IDnsStatic>());
 			}
@@ -35,7 +31,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			[TearDown]
 			public void TearDown()
 			{
-				_databaseStatementParser.Dispose();
 				_configurationService.Dispose();
 			}
 
@@ -49,43 +44,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 				}
 
 				Assert.IsTrue(wasCalled);
-			}
-
-			[Test]
-			public void DatabaseStatementCacheCapacityIsDefault()
-			{
-				var wasCalled = false;
-				using (new EventSubscription<ConfigurationUpdatedEvent>(_ => wasCalled = true))
-				{
-					EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(new configuration()));
-				}
-
-				Assert.IsTrue(wasCalled);
-
-				var defaultCapacity = 1000; 
-				Assert.AreEqual(defaultCapacity, _databaseStatementParser.CacheCapacity);
-			}
-
-			[Test]
-			public void DatabaseStatementCacheCapacityGetUpdated()
-			{
-
-				EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(new configuration()));
-
-				var defaultCapacity = 1000;
-				Assert.AreEqual(defaultCapacity, _databaseStatementParser.CacheCapacity);
-
-				var newCapacity = 2000;
-				var newConfiguration = new configuration()
-				{
-					appSettings = new List<configurationAdd>()
-					{
-						new configurationAdd() {key = "SqlStatementCacheCapacity", value = "2000"}
-					}
-				};
-				EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(newConfiguration));
-
-				Assert.AreEqual(newCapacity, _databaseStatementParser.CacheCapacity);
 			}
 		}
 

@@ -13,13 +13,13 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 		private const string DomainName = "Domain-Name";
 		private const string EmptyDomainName = "";
 
-		private NetworkData _mockNetworkData;
+		private INetworkData _mockNetworkData;
 		private NetworkData _realNetworkData;
 
 		[SetUp]
 		public void Setup()
 		{
-			_mockNetworkData = Mock.Create<NetworkData>(); // need to mock class not interface to allow CallOriginal to function.
+			_mockNetworkData = Mock.Create<INetworkData>();
 			_realNetworkData = new NetworkData();
 			
 		}

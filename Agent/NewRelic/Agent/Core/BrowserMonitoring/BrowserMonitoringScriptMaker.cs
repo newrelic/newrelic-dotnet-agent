@@ -1,14 +1,14 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core;
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using System;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
+using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			return new BrowserMonitoringConfigurationData(licenseKey, beacon, errorBeacon, browserMonitoringKey, applicationId, obfuscatedTransactionName, queueTime, applicationTime, jsAgentPayloadFile, obfuscatedFormattedAttributes, sslForHttp);
 		}
 
-		private string GetObfuscatedFormattedAttributes(Attributes attributes,string licenseKey)
+		private string GetObfuscatedFormattedAttributes(AttributeCollection attributes,string licenseKey)
 		{
 			if (attributes == null || attributes.Count() == 0)
 			{

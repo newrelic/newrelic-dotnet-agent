@@ -16,9 +16,9 @@ namespace NewRelic.Agent.Core.Configuration
 		public int? ReportPeriodMs { get; set; }
 
 		[JsonProperty("harvest_limits")]
-		public Dictionary<string, uint> HarvestLimits { get; set; }
+		public Dictionary<string, int> HarvestLimits { get; set; }
 
-		public uint? ErrorEventHarvestLimit()
+		public int? ErrorEventHarvestLimit()
 		{
 			return GetEventHarvestLimitFor(ErrorEventHarvestLimitKey);
 		}
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return GetEventHarvestCycleFor(ErrorEventHarvestLimitKey);
 		}
 
-		public uint? CustomEventHarvestLimit()
+		public int? CustomEventHarvestLimit()
 		{
 			return GetEventHarvestLimitFor(CustomEventHarvestLimitKey);
 		}
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return GetEventHarvestCycleFor(CustomEventHarvestLimitKey);
 		}
 
-		public uint? TransactionEventHarvestLimit()
+		public int? TransactionEventHarvestLimit()
 		{
 			return GetEventHarvestLimitFor(TransactionEventHarvestLimitKey);
 		}
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return GetEventHarvestCycleFor(TransactionEventHarvestLimitKey);
 		}
 
-		public uint? SpanEventHarvestLimit()
+		public int? SpanEventHarvestLimit()
 		{
 			return GetEventHarvestLimitFor(SpanEventHarvestLimitKey);
 		}
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Configuration
 			return GetEventHarvestCycleFor(SpanEventHarvestLimitKey);
 		}
 
-		private uint? GetEventHarvestLimitFor(string eventType)
+		private int? GetEventHarvestLimitFor(string eventType)
 		{
 			if (HarvestLimits == null || !ReportPeriodMs.HasValue || !HarvestLimits.ContainsKey(eventType)) return null;
 

@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
-using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -9,7 +8,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -22,25 +20,16 @@ namespace NewRelic.Agent.Core.Aggregators
 	public class MetricAggregator : AbstractAggregator<IAllMetricStatsCollection>, IMetricAggregator
 	{
 		private MetricStatsEngineQueue _metricStatsEngineQueue;
-		private readonly IAgentHealthReporter _agentHealthReporter;
-		private readonly IDnsStatic _dnsStatic;
-		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
 		private readonly IMetricBuilder _metricBuilder;
 		private readonly IMetricNameService _metricNameService;
-		private readonly ISqlParsingCacheSupportabilityMetricReporter _sqlParsingCacheSupportabilityMetricReporter;
-		private readonly ICATSupportabilityMetricCounters _catSupportabilityMetricCounters;
+		private readonly IEnumerable<IOutOfBandMetricSource> _outOfBandMetricSources;
 
-		// We are not sold on the pattern on adding additional counters to this constructor when we already pass in the agentHealthReporter, which is what eventually consumes the counters.
-		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, ISqlParsingCacheSupportabilityMetricReporter sqlParsingCacheSupportabilityMetricReporter, ICATSupportabilityMetricCounters catSupportabilityMetricCounters) 
+		public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IProcessStatic processStatic, IScheduler scheduler)
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_metricBuilder = metricBuilder;
 			_metricNameService = metricNameService;
-			_agentHealthReporter = agentHealthReporter;
-			_dnsStatic = dnsStatic;
-			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
-			_sqlParsingCacheSupportabilityMetricReporter = sqlParsingCacheSupportabilityMetricReporter;
-			_catSupportabilityMetricCounters = catSupportabilityMetricCounters;
+			_outOfBandMetricSources = outOfBandMetricSources;
 
 			foreach (var source in outOfBandMetricSources)
 			{
@@ -71,19 +60,10 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			Log.Info("Metric harvest starting.");
 
-			_agentHealthReporter.CollectDistributedTraceSuccessMetrics();
-
-			_agentHealthReporter.ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
-
-			_agentHealthReporter.ReportIfHostIsLinuxOs();
-			_agentHealthReporter.ReportDotnetVersion();
-
-			_agentHealthReporter.ReportAgentInfo();
-
-			_sqlParsingCacheSupportabilityMetricReporter.CollectMetrics();
-
-			_apiSupportabilityMetricCounters.CollectMetrics();
-			_catSupportabilityMetricCounters.CollectMetrics();
+			foreach (var source in _outOfBandMetricSources)
+			{
+				source.CollectMetrics();
+			}
 
 			var oldMetrics = GetStatsEngineForHarvest();
 

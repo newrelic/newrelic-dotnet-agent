@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,7 +27,7 @@ namespace NewRelic.Agent.Core.Aggregators
 	{
 		private IDataTransportService _dataTransportService;
 		private IMetricBuilder _metricBuilder;
-		private IOutOfBandMetricSource _outOfBandMetricSource;
+		private IOutOfBandMetricSource[] _outOfBandMetricSources;
 		private IAgentHealthReporter _agentHealthReporter;
 		private IMetricNameService _metricNameService;
 		private MetricAggregator _metricAggregator;
@@ -47,21 +47,18 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
 			_metricBuilder = WireModels.Utilities.GetSimpleMetricBuilder();
-			_outOfBandMetricSource = Mock.Create<IOutOfBandMetricSource>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+			_outOfBandMetricSources = new IOutOfBandMetricSource[] { (IOutOfBandMetricSource)_agentHealthReporter };
 			_dnsStatic = Mock.Create<IDnsStatic>();
 			_processStatic = Mock.Create<IProcessStatic>();
 			_metricNameService = Mock.Create<IMetricNameService>();
 			Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 
 			var scheduler = Mock.Create<IScheduler>();
-			var apiSupportabilityMetricCounters = Mock.Create<IApiSupportabilityMetricCounters>();
-			var catSupportabilityMetricCounters = Mock.Create<ICATSupportabilityMetricCounters>();
-			var sqlParsingCacheSupportabilityMetricReporter = Mock.Create<ISqlParsingCacheSupportabilityMetricReporter>();
 			
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
-			_metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, new[] { _outOfBandMetricSource }, _agentHealthReporter, _dnsStatic, _processStatic, scheduler, apiSupportabilityMetricCounters, sqlParsingCacheSupportabilityMetricReporter, catSupportabilityMetricCounters);
+			_metricAggregator = new MetricAggregator(_dataTransportService, _metricBuilder, _metricNameService, _outOfBandMetricSources, _processStatic, scheduler);
 
 			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
@@ -76,17 +73,21 @@ namespace NewRelic.Agent.Core.Aggregators
 		[Test]
 		public void Constructor_RegistersWithOutOfBandMetricSources()
 		{
-			Mock.Assert(() => _outOfBandMetricSource.RegisterPublishMetricHandler(Arg.IsAny<PublishMetricDelegate>()));
+			foreach (var source in _outOfBandMetricSources)
+			{
+				Mock.Assert(() => source.RegisterPublishMetricHandler(Arg.IsAny<PublishMetricDelegate>()));
+			}
 		}
 
 		[Test]
-		public void Harvest_ReportsAgentVersionAgentHealthReporter()
+		public void Harvest_CallsCollectMetricsOnOutOfBandMetricSources()
 		{
-			Mock.Arrange(() => _dnsStatic.GetHostName()).Returns("foo");
-
 			_harvestAction();
 
-			Mock.Assert(() => _agentHealthReporter.ReportAgentVersion(AgentVersion.Version, "foo"));
+			foreach (var source in _outOfBandMetricSources)
+			{
+				Mock.Assert(() => source.CollectMetrics());
+			}
 		}
 
 		[Test]
@@ -139,14 +140,11 @@ namespace NewRelic.Agent.Core.Aggregators
 			var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			var dnsStatic = Mock.Create<IDnsStatic>();
 			var processStatic = Mock.Create<IProcessStatic>();
-			var apiSupportabilityMetricCounters = Mock.Create<IApiSupportabilityMetricCounters>();
-			var catSupportabilityMetricCounters = Mock.Create<ICATSupportabilityMetricCounters>();
-			var sqlParsingCacheSupportabilityMetricReporter = Mock.Create<ISqlParsingCacheSupportabilityMetricReporter>();
 
 			var scheduler = Mock.Create<IScheduler>();
 			Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
 				.DoInstead<Action, TimeSpan, TimeSpan?>((action, _, __) => _harvestAction = action);
-			_metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, agentHealthReporter, dnsStatic, processStatic, scheduler, apiSupportabilityMetricCounters, sqlParsingCacheSupportabilityMetricReporter, catSupportabilityMetricCounters);
+			_metricAggregator = new MetricAggregator(dataTransportService, metricBuilder, _metricNameService, new[] { outOfBandMetricSource }, processStatic, scheduler);
 
 			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 

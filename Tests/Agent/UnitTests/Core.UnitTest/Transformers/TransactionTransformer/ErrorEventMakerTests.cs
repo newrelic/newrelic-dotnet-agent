@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
@@ -11,9 +11,11 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
+using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Segments;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -61,7 +63,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", isSynthetics: false, isCAT: false, referrerUri: "http://referrer.uri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
-			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 
@@ -75,12 +77,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual(false, errorEvent.IsSynthetics()),
-				() => Assert.AreEqual(6, agentAttributes.Length),
+				() => Assert.AreEqual(7, agentAttributes.Length),
 				() => Assert.AreEqual(7, intrinsicAttributes.Length),
 				() => Assert.AreEqual(0, userAttributes.Length),
 
 				() => Assert.Contains("queue_wait_time_ms", agentAttributes),
 				() => Assert.Contains("response.status", agentAttributes),
+				() => Assert.Contains("http.statusCode", agentAttributes),
 				() => Assert.Contains("original_url", agentAttributes),
 				() => Assert.Contains("request.uri", agentAttributes),
 				() => Assert.Contains("request.referer", agentAttributes),
@@ -119,7 +122,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual(false, errorEvent.IsSynthetics()),
-				() => Assert.AreEqual(6, agentAttributes.Length),
+				() => Assert.AreEqual(7, agentAttributes.Length),
 				() => Assert.AreEqual(7, intrinsicAttributes.Length),
 				() => Assert.AreEqual(0, userAttributes.Length),
 
@@ -127,6 +130,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.Contains("response.status", agentAttributes),
 				() => Assert.Contains("original_url", agentAttributes),
 				() => Assert.Contains("request.uri", agentAttributes),
+				() => Assert.Contains("http.statusCode", agentAttributes),
 				() => Assert.Contains("request.referer", agentAttributes),
 				() => Assert.Contains("host.displayName", agentAttributes),
 
@@ -171,12 +175,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual(true, errorEvent.IsSynthetics()),
 
-				() => Assert.AreEqual(6, agentAttributes.Length),
+				() => Assert.AreEqual(7, agentAttributes.Length),
 				() => Assert.AreEqual(16, intrinsicAttributes.Length),
 				() => Assert.AreEqual(1, userAttributes.Length),
 
 				() => Assert.Contains("queue_wait_time_ms", agentAttributes),
 				() => Assert.Contains("response.status", agentAttributes),
+				() => Assert.Contains("http.statusCode", agentAttributes),
 				() => Assert.Contains("original_url", agentAttributes),
 				() => Assert.Contains("request.uri", agentAttributes),
 				() => Assert.Contains("request.referer", agentAttributes),
@@ -207,7 +212,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public void GetErrorEvent_NoTransaction_WithException_ContainsCorrectAttributes()
 		{
 			// Arrange
-			var customAttributes = new Attributes();
+			var customAttributes = new AttributeCollection();
 
 			customAttributes.Add(Attribute.BuildCustomAttribute("custom attribute name", "custom attribute value"));
 			var errorData = ErrorData.FromException(new System.NullReferenceException("NRE message"), false);
@@ -260,10 +265,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
 
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false);
 
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
 			var transactionMetadata = internalTransaction.TransactionMetadata;
 			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
@@ -315,9 +320,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private static ImmutableSegmentTreeNode BuildNode(TimeSpan relativeStart = new TimeSpan(), TimeSpan? duration = null)
 		{
 			var methodCallData = new MethodCallData("typeName", "methodName", 1);
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			segment.SetSegmentData(new SimpleSegmentData(""));
+
 			return new SegmentTreeNodeBuilder(
-				new TypedSegment<SimpleSegmentData>(relativeStart, duration ?? TimeSpan.Zero, 
-				new TypedSegment<SimpleSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, new SimpleSegmentData(""), false)))
+				new Segment(relativeStart, duration ?? TimeSpan.Zero, segment, null))
 				.Build();
 		}
 

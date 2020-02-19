@@ -1,14 +1,17 @@
-﻿using System;
+using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -17,11 +20,13 @@ namespace NewRelic.Agent.Core.Transformers
 	{
 
 		private IConfigurationService _configurationService;
+		private IDatabaseService _databaseService;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_configurationService = Mock.Create<IConfigurationService>();
+			_databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
 		}
 
 		#region Transform
@@ -264,19 +269,23 @@ namespace NewRelic.Agent.Core.Transformers
 		}
 		#endregion Transform
 
-		private static Segment GetSegment(DatastoreVendor vendor, string operation, string model, CrossApplicationResponseData catResponseData = null)
+		private Segment GetSegment(DatastoreVendor vendor, string operation, string model)
 		{
-			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, operation));
-			return new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), data);
+			var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, operation));
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			segment.SetSegmentData(data);
+
+			return segment;
 		}
 
-		private static TypedSegment<DatastoreSegmentData> GetSegment(DatastoreVendor vendor, string operation, string model, double duration, CrossApplicationResponseData catResponseData = null, string host = null, string portPathOrId = null)
+		private Segment GetSegment(DatastoreVendor vendor, string operation, string model, double duration, CrossApplicationResponseData catResponseData = null, string host = null, string portPathOrId = null)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
-			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, operation), null, new ConnectionInfo(host, portPathOrId, null));
+			var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, operation), null, new ConnectionInfo(host, portPathOrId, null));
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			segment.SetSegmentData(data);
 
-			return new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false)
-				.CreateSimilar(new TimeSpan(), TimeSpan.FromSeconds(duration), null) as TypedSegment<DatastoreSegmentData>;
+			return segment.CreateSimilar(new TimeSpan(), TimeSpan.FromSeconds(duration), null);
 		}
 	}
 }

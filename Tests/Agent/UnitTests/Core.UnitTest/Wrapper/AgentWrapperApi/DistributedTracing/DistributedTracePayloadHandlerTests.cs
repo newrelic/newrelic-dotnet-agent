@@ -3,8 +3,9 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -574,7 +575,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		private static IInternalTransaction BuildMockTransaction(bool hasIncomingPayload = false)
 		{
 			var transaction = Mock.Create<IInternalTransaction>();
-			var transactionMetadata = Mock.Create<TransactionMetadata>();
+			var transactionMetadata = Mock.Create<ITransactionMetadata>();
 			Mock.Arrange(() => transaction.TransactionMetadata).Returns(transactionMetadata);
 			
 			var transactionGuid = Guid.NewGuid().ToString();

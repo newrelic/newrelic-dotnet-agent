@@ -1,7 +1,7 @@
 ﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
@@ -693,7 +693,7 @@ namespace CompositeTests
 				category: "testing",
 				transactionDisplayName: "test",
 				doNotTrackAsUnitOfWork: true);
-			var segment = (TypedSegment<CustomSegmentData>)_agent.StartCustomSegmentOrThrow("parentSegment");
+			var segment = (Segment)_agent.StartCustomSegmentOrThrow("parentSegment");
 			//We need the child segment to run on a different thread than the parent
 			Task.Run(() =>
 			{
@@ -717,7 +717,7 @@ namespace CompositeTests
 				category: "testing",
 				transactionDisplayName: "test",
 				doNotTrackAsUnitOfWork: true);
-			var segment = (TypedSegment<CustomSegmentData>)_agent.StartCustomSegmentOrThrow("parentSegment");
+			var segment = (Segment)_agent.StartCustomSegmentOrThrow("parentSegment");
 			//We need the child segment to run on a different thread than the parent
 			Task.Run(() =>
 			{

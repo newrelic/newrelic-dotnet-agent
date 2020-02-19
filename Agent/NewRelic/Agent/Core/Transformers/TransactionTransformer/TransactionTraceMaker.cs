@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Helpers;
@@ -13,7 +14,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface ITransactionTraceMaker
 	{
-		TransactionTraceWireModel GetTransactionTrace(ImmutableTransaction immutableTransaction, IEnumerable<ImmutableSegmentTreeNode> segmentTrees, TransactionMetricName transactionMetricName, Attributes attributes);
+		TransactionTraceWireModel GetTransactionTrace(ImmutableTransaction immutableTransaction, IEnumerable<ImmutableSegmentTreeNode> segmentTrees, TransactionMetricName transactionMetricName, AttributeCollection attributes);
 	}
 
 	public class TransactionTraceMaker : ITransactionTraceMaker
@@ -28,7 +29,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_configurationService = configurationService;
 		}
 
-		public TransactionTraceWireModel GetTransactionTrace(ImmutableTransaction immutableTransaction, IEnumerable<ImmutableSegmentTreeNode> segmentTrees, TransactionMetricName transactionMetricName, Attributes attributes)
+		public TransactionTraceWireModel GetTransactionTrace(ImmutableTransaction immutableTransaction, IEnumerable<ImmutableSegmentTreeNode> segmentTrees, TransactionMetricName transactionMetricName, AttributeCollection attributes)
 		{
 			segmentTrees = segmentTrees.ToList();
 

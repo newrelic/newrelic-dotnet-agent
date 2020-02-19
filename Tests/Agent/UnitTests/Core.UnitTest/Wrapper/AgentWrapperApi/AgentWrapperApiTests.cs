@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
@@ -8,6 +8,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -66,7 +67,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private IAgentHealthReporter _agentHealthReporter;
 
 		private ITraceMetadataFactory _traceMetadataFactory;
-
+		private ICATSupportabilityMetricCounters _catMetrics;
+		private IThreadPoolStatic _threadPoolStatic;
 		private IAgentTimerService _agentTimerService;
 		private IMetricNameService _metricNameService;
 
@@ -94,10 +96,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			_transactionTransformer = Mock.Create<ITransactionTransformer>();
 
-			var threadPoolStatic = Mock.Create<IThreadPoolStatic>();
-			Mock.Arrange(() => threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>()))
+			_threadPoolStatic = Mock.Create<IThreadPoolStatic>();
+			Mock.Arrange(() => _threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>()))
 				.DoInstead<WaitCallback>(callback => callback(null));
-			Mock.Arrange(() => threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>(), Arg.IsAny<object>()))
+			Mock.Arrange(() => _threadPoolStatic.QueueUserWorkItem(Arg.IsAny<WaitCallback>(), Arg.IsAny<object>()))
 				.DoInstead<WaitCallback, object>((callback, state) => callback(state));
 
 			_transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
@@ -112,12 +114,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 			_metricNameService = new MetricNameService();
-			var catMetrics = Mock.Create<ICATSupportabilityMetricCounters>();
+			_catMetrics = Mock.Create<ICATSupportabilityMetricCounters>();
 
-			_distributedTracePayloadHandler = Mock.Create<DistributedTracePayloadHandler>(Behavior.CallOriginal, _configurationService, _agentHealthReporter, new AdaptiveSampler());
+			_distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 			_traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
 
-			_agent = new Agent(_transactionService, Mock.Create<ITimerFactory>(), _transactionTransformer, threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, catMetrics);
+			_agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics);
 		}
 
 		private class CallStackManagerFactory : ICallStackManagerFactory
@@ -384,14 +386,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(methodCall, "foo");
 			Assert.NotNull(opaqueSegment);
 
-			var segment = opaqueSegment as TypedSegment<SimpleSegmentData>;
+			var segment = opaqueSegment as Segment;
 			Assert.NotNull(segment);
 
-			var immutableSegment = segment as TypedSegment<SimpleSegmentData>;
+			var immutableSegment = segment as Segment;
+			var simpleSegmentData = immutableSegment.Data as SimpleSegmentData;
 			NrAssert.Multiple(
 				() => Assert.NotNull(immutableSegment.UniqueId),
 				() => Assert.AreEqual(expectedParentId, immutableSegment.ParentUniqueId),
-				() => Assert.AreEqual("foo", immutableSegment.TypedData.Name),
+				() => Assert.AreEqual("foo", simpleSegmentData?.Name),
 				() => Assert.AreEqual("System.String", immutableSegment.MethodCallData.TypeName),
 				() => Assert.AreEqual("methodName", immutableSegment.MethodCallData.MethodName),
 				() => Assert.AreEqual(RuntimeHelpers.GetHashCode(invocationTarget), immutableSegment.MethodCallData.InvocationTargetHashCode)
@@ -410,10 +413,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var opaqueSegment = _agent.CurrentTransaction.StartTransactionSegment(new MethodCall(new Method(typeof(string), "", ""), "", new object[0]), "foo");
 			Assert.NotNull(opaqueSegment);
 
-			var segment = opaqueSegment as TypedSegment<SimpleSegmentData>;
+			var segment = opaqueSegment as Segment;
 			Assert.NotNull(segment);
 
-			var immutableSegment = segment as TypedSegment<SimpleSegmentData>;
+			var immutableSegment = segment as Segment;
 			Assert.AreEqual(pushedUniqueId, immutableSegment.UniqueId);
 		}
 
@@ -587,6 +590,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void ProcessInboundRequest__ReportsSupportabilityMetric_NullPayload()
 		{
+			_distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
+			_agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics);
 			SetupTransaction();
 
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
@@ -674,11 +679,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				.Returns(expectedCatResponseData);
 
 			var headers = new Dictionary<string, string>();
-			var segment = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
+			var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			segment.SetSegmentData(externalSegmentData);
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
 
 			var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-			Assert.AreEqual(expectedCatResponseData, segment.TypedData.CrossApplicationResponseData);
+			Assert.AreEqual(expectedCatResponseData, externalSegmentData.CrossApplicationResponseData);
 			Assert.AreEqual(true, immutableTransactionMetadata.HasCatResponseHeaders);
 		}
 
@@ -689,7 +696,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(transaction);
 
 			var headers = new Dictionary<string, string>();
-			var segment = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
 
@@ -704,11 +712,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				.Returns(expectedCatResponseData);
 
 			var headers = new Dictionary<string, string>();
-			var segmentBuilder = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
+			var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
+			var segmentBuilder = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			segmentBuilder.SetSegmentData(externalSegmentData);
+
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segmentBuilder);
 
-			var builtSegment = segmentBuilder as TypedSegment<ExternalSegmentData>;
-			Assert.AreEqual(builtSegment.TypedData.CrossApplicationResponseData, expectedCatResponseData);
+			Assert.AreEqual(externalSegmentData.CrossApplicationResponseData, expectedCatResponseData);
 			Mock.Assert(() => _transaction.TransactionMetadata.MarkHasCatResponseHeaders(), Occurs.Never());
 		}
 
@@ -722,11 +732,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				.Returns(expectedCatResponseData);
 
 			var headers = new Dictionary<string, string>();
-			var segment = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
+			var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			segment.SetSegmentData(externalSegmentData);
+
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
 
 			var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-			Assert.AreEqual(expectedCatResponseData, segment.TypedData.CrossApplicationResponseData);
+			Assert.AreEqual(expectedCatResponseData, externalSegmentData.CrossApplicationResponseData);
 			Assert.AreEqual(true, immutableTransactionMetadata.HasCatResponseHeaders);
 		}
 
@@ -1005,7 +1018,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private void SetupTransaction()
 		{
 			var transactionName = TransactionName.ForWebTransaction("foo", "bar");
-			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, SqlObfuscator.GetObfuscatingSqlObfuscator(), default(float), Mock.Create<IDatabaseStatementParser>());
+			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>());
 
 			//_transactionService = Mock.Create<ITransactionService>();
 			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);

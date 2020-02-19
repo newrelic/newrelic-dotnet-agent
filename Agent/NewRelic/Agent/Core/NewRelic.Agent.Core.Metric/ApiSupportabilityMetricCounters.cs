@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core.Logging;
@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.Metric
 		CreateDistributedTracePayload = 0,
 		AcceptDistributedTracePayload = 1,
 		CurrentTransaction = 2,
-		AddCustomParameter = 3,
+		AddCustomParameter = 3,		//To Be replaced by AddCustomAttribute
 		DisableBrowserMonitoring = 4,
 		GetBrowserTimingHeader = 5,
 		IgnoreApdex = 6,
@@ -28,13 +28,13 @@ namespace NewRelic.Agent.Core.Metric
 		StartAgent = 17,
 		SetTransactionUri = 18,
 		TraceMetadata = 19,
-		GetLinkingMetadata = 20
+		GetLinkingMetadata = 20,
+		TransactionAddCustomAttribute = 21
 	}
 
 	public interface IApiSupportabilityMetricCounters : IOutOfBandMetricSource
 	{
 		void Record(ApiMethod method);
-		void CollectMetrics();
 	}
 
 	public class ApiSupportabilityMetricCounters : IApiSupportabilityMetricCounters

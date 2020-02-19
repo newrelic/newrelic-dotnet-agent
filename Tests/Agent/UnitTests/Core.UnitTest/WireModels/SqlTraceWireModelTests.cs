@@ -1,17 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -56,28 +59,29 @@ namespace NewRelic.Agent.Core.WireModels
 			var duration = TimeSpan.FromSeconds(1);
 			var guid = Guid.NewGuid().ToString();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
-			var databaseService = new DatabaseService();
-			var configurationService = Mock.Create<ConfigurationService>();
+			var databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+			var configurationService = Mock.Create<IConfigurationService>();
 			var attributeService = Mock.Create<IAttributeService>();
 			string[] queries = {Sql, "Select * from someTable", "Insert x into anotherTable", "another random string",
 				"1234567890!@#$%^&*()", "fjdksalfjdkla;fjdla;", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 				"NNNNNNNNNNNUUUUUUUUUUUUUUUUTTTTTTTTTTTTTTTHHHHHHHHHHHHHIIIIIIIIIIIIIIIIIIIINNNNNNNNNNNNNNNNNNNN",
 				double.MaxValue.ToString()};
-			var sqlTraceMaker = new SqlTraceMaker(configurationService, attributeService);
+			var sqlTraceMaker = new SqlTraceMaker(configurationService, attributeService, databaseService);
 			var traceDatas = new List<SqlTraceWireModel>();
 			
 			foreach (string query in queries)
 			{
-				var data = new DatastoreSegmentData(new ParsedSqlStatement(DatastoreVendor.MSSQL, null, null), query);
+				var data = new DatastoreSegmentData(databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, null, null), query);
+				var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("typeName", "methodName", 1));
+				segment.SetSegmentData(data);
+
 				var segments = new List<Segment>()
 					{
-						new TypedSegment<DatastoreSegmentData>(new TimeSpan(), TotalCallTime,
-							new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(),
-							new MethodCallData("typeName", "methodName", 1), data, false))
+						new Segment(new TimeSpan(), TotalCallTime, segment, null)
 					};
-				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, duration, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, duration, guid, false, false, false);
 
-				var sqlTraceData = sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, (TypedSegment<DatastoreSegmentData>)immutableTransaction.Segments.FirstOrDefault());
+				var sqlTraceData = sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, immutableTransaction.Segments.FirstOrDefault());
 				traceDatas.Add(sqlTraceData);
 			}
 

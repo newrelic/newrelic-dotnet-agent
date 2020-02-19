@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.SharedInterfaces
 {
@@ -6,6 +6,7 @@ namespace NewRelic.Agent.Core.SharedInterfaces
 
 	public interface IOutOfBandMetricSource
 	{
+		void CollectMetrics();
 		void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate);
 	}
 }

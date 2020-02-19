@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
@@ -11,20 +11,25 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public static class TestTransactions
 	{
+		private static IDatabaseService _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+
 		public static IConfiguration GetDefaultConfiguration()
 		{
 			var configuration = Mock.Create<IConfiguration>();
 
 			Mock.Arrange(() => configuration.TransactionTracerMaxSegments).Returns(666);
 			Mock.Arrange(() => configuration.TransactionEventsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.TransactionEventsMaxSamplesStored).Returns(10000);
+			Mock.Arrange(() => configuration.TransactionEventsMaximumSamplesStored).Returns(10000);
 			Mock.Arrange(() => configuration.TransactionEventsTransactionsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.CaptureTransactionEventsAttributes).Returns(true);
+			Mock.Arrange(() => configuration.TransactionEventsAttributesEnabled).Returns(true);
 			Mock.Arrange(() => configuration.ErrorCollectorEnabled).Returns(true);
 			Mock.Arrange(() => configuration.ErrorCollectorCaptureEvents).Returns(true);
 			Mock.Arrange(() => configuration.CaptureErrorCollectorAttributes).Returns(true);
@@ -43,9 +48,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var placeholderMetadataBuilder = new TransactionMetadata();
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 			
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false);
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(GetDefaultConfiguration(), immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			var internalTransaction = new Transaction(GetDefaultConfiguration(), immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>());
 			if (segments.Any())
 			{
 				foreach (var segment in segments)
@@ -55,7 +60,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			}
 			else if (addSegment)
 			{
-				internalTransaction.Add(SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, null, Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false));
+				internalTransaction.Add(SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false));
 			}
 			var transactionMetadata = internalTransaction.TransactionMetadata;
 			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, sampled);
@@ -74,18 +79,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			var guid = Guid.NewGuid().ToString();
 
-			var transaction = new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var transaction = new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false);
 			return transaction;
 		}
 
-		public static TypedSegment<DatastoreSegmentData> BuildSegment(ITransactionSegmentState txSegmentState, DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
+		public static Segment BuildSegment(ITransactionSegmentState txSegmentState, DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
 		{
 			if (txSegmentState == null)
 				txSegmentState = Mock.Create<ITransactionSegmentState>();
 			methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-			var data = new DatastoreSegmentData(new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
-			return new TypedSegment<DatastoreSegmentData>(startTime, duration, 
-				new TypedSegment<DatastoreSegmentData>(txSegmentState, methodCallData, data, false));
+			var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
+			var segment = new Segment(txSegmentState, methodCallData);
+			segment.SetSegmentData(data);
+
+			return new Segment(startTime, duration, segment, parameters);
 		}
 		private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, bool sampled = false)
 		{

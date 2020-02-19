@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using NewRelic.Agent.Api;
@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.AssemblyLoading;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Commands;
@@ -20,6 +21,7 @@ using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
@@ -29,7 +31,6 @@ using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
@@ -72,7 +73,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
 			container.Register<IThreadStatsSampleTransformer, ThreadStatsSampleTransformer>();
 			container.Register<IEnvironment, SystemInterfaces.Environment>();
-			container.Register<IAgent, Wrapper.AgentWrapperApi.Agent>();
+			container.Register<IAgent, Agent>();
 			container.Register<CpuSampler, CpuSampler>();
 			container.Register<MemorySampler, MemorySampler>();
 			container.Register<Func<ISampledEventListener<ThreadpoolThroughputEventsSample>>>(() => new ThreadEventsListener());
@@ -121,7 +122,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
 			container.Register<IApiSupportabilityMetricCounters, IOutOfBandMetricSource, ApiSupportabilityMetricCounters>();
 			container.Register<ICATSupportabilityMetricCounters, IOutOfBandMetricSource, CATSupportabilityMetricCounters>();
-			container.Register<ISqlParsingCacheSupportabilityMetricReporter, IOutOfBandMetricSource, SqlParsingCacheSupportabilityMetricReporter>();
+			container.Register<ICacheStatsReporter, IOutOfBandMetricSource, CacheStatsReporter>();
 			container.Register<IAgentTimerService, AgentTimerService>();
 #if NET45
 			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
@@ -168,7 +169,6 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			
 			container.Register<ITransactionService, TransactionService>();
 			container.Register<IAttributeService, AttributeService>();
-			container.Register<DatabaseService, DatabaseService>();
 			container.Register<CommandService, CommandService>();
 			container.Register<ConfigurationTracker, ConfigurationTracker>();
 			container.Register<IDatabaseService, DatabaseService>();

@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
-			ResetCollections(_configuration.TransactionEventsMaxSamplesStored);
+			ResetCollections(_configuration.TransactionEventsMaximumSamplesStored);
 		}
 
 		protected override TimeSpan HarvestCycle => _configuration.TransactionEventsHarvestCycle;
@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			var aggregatedEvents = transactionEvents.Union(originalSyntheticsTransactionEvents).ToList();
 
 			// EventHarvestData is required for extrapolation in the UI.
-			var eventHarvestData = new EventHarvestData(originalTransactionEvents.Size, (uint)originalTransactionEvents.GetAddAttemptsCount());
+			var eventHarvestData = new EventHarvestData(originalTransactionEvents.Size, originalTransactionEvents.GetAddAttemptsCount());
 
 			// if we don't have any events to publish then don't
 			if (aggregatedEvents.Count <= 0)
@@ -99,16 +99,16 @@ namespace NewRelic.Agent.Core.Aggregators
 			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
 			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-			ResetCollections(_configuration.TransactionEventsMaxSamplesStored);
+			ResetCollections(_configuration.TransactionEventsMaximumSamplesStored);
 		}
 
-		private void ResetCollections(uint transactionEventCollectionCapacity)
+		private void ResetCollections(int transactionEventCollectionCapacity)
 		{
 			GetAndResetRegularTransactionEvents(transactionEventCollectionCapacity);
 			GetAndResetSyntheticsTransactionEvents();
 		}
 
-		private IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> GetAndResetRegularTransactionEvents(uint transactionEventCollectionCapacity)
+		private IResizableCappedCollection<PrioritizedNode<TransactionEventWireModel>> GetAndResetRegularTransactionEvents(int transactionEventCollectionCapacity)
 		{
 			return Interlocked.Exchange(ref _transactionEvents, new ConcurrentPriorityQueue<PrioritizedNode<TransactionEventWireModel>>(transactionEventCollectionCapacity));
 		}
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(transactionEvents);
 					break;
 				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
-					ReduceReservoirSize((uint)(transactionEvents.Count * ReservoirReductionSizeMultiplier));
+					ReduceReservoirSize((int)(transactionEvents.Count * ReservoirReductionSizeMultiplier));
 					RetainEvents(transactionEvents);
 					break;
 				case DataTransportResponseStatus.Discard:
@@ -164,12 +164,12 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private uint GetReservoirSize()
+		private int GetReservoirSize()
 		{
 			return _transactionEvents.Size;
 		}
 
-		private void ReduceReservoirSize(uint newSize)
+		private void ReduceReservoirSize(int newSize)
 		{
 			if (newSize >= GetReservoirSize())
 				return;

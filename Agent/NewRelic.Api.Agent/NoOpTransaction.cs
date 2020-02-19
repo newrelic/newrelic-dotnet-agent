@@ -12,5 +12,10 @@
 		{
 			return _noOpDistributedTracePayload;
 		}
+
+		public ITransaction AddCustomAttribute(string key, object value)
+		{
+			return this;
+		}
 	}
 }

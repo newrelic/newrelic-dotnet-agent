@@ -169,13 +169,13 @@ namespace NewRelic.Agent.Core.DataTransport
 	public class EventHarvestConfigModel
 	{
 		[JsonProperty("harvest_limits")]
-		public readonly Dictionary<string, uint> HarvestLimits;
+		public readonly Dictionary<string, int> HarvestLimits;
 
 		public EventHarvestConfigModel(IConfiguration configuration)
 		{
-			HarvestLimits = new Dictionary<string, uint>() {
-				{ "analytic_event_data", configuration.TransactionEventsMaxSamplesStored },
-				{ "custom_event_data", configuration.CustomEventsMaxSamplesStored },
+			HarvestLimits = new Dictionary<string, int>() {
+				{ "analytic_event_data", configuration.TransactionEventsMaximumSamplesStored },
+				{ "custom_event_data", configuration.CustomEventsMaximumSamplesStored },
 				{ "error_event_data", configuration.ErrorCollectorMaxEventSamplesStored },
 				{ "span_event_data", configuration.SpanEventsMaxSamplesStored },
 			};

@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+﻿using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Events
 {

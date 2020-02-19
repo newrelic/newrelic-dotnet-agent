@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Threading;
-using NewRelic.Core.NewRelic.Cache;
+using NewRelic.Core.Caching;
 using NUnit.Framework;
 
 namespace NewRelic.Core.Tests.NewRelic.Cache
@@ -10,7 +10,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 		[Test]
 		public void CacheReturnsCorrectValuesForKeys()
 		{
-			uint capacity = 5;
+			int capacity = 5;
 			var cache = new SimpleCache<string, object>(capacity);
 
 			var val1 = "value1";
@@ -41,7 +41,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 			var val2 = "value2";
 			var val3 = "value3";
 
-			uint capacity = 5;
+			int capacity = 5;
 			var cache = new SimpleCache<string, string>(capacity);
 			cache.GetOrAdd("key1", () => val1);
 			cache.GetOrAdd("key2", () => val2);
@@ -75,7 +75,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 			var val5 = "value5";
 			var val6 = "value6";
 
-			uint capacity = 5;
+			int capacity = 5;
 			var cache = new SimpleCache<string, string>(capacity);
 
 			cache.GetOrAdd("key1", () => val1);
@@ -121,12 +121,12 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 		[Test]
 		public void Capacity_MatchesWhatItWasSetTo()
 		{
-			uint capacity = 5;
+			int capacity = 5;
 			var cache = new SimpleCache<string, string>(capacity);
 
 			Assert.AreEqual(capacity, cache.Capacity);
 
-			uint newCapacity = 10;
+			int newCapacity = 10;
 			cache.Capacity = newCapacity;
 
 			Assert.AreEqual(10, cache.Capacity);
@@ -144,7 +144,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 			var val7 = "value7";
 			var val8 = "value8";
 
-			uint capacity = 5;
+			int capacity = 5;
 			var cache = new SimpleCache<string, string>(capacity);
 
 			cache.GetOrAdd("key1", () => val1);
@@ -158,7 +158,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 			//This checks that the clearing didn't happen.
 			Assert.AreEqual(capacity, cache.Size);
 
-			uint newCapacity = 7;
+			int newCapacity = 7;
 			cache.Capacity = newCapacity;
 
 			cache.GetOrAdd("key6", () => val6);
@@ -191,7 +191,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 			var val4 = "value4";
 			var val5 = "value5";
 
-			uint capacity = 5;
+			int capacity = 5;
 			var cache = new SimpleCache<string, string>(capacity);
 
 			cache.GetOrAdd("key1", () => val1);
@@ -205,7 +205,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 			//This checks that the clearing didn't happen.
 			Assert.AreEqual(capacity, cache.Size);
 
-			uint newCapacity = 3;
+			int newCapacity = 3;
 			cache.Capacity = newCapacity;
 
 			Thread.Sleep(1000); //allow the cache to check it's size.
@@ -227,7 +227,7 @@ namespace NewRelic.Core.Tests.NewRelic.Cache
 			var val1 = "value1";
 			var val2 = "value2";
 
-			uint capacity = 5;
+			int capacity = 5;
 			var cache = new SimpleCache<string, string>(capacity);
 
 			cache.GetOrAdd("key1", () => val1);

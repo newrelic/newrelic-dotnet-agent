@@ -17,6 +17,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 		private static ConcurrentDictionary<Type, Func<object, object>> _getRestResponseFromGeneric = new ConcurrentDictionary<Type, Func<object, object>>();
 		private static ConcurrentDictionary<Type, Func<object, object>> _getHeadersFromInterface = new ConcurrentDictionary<Type, Func<object, object>>();
 		private static ConcurrentDictionary<Type, Func<object, object>> _getListElementsFromGeneric = new ConcurrentDictionary<Type, Func<object, object>>();
+		private static ConcurrentDictionary<Type, Func<object, object>> _getStatusCodeFromInterface = new ConcurrentDictionary<Type, Func<object, object>>();
 
 		public static Func<object, Enum> GetMethod => _getMethod ?? (_getMethod = VisibilityBypasser.Instance.GeneratePropertyAccessor<Enum>(RestSharpAssemblyName, "RestSharp.RestRequest", "Method"));
 
@@ -43,6 +44,12 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 		{
 			var getResponse = _getRestResponseFromGeneric.GetOrAdd(responseTask.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(t, "Result"));
 			return getResponse(responseTask);
+		}
+
+		public static int GetResponseStatusCode(object restResponse)
+		{
+			var getStatusCode = _getStatusCodeFromInterface.GetOrAdd(restResponse.GetType(), t => VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(RestSharpAssemblyName, "RestSharp.RestResponse", "StatusCode"));
+			return (int)getStatusCode(restResponse);
 		}
 
 		private static object[] GetListElementsAsArray(object owner)

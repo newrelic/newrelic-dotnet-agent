@@ -10,6 +10,7 @@ using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -19,7 +20,13 @@ namespace NewRelic.Agent.Core.Aggregators
 	[TestFixture]
 	public class CustomEventAggregatorTests
 	{
-		private readonly Dictionary<string, object> _emptyAttributes = new Dictionary<string, object>();
+		private readonly Dictionary<string, object> _intrinsicAttributes = new Dictionary<string, object>()
+		{
+			{ "type", "event type" },
+			{ "timestamp", DateTime.UtcNow.ToUnixTimeMilliseconds() }
+		};
+
+		private readonly Dictionary<string, object> _emptyCustomAttributes = new Dictionary<string, object>();
 
 		private IDataTransportService _dataTransportService;
 		private IAgentHealthReporter _agentHealthReporter;
@@ -85,7 +92,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			// Arrange
 			var configuration = Mock.Create<IConfiguration>();
 			Mock.Arrange(() => configuration.CustomEventsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.CustomEventsMaxSamplesStored).Returns(2);  //set the reservoir to only two
+			Mock.Arrange(() => configuration.CustomEventsMaximumSamplesStored).Returns(2);  //set the reservoir to only two
 			Mock.Arrange(() => configuration.ConfigurationVersion).Returns(configuration.ConfigurationVersion +1);
 			var sentEvents = Enumerable.Empty<CustomEventWireModel>();
 			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
@@ -94,9 +101,9 @@ namespace NewRelic.Agent.Core.Aggregators
 			//ordered by priority descending
 			var eventsToSend = new[]
 			{
-				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.3f),
-				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f),
-				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f)
+				new CustomEventWireModel(0.3f, _intrinsicAttributes, _emptyCustomAttributes),
+				new CustomEventWireModel(0.2f, _intrinsicAttributes, _emptyCustomAttributes),
+				new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes)
 			};
 
 			// Act
@@ -135,10 +142,11 @@ namespace NewRelic.Agent.Core.Aggregators
 			//ordered by priority descending
 			var eventsToSend = new[]
 			{
-				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.3f),
-				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f),
-				Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f)
+				new CustomEventWireModel(0.3f, _intrinsicAttributes, _emptyCustomAttributes),
+				new CustomEventWireModel(0.2f, _intrinsicAttributes, _emptyCustomAttributes),
+				new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes)
 			};
+
 			eventsToSend.ForEach(_customEventAggregator.Collect);
 
 			// Act
@@ -153,7 +161,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void Event_seen_reported_on_collect()
 		{
 			// Act
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>());
+			_customEventAggregator.Collect(new CustomEventWireModel(0.3f, _intrinsicAttributes, _emptyCustomAttributes));
 
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportCustomEventCollected());
@@ -163,7 +171,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void Events_sent_reported_on_harvest()
 		{
 			// Arrange
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>());
+			_customEventAggregator.Collect(new CustomEventWireModel(0.3f, _intrinsicAttributes, _emptyCustomAttributes));
 
 			// Act
 			_harvestAction();
@@ -177,8 +185,8 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void Reservoir_resized_reported_on_post_too_big_response()
 		{
 			// Arrange
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.2f, _intrinsicAttributes, _emptyCustomAttributes));
 			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<IEnumerable<CustomEventWireModel>>()))
 				.Returns<IEnumerable<CustomEventWireModel>>(events =>
 				{
@@ -222,8 +230,9 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEvents = events;
 					return DataTransportResponseStatus.RequestSuccessful;
 				});
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
+
+			_customEventAggregator.Collect(new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.2f, _intrinsicAttributes, _emptyCustomAttributes));
 			_harvestAction();
 			sentEvents = null; // reset
 
@@ -245,8 +254,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEvents = events;
 					return DataTransportResponseStatus.Discard;
 				});
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.2f, _intrinsicAttributes, _emptyCustomAttributes));
 			_harvestAction();
 			sentEvents = null; // reset
 
@@ -268,8 +277,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.Retain;
 				});
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.2f, _intrinsicAttributes, _emptyCustomAttributes));
 			_harvestAction();
 			sentEventCount = int.MinValue; // reset
 
@@ -292,8 +301,8 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
 				});
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.11f));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.11f, _intrinsicAttributes, _emptyCustomAttributes));
 			_harvestAction();
 			sentEventCount = int.MinValue; // reset
 
@@ -316,7 +325,7 @@ namespace NewRelic.Agent.Core.Aggregators
 					sentEvents = events;
 					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
 				});
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes));
 			_harvestAction();
 			sentEvents = null; // reset
 
@@ -337,7 +346,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportCustomEventCollected(), Occurs.Never());
 			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<int>()), Occurs.Never());
 			Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(Arg.IsAny<int>()), Occurs.Never());
 		}
 
@@ -355,9 +364,9 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void When_harvesting_events_then_event_sent_is_reported_to_agent_health()
 		{
 			// Arrange
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.1f));
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.2f));
-			_customEventAggregator.Collect(Mock.Create<CustomEventWireModel>("event type", DateTime.Now, _emptyAttributes, 0.3f));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.1f, _intrinsicAttributes, _emptyCustomAttributes));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.2f, _intrinsicAttributes, _emptyCustomAttributes));
+			_customEventAggregator.Collect(new CustomEventWireModel(0.3f, _intrinsicAttributes, _emptyCustomAttributes));
 
 			// Act
 			_harvestAction();
@@ -393,7 +402,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			var configuration = Mock.Create<IConfiguration>();
 			Mock.Arrange(() => configuration.CustomEventsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.CustomEventsMaxSamplesStored).Returns(10000);
+			Mock.Arrange(() => configuration.CustomEventsMaximumSamplesStored).Returns(10000);
 			if (versionNumber.HasValue)   
 				Mock.Arrange(() => configuration.ConfigurationVersion).Returns(versionNumber.Value);
 			return configuration;

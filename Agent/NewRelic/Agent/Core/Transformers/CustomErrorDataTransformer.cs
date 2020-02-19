@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.Transformers
 {
 	public interface ICustomErrorDataTransformer
 	{
-		void Transform(ErrorData errorData, IEnumerable<KeyValuePair<string, string>> customAttributes, float priority);
+		void Transform<T>(ErrorData errorData, IEnumerable<KeyValuePair<string, T>> customAttributes, float priority);
 	}
 
 	public class CustomErrorDataTransformer : ICustomErrorDataTransformer
@@ -39,25 +38,18 @@ namespace NewRelic.Agent.Core.Transformers
 			_errorEventAggregator = errorEventAggregator;
 		}
 
-		public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<string, string>> customAttributes, float priority)
+		public void Transform<T>(ErrorData errorData, IEnumerable<KeyValuePair<string, T>> customAttributes, float priority)
 		{
 			if (!_configurationService.Configuration.ErrorCollectorEnabled)
 				return;
 
-			var errorEventAttributes = new Attributes();
-			var errorTraceAttributes = new Attributes();
+			var errorEventAttributes = new AttributeCollection();
+			var errorTraceAttributes = new AttributeCollection();
 
 			if (customAttributes != null && _configurationService.Configuration.CaptureCustomParameters)
 			{
-				foreach(var customAttr in customAttributes)
-				{
-					if ( customAttr.Key != null && customAttr.Value != null)
-					{
-						var attr = Attribute.BuildCustomAttribute(customAttr.Key, customAttr.Value);
-						errorEventAttributes.Add(attr);
-						errorTraceAttributes.Add(attr);
-					}
-				}
+				errorEventAttributes.TryAddAll(Attribute.BuildCustomAttributeForError, customAttributes);
+				errorTraceAttributes.TryAddAll(Attribute.BuildCustomAttributeForError, customAttributes);
 			}
 
 			// For Custom Errors (occurring outside a transaction), UI Error Analytics page co-opts the

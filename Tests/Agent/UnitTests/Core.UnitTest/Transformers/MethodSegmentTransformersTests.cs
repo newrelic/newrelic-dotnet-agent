@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -168,13 +170,13 @@ namespace NewRelic.Agent.Core.Transformers
 
 		private static Segment GetSegment(string type, string method)
 		{
-			var timerFactory = Mock.Create<ITimerFactory>();
-			var builder = new TypedSegment<MethodSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new MethodSegmentData(type, method));
+			var builder = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			builder.SetSegmentData(new MethodSegmentData(type, method));
 			builder.End();
 			return builder;
 		}
 
-		private static TypedSegment<MethodSegmentData> GetSegment(string type, string method, double duration)
+		private static Segment GetSegment(string type, string method, double duration)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
 			var parameters = (new Dictionary<string, object>());

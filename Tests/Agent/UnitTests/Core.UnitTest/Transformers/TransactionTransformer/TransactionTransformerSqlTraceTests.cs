@@ -1,9 +1,8 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -12,6 +11,11 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -107,7 +111,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 
-			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService);
+			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService, new DatabaseService(Mock.Create<ICacheStatsReporter>()));
 
 			// create TransactionTransformer
 			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>());
@@ -187,9 +191,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			var configuration = Mock.Create<IConfiguration>();
 			Mock.Arrange(() => configuration.TransactionEventsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.TransactionEventsMaxSamplesStored).Returns(10000);
+			Mock.Arrange(() => configuration.TransactionEventsMaximumSamplesStored).Returns(10000);
 			Mock.Arrange(() => configuration.TransactionEventsTransactionsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.CaptureTransactionEventsAttributes).Returns(true);
+			Mock.Arrange(() => configuration.TransactionEventsAttributesEnabled).Returns(true);
 			Mock.Arrange(() => configuration.ErrorCollectorEnabled).Returns(true);
 			Mock.Arrange(() => configuration.ErrorCollectorCaptureEvents).Returns(true);
 			Mock.Arrange(() => configuration.CaptureErrorCollectorAttributes).Returns(true);

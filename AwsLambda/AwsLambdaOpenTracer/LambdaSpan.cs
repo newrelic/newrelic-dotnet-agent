@@ -148,22 +148,8 @@ namespace NewRelic.OpenTracing.AmazonLambda
 		{
 			get 
 			{
-				return _agentAttributes ?? (_agentAttributes = BuildAgentAttributes());
+				return _agentAttributes ?? (_agentAttributes = Tags.BuildAgentAttributes());
 			}
-		}
-
-		protected virtual IDictionary<string, object> BuildAgentAttributes()
-		{
-			var agentAttributes = new Dictionary<string, object>();
-			foreach (var tag in Tags)
-			{
-				if (tag.IsAgentAttribute())
-				{
-					agentAttributes.Add(tag.GetAttributeName(), tag.Value);
-				}
-			}
-
-			return agentAttributes;
 		}
 
 		public void Finish()

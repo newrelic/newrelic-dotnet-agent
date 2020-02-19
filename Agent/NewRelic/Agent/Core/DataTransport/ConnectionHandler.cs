@@ -337,7 +337,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				TransactionTracerRecordSql = _configuration.TransactionTracerRecordSql,
 				SlowSqlEnabled = _configuration.SlowSqlEnabled,
 				BrowserMonitoringAutoInstrument = _configuration.BrowserMonitoringAutoInstrument,
-				TransactionEventMaxSamplesStored = _configuration.TransactionEventsMaxSamplesStored
+				TransactionEventMaxSamplesStored = _configuration.TransactionEventsMaximumSamplesStored
 			};
 
 			try
@@ -386,11 +386,11 @@ namespace NewRelic.Agent.Core.DataTransport
 			}
 		}
 
-		private bool GenerateHarvestLimitMetricIfAvailable(string metricName, uint? harvestLimit)
+		private bool GenerateHarvestLimitMetricIfAvailable(string metricName, int? harvestLimit)
 		{
 			if (!harvestLimit.HasValue) return false;
 
-			_agentHealthReporter.ReportSupportabilityCountMetric(metricName, unchecked((int)harvestLimit.Value));
+			_agentHealthReporter.ReportSupportabilityCountMetric(metricName, unchecked(harvestLimit.Value));
 			return true;
 		}
 

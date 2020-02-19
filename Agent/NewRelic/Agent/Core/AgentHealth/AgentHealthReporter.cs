@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
@@ -6,18 +6,20 @@ using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using NewRelic.Core.Logging;
+using NewRelic.SystemInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Net;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
-	public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
+	public class AgentHealthReporter : DisposableService, IAgentHealthReporter
 	{
 		private static readonly TimeSpan _timeBetweenExecutions = TimeSpan.FromMinutes(1);
 
 		private readonly IMetricBuilder _metricBuilder;
 		private readonly IScheduler _scheduler;
+		private readonly IDnsStatic _dnsStatic;
 		private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
 		private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
 
@@ -25,9 +27,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 		private InterlockedCounter _payloadCreateSuccessCounter;
 		private InterlockedCounter _payloadAcceptSuccessCounter;
 
-		public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
+		public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler, IDnsStatic dnsStatic)
 		{
 			_metricBuilder = metricBuilder;
+			_dnsStatic = dnsStatic;
 			_scheduler = scheduler;
 			_scheduler.ExecuteEvery(LogRecurringLogs, _timeBetweenExecutions);
 			var agentHealthEvents = Enum.GetValues(typeof(AgentHealthEvent)) as AgentHealthEvent[];
@@ -96,7 +99,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		#region TransactionEvents
 
-		public void ReportTransactionEventReservoirResized(uint newSize)
+		public void ReportTransactionEventReservoirResized(int newSize)
 		{
 			TrySend(_metricBuilder.TryBuildTransactionEventReservoirResizedMetric());
 			Log.Warn("Resizing transaction event reservoir to " + newSize + " events.");
@@ -118,7 +121,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		#region CustomEvents
 
-		public void ReportCustomEventReservoirResized(uint newSize)
+		public void ReportCustomEventReservoirResized(int newSize)
 		{
 			TrySend(_metricBuilder.TryBuildCustomEventReservoirResizedMetric());
 			Log.Warn("Resizing custom event reservoir to " + newSize + " events.");
@@ -336,6 +339,15 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void ReportSupportabilityPayloadsDroppeDueToMaxPayloadSizeLimit(string endpoint)
 		{
 			TrySend(_metricBuilder.TryBuildSupportabilityPayloadsDroppedDueToMaxPayloadLimit(endpoint));
+		}
+
+		public void CollectMetrics()
+		{
+			CollectDistributedTraceSuccessMetrics();
+			ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
+			ReportIfHostIsLinuxOs();
+			ReportDotnetVersion();
+			ReportAgentInfo();
 		}
 
 		public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)

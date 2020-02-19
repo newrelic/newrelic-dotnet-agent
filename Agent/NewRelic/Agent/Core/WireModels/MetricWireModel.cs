@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Metric;
@@ -878,16 +878,16 @@ namespace NewRelic.Agent.Core.WireModels
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			public MetricWireModel TryBuildSqlParsingCacheCountMetric(string name, int count)
+			public MetricWireModel TryBuildCacheCountMetric(string name, int count)
 			{
-				var proposedName = MetricNames.SupportabilitySqlParsingCachePrefix + MetricNames.PathSeparator + name;
+				var proposedName = MetricNames.SupportabilityCachePrefix + name;
 				var data = MetricDataWireModel.BuildCountData(count);
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}
 
-			public MetricWireModel TryBuildSqlParsingCacheSizeMetric(string name, int size)
+			public MetricWireModel TryBuildCacheSizeMetric(string name, int size)
 			{
-				var proposedName = MetricNames.SupportabilitySqlParsingCachePrefix + MetricNames.PathSeparator + name;
+				var proposedName = MetricNames.SupportabilityCachePrefix + name;
 				var data = MetricDataWireModel.BuildAverageData(size);
 				return BuildMetric(_metricNameService, proposedName, null, data);
 			}

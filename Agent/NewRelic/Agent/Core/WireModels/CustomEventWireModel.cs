@@ -1,4 +1,5 @@
 ﻿using NewRelic.Agent.Core.JsonConverters;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Collections;
 using NewRelic.Core;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -37,23 +38,11 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 		}
 
-		/// <param name="eventType">The event type.</param>
-		/// <param name="eventTimeStamp">The start time of the event.</param>
-		/// <param name="userAttributes">Additional attributes supplied by the user.</param>
-		/// <param name="priority">value from 0.0-1.0 applied to items in ConcurrentPriorityQueue to increase the LIKELIHOOD that relate events are retained</param>
-		public CustomEventWireModel(string eventType, DateTime eventTimeStamp, IEnumerable<KeyValuePair<string, object>> userAttributes, float priority)
+		public CustomEventWireModel(float priority, IDictionary<string, object> intrinsicAttributes, IDictionary<string, object> userAttributes)
 		{
-			const string eventTypeKey = "type";
-			const string timeStampKey = "timestamp";
 			Priority = priority;
-
-			IntrinsicAttributes = new Dictionary<string, object>
-			{
-				{eventTypeKey, eventType},
-				{timeStampKey, eventTimeStamp.ToUnixTimeMilliseconds()},
-			};
-
-			UserAttributes = userAttributes.ToDictionary();
+			IntrinsicAttributes = intrinsicAttributes;
+			UserAttributes = userAttributes;
 		}
 	}
 }

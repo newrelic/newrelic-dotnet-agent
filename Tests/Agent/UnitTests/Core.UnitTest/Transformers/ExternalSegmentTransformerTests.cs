@@ -1,12 +1,13 @@
 ﻿using System;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -315,19 +316,21 @@ namespace NewRelic.Agent.Core.Transformers
 		private static Segment GetSegment(string uri, string method, CrossApplicationResponseData catResponseData = null)
 		{
 			var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
-			var builder = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), data);
+			var builder = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			builder.SetSegmentData(data);
 			builder.End();
 			return builder;
 		}
 
-		private static TypedSegment<ExternalSegmentData> GetSegment(string uri, string method, double duration, CrossApplicationResponseData catResponseData = null)
+		private static Segment GetSegment(string uri, string method, double duration, CrossApplicationResponseData catResponseData = null)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
 
 			var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			segment.SetSegmentData(data);
 
-			return new TypedSegment<ExternalSegmentData>(new TimeSpan(), TimeSpan.FromSeconds(duration), 
-				new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false));
+			return new Segment(new TimeSpan(), TimeSpan.FromSeconds(duration), segment, null);
 		}
 
 	}

@@ -123,8 +123,8 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 			var rootSpan = (LambdaRootSpan)TestUtil.CreateRootSpan("rootOperation", startTime, new Dictionary<string, object>(), "rootguid");
 			var childSpan = TestUtil.CreateSpan("childOperation", startTime, new Dictionary<string, object>(), rootSpan, "childguid");
 
-			rootSpan.SetTag("http.status_code", "200");
-			childSpan.SetTag("http.status_code", "500");
+			rootSpan.SetTag("http.status_code", 200);
+			childSpan.SetTag("http.status_code", 500);
 
 			childSpan.Finish();
 			rootSpan.Finish();
@@ -142,6 +142,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 			Assert.IsFalse(rootSpan.UserAttributes.ContainsKey("http.status_code"));
 
 			Assert.AreEqual(rootSpan.AgentAttributes["response.status"], "200");
+			Assert.AreEqual(rootSpan.AgentAttributes["http.statusCode"], 200);
 
 			Assert.AreEqual(childSpan.Intrinsics["type"], "Span");
 			Assert.AreEqual(childSpan.Intrinsics["name"], "childOperation");
@@ -156,6 +157,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 			Assert.IsFalse(childSpan.UserAttributes.ContainsKey("http.status_code"));
 
 			Assert.AreEqual(childSpan.AgentAttributes["response.status"], "500");
+			Assert.AreEqual(childSpan.AgentAttributes["http.statusCode"], 500);
 		}
 	}
 }

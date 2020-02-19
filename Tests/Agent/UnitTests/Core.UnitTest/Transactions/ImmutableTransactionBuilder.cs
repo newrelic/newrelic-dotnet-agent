@@ -1,7 +1,8 @@
-﻿using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Core;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -72,7 +73,7 @@ namespace NewRelic.Agent.Core.Transactions
 		}
 
 		//Transactions should always have a root segment
-		private List<Segment> _segments = new List<Segment>() { SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, null, Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false) };
+		private List<Segment> _segments = new List<Segment>() { SimpleSegmentDataTests.createSimpleSegmentBuilder(TimeSpan.Zero, TimeSpan.Zero, 0, null, new MethodCallData("typeName", "methodName", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "MyMockedRootNode", false) };
 
 		public ImmutableTransactionBuilder WithSegments(List<Segment> segments)
 		{
@@ -162,8 +163,7 @@ namespace NewRelic.Agent.Core.Transactions
 				hasCatResponseHeaders: false,
 				priority: _priority);
 
-			return new ImmutableTransaction(_transactionName, _segments, metadata, _startTime, _duration, _responseTime, _transactionGuid, true, true,
-				false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			return new ImmutableTransaction(_transactionName, _segments, metadata, _startTime, _duration, _responseTime, _transactionGuid, true, true, false);
 		}
 	}
 }

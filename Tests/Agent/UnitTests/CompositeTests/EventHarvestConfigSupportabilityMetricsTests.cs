@@ -103,7 +103,7 @@ namespace CompositeTests
 		{
 			var eventHarvestConfig = new EventHarvestConfig
 			{
-				HarvestLimits = new Dictionary<string,uint>
+				HarvestLimits = new Dictionary<string, int>
 				{
 					{ EventHarvestConfig.ErrorEventHarvestLimitKey, 1 },
 					{ EventHarvestConfig.CustomEventHarvestLimitKey, 2 },
@@ -127,7 +127,7 @@ namespace CompositeTests
 			var eventHarvestConfig = new EventHarvestConfig
 			{
 				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string,uint> { { eventType, 10 } }
+				HarvestLimits = new Dictionary<string, int> { { eventType, 10 } }
 			};
 			ConnectRespondsWithEventHarvestConfig(eventHarvestConfig);
 

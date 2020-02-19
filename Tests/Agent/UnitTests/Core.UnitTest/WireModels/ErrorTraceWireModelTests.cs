@@ -1,7 +1,7 @@
 ﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core;
@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
 			private DisposableCollection _disposables;
 			private TestUtilities.Logging _logging;
-			private Attributes _attributes;
+			private AttributeCollection _attributes;
 
 			private IList<string> _stackTrace;
 			private DateTime _timestamp;
@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			public void SetUp()
 			{
 				_dataTransportService = Mock.Create<IDataTransportService>();
-				_attributes = new Attributes();
+				_attributes = new AttributeCollection();
 				_logging = new TestUtilities.Logging();
 				_disposables = new DisposableCollection
 				{

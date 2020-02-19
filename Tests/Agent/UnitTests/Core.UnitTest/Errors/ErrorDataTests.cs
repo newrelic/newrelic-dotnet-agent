@@ -1,30 +1,25 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Errors.UnitTest
 {
 	[TestFixture]
 	public class ErrorDataTests
 	{
-		private IConfigurationService _configurationService;
-
-		private IConfiguration _configuration;
+		IList<string> _exceptionsToIgnore;
+		IList<string> _httpStatusCodesToIgnore;
 
 		[SetUp]
 		public void SetUp()
 		{
-			_configurationService = Mock.Create<IConfigurationService>();
-			_configuration = Mock.Create<IConfiguration>();
-			Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
+			_exceptionsToIgnore = new List<string>();
+			_httpStatusCodesToIgnore = new List<string>();
 		}
 
 		[Test]
@@ -32,7 +27,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		{
 			var transaction = BuildTestTransaction(DateTime.UtcNow, TimeSpan.FromSeconds(1));
 
-			var errorData = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
 
 			Assert.Null(errorData.ErrorTypeName);
 		}
@@ -42,7 +37,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		{
 			var transaction = BuildTestTransaction(DateTime.UtcNow, TimeSpan.FromSeconds(1), statusCode: 200);
 
-			var errorData = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.Null(errorData.ErrorTypeName);
 		}
@@ -56,7 +51,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
 			var transaction = BuildTestTransaction(startTime, duration, responseTime, statusCode: 404, uri: "http://www.newrelic.com/test?param=value");
 
-			var errorData = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.NotNull(errorData.ErrorTypeName);
 			NrAssert.Multiple(
@@ -75,7 +70,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
 			var transaction = BuildTestTransaction(startTime, duration, responseTime, statusCode: 404, subStatusCode: 5, uri: "http://www.newrelic.com/test?param=value");
 
-			var errorData = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual("404.5", errorData.ErrorTypeName),
@@ -93,7 +88,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.NotNull(errorDataOut.ErrorTypeName);
 			NrAssert.Multiple(
@@ -110,7 +105,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData1, errorData2 });
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.NotNull(errorDataOut.ErrorTypeName);
 			NrAssert.Multiple(
@@ -126,7 +121,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.NotNull(errorDataOut.ErrorTypeName);
 
@@ -140,10 +135,10 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		[Test]
 		public void TryGetErrorData_ReturnsNull_IfStatusCodeIsIgnoredByConfig()
 		{
-			Mock.Arrange(() => _configuration.HttpStatusCodesToIgnore).Returns(new[] { "404" });
+			_httpStatusCodesToIgnore.Add("404");
 			var transaction = BuildTestTransaction(statusCode: 404);
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.IsNull(errorDataOut.ErrorTypeName);
 		}
@@ -151,12 +146,12 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		[Test]
 		public void TryGetErrorData_ReturnsNull_IfStatusCodeIsIgnoredByConfig_EvenIfExceptionIsNoticed()
 		{
-			Mock.Arrange(() => _configuration.HttpStatusCodesToIgnore).Returns(new[] { "404" });
-			
+			_httpStatusCodesToIgnore.Add("404");
+
 			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(statusCode: 404, transactionExceptionDatas: new[] { errorDataIn });
 			
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.IsNull(errorDataOut.ErrorTypeName);
 		}
@@ -164,13 +159,13 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		[Test]
 		public void TryGetErrorData_ReturnsNull_IfAnyExceptionIsIgnored()
 		{
-			Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new[] { "My type name2" });
+			_exceptionsToIgnore.Add("My type name2");
 			
 			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(transactionExceptionDatas: new[] { errorData1, errorData2 });
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.IsNull(errorDataOut.ErrorTypeName);
 		}
@@ -178,13 +173,13 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 		[Test]
 		public void TryGetErrorTrace_ReturnsNull_IfAnyExceptionIsIgnored_EvenIfStatusCodeIs404()
 		{
-			Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new[] { "My type name2" });
+			_exceptionsToIgnore.Add("My type name2");
 
 			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
 			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
 			var transaction = BuildTestTransaction(statusCode: 404, transactionExceptionDatas: new[] { errorData1, errorData2 });
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorDataOut = ErrorData.TryGetErrorData(transaction, _exceptionsToIgnore, _httpStatusCodesToIgnore);
 
 			Assert.IsNull(errorDataOut.ErrorTypeName);
 		}
@@ -205,7 +200,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			guid = guid ?? Guid.NewGuid().ToString();
 			responseTime = responseTime ?? duration;
 
-			return new ImmutableTransaction(name, segments, metadata, startTime , duration, responseTime, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			return new ImmutableTransaction(name, segments, metadata, startTime , duration, responseTime, guid, false, false, false);
 		}
 
 		private static ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null,
@@ -224,7 +219,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false);
 		}
 
 	}

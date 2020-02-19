@@ -257,10 +257,8 @@ namespace NewRelic.Agent.Api
 
 		ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql);
 
-		/// <summary>
-		/// Returns the Linking Metadata that is used to correlate application data in the New Relic backend.
-		/// </summary>
-		/// <returns>Dictionary of key/value pairs.</returns>
-		Dictionary<string, string> GetLinkingMetadata();
+
+		ITransaction SetCustomAttribute(string key, object value);
+
 	}
 }

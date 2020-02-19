@@ -15,20 +15,20 @@ namespace NewRelic.Collections
 
 		private readonly SortedSet<T> _sortedSet;
 
-		public uint Size {  get; private set;  }
+		public int Size {  get; private set;  }
 
 		public int Count { get { lock(_syncroot) return _sortedSet.Count; } }
 
 		public bool IsReadOnly => false;
 
 		#region Constructors
-		public ConcurrentPriorityQueue(uint capacity)
+		public ConcurrentPriorityQueue(int capacity)
 		{
 			_sortedSet = new SortedSet<T>();
 			Size = capacity;
 		}
 
-		public ConcurrentPriorityQueue(uint capacity, IComparer<T> comparer)
+		public ConcurrentPriorityQueue(int capacity, IComparer<T> comparer)
 		{
 			_sortedSet = new SortedSet<T>(comparer);
 			Size = capacity;
@@ -129,7 +129,7 @@ namespace NewRelic.Collections
 			}
 		}
 
-		public void Resize(uint newSize)
+		public void Resize(int newSize)
 		{
 			lock (_syncroot)
 			{
@@ -138,9 +138,9 @@ namespace NewRelic.Collections
 			}
 		}
 
-		public ulong GetAddAttemptsCount()
+		public int GetAddAttemptsCount()
 		{
-			return (ulong)Volatile.Read(ref _addsAttempted);
+			return Volatile.Read(ref _addsAttempted);
 		}
 
 		public void Clear()

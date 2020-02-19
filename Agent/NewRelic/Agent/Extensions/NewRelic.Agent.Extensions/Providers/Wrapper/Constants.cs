@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
@@ -66,9 +66,16 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 	public static class EnumNameCache<TEnum> // c# 7.3: where TEnum : System.Enum	
 	{
 		private static readonly ConcurrentDictionary<TEnum, string> Cache = new ConcurrentDictionary<TEnum, string>();
+		private static readonly ConcurrentDictionary<TEnum, string> ToLowerCache = new ConcurrentDictionary<TEnum, string>();
+
 		public static string GetName(TEnum enumValue)
 		{
 			return Cache.GetOrAdd(enumValue, (enumVal) => enumVal.ToString());
+		}
+
+		public static string GetNameToLower(TEnum enumValue)
+		{
+			return ToLowerCache.GetOrAdd(enumValue, (enumVal) => enumVal.ToString().ToLower());
 		}
 	}
 

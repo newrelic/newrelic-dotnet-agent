@@ -1,6 +1,7 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.BrowserMonitoring;
+using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
@@ -9,10 +10,12 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
@@ -61,7 +64,7 @@ namespace NewRelic.Agent.Core.Api
 			_browserMonitoringScriptMaker = browserMonitoringScriptMaker;
 			_configurationService = configurationService;
 			_agent = agent;
-			_agentBridgeApi = new AgentBridgeApi(_agent, apiSupportabilityMetricCounters);
+			_agentBridgeApi = new AgentBridgeApi(_agent, apiSupportabilityMetricCounters, _configurationService);
 			_tracePriorityManager = tracePriorityManager;
 		}
 
@@ -105,7 +108,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				var transaction = TryGetCurrentInternalTransaction();
 				float priority = transaction?.TransactionMetadata.Priority ?? _tracePriorityManager.Create();
-
+				
 				_customEventTransformer.Transform(eventType, attributes, priority);
 			}
 		}
@@ -195,7 +198,18 @@ namespace NewRelic.Agent.Core.Api
 			using (new IgnoreWork())
 			{
 				var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
-				ProcessedNoticedError(errorData, customAttributes);
+				ProcessNoticedError(errorData, customAttributes);
+			}
+		}
+
+		public void NoticeError(Exception exception, IDictionary<string, object> customAttributes)
+		{
+			exception = exception ?? throw new ArgumentNullException(nameof(exception));
+
+			using (new IgnoreWork())
+			{
+				var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
+				ProcessNoticedError(errorData, customAttributes);
 			}
 		}
 
@@ -217,7 +231,7 @@ namespace NewRelic.Agent.Core.Api
 			using (new IgnoreWork())
 			{
 				var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
-				ProcessedNoticedError(errorData, null);
+				ProcessNoticedError<object>(errorData, null);
 			}
 		}
 
@@ -241,11 +255,22 @@ namespace NewRelic.Agent.Core.Api
 			using (new IgnoreWork())
 			{
 				var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, _configurationService.Configuration.StripExceptionMessages);
-				ProcessedNoticedError(errorData, customAttributes);
+				ProcessNoticedError(errorData, customAttributes);
 			}
 		}
 
-		private void ProcessedNoticedError(ErrorData errorData, IDictionary<string, string> customAttributes)
+		public void NoticeError(string message, IDictionary<string, object> customAttributes)
+		{
+			message = message ?? throw new ArgumentNullException(nameof(message));
+
+			using (new IgnoreWork())
+			{
+				var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, _configurationService.Configuration.StripExceptionMessages);
+				ProcessNoticedError(errorData, customAttributes);
+			}
+		}
+
+		private void ProcessNoticedError<T>(ErrorData errorData, IDictionary<string, T> customAttributes)
 		{
 			var transaction = TryGetCurrentInternalTransaction();
 			if (transaction != null)
@@ -266,7 +291,7 @@ namespace NewRelic.Agent.Core.Api
 			else
 			{
 				errorData.Path = NoticeErrorPath;
-				_customErrorDataTransformer.Transform(errorData, customAttributes, _tracePriorityManager.Create());
+				_customErrorDataTransformer.Transform<T>(errorData, customAttributes, _tracePriorityManager.Create());
 			}
 		}
 
@@ -280,6 +305,7 @@ namespace NewRelic.Agent.Core.Api
 		/// <param name="value"> The value associated with the custom parameter. If the value is a float
 		/// it is recorded as a number, otherwise, <paramref name="value"/> is converted to a string.
 		/// (via <c>value.ToString(CultureInfo.InvariantCulture);</c> </param>
+		[ToBeRemovedInFutureRelease("Use TransactionBridgeApi.AddCustomAttribute(string, object) instead")]
 		public void AddCustomParameter(string key, IConvertible value)
 		{
 			key = key ?? throw new ArgumentNullException(nameof(key));
@@ -306,6 +332,7 @@ namespace NewRelic.Agent.Core.Api
 		/// are retained. </param>
 		/// <param name="value"> The value associated with the custom parameter. Only the first 1000
 		/// characters are retained. </param>
+		[ToBeRemovedInFutureRelease("Use TransactionBridgeApi.AddCustomAttribute(string, object) instead")]
 		public void AddCustomParameter(string key, string value)
 		{
 			key = key ?? throw new ArgumentNullException(nameof(key));
@@ -316,6 +343,7 @@ namespace NewRelic.Agent.Core.Api
 			}
 		}
 
+		[ToBeRemovedInFutureRelease("Use TransactionBridgeApi.AddCustomAttribute(string, object) instead")]
 		private void AddUserAttributeToCurrentTransaction(string key, object value)
 		{
 			if (_configurationService.Configuration.CaptureCustomParameters)
@@ -335,6 +363,7 @@ namespace NewRelic.Agent.Core.Api
 		/// <param name="name">	    The name of the transaction starting with a forward slash.  example:
 		/// /store/order Only the first 1000 characters are retained. </param>
 		public void SetTransactionName(string category, string name)
+
 		{
 			name = name ?? throw new ArgumentNullException(nameof(name));
 
@@ -468,6 +497,7 @@ namespace NewRelic.Agent.Core.Api
 		///
 		/// <returns> An empty string. </returns>
 		[Obsolete]
+		[ToBeRemovedInFutureRelease()]
 		public string GetBrowserTimingFooter()
 		{
 			// This method is deprecated.

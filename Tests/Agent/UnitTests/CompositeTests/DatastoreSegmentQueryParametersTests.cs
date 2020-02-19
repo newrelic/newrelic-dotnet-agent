@@ -1,7 +1,7 @@
 ﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -282,14 +282,15 @@ namespace CompositeTests
 			_compositeTestAgent.PushConfiguration();
 		}
 
-		private TypedSegment<DatastoreSegmentData> CreateWebTransactionWithDatastoreSegment(IDictionary<string, IConvertible> queryParameters)
+		private Segment CreateWebTransactionWithDatastoreSegment(IDictionary<string, IConvertible> queryParameters)
 		{
 			_agent.CreateTransaction(
 				isWeb: true,
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
 				transactionDisplayName: "name",
 				doNotTrackAsUnitOfWork: true);
-			return (TypedSegment<DatastoreSegmentData>)_agent.StartDatastoreRequestSegmentOrThrow("INSERT", DatastoreVendor.MSSQL, "MyAwesomeTable", null, null, "HostName", "1433", "MyDatabase", queryParameters);
+
+			return (Segment)_agent.StartDatastoreRequestSegmentOrThrow("INSERT", DatastoreVendor.MSSQL, "MyAwesomeTable", null, null, "HostName", "1433", "MyDatabase", queryParameters);
 		}
 
 		private class ExceptionThrowingConvertible : IConvertible

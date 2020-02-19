@@ -1,4 +1,5 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
+using System;
 
 namespace NewRelic.Api.Agent
 {
@@ -13,6 +14,8 @@ namespace NewRelic.Api.Agent
 		}
 
 		private static bool _isAcceptDistributedTracePayloadAvailable = true;
+
+		//[Obsolete("AcceptDistributedTracePayload is deprecated.")]
 		public void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown)
 		{
 			if (!_isAcceptDistributedTracePayloadAvailable) return;
@@ -28,6 +31,8 @@ namespace NewRelic.Api.Agent
 		}
 
 		private static bool _isCreateDistributedTracePayloadAvailable = true;
+
+		//[Obsolete("CreateDistributedTracePayload is deprecated.")]
 		public IDistributedTracePayload CreateDistributedTracePayload()
 		{
 			if (!_isCreateDistributedTracePayloadAvailable) return _noOpTransaction.CreateDistributedTracePayload();
@@ -46,6 +51,27 @@ namespace NewRelic.Api.Agent
 			}
 
 			return _noOpTransaction.CreateDistributedTracePayload();
+		}
+
+		private static bool _isAddCustomAttributeAvailable = true;
+		public ITransaction AddCustomAttribute(string key, object value)
+		{
+
+			if(!_isAddCustomAttributeAvailable)
+			{
+				return _noOpTransaction.AddCustomAttribute(key, value);
+			}
+
+			try
+			{
+				return _wrappedTransaction.AddCustomAttribute(key, value);
+			}
+			catch (RuntimeBinderException)
+			{
+				_isAddCustomAttributeAvailable = false;
+			}
+
+			return _noOpTransaction;
 		}
 	}
 }

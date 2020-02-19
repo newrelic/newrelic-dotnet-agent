@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.RestSharp
@@ -39,8 +40,12 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 			}
 			
 			var method = RestSharpHelper.GetMethod(restRequest).ToString();
-			
+
+			var transactionExperimental = transaction.GetExperimentalApi();
+
+			var externalSegmentData = transactionExperimental.CreateExternalSegmentData(uri, method);
 			var segment = agent.CurrentTransaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
+			segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
 
 			//Outbound CAT headers are added via AppendHeaders instrumentation.
 
@@ -68,7 +73,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 
 				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
 				{
-					TryProcessResponse(agent, responseTask, transaction, segment);
+					TryProcessResponse(agent, responseTask, transaction, segment, externalSegmentData);
 					segment.End();
 					transaction.Release();
 
@@ -76,7 +81,7 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 			}
 		}
 
-		private static void TryProcessResponse(IAgent agent, Task responseTask, ITransaction transaction, ISegment segment)
+		private static void TryProcessResponse(IAgent agent, Task responseTask, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
 		{
 			try
 			{
@@ -86,6 +91,12 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 				}
 
 				var restResponse = RestSharpHelper.GetRestResponse(responseTask);
+
+				var statusCode = RestSharpHelper.GetResponseStatusCode(restResponse);
+				if (statusCode != 0)
+				{
+					externalSegmentData.SetHttpStatusCode(statusCode);
+				}
 
 				var headers = RestSharpHelper.GetResponseHeaders(restResponse);
 				if (headers == null)

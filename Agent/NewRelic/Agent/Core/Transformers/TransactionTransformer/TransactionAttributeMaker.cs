@@ -1,20 +1,20 @@
-﻿using System;
+using System;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
+using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Attributes;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface ITransactionAttributeMaker
 	{
-		Attributes GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats);
+		AttributeCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats);
 
-		Attributes GetUserAndAgentAttributes(ITransactionAttributeMetadata metadata);
+		AttributeCollection GetUserAndAgentAttributes(ITransactionAttributeMetadata metadata);
 	}
 
 	public class TransactionAttributeMaker : ITransactionAttributeMaker
@@ -25,14 +25,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			_configurationService = configurationService;
 		}
-		public Attributes GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats)
+		public AttributeCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats)
 		{
 
 			var attributes = GetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
 
 			// Required transaction attributes
 			attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.Transaction));
-			attributes.Add(Attribute.BuildTransactionTimeStampAttribute(immutableTransaction.StartTime));
+			attributes.Add(Attribute.BuildTimestampAttribute(immutableTransaction.StartTime));
 
 			
 			attributes.Add(Attribute.BuildTransactionNameAttribute(transactionMetricName.PrefixedName));
@@ -149,9 +149,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return attributes;
 		}
 		
-		public Attributes GetUserAndAgentAttributes(ITransactionAttributeMetadata metadata)
+		public AttributeCollection GetUserAndAgentAttributes(ITransactionAttributeMetadata metadata)
 		{
-			var attributes = new Attributes();
+			var attributes = new AttributeCollection();
 
 			attributes.TryAdd(Attribute.BuildRequestUriAttribute, metadata.Uri ?? "/Unknown");
 
@@ -161,27 +161,18 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			attributes.TryAdd(Attribute.BuildRequestRefererAttribute, metadata.ReferrerUri);
 			attributes.TryAdd(Attribute.BuildQueueWaitTimeAttribute, metadata.QueueTime);
+
 			attributes.TryAdd(Attribute.BuildResponseStatusAttribute, metadata.HttpResponseStatusCode?.ToString());
+			if (metadata.HttpResponseStatusCode.HasValue)
+				attributes.TryAdd(Attribute.BuildHttpStatusCodeAttribute, metadata.HttpResponseStatusCode.Value);
+
 			attributes.TryAdd(Attribute.BuildHostDisplayNameAttribute, _configurationService.Configuration.ProcessHostDisplayName);
 
-			foreach (var reqParam in metadata.RequestParameters)
-			{
-				var rpa = Attribute.BuildRequestParameterAttribute(reqParam.Key, reqParam.Value);
-				attributes.Add(rpa);
-			}
+			attributes.TryAddAll(Attribute.BuildRequestParameterAttribute, metadata.RequestParameters);
 
-			foreach(var userAttr in metadata.UserAttributes)
-			{
-				var ca = Attribute.BuildCustomAttribute(userAttr.Key, userAttr.Value);
-				attributes.Add(ca);
-			}
+			attributes.TryAddAll(Attribute.BuildCustomAttribute, metadata.UserAttributes);
 
-			//hmm pretty sure this is wrong - error attributes only go on errors
-			foreach(var errAttr in metadata.UserErrorAttributes)
-			{
-				var cea = Attribute.BuildCustomErrorAttribute(errAttr.Key, errAttr.Value);
-				attributes.Add(cea);
-			}
+			attributes.TryAddAll(Attribute.BuildCustomAttributeForError, metadata.UserErrorAttributes);
 			
 			return attributes;
 		}

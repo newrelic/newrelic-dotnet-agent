@@ -1,13 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
@@ -283,18 +282,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var duration = TimeSpan.FromSeconds(1);
 			var guid = Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false);
 		}
 
-		private static TypedSegment<SimpleSegmentData> GetUnfinishedSegment(DateTime transactionStartTime, DateTime startTime)
+		private static Segment GetUnfinishedSegment(DateTime transactionStartTime, DateTime startTime)
 		{
 			return GetFinishedSegment(transactionStartTime, startTime, null);
 		}
 
-		private static TypedSegment<SimpleSegmentData> GetFinishedSegment(DateTime transactionStartTime, DateTime startTime, TimeSpan? duration)
+		private static Segment GetFinishedSegment(DateTime transactionStartTime, DateTime startTime, TimeSpan? duration)
 		{
-			return new TypedSegment<SimpleSegmentData>(startTime - transactionStartTime, duration,
-				new TypedSegment<SimpleSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("type", "method", 1), new SimpleSegmentData(""), false));
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("type", "method", 1));
+			segment.SetSegmentData(new SimpleSegmentData(""));
+
+			return new Segment(startTime - transactionStartTime, duration, segment, null);
 		}
 	}
 }

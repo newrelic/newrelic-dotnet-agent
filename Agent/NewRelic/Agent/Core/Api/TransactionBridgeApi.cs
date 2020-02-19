@@ -1,6 +1,7 @@
 using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
 
@@ -23,11 +24,13 @@ namespace NewRelic.Agent.Core.Api
 
 		private readonly ITransaction _transaction;
 		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+		private readonly IConfigurationService _configSvc;
 
-		public TransactionBridgeApi(ITransaction transaction, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
+		public TransactionBridgeApi(ITransaction transaction, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, IConfigurationService configSvc)
 		{
 			_transaction = transaction;
 			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
+			_configSvc = configSvc;
 		}
 
 		public object CreateDistributedTracePayload()
@@ -87,5 +90,33 @@ namespace NewRelic.Agent.Core.Api
 			return TransportType.Unknown;
 		}
 
+		public object AddCustomAttribute(string key, object value)
+		{
+			try
+			{
+				_apiSupportabilityMetricCounters.Record(ApiMethod.TransactionAddCustomAttribute);
+
+				if (!_configSvc.Configuration.CaptureCustomParameters)
+				{
+					return _transaction;
+				}
+				
+				_transaction.SetCustomAttribute(key, value);
+			}
+			catch (Exception ex)
+			{
+				try
+				{
+					Log.Error($"Error in AddCustomAttribute: {ex}");
+				}
+				catch (Exception)
+				{
+					//Swallow the error
+				}
+
+			}
+
+			return _transaction;
+		}
 	}
 }

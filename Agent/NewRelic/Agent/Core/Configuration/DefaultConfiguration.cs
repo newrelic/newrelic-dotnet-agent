@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Helpers;
@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Configuration
 		private const string LocalConfigSource = "Local Configuration";
 		private const string ServerConfigSource = "Server Configuration";
 		private static long _currentConfigurationVersion;
-		private const uint DefaultSpanEventsMaxSamplesStored = 1000u;
+		private const int DefaultSpanEventsMaxSamplesStored = 1000;
 		private readonly IEnvironment _environment = new EnvironmentMock();
 		private readonly IProcessStatic _processStatic = new ProcessStatic();
 		private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
@@ -141,17 +141,6 @@ namespace NewRelic.Agent.Core.Configuration
 				return defaultValue;
 
 			return parsedInt;
-		}
-
-		private uint TryGetAppSettingAsUintWithDefault(string key, uint defaultValue)
-		{
-			var value = _newRelicAppSettings.GetValueOrDefault(key);
-
-			uint parsedUint;
-
-			return uint.TryParse(value, out parsedUint)
-				? parsedUint
-				: defaultValue;
 		}
 
 		public bool SecurityPoliciesTokenExists => !string.IsNullOrEmpty(SecurityPoliciesToken);
@@ -432,62 +421,53 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual bool CaptureTransactionEventsAttributes => ShouldCaptureTransactionEventAttributes();
-
-		public bool ShouldCaptureTransactionEventAttributes()
-		{
-			if (_localConfiguration.attributes.enabled == false)
-			{
-				return false;
-			}
-
-			if (_localConfiguration.transactionEvents.attributes.enabledSpecified)
-			{
-				return _localConfiguration.transactionEvents.attributes.enabled;
-			}
-
-			if (_localConfiguration.analyticsEvents.captureAttributesSpecified)
-			{
-				return _localConfiguration.analyticsEvents.captureAttributes;
-			}
-
-			return CaptureTransactionEventsAttributesDefault;
-		}
-
-		private IEnumerable<string> _captureTransactionEventAttributesIncludes;
-
-		public virtual IEnumerable<string> CaptureTransactionEventAttributesIncludes
+		private bool IsAttributesAllowedByConfigurableSecurityPolicy
 		{
 			get
 			{
-				if (ShouldCaptureTransactionEventAttributesIncludes())
+				if (HighSecurityModeEnabled) return false;
+
+				if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
 				{
-					return Memoizer.Memoize(ref _captureTransactionEventAttributesIncludes, () => new HashSet<string>(_localConfiguration.transactionEvents.attributes.include));
+					return _securityPoliciesConfiguration.AttributesInclude.Enabled;
 				}
 
-				return Memoizer.Memoize(ref _captureTransactionEventAttributesIncludes, () => new List<string>());
+				return true;
 			}
 		}
 
-		private bool ShouldCaptureTransactionEventAttributesIncludes()
-		{
-			var shouldCapture = !HighSecurityModeEnabled && CaptureTransactionEventsAttributes;
+		public virtual bool TransactionEventsAttributesEnabled =>
+			CaptureAttributes
+			&& _localConfiguration.transactionEvents.attributes.enabled
+			&& (!_localConfiguration.analyticsEvents.captureAttributesSpecified || _localConfiguration.analyticsEvents.captureAttributes);
 
-			if (_securityPoliciesConfiguration.SecurityPolicyExistsFor(SecurityPoliciesConfiguration.AttributesIncludePolicyName))
-			{
-				shouldCapture = shouldCapture && _securityPoliciesConfiguration.AttributesInclude.Enabled;
-			}
-
-			return shouldCapture;
-		}
-
-		private IEnumerable<string> _captureTransactionEventAttributesExcludes;
-
-		public virtual IEnumerable<string> CaptureTransactionEventAttributesExcludes
+		private HashSet<string> _transactionEventsAttributesInclude;
+		public  HashSet<string> TransactionEventsAttributesInclude
 		{
 			get
 			{
-				return Memoizer.Memoize(ref _captureTransactionEventAttributesExcludes, () => new HashSet<string>(_localConfiguration.transactionEvents.attributes.exclude));
+				if (_transactionEventsAttributesInclude == null)
+				{
+					_transactionEventsAttributesInclude = IsAttributesAllowedByConfigurableSecurityPolicy && TransactionEventsAttributesEnabled
+						? new HashSet<string>(_localConfiguration.transactionEvents.attributes.include)
+						: new HashSet<string>();
+				}
+
+				return _transactionEventsAttributesInclude;
+			}
+		}
+
+		private HashSet<string> _transactionEventsAttributesExclude;
+		public  HashSet<string> TransactionEventsAttributesExclude
+		{
+			get
+			{
+				if (_transactionEventsAttributesExclude == null)
+				{
+					_transactionEventsAttributesExclude = new HashSet<string>(_localConfiguration.transactionEvents.attributes.exclude);
+				}
+
+				return _transactionEventsAttributesExclude;
 			}
 		}
 
@@ -862,6 +842,38 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
+		public bool SpanEventsAttributesEnabled => CaptureAttributes && _localConfiguration.spanEvents.attributes.enabled;
+
+		private HashSet<string> _spanEventsAttributesInclude;
+		public HashSet<string> SpanEventsAttributesInclude
+		{
+			get
+			{
+				if (_spanEventsAttributesInclude == null)
+				{
+					_spanEventsAttributesInclude = IsAttributesAllowedByConfigurableSecurityPolicy && SpanEventsAttributesEnabled
+						? new HashSet<string>(_localConfiguration.spanEvents.attributes.include)
+						: new HashSet<string>();
+				}
+
+				return _spanEventsAttributesInclude;
+			}
+		}
+
+		private HashSet<string> _spanEventsAttributesExclude;
+		public virtual HashSet<string> SpanEventsAttributesExclude
+		{
+			get
+			{
+				if (_spanEventsAttributesExclude == null)
+				{
+					_spanEventsAttributesExclude = new HashSet<string>(_localConfiguration.spanEvents.attributes.exclude);
+				}
+
+				return _spanEventsAttributesExclude;
+			}
+		}
+
 		#endregion
 
 		#region Distributed Tracing
@@ -882,10 +894,12 @@ namespace NewRelic.Agent.Core.Configuration
 
 		public int? SamplingTarget => _serverConfiguration.SamplingTarget;
 
-		public uint SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestLimit(), DefaultSpanEventsMaxSamplesStored);
+		public int SpanEventsMaxSamplesStored => ServerOverrides(_serverConfiguration.EventHarvestConfig?.SpanEventHarvestLimit(), DefaultSpanEventsMaxSamplesStored);
 		public int? SamplingTargetPeriodInSeconds => _serverConfiguration.SamplingTargetPeriodInSeconds;
 
 		public bool PayloadSuccessMetricsEnabled => _localConfiguration.distributedTracing.enableSuccessMetrics;
+
+		public bool ExcludeNewrelicHeader => _localConfiguration.distributedTracing.excludeNewrelicHeader;
 
 		#endregion Distributed Tracing
 
@@ -912,11 +926,11 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		public virtual uint ErrorCollectorMaxEventSamplesStored
+		public virtual int ErrorCollectorMaxEventSamplesStored
 		{
 			get
 			{
-				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestLimit(), (uint)_localConfiguration.errorCollector.maxEventSamplesStored);
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.ErrorEventHarvestLimit(), _localConfiguration.errorCollector.maxEventSamplesStored);
 			}
 		}
 
@@ -1176,22 +1190,19 @@ namespace NewRelic.Agent.Core.Configuration
 				return new BoolConfigurationItem(false, ServerConfigSource);
 			}
 
-			if (CustomEventsMaxSamplesStored == 0)
+			if (CustomEventsMaximumSamplesStored == 0)
 			{
-				return new BoolConfigurationItem(false, $"{nameof(CustomEventsMaxSamplesStored)} set to 0");
+				return new BoolConfigurationItem(false, $"{nameof(CustomEventsMaximumSamplesStored)} set to 0");
 			}
 
 			return new BoolConfigurationItem(_localConfiguration.customEvents.enabled, LocalConfigSource);
 		}
 
-		public virtual uint CustomEventsMaxSamplesStored
+		public virtual int CustomEventsMaximumSamplesStored
 		{
 			get
 			{
-				//if we have a specifed value, use it; otherwise, use our default
-				var localValue = _localConfiguration.customEvents.maximumSamplesStoredSpecified ?
-					_localConfiguration.customEvents.maximumSamplesStored : CustomEventsMaxSamplesStoredDefault;
-				return ServerOverrides((uint?)_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), localValue);
+				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestLimit(), _localConfiguration.customEvents.maximumSamplesStored);
 			}
 		}
 
@@ -1202,6 +1213,40 @@ namespace NewRelic.Agent.Core.Configuration
 				return ServerOverrides(_serverConfiguration.EventHarvestConfig?.CustomEventHarvestCycle(), TimeSpan.FromMinutes(1));
 			}
 		}
+
+		public bool CustomEventsAttributesEnabled => CaptureAttributes && _localConfiguration.customEvents.attributes.enabled;
+
+
+		private HashSet<string> _customEventsAttributesInclude;
+		public HashSet<string> CustomEventsAttributesInclude
+		{
+			get
+			{
+				if (_customEventsAttributesInclude == null)
+				{
+					_customEventsAttributesInclude = IsAttributesAllowedByConfigurableSecurityPolicy && CustomEventsAttributesEnabled
+						? new HashSet<string>(_localConfiguration.customEvents.attributes.include)
+						: new HashSet<string>();
+				}
+
+				return _customEventsAttributesInclude;
+			}
+		}
+
+		private HashSet<string> _customEventsAttributesExclude;
+		public  HashSet<string> CustomEventsAttributesExclude
+		{
+			get
+			{
+				if (_customEventsAttributesExclude == null)
+				{
+					_customEventsAttributesExclude = new HashSet<string>(_localConfiguration.customEvents.attributes.exclude);
+				}
+
+				return _customEventsAttributesExclude;
+			}
+		}
+
 
 		#endregion
 
@@ -1215,28 +1260,18 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				if (_localConfiguration.transactionEvents.enabledSpecified)
-					return ServerCanDisable(_serverConfiguration.AnalyticsEventCollectionEnabled, _localConfiguration.transactionEvents.enabled);
-
-				if (_localConfiguration.analyticsEvents.enabledSpecified)
-					return ServerCanDisable(_serverConfiguration.AnalyticsEventCollectionEnabled, _localConfiguration.analyticsEvents.enabled);
-
-				if (TransactionEventsMaxSamplesStored == 0)
-					return false;
-
-				return ServerCanDisable(_serverConfiguration.AnalyticsEventCollectionEnabled, TransactionEventsEnabledDefault);
+				return TransactionEventsMaximumSamplesStored > 0 && ServerCanDisable(
+					_serverConfiguration.AnalyticsEventCollectionEnabled,
+					_localConfiguration.transactionEvents.enabled
+					&& (!_localConfiguration.analyticsEvents.enabledSpecified || _localConfiguration.analyticsEvents.enabled));
 			}
 		}
 
-		public virtual uint TransactionEventsMaxSamplesStored
+		public virtual int TransactionEventsMaximumSamplesStored
 		{
 			get
 			{
-				uint maxValue = TransactionEventsMaxSamplesStoredDefault;
-				if (_localConfiguration.transactionEvents.maximumSamplesStoredSpecified)
-				{
-					maxValue = _localConfiguration.transactionEvents.maximumSamplesStored;
-				}
+				var maxValue = _localConfiguration.transactionEvents.maximumSamplesStored;
 				if (_localConfiguration.analyticsEvents.maximumSamplesStoredSpecified)
 				{
 					LogDeprecatedPropertyUse("analyticsEvents.maximumSamplesStored", "transactionEvents.maximumSamplesStored");
@@ -1779,10 +1814,10 @@ namespace NewRelic.Agent.Core.Configuration
 			}
 		}
 
-		uint? _databaseStatementCacheCapcity = null;
+		int? _databaseStatementCacheCapcity = null;
 
-		public uint DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
-			TryGetAppSettingAsUintWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
+		public int DatabaseStatementCacheCapcity => _databaseStatementCacheCapcity ?? (_databaseStatementCacheCapcity =
+			TryGetAppSettingAsIntWithDefault("SqlStatementCacheCapacity", DefaultSqlStatementCacheCapacity)).Value;
 
 		private IEnumerable<string> GetDeprecatedIgnoreParameters()
 		{
@@ -1863,23 +1898,12 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion
 
-		private const bool DeprecatedCaptureIdentityParametersDefault = true;
-		private const bool DeprecatedResponseHeaderParametersEnabledDefault = true;
-		private const bool DeprecatedCustomParametersEnabledDefault = true;
-		private const bool DeprecatedRequestHeaderParametersEnabledDefault = true;
-		private const bool DeprecatedRequestParametersEnabledDefault = false;
-
-		private const bool CaptureTransactionEventsAttributesDefault = true;
 		private const bool CaptureTransactionTraceAttributesDefault = true;
 		private const bool CaptureErrorCollectorAttributesDefault = true;
 		private const bool CaptureBrowserMonitoringAttributesDefault = false;
 		private const bool CaptureCustomParametersAttributesDefault = true;
 
-		private const bool TransactionEventsEnabledDefault = true;
 		private const bool TransactionEventsTransactionsEnabledDefault = true;
-		private const uint TransactionEventsMaxSamplesPerMinuteDefault = 10000;
-		private const uint TransactionEventsMaxSamplesStoredDefault = 10000;
-		private const uint CustomEventsMaxSamplesStoredDefault = 10000;
 		private const int MaxPayloadSizeInBytes = 1000000; // 1 MiB
 	}
 }

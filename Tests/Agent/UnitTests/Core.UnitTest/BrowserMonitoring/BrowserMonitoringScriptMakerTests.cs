@@ -1,6 +1,8 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -11,7 +13,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
+using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
@@ -72,13 +74,13 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 		[Test]
 		public void GetScript_IncludesObfuscatedAttributes_IfAttributesReturnedFromAttributeService()
 		{
-			var mockAttributes = new Attributes();
+			var mockAttributes = new AttributeCollection();
 			mockAttributes.Add(Attribute.BuildOriginalUrlAttribute("http://www.google.com"));
 			mockAttributes.Add(Attribute.BuildCustomAttribute("foo", "bar"));
 
 			Mock.Arrange(() => _transactionAttributeMaker.GetUserAndAgentAttributes(Arg.IsAny<ITransactionAttributeMetadata>()))
 				.Returns(mockAttributes);
-			Mock.Arrange(() => _attributeService.FilterAttributes(Arg.IsAny<Attributes>(), AttributeDestinations.JavaScriptAgent))
+			Mock.Arrange(() => _attributeService.FilterAttributes(Arg.IsAny<AttributeCollection>(), AttributeDestinations.JavaScriptAgent))
 				.Returns(mockAttributes);
 
 			var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));
@@ -200,7 +202,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			Mock.Arrange(() => timer.Duration).Returns(time);
 
 			var priority = 0.5f;
-			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
 
 			if (queueTime != null)
 				tx.TransactionMetadata.SetQueueTime(queueTime.Value);

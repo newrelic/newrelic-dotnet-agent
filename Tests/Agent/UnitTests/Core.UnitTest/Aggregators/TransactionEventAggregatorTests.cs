@@ -114,8 +114,8 @@ namespace NewRelic.Agent.Core.Aggregators
 		public void Valid_EventHarvestData()
 		{
 			// Arrange
-			var actualReservoirSize = 0u;
-			var actualEventsSeen = 0u;
+			var actualReservoirSize = 0;
+			var actualEventsSeen = 0;
 			const uint expectedReservoirSize = MaxSamplesStored;
 
 			var eventsToSend = new[]
@@ -332,7 +332,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventCollected(), Occurs.Never());
 			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
-			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<int>()), Occurs.Never());
 			Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(Arg.IsAny<int>()), Occurs.Never());
 		}
 
@@ -388,9 +388,9 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			var configuration = Mock.Create<IConfiguration>();
 			Mock.Arrange(() => configuration.TransactionEventsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.TransactionEventsMaxSamplesStored).Returns(MaxSamplesStored);
+			Mock.Arrange(() => configuration.TransactionEventsMaximumSamplesStored).Returns(MaxSamplesStored);
 			Mock.Arrange(() => configuration.TransactionEventsTransactionsEnabled).Returns(true);
-			Mock.Arrange(() => configuration.CaptureTransactionEventsAttributes).Returns(true);
+			Mock.Arrange(() => configuration.TransactionEventsAttributesEnabled).Returns(true);
 			if (versionNumber.HasValue)   
 				Mock.Arrange(() => configuration.ConfigurationVersion).Returns(versionNumber.Value);
 			return configuration;

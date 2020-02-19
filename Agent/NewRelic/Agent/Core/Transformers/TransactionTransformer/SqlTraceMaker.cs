@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface ISqlTraceMaker
 	{
-		SqlTraceWireModel TryGetSqlTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TypedSegment<DatastoreSegmentData> segment);
+		SqlTraceWireModel TryGetSqlTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, Segment segment);
 	}
 
 
@@ -16,19 +18,22 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 	{
 		private readonly IConfigurationService _configurationService;
 		private readonly IAttributeService _attributeService;
+		private readonly IDatabaseService _databaseService;
 
-		public SqlTraceMaker(IConfigurationService configurationService, IAttributeService attributeService)
+		public SqlTraceMaker(IConfigurationService configurationService, IAttributeService attributeService, IDatabaseService databaseService)
 		{
 			_configurationService = configurationService;
 			_attributeService = attributeService;
+			_databaseService = databaseService;
 		}
 
-		public SqlTraceWireModel TryGetSqlTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TypedSegment<DatastoreSegmentData> segment)
+		public SqlTraceWireModel TryGetSqlTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, Segment segment)
 		{
-			if (segment.Duration == null)
+			var segmentData = segment.Data as DatastoreSegmentData;
+
+			if (segment.Duration == null || segmentData == null)
 				return null;
 
-			var segmentData = segment.TypedData;
 			var transactionName = transactionMetricName.PrefixedName;
 			var uri = immutableTransaction.TransactionMetadata.Uri ?? "<unknown>";
 
@@ -37,10 +42,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				uri = "<unknown>";
 			}
 
-			var sql = immutableTransaction.GetSqlObfuscatedAccordingToConfig(segmentData.CommandText, segmentData.DatastoreVendorName);
-			var sqlId = immutableTransaction.GetSqlId(segmentData.CommandText,segmentData.DatastoreVendorName);
+			var sql = _databaseService.GetObfuscatedSql(segmentData.CommandText, segmentData.DatastoreVendorName);
+			var sqlId = _databaseService.GetSqlId(segmentData.CommandText,segmentData.DatastoreVendorName);
 
-			var metricName = segment.GetTransactionTraceName();
+			var metricName = segmentData.GetTransactionTraceName();
 			const int count = 1;
 			var totalCallTime = segment.Duration.Value;
 			var parameterData = new Dictionary<string, object>(); // Explain plans will go here

@@ -1,6 +1,6 @@
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core;
-using NewRelic.Core.NewRelic.Cache;
+using NewRelic.Core.Caching;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;

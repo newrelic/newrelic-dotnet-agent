@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Helpers;
 
@@ -57,11 +56,11 @@ namespace NewRelic.Agent.Core.Errors
 			return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt);
 		}
 
-		public static ErrorData TryGetErrorData(ImmutableTransaction immutableTransaction, IConfigurationService configurationService)
+		public static ErrorData TryGetErrorData(ImmutableTransaction immutableTransaction, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
 		{
 			// *Any* ignored custom error noticed by the agent should result in no error trace
 			var customErrors = immutableTransaction.TransactionMetadata.CustomErrorDatas.ToList();
-			if (ShouldIgnoreAnyError(customErrors, configurationService))
+			if (ShouldIgnoreAnyError(customErrors, exceptionsToIgnore, httpStatusCodesToIgnore))
 				return new ErrorData();
 
 			// Custom errors are more valuable than exception errors or status code errors
@@ -72,12 +71,12 @@ namespace NewRelic.Agent.Core.Errors
 
 			// An ignored status code should result in no error trace
 			var formattedStatusCode = TryGetFormattedStatusCode(immutableTransaction);
-			if (ShouldIgnoreError(formattedStatusCode, configurationService))
+			if (ShouldIgnoreError(formattedStatusCode, exceptionsToIgnore, httpStatusCodesToIgnore))
 				return new ErrorData();
 
 			// *Any* ignored exception noticed by the agent should result in no error trace (unless there is a custom error)
 			var transactionExceptions = immutableTransaction.TransactionMetadata.TransactionExceptionDatas.ToList();
-			if (ShouldIgnoreAnyError(transactionExceptions, configurationService))
+			if (ShouldIgnoreAnyError(transactionExceptions, exceptionsToIgnore, httpStatusCodesToIgnore))
 				return new ErrorData();
 
 			// Exception errors are more valuable than status code errors
@@ -89,32 +88,32 @@ namespace NewRelic.Agent.Core.Errors
 			return TryCreateHttpErrorData(immutableTransaction);
 		}
 
-		private static bool ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IConfigurationService configurationService)
+		private static bool ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
 		{
 			var errorTypeNames = errorData.Select(data => data.ErrorTypeName);
-			return ShouldIgnoreAnyError(errorTypeNames, configurationService);
+			return ShouldIgnoreAnyError(errorTypeNames, exceptionsToIgnore, httpStatusCodesToIgnore);
 		}
 
-		internal static bool ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
+		internal static bool ShouldIgnoreError(string errorTypeName, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
 		{
-			return ShouldIgnoreAnyError(new[] { errorTypeName }, configurationService);
+			return ShouldIgnoreAnyError(new[] { errorTypeName }, exceptionsToIgnore, httpStatusCodesToIgnore);
 		}
 
-		private static bool ShouldIgnoreAnyError(IEnumerable<string> errorTypeNames, IConfigurationService configurationService)
+		private static bool ShouldIgnoreAnyError(IEnumerable<string> errorTypeNames, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
 		{
 			foreach (var errorClassName in errorTypeNames)
 			{
 				if (errorClassName == null)
 					continue;
 
-				if (configurationService.Configuration.ExceptionsToIgnore.Contains(errorClassName))
+				if (exceptionsToIgnore.Contains(errorClassName))
 					return true;
 
-				if (configurationService.Configuration.HttpStatusCodesToIgnore.Contains(errorClassName))
+				if (httpStatusCodesToIgnore.Contains(errorClassName))
 					return true;
 
 				var splitStatusCode = errorClassName.Split(StringSeparators.Period);
-				if (splitStatusCode[0] != null && configurationService.Configuration.HttpStatusCodesToIgnore.Contains(splitStatusCode[0]))
+				if (splitStatusCode[0] != null && httpStatusCodesToIgnore.Contains(splitStatusCode[0]))
 				{
 					return true;
 				}

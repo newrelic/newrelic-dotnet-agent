@@ -1,5 +1,5 @@
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 using System;

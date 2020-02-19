@@ -1,4 +1,4 @@
-﻿using BenchmarkingTests.Scaffolding.Benchmarker;
+using BenchmarkingTests.Scaffolding.Benchmarker;
 using BenchmarkingTests.Scaffolding.CodeExerciser;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
@@ -9,6 +9,8 @@ using System.Data;
 using NewRelic.Core;
 using NewRelic.Parsing;
 using System.Threading;
+using Telerik.JustMock;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace BenchmarkingTests.Tests
 {
@@ -127,7 +129,7 @@ namespace BenchmarkingTests.Tests
 			var cachedThroughput = ThroughputExerciser.Create()
 				.UsingThreads(10)
 				.ForDuration(1000)  // 1 second
-				.DoThisToSetup(() => { dbParser = new DatabaseStatementParser(); })
+				.DoThisToSetup(() => { dbParser = new DatabaseStatementParser(Mock.Create<ICacheStatsReporter>()); })
 				.DoThisUnitOfWork((threadId, uowIdLocal, uowIdGlobal) =>
 				{
 					var stmt = dbParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, $"SELECT * FROM dbo.User WHERE UserID = {uowIdLocal}");
@@ -137,7 +139,7 @@ namespace BenchmarkingTests.Tests
 			var notCachedThroughput = ThroughputExerciser.Create()
 				.UsingThreads(10)
 				.ForDuration(1000)  // 1 second
-				.DoThisToSetup(() => { dbParser = new DatabaseStatementParser(); })
+				.DoThisToSetup(() => { dbParser = new DatabaseStatementParser(Mock.Create<ICacheStatsReporter>()); })
 				.DoThisUnitOfWork((threadId, uowIdLocal, uowIdGlobal) =>
 				{
 					var stmt = SqlParser.GetParsedDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, $"SELECT * FROM dbo.User WHERE UserID = {uowIdLocal}");

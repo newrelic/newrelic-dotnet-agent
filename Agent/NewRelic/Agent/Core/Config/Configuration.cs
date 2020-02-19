@@ -1639,7 +1639,7 @@ namespace NewRelic.Agent.Core.Config
         
         private System.Nullable<uint> maximumSamplesPerMinuteField;
         
-        private System.Nullable<uint> maximumSamplesStoredField;
+        private System.Nullable<int> maximumSamplesStoredField;
         
         private System.Nullable<bool> captureAttributesField;
         
@@ -1730,7 +1730,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public uint maximumSamplesStored
+        public int maximumSamplesStored
         {
             get
             {
@@ -1740,7 +1740,7 @@ namespace NewRelic.Agent.Core.Config
                 }
                 else
                 {
-                    return default(uint);
+                    return default(int);
                 }
             }
             set
@@ -1845,13 +1845,29 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationCustomEvents
     {
         
+        private configurationCustomEventsAttributes attributesField;
+        
         private bool enabledField;
         
-        private System.Nullable<uint> maximumSamplesStoredField;
+        private int maximumSamplesStoredField;
         
         public configurationCustomEvents()
         {
+            this.attributesField = new configurationCustomEventsAttributes();
             this.enabledField = true;
+            this.maximumSamplesStoredField = 10000;
+        }
+        
+        public configurationCustomEventsAttributes attributes
+        {
+            get
+            {
+                return this.attributesField;
+            }
+            set
+            {
+                this.attributesField = value;
+            }
         }
         
         [System.ComponentModel.DefaultValueAttribute(true)]
@@ -1867,38 +1883,70 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public uint maximumSamplesStored
+        [System.ComponentModel.DefaultValueAttribute(10000)]
+        public int maximumSamplesStored
         {
             get
             {
-                if (this.maximumSamplesStoredField.HasValue)
-                {
-                    return this.maximumSamplesStoredField.Value;
-                }
-                else
-                {
-                    return default(uint);
-                }
+                return this.maximumSamplesStoredField;
             }
             set
             {
                 this.maximumSamplesStoredField = value;
             }
         }
+    }
+    
+    public partial class configurationCustomEventsAttributes
+    {
         
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool maximumSamplesStoredSpecified
+        private List<string> includeField;
+        
+        private List<string> excludeField;
+        
+        private bool enabledField;
+        
+        public configurationCustomEventsAttributes()
+        {
+            this.excludeField = new List<string>();
+            this.includeField = new List<string>();
+            this.enabledField = true;
+        }
+        
+        public List<string> include
         {
             get
             {
-                return this.maximumSamplesStoredField.HasValue;
+                return this.includeField;
             }
             set
             {
-                if (value==false)
-                {
-                    this.maximumSamplesStoredField = null;
-                }
+                this.includeField = value;
+            }
+        }
+        
+        public List<string> exclude
+        {
+            get
+            {
+                return this.excludeField;
+            }
+            set
+            {
+                this.excludeField = value;
+            }
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
             }
         }
     }
@@ -1910,16 +1958,18 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationTransactionEventsAttributes attributesField;
         
-        private System.Nullable<bool> enabledField;
+        private bool enabledField;
         
         private System.Nullable<uint> maximumSamplesPerMinuteField;
         
-        private System.Nullable<uint> maximumSamplesStoredField;
+        private int maximumSamplesStoredField;
         
         public configurationTransactionEvents()
         {
             this.attributesField = new configurationTransactionEventsAttributes();
             this.transactionsField = new configurationTransactionEventsTransactions();
+            this.enabledField = true;
+            this.maximumSamplesStoredField = 10000;
         }
         
         public configurationTransactionEventsTransactions transactions
@@ -1946,38 +1996,16 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get
             {
-                if (this.enabledField.HasValue)
-                {
-                    return this.enabledField.Value;
-                }
-                else
-                {
-                    return default(bool);
-                }
+                return this.enabledField;
             }
             set
             {
                 this.enabledField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool enabledSpecified
-        {
-            get
-            {
-                return this.enabledField.HasValue;
-            }
-            set
-            {
-                if (value==false)
-                {
-                    this.enabledField = null;
-                }
             }
         }
         
@@ -2016,38 +2044,16 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public uint maximumSamplesStored
+        [System.ComponentModel.DefaultValueAttribute(10000)]
+        public int maximumSamplesStored
         {
             get
             {
-                if (this.maximumSamplesStoredField.HasValue)
-                {
-                    return this.maximumSamplesStoredField.Value;
-                }
-                else
-                {
-                    return default(uint);
-                }
+                return this.maximumSamplesStoredField;
             }
             set
             {
                 this.maximumSamplesStoredField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool maximumSamplesStoredSpecified
-        {
-            get
-            {
-                return this.maximumSamplesStoredField.HasValue;
-            }
-            set
-            {
-                if (value==false)
-                {
-                    this.maximumSamplesStoredField = null;
-                }
             }
         }
     }
@@ -2100,12 +2106,13 @@ namespace NewRelic.Agent.Core.Config
         
         private List<string> excludeField;
         
-        private System.Nullable<bool> enabledField;
+        private bool enabledField;
         
         public configurationTransactionEventsAttributes()
         {
             this.excludeField = new List<string>();
             this.includeField = new List<string>();
+            this.enabledField = true;
         }
         
         public List<string> include
@@ -2132,38 +2139,16 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
+        [System.ComponentModel.DefaultValueAttribute(true)]
         public bool enabled
         {
             get
             {
-                if (this.enabledField.HasValue)
-                {
-                    return this.enabledField.Value;
-                }
-                else
-                {
-                    return default(bool);
-                }
+                return this.enabledField;
             }
             set
             {
                 this.enabledField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool enabledSpecified
-        {
-            get
-            {
-                return this.enabledField.HasValue;
-            }
-            set
-            {
-                if (value==false)
-                {
-                    this.enabledField = null;
-                }
             }
         }
     }
@@ -2664,11 +2649,14 @@ namespace NewRelic.Agent.Core.Config
         
         private bool enabledField;
         
+        private bool excludeNewrelicHeaderField;
+        
         private bool enableSuccessMetricsField;
         
         public configurationDistributedTracing()
         {
             this.enabledField = false;
+            this.excludeNewrelicHeaderField = false;
             this.enableSuccessMetricsField = true;
         }
         
@@ -2682,6 +2670,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.enabledField = value;
+            }
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(false)]
+        public bool excludeNewrelicHeader
+        {
+            get
+            {
+                return this.excludeNewrelicHeaderField;
+            }
+            set
+            {
+                this.excludeNewrelicHeaderField = value;
             }
         }
         
@@ -2702,11 +2703,80 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationSpanEvents
     {
         
+        private configurationSpanEventsAttributes attributesField;
+        
         private bool enabledField;
         
         public configurationSpanEvents()
         {
+            this.attributesField = new configurationSpanEventsAttributes();
             this.enabledField = true;
+        }
+        
+        public configurationSpanEventsAttributes attributes
+        {
+            get
+            {
+                return this.attributesField;
+            }
+            set
+            {
+                this.attributesField = value;
+            }
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(true)]
+        public bool enabled
+        {
+            get
+            {
+                return this.enabledField;
+            }
+            set
+            {
+                this.enabledField = value;
+            }
+        }
+    }
+    
+    public partial class configurationSpanEventsAttributes
+    {
+        
+        private List<string> includeField;
+        
+        private List<string> excludeField;
+        
+        private bool enabledField;
+        
+        public configurationSpanEventsAttributes()
+        {
+            this.excludeField = new List<string>();
+            this.includeField = new List<string>();
+            this.enabledField = true;
+        }
+        
+        public List<string> include
+        {
+            get
+            {
+                return this.includeField;
+            }
+            set
+            {
+                this.includeField = value;
+            }
+        }
+        
+        public List<string> exclude
+        {
+            get
+            {
+                return this.excludeField;
+            }
+            set
+            {
+                this.excludeField = value;
+            }
         }
         
         [System.ComponentModel.DefaultValueAttribute(true)]

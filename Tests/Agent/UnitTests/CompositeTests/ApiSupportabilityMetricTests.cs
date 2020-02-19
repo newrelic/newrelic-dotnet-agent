@@ -1,5 +1,6 @@
 ﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -16,6 +17,7 @@ namespace CompositeTests
 
 		private static CompositeTestAgent _compositeTestAgent;
 		private IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+		private IConfigurationService _configSvc;
 		private IAgent _agent;
 
 		[SetUp]
@@ -24,6 +26,7 @@ namespace CompositeTests
 			_compositeTestAgent = new CompositeTestAgent();
 			_agent = _compositeTestAgent.GetAgent();
 			_apiSupportabilityMetricCounters = _compositeTestAgent.Container.Resolve<IApiSupportabilityMetricCounters>();
+			_configSvc = _compositeTestAgent.Container.Resolve<IConfigurationService>();
 		}
 
 		[TearDown]
@@ -48,7 +51,7 @@ namespace CompositeTests
 		public void CurrentTransactionTest()
 		{
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters);
+			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters, _configSvc);
 
 			var currentTransaction = agentBridgeApi.CurrentTransaction;
 
@@ -180,7 +183,7 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 
 			apiMethod(transactionBridgeApi);
@@ -196,7 +199,7 @@ namespace CompositeTests
 		public void TraceMetadataTest()
 		{
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters);
+			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters, _configSvc);
 
 			var traceMetadata = agentBridgeApi.TraceMetadata;
 
@@ -207,7 +210,7 @@ namespace CompositeTests
 		public void GetLinkingMetadataTest()
 		{
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
-			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters);
+			var agentBridgeApi = new AgentBridgeApi(agentWrapperApi, _apiSupportabilityMetricCounters, _configSvc);
 
 			var getLinkingMetadata = agentBridgeApi.GetLinkingMetadata();
 

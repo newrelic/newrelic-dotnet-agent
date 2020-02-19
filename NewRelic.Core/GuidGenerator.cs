@@ -19,7 +19,7 @@ namespace NewRelic.Core
 		{
 			var rndBytes = new byte[8];
 			RngCryptoServiceProvider.GetBytes(rndBytes);
-			return $"{BitConverter.ToUInt64(rndBytes, 0):X16}";
+			return $"{BitConverter.ToUInt64(rndBytes, 0):x16}";
 		}
 	}
 }

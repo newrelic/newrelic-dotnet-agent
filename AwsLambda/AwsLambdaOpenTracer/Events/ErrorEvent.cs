@@ -75,22 +75,8 @@ namespace NewRelic.OpenTracing.AmazonLambda.Events
 		{
 			get
 			{
-				return _userAttributes ?? (_userAttributes = BuildUserAttributes());
+				return _userAttributes ?? (_userAttributes = Tags.BuildUserAttributes());
 			}
-		}
-
-		protected virtual IDictionary<string, object> BuildUserAttributes()
-		{
-			var userAttributes = new Dictionary<string, object>();
-			foreach (var tag in Tags)
-			{
-				if (! tag.IsAgentAttribute())
-				{
-					userAttributes.Add(tag.Key, tag.Value);
-				}
-			}
-
-			return userAttributes;
 		}
 
 		// Per 12-4-2019 spec, error events have very specific agent attributes
@@ -98,22 +84,8 @@ namespace NewRelic.OpenTracing.AmazonLambda.Events
 		{
 			get
 			{
-				return _agentAttributes ?? (_agentAttributes = BuildAgentAttributes());
+				return _agentAttributes ?? (_agentAttributes = Tags.BuildAgentAttributes());
 			}
-		}
-
-		protected virtual IDictionary<string, object> BuildAgentAttributes()
-		{
-			var agentAttributes = new Dictionary<string, object>();
-			foreach (var tag in Tags)
-			{
-				if (tag.IsAgentAttribute())
-				{
-					agentAttributes.Add(tag.GetAttributeName(), tag.Value);
-				}
-			}
-
-			return agentAttributes;
 		}
 
 	}

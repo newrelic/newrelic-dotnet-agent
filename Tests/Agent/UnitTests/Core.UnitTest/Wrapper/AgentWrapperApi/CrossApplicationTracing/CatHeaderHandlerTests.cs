@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Metric;
@@ -343,7 +343,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			Mock.Arrange(() => timer.Duration).Returns(duration);
 
 			var priority = 0.5f;
-			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
 			tx.TransactionMetadata.SetCrossApplicationPathHash(pathHash);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid(referrerGuid);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTripId(referrerTripId);

@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			{
 				if (!transactionAlreadyExists)
 				{
-					agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction because this call is not already encapsulated within a transaction.");
+					agent.Logger.Log(Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction because this call is not already encapsulated within a transaction.");
 				}
 				else
 				{
@@ -48,11 +48,11 @@ namespace NewRelic.Agent.Core.Wrapper
 
 					if (!trackWorkAsNewTransaction)
 					{
-						agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction.  Only asynchronous work spawned on a new thread (e.g. Task.Run, TaskFactory.StartNew, or new Thread()) is supported at this time.");
+						agent.Logger.Log(Extensions.Logging.Level.Debug, $"Ignoring request to track {name} as a separate transaction.  Only asynchronous work spawned on a new thread (e.g. Task.Run, TaskFactory.StartNew, or new Thread()) is supported at this time.");
 					}
 					else
 					{
-						agent.Logger.Log(Agent.Extensions.Logging.Level.Finest, $"Tracking call to method {name} under a separate transaction.");
+						agent.Logger.Log(Extensions.Logging.Level.Finest, $"Tracking call to method {name} under a separate transaction.");
 					}
 				}
 			}
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Wrapper
 				// Because we cannot add a continuation for segment timing, we cannot support these type of methods
 				if (task == null)
 				{
-					agent.Logger.Log(Agent.Extensions.Logging.Level.Debug, $"Warning, method {name} is an async method, but does not have a return type of Task.  This may prevent downstream instrumentation from being captured correctly.  Consider revising the method to have a return-type of Task.");
+					agent.Logger.Log(Extensions.Logging.Level.Debug, $"Warning, method {name} is an async method, but does not have a return type of Task.  This may prevent downstream instrumentation from being captured correctly.  Consider revising the method to have a return-type of Task.");
 
 					// Since we cannot add a continuation, we have no other choice than to end the segment and transaction here.
 					// This means we truncate the segment and potentially end the transaction prematurely preventing downstream instrumentation from being invoked.

@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core.Logging;
@@ -30,7 +30,6 @@ namespace NewRelic.Agent.Core.Metric
 	public interface ICATSupportabilityMetricCounters : IOutOfBandMetricSource
 	{
 		void Record(CATSupportabilityCondition condition);
-		void CollectMetrics();
 	}
 
 	public class CATSupportabilityMetricCounters : ICATSupportabilityMetricCounters

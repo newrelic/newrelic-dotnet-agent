@@ -1,50 +1,96 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-    <PropertyGroup>
-        <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-        <AssemblyName>NewRelic.Agent.Core</AssemblyName>
-        <RootNamespace>NewRelic.Agent.Core</RootNamespace>
-        <Description></Description>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
-        <IntermediateOutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
-        <OutputPath>$(SolutionDir)_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-        <PackageReference Include="ILRepack" Version="2.0.16" />
-        <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
-        <PackageReference Include="log4net" Version="2.0.8" />
-        <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-        <PackageReference Include="SharpZipLib" Version="1.1.0" />
-    </ItemGroup>
-  
+﻿<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <TransformOnBuild>true</TransformOnBuild>
-    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
-    <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <AssemblyName>NewRelic.Agent.Core</AssemblyName>
+    <RootNamespace>NewRelic.Agent.Core</RootNamespace>
+    <Description></Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
+    <IntermediateOutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
+    <OutputPath>$(SolutionDir)_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
+  <ItemGroup>
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="ILRepack" Version="2.0.16" />
+    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="SharpZipLib" Version="1.1.0" />
+  </ItemGroup>
 
-  <PropertyGroup>
-    <ConfigurationCsPath>Config\Configuration.cs</ConfigurationCsPath>
-    <ExtensionCsPath>NewRelic.Agent.Core.Extension\Extension.cs</ExtensionCsPath>
-  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <PackageReference Include="Castle.Core" Version="3.3.0" />
+    <PackageReference Include="Castle.Windsor" Version="3.3.0" />
+  </ItemGroup>
 
-  <Target Name="GenerateCodeInner">
-    <PropertyGroup>
-      <Xsd2CodePath>$(SolutionDir)BuildTools\Xsd2Code.exe</Xsd2CodePath>
-    </PropertyGroup>
- 
-    <Message Importance="high" Text="Running GenerateCodeInner target" />
-    <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\Config\Configuration.xsd&quot; NewRelic.Agent.Core.Config Configuration.cs /cl /ap /sc /xa" /> -->
-    <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd&quot; NewRelic.Agent.Core.Extension Extension.cs /cl /ap /sc /xa" /> -->
-  </Target>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Autofac" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dongle\Dongle.csproj" />
+    <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    <ProjectReference Include="..\LabelsService\LabelsService.csproj" />
+    <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\Parsing\Parsing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <Reference Include="System.Web" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SolutionDir)Shared\SharedLog4NetRepository.cs">
+      <Link>Properties\SharedLog4NetRepository.cs</Link>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+
+    <!-- 
+      The following includes are required because these files are generated by the PreBuildEvent. They do not exist when building from a clean working folder. 
+      Since we are using EnableDefaultCompileItems, it seems the list of files to compile is determined prior to the PreBuildEvent. This causes compilation to fail on the
+      first build attempt and then succeed on the second build attempt. These includes remedy this issue.
+    -->
+    <Compile Include="Config\Configuration.cs" Condition="!Exists('Config\Configuration.cs')" />
+    <Compile Include="NewRelic.Agent.Core.Extension\Extension.cs" Condition="!Exists('NewRelic.Agent.Core.Extension\Extension.cs')" />
+    <Compile Include="AgentInstallConfiguration_Generated.cs" Condition="!Exists('AgentInstallConfiguration_Generated.cs')">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AgentInstallConfiguration_Generated.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(SolutionDir)NewRelicStrongNameKey.snk">
+      <Link>$(SolutionDir)NewRelicStrongNameKey.snk</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="AgentInstallConfiguration_Generated.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
 
   <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds;CoreCompile">
     <!--
@@ -57,96 +103,26 @@
     <MSBuild Projects="$(MSBuildProjectFile)" Targets="GenerateCodeInner" Properties="TargetFramework=once" />
   </Target>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Autofac" Version="4.5.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration">
-      <Version>2.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions">
-      <Version>2.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json">
-      <Version>2.0.0</Version>
-    </PackageReference>
-  </ItemGroup>
+  <Target Name="GenerateCodeInner">
+    <PropertyGroup>
+      <Xsd2CodePath>$(SolutionDir)BuildTools\Xsd2Code.exe</Xsd2CodePath>
+    </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-        <PackageReference Include="Castle.Core" Version="3.3.0" />
-        <PackageReference Include="Castle.Windsor" Version="3.3.0" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-      <Reference Include="System" />
-      <Reference Include="System.Messaging" />
-      <Reference Include="System.Web" />
-      <Reference Include="System.Data" />
-      <Reference Include="System.Xml" />
-      <Reference Include="System.Management" />
-      <Reference Include="System.Configuration" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\AttributeFilter\AttributeFilter.csproj" />
-        <ProjectReference Include="..\Dongle\Dongle.csproj" />
-        <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-        <ProjectReference Include="..\LabelsService\LabelsService.csproj" />
-        <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj" />
-        <ProjectReference Include="..\Parsing\Parsing.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="$(SolutionDir)Shared\SharedLog4NetRepository.cs">
-            <Link>Properties\SharedLog4NetRepository.cs</Link>
-        </Compile>
-        <Compile Update="Properties\Resources.Designer.cs">
-            <AutoGen>True</AutoGen>
-            <DesignTime>True</DesignTime>
-            <DependentUpon>Resources.resx</DependentUpon>
-        </Compile>
-
-        <!-- The following includes are required because these files are generated by the PreBuildEvent. They do not exist when building from a clean working folder. 
-             Since we are using EnableDefaultCompileItems, it seems the list of files to compile is determined prior to the PreBuildEvent. This causes compilation to fail on the
-             first build attempt and then succeed on the second build attempt. These includes remedy this issue. -->
-        <Compile Include="Config\Configuration.cs" Condition="!Exists('Config\Configuration.cs')" />
-        <Compile Include="NewRelic.Agent.Core.Extension\Extension.cs" Condition="!Exists('NewRelic.Agent.Core.Extension\Extension.cs')" />
-        <Compile Include="AgentInstallConfiguration_Generated.cs" Condition="!Exists('AgentInstallConfiguration_Generated.cs')">
-          <DesignTime>True</DesignTime>
-          <AutoGen>True</AutoGen>
-          <DependentUpon>AgentInstallConfiguration_Generated.tt</DependentUpon>
-        </Compile>
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="$(SolutionDir)NewRelicStrongNameKey.snk">
-            <Link>$(SolutionDir)NewRelicStrongNameKey.snk</Link>
-        </None>
-    </ItemGroup>
-    <ItemGroup>
-        <EmbeddedResource Update="Properties\Resources.resx">
-            <Generator>ResXFileCodeGenerator</Generator>
-            <SubType>Designer</SubType>
-        </EmbeddedResource>
-    </ItemGroup>
-    <ItemGroup>
-      <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-    </ItemGroup>
-    <ItemGroup>
-      <None Update="AgentInstallConfiguration_Generated.tt">
-        <Generator>TextTemplatingFileGenerator</Generator>
-        <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
-      </None>
-    </ItemGroup>
+    <Message Importance="high" Text="Running GenerateCodeInner target" />
+    <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\Config\Configuration.xsd&quot; NewRelic.Agent.Core.Config Configuration.cs /cl /ap /sc /xa" /> -->
+    <!-- <Exec Command="&quot;$(Xsd2CodePath)&quot; &quot;$(SolutionDir)NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd&quot; NewRelic.Agent.Core.Extension Extension.cs /cl /ap /sc /xa" /> -->
+  </Target>
 
   <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
     <ItemGroup>
       <PossibleRefsForILRepack Include="$(OutputPath)*.dll" />
     </ItemGroup>
-    
+
     <ItemGroup>
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Dongle'" />
-      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.AttributeFilter'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.LabelsService'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Core'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Parsing'" />
-      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Trie'" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
@@ -167,8 +143,8 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net45'">13</ILRepackIncludeCount>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">10</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net45'">11</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">8</ILRepackIncludeCount>
     </PropertyGroup>
     
     <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude->Count())."
@@ -192,6 +168,17 @@
     <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />
     <Exec Command="$(ILRepackCommand)" />
   </Target>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <TransformOnBuild>true</TransformOnBuild>
+    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
+    <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
+  </PropertyGroup>
+  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
 
   <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
 </Project>

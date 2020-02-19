@@ -1,6 +1,6 @@
 ﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Core;
-using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;

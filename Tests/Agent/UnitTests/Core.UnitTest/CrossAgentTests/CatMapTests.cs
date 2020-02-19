@@ -1,4 +1,4 @@
-﻿using MoreLinq;
+using MoreLinq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -15,7 +15,6 @@ using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
@@ -78,7 +77,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 			var agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-			_agent = new Wrapper.AgentWrapperApi.Agent(transactionBuilderService, Mock.Create<ITimerFactory>(), Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters);
+			_agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters);
 
 			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 		}
@@ -129,7 +128,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			// Get the attributes that would be created for this transaction
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(transaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
-			var errorData = ErrorData.TryGetErrorData(transaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
 			var attributes = _transactionAttributeMaker.GetAttributes(transaction, transactionMetricName, null, totalTime, errorData, txStats);
 			var intrinsics = attributes.GetIntrinsicsDictionary();
 
@@ -165,7 +164,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var transactionName = GetTransactionNameFromString(testCase.TransactionName);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
 
 			SetGuid(transaction, testCase.TransactionGuid);
 

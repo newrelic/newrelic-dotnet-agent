@@ -1,5 +1,6 @@
-﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -30,6 +31,40 @@ namespace CompositeTests
 		public static void TearDown()
 		{
 			_compositeTestAgent.Dispose();
+		}
+
+		[Test]
+		public void CreatedTransactionIdTraceIdSpanIdShouldBeLowerCase()
+		{
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
+			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
+			_compositeTestAgent.PushConfiguration();
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			var transaction = _agent.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: false);
+
+
+			var segment = _agent.StartTransactionSegmentOrThrow("segment");
+			segment.End();
+			transaction.End();
+
+			_compositeTestAgent.Harvest();
+
+			foreach (SpanEventWireModel span in _compositeTestAgent.SpanEvents)
+			{
+				Assert.IsTrue(IsLowerCase(span.IntrinsicAttributes["traceId"].ToString()));
+				Assert.IsTrue(IsLowerCase(span.IntrinsicAttributes["transactionId"].ToString()));
+			}
+
+			foreach (TransactionEventWireModel tx in _compositeTestAgent.TransactionEvents)
+			{
+				Assert.IsTrue(IsLowerCase(tx.IntrinsicAttributes["guid"].ToString()));
+				Assert.IsTrue(IsLowerCase(tx.IntrinsicAttributes["traceId"].ToString()));
+			}
 		}
 
 		[Test]
@@ -73,10 +108,10 @@ namespace CompositeTests
 			TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan);
 
 			//The specific test
-			Assert.IsFalse(actualSpan.IntrinsicAttributes.ContainsKey("db.statement"));
-			Assert.AreEqual(testDBName, actualSpan.IntrinsicAttributes["db.instance"]);
-			Assert.AreEqual(testHostName, actualSpan.IntrinsicAttributes["peer.hostname"]);
-			Assert.AreEqual($"{testHostName}:{testPort}", actualSpan.IntrinsicAttributes["peer.address"]);
+			Assert.IsFalse(actualSpan.AgentAttributes.ContainsKey("db.statement"));
+			Assert.AreEqual(testDBName, actualSpan.AgentAttributes["db.instance"]);
+			Assert.AreEqual(testHostName, actualSpan.AgentAttributes["peer.hostname"]);
+			Assert.AreEqual($"{testHostName}:{testPort}", actualSpan.AgentAttributes["peer.address"]);
 		}
 
 		[Test]
@@ -122,10 +157,10 @@ namespace CompositeTests
 			TestPayloadInfoMatchesSpanInfo(Payload, rootSpan, actualSpan);
 			
 			//The specific test
-			Assert.AreEqual(testCommand, actualSpan.IntrinsicAttributes["db.statement"]);
-			Assert.AreEqual(testDBName, actualSpan.IntrinsicAttributes["db.instance"]);
-			Assert.AreEqual(testHostName, actualSpan.IntrinsicAttributes["peer.hostname"]);
-			Assert.AreEqual($"{testHostName}:{testPort}", actualSpan.IntrinsicAttributes["peer.address"]);
+			Assert.AreEqual(testCommand, actualSpan.AgentAttributes["db.statement"]);
+			Assert.AreEqual(testDBName, actualSpan.AgentAttributes["db.instance"]);
+			Assert.AreEqual(testHostName, actualSpan.AgentAttributes["peer.hostname"]);
+			Assert.AreEqual($"{testHostName}:{testPort}", actualSpan.AgentAttributes["peer.address"]);
 		}
 
 		[Test]
@@ -180,8 +215,6 @@ namespace CompositeTests
 			Assert.AreEqual("generic", (string)actualSpan.IntrinsicAttributes["category"]);
 		}
 
-
-
 		private static Dictionary<string, string> NewRelicHeaders
 		{
 			get
@@ -200,13 +233,13 @@ namespace CompositeTests
 			Type = "App",
 			AccountId = "33",
 			AppId = "2827902",
-			TraceId = "d6b4ba0c3a712ca".ToUpperInvariant(),
+			TraceId = "d6b4ba0c3a712ca",
 			Priority = 1.1f,
 			Sampled = true,
 			Timestamp = DateTime.UtcNow,
-			Guid = "7d3efb1b173fecfa".ToUpperInvariant(),
+			Guid = "7d3efb1b173fecfa",
 			TrustKey = "33",
-			TransactionId = "e8b91a159289ff74".ToUpperInvariant()
+			TransactionId = "e8b91a159289ff74"
 		};
 
 		private static void TestPayloadInfoMatchesSpanInfo(DistributedTracePayload payload, SpanEventWireModel rootSpan, SpanEventWireModel actualSpan)
@@ -227,6 +260,10 @@ namespace CompositeTests
 			Assert.AreEqual((string)rootSpan.IntrinsicAttributes["transactionId"], (string)actualSpan.IntrinsicAttributes["transactionId"]);
 			Assert.AreEqual("datastore", (string)actualSpan.IntrinsicAttributes["category"]);
 		}
-
+		
+		private bool IsLowerCase(string id)
+		{
+			return id.Equals(id.ToLowerInvariant());
+		}
 	}
 }

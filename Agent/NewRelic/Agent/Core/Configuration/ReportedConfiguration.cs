@@ -69,6 +69,6 @@ namespace NewRelic.Agent.Core.Configuration
 		public bool BrowserMonitoringAutoInstrument { get; set; }
 
 		[JsonProperty("transaction_event.max_samples_stored")]
-		public uint TransactionEventMaxSamplesStored { get; set; }
+		public int TransactionEventMaxSamplesStored { get; set; }
 	}
 }

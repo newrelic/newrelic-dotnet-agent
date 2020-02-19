@@ -1,6 +1,7 @@
 using System;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Configuration;
 using NewRelic.Core.Logging;
 using System.Collections.Generic;
 
@@ -10,10 +11,12 @@ namespace NewRelic.Agent.Core.Api
 	{
 		private readonly IAgent _agent;
 		private readonly IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+		private readonly IConfigurationService _configSvc;
 
-		public AgentBridgeApi(IAgent agent, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
+		public AgentBridgeApi(IAgent agent, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, IConfigurationService configSvc )
 		{
 			_agent = agent;
+			_configSvc = configSvc;
 			_apiSupportabilityMetricCounters = apiSupportabilityMetricCounters;
 		}
 
@@ -27,7 +30,7 @@ namespace NewRelic.Agent.Core.Api
 					{
 						_apiSupportabilityMetricCounters.Record(ApiMethod.CurrentTransaction);
 						var transaction = _agent.CurrentTransaction;
-						return new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+						return new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 					}
 				}
 				catch (Exception ex)

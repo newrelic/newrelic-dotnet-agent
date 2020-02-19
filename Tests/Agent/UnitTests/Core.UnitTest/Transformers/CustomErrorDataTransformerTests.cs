@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
+using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -50,11 +50,11 @@ namespace NewRelic.Agent.Core.Transformers
 		public void Transform_SendsErrorTraceToAggregator()
 		{
 			var expectedErrorTrace = Mock.Create<ErrorTraceWireModel>();
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<Attributes>(), Arg.IsAny<ErrorData>()))
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<AttributeCollection>(), Arg.IsAny<ErrorData>()))
 				.Returns(expectedErrorTrace);
 
 			float priority = 0.5f;
-			_customErrorDataTransformer.Transform(new ErrorData(), null, priority);
+			_customErrorDataTransformer.Transform<object>(new ErrorData(), null, priority);
 
 			Mock.Assert(() => _errorTraceAggregator.Collect(expectedErrorTrace));
 		}
@@ -64,10 +64,10 @@ namespace NewRelic.Agent.Core.Transformers
 		{
 			var expectedErrorEvent = Mock.Create<ErrorEventWireModel>();
 			float priority = 0.5f;
-			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<Attributes>(), priority))
+			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<AttributeCollection>(), priority))
 				.Returns(expectedErrorEvent);
 
-			_customErrorDataTransformer.Transform(new ErrorData(), null, priority);
+			_customErrorDataTransformer.Transform<object>(new ErrorData(), null, priority);
 
 			Mock.Assert(() => _errorEventAggregator.Collect(expectedErrorEvent));
 		}
@@ -78,20 +78,20 @@ namespace NewRelic.Agent.Core.Transformers
 			// ARRANGE
 
 			// Capture the attributes that are passed to IAttributeService.FilterAttributes, and mock the return value to be a single attribute, "key2".
-			var expectedFilteredAttributes = new Attributes();
-			var attributesPassedToAttributeService = null as Attributes;
+			var expectedFilteredAttributes = new AttributeCollection();
+			var attributesPassedToAttributeService = null as AttributeCollection;
 			expectedFilteredAttributes.Add(Attribute.BuildCustomAttribute("key2", "value2"));
-			Mock.Arrange(() => _attributeService.FilterAttributes(Arg.IsAny<Attributes>(), AttributeDestinations.ErrorTrace))
-				.Returns<Attributes, AttributeDestinations>((attributes, _) =>
+			Mock.Arrange(() => _attributeService.FilterAttributes(Arg.IsAny<AttributeCollection>(), AttributeDestinations.ErrorTrace))
+				.Returns<AttributeCollection, AttributeDestinations>((attributes, _) =>
 				{
 					attributesPassedToAttributeService = attributes;
 					return expectedFilteredAttributes;
 				});
 
 			// Capture the attributes that are passed to IErrorTraceMaker.GetErrorTrace
-			var attributesPassedToErrorTraceMaker = null as Attributes;
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<Attributes>(), Arg.IsAny<ErrorData>()))
-				.DoInstead<Attributes, ErrorData>((attributes, _) => attributesPassedToErrorTraceMaker = attributes);
+			var attributesPassedToErrorTraceMaker = null as AttributeCollection;
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<AttributeCollection>(), Arg.IsAny<ErrorData>()))
+				.DoInstead<AttributeCollection, ErrorData>((attributes, _) => attributesPassedToErrorTraceMaker = attributes);
 
 			// ACT
 			var inputAttributes = new Dictionary<string, string>
@@ -120,11 +120,11 @@ namespace NewRelic.Agent.Core.Transformers
 			Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
 
 			var expectedErrorTrace = Mock.Create<ErrorTraceWireModel>();
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<Attributes>(), Arg.IsAny<ErrorData>()))
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<AttributeCollection>(), Arg.IsAny<ErrorData>()))
 				.Returns(expectedErrorTrace);
 
 			float priority = 0.5f;
-			_customErrorDataTransformer.Transform(new ErrorData(), null, priority);
+			_customErrorDataTransformer.Transform<object>(new ErrorData(), null, priority);
 
 			Mock.Assert(() => _errorTraceAggregator.Collect(expectedErrorTrace), Occurs.Never());
 		}

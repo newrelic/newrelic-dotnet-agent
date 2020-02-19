@@ -1,6 +1,7 @@
 ﻿using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
@@ -31,6 +32,7 @@ namespace CompositeTests
 
 		private static CompositeTestAgent _compositeTestAgent;
 		private IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+		private IConfigurationService _configSvc;
 
 		[SetUp]
 		public void SetUp()
@@ -40,7 +42,7 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = _trustKey;
 			_compositeTestAgent.ServerConfiguration.PrimaryApplicationId = _appId;
 			_apiSupportabilityMetricCounters = _compositeTestAgent.Container.Resolve<IApiSupportabilityMetricCounters>();
-
+			_configSvc = _compositeTestAgent.Container.Resolve<IConfigurationService>();
 		}
 
 		[TearDown]
@@ -58,7 +60,7 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 
 			dynamic payload = transactionBridgeApi.CreateDistributedTracePayload();
 
@@ -80,7 +82,7 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 
 			dynamic payload = transactionBridgeApi.CreateDistributedTracePayload();
 
@@ -102,7 +104,7 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			transactionBridgeApi.AcceptDistributedTracePayload(_distributedTracePayload.ToJson(), 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);
@@ -137,7 +139,7 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			transactionBridgeApi.AcceptDistributedTracePayload(_distributedTracePayload.ToJson(), 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);
@@ -177,7 +179,7 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			transactionBridgeApi.AcceptDistributedTracePayload(_emptyDistributedTracePayloadString, 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);
@@ -206,7 +208,7 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
 			transactionBridgeApi.AcceptDistributedTracePayload(_badDistributedTracePayloadString, 0 /*Unknown TransportType see Agent\NewRelic.Api.Agent\TransportType.cs for more info*/);

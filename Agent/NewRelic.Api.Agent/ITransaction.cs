@@ -1,4 +1,6 @@
-﻿namespace NewRelic.Api.Agent
+﻿using System;
+
+namespace NewRelic.Api.Agent
 {
 	/// <summary>
 	/// Provides access to transaction-specific methods in the New Relic API.
@@ -18,6 +20,7 @@
 		///   transaction.AcceptDistributedTracePayload(metadata.Value, TransportType.Queue);
 		/// </code>
 		/// </example>
+		//[Obsolete("AcceptDistributedTracePayload is deprecated.")]
 		void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown);
 
 		/// <summary>
@@ -31,6 +34,16 @@
 		/// </code>
 		/// </example>
 		/// <returns>Returns an object providing access to the outgoing payload.</returns>
+		//[Obsolete("CreateDistributedTracePayload is deprecated.")]
 		IDistributedTracePayload CreateDistributedTracePayload();
+
+
+		/// <summary> Add a key/value pair to the transaction.  These are reported in errors and
+		/// transaction traces.</summary>
+		///
+		/// <param name="key">   The key name to add to the transaction parameters. Limited to 255-bytes.</param>
+		/// <param name="value"> The value to add to the current transaction.  Values are limited to 255-bytes.</param>
+		ITransaction AddCustomAttribute(string key, object value);
+
 	}
 }

@@ -1,16 +1,17 @@
 ﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using Newtonsoft.Json;
@@ -61,6 +62,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 		private IErrorTraceAggregator _errorTraceAggregator;
 		private IErrorTraceMaker _errorTraceMaker;
 		private IMetricNameService _metricNameService;
+		private IAttributeService _attributeService;
 
 
 		[SetUp]
@@ -106,10 +108,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			_spanEventAggregator = Mock.Create<ISpanEventAggregator>();
 			_spanEventMaker = Mock.Create<ISpanEventMaker>();
 			_customEventAggregator = Mock.Create<ICustomEventAggregator>();
+			_attributeService = Mock.Create<IAttributeService>();
 
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>());
-			_customEventTransformer = new CustomEventTransformer(_configurationService, _customEventAggregator);
+			_customEventTransformer = new CustomEventTransformer(_configurationService, _attributeService, _customEventAggregator);
 		}
 
 		[Test]
@@ -125,10 +128,10 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var customEvent = Mock.Create<CustomEventWireModel>();
 			var transaction = TestTransactions.CreateDefaultTransaction(uri: "http://www.newrelic.com/test?param=value", statusCode: 404);
 
-			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>())).Returns(errorEvent);
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(errorTrace);
-			Mock.Arrange(() => _transactionEventMaker.GetTransactionEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<Attributes>())).Returns(transactionEvent);
-			Mock.Arrange(() => _transactionTraceMaker.GetTransactionTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IEnumerable<ImmutableSegmentTreeNode>>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<Attributes>())).Returns(transactionTrace);
+			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>())).Returns(errorEvent);
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(errorTrace);
+			Mock.Arrange(() => _transactionEventMaker.GetTransactionEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>())).Returns(transactionEvent);
+			Mock.Arrange(() => _transactionTraceMaker.GetTransactionTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IEnumerable<ImmutableSegmentTreeNode>>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<AttributeCollection>())).Returns(transactionTrace);
 			Mock.Arrange(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>())).Returns(spanEvents);
 
 			Action assertAction = null;

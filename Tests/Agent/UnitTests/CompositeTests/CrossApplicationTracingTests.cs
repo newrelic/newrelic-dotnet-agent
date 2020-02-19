@@ -1,5 +1,5 @@
 ﻿using NewRelic.Agent.Api;
-using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Testing.Assertions;

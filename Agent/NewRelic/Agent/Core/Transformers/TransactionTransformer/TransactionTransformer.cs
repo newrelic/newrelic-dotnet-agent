@@ -1,14 +1,16 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
@@ -129,13 +131,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var apdexT = GetApdexT(immutableTransaction, transactionMetricName.PrefixedName);
 
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
-			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService.Configuration.ExceptionsToIgnore, _configurationService.Configuration.HttpStatusCodesToIgnore);
 			
 			GenerateAndCollectSqlTrace(immutableTransaction, transactionMetricName, txStats);
 			GenerateAndCollectMetrics(immutableTransaction, errorData.IsAnError, apdexT, transactionApdexMetricName, totalTime, txStats);
 			
 			// defer the creation of attributes until something asks for them.
-			Func<Attributes> attributes = () => _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
+			Func<AttributeCollection> attributes = () => _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, errorData, txStats);
 			attributes = attributes.Memoize();
 
 			// Must generate errors first so other wire models get attribute updates
@@ -185,7 +187,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return new TimeSpan(total);
 		}
 
-		private ErrorTraceWireModel GenerateErrorTrace(ImmutableTransaction immutableTransaction, Attributes attributes, TransactionMetricName transactionMetricName, ErrorData errorData)
+		private ErrorTraceWireModel GenerateErrorTrace(ImmutableTransaction immutableTransaction, AttributeCollection attributes, TransactionMetricName transactionMetricName, ErrorData errorData)
 		{
 			if (!_configurationService.Configuration.ErrorCollectorEnabled)
 				return null;
@@ -202,7 +204,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return apdexT;
 		}
 
-		private void GenerateAndCollectErrorEventTracesAndEvents(ImmutableTransaction immutableTransaction, Attributes attributes, TransactionMetricName transactionMetricName, ErrorData errorData)
+		private void GenerateAndCollectErrorEventTracesAndEvents(ImmutableTransaction immutableTransaction, AttributeCollection attributes, TransactionMetricName transactionMetricName, ErrorData errorData)
 		{
 			var errorTrace = GenerateErrorTrace(immutableTransaction, attributes, transactionMetricName, errorData);
 			if (errorTrace == null)
@@ -232,38 +234,39 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var isWebTransaction = immutableTransaction.IsWebTransaction();
 			var immutableTransactionMetadata = immutableTransaction.TransactionMetadata;
 
-			var isDistributedTracingEnabled = _configurationService.Configuration.DistributedTracingEnabled;
-
-			var duration = immutableTransactionMetadata.DistributedTraceTransportDuration;
-			var type = immutableTransactionMetadata.DistributedTraceType;
-			var account = immutableTransactionMetadata.DistributedTraceAccountId;
-			var app = immutableTransactionMetadata.DistributedTraceAppId;
-			var transport = immutableTransactionMetadata.DistributedTraceTransportType;
-
+			if (_configurationService.Configuration.DistributedTracingEnabled)
 			{
-				MetricBuilder.TryBuildTransactionMetrics(isWebTransaction, immutableTransaction.ResponseTimeOrDuration, txStats);
+				var duration = immutableTransactionMetadata.DistributedTraceTransportDuration;
+				var type = immutableTransactionMetadata.DistributedTraceType;
+				var account = immutableTransactionMetadata.DistributedTraceAccountId;
+				var app = immutableTransactionMetadata.DistributedTraceAppId;
+				var transport = immutableTransactionMetadata.DistributedTraceTransportType;
 
-				if (isDistributedTracingEnabled)
+				MetricBuilder.TryBuildDistributedTraceDurationByCaller(type, account, app, transport, isWebTransaction,
+					immutableTransaction.Duration, txStats);
+
+				if (immutableTransactionMetadata.HasIncomingDistributedTracePayload)
 				{
-					MetricBuilder.TryBuildDistributedTraceDurationByCaller(type, account, app, transport, isWebTransaction,
-						immutableTransaction.Duration, txStats);
-
-					if (immutableTransactionMetadata.HasIncomingDistributedTracePayload)
-					{
-						MetricBuilder.TryBuildDistributedTraceTransportDuration(type, account, app, transport, isWebTransaction, duration, txStats);
-					}
+					MetricBuilder.TryBuildDistributedTraceTransportDuration(type, account, app, transport, isWebTransaction, duration, txStats);
 				}
 
-				// Total time is the total amount of time spent, even when work is happening parallel, which means it is the sum of all exclusive times.
-				// https://source.datanerd.us/agents/agent-specs/blob/master/Total-Time-Async.md
-				MetricBuilder.TryBuildTotalTimeMetrics(isWebTransaction, totalTime, txStats);
-
-				// CPU time is the total time spent actually doing work rather than waiting. Basically, it's TotalTime minus TimeSpentWaiting.
-				// Our agent does not yet the ability to calculate time spent waiting, so we cannot generate this metric.
-				// https://source.datanerd.us/agents/agent-specs/blob/master/Total-Time-Async.md
-				//_metricBuilder.TryBuildCpuTimeRollupMetric(isWebTransaction, immutableTransaction.Duration, txStats),
-				//_metricBuilder.TryBuildCpuTimeMetric(transactionMetricName, immutableTransaction.Duration, txStats)
+				if (isErrorTransaction)
+				{
+					MetricBuilder.TryBuildDistributedTraceErrorsByCaller(type, account, app, transport, isWebTransaction, txStats);
+				}
 			}
+
+			MetricBuilder.TryBuildTransactionMetrics(isWebTransaction, immutableTransaction.ResponseTimeOrDuration, txStats);
+
+			// Total time is the total amount of time spent, even when work is happening parallel, which means it is the sum of all exclusive times.
+			// https://source.datanerd.us/agents/agent-specs/blob/master/Total-Time-Async.md
+			MetricBuilder.TryBuildTotalTimeMetrics(isWebTransaction, totalTime, txStats);
+
+			// CPU time is the total time spent actually doing work rather than waiting. Basically, it's TotalTime minus TimeSpentWaiting.
+			// Our agent does not yet the ability to calculate time spent waiting, so we cannot generate this metric.
+			// https://source.datanerd.us/agents/agent-specs/blob/master/Total-Time-Async.md
+			//_metricBuilder.TryBuildCpuTimeRollupMetric(isWebTransaction, immutableTransaction.Duration, txStats),
+			//_metricBuilder.TryBuildCpuTimeMetric(transactionMetricName, immutableTransaction.Duration, txStats)
 
 			if (immutableTransaction.TransactionMetadata.QueueTime != null)
 				MetricBuilder.TryBuildQueueTimeMetric(immutableTransaction.TransactionMetadata.QueueTime.Value, txStats);
@@ -276,10 +279,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (isErrorTransaction)
 			{
 				MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats);
-				if (isDistributedTracingEnabled)
-				{
-					MetricBuilder.TryBuildDistributedTraceErrorsByCaller(type, account, app, transport, isWebTransaction, txStats);
-				}
 			}
 
 			var referrerCrossProcessId = immutableTransaction.TransactionMetadata.CrossApplicationReferrerProcessId;
@@ -295,7 +294,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			}
 		}
 
-		private void GenerateAndCollectTransactionEvent(ImmutableTransaction immutableTransaction, Func<Attributes> attributes)
+		private void GenerateAndCollectTransactionEvent(ImmutableTransaction immutableTransaction, Func<AttributeCollection> attributes)
 		{
 			if (!_configurationService.Configuration.TransactionEventsEnabled)
 				return;
@@ -315,7 +314,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (!_configurationService.Configuration.SpanEventsEnabled)
 				return;
 
-			if (immutableTransaction.TransactionMetadata.DistributedTraceSampled.HasValue && immutableTransaction.TransactionMetadata.DistributedTraceSampled.Value == false)
+			if (!immutableTransaction.TransactionMetadata.DistributedTraceSampled)
 				return;
 
 			var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, transactionName);
@@ -325,7 +324,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			}
 		}
 
-		private void GenerateAndCollectTransactionTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, Func<Attributes> attributes)
+		private void GenerateAndCollectTransactionTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, Func<AttributeCollection> attributes)
 		{
 			if (!_configurationService.Configuration.TransactionTracerEnabled)
 				return;
@@ -349,9 +348,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var txSqlTrStats = new SqlTraceStatsCollection();
 
-			foreach(var segment in immutableTransaction.Segments.OfType<TypedSegment<DatastoreSegmentData>>())
+			foreach(var segment in immutableTransaction.Segments.Where(s => s.Data is DatastoreSegmentData))
 			{
-				if ( segment.TypedData.CommandText != null &&
+				var datastoreSegmentData = (DatastoreSegmentData)segment.Data;
+				if (datastoreSegmentData.CommandText != null &&
 					 segment.Duration >= _configurationService.Configuration.SqlExplainPlanThreshold)
 				{
 					AddSqlTraceStats(txSqlTrStats, _sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, segment));
@@ -383,11 +383,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 					var sqlExplainPlansMax = _configurationService.Configuration.SqlExplainPlansMax;
 					var threshold = _configurationService.Configuration.SqlExplainPlanThreshold;
 					var obfuscator = SqlObfuscator.GetSqlObfuscator(_configurationService.Configuration.TransactionTracerEnabled, _configurationService.Configuration.TransactionTracerRecordSql);
-					foreach (var segment in segments)
+					foreach (var segment in segments.Where(s => s.Data is DatastoreSegmentData))
 					{
-						if (segment.Duration > threshold && segment is TypedSegment<DatastoreSegmentData>)
+						if (segment.Duration > threshold)
 						{
-							var datastoreSegmentData = ((TypedSegment<DatastoreSegmentData>)segment).TypedData;
+							var datastoreSegmentData = (DatastoreSegmentData)segment.Data;
 							if (datastoreSegmentData.DoExplainPlanCondition?.Invoke() == true)
 							{
 								datastoreSegmentData.ExecuteExplainPlan(obfuscator);

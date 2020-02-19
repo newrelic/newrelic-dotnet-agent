@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			: base(dataTransportService, scheduler, processStatic)
 		{
 			_agentHealthReporter = agentHealthReporter;
-			GetAndResetCollection(_configuration.CustomEventsMaxSamplesStored);
+			GetAndResetCollection(_configuration.CustomEventsMaximumSamplesStored);
 		}
 
 		public override void Dispose()
@@ -91,10 +91,10 @@ namespace NewRelic.Agent.Core.Aggregators
 			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
 			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-			GetAndResetCollection(_configuration.CustomEventsMaxSamplesStored);
+			GetAndResetCollection(_configuration.CustomEventsMaximumSamplesStored);
 		}
 
-		private ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> GetAndResetCollection(uint customEventCollectionCapacity)
+		private ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>> GetAndResetCollection(int customEventCollectionCapacity)
 		{
 			return Interlocked.Exchange(ref _customEvents, new ConcurrentPriorityQueue<PrioritizedNode<CustomEventWireModel>>(customEventCollectionCapacity));
 		}
@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.Aggregators
 					RetainEvents(customEvents);
 					break;
 				case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
-					var newSize = (uint)(customEvents.Count * ReservoirReductionSizeMultiplier);
+					var newSize = (int)(customEvents.Count * ReservoirReductionSizeMultiplier);
 					ReduceReservoirSize(newSize);
 					RetainEvents(customEvents);
 					break;
@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.Aggregators
 			}
 		}
 
-		private void ReduceReservoirSize(uint newSize)
+		private void ReduceReservoirSize(int newSize)
 		{
 			if (newSize >= _customEvents.Size)
 				return;

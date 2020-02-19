@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -32,7 +34,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		{
 			_timerFactory = Mock.Create<ITimerFactory>();
 			var attributeService = Mock.Create<IAttributeService>();
-			Mock.Arrange(() => attributeService.FilterAttributes(Arg.IsAny<Attributes>(), Arg.IsAny<AttributeDestinations>())).Returns<Attributes, AttributeDestinations>((attrs, _) => attrs);
+			Mock.Arrange(() => attributeService.FilterAttributes(Arg.IsAny<AttributeCollection>(), Arg.IsAny<AttributeDestinations>())).Returns<AttributeCollection, AttributeDestinations>((attrs, _) => attrs);
 			_transactionEventMaker = new TransactionEventMaker(attributeService);
 
 			_configuration = Mock.Create<IConfiguration>();
@@ -54,7 +56,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var transaction = BuildTestTransaction(isSynthetics: true);
 
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
-			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
@@ -79,10 +81,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
 
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false);
 
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
 			var transactionMetadata = internalTransaction.TransactionMetadata;
 			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
@@ -140,7 +142,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			transaction.TransactionMetadata.AddUserErrorAttribute( "fiz", "baz");
 			
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
-			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
@@ -153,8 +155,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			NrAssert.Multiple(
 				() => Assert.AreEqual(24, transactionEvent.IntrinsicAttributes.Count),
 				() => Assert.AreEqual("Transaction", transactionEvent.IntrinsicAttributes["type"]),
-				() => Assert.AreEqual(5, transactionEvent.AgentAttributes.Count),
+				() => Assert.AreEqual(6, transactionEvent.AgentAttributes.Count),
 				() => Assert.AreEqual("200", transactionEvent.AgentAttributes["response.status"]),
+				() => Assert.AreEqual(200, transactionEvent.AgentAttributes["http.statusCode"]),
 				() => Assert.AreEqual("http://foo.com", transactionEvent.AgentAttributes["request.uri"]),
 				() => Assert.Contains("host.displayName", agentAttributes),
 				() => Assert.AreEqual(2, transactionEvent.UserAttributes.Count),
@@ -170,7 +173,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var transaction = BuildTestTransaction(isSynthetics:false);
 
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
-			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
@@ -206,7 +209,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			transaction.TransactionMetadata.DistributedTraceType = "Mobile";
 
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
-			var errorData = ErrorData.TryGetErrorData(immutableTransaction, _configurationService);
+			var errorData = ErrorData.TryGetErrorData(immutableTransaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);

@@ -131,13 +131,30 @@ namespace NewRelic.Agent.Core.Time
 					using (new IgnoreWork())
 						action();
 
-					timer.Change(timeBetweenExecutions, DisablePeriodicExecution);
 				}
 				catch (Exception exception)
 				{
 					Log.Error(exception);
 				}
-				
+				finally
+				{
+					try
+					{
+						// Change timer in finally so its enabled even if there was an exception
+						// while executing Action. 
+						timer.Change(timeBetweenExecutions, DisablePeriodicExecution);
+					}
+					catch (ObjectDisposedException)
+					{
+						// This can happen when the agent shuts down. The callback for a timer can still
+						// called after the timer has been disposed because it was already queue up. Even
+						// if you used the other Dispose overload that will attempt to wait for the callback
+						// to complete the documentation mentions that there is a race condition that could
+						// allow the callback to still execute. This catch block is here to prevent the
+						// instrumented application from crashing.
+					}
+				}
+
 			});
 
 			// Initialize the timer with an execution time of Never so that we can guarantee `timer` is assign before the timer ticks the first time

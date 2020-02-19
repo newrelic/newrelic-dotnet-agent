@@ -1,11 +1,12 @@
-﻿using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.SharedInterfaces;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Net;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
-	public interface IAgentHealthReporter
+	public interface IAgentHealthReporter : IOutOfBandMetricSource
 	{
 		void ReportDotnetVersion();
 
@@ -13,7 +14,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		void ReportLibraryVersion(string assemblyName, string assemblyVersion);
 
-		void ReportTransactionEventReservoirResized(uint newSize);
+		void ReportTransactionEventReservoirResized(int newSize);
 
 		void ReportTransactionEventCollected();
 
@@ -21,7 +22,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		void ReportTransactionEventsSent(int count);
 
-		void ReportCustomEventReservoirResized(uint newSize);
+		void ReportCustomEventReservoirResized(int newSize);
 
 		void ReportCustomEventCollected();
 

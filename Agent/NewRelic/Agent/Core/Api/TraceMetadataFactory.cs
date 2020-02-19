@@ -1,6 +1,6 @@
 using NewRelic.Agent.Core.DistributedTracing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Api
 {

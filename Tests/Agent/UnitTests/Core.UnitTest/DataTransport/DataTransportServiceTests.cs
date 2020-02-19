@@ -26,6 +26,8 @@ namespace NewRelic.Agent.Core.DataTransport
 		private DisposableCollection _disposableCollection;
 		private IAgentHealthReporter _agentHealthReporter;
 		private IConnectionHandler _connectionHandler;
+		private IScheduler _scheduler;
+		private IDateTimeStatic _dateTimeStatic;
 
 		private static readonly Exception[] ExceptionsThatShouldTriggerSupportabilityMetrics =
 		{
@@ -44,11 +46,11 @@ namespace NewRelic.Agent.Core.DataTransport
 			_disposableCollection.Add(new ConfigurationAutoResponder(_configuration));
 
 			_connectionHandler = Mock.Create<IConnectionHandler>();
-			var scheduler = Mock.Create<IScheduler>();
-			_connectionManager = Mock.Create(() => new ConnectionManager(_connectionHandler, scheduler));
-			var dateTimeStatic = Mock.Create<IDateTimeStatic>();
+			_scheduler = Mock.Create<IScheduler>();
+			_connectionManager = Mock.Create<IConnectionManager>();
+			_dateTimeStatic = Mock.Create<IDateTimeStatic>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>(); 
-			_disposableCollection.Add(_dataTransportService = new DataTransportService(_connectionManager, dateTimeStatic, _agentHealthReporter));
+			_disposableCollection.Add(_dataTransportService = new DataTransportService(_connectionManager, _dateTimeStatic, _agentHealthReporter));
 		}
 
 		[TearDown]
@@ -156,6 +158,19 @@ namespace NewRelic.Agent.Core.DataTransport
 			{
 				_dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 			}
+		}
+
+		[TestCase(HttpStatusCode.Unauthorized)]
+		[TestCase(HttpStatusCode.Conflict)]
+		public void SendXyz_ConnectionHandler_DisconnectAndConnectAreCalled_ForCertainHttpStatusCodes(HttpStatusCode statusCode)
+		{
+			_connectionManager = new ConnectionManager(_connectionHandler, _scheduler);
+			_disposableCollection.Add(_dataTransportService = new DataTransportService(_connectionManager, _dateTimeStatic, _agentHealthReporter));
+
+			Mock.Arrange(() => _connectionHandler.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+				.Throws(new HttpException(statusCode, null));
+
+			_dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Enumerable.Empty<TransactionEventWireModel>());
 
 			Mock.Assert(() => _connectionHandler.Disconnect(), Occurs.Once());
 			Mock.Assert(() => _connectionHandler.Connect(), Occurs.Once());

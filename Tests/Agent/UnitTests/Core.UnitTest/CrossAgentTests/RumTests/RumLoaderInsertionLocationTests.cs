@@ -34,7 +34,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 				.Select(file =>
 				{
 					var contents = File.ReadAllText(file);
-					return new TestCaseData(file, contents.Replace("EXPECTED_RUM_LOADER_LOCATION", ""), contents).SetName(file);
+					return new TestCaseData(file, contents.Replace("EXPECTED_RUM_LOADER_LOCATION", ""), contents)
+						.SetName(new FileInfo(file).Name);
 				});
 		}
 	}

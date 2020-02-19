@@ -1,8 +1,8 @@
 ﻿using NewRelic.Agent.Configuration;
 using NUnit.Framework;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Api
 {

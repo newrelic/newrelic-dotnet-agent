@@ -1,8 +1,8 @@
 ﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Helpers;
 using NewRelic.Core;
 using NewRelic.Core.Logging;

@@ -5,11 +5,11 @@ namespace NewRelic.Agent.Core.Aggregators
 	public struct EventHarvestData
 	{
 		[JsonProperty("reservoir_size")]
-		public uint ReservoirSize { get; private set; }
+		public int ReservoirSize { get; private set; }
 		[JsonProperty("events_seen")]
-		public uint EventsSeen { get; private set; }
+		public int EventsSeen { get; private set; }
 
-		public EventHarvestData(uint reservoirSize, uint eventsSeen)
+		public EventHarvestData(int reservoirSize, int eventsSeen)
 		{
 			ReservoirSize = reservoirSize;
 			EventsSeen = eventsSeen;

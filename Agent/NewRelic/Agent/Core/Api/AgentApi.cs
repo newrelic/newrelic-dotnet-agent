@@ -1,8 +1,10 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Core.CodeAttributes;
 using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
+
 // The AgentApi is the only interface we expose to our customers.
 //
 // The public static members of this class must exactly match
@@ -200,6 +202,32 @@ namespace NewRelic.Agent.Core
 		}
 
 		/// <summary>
+		/// Notice an error identified by an exception report it to the New Relic service.
+		/// If this method is called within a transaction,
+		/// the exception will be reported with the transaction when it finishes.  
+		/// If it is invoked outside of a transaction, a traced error will be created and reported to the New Relic service.
+		/// Only the exception/parameter pair for the first call to NoticeError during the course of a transaction is retained.
+		/// Supports web applications only.
+		/// </summary>
+		/// <param name="exception">The exception to be reported.
+		/// Only part of the exception's information may be retained to prevent the report from being too large.
+		/// </param>
+		/// <param name="customAttributes">Custom parameters to include in the traced error.
+		/// May be null.
+		/// Only 10,000 characters of combined key/value data is retained.
+		/// </param>
+		public static void NoticeError(Exception exception, IDictionary<string, object> customAttributes)
+		{
+			const ApiMethod apiMetric = ApiMethod.NoticeError;
+			const string apiName = nameof(NoticeError);
+			void work()
+			{
+				InternalApi.NoticeError(exception, customAttributes);
+			}
+			TryInvoke(work, apiName, apiMetric);
+		}
+
+		/// <summary>
 		/// Notice an error identified by an exception and report it to the New Relic service.
 		/// If this method is called within a transaction,
 		/// the exception will be reported with the transaction when it finishes.  
@@ -237,6 +265,32 @@ namespace NewRelic.Agent.Core
 		/// Only 10,000 characters of combined key/value data is retained.
 		/// </param>
 		public static void NoticeError(string message, IDictionary<string, string> customAttributes)
+		{
+			const ApiMethod apiMetric = ApiMethod.NoticeError;
+			const string apiName = nameof(NoticeError);
+			void work()
+			{
+				InternalApi.NoticeError(message, customAttributes);
+			}
+			TryInvoke(work, apiName, apiMetric);
+		}
+
+		/// <summary>
+		/// Notice an error identified by a simple message and report it to the New Relic service.
+		/// If this method is called within a transaction,
+		/// the exception will be reported with the transaction when it finishes.  
+		/// If it is invoked outside of a transaction, a traced error will be created and reported to the New Relic service.
+		/// Only the string/parameter pair for the first call to NoticeError during the course of a transaction is retained.
+		/// Supports web applications only. 
+		/// </summary>
+		/// <param name="message">The message to be displayed in the traced error.
+		/// Only the first 1000 characters are retained.
+		/// </param>
+		/// <param name="customAttributes">Custom parameters to include in the traced error.
+		/// May be null.
+		/// Only 10,000 characters of combined key/value data is retained.
+		/// </param>
+		public static void NoticeError(string message, IDictionary<string, object> customAttributes)
 		{
 			const ApiMethod apiMetric = ApiMethod.NoticeError;
 			const string apiName = nameof(NoticeError);
@@ -394,6 +448,7 @@ namespace NewRelic.Agent.Core
 		/// Supports web applications only.
 		/// <returns>An empty string.</returns>
 		[Obsolete("This method returns an empty string.")]
+		[ToBeRemovedInFutureRelease()]
 		public static string GetBrowserTimingFooter()
 		{
 			const ApiMethod apiMetric = ApiMethod.GetBrowserTimingFooter;

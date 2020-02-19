@@ -78,11 +78,16 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
 		public void AfterReceiveReply(ref Message reply, object correlationState)
 		{
+			var typedCorrelationState = correlationState as CorrelationState;
+
 			string headerValue = null;
 			if(reply.Properties.TryGetValue(HttpResponseMessageProperty.Name, out var httpResponseObject))
 			{
 				var httpResponse = httpResponseObject as HttpResponseMessageProperty;
 				headerValue = httpResponse.Headers[AppDataHttpHeader];
+
+				var externalSegmentData = typedCorrelationState?.Segment?.GetExperimentalApi()?.SegmentData as IExternalSegmentData;
+				externalSegmentData?.SetHttpStatusCode((int)httpResponse.StatusCode);
 			}
 
 			if (string.IsNullOrEmpty(headerValue))
@@ -91,7 +96,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				headerValue = headerIndex > 0 ? reply.Headers.GetHeader<string>(headerIndex) : null;
 			}
 
-			var typedCorrelationState = correlationState as CorrelationState;
 			if (correlationState != null && !string.IsNullOrEmpty(headerValue))
 			{
 				typedCorrelationState.Transaction.ProcessInboundResponse(new[] { new KeyValuePair<string, string>(AppDataHttpHeader, headerValue) }, typedCorrelationState?.Segment);

@@ -1,9 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -45,7 +44,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public TimeSpan DistributedTraceTransportDuration { get; }
 		public string DistributedTraceTraceId { get; }
 		public string DistributedTraceTrustKey { get; }
-		public bool? DistributedTraceSampled { get; }
+		public bool DistributedTraceSampled { get; }
 		public bool HasOutgoingDistributedTracePayload { get; }
 		public bool HasIncomingDistributedTracePayload { get; }
 
@@ -87,7 +86,7 @@ namespace NewRelic.Agent.Core.Transactions
 			string distributedTraceTraceId,
 			string distributedTraceTrustKey,
 			string distributedTraceTransactionId,
-			bool? distributedTraceSampled,
+			bool distributedTraceSampled,
 			bool hasOutgoingDistributedTracePayload,
 			bool hasIncomingDistributedTracePayload,
 			string syntheticsResourceId,

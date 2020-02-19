@@ -1,11 +1,12 @@
-﻿using NewRelic.Agent.Core.Transactions;
+﻿using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface ITransactionEventMaker
 	{
-		TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, Attributes attributes);
+		TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, AttributeCollection attributes);
 	}
 
 	public class TransactionEventMaker : ITransactionEventMaker
@@ -17,7 +18,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_attributeService = attributeService;
 		}
 
-		public TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, Attributes attributes)
+		public TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, AttributeCollection attributes)
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(attributes, AttributeDestinations.TransactionEvent);
 			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -13,9 +13,10 @@ using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
+using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Attributes;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 {
@@ -71,14 +72,14 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>()))
 				.Returns(transactionMetricName);
 
-			var attributes = new Attributes();
+			var attributes = new AttributeCollection();
 			if (testCase.BrowserMonitoringAttributesEnabled)
 			{
 				testCase.UserAttributes.ForEach(attr => attributes.Add(Attribute.BuildCustomAttribute(attr.Key, attr.Value)));
 			}
 			Mock.Arrange(() => _transactionAttributeMaker.GetUserAndAgentAttributes(Arg.IsAny<ITransactionAttributeMetadata>()))
 				.Returns(attributes);
-			Mock.Arrange(() => _attributeService.FilterAttributes(Arg.IsAny<Attributes>(), Arg.IsAny<AttributeDestinations>()))
+			Mock.Arrange(() => _attributeService.FilterAttributes(Arg.IsAny<AttributeCollection>(), Arg.IsAny<AttributeDestinations>()))
 				.Returns(attributes);
 
 			ITimer timer = Mock.Create<ITimer>();
@@ -87,7 +88,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
 			ITransactionName name = TransactionName.ForWebTransaction(transactionMetricName.Prefix, transactionMetricName.UnPrefixedName);
 			var priority = 0.5f;
-			IInternalTransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), priority, Mock.Create<IDatabaseStatementParser>());
+			IInternalTransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
 			tx.TransactionMetadata.SetQueueTime(TimeSpan.FromMilliseconds(testCase.QueueTimeMilliseconds));
 			testCase.UserAttributes.ForEach(attr => tx.TransactionMetadata.AddUserAttribute(attr.Key, attr.Value));
 			tx.TransactionMetadata.SetCrossApplicationReferrerTripId("");

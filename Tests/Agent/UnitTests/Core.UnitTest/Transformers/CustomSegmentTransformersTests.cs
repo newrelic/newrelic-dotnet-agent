@@ -1,12 +1,12 @@
 ﻿using System;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
-
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -180,11 +180,13 @@ namespace NewRelic.Agent.Core.Transformers
 
 		#endregion GetTransactionTraceName
 
-		private static TypedSegment<CustomSegmentData> GetSegment(string name, double duration)
+		private static Segment GetSegment(string name, double duration)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
-			return new TypedSegment<CustomSegmentData>(new TimeSpan(), TimeSpan.FromSeconds(duration), 
-				new TypedSegment<CustomSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, new CustomSegmentData(name), false));
+			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			segment.SetSegmentData(new CustomSegmentData(name));
+
+			return new Segment(new TimeSpan(), TimeSpan.FromSeconds(duration), segment, null);
 		}
 	}
 }

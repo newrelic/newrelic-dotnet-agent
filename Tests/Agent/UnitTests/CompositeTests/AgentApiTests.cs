@@ -1,8 +1,9 @@
 ﻿using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
@@ -24,6 +25,7 @@ namespace CompositeTests
 		private const string NoticeErrorPathOutsideTransaction = "NewRelic.Api.Agent.NoticeError API Call";
 		private const string ExceptionMessage = "This is a new exception.";
 		private IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+		private IConfigurationService _configSvc;
 
 		private static readonly string _accountId = "acctid";
 		private static readonly string _appId = "appid";
@@ -44,6 +46,7 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = _trustKey;
 			_compositeTestAgent.ServerConfiguration.PrimaryApplicationId = _appId;
 			_apiSupportabilityMetricCounters = _compositeTestAgent.Container.Resolve<IApiSupportabilityMetricCounters>();
+			_configSvc = _compositeTestAgent.Container.Resolve<IConfigurationService>();
 		}
 
 		[TearDown]
@@ -606,16 +609,60 @@ namespace CompositeTests
 
 		[Test]
 		[Description("Verifies a reported error with an Exception and a dictionary of custom parameters when outside of a transaction.")]
-		public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams()
+		public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams_String()
 		{
+			var dtmNow = DateTime.Now;
+
 			// ACT
-			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string>() { { "attribute1", "value1" } });
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string>() {
+				{ "attribute4", "test" },
+			});
 			_compositeTestAgent.Harvest();
 
 			// ASSERT
 			var expectedAttributes = new List<ExpectedAttribute>
 			{
-				new ExpectedAttribute {Key = "attribute1", Value = "value1"}
+				new ExpectedAttribute {Key = "attribute4", Value = "test" }
+			};
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+
+			Assert.AreEqual("System.Exception", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
+		}
+
+
+
+		[Test]
+		[Description("Verifies a reported error with an Exception and a dictionary of custom parameters when outside of a transaction.")]
+		public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams_Object()
+		{
+			var dtmNow = DateTime.Now;
+
+			// ACT
+			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, object>() {
+				{ "attribute1", 21 },
+				{ "attribute2", dtmNow },
+				{ "attribute3", TimeSpan.FromMilliseconds(1234) },
+				{ "attribute4", "test" },
+			});
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var expectedAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "attribute1", Value = 21L},
+				new ExpectedAttribute {Key = "attribute2", Value = dtmNow.ToString("o")},
+				new ExpectedAttribute {Key = "attribute3", Value = 1.234D },
+				new ExpectedAttribute {Key = "attribute4", Value = "test" },
 			};
 
 			var errorTrace = _compositeTestAgent.ErrorTraces.First();
@@ -852,7 +899,7 @@ namespace CompositeTests
 
 		[Test]
 		[Description("Verifies a reported error with a string and a dictionary of custom parameters when in a transaction when outside of a transaction.")]
-		public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams()
+		public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams_String()
 		{
 			// ACT
 			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
@@ -877,6 +924,46 @@ namespace CompositeTests
 			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
 			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
 		}
+
+
+		[Test]
+		[Description("Verifies a reported error with a string and a dictionary of custom parameters when in a transaction when outside of a transaction.")]
+		public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams_Object()
+		{
+			var dtmNow = DateTime.Now;
+
+			// ACT
+			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, object>() { 
+				{ "attribute1", 21 },
+				{ "attribute2", dtmNow },
+				{ "attribute3", TimeSpan.FromMilliseconds(1234) },
+				{ "attribute4", "test" },
+			});
+			_compositeTestAgent.Harvest();
+
+			// ASSERT
+			var expectedAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute {Key = "attribute1", Value = 21L},
+				new ExpectedAttribute {Key = "attribute2", Value = dtmNow.ToString("o")},
+				new ExpectedAttribute {Key = "attribute3", Value = 1.234D },
+				new ExpectedAttribute {Key = "attribute4", Value = "test" },
+			};
+
+			var errorTrace = _compositeTestAgent.ErrorTraces.First();
+
+			Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName);
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorTrace.Path);
+			Assert.AreEqual(ExceptionMessage, errorTrace.Message);
+			Assert.IsEmpty(errorTrace.Attributes.AgentAttributes);
+			Assert.IsEmpty(errorTrace.Attributes.Intrinsics);
+			ErrorTraceAssertions.ErrorTraceHasAttributes(expectedAttributes, AttributeClassification.UserAttributes, errorTrace);
+
+			var errorEvent = _compositeTestAgent.ErrorEvents.First();
+			Assert.AreEqual(NoticeErrorPathOutsideTransaction, errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
+		}
+
 
 		[Test]
 		[Description("Verifies a reported error with a string and a dictionary of custom parameters when in a transaction when outside of a transaction with StripExceptionMessagesEnabled.")]
@@ -1042,7 +1129,7 @@ namespace CompositeTests
 				new ExpectedAttribute {Key = "key3", Value = "3.1"},
 
 				// Singles should be left as singles
-				new ExpectedAttribute {Key = "key4", Value = 4.0f}
+				new ExpectedAttribute {Key = "key4", Value = 4.0d}
 			};
 
 			TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
@@ -1924,7 +2011,7 @@ namespace CompositeTests
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
-			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters);
+			var transactionBridgeApi = new TransactionBridgeApi(transaction, _apiSupportabilityMetricCounters, _configSvc);
 
 			dynamic traceMetadata = agentWrapperApi.TraceMetadata;
 			var traceIdBefore = traceMetadata.TraceId;

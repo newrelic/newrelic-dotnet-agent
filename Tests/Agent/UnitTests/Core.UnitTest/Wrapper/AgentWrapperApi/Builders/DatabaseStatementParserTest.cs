@@ -1,7 +1,15 @@
-﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.SystemInterfaces;
+using NewRelic.SystemInterfaces.Web;
 using NUnit.Framework;
 using System.Data;
 using System.Threading;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -14,7 +22,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[SetUp]
 		public void SetUp()
 		{
-			_databaseStatementParser = new DatabaseStatementParser();
+			_databaseStatementParser = new DatabaseStatementParser(Mock.Create<ICacheStatsReporter>());
 		}
 
 		[TearDown]
@@ -26,8 +34,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[Test]
 		public void ParseDatabaseStatement_SameStatementSameVendor_Matched()
 		{
-			_databaseStatementParser.CacheCapacity = 10;
-
 			var statement = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from users");
 			var statement2 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from users");
 
@@ -38,8 +44,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[Test]
 		public void ParseDatabaseStatement_DifferentStatementsSameVendor_NotMatched()
 		{
-			_databaseStatementParser.CacheCapacity = 10;
-
 			var statement = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from users");
 			var statement2 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from people");
 
@@ -49,8 +53,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[Test]
 		public void ParseDatabaseStatement_SameStatementDifferentVendor_NotMatched()
 		{
-			_databaseStatementParser.CacheCapacity = 10;
-
 			var statement = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, "select * from users");
 			var statement2 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.Oracle, CommandType.Text, "select * from users");
 
@@ -61,8 +63,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[Test]
 		public void ParseDatabaseStatement_CommandTypeNotText_IsNotCached()
 		{
-			_databaseStatementParser.CacheCapacity = 10;
-
 			var statement1 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.StoredProcedure, "pHelloWorld");
 			var statement2 = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.StoredProcedure, "pHelloWorld");
 
@@ -76,12 +76,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		[Test]
 		public void CacheCapacity_ChangesApplied()
 		{
+			// A configuration service is instantiated here because it will
+			// subscribe to the ConfigurationDeserializedEvent fired in SetCacheCapcity.
+			var configurationService = new ConfigurationService(
+				Mock.Create<IEnvironment>(),
+				Mock.Create<IProcessStatic>(),
+				Mock.Create<IHttpRuntimeStatic>(),
+				Mock.Create<IConfigurationManagerStatic>(),
+				Mock.Create<IDnsStatic>());
+
 			const string sql1 = "select * from table1";
 			const string sql2 = "select * from table2";
 			const string sql3 = "select * from table3";
 
 			//Set initial capacity of cache to 2
-			_databaseStatementParser.CacheCapacity = 2;
+			SetCacheCapacity(2);
 
 			_databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, sql1);
 			_databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, sql2);
@@ -96,7 +105,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			Assert.AreNotSame(stmtA, stmtB);
 
 			//Resize the cache
-			_databaseStatementParser.CacheCapacity = 3;
+			SetCacheCapacity(3);
 
 			_databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, sql1);
 			_databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, sql2);
@@ -106,6 +115,20 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			//stmtB and stmtC are the same SQL, but this time nothing was ejected because of the cache size is withing its capacity, so they are the same object reference
 			var stmtC = _databaseStatementParser.ParseDatabaseStatement(DatastoreVendor.MSSQL, CommandType.Text, sql3);
 			Assert.AreSame(stmtB, stmtC);
+
+			configurationService.Dispose();
+		}
+
+		private void SetCacheCapacity(int capacity)
+		{
+			var newConfiguration = new configuration()
+			{
+				appSettings = new System.Collections.Generic.List<configurationAdd>()
+				{
+					new configurationAdd() {key = "SqlStatementCacheCapacity", value = capacity.ToString()}
+				}
+			};
+			EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(newConfiguration));
 		}
 	}
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NUnit.Framework;

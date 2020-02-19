@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -10,16 +10,17 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.AgentHealth;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
 	[TestFixture]
 	public class TransactionTests
 	{
-
 		private IConfiguration _configuration;
 		private Transaction _transaction;
-
+		private IDatabaseService _databaseService;
 		private TransactionFinalizedEvent _publishedEvent;
 		private EventSubscription<TransactionFinalizedEvent> _eventSubscription;
 		
@@ -33,8 +34,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var configurationService = Mock.Create<IConfigurationService>();
 			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
+			_databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
 			
-			_transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
+			_transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>());
 			_publishedEvent = null;
 			_eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
 			_wrapperToken = new object();
@@ -150,11 +152,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var transactionName = TransactionName.ForWebTransaction("WebTransaction", "Test");
 
 
-			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator(), Priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>());
 
 			for (int i = 0; i < segmentCount; i++)
 			{
-				new TypedSegment<ExternalSegmentData>(transaction, new MethodCallData("foo" + i, "bar" + i, 1), new ExternalSegmentData(new Uri("http://www.test.com"), "method")).End();
+				var segment = new Segment(transaction, new MethodCallData("foo" + i, "bar" + i, 1));
+				segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.test.com"), "method"));
+				segment.End();
 			}
 			
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -170,8 +174,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var startTime = DateTime.Now;
 			var timer = Mock.Create<ITimer>();
 			var callStackManager = Mock.Create<ICallStackManager>();
-			var sqlObfuscator = SqlObfuscator.GetObfuscatingSqlObfuscator();
-			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>());
+			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, _databaseService, Priority, Mock.Create<IDatabaseStatementParser>());
 
 			// Assert
 			Assert.That(tx.TransactionMetadata.DistributedTraceTraceId, Is.Not.Null);
@@ -189,7 +192,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var startTime = DateTime.Now;
 			var timer = Mock.Create<ITimer>();
 			var callStackManager = Mock.Create<ICallStackManager>();
-			var sqlObfuscator = SqlObfuscator.GetObfuscatingSqlObfuscator();
+			var sqlObfuscator = Mock.Create<IDatabaseService>();
 			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>());
 
 			// Assert

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.WireModels;
 

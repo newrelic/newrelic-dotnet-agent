@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using NewRelic.OpenTracing.AmazonLambda.Util;
 
 namespace NewRelic.OpenTracing.AmazonLambda.Events
 {
@@ -31,20 +32,9 @@ namespace NewRelic.OpenTracing.AmazonLambda.Events
 			}
 
 			_distributedTraceIntrinsics = rootSpan.Intrinsics;
-			_userAttributes = new Dictionary<string, object>();
+			_userAttributes = rootSpan.Tags.BuildUserAttributes();
 
-			_agentAttributes = rootSpan.Tags != null ? new Dictionary<string, object>(rootSpan.Tags) : new Dictionary<string, object>();
-			_agentAttributes.Remove("http.status_code");
-			if (_agentAttributes.Keys.Contains("response.status"))
-			{
-				return;
-			}
-
-			var status = rootSpan.GetTag("http.status_code")?.ToString();
-			if (!string.IsNullOrEmpty(status))
-			{
-				_agentAttributes.Add("response.status", status);
-			}
+			_agentAttributes = rootSpan.Tags.BuildAgentAttributes();
 		}
 
 		public override IDictionary<string, object> Intrinsics
@@ -80,8 +70,9 @@ namespace NewRelic.OpenTracing.AmazonLambda.Events
 			}
 		}
 
-		public override IDictionary<string, object> UserAttributes => _userAttributes ?? (_userAttributes = new Dictionary<string, object>());
+		public override IDictionary<string, object> UserAttributes => _userAttributes;
 
-		public override IDictionary<string, object> AgentAttributes => _agentAttributes ?? (_agentAttributes = new Dictionary<string, object>());
+		public override IDictionary<string, object> AgentAttributes => _agentAttributes;
+
 	}
 }
