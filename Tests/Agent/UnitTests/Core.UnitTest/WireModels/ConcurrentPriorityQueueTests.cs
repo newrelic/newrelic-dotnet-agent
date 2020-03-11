@@ -384,7 +384,7 @@ namespace NewRelic.Collections.UnitTests
 		{
 			Interlocked.Increment(ref CreateCount);
 			var intrinsicAttributes = new Dictionary<string, object> {{TimeStampKey, DateTime.UtcNow.ToUnixTimeMilliseconds()}};
-			return new PrioritizedNode<TransactionEventWireModel> (new TransactionEventWireModel(EmptyAttributes, EmptyAttributes, intrinsicAttributes, false, priority, false, false));
+			return new PrioritizedNode<TransactionEventWireModel> (new TransactionEventWireModel(EmptyAttributes, EmptyAttributes, intrinsicAttributes, false, priority));
 		}
 
 		[TestCaseSource("ConstructPriorityQueueSizes")]

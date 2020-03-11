@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Errors;
@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <summary>
 		/// Returns the best possible error trace for a given transaction.
 		/// </summary>
-		ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes, TransactionMetricName transactionMetricName, ErrorData errorData);
+		ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes, TransactionMetricName transactionMetricName);
 
 		/// <summary>
 		/// Returns an error trace for the given custom error data. 
@@ -73,8 +73,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <param name="transactionMetricName"></param>
 		/// <param name="errorData"></param>
 		/// <returns></returns>
-		public ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes, TransactionMetricName transactionMetricName, ErrorData errorData)
+		public ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes, TransactionMetricName transactionMetricName)
 		{
+			var errorData = immutableTransaction.TransactionMetadata.ErrorData;
+
 			var stackTrace = GetFormattedStackTrace(errorData);
 
 			var timestamp = errorData.NoticedAt;

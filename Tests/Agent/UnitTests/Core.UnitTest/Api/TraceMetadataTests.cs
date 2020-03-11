@@ -3,6 +3,12 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.CallStack;
+using System;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
+using NewRelic.Agent.Core.Errors;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -13,7 +19,6 @@ namespace NewRelic.Agent.Core.Api
 		private IConfiguration _configuration;
 		private IAdaptiveSampler _adaptiveSampler;
 		private float priority = 0.0f;
-		private IInternalTransaction _transaction;
 
 		[SetUp]
 		public void Setup()
@@ -22,24 +27,19 @@ namespace NewRelic.Agent.Core.Api
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
 			Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
 
-			var configurationService = Mock.Create<IConfigurationService>();
-			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
-
 			_adaptiveSampler = Mock.Create<IAdaptiveSampler>();
 			_traceMetadataFactory = new TraceMetadataFactory(_adaptiveSampler);
-
-			_transaction = Mock.Create<IInternalTransaction>();
-			Mock.Arrange(() => _transaction.TransactionMetadata).Returns(new TransactionMetadata());
 		}
 
 		[Test]
 		public void TraceMetadata_ComputesSampledIfNotSet()
 		{
-			_transaction.TransactionMetadata.DistributedTraceSampled = null;
+			var transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
+			Assert.IsNull(transaction.Sampled);
 
 			Mock.Arrange(() => _adaptiveSampler.ComputeSampled(ref priority)).Returns(true);
 
-			var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(_transaction);
+			var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
 			var sampled = traceMetadata.IsSampled;
 
 			Assert.AreEqual(true, sampled, "TraceMetadata did not set IsSampled.");
@@ -49,11 +49,12 @@ namespace NewRelic.Agent.Core.Api
 		[Test]
 		public void TraceMetadata_ReturnsExistingSampledIfSet()
 		{
-			_transaction.TransactionMetadata.DistributedTraceSampled = true;
+			var transaction = Mock.Create<IInternalTransaction>();
+			Mock.Arrange(() => transaction.Sampled).Returns(true);
 
 			Mock.Arrange(() => _adaptiveSampler.ComputeSampled(ref priority)).Returns(false);
 
-			var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(_transaction);
+			var traceMetadata = _traceMetadataFactory.CreateTraceMetadata(transaction);
 			var sampled = traceMetadata.IsSampled;
 
 			Assert.AreEqual(true, sampled, "TraceMetadata did not use existing Sampled setting.");

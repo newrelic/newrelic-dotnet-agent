@@ -28,7 +28,6 @@ namespace CompositeTests
 			//This will simulate that the agent has connected and force a sampling interval to start
 			_compositeTestAgent.ServerConfiguration.SamplingTarget = AdaptiveSampler.DefaultTargetSamplesPerInterval;
 			_compositeTestAgent.ServerConfiguration.SamplingTargetPeriodInSeconds = DefaultSamplingTargetIntervalInSecondsForTesting;
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true; 
 			_compositeTestAgent.PushConfiguration();
 		}
 

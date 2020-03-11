@@ -2,148 +2,129 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Helpers;
 
 namespace NewRelic.Agent.Core.Errors
 {
-	public struct ErrorData
+	public class ErrorData
 	{
-		public readonly string ErrorMessage;
+		public string ErrorMessage { get; }
+		public string ErrorTypeName { get; }
+		public string StackTrace { get; }
+		public DateTime NoticedAt { get; }
+		public string Path { get; set; }
+		public ReadOnlyDictionary<string, object> CustomAttributes { get; }
 
-		public readonly string ErrorTypeName;
+		public const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
 
-		public readonly string StackTrace;
-
-		public readonly DateTime NoticedAt;
-
-		public readonly bool IsAnError;
-
-		// used for Custom Error outside a transaction to set value for:
-		// 1. ErrorTraceWireModel.Path
-		// 2. ErrorEvent transactionName attribute
-		public string Path;
-
-		internal static readonly string _stripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
-
-		private ErrorData(string errorMessage, string errorTypeName, string stackTrace, DateTime noticedAt)
+		public ErrorData(string errorMessage, string errorTypeName, string stackTrace, DateTime noticedAt, ReadOnlyDictionary<string, object> customAttributes)
 		{
 			NoticedAt = noticedAt;
 			StackTrace = stackTrace;
 			ErrorMessage = errorMessage;
-			ErrorTypeName = GetFriendlyExceptionTypeName(errorTypeName);
-			IsAnError = true;
+			ErrorTypeName = errorTypeName;
 			Path = null;
+			CustomAttributes = customAttributes;
 		}
+	}
 
-		public static ErrorData FromParts(string errorMessage, string errorTypeName, DateTime noticedAt, bool stripErrorMessage)
+	public interface IErrorService
+	{
+		bool ShouldIgnoreException(Exception exception);
+		bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode);
+
+		ErrorData FromException(Exception exception);
+		ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes);
+		ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes);
+		ErrorData FromParts(string errorMessage, string errorTypeName, DateTime noticedAt, IDictionary<string, string> customAttributes);
+		ErrorData FromParts(string errorMessage, string errorTypeName, DateTime noticedAt, IDictionary<string, object> customAttributes);
+		ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt);
+	}
+
+	public class ErrorService : IErrorService
+	{
+		private static ReadOnlyDictionary<string, object> _emptyCustomAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+		private IConfigurationService _configurationService;
+
+		public ErrorService(IConfigurationService configurationService)
 		{
-			var message = stripErrorMessage ? _stripExceptionMessagesMessage : errorMessage;
-			return new ErrorData(message, errorTypeName, null, noticedAt);
+			_configurationService = configurationService;
 		}
 
-		public static ErrorData FromException(Exception exception, bool stripErrorMessage)
+		public ErrorData FromParts(string errorMessage, string errorTypeName, DateTime noticedAt, IDictionary<string, string> customAttributes)
+		{
+			var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
+			return new ErrorData(message, errorTypeName, null, noticedAt, CaptureAttributes(customAttributes));
+		}
+
+		public ErrorData FromParts(string errorMessage, string errorTypeName, DateTime noticedAt, IDictionary<string, object> customAttributes)
+		{
+			var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
+			return new ErrorData(message, errorTypeName, null, noticedAt, CaptureAttributes(customAttributes));
+		}
+
+		public ErrorData FromException(Exception exception)
+		{
+			return FromExceptionInternal(exception, _emptyCustomAttributes);
+		}
+
+		public ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes)
+		{
+			return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
+		}
+
+		public ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes)
+		{
+			return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
+		}
+
+		private ErrorData FromExceptionInternal(Exception exception, ReadOnlyDictionary<string, object> customAttributes)
 		{
 			// this does more work than just getting the exception, so we want to do this just once.
 			var baseException = exception.GetBaseException();
-			var message = stripErrorMessage ? _stripExceptionMessagesMessage : baseException.Message;
-			var baseExceptionTypeName = baseException.GetType().FullName;
+			var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : baseException.Message;
+			var baseExceptionTypeName = GetFriendlyExceptionTypeName(baseException.GetType().FullName);
 			// We want the message from the base exception since that is the real exception.
 			// We want to show to the stacktace from theouter most excpetion since that will provide the most context for the base exception.
 			// See https://newrelic.atlassian.net/browse/DOTNET-4042 for example stacktraces
-			var stackTrace = ExceptionFormatter.FormatStackTrace(exception, stripErrorMessage);
+			var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
 			var noticedAt = DateTime.UtcNow;
-			return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt);
+			return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes);
 		}
 
-		public static ErrorData TryGetErrorData(ImmutableTransaction immutableTransaction, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
+		public bool ShouldIgnoreException(Exception exception)
 		{
-			// *Any* ignored custom error noticed by the agent should result in no error trace
-			var customErrors = immutableTransaction.TransactionMetadata.CustomErrorDatas.ToList();
-			if (ShouldIgnoreAnyError(customErrors, exceptionsToIgnore, httpStatusCodesToIgnore))
-				return new ErrorData();
+			var baseException = exception.GetBaseException();
+			var baseExceptionTypeName = GetFriendlyExceptionTypeName(baseException.GetType().FullName);
+			return ShouldIgnoreError(baseExceptionTypeName);
+		}
 
-			// Custom errors are more valuable than exception errors or status code errors
-			if (customErrors.Any())
+		public bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode)
+		{
+			return ShouldIgnoreError(GetFormattedHttpStatusCode(statusCode, subStatusCode));
+		}
+
+		private bool ShouldIgnoreError(string errorTypeName)
+		{
+			if (_configurationService.Configuration.ExceptionsToIgnore.Contains(errorTypeName))
+				return true;
+
+			if (_configurationService.Configuration.HttpStatusCodesToIgnore.Contains(errorTypeName))
+				return true;
+
+			var splitStatusCode = errorTypeName.Split(StringSeparators.Period);
+			if (splitStatusCode[0] != null && _configurationService.Configuration.HttpStatusCodesToIgnore.Contains(splitStatusCode[0]))
 			{
-				return customErrors.First();
-			}
-
-			// An ignored status code should result in no error trace
-			var formattedStatusCode = TryGetFormattedStatusCode(immutableTransaction);
-			if (ShouldIgnoreError(formattedStatusCode, exceptionsToIgnore, httpStatusCodesToIgnore))
-				return new ErrorData();
-
-			// *Any* ignored exception noticed by the agent should result in no error trace (unless there is a custom error)
-			var transactionExceptions = immutableTransaction.TransactionMetadata.TransactionExceptionDatas.ToList();
-			if (ShouldIgnoreAnyError(transactionExceptions, exceptionsToIgnore, httpStatusCodesToIgnore))
-				return new ErrorData();
-
-			// Exception errors are more valuable than status code errors
-			if (transactionExceptions.Any())
-			{
-				return transactionExceptions.First();
-			}
-
-			return TryCreateHttpErrorData(immutableTransaction);
-		}
-
-		private static bool ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
-		{
-			var errorTypeNames = errorData.Select(data => data.ErrorTypeName);
-			return ShouldIgnoreAnyError(errorTypeNames, exceptionsToIgnore, httpStatusCodesToIgnore);
-		}
-
-		internal static bool ShouldIgnoreError(string errorTypeName, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
-		{
-			return ShouldIgnoreAnyError(new[] { errorTypeName }, exceptionsToIgnore, httpStatusCodesToIgnore);
-		}
-
-		private static bool ShouldIgnoreAnyError(IEnumerable<string> errorTypeNames, IEnumerable<string> exceptionsToIgnore, IEnumerable<string> httpStatusCodesToIgnore)
-		{
-			foreach (var errorClassName in errorTypeNames)
-			{
-				if (errorClassName == null)
-					continue;
-
-				if (exceptionsToIgnore.Contains(errorClassName))
-					return true;
-
-				if (httpStatusCodesToIgnore.Contains(errorClassName))
-					return true;
-
-				var splitStatusCode = errorClassName.Split(StringSeparators.Period);
-				if (splitStatusCode[0] != null && httpStatusCodesToIgnore.Contains(splitStatusCode[0]))
-				{
-					return true;
-				}
+				return true;
 			}
 
 			return false;
 		}
 
-		private static string TryGetFormattedStatusCode(ImmutableTransaction immutableTransaction)
+		public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
 		{
-			if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
-				return null;
-
-			var statusCode = immutableTransaction.TransactionMetadata.HttpResponseStatusCode.Value;
-			var subStatusCode = immutableTransaction.TransactionMetadata.HttpResponseSubStatusCode;
-
-			return subStatusCode == null
-				? $"{statusCode}"
-				: $"{statusCode}.{subStatusCode}";
-		}
-
-		private static ErrorData TryCreateHttpErrorData(ImmutableTransaction immutableTransaction)
-		{
-			if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
-				return new ErrorData();
-
-			// Only status codes 400+ are considered error status codes
-			var statusCode = immutableTransaction.TransactionMetadata.HttpResponseStatusCode.Value;
-			if (statusCode < 400)
-				return new ErrorData();
+			if (statusCode < 400) return null;
 
 			var statusDescription =
 #if NETSTANDARD2_0
@@ -151,18 +132,38 @@ namespace NewRelic.Agent.Core.Errors
 #else
 				HttpWorkerRequest.GetStatusDescription(statusCode);
 #endif
-			var formattedFullStatusCode = TryGetFormattedStatusCode(immutableTransaction);
+			var errorTypeName = GetFormattedHttpStatusCode(statusCode, subStatusCode);
+			var errorMessage = statusDescription ?? $"Http Error {errorTypeName}";
 
-			var noticedAt = immutableTransaction.StartTime + immutableTransaction.ResponseTimeOrDuration;
-			var errorMessage = statusDescription ?? $"Http Error {formattedFullStatusCode}";
-			var errorTypeName = formattedFullStatusCode;
-
-			return new ErrorData(errorMessage, errorTypeName, null, noticedAt);
+			return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null);
 		}
 
-		private static string GetFriendlyExceptionTypeName(string exceptionTypeName)
+		private string GetFriendlyExceptionTypeName(string exceptionTypeName)
 		{
 			return exceptionTypeName?.Split(StringSeparators.BackTick, 2)[0] ?? string.Empty;
+		}
+
+		private string GetFormattedHttpStatusCode(int statusCode, int? subStatusCode)
+		{
+			return subStatusCode == null ? $"{statusCode}" : $"{statusCode}.{subStatusCode}";
+		}
+
+		private ReadOnlyDictionary<string, object> CaptureAttributes<T>(IDictionary<string, T> attributes)
+		{
+			IDictionary<string, object> result = null;
+			if (attributes != null && _configurationService.Configuration.CaptureCustomParameters)
+			{
+				foreach (var customAttribute in attributes)
+				{
+					if (customAttribute.Key != null && customAttribute.Value != null)
+					{
+						if (result == null) result = new Dictionary<string, object>();
+						result.Add(customAttribute.Key, customAttribute.Value);
+					}
+				}
+			}
+
+			return result == null ? _emptyCustomAttributes : new ReadOnlyDictionary<string, object>(result);
 		}
 	}
 }

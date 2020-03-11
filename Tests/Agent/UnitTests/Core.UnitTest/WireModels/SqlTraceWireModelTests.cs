@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.WireModels
 					{
 						new Segment(new TimeSpan(), TotalCallTime, segment, null)
 					};
-				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, duration, guid, false, false, false);
+				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, duration, guid, false, false, false,1.2f, false, string.Empty, null);
 
 				var sqlTraceData = sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, immutableTransaction.Segments.FirstOrDefault());
 				traceDatas.Add(sqlTraceData);

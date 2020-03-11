@@ -1,39 +1,46 @@
 ﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
-using System.Collections.Generic;
 using NewRelic.Core.DistributedTracing;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
 	internal class W3CTraceContext
 	{
-		private W3CTraceparentHeader Traceparent { get; set; }
-		private W3CTracestate Tracestate { get; set; }
+		private W3CTraceparent _traceparent { get; set; }
+		private W3CTracestate _tracestate { get; set; }
 
-		internal static W3CTraceContext TryGetTraceContextFromHeaders(IEnumerable<KeyValuePair<string, string>> headers, TransportType transportType)
+		public List<string> VendorStateEntries =>_tracestate?.VendorstateEntries;
+
+		internal static W3CTraceContext TryGetTraceContextFromHeaders(Func<string, IList<string>> getHeaders, TransportType transportType, string trustedAccountKey)
 		{
 			var traceContext = new W3CTraceContext();
-			traceContext.Traceparent = TryGetTraceparentHeaderFromHeaders(headers);
-			if (traceContext.Traceparent != null)
+			traceContext._traceparent = TryGetTraceparentHeaderFromHeaders(getHeaders);
+			if (traceContext._traceparent != null)
 			{
-				traceContext.Tracestate = TryGetTracestateFromHeaders(headers, transportType);
+				traceContext._tracestate = TryGetTracestateFromHeaders(getHeaders, transportType, trustedAccountKey);
 				return traceContext;
 			}
-			else
+
+			return null;
+		}
+
+		private static W3CTraceparent TryGetTraceparentHeaderFromHeaders(Func<string, IList<string>> getHeaders)
+		{
+			var result = getHeaders("traceparent");
+			if (result == null || result.Count != 1)
 			{
 				return null;
 			}
+
+			return W3CTraceparent.GetW3CTraceparentFromHeader(result[0]);
 		}
 
-		private static W3CTraceparentHeader TryGetTraceparentHeaderFromHeaders(IEnumerable<KeyValuePair<string, string>> headers)
+		private static W3CTracestate TryGetTracestateFromHeaders(Func<string, IList<string>> getHeaders, TransportType transportType, string trustedAccountKey)
 		{
-			var result = TracingState.GetHeaders("traceparent", headers);
-			return result.Count == 0 ? null : new W3CTraceparentHeader(result);
-		}
-
-		private static W3CTracestate TryGetTracestateFromHeaders(IEnumerable<KeyValuePair<string, string>> headers, TransportType transportType)
-		{
-			var result = TracingState.GetHeaders("traceparent", headers);
-			return result.Count == 0 ? null : new W3CTracestate(result);
+			var result = getHeaders("tracestate");
+			return result.Count == 0 ? null : W3CTracestate.GetW3CTracestateFromHeaders(result, trustedAccountKey);
 		}
 	}
 }

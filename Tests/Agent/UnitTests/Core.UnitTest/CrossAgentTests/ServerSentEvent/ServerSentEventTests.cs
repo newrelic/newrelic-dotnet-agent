@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Config;
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 		private IErrorTraceMaker _errorTraceMaker;
 		private IMetricNameService _metricNameService;
 		private IAttributeService _attributeService;
-
+		private IErrorService _errorService;
 
 		[SetUp]
 		public void SetUp()
@@ -109,9 +109,10 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			_spanEventMaker = Mock.Create<ISpanEventMaker>();
 			_customEventAggregator = Mock.Create<ICustomEventAggregator>();
 			_attributeService = Mock.Create<IAttributeService>();
+			_errorService = Mock.Create<IErrorService>();
 
 			_agentTimerService = Mock.Create<IAgentTimerService>();
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>());
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService);
 			_customEventTransformer = new CustomEventTransformer(_configurationService, _attributeService, _customEventAggregator);
 		}
 
@@ -128,8 +129,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var customEvent = Mock.Create<CustomEventWireModel>();
 			var transaction = TestTransactions.CreateDefaultTransaction(uri: "http://www.newrelic.com/test?param=value", statusCode: 404);
 
-			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>())).Returns(errorEvent);
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(errorTrace);
+			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>())).Returns(errorEvent);
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(errorTrace);
 			Mock.Arrange(() => _transactionEventMaker.GetTransactionEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>())).Returns(transactionEvent);
 			Mock.Arrange(() => _transactionTraceMaker.GetTransactionTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IEnumerable<ImmutableSegmentTreeNode>>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<AttributeCollection>())).Returns(transactionTrace);
 			Mock.Arrange(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>())).Returns(spanEvents);
@@ -168,8 +169,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			{
 				_serverConfig.SpanEventCollectionEnabled = testCase.ConnectResponse["collect_span_events"];
 
-				//if transaction.TransactionMetadata.DistributedTraceSampled is null or false, span events aren't generated.
-				transaction.TransactionMetadata.DistributedTraceSampled = true;
+				//if transaction.Sampled is null or false, span events aren't generated.
+				transaction = TestTransactions.CreateDefaultTransaction(uri: "http://www.newrelic.com/test?param=value", statusCode: 404, sampled: true);
 
 				assertAction = new Action(() => Mock.Assert(() => _spanEventAggregator.Collect(spanEvents), Occurs.Exactly(num)));
 			}
@@ -180,8 +181,6 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 			// ASSERT
 			assertAction();
-
-
 		}
 
 		public static IEnumerable<TestCase[]> TestCases

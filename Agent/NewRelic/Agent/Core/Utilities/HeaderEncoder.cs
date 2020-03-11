@@ -67,6 +67,8 @@ namespace NewRelic.Agent.Core.Utilities
 			return Strings.Base64Encode(serializedData);
 		}
 
+		// This same method was added to DistributedTracePayload, no need for duplicate definitions
+		// TODO: Remove from here
 		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload(string encodedString)
 		{
 			var stringToConvert = encodedString?.Trim();

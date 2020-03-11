@@ -10,12 +10,10 @@ using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
@@ -32,28 +30,19 @@ namespace NewRelic.Agent.Core.Api
 		private const string NoticeErrorPath = "NewRelic.Api.Agent.NoticeError API Call";
 
 		private readonly ITransactionService _transactionService;
-
 		private readonly ICustomEventTransformer _customEventTransformer;
-
 		private readonly IMetricBuilder _metricBuilder;
-
 		private readonly IMetricAggregator _metricAggregator;
-		
 		private readonly ICustomErrorDataTransformer _customErrorDataTransformer;
-
 		private readonly IBrowserMonitoringPrereqChecker _browserMonitoringPrereqChecker;
-
 		private readonly IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
-
 		private readonly IConfigurationService _configurationService;
-
 		private readonly IAgent _agent;
-
 		private readonly AgentBridgeApi _agentBridgeApi;
-
 		private readonly ITracePriorityManager _tracePriorityManager;
+		private readonly IErrorService _errorService;
 
-		public AgentApiImplementation(ITransactionService transactionService, ICustomEventTransformer customEventTransformer, IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, ICustomErrorDataTransformer customErrorDataTransformer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgent agent, ITracePriorityManager tracePriorityManager, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
+		public AgentApiImplementation(ITransactionService transactionService, ICustomEventTransformer customEventTransformer, IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, ICustomErrorDataTransformer customErrorDataTransformer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgent agent, ITracePriorityManager tracePriorityManager, IApiSupportabilityMetricCounters apiSupportabilityMetricCounters, IErrorService errorService)
 		{
 			_transactionService = transactionService;
 			_customEventTransformer = customEventTransformer;
@@ -66,6 +55,7 @@ namespace NewRelic.Agent.Core.Api
 			_agent = agent;
 			_agentBridgeApi = new AgentBridgeApi(_agent, apiSupportabilityMetricCounters, _configurationService);
 			_tracePriorityManager = tracePriorityManager;
+			_errorService = errorService;
 		}
 
 		public void InitializePublicAgent(object publicAgent)
@@ -107,7 +97,7 @@ namespace NewRelic.Agent.Core.Api
 			using (new IgnoreWork())
 			{
 				var transaction = TryGetCurrentInternalTransaction();
-				float priority = transaction?.TransactionMetadata.Priority ?? _tracePriorityManager.Create();
+				float priority = transaction?.Priority ?? _tracePriorityManager.Create();
 				
 				_customEventTransformer.Transform(eventType, attributes, priority);
 			}
@@ -197,8 +187,10 @@ namespace NewRelic.Agent.Core.Api
 
 			using (new IgnoreWork())
 			{
-				var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
-				ProcessNoticedError(errorData, customAttributes);
+				var transaction = TryGetCurrentInternalTransaction();
+				if (IsCustomExceptionIgnored(exception, transaction)) return;
+				var errorData = _errorService.FromException(exception, customAttributes);
+				ProcessNoticedError(errorData, transaction);
 			}
 		}
 
@@ -208,8 +200,10 @@ namespace NewRelic.Agent.Core.Api
 
 			using (new IgnoreWork())
 			{
-				var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
-				ProcessNoticedError(errorData, customAttributes);
+				var transaction = TryGetCurrentInternalTransaction();
+				if (IsCustomExceptionIgnored(exception, transaction)) return;
+				var errorData = _errorService.FromException(exception, customAttributes);
+				ProcessNoticedError(errorData, transaction);
 			}
 		}
 
@@ -230,8 +224,10 @@ namespace NewRelic.Agent.Core.Api
 
 			using (new IgnoreWork())
 			{
-				var errorData = ErrorData.FromException(exception, _configurationService.Configuration.StripExceptionMessages);
-				ProcessNoticedError<object>(errorData, null);
+				var transaction = TryGetCurrentInternalTransaction();
+				if (IsCustomExceptionIgnored(exception, transaction)) return;
+				var errorData = _errorService.FromException(exception);
+				ProcessNoticedError(errorData, transaction);
 			}
 		}
 
@@ -254,8 +250,10 @@ namespace NewRelic.Agent.Core.Api
 
 			using (new IgnoreWork())
 			{
-				var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, _configurationService.Configuration.StripExceptionMessages);
-				ProcessNoticedError(errorData, customAttributes);
+				var transaction = TryGetCurrentInternalTransaction();
+				if (IsErrorMessageIgnored(message)) return;
+				var errorData = _errorService.FromParts(message, "Custom Error", DateTime.UtcNow, customAttributes);
+				ProcessNoticedError(errorData, transaction);
 			}
 		}
 
@@ -265,34 +263,42 @@ namespace NewRelic.Agent.Core.Api
 
 			using (new IgnoreWork())
 			{
-				var errorData = ErrorData.FromParts(message, "Custom Error", DateTime.UtcNow, _configurationService.Configuration.StripExceptionMessages);
-				ProcessNoticedError(errorData, customAttributes);
+				var transaction = TryGetCurrentInternalTransaction();
+				if (IsErrorMessageIgnored(message)) return;
+				var errorData = _errorService.FromParts(message, "Custom Error", DateTime.UtcNow, customAttributes);
+				ProcessNoticedError(errorData, transaction);
 			}
 		}
 
-		private void ProcessNoticedError<T>(ErrorData errorData, IDictionary<string, T> customAttributes)
+		private void ProcessNoticedError(ErrorData errorData, IInternalTransaction transaction)
 		{
-			var transaction = TryGetCurrentInternalTransaction();
 			if (transaction != null)
 			{
-				transaction.TransactionMetadata.AddCustomErrorData(errorData);
-
-				if (customAttributes != null && _configurationService.Configuration.CaptureCustomParameters)
-				{
-					foreach (var customAttribute in customAttributes)
-					{
-						if (customAttribute.Key != null && customAttribute.Value != null)
-						{
-							transaction.TransactionMetadata.AddUserErrorAttribute(customAttribute.Key, customAttribute.Value);
-						}
-					}
-				}
+				transaction.NoticeError(errorData);
 			}
 			else
 			{
 				errorData.Path = NoticeErrorPath;
-				_customErrorDataTransformer.Transform<T>(errorData, customAttributes, _tracePriorityManager.Create());
+				_customErrorDataTransformer.Transform(errorData, _tracePriorityManager.Create());
 			}
+		}
+
+		private bool IsCustomExceptionIgnored(Exception exception, IInternalTransaction transaction)
+		{
+			if (_errorService.ShouldIgnoreException(exception))
+			{
+				if (transaction != null) transaction.TransactionMetadata.CustomErrorWasIgnored = true;
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool IsErrorMessageIgnored(string message)
+		{
+			// The agent does not currently implement ignoring errors by error message.
+			// The spec allows for this functionality: https://source.datanerd.us/agents/agent-specs/blob/master/Errors.md#ignore--expected-errors
+			return false;
 		}
 
 		/// <summary> Add a key/value pair to the current transaction.  These are reported in errors and

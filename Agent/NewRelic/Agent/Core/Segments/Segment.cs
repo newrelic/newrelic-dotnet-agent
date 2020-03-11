@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Linq;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Configuration;
@@ -12,7 +14,7 @@ using NewRelic.Agent.Core.Transactions;
 
 namespace NewRelic.Agent.Core.Segments
 {
-	public class Segment : ISegment, ISegmentExperimental
+	public class Segment : ISegment, ISegmentExperimental, ISpan
 	{
 		public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData)
 		{
@@ -52,6 +54,8 @@ namespace NewRelic.Agent.Core.Segments
 			}
 
 			SpanId = segment.SpanId;
+
+			_customAttributes = segment.CustomAttributes;
 		}
 
 		public bool IsValid => true;
@@ -124,6 +128,9 @@ namespace NewRelic.Agent.Core.Segments
 		public bool Unfinished { get; private set; }
 
 		public IEnumerable<KeyValuePair<string, object>> Parameters => _parameters ?? EmptyImmutableParameters;
+
+		private ConcurrentDictionary<string, object> _customAttributes;
+		public ConcurrentDictionary<string, object> CustomAttributes => _customAttributes;
 
 		public bool Combinable { get; set; }
 
@@ -259,6 +266,18 @@ namespace NewRelic.Agent.Core.Segments
 		public ISegmentExperimental MakeLeaf()
 		{
 			IsLeaf = true;
+			return this;
+		}
+
+		public ISpan AddCustomAttribute(string key, object value)
+		{
+			if(_customAttributes == null)
+			{
+				_customAttributes = new ConcurrentDictionary<string, object>();
+			}
+
+			_customAttributes[key] = value;
+
 			return this;
 		}
 	}

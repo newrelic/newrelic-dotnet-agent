@@ -128,8 +128,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			// Get the attributes that would be created for this transaction
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(transaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
-			var errorData = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
-			var attributes = _transactionAttributeMaker.GetAttributes(transaction, transactionMetricName, null, totalTime, errorData, txStats);
+			var attributes = _transactionAttributeMaker.GetAttributes(transaction, transactionMetricName, null, totalTime, txStats);
 			var intrinsics = attributes.GetIntrinsicsDictionary();
 
 			// Run assertions
@@ -164,7 +163,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var transactionName = GetTransactionNameFromString(testCase.TransactionName);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
 
 			SetGuid(transaction, testCase.TransactionGuid);
 

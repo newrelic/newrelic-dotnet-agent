@@ -18,6 +18,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 	{
 		private IConfigurationService _configurationService;
 		private ErrorTraceMaker _errorTraceMaker;
+		private ErrorService _errorService;
 
 		private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
 
@@ -30,6 +31,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => attributeService.FilterAttributes(Arg.IsAny<AttributeCollection>(), Arg.IsAny<AttributeDestinations>())).Returns<AttributeCollection, AttributeDestinations>((attrs, _) => attrs);
 
 			_errorTraceMaker = new ErrorTraceMaker(_configurationService, attributeService);
+			_errorService = new ErrorService(_configurationService);
 		}
 
 		[Test]
@@ -39,8 +41,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
-			var errorData = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
-			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName, errorData);
+			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
 			Assert.NotNull(errorTrace);
 			NrAssert.Multiple(
@@ -55,13 +56,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsErrorTrace_IfExceptionIsNoticed()
 		{
-			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
+			var errorDataIn = _errorService.FromParts("My message", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
-			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName, errorDataOut);
+			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
 			Assert.NotNull(errorTrace);
 			NrAssert.Multiple(
@@ -75,14 +75,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsFirstException_IfMultipleExceptionsNoticed()
 		{
-			var errorData1 = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
-			var errorData2 = ErrorData.FromParts("My message2", "My type name2", DateTime.UtcNow, false);
+			var errorData1 = _errorService.FromParts("My message", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
+			var errorData2 = _errorService.FromParts("My message2", "My type name2", DateTime.UtcNow, (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData1, errorData2 });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
-			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName, errorDataOut);
+			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
 			Assert.NotNull(errorTrace);
 			NrAssert.Multiple(
@@ -96,13 +95,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsExceptionsBeforeStatusCodes()
 		{
-			var errorDataIn = ErrorData.FromParts("My message", "My type name", DateTime.UtcNow, false);
+			var errorDataIn = _errorService.FromParts("My message", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
-			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName,errorDataOut);
+			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
 			Assert.NotNull(errorTrace);
 			NrAssert.Multiple(
@@ -116,13 +114,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsExceptionWithoutMessage_IfStripExceptionMessageEnabled()
 		{
-			var errorData = ErrorData.FromParts("This message should be stripped.", "My type name", DateTime.UtcNow, true);
+			Mock.Arrange(() => _configurationService.Configuration.StripExceptionMessages).Returns(true);
+
+			var errorData = _errorService.FromParts("This message should be stripped.", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
 
-			var errorDataOut = ErrorData.TryGetErrorData(transaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
-			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName, errorDataOut);
+			var errorTrace = _errorTraceMaker.GetErrorTrace(transaction, attributes, transactionMetricName);
 
 			Assert.NotNull(errorTrace);
 			NrAssert.Multiple(
@@ -133,13 +132,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			);
 		}
 
-		private static ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
+		private ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
 		{
 			var transactionMetadata = new TransactionMetadata();
 			if (uri != null)
 				transactionMetadata.SetUri(uri);
 			if (statusCode != null)
-				transactionMetadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode);
+				transactionMetadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (transactionExceptionDatas != null)
 				transactionExceptionDatas.ForEach(data => transactionMetadata.AddExceptionData(data));
 
@@ -148,7 +147,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false);
+			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null);
 		}
 	}
 }

@@ -2,6 +2,8 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
@@ -202,7 +204,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			Mock.Arrange(() => timer.Duration).Returns(time);
 
 			var priority = 0.5f;
-			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
+			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
 
 			if (queueTime != null)
 				tx.TransactionMetadata.SetQueueTime(queueTime.Value);

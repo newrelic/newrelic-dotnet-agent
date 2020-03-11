@@ -314,8 +314,6 @@ namespace CompositeTests
 		{
 			//Tests Fix for DOTNET-3351 - Transaction timestamp shifted when Error is reported
 
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
 

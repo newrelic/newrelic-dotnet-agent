@@ -21,5 +21,19 @@ namespace NewRelic.Core
 			RngCryptoServiceProvider.GetBytes(rndBytes);
 			return $"{BitConverter.ToUInt64(rndBytes, 0):x16}";
 		}
+
+		public static string GenerateNewRelicTraceId()
+		{
+			var rndBytes = new byte[16];
+			RngCryptoServiceProvider.GetBytes(rndBytes);
+
+			var firstHalf = new byte[8];
+			var secondHalf = new byte[8];
+
+			Array.Copy(rndBytes, 0, firstHalf, 0, 8);
+			Array.Copy(rndBytes, 8, secondHalf, 0, 8);
+
+			return $"{BitConverter.ToUInt64(firstHalf, 0):x16}{BitConverter.ToUInt64(secondHalf, 0):x16}";
+		}
 	}
 }

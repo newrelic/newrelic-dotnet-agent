@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
@@ -19,6 +19,9 @@ namespace CompositeTests
 		public void SetUp()
 		{
 			_compositeTestAgent = new CompositeTestAgent();
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
+			_compositeTestAgent.PushConfiguration();
+
 			_agent = _compositeTestAgent.GetAgent();
 		}
 

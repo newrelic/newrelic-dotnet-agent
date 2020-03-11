@@ -252,6 +252,12 @@ namespace NewRelic.Agent.Core.Attributes
 			return BuildCustomAttribute(key, value, AttributeClassification.UserAttributes, destinations);
 		}
 
+		public static Attribute BuildCustomAttributeForSpan(string key, object value)
+		{
+			const AttributeDestinations destinations = AttributeDestinations.SpanEvent;
+			return BuildCustomAttribute(key, value, AttributeClassification.UserAttributes, destinations);
+		}
+
 		public static Attribute BuildCustomAttributeForCustomEvent(string key, object value)
 		{
 			const AttributeDestinations destinations = AttributeDestinations.CustomEvent;
@@ -441,10 +447,10 @@ namespace NewRelic.Agent.Core.Attributes
 			return new StringAttribute("parent.transportType", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorTrace | AttributeDestinations.SqlTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent);
 		}
 
-		public static FloatAttribute BuildParentTransportDurationAttribute(TimeSpan value)
+		public static DoubleAttribute BuildParentTransportDurationAttribute(TimeSpan value)
 		{
 			var durationInSeconds = (float)value.TotalSeconds;
-			return new FloatAttribute("parent.transportDuration", durationInSeconds, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorTrace | AttributeDestinations.SqlTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent);
+			return new DoubleAttribute("parent.transportDuration", durationInSeconds, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorTrace | AttributeDestinations.SqlTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent);
 		}
 
 		public static StringAttribute BuildParentSpanIdAttribute(string value)

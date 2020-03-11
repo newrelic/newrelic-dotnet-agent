@@ -1,7 +1,7 @@
-using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Core;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using System;
 using System.Collections.Concurrent;
@@ -10,6 +10,97 @@ using System.Linq;
 
 namespace NewRelic.Agent.Core.Transactions
 {
+	public class TestImmutableTransactionMetadata : IImmutableTransactionMetadata
+	{
+		public KeyValuePair<string, string>[] RequestParameters { get; }
+		public KeyValuePair<string, object>[] UserAttributes { get; }
+		public ErrorData ErrorData { get; }
+
+		public string Uri { get; }
+		public string OriginalUri { get; }
+		public string ReferrerUri { get; }
+
+		public TimeSpan? QueueTime { get; }
+		
+		public int? HttpResponseStatusCode { get; }
+
+		public IEnumerable<string> CrossApplicationAlternatePathHashes { get; }
+
+		public string CrossApplicationReferrerTransactionGuid { get; }
+
+		public string CrossApplicationReferrerPathHash { get; }
+
+		public string CrossApplicationPathHash { get; }
+
+		public string CrossApplicationReferrerProcessId { get; }
+		public string CrossApplicationReferrerTripId { get; }
+
+		public float CrossApplicationResponseTimeInSeconds { get; }
+
+		public bool HasOutgoingDistributedTracePayload { get; }
+
+		public int? HttpResponseSubStatusCode { get; }
+
+		public string SyntheticsResourceId { get; }
+		public string SyntheticsJobId { get; }
+		public string SyntheticsMonitorId { get; }
+		public bool IsSynthetics { get; }
+		public bool HasCatResponseHeaders { get; }
+		public float Priority { get; }
+
+		public TestImmutableTransactionMetadata(
+			string uri,
+			string originalUri,
+			string referrerUri,
+			TimeSpan? queueTime,
+			ConcurrentDictionary<string, string> requestParameters,
+			ConcurrentDictionary<string, object> userAttributes,
+			int? httpResponseStatusCode,
+			int? httpResponseSubStatusCode,
+			string crossApplicationReferrerPathHash,
+			string crossApplicationPathHash,
+			IEnumerable<string> crossApplicationPathHashes,
+			string crossApplicationReferrerTransactionGuid,
+			string crossApplicationReferrerProcessId,
+			string crossApplicationReferrerTripId,
+			float crossApplicationResponseTimeInSeconds,
+			bool hasOutgoingDistributedTracePayload,
+			string syntheticsResourceId,
+			string syntheticsJobId,
+			string syntheticsMonitorId,
+			bool isSynthetics,
+			bool hasCatResponseHeaders,
+			float priority)
+		{
+			Uri = uri;
+			OriginalUri = originalUri;
+			ReferrerUri = referrerUri;
+			QueueTime = queueTime;
+
+			// The following must use ToArray because ToArray is thread safe on a ConcurrentDictionary.
+			RequestParameters = requestParameters.ToArray();
+			UserAttributes = userAttributes.ToArray();
+
+			HttpResponseStatusCode = httpResponseStatusCode;
+			HttpResponseSubStatusCode = httpResponseSubStatusCode;
+			CrossApplicationReferrerPathHash = crossApplicationReferrerPathHash;
+			CrossApplicationPathHash = crossApplicationPathHash;
+			CrossApplicationAlternatePathHashes = crossApplicationPathHashes.ToList();
+			CrossApplicationReferrerTransactionGuid = crossApplicationReferrerTransactionGuid;
+			CrossApplicationReferrerProcessId = crossApplicationReferrerProcessId;
+			CrossApplicationReferrerTripId = crossApplicationReferrerTripId;
+			CrossApplicationResponseTimeInSeconds = crossApplicationResponseTimeInSeconds;
+			HasOutgoingDistributedTracePayload = hasOutgoingDistributedTracePayload;
+			SyntheticsResourceId = syntheticsResourceId;
+			SyntheticsJobId = syntheticsJobId;
+			SyntheticsMonitorId = syntheticsMonitorId;
+			IsSynthetics = isSynthetics;
+			HasCatResponseHeaders = hasCatResponseHeaders;
+			Priority = priority;
+		}
+	}
+
+
 	public class ImmutableTransactionBuilder
 	{
 		private ITransactionName _transactionName = TransactionName.ForWebTransaction("foo", "bar");
@@ -34,17 +125,9 @@ namespace NewRelic.Agent.Core.Transactions
 			return this;
 		}
 
-		private ConcurrentDictionary<string, object> _userErrorAttributes = new ConcurrentDictionary<string, object>();
-
-		public ImmutableTransactionBuilder WithUserErrorAttribute(string attributeKey, object attributeValue)
-		{
-			_userErrorAttributes.TryAdd(attributeKey, attributeValue);
-			return this;
-		}
-
 		private string _distributedTraceGuid;
 		private string _distributedTraceTraceId;
-		private bool _distributedTraceSampled;
+		private bool _distributedTraceSampled = false;
 		private bool _hasIncomingDistributedTracePayload;
 
 		public ImmutableTransactionBuilder WithDistributedTracing(string distributedTraceGuid, string distributedTraceTraceId, bool distributedTraceSampled, bool hasIncomingDistributedTracePayload)
@@ -125,18 +208,15 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public ImmutableTransaction Build()
 		{
-			var metadata = new ImmutableTransactionMetadata(
+			var metadata = new TestImmutableTransactionMetadata(
 				uri: "uri",
 				originalUri: "originalUri",
 				referrerUri: "referrerUri",
 				queueTime: new TimeSpan(1),
 				requestParameters: new ConcurrentDictionary<string, string>(),
 				userAttributes: new ConcurrentDictionary<string, object>(),
-				userErrorAttributes: _userErrorAttributes,
 				httpResponseStatusCode: 200,
 				httpResponseSubStatusCode: 201,
-				transactionExceptionDatas: new List<ErrorData>(),
-				customErrorDatas: new List<ErrorData>(),
 				crossApplicationReferrerPathHash: _crossApplicationReferrerPathHash,
 				crossApplicationPathHash: _crossApplicationPathHash,
 				crossApplicationPathHashes: new List<string>(),
@@ -144,18 +224,7 @@ namespace NewRelic.Agent.Core.Transactions
 				crossApplicationReferrerProcessId: _crossApplicationReferrerProcessId,
 				crossApplicationReferrerTripId: _crossApplicationReferrerTripId,
 				crossApplicationResponseTimeInSeconds: _crossApplicationResponseTimeInSeconds,
-				distributedTraceType: "distributedTraceType",
-				distributedTraceAppId: "distributedTraceApp",
-				distributedTraceAccountId: "distributedTraceAccount",
-				distributedTraceTransportType: "distributedTraceTransportType",
-				distributedTraceGuid: _distributedTraceGuid,
-				distributedTraceTransportDuration: TimeSpan.MinValue,
-				distributedTraceTraceId: _distributedTraceTraceId,
-				distributedTraceTransactionId: "distributedTransactionId",
-				distributedTraceTrustKey: "distributedTraceTrustKey",
-				distributedTraceSampled: _distributedTraceSampled,
 				hasOutgoingDistributedTracePayload: false,
-				hasIncomingDistributedTracePayload: _hasIncomingDistributedTracePayload,
 				syntheticsResourceId: "syntheticsResourceId",
 				syntheticsJobId: "syntheticsJobId",
 				syntheticsMonitorId: "syntheticsMonitorId",
@@ -163,7 +232,7 @@ namespace NewRelic.Agent.Core.Transactions
 				hasCatResponseHeaders: false,
 				priority: _priority);
 
-			return new ImmutableTransaction(_transactionName, _segments, metadata, _startTime, _duration, _responseTime, _transactionGuid, true, true, false);
+			return new ImmutableTransaction(_transactionName, _segments, metadata, _startTime, _duration, _responseTime, _transactionGuid, true, true, false, 0.5f, _distributedTraceSampled, _distributedTraceTraceId, null);
 		}
 	}
 }

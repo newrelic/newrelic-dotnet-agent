@@ -27,6 +27,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		private IAttributeService _attributeService;
 
+		private IErrorService _errorService;
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -37,6 +39,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _configurationService.Configuration.DatabaseNameReportingEnabled).Returns(true);
 			_attributeService = Mock.Create<IAttributeService>();
 			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService, _databaseService);
+			_errorService = new ErrorService(_configurationService);
 		}
 
 		[Test]
@@ -117,7 +120,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (uri != null)
 				txMetadata.SetUri(uri);
 			if (statusCode != null)
-				txMetadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode);
+				txMetadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (transactionExceptionDatas != null)
 				transactionExceptionDatas.ForEach(data => txMetadata.AddExceptionData(data));
 
@@ -126,7 +129,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var immutableMetadata = txMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, immutableMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false);
+			return new ImmutableTransaction(name, segments, immutableMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null);
 		}
 
 		private Segment BuildSegment(DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)

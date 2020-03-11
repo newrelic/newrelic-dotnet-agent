@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.Transformers
 				.Returns(expectedErrorTrace);
 
 			float priority = 0.5f;
-			_customErrorDataTransformer.Transform<object>(new ErrorData(), null, priority);
+			_customErrorDataTransformer.Transform(MakeError(), priority);
 
 			Mock.Assert(() => _errorTraceAggregator.Collect(expectedErrorTrace));
 		}
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.Transformers
 			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<AttributeCollection>(), priority))
 				.Returns(expectedErrorEvent);
 
-			_customErrorDataTransformer.Transform<object>(new ErrorData(), null, priority);
+			_customErrorDataTransformer.Transform(MakeError(), priority);
 
 			Mock.Assert(() => _errorEventAggregator.Collect(expectedErrorEvent));
 		}
@@ -94,13 +94,13 @@ namespace NewRelic.Agent.Core.Transformers
 				.DoInstead<AttributeCollection, ErrorData>((attributes, _) => attributesPassedToErrorTraceMaker = attributes);
 
 			// ACT
-			var inputAttributes = new Dictionary<string, string>
+			var inputAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
 			{
 				{"key1", "value1"},
 				{"key2", "value2"}
-			};
+			});
 			float priority = 0.5f;
-			_customErrorDataTransformer.Transform(new ErrorData(), inputAttributes, priority);
+			_customErrorDataTransformer.Transform(MakeError(inputAttributes), priority);
 
 			// ASSERT
 
@@ -124,9 +124,14 @@ namespace NewRelic.Agent.Core.Transformers
 				.Returns(expectedErrorTrace);
 
 			float priority = 0.5f;
-			_customErrorDataTransformer.Transform<object>(new ErrorData(), null, priority);
+			_customErrorDataTransformer.Transform(MakeError(), priority);
 
 			Mock.Assert(() => _errorTraceAggregator.Collect(expectedErrorTrace), Occurs.Never());
+		}
+
+		private ErrorData MakeError(ReadOnlyDictionary<string, object> attributes = null)
+		{
+			return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes);
 		}
 	}
 }

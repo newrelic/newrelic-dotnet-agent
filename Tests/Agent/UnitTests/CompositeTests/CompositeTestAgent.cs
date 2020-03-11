@@ -339,7 +339,11 @@ namespace CompositeTests
 
 		private static configuration GetDefaultTestLocalConfiguration()
 		{
-			return new configuration();
+			var configuration = new configuration();
+
+			// Distributed tracing is disabled by default. However, we have fewer tests that need it disabled than we do that need it enabled.
+			configuration.distributedTracing.enabled = true;
+			return configuration;
 		}
 
 		private static ServerConfiguration GetDefaultTestServerConfiguration()

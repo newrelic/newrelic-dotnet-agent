@@ -1,11 +1,13 @@
-﻿using System;
+using System;
 using System.Linq;
 using MoreLinq;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -30,16 +32,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var metadata = new TransactionMetadata();
 			Assert.IsNull(metadata.HttpResponseStatusCode);
 
-			metadata.SetHttpResponseStatusCode(200, null);
+			metadata.SetHttpResponseStatusCode(200, null, Mock.Create<IErrorService>());
 			Assert.AreEqual(200, metadata.HttpResponseStatusCode);
 
-			metadata.SetHttpResponseStatusCode(400, null);
+			metadata.SetHttpResponseStatusCode(400, null, Mock.Create<IErrorService>());
 			Assert.AreEqual(400, metadata.HttpResponseStatusCode);
 			var immutableMetadata = metadata.ConvertToImmutableMetadata();
 			Assert.AreEqual(400, immutableMetadata.HttpResponseStatusCode);
 			Assert.IsNull(immutableMetadata.HttpResponseSubStatusCode);
 
-			metadata.SetHttpResponseStatusCode(404, 420);
+			metadata.SetHttpResponseStatusCode(404, 420, Mock.Create<IErrorService>());
 			Assert.AreEqual(404, metadata.HttpResponseStatusCode);
 			immutableMetadata = metadata.ConvertToImmutableMetadata();
 			Assert.AreEqual(404, immutableMetadata.HttpResponseStatusCode);
@@ -176,110 +178,5 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
 			Assert.AreEqual(result, valueB);
 		}
-
-		[Test]
-		public void AddUserErrorAttribute_LastInWins()
-		{
-			var key = "testKey";
-			var valueA = "valueA";
-			var valueB = "valueB";
-
-			var transactionMetadata = new TransactionMetadata();
-			transactionMetadata.AddUserErrorAttribute(key, valueA);
-			transactionMetadata.AddUserErrorAttribute(key, valueB);
-
-			var immutableTransactionMetadata = transactionMetadata.ConvertToImmutableMetadata();
-
-			var userErrorAttributes = immutableTransactionMetadata.UserErrorAttributes.ToDictionary();
-
-			var result = userErrorAttributes[key];
-
-			Assert.AreEqual(result, valueB);
-		}
-
-		#region Distributed Trace
-
-		[Test]
-		public void Build_HasEmptyDistributedTracePropertiesIfNeverSet()
-		{
-			var transactionMetadata = new TransactionMetadata();
-			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
-
-			NrAssert.Multiple(
-				() => Assert.That(transactionMetadata.DistributedTraceType, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceType, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceAppId, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceAppId, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceAccountId, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceAccountId, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceType, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceType, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceTrustKey, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceTrustKey, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceTransactionId, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceGuid, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceGuid, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceSampled, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceTraceId, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceTraceId, Is.Null),
-				() => Assert.That(transactionMetadata.DistributedTraceTransportType, Is.Null),
-				() => Assert.That(immutableMetadata.DistributedTraceTransportType, Is.Null)
-			);
-		}
-
-		[Test]
-		public void ConvertToImmutableMetadata_SetsDistributedTraceProperties()
-		{
-			var transactionMetadata = new TransactionMetadata();
-
-			transactionMetadata.DistributedTraceType = "type";
-			transactionMetadata.DistributedTraceAccountId = "acct";
-			transactionMetadata.DistributedTraceAppId = "app";
-			transactionMetadata.DistributedTraceGuid = "id";
-			transactionMetadata.DistributedTraceSampled = false;
-			transactionMetadata.DistributedTraceTraceId = "trace";
-			transactionMetadata.DistributedTraceTrustKey = "12345";
-			transactionMetadata.SetDistributedTraceTransportType((TransportType)(-1));
-			transactionMetadata.Priority = 0.6f;
-			transactionMetadata.DistributedTraceTransactionId = "12345";
-
-			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
-
-			NrAssert.Multiple(
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceType, immutableMetadata.DistributedTraceType),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceAccountId, immutableMetadata.DistributedTraceAccountId),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceAppId, immutableMetadata.DistributedTraceAppId),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceAppId, immutableMetadata.DistributedTraceAppId),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceGuid, immutableMetadata.DistributedTraceGuid),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceSampled, immutableMetadata.DistributedTraceSampled),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceTraceId, immutableMetadata.DistributedTraceTraceId),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceTrustKey, immutableMetadata.DistributedTraceTrustKey),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceTransportType, immutableMetadata.DistributedTraceTransportType),
-				() => Assert.AreEqual(transactionMetadata.Priority, immutableMetadata.Priority),
-				() => Assert.AreEqual(transactionMetadata.DistributedTraceTransactionId, immutableMetadata.DistributedTraceTransactionId)
-			);
-		}
-
-		[TestCase(TransportType.Unknown, "Unknown")]
-		[TestCase(TransportType.HTTP, "HTTP")]
-		[TestCase(TransportType.HTTPS, "HTTPS")]
-		[TestCase(TransportType.Kafka, "Kafka")]
-		[TestCase(TransportType.JMS, "JMS")]
-		[TestCase(TransportType.IronMQ, "IronMQ")]
-		[TestCase(TransportType.AMQP, "AMQP")]
-		[TestCase(TransportType.Queue, "Queue")]
-		[TestCase(TransportType.Other, "Other")]
-		[TestCase((TransportType)(-1), "Unknown")]
-		[TestCase((TransportType)99999, "Unknown")]
-		public void ConvertToImmutableMetadata_DistributedTraceTransportType(TransportType transportType, string expectedTransportTypeName)
-		{
-			var transactionMetadata = new TransactionMetadata();
-			transactionMetadata.SetDistributedTraceTransportType(transportType);
-
-			var immutableMetadata = transactionMetadata.ConvertToImmutableMetadata();
-
-			Assert.AreEqual(expectedTransportTypeName, immutableMetadata.DistributedTraceTransportType);
-		}
-		#endregion Distributed Trace
 	}
 }

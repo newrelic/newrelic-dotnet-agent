@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.Errors;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -12,7 +13,7 @@ namespace NewRelic.Agent.Core.Transactions
 	{
 		KeyValuePair<string, string>[] RequestParameters { get; }
 		KeyValuePair<string, object>[] UserAttributes { get; }
-		KeyValuePair<string, object>[] UserErrorAttributes { get; }
+		ErrorData ErrorData { get; }
 
 		string Uri { get; }
 		string OriginalUri { get; }

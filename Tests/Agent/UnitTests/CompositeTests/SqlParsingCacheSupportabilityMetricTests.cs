@@ -22,14 +22,6 @@ namespace CompositeTests
 		{
 			_compositeTestAgent = new CompositeTestAgent();
 			_agent = _compositeTestAgent.GetAgent();
-
-			// Span events of type datastore include obfuscated SQL.
-			// This configuration ensures that we generate datastore spans that will exercise
-			// the SQL obfuscation cache.
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
-			_compositeTestAgent.PushConfiguration();
-			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 		}
 
 		[TearDown]

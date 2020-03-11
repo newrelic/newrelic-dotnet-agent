@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using Telerik.JustMock;
 using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -33,7 +34,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		private IAdaptiveSampler _adaptiveSampler;
 		private IAgentHealthReporter _agentHealthReporter;
 
-		private TransactionService _transactionService;
 		private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
 
 		[SetUp]
@@ -53,8 +53,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _adaptiveSampler);
-
-			_transactionService = new TransactionService(new[] { CreateFactoryForTransactionContext }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>());
 		}
 
 		[TestCase(null, _accountId, _appId, _traceId)]
@@ -120,9 +118,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		{
 			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
 
-			var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
+			var transaction = new Transaction(_configuration, _initialTransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), 1.0f, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
 			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
-			
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess(), Occurs.Once());
 			Assert.NotNull(headers);
@@ -133,7 +130,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		{
 			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(false);
 
-			var transaction = _transactionService.GetOrCreateInternalTransaction(_initialTransactionName);
+			var transaction = new Transaction(_configuration, _initialTransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), 1.0f, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
 			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 
 

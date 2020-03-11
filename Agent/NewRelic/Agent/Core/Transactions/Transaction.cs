@@ -4,6 +4,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metric;
@@ -17,7 +18,6 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
 using NewRelic.Core;
-using NewRelic.Core.DistributedTracing;
 using NewRelic.Core.Logging;
 using NewRelic.Parsing;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Transactions
 		private Agent Agent => _agent ?? (_agent = Agent.Instance);
 
 		public bool IsValid => true;
-
+		
 		public ISegment CurrentSegment
 		{
 			get
@@ -53,6 +53,43 @@ namespace NewRelic.Agent.Core.Transactions
 				}
 
 				return Segments[currentSegmentIndex.Value] ?? Segment.NoOpSegment;
+			}
+		}
+
+		public ITracingState TracingState { get; private set; }
+
+		public string TraceId
+		{
+			get => (TracingState != null && TracingState.TraceId != null) ? TracingState.TraceId : _traceId;
+
+			internal set => _traceId = value;
+		}
+
+		public float Priority
+		{
+			get => (TracingState != null && TracingState.Priority.HasValue) ? (float)TracingState.Priority : _priority;
+
+			internal set => _priority = value;
+		}
+
+		public bool? Sampled
+		{
+			get => (TracingState != null && TracingState.Sampled.HasValue) ? (bool)TracingState.Sampled : _sampled;
+
+			internal set => _sampled = value;
+		}
+
+		public void SetSampled(IAdaptiveSampler adaptiveSampler)
+		{
+			lock (_sync)
+			{
+				if (!Sampled.HasValue)
+				{
+					var priority = _priority;
+					Sampled = adaptiveSampler.ComputeSampled(ref priority);
+					_priority = priority;
+
+				}
 			}
 		}
 
@@ -442,7 +479,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
 		{
-			if (Agent.Configuration.DistributedTracingEnabled)
+			if (_configuration.DistributedTracingEnabled)
 			{
 				var payload = CreateDistributedTracePayload();
 				if (payload.IsEmpty())
@@ -501,7 +538,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public void AcceptDistributedTracePayload(string payload, TransportType transportType)
 		{
-			if (!Agent.Configuration.DistributedTracingEnabled)
+			if (!_configuration.DistributedTracingEnabled)
 			{
 				return;
 			}
@@ -510,18 +547,25 @@ namespace NewRelic.Agent.Core.Transactions
 				Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept();
 				return;
 			}
-			if (TransactionMetadata.HasIncomingDistributedTracePayload)
+			if (TracingState != null)
 			{
 				Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple();
 				return;
 			}
 
-			TryProcessDistributedTraceRequestData(payload, transportType);
+			var isUnknownTransportType = transportType < TransportType.Unknown || transportType > TransportType.Other;
+
+			TracingState = Agent._distributedTracePayloadHandler.AcceptDistributedTracePayload(payload, isUnknownTransportType ? TransportType.Unknown : transportType);
+		}
+
+		public void AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType)
+		{
+			TracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, transportType);
 		}
 
 		public IDistributedTracePayload CreateDistributedTracePayload()
 		{
-			if (!Agent.Configuration.DistributedTracingEnabled)
+			if (!_configuration.DistributedTracingEnabled)
 			{
 				return DistributedTraceApiModel.EmptyModel;
 			}
@@ -529,61 +573,29 @@ namespace NewRelic.Agent.Core.Transactions
 			return Agent._distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(this, CurrentSegment);
 		}
 
-		private void TryProcessDistributedTraceRequestData(string payload, TransportType transportType)
-		{
-			var distributedTracePayload = Agent._distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(payload);
-
-			if (distributedTracePayload == null)
-				return;
-
-			UpdateTransactionMetadata(distributedTracePayload, transportType);
-		}
-
-		private void UpdateTransactionMetadata(DistributedTracePayload distributedTracePayload, TransportType transportType)
-		{
-			TransactionMetadata.HasIncomingDistributedTracePayload = true;
-			TransactionMetadata.DistributedTraceType = distributedTracePayload.Type;
-			TransactionMetadata.DistributedTraceAccountId = distributedTracePayload.AccountId;
-			TransactionMetadata.DistributedTraceAppId = distributedTracePayload.AppId;
-			TransactionMetadata.DistributedTraceGuid = distributedTracePayload.Guid;
-			TransactionMetadata.SetDistributedTraceTransportType(transportType);
-			TransactionMetadata.DistributedTraceTransportDuration = ComputeDuration(StartTime, distributedTracePayload.Timestamp);
-			TransactionMetadata.DistributedTraceTraceId = distributedTracePayload.TraceId;
-			TransactionMetadata.DistributedTraceTrustKey = distributedTracePayload.TrustKey;
-			TransactionMetadata.DistributedTraceTransactionId = distributedTracePayload.TransactionId;
-
-			if (distributedTracePayload.Priority.HasValue)
-			{
-				TransactionMetadata.Priority = distributedTracePayload.Priority.Value;
-			}
-			TransactionMetadata.DistributedTraceSampled = distributedTracePayload.Sampled;
-		}
-
-		private TimeSpan ComputeDuration(DateTime transactionStart, DateTime payloadStart)
-		{
-			var duration = transactionStart - payloadStart;
-			return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
-		}
-
 		public void NoticeError(Exception exception)
 		{
 			Log.Debug($"Noticed application error: {exception}");
 
-			// CHeck whether this exception is being ignored
-			// to avoid stacktrace lookup etc. 
-			var exceptionTypeName = exception.GetType().FullName;
-			if (!ErrorData.ShouldIgnoreError(exceptionTypeName, Agent.Configuration.ExceptionsToIgnore, Agent.Configuration.HttpStatusCodesToIgnore))
+			if (!_errorService.ShouldIgnoreException(exception))
 			{
-				var errorData = ErrorData.FromException(exception,
-					Agent.Configuration.StripExceptionMessages);
-
+				var errorData = _errorService.FromException(exception);
 				TransactionMetadata.AddExceptionData(errorData);
 			}
+			else
+			{
+				TransactionMetadata.AgentNoticedErrorWasIgnored = true;
+			}
+		}
+
+		public void NoticeError(ErrorData errorData)
+		{
+			TransactionMetadata.AddCustomErrorData(errorData);
 		}
 
 		public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
 		{
-			TransactionMetadata.SetHttpResponseStatusCode(statusCode, subStatusCode);
+			TransactionMetadata.SetHttpResponseStatusCode(statusCode, subStatusCode, _errorService);
 		}
 
 		public void AttachToAsync()
@@ -764,14 +776,14 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 		}
 
-		public ITransaction SetCustomAttribute(string key, object value)
+		public ITransaction AddCustomAttribute(string key, object value)
 		{
 			//This code is in addition to the validation on the Attribute
 			//because the values are stored in a dictionary and a null value
 			//would cause an exception.
 			if (key == null)
 			{
-				Log.Debug($"SetCustomAttribute - Unable to set custom value on transaction because the key is null/empty");
+				Log.Debug($"AddCustomAttribute - Unable to set custom value on transaction because the key is null/empty");
 				return this;
 			}
 
@@ -812,18 +824,27 @@ namespace NewRelic.Agent.Core.Transactions
 		private readonly IDatabaseService _databaseService;
 		private readonly IDatabaseStatementParser _databaseStatementParser;
 
+		private readonly IErrorService _errorService;
+		private readonly IConfiguration _configuration;
+
+		private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
 		private object _wrapperToken;
+		private readonly object _sync = new object();
+		private volatile float _priority;
+		private bool? _sampled;
+		private volatile string _traceId;
 
 		public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
-			ITimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService, float priority, IDatabaseStatementParser databaseStatementParser)
+			ITimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService,
+			float priority, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler,
+			IErrorService errorService)
 		{
 			CandidateTransactionName = new CandidateTransactionName(this, initialTransactionName);
 			_guid = GuidGenerator.GenerateNewRelicGuid();
-			TransactionMetadata = new TransactionMetadata
-			{
-				Priority = priority,
-				DistributedTraceTraceId = _guid
-			};
+			_configuration = configuration;
+			Priority = priority;
+			_traceId = configuration.DistributedTracingEnabled ? Guid : null;
+			TransactionMetadata = new TransactionMetadata();
 
 			CallStackManager = callStackManager;
 			_transactionTracerMaxSegments = configuration.TransactionTracerMaxSegments;
@@ -832,6 +853,8 @@ namespace NewRelic.Agent.Core.Transactions
 			_unitOfWorkCount = 1;
 			_databaseService = databaseService;
 			_databaseStatementParser = databaseStatementParser;
+			_errorService = errorService;
+			_distributedTracePayloadHandler = distributedTracePayloadHandler;
 		}
 
 		public int Add(Segment segment)
@@ -848,7 +871,7 @@ namespace NewRelic.Agent.Core.Transactions
 			var transactionName = CandidateTransactionName.CurrentTransactionName;
 			var transactionMetadata = TransactionMetadata.ConvertToImmutableMetadata();
 
-			return new ImmutableTransaction(transactionName, Segments, transactionMetadata, _startTime, _forcedDuration ?? _timer.Duration, ResponseTime, _guid, _ignoreAutoBrowserMonitoring, _ignoreAllBrowserMonitoring, _ignoreApdex);
+			return new ImmutableTransaction(transactionName, Segments, transactionMetadata, _startTime, _forcedDuration ?? _timer.Duration, ResponseTime, _guid, _ignoreAutoBrowserMonitoring, _ignoreAllBrowserMonitoring, _ignoreApdex, Priority, Sampled, TraceId, TracingState);
 		}
 
 		public void LogFinest(string message)
@@ -1064,6 +1087,11 @@ namespace NewRelic.Agent.Core.Transactions
 		public void SetWrapperToken(object wrapperToken)
 		{
 			_wrapperToken = wrapperToken;
+		}
+
+		public void InsertDistributedTraceHeaders(Action<string, string> setHeaders)
+		{
+			_distributedTracePayloadHandler.InsertDistributedTraceHeaders(this, setHeaders);
 		}
 	}
 }

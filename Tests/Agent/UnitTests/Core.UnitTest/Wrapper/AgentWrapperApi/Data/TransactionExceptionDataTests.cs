@@ -1,7 +1,9 @@
-﻿using System;
+using System;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
 {
@@ -11,6 +13,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
 		[Test]
 		public void FromException_GeneratesCorrectTransactionExceptionData()
 		{
+			IErrorService errorService = new ErrorService(Mock.Create<IConfigurationService>());
 			var now = DateTime.UtcNow;
 
 			Exception ex;
@@ -23,7 +26,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data
 				ex = e;
 			}
 
-			var errorData = ErrorData.FromException(ex, false);
+			var errorData = errorService.FromException(ex);
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual("Oh no!", errorData.ErrorMessage),

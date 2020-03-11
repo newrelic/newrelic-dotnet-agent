@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Errors;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -65,6 +66,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private IAgentTimerService _agentTimerService;
 
 		private IAttributeService _attributeService;
+		private IErrorService _errorService;
 
 		// TransactionTransformerSqlTraceTests is modelled after TransactionTransformerTests, but more real (non-mock) objects are required so that appropriate segment trees get generated.
 		[SetUp]
@@ -96,6 +98,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 
 			_attributeService = Mock.Create<IAttributeService>();
+			_errorService = Mock.Create<IErrorService>();
 
 			// Non-Mocks
 			_segmentTreeMaker = new SegmentTreeMaker();
@@ -114,7 +117,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService, new DatabaseService(Mock.Create<ICacheStatsReporter>()));
 
 			// create TransactionTransformer
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>());
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService);
 		}
 
 		[Test]

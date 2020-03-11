@@ -36,9 +36,6 @@ namespace CompositeTests
 		[Test]
 		public void CreatedTransactionIdTraceIdSpanIdShouldBeLowerCase()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
-			_compositeTestAgent.PushConfiguration();
 			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var transaction = _agent.CreateTransaction(
@@ -74,12 +71,8 @@ namespace CompositeTests
 			var testPort = "myPort";
 			var testDBName = "myDatabase";
 
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
-			//SpanEvents were not enabled when the aggregators were first started so we need to start them here.
-			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var tx = _agent.CreateTransaction(
 				isWeb: true,
@@ -122,13 +115,8 @@ namespace CompositeTests
 			var testDBName = "myDatabase";
 			var testCommand = "myStatement";
 
-
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
-			//SpanEvents were not enabled when the aggregators were first started so we need to start them here.
-			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var tx = _agent.CreateTransaction(
 				isWeb: true,
@@ -169,12 +157,8 @@ namespace CompositeTests
 			var vendorName = "RabbitMQ";
 			var routingKey = "queueName"; //TOPIC has a . QUEUE no .
 
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = true;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = "33";
 			_compositeTestAgent.PushConfiguration();
-			//SpanEvents were not enabled when the aggregators were first started so we need to start them here.
-			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
 			var tx = _agent.CreateTransaction(
 				destinationType: MessageBrokerDestinationType.Queue,

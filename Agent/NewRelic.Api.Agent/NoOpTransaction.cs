@@ -3,6 +3,7 @@
 	internal class NoOpTransaction : ITransaction
 	{
 		private static IDistributedTracePayload _noOpDistributedTracePayload = new NoOpDistributedTracePayload();
+		private static ISpan _noOpSpan = new NoOpSpan();
 
 		public void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown)
 		{
@@ -17,5 +18,7 @@
 		{
 			return this;
 		}
+
+		public ISpan CurrentSpan => _noOpSpan;
 	}
 }

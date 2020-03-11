@@ -9,6 +9,8 @@ namespace NewRelic.Api.Agent
 
 		public ITransaction CurrentTransaction => _noOpTransaction;
 
+		public ISpan CurrentSpan => _noOpTransaction.CurrentSpan;
+
 		ITraceMetadata IAgent.TraceMetadata => _noOpTraceMetadata;
 
 		public Dictionary<string, string> GetLinkingMetadata() => new Dictionary<string, string>();

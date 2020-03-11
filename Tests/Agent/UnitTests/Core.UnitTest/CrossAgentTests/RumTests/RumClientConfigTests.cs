@@ -17,6 +17,8 @@ using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 {
@@ -88,7 +90,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
 			ITransactionName name = TransactionName.ForWebTransaction(transactionMetricName.Prefix, transactionMetricName.UnPrefixedName);
 			var priority = 0.5f;
-			IInternalTransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
+			IInternalTransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
 			tx.TransactionMetadata.SetQueueTime(TimeSpan.FromMilliseconds(testCase.QueueTimeMilliseconds));
 			testCase.UserAttributes.ForEach(attr => tx.TransactionMetadata.AddUserAttribute(attr.Key, attr.Value));
 			tx.TransactionMetadata.SetCrossApplicationReferrerTripId("");

@@ -362,7 +362,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			duration = duration ?? TimeSpan.FromSeconds(1);
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration.Value, responseTime, guid, false, false, false);
+			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration.Value, responseTime, guid, false, false, false, 1.2f, false, string.Empty, null);
 		}
 	}
 }

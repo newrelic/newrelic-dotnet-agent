@@ -325,7 +325,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		{
 			return new ImmutableTransactionBuilder()
 				.IsWebTransaction("foo", "bar")
-				.WithUserErrorAttribute("CustomErrorAttrKey", "CustomErrorAttrValue")
 				.WithPriority(Priority)
 				.WithDistributedTracing(DistributedTraceGuid, DistributedTraceTraceId, sampled, hasIncomingPayload)
 				.WithSegments(segments)

@@ -1,18 +1,19 @@
 using System;
 using System.Linq;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
 using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface ITransactionAttributeMaker
 	{
-		AttributeCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats);
+		AttributeCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, TransactionMetricStatsCollection txStats);
 
 		AttributeCollection GetUserAndAgentAttributes(ITransactionAttributeMetadata metadata);
 	}
@@ -25,7 +26,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			_configurationService = configurationService;
 		}
-		public AttributeCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats)
+		public AttributeCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
 		{
 
 			var attributes = GetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
@@ -73,24 +74,21 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				attributes.TryAdd(Attribute.BuildDatabaseCallCountAttribute, (float)databaseData.Value0);
 			}
 
-			if (errorData.IsAnError)
+			var errorData = immutableTransaction.TransactionMetadata.ErrorData;
+			if (errorData != null)
 			{
-
 				attributes.Add(Attribute.BuildTypeAttribute(TypeAttributeValue.TransactionError));
 				attributes.Add(Attribute.BuildErrorTimeStampAttribute(errorData.NoticedAt));
-
 				attributes.TryAdd(Attribute.BuildErrorClassAttribute, errorData.ErrorTypeName);
 				attributes.TryAdd(Attribute.BuildErrorTypeAttribute, errorData.ErrorTypeName);
-
 				attributes.TryAdd(Attribute.BuildErrorMessageAttribute, errorData.ErrorMessage);
 				attributes.TryAdd(Attribute.BuildErrorDotMessageAttribute, errorData.ErrorMessage);
-
 				attributes.TryAdd(Attribute.BuildErrorAttribute, true);
 			}
 
 			var isCatParticipant = IsCatParticipant(immutableTransaction);
 			var isSyntheticsParticipant = IsSyntheticsParticipant(immutableTransaction);
-			var isDistributedTraceParticipant = immutableTransaction.TransactionMetadata.HasIncomingDistributedTracePayload;
+			var isDistributedTraceParticipant = immutableTransaction.TracingState != null;
 
 			if (_configurationService.Configuration.DistributedTracingEnabled == false)
 			{
@@ -120,22 +118,21 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			}
 			else if (isDistributedTraceParticipant)
 			{
-				//Won't be a DT participant if DT not enabled.
-				attributes.TryAdd(Attribute.BuildParentTypeAttribute, immutableTransaction.TransactionMetadata.DistributedTraceType);
-				attributes.TryAdd(Attribute.BuildParentAppAttribute, immutableTransaction.TransactionMetadata.DistributedTraceAppId);
-				attributes.TryAdd(Attribute.BuildParentAccountAttribute, immutableTransaction.TransactionMetadata.DistributedTraceAccountId);
-				attributes.TryAdd(Attribute.BuildParentTransportTypeAttribute, immutableTransaction.TransactionMetadata.DistributedTraceTransportType);
-				attributes.TryAdd(Attribute.BuildParentTransportDurationAttribute, immutableTransaction.TransactionMetadata.DistributedTraceTransportDuration);
-				attributes.TryAdd(Attribute.BuildParentIdAttribute, immutableTransaction.TransactionMetadata.DistributedTraceTransactionId);
-				attributes.TryAdd(Attribute.BuildParentSpanIdAttribute,immutableTransaction.TransactionMetadata.DistributedTraceGuid);
+				attributes.TryAdd(Attribute.BuildParentTypeAttribute, EnumNameCache<DistributedTracingParentType>.GetName(immutableTransaction.TracingState.Type));
+				attributes.TryAdd(Attribute.BuildParentAppAttribute, immutableTransaction.TracingState.AppId);
+				attributes.TryAdd(Attribute.BuildParentAccountAttribute, immutableTransaction.TracingState.AccountId);
+				attributes.TryAdd(Attribute.BuildParentTransportTypeAttribute, EnumNameCache<TransportType>.GetName(immutableTransaction.TracingState.TransportType));
+				attributes.TryAdd(Attribute.BuildParentTransportDurationAttribute, ComputeDuration(immutableTransaction.StartTime, immutableTransaction.TracingState.Timestamp));
+				attributes.TryAdd(Attribute.BuildParentIdAttribute, immutableTransaction.TracingState.TransactionId);
+				attributes.TryAdd(Attribute.BuildParentSpanIdAttribute,immutableTransaction.TracingState.Guid);
 			}
 
 			if (_configurationService.Configuration.DistributedTracingEnabled)
 			{
 				attributes.TryAdd(Attribute.BuildGuidAttribute, immutableTransaction.Guid);
-				attributes.TryAdd(Attribute.BuildDistributedTraceIdAttributes, immutableTransaction.TransactionMetadata.DistributedTraceTraceId ?? immutableTransaction.Guid);
-				attributes.TryAdd(Attribute.BuildPriorityAttribute, immutableTransaction.TransactionMetadata.Priority);
-				attributes.TryAdd(Attribute.BuildSampledAttribute, immutableTransaction.TransactionMetadata.DistributedTraceSampled);
+				attributes.TryAdd(Attribute.BuildDistributedTraceIdAttributes, immutableTransaction.TraceId ?? immutableTransaction.Guid);
+				attributes.TryAdd(Attribute.BuildPriorityAttribute, immutableTransaction.Priority);
+				attributes.TryAdd(Attribute.BuildSampledAttribute, immutableTransaction.Sampled);
 			}
 
 			if (isSyntheticsParticipant)
@@ -148,7 +145,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			return attributes;
 		}
-		
+
+		private TimeSpan ComputeDuration(DateTime transactionStart, DateTime payloadStart)
+		{
+			var duration = transactionStart - payloadStart;
+			return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
+		}
+
 		public AttributeCollection GetUserAndAgentAttributes(ITransactionAttributeMetadata metadata)
 		{
 			var attributes = new AttributeCollection();
@@ -172,8 +175,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			attributes.TryAddAll(Attribute.BuildCustomAttribute, metadata.UserAttributes);
 
-			attributes.TryAddAll(Attribute.BuildCustomAttributeForError, metadata.UserErrorAttributes);
-			
+			if (metadata.ErrorData != null)
+			{
+				attributes.TryAddAll(Attribute.BuildCustomAttributeForError, metadata.ErrorData.CustomAttributes);
+			}
+
 			return attributes;
 		}
 

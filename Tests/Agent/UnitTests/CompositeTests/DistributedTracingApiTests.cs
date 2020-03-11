@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Configuration;
@@ -22,10 +22,10 @@ namespace CompositeTests
 		private static readonly bool _sampled = true;
 		private static readonly string _traceId = "traceid";
 		private static readonly string _trustKey = "trustedkey";
-		private static readonly string _type = "typeapp";
+		private static readonly DistributedTracingParentType _type = DistributedTracingParentType.App;
 		private static readonly string _transactionId = "transactionId";
 
-		private readonly DistributedTracePayload _distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(_type, _accountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
+		private readonly DistributedTracePayload _distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(_type.ToString(), _accountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
 		private readonly string _emptyDistributedTracePayloadString = "";
 		// "bad" JSON string created by adding an extra single quote to the beginning of the string
 		private readonly string _badDistributedTracePayloadString = "{{\"v\":[0,1],\"d\":{\"ty\":\"App\",\"ac\":\"acctid\",\"ap\":\"appid\",\"tr\":\"EA7E29EBB63A42AB\",\"pr\":1.120429,\"sa\":true,\"ti\":1540398878608,\"tk\":\"trustedkey\",\"tx\":\"EA7E29EBB63A42AB\"}}";
@@ -52,8 +52,11 @@ namespace CompositeTests
 		}
 
 		[Test]
-		public void ShouldNotCreateDistributedTracePayload()
+		public void ShouldNotCreateDistributedTracePayload_WhenDistributedTracingIsDisabled()
 		{
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
+			_compositeTestAgent.PushConfiguration();
+
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -74,8 +77,6 @@ namespace CompositeTests
 		[Test]
 		public void ShouldCreateDistributedTracePayload()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -96,8 +97,6 @@ namespace CompositeTests
 		[Test]
 		public void ShouldAcceptStringDistributedTracePayloadWhenDTEnabled()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -119,7 +118,7 @@ namespace CompositeTests
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual(_traceId, transactionAttributes["traceId"]),
-				() => Assert.AreEqual(_type, transactionAttributes["parent.type"]),
+				() => Assert.AreEqual(_type.ToString(), transactionAttributes["parent.type"]),
 				() => Assert.AreEqual(_appId, transactionAttributes["parent.app"]),
 				() => Assert.AreEqual(_accountId, transactionAttributes["parent.account"]),
 				() => Assert.AreEqual("Unknown", transactionAttributes["parent.transportType"]),
@@ -133,6 +132,9 @@ namespace CompositeTests
 		[Test]
 		public void ShouldNotAcceptStringDistributedTracePayloadWhenDTNotEnabled()
 		{
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
+			_compositeTestAgent.PushConfiguration();
+
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -171,8 +173,6 @@ namespace CompositeTests
 		[Test]
 		public void ShouldNotAcceptEmptyStringDistributedTracePayload()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,
@@ -200,8 +200,6 @@ namespace CompositeTests
 		[Test]
 		public void ShouldNotAcceptBadStringDistributedTracePayload()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(
 				isWeb: true,

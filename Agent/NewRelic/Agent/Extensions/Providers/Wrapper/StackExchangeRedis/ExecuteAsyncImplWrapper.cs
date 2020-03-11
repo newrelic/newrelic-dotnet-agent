@@ -4,6 +4,8 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 {
@@ -62,7 +64,28 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 			}
 
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
-			return Delegates.GetAsyncDelegateFor(agent, segment);
+
+			//We're not using Delegates.GetAsyncDelegateFor(agent, segment) because if an async redis call is made from an asp.net mvc action,
+			//the continuation may not run until that mvc action has finished executing, or has yielded execution, because the synchronization context
+			//will only allow one thread to execute at a time. To work around this limitation, since we don't need access to HttpContext in our continuation,
+			//we can just provide the TaskContinuationOptions.HideScheduler flag so that we will use the default ThreadPool scheduler to schedule our
+			//continuation. Using the ThreadPool scheduler allows our continuation to run without needing to wait for the mvc action to finish executing or
+			//yielding its execution. We're not applying this change across the board, because we still need to better understand the impact of making this
+			//change more broadly vs just fixing a known customer issue.
+
+			return Delegates.GetDelegateFor<Task>(
+				onFailure: segment.End,
+				onSuccess: task =>
+				{
+					segment.RemoveSegmentFromCallStack();
+
+					if (task == null)
+					{
+						return;
+					}
+
+					task.ContinueWith(responseTask => agent.HandleExceptions(segment.End), TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.HideScheduler);
+				});
 		}
 
 		private static string TryGetPropertyName(string propertyName, object contextObject)

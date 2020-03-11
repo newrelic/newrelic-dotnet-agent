@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.BrowserMonitoring;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
@@ -51,8 +52,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private IPathHashMaker _pathHashMaker;
 
 		private ICatHeaderHandler _catHeaderHandler;
+		
 		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
-
 
 		private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
 
@@ -71,6 +72,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private IThreadPoolStatic _threadPoolStatic;
 		private IAgentTimerService _agentTimerService;
 		private IMetricNameService _metricNameService;
+		private IErrorService _errorService;
 
 		private const string DistributedTraceHeaderName = "Newrelic";
 
@@ -118,6 +120,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			_distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 			_traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
+			_errorService = new ErrorService(_configurationService);
 
 			_agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics);
 		}
@@ -463,7 +466,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agent.CurrentTransaction.NoticeError(exception);
 
 			var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-			var errorData = immutableTransactionMetadata.TransactionExceptionDatas.First();
+			var errorData = immutableTransactionMetadata.ErrorData;
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual("My message", errorData.ErrorMessage),
@@ -471,20 +474,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				() => Assert.IsTrue(errorData.StackTrace?.Contains("NotNewRelic.ExceptionBuilder.BuildException") == true),
 				() => Assert.IsTrue(errorData.NoticedAt >= now && errorData.NoticedAt < now.AddMinutes(1))
 			);
-		}
-
-		[Test]
-		public void NoticeError_SendsAllErrorDataToTransactionBuilder()
-		{
-			SetupTransaction();
-
-			var exception = NotNewRelic.ExceptionBuilder.BuildException("My message");
-
-			_agent.CurrentTransaction.NoticeError(exception);
-			_agent.CurrentTransaction.NoticeError(exception);
-
-			var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-			Assert.AreEqual(2, immutableTransactionMetadata.TransactionExceptionDatas.Count());
 		}
 
 		#endregion NoticeError
@@ -806,10 +795,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private static readonly bool _sampled = true;
 		private static readonly string _traceId  = "traceid";
 		private static readonly string _trustKey = "trustedkey";
-		private static readonly string _type  = "typeapp";
+		private static readonly DistributedTracingParentType _type  = DistributedTracingParentType.App;
 		private static readonly string _transactionId = "transactionId";
 
-		private readonly DistributedTracePayload _distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(_type, _accountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
+		private readonly DistributedTracePayload _distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(_type.ToString(), _accountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
 
 		[Test]
 		public void GetRequestMetadata_DoesNotReturnsCatHeaders_IfDistributedTraceEnabled()
@@ -867,6 +856,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).Returns(_distributedTracePayload);
 
+			var tracingState = Mock.Create<ITracingState>();
+			Mock.Arrange(() => tracingState.Type).Returns(_type);
+			Mock.Arrange(() => tracingState.AppId).Returns(_appId);
+			Mock.Arrange(() => tracingState.AccountId).Returns(_accountId);
+			Mock.Arrange(() => tracingState.Guid).Returns(_guid);
+			Mock.Arrange(() => tracingState.TraceId).Returns(_traceId);
+			Mock.Arrange(() => tracingState.TransactionId).Returns(_transactionId);
+			Mock.Arrange(() => tracingState.Sampled).Returns(_sampled);
+			Mock.Arrange(() => tracingState.Priority).Returns(_priority);
+
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>())).Returns(tracingState);
+
 			// Act
 			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
 
@@ -878,13 +879,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Assert.IsNull(_transaction.TransactionMetadata.CrossApplicationReferrerPathHash);
 			Assert.IsNull(null, immutableTransactionMetadata.CrossApplicationReferrerTransactionGuid);
 
-			Assert.AreEqual(_transaction.TransactionMetadata.DistributedTraceAccountId, _accountId);
-			Assert.AreEqual(_transaction.TransactionMetadata.DistributedTraceAppId, _appId);
-			Assert.AreEqual(_transaction.TransactionMetadata.DistributedTraceGuid, _guid);
-			Assert.AreEqual(_transaction.TransactionMetadata.Priority, _priority);
-			Assert.AreEqual(_transaction.TransactionMetadata.DistributedTraceTraceId, _traceId);
-			Assert.AreEqual(_transaction.TransactionMetadata.DistributedTraceTrustKey, _trustKey);
-			Assert.AreEqual(_transaction.TransactionMetadata.DistributedTraceType, _type);
+			Assert.AreEqual(_accountId, _transaction.TracingState.AccountId);
+			Assert.AreEqual(_appId, _transaction.TracingState.AppId);
+			Assert.AreEqual(_guid, _transaction.TracingState.Guid);
+			Assert.AreEqual(_type, _transaction.TracingState.Type);
+			Assert.AreEqual(_transactionId, _transaction.TracingState.TransactionId);
 		}
 
 		[Test]
@@ -893,9 +892,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			// Arrange
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
-			var transactionMetadata = new TransactionMetadata() { HasIncomingDistributedTracePayload = true };
-			Mock.Arrange(() => _transaction.TransactionMetadata).Returns(transactionMetadata);
-
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).Returns(_distributedTracePayload);
 
 			// Act
@@ -903,7 +899,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			// Assert
 			Mock.Assert(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>()), Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.DistributedTraceAccountId, Occurs.Never());
+			Mock.Assert(() => _transaction.TracingState.AccountId, Occurs.Never());
 		}
 
 		[Test]
@@ -920,12 +916,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			// Assert
 			Mock.Assert(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>()), Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.DistributedTraceAccountId, Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.DistributedTraceAppId, Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.DistributedTraceGuid, Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.DistributedTraceTrustKey, Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.DistributedTraceTraceId, Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.DistributedTraceType, Occurs.Never());
+			Mock.Assert(() => _transaction.TracingState.AccountId, Occurs.Never());
+			Mock.Assert(() => _transaction.TracingState.AppId, Occurs.Never());
+			Mock.Assert(() => _transaction.TracingState.Guid, Occurs.Never());
+			Mock.Assert(() => _transaction.TraceId, Occurs.Never());
+			Mock.Assert(() => _transaction.TracingState.Type, Occurs.Never());
 		}
 
 		[Test]
@@ -1018,7 +1013,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private void SetupTransaction()
 		{
 			var transactionName = TransactionName.ForWebTransaction("foo", "bar");
-			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>());
+			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService);
 
 			//_transactionService = Mock.Create<ITransactionService>();
 			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);
@@ -1030,49 +1025,30 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			SetupTransaction();
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
+			var tracingState = Mock.Create<ITracingState>();
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>())).Returns(tracingState);
+
 			var payload = string.Empty;
-			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).Returns(_distributedTracePayload);
 
 			_agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
 
-			var metaData = _transaction.TransactionMetadata;
-			NrAssert.Multiple(
-				() => Assert.AreEqual(_accountId, metaData.DistributedTraceAccountId),
-				() => Assert.AreEqual(_appId, metaData.DistributedTraceAppId),
-				() => Assert.AreEqual(_guid, metaData.DistributedTraceGuid),
-				() => Assert.AreEqual(_sampled, metaData.DistributedTraceSampled),
-				() => Assert.AreEqual(_traceId, metaData.DistributedTraceTraceId),
-				() => Assert.AreEqual(_transactionId, metaData.DistributedTraceTransactionId),
-				() => Assert.AreEqual("HTTPS", metaData.DistributedTraceTransportType),
-				() => Assert.AreEqual(_trustKey, metaData.DistributedTraceTrustKey),
-				() => Assert.AreEqual(_type, metaData.DistributedTraceType),
-				() => Assert.AreEqual(_priority, metaData.Priority)
-			);
+			Assert.IsNotNull(_transaction.TracingState);
 		}
 
 		[Test]
 		public void AcceptDistributedTracePayload_ShouldNotAccept_IfConfigIsFalse()
 		{
+			SetupTransaction();
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
 
+			var tracingState = Mock.Create<ITracingState>();
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>())).Returns(tracingState);
+
 			var payload = string.Empty;
-			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).Returns(_distributedTracePayload);
 
 			_agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
 
-			var metaData = _transaction.TransactionMetadata;
-			NrAssert.Multiple(
-				() => Assert.AreNotEqual(_accountId, metaData.DistributedTraceAccountId),
-				() => Assert.AreNotEqual(_appId, metaData.DistributedTraceAppId),
-				() => Assert.AreNotEqual(_guid, metaData.DistributedTraceGuid),
-				() => Assert.AreNotEqual(_sampled, metaData.DistributedTraceSampled),
-				() => Assert.AreNotEqual(_traceId, metaData.DistributedTraceTraceId),
-				() => Assert.AreNotEqual(_transactionId, metaData.DistributedTraceTransactionId),
-				() => Assert.AreNotEqual("HTTPS", metaData.DistributedTraceTransportType),
-				() => Assert.AreNotEqual(_trustKey, metaData.DistributedTraceTrustKey),
-				() => Assert.AreNotEqual(_type, metaData.DistributedTraceType),
-				() => Assert.AreNotEqual(_priority, metaData.Priority)
-			);
+			Assert.IsNull(_transaction.TracingState);
 		}
 
 		[TestCase("Newrelic", "payload", true)]

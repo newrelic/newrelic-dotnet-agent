@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Api
 
 		public ITraceMetadata CreateTraceMetadata(IInternalTransaction transaction)
 		{
-			var traceId = transaction.TransactionMetadata.DistributedTraceTraceId;
+			var traceId = transaction.TraceId;
 			var spanId = transaction.CurrentSegment.SpanId;
 			var isSampled = setIsSampled(transaction);
 
@@ -47,15 +47,15 @@ namespace NewRelic.Agent.Core.Api
 
 		private bool setIsSampled(IInternalTransaction transaction)
 		{
-			// if DistributedTraceSampled has not been set, compute it now
-			if (transaction.TransactionMetadata.DistributedTraceSampled.HasValue)
+			// if Sampled has not been set, compute it now
+			if (transaction.Sampled != null)
 			{
-				return (bool)transaction.TransactionMetadata.DistributedTraceSampled;
+				return (bool)transaction.Sampled;
 			}
 			else
 			{
-				transaction.TransactionMetadata.SetSampled(_adaptiveSampler);
-				return (bool)transaction.TransactionMetadata.DistributedTraceSampled;
+				transaction.SetSampled(_adaptiveSampler);
+				return (bool)transaction.Sampled;
 			}
 		}
 	}

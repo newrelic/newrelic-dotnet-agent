@@ -41,9 +41,20 @@ namespace NewRelic.Api.Agent
 		/// <summary> Add a key/value pair to the transaction.  These are reported in errors and
 		/// transaction traces.</summary>
 		///
-		/// <param name="key">   The key name to add to the transaction parameters. Limited to 255-bytes.</param>
+		/// <param name="key">   The key name to add to the transaction attributes. Limited to 255-bytes.</param>
 		/// <param name="value"> The value to add to the current transaction.  Values are limited to 255-bytes.</param>
 		ITransaction AddCustomAttribute(string key, object value);
 
+		/// <summary>
+		/// Property providing access to the currently executing span via the ISpan interface.
+		/// </summary>
+		/// <example>
+		/// <code>
+		///   IAgent agent = GetAgent();
+		///   ITransaction transaction = agent.CurrentTransaction;
+		///   ISpan span = transaction.CurrentSpan;
+		/// </code>
+		/// </example>
+		ISpan CurrentSpan { get; }
 	}
 }

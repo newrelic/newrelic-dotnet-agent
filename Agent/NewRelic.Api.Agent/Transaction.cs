@@ -56,7 +56,6 @@ namespace NewRelic.Api.Agent
 		private static bool _isAddCustomAttributeAvailable = true;
 		public ITransaction AddCustomAttribute(string key, object value)
 		{
-
 			if(!_isAddCustomAttributeAvailable)
 			{
 				return _noOpTransaction.AddCustomAttribute(key, value);
@@ -64,14 +63,40 @@ namespace NewRelic.Api.Agent
 
 			try
 			{
-				return _wrappedTransaction.AddCustomAttribute(key, value);
+				_wrappedTransaction.AddCustomAttribute(key, value);
+				return this;
 			}
 			catch (RuntimeBinderException)
 			{
 				_isAddCustomAttributeAvailable = false;
 			}
 
-			return _noOpTransaction;
+			return this;
+		}
+
+
+		private static bool _isCurrentSpanAvailable = true;
+		public ISpan CurrentSpan
+		{
+			get
+			{
+				if (!_isCurrentSpanAvailable) return _noOpTransaction.CurrentSpan;
+
+				try
+				{
+					var wrappedSpan = _wrappedTransaction.CurrentSpan;
+					if (wrappedSpan != null)
+					{
+						return new Span(wrappedSpan);
+					}
+				}
+				catch (RuntimeBinderException)
+				{
+					_isCurrentSpanAvailable = false;
+				}
+
+				return _noOpTransaction.CurrentSpan;
+			}
 		}
 	}
 }

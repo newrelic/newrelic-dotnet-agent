@@ -22,9 +22,6 @@ namespace NewRelic.Agent.Core.WireModels
 		[JsonConverter(typeof(EventAttributesJsonConverter))]
 		public readonly ReadOnlyDictionary<string, object> AgentAttributes;
 
-		public bool HasOutgoingDistributedTracePayload { get; set; }
-		public bool HasIncomingDistributedTracePayload { get; set; }
-
 		private readonly bool _isSynthetics;
 
 		private float _priority;
@@ -43,11 +40,9 @@ namespace NewRelic.Agent.Core.WireModels
 			}
 		}
 
-		public TransactionEventWireModel(IDictionary<string, object> userAttributes, IDictionary<string, object> agentAttributes,IDictionary<string, object> intrinsicAttributes, bool isSynthetics, float priority,bool hasOutgoingDistributedTracePayload, bool hasIncomingDistributedTracePayload)
+		public TransactionEventWireModel(IDictionary<string, object> userAttributes, IDictionary<string, object> agentAttributes,IDictionary<string, object> intrinsicAttributes, bool isSynthetics, float priority)
 		{
 			Priority = priority;
-			HasOutgoingDistributedTracePayload = hasOutgoingDistributedTracePayload;
-			HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
 			IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes);
 			UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes);
 			AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes);

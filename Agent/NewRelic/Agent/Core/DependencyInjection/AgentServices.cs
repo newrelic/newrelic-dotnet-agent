@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
@@ -172,6 +173,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<CommandService, CommandService>();
 			container.Register<ConfigurationTracker, ConfigurationTracker>();
 			container.Register<IDatabaseService, DatabaseService>();
+			container.Register<IErrorService, ErrorService>();
 
 			container.RegisterFactory<IEnumerable<IRuntimeInstrumentationGenerator>>(ExtensionsLoader.LoadRuntimeInstrumentationGenerators);
 			container.Register<IInstrumentationService, InstrumentationService>();

@@ -19,6 +19,18 @@ namespace NewRelic.Api.Agent
 		ITransaction CurrentTransaction { get; }
 
 		/// <summary>
+		/// Property providing access to the currently executing span via the ISpan interface.
+		/// </summary>
+		/// <example>
+		/// <code>
+		///   IAgent agent = GetAgent();
+		///   ITransaction transaction = agent.CurrentTransaction;
+		///   ISpan span = transaction.CurrentSpan;
+		/// </code>
+		/// </example>
+		ISpan CurrentSpan { get; }
+
+		/// <summary>
 		/// Provides access to Trace Metadata for details about the currently executing distributed trace.
 		/// </summary>
 		/// <example>

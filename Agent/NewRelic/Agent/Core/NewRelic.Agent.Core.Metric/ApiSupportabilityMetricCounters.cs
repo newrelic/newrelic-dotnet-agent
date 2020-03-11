@@ -29,7 +29,9 @@ namespace NewRelic.Agent.Core.Metric
 		SetTransactionUri = 18,
 		TraceMetadata = 19,
 		GetLinkingMetadata = 20,
-		TransactionAddCustomAttribute = 21
+		TransactionAddCustomAttribute = 21,
+		TransactionGetCurrentSpan=22,
+		SpanAddCustomAttribute=23
 	}
 
 	public interface IApiSupportabilityMetricCounters : IOutOfBandMetricSource

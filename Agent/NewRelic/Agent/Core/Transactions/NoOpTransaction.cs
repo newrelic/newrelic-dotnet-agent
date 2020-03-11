@@ -240,9 +240,19 @@ namespace NewRelic.Agent.Core.Transactions
 			return _noOpExternalSegmentData;
 		}
 
-		public ITransaction SetCustomAttribute(string key, object value)
+		public ITransaction AddCustomAttribute(string key, object value)
 		{
 			return this;
+		}
+
+		public void InsertDistributedTraceHeaders(Action<string, string> setHeaders)
+		{
+			return;
+		}
+
+		public void AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType)
+		{
+			return;
 		}
 	}
 }

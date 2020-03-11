@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
@@ -24,6 +24,10 @@ namespace CompositeTests
 		public void SetUp()
 		{
 			_compositeTestAgent = new CompositeTestAgent();
+
+			// This is a bug. Synthetics should work with DT enabled. Fix in follow up PR.
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
+
 			_agent = _compositeTestAgent.GetAgent();
 		}
 

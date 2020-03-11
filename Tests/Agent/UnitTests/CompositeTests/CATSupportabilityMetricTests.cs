@@ -50,6 +50,8 @@ namespace CompositeTests
 			_reqDataEncoded = HeaderEncoder.SerializeAndEncode(reqData, _agent.Configuration.EncodingKey);
 
 			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { _accountId };
+
+			_compositeTestAgent.PushConfiguration();
 		}
 
 

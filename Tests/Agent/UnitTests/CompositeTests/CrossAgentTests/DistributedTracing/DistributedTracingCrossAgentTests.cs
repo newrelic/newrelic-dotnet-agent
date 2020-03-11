@@ -97,7 +97,6 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 				Mock.Arrange(() => _adaptiveSampler.ComputeSampled(ref priority)).IgnoreArguments().Returns(true);
 			}
 
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
 			_compositeTestAgent.LocalConfiguration.spanEvents.enabled = testData.SpanEventsEnabled;
 			_compositeTestAgent.ServerConfiguration.TrustedAccountKey = testData.TrustedAccountKey;
 			_compositeTestAgent.ServerConfiguration.AccountId = testData.AccountId;

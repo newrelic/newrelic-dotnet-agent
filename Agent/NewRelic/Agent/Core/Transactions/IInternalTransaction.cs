@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Errors;
+using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
@@ -31,6 +33,12 @@ namespace NewRelic.Agent.Core.Transactions
 		void IgnoreAutoBrowserMonitoringForThisTx();
 		void IgnoreAllBrowserMonitoringForThisTx();
 		void IgnoreApdex();
+
+		ITracingState TracingState { get; }
+		string TraceId { get; }
+		float Priority { get; }
+		bool? Sampled { get; }
+		void SetSampled(IAdaptiveSampler adaptiveSampler);
 
 		/// <summary>
 		/// Marks this builder as cleanly finished.
@@ -67,5 +75,7 @@ namespace NewRelic.Agent.Core.Transactions
 		bool TryCaptureResponseTime();
 
 		ITransactionSegmentState GetTransactionSegmentState();
+
+		void NoticeError(ErrorData errorData);
 	}
 }

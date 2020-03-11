@@ -31,5 +31,10 @@ namespace NewRelic.Agent.Core.Segments
 		{
 			return this;
 		}
+
+		public ISpan AddCustomAttribute(string key, object value)
+		{
+			return this;
+		}
 	}
 }

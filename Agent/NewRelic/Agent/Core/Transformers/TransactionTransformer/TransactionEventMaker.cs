@@ -27,9 +27,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var transactionMetadata = immutableTransaction.TransactionMetadata;
 			var isSynthetics = transactionMetadata.IsSynthetics;
-			var priority = transactionMetadata.Priority;
+			var priority = immutableTransaction.Priority;
 
-			return new TransactionEventWireModel(userAttributes, agentAttributes, intrinsicAttributes, isSynthetics, priority, transactionMetadata.HasOutgoingDistributedTracePayload, transactionMetadata.HasIncomingDistributedTracePayload);
+			return new TransactionEventWireModel(userAttributes, agentAttributes, intrinsicAttributes, isSynthetics, priority);
 		}
 	}
 }

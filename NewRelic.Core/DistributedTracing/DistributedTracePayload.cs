@@ -2,9 +2,20 @@
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Core.DistributedTracing
 {
+	public enum IngestErrorType
+	{
+		Version,
+		NullPayload,
+		ParseException,
+		OtherException,
+		NotTraceable,
+		NotTrusted
+	}
+
 	/// <remarks>
 	/// https://source.datanerd.us/agents/agent-specs/blob/master/Distributed-Tracing.md#payload-fields
 	/// </remarks>
@@ -125,6 +136,32 @@ namespace NewRelic.Core.DistributedTracing
 			}
 		}
 
+		public static DistributedTracePayload TryBuildIncomingPayloadFromJson(string json, List<IngestErrorType> errors)
+		{
+			if (string.IsNullOrEmpty(json))
+			{
+				//throw new DistributedTraceAcceptPayloadNullException("json input cannot be null or empty string");
+				errors.Add(IngestErrorType.NullPayload);
+				return null;
+			}
+
+			try
+			{
+				return JsonConvert.DeserializeObject<DistributedTracePayload>(json);
+			}
+			catch (Exception ex) when (ex is DistributedTraceAcceptPayloadParseException || ex is JsonException)
+			{
+				errors.Add(IngestErrorType.ParseException);
+				return null;
+			}
+			catch (DistributedTraceAcceptPayloadVersionException)
+			{
+				errors.Add(IngestErrorType.Version);
+				return null;
+			}
+
+		}
+
 		/// <summary>
 		/// Serialize a DistributedTracePayload <paramref name="payload"/> to an, optionally pretty, JSON string.
 		/// </summary>
@@ -152,6 +189,7 @@ namespace NewRelic.Core.DistributedTracing
 			return Strings.Base64Encode(serializedData);
 		}
 
+		// used by Lambda
 		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload(string encodedString)
 		{
 			var stringToConvert = encodedString?.Trim();
@@ -169,7 +207,56 @@ namespace NewRelic.Core.DistributedTracing
 				}
 			}
 
-			return DistributedTracePayload.TryBuildIncomingPayloadFromJson(stringToConvert);
+			return TryBuildIncomingPayloadFromJson(stringToConvert);
+		}
+
+		// used by TracingState
+		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload(string encodedString, string agentTrustKey, List<IngestErrorType> errors)
+		{
+			var stringToConvert = encodedString?.Trim();
+			if (!string.IsNullOrEmpty(stringToConvert))
+			{
+				var firstChar = stringToConvert[0];
+				if (firstChar != '{' && firstChar != '[')
+				{
+					stringToConvert = Strings.TryBase64Decode(stringToConvert);
+					if (stringToConvert == null)
+					{
+						Log.Debug("Could not decode distributed trace payload string: " + encodedString);
+						errors.Add(IngestErrorType.ParseException);
+						return null;
+					}
+				}
+			}
+			else
+			{
+				errors.Add(IngestErrorType.NullPayload);
+				return null;
+			}
+
+			var payload = TryBuildIncomingPayloadFromJson(stringToConvert, errors);
+
+			if (payload != null)
+			{
+				if (payload.Guid == null && payload.TransactionId == null)
+				{
+					Log.Debug("Incoming Guid and TransactionId were null, which is invalid for a Distributed Trace payload.");
+					errors.Add(IngestErrorType.NotTraceable);
+					return null;
+				}
+
+				var incomingTrustKey = payload.TrustKey ?? payload.AccountId;
+				var isTrusted = incomingTrustKey == agentTrustKey;
+
+				if (!isTrusted)
+				{
+					Log.Debug($"Incoming trustKey or accountId [{incomingTrustKey}] not trusted, distributed trace payload will be ignored.");
+					errors.Add(IngestErrorType.NotTrusted);
+					return null;
+				}
+			}
+
+			return payload;
 		}
 	}
 }

@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Spans
 			var userAttributes = filteredAttributes.GetUserAttributesDictionary();
 
 			var transactionMetadata = immutableTransaction.TransactionMetadata;
-			var priority = transactionMetadata.Priority;
+			var priority = immutableTransaction.Priority;
 
 			return new SpanEventWireModel(priority, intrinsicAttributes, userAttributes, agentAttributes);
 		}
@@ -59,10 +59,9 @@ namespace NewRelic.Agent.Core.Spans
 			spanAttributes.Add(immutableTransaction.CommonSpanAttributes);
 
 			// parentId should be null if very first span in trace, but should use DistributedTraceGuid otherwise.
-			if (immutableTransaction.TransactionMetadata.HasIncomingDistributedTracePayload &&
-				immutableTransaction.TransactionMetadata.DistributedTraceGuid != null)
+			if (immutableTransaction.TracingState != null && immutableTransaction.TracingState.Guid != null)
 			{
-				spanAttributes.Add(Attribute.BuildParentIdAttribute(immutableTransaction.TransactionMetadata.DistributedTraceGuid));
+				spanAttributes.Add(Attribute.BuildParentIdAttribute(immutableTransaction.TracingState.Guid));
 			}
 
 			spanAttributes.Add(Attribute.BuildGuidAttribute(rootSpanId));
@@ -72,6 +71,8 @@ namespace NewRelic.Agent.Core.Spans
 
 			spanAttributes.Add(Attribute.BuildSpanCategoryAttribute(SpanCategory.Generic));
 			spanAttributes.Add(Attribute.BuildNrEntryPointAttribute(true));
+
+			AddTransactionCustomAttributesToRootSpan(spanAttributes, immutableTransaction);
 
 			return GetSpanEvent(immutableTransaction, spanAttributes);
 		}
@@ -91,7 +92,20 @@ namespace NewRelic.Agent.Core.Spans
 
 			segment.Data.AddSpanTypeSpecificAttributes(spanAttributes, segment);
 
+			AddSegmentCustomAttributesToSpan(spanAttributes, segment);
+
 			return spanAttributes;
+		}
+
+		///  TODO:  This should pobably add the intrinsics, agents too.
+		private static void AddTransactionCustomAttributesToRootSpan(AttributeCollection attributes, ImmutableTransaction transaction)
+		{
+			attributes.TryAddAll(Attribute.BuildCustomAttributeForSpan, transaction.TransactionMetadata.UserAttributes);
+		}
+
+		private static void AddSegmentCustomAttributesToSpan(AttributeCollection attributes, Segment segment)
+		{
+			attributes.TryAddAll(Attribute.BuildCustomAttributeForSpan, segment.CustomAttributes);
 		}
 
 		/// <summary>

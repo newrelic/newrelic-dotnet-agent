@@ -39,6 +39,31 @@ namespace NewRelic.Api.Agent
 			}
 		}
 
+
+		private static bool _isCurrentSpanAvailable = true;
+		public ISpan CurrentSpan
+		{
+			get
+			{
+				if (!_isCurrentSpanAvailable) return _noOpAgent.CurrentTransaction.CurrentSpan;
+
+				try
+				{
+					var wrappedSpan = _wrappedAgent.CurrentTransaction.CurrentSpan;
+					if (wrappedSpan != null)
+					{
+						return new Span(wrappedSpan);
+					}
+				}
+				catch (RuntimeBinderException)
+				{
+					_isCurrentSpanAvailable = false;
+				}
+
+				return _noOpAgent.CurrentTransaction.CurrentSpan;
+			}
+		}
+
 		private static bool _isTraceMetadataAvailable = true;
 		public ITraceMetadata TraceMetadata
 		{

@@ -6,10 +6,14 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
@@ -17,20 +21,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 	[TestFixture]
 	public class DistributedTracePayloadHandlerTests
 	{
-		private const string DistributedTraceHeaderName = "NewRelic";
+		private const string DistributedTraceHeaderName = "Newrelic";
+		private const string TracestateHeaderName = "tracestate";
+		private const string TraceParentHeaderName = "traceparent";
 
-		private const string DtTypeApp = "App";
-		private const string IncomingDtType = "Mobile";
+
+		private const DistributedTracingParentType DtTypeApp = DistributedTracingParentType.App;
+		private const DistributedTracingParentType IncomingDtType = DistributedTracingParentType.Mobile;
 		private const string AgentAccountId = "273070";
 		private const string IncomingAccountId = "222222";
 		private const string AgentApplicationId = "238575";
 		private const string IncomingApplicationId = "888888";
-		private const string IncomingDtGuid = "incomingGuid";
-		private const string IncomingDtTraceId = "incomingTraceId";
+		private const string IncomingDtGuid = "6d10a3dfbc4448a1";
+		private const string IncomingDtTraceId = "e6463956f2c14ddaa3f737104381714f";
 		private const string IncomingTrustKey = "12345";
 		private const float Priority = 0.5f;
 		private const float IncomingPriority = 0.75f;
-		private const string TransactionId = "transactionId";
+		private const string TransactionId = "b85cf40e58084c21";
 
 		private DistributedTracePayloadHandler _distributedTracePayloadHandler;
 		private IConfiguration _configuration;
@@ -75,7 +82,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Assert.IsNotNull(decodedPayload);
 
 			NrAssert.Multiple(
-				() => Assert.AreEqual(IncomingDtType, decodedPayload.Type),
+				() => Assert.AreEqual(IncomingDtType.ToString(), decodedPayload.Type),
 				() => Assert.AreEqual(IncomingAccountId, decodedPayload.AccountId),
 				() => Assert.AreEqual(AgentApplicationId, decodedPayload.AppId),
 				() => Assert.AreEqual(null, decodedPayload.Guid),
@@ -221,6 +228,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			var transaction = BuildMockTransaction(hasIncomingPayload: false);
 
+			Mock.Arrange(() => transaction.TraceId).Returns((string)null);
+
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 			var encodedJson = model.HttpSafe();
@@ -230,7 +239,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 			// Assert
 			NrAssert.Multiple(
-				() => Assert.AreEqual(DtTypeApp, dtPayload.Type),
+				() => Assert.AreEqual(DtTypeApp.ToString(), dtPayload.Type),
 				() => Assert.AreEqual(AgentAccountId, dtPayload.AccountId),
 				() => Assert.AreEqual(AgentApplicationId, dtPayload.AppId),
 				() => Assert.AreEqual(null, dtPayload.Guid),
@@ -257,7 +266,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 			// Assert
 			NrAssert.Multiple(
-				() => Assert.AreEqual(DtTypeApp, dtPayload.Type),
+				() => Assert.AreEqual(DtTypeApp.ToString(), dtPayload.Type),
 				() => Assert.AreEqual(AgentAccountId, dtPayload.AccountId),
 				() => Assert.AreEqual(AgentApplicationId, dtPayload.AppId),
 				() => Assert.AreEqual(null, dtPayload.Guid),
@@ -309,8 +318,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
 
-			var transaction = BuildMockTransaction();
-			transaction.TransactionMetadata.DistributedTraceSampled = true;
+			var transaction = BuildMockTransaction(sampled: true);
+			//transaction.TransactionMetadata.DistributedTraceSampled = true;
 
 			const string expectedGuid = "expectedId";
 			var segment = Mock.Create<ISegment>();
@@ -353,8 +362,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
 
-			var transaction = BuildMockTransaction();
-			transaction.TransactionMetadata.DistributedTraceSampled = false;
+			var transaction = BuildMockTransaction(sampled: false);
+			//transaction.TransactionMetadata.DistributedTraceSampled = false;
 
 			const string expectedGuid = "expectedId";
 			var segment = Mock.Create<ISegment>();
@@ -405,8 +414,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		public void ShouldNotCreatePayloadWhenSampledNotSet()
 		{
 			// Arrange
-			var transaction = BuildMockTransaction();
-			transaction.TransactionMetadata.DistributedTraceSampled = null;
+			var transaction = BuildMockTransaction(sampled: null);
+			//transaction.TransactionMetadata.DistributedTraceSampled = null;
 
 			// Act
 			var payload = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
@@ -425,9 +434,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var segment = Mock.Create<Segment>();
 			Mock.Arrange(() => segment.SpanId).Returns("56789");
 
-			var transaction = BuildMockTransaction();
-			transaction.TransactionMetadata.DistributedTraceGuid = "12345";
-			transaction.TransactionMetadata.DistributedTraceSampled = true;
+			var transaction = BuildMockTransaction(sampled: true);
 
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
@@ -471,6 +478,262 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Assert
 			Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
 		}
+
+		#region W3C Tests
+		[TestCase("getHeaders is null")]
+		[TestCase("getHeaders throws exception")]
+		public void W3C_AcceptDistributedTraceHeaders_DoesNotThrowException(string testCaseName)
+		{
+			// Arrange
+			var transaction = Mock.Create<ITransaction>();
+			var headers = new List<KeyValuePair<string, string>>();
+
+			Func<string, IList<string>> getHeaders = null;
+			if (testCaseName != "getHeaders is null")
+			{
+				getHeaders = new Func<string, IList<string>> ((key) =>
+				{
+					throw new Exception("Exception occurred in getHeaders.");
+				});
+			}
+
+			var tracingState = Mock.Create<ITracingState>();
+			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
+
+			Mock.Arrange(() => transaction.AcceptDistributedTraceHeaders(Arg.IsAny<Func<string, IList<string>>>()
+				,Arg.IsAny<TransportType>())).DoInstead(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP));
+
+			// Act
+			Assert.DoesNotThrow(() => transaction.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP));
+			Assert.That(headers.Count == 0);
+		}
+
+		[TestCase(true)]
+		[TestCase(false)]
+		public void W3C_InsertDistributedTraceHeaders_OutboundHeaders(bool hasIncomingPayload)
+		{
+			// Arrange
+			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
+
+			var transaction = BuildMockTransaction(hasIncomingPayload: hasIncomingPayload, sampled: true);
+			
+			var transactionGuid = GuidGenerator.GenerateNewRelicGuid();
+			Mock.Arrange(() => transaction.Guid).Returns(transactionGuid);
+
+			var expectedSpanGuid = GuidGenerator.GenerateNewRelicGuid();
+			var segment = Mock.Create<ISegment>();
+			Mock.Arrange(() => segment.SpanId).Returns(expectedSpanGuid);
+
+			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+
+			var headers = new List<KeyValuePair<string, string>>();
+			var setHeaders = new Action<string, string>((key, value) =>
+			{
+				headers.Add(new KeyValuePair<string, string>(key, value));
+			});
+
+			var tracingState = Mock.Create<ITracingState>();
+
+			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
+
+			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
+			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
+
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+
+			// Act
+			transaction.InsertDistributedTraceHeaders(setHeaders);
+
+			Assert.That(headers.Where(header => header.Key == DistributedTraceHeaderName).Count() > 0, "There must be at least a newrelic header");
+			Assert.That(headers.Where(header => header.Key == TraceParentHeaderName).Count() > 0, "There must be at least a traceparent header");
+			Assert.That(headers.Where(header => header.Key == TracestateHeaderName).Count() > 0, "There must be at least a tracestate header");
+
+			var tracestateHeaderValue = headers.Where(header => header.Key == TracestateHeaderName).Select(header => header.Value).ToList();
+			var traceState = W3CTracestate.GetW3CTracestateFromHeaders(tracestateHeaderValue, IncomingTrustKey);
+			Assert.NotNull(traceState);
+			Assert.That(traceState.AccountId == AgentAccountId);
+			Assert.That(traceState.AccountKey == IncomingTrustKey);
+			Assert.That(traceState.AppId == AgentApplicationId);
+			Assert.That(traceState.TransactionId == transactionGuid);
+			Assert.That(traceState.ParentType == 0);
+			Assert.That(traceState.Priority == (hasIncomingPayload ? IncomingPriority : Priority));
+			Assert.That(traceState.SpanId == expectedSpanGuid);
+			Assert.That(traceState.VendorstateEntries.SequenceEqual(vendorStateEntries));
+			Assert.That(traceState.Version == 0);
+
+			var traceParentHeaderValue = headers.Where(header => header.Key == TraceParentHeaderName).Select(header => header.Value).FirstOrDefault();
+
+			var traceIdExpectedLength = 32;
+
+			var tracepararent = W3CTraceparent.GetW3CTraceparentFromHeader(traceParentHeaderValue);
+
+			var expectedTraceId = transaction.TraceId;
+			expectedTraceId = expectedTraceId.PadLeft(traceIdExpectedLength, '0').ToLowerInvariant();
+			var expectedParentId = expectedSpanGuid;
+
+			Assert.That(tracepararent.TraceId.Length == traceIdExpectedLength);
+			Assert.That(tracepararent.TraceId == expectedTraceId);
+			Assert.That(tracepararent.Version == 0);
+			Assert.That(tracepararent.ParentId == expectedParentId);
+			Assert.That(tracepararent.TraceFlags == "01");
+
+			var nrHeaderValue = headers.Where(header => header.Key == DistributedTraceHeaderName).Select(header => header.Value).FirstOrDefault();
+			Assert.NotNull(nrHeaderValue);
+		}
+
+		[Test]
+		public void W3C_InsertDistributedTraceHeaders_ExcludeNewRelicHeader()
+		{
+			// Arrange
+			Mock.Arrange(() => _configuration.ExcludeNewrelicHeader).Returns(true);
+
+			var transaction = BuildMockTransaction(hasIncomingPayload: true, sampled: true);
+
+			Mock.Arrange(() => transaction.Guid).Returns(GuidGenerator.GenerateNewRelicGuid());
+
+			var segment = Mock.Create<ISegment>();
+			Mock.Arrange(() => segment.SpanId).Returns(GuidGenerator.GenerateNewRelicGuid());
+			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+
+			var headers = new List<KeyValuePair<string, string>>();
+			var setHeaders = new Action<string, string>((key, value) =>
+			{
+				headers.Add(new KeyValuePair<string, string>(key, value));
+			});
+
+			var tracingState = Mock.Create<ITracingState>();
+			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
+
+			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
+			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
+
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+
+			// Act
+			transaction.InsertDistributedTraceHeaders(setHeaders);
+
+			Assert.That(headers.Count == 2);
+			Assert.That(headers.Where(header => header.Key == DistributedTraceHeaderName).Count() == 0, "There should not be a newrelic header");
+			Assert.That(headers.Where(header => header.Key == TraceParentHeaderName).Count() > 0, "There must be at least a traceparent header");
+			Assert.That(headers.Where(header => header.Key == TracestateHeaderName).Count() > 0, "There must be at least a tracestate header");
+		}
+
+		[TestCase(.1234567f,"0.123457")]
+		[TestCase(1.123000f,"1.123")]
+		public void W3C_InsertDistributedTraceHeaders_PriorityInRightFormat(float testPriority, string expectedPriorityString)
+		{
+			// Arrange
+			Mock.Arrange(() => _configuration.ExcludeNewrelicHeader).Returns(true);
+
+			var transaction = BuildMockTransaction(sampled: true);
+			Mock.Arrange(() => transaction.Priority).Returns(testPriority);
+
+			Mock.Arrange(() => transaction.Guid).Returns(GuidGenerator.GenerateNewRelicGuid());
+
+			var segment = Mock.Create<ISegment>();
+			Mock.Arrange(() => segment.SpanId).Returns(GuidGenerator.GenerateNewRelicGuid());
+			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+
+			var headers = new List<KeyValuePair<string, string>>();
+			var setHeaders = new Action<string, string>((key, value) =>
+			{
+				headers.Add(new KeyValuePair<string, string>(key, value));
+			});
+
+			var tracingState = Mock.Create<ITracingState>();
+			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
+
+			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
+			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
+
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+
+			// Act
+			transaction.InsertDistributedTraceHeaders(setHeaders);
+
+			var tracestateHeaderValue = headers.Where(header => header.Key == TracestateHeaderName).Select(header => header.Value).ToList();
+			var priorityIndex = 7;
+			var priorityString = tracestateHeaderValue[0].Split('-')[priorityIndex];
+			Assert.AreEqual(expectedPriorityString, priorityString);
+		}
+
+		[TestCase("E6463956F2C14DDAA3F737104381714F", "e6463956f2c14ddaa3f737104381714f")]
+		[TestCase("E6463956F2C14DDA", "0000000000000000e6463956f2c14dda")]
+		[TestCase("e6463956f2c14dda", "0000000000000000e6463956f2c14dda")]
+		public void W3C_InsertDistributedTraceHeaders_TraceIdInRightFormat(string testTraceId, string expectedTraceId)
+		{
+			// Arrange
+			Mock.Arrange(() => _configuration.ExcludeNewrelicHeader).Returns(true);
+
+			var transaction = BuildMockTransaction(hasIncomingPayload: true, sampled: true);
+
+			Mock.Arrange(() => transaction.TraceId).Returns(testTraceId);
+
+			var segment = Mock.Create<ISegment>();
+			Mock.Arrange(() => segment.SpanId).Returns(GuidGenerator.GenerateNewRelicGuid());
+			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+
+			var headers = new List<KeyValuePair<string, string>>();
+			var setHeaders = new Action<string, string>((key, value) =>
+			{
+				headers.Add(new KeyValuePair<string, string>(key, value));
+			});
+
+			var tracingState = Mock.Create<ITracingState>();
+			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
+
+			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
+			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
+
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+
+			// Act
+			transaction.InsertDistributedTraceHeaders(setHeaders);
+
+			var traceParentHeaderValue = headers.Where(header => header.Key == TraceParentHeaderName).Select(header => header.Value).ToList();
+			var traceIdIndex = 1;
+			var traceId = traceParentHeaderValue[0].Split('-')[traceIdIndex];
+			Assert.AreEqual(expectedTraceId, traceId);
+		}
+
+		[TestCase("setHeaders is null")]
+		[TestCase("setHeaders throws exception")]
+		public void W3C_InsertDistributedTraceHeaders_DoesNotThrowException(string testCaseName)
+		{
+			// Arrange
+			var transaction = BuildMockTransaction(hasIncomingPayload: true, sampled: true);
+
+			Mock.Arrange(() => transaction.Guid).Returns(GuidGenerator.GenerateNewRelicGuid());
+
+			var segment = Mock.Create<ISegment>();
+			Mock.Arrange(() => segment.SpanId).Returns(GuidGenerator.GenerateNewRelicGuid());
+			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
+
+			var headers = new List<KeyValuePair<string, string>>();
+
+			Action<string, string> setHeaders = null;
+			if(testCaseName != "setHeaders is null") 
+			{
+				setHeaders = new Action<string, string>((key, value) =>
+				{
+					throw new Exception("Exception occurred in setHeaders.");
+				});
+			}
+
+			var tracingState = Mock.Create<ITracingState>();
+			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
+
+			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
+			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
+
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+
+			// Act
+			Assert.DoesNotThrow(() => transaction.InsertDistributedTraceHeaders(setHeaders));
+			Assert.That(headers.Count == 0);
+		}
+
+		#endregion W3C Tests
 
 		#region TraceId Tests
 
@@ -530,6 +793,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		{
 			// Arrange
 			var transaction = BuildMockTransaction();
+			Mock.Arrange(() => transaction.TraceId).Returns((string) null);
 
 			var segment = Mock.Create<ISegment>();
 			var expectedTraceIdValue = transaction.Guid;
@@ -572,36 +836,28 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 		#region helpers
 
-		private static IInternalTransaction BuildMockTransaction(bool hasIncomingPayload = false)
+		private static IInternalTransaction BuildMockTransaction(bool hasIncomingPayload = false, bool? sampled = false)
 		{
 			var transaction = Mock.Create<IInternalTransaction>();
 			var transactionMetadata = Mock.Create<ITransactionMetadata>();
 			Mock.Arrange(() => transaction.TransactionMetadata).Returns(transactionMetadata);
 			
-			var transactionGuid = Guid.NewGuid().ToString();
-			Mock.Arrange(() => transaction.Guid).Returns(transactionGuid);
+			Mock.Arrange(() => transaction.Guid).Returns(GuidGenerator.GenerateNewRelicGuid());
 
-			transaction.TransactionMetadata.Priority = Priority;
-			transaction.TransactionMetadata.DistributedTraceSampled = false;
+			Mock.Arrange(() => transaction.Priority).Returns(Priority);
+			Mock.Arrange(() => transaction.Sampled).Returns(sampled);
+			Mock.Arrange(() => transaction.TraceId).Returns(GuidGenerator.GenerateNewRelicTraceId());
 
 			if (hasIncomingPayload)
 			{
-				transaction.TransactionMetadata.DistributedTraceType = IncomingDtType;
-				transaction.TransactionMetadata.DistributedTraceAccountId = IncomingAccountId;
-				transaction.TransactionMetadata.DistributedTraceAppId = IncomingApplicationId;
-				transaction.TransactionMetadata.DistributedTraceGuid = IncomingDtGuid;
-				transaction.TransactionMetadata.DistributedTraceTraceId = IncomingDtTraceId;
-				transaction.TransactionMetadata.DistributedTraceTrustKey = IncomingTrustKey;
-				transaction.TransactionMetadata.Priority = IncomingPriority;
+				Mock.Arrange(() => transaction.TracingState).Returns(BuildMockTracingState());
+				Mock.Arrange(() => transaction.Priority).Returns(IncomingPriority);
+				Mock.Arrange(() => transaction.TraceId).Returns(IncomingDtTraceId);
 			}
 			else
 			{
-				transaction.TransactionMetadata.DistributedTraceType = null;
-				transaction.TransactionMetadata.DistributedTraceAccountId = null;
-				transaction.TransactionMetadata.DistributedTraceAppId = null;
-				transaction.TransactionMetadata.DistributedTraceGuid = null;
-				transaction.TransactionMetadata.DistributedTraceTraceId = null;
-				transaction.TransactionMetadata.DistributedTraceTrustKey = null;
+				ITracingState nullTracingState = null;
+				Mock.Arrange(() => transaction.TracingState).Returns(nullTracingState);
 			}
 
 			return transaction;
@@ -610,7 +866,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		private static DistributedTracePayload BuildSampleDistributedTracePayload()
 		{
 			return DistributedTracePayload.TryBuildOutgoingPayload(
-				IncomingDtType,
+				IncomingDtType.ToString(),
 				IncomingAccountId,
 				AgentApplicationId,
 				IncomingDtGuid,
@@ -620,6 +876,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				false,
 				DateTime.UtcNow,
 				null);				
+		}
+
+		private static ITracingState BuildMockTracingState()
+		{
+			var tracingState = Mock.Create<ITracingState>();
+
+			Mock.Arrange(() => tracingState.Type).Returns(IncomingDtType);
+			Mock.Arrange(() => tracingState.AppId).Returns(IncomingApplicationId);
+			Mock.Arrange(() => tracingState.AccountId).Returns(IncomingAccountId);
+			Mock.Arrange(() => tracingState.Guid).Returns(IncomingDtGuid);
+
+			return tracingState;
 		}
 
 		#endregion helpers

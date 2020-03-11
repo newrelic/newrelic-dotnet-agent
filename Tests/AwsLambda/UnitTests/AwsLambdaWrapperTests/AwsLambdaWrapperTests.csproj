@@ -8,6 +8,9 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.2.0" />

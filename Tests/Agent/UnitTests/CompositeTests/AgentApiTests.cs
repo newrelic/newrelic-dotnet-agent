@@ -1,4 +1,4 @@
-﻿using NewRelic.Agent.Core;
+using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Metric;
@@ -1838,6 +1838,7 @@ namespace CompositeTests
 			var NewRelicIdHttpHeader = "X-NewRelic-ID";
 			var TransactionDataHttpHeader = "X-NewRelic-Transaction";
 
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
 			_compositeTestAgent.ServerConfiguration.EncodingKey = "foo";
 			_compositeTestAgent.PushConfiguration();
 
@@ -1884,6 +1885,7 @@ namespace CompositeTests
 		{
 			var AppDataHttpHeader = "X-NewRelic-App-Data";
 
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
 			var trustedAccount = long.Parse(_compositeTestAgent.ServerConfiguration.CatId.Split(new []{'#'})[0]);
 			_compositeTestAgent.ServerConfiguration.TrustedIds = new long[] {trustedAccount};
 			_compositeTestAgent.ServerConfiguration.EncodingKey = "foo";
@@ -1955,9 +1957,6 @@ namespace CompositeTests
 		[Test]
 		public void Test_TraceMetadataReturnsValidValues()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.PushConfiguration();
-
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
@@ -2006,8 +2005,6 @@ namespace CompositeTests
 		[Test]
 		public void TraceMetadataReturnsNewValuesAfterAcceptDTPayload()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
-			_compositeTestAgent.PushConfiguration();
 			var agentWrapperApi = _compositeTestAgent.GetAgent();
 			var transaction = agentWrapperApi.CreateTransaction(true, WebTransactionType.ASP.ToString(), "TransactionName", false);
 			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
@@ -2040,6 +2037,8 @@ namespace CompositeTests
 		public void Test_GetLinkingMetadataOnlyReturnsExistingValues()
 		{
 			// traceId and spanId are not available if DistributedTracing is disabled
+			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = false;
+
 			_compositeTestAgent.ServerConfiguration.EntityGuid = "entityguid";
 			_compositeTestAgent.PushConfiguration();
 
@@ -2062,7 +2061,6 @@ namespace CompositeTests
 		[Test]
 		public void Test_GetLinkingMetadataReturnsValidValuesIfDTEnabled()
 		{
-			_compositeTestAgent.LocalConfiguration.distributedTracing.enabled = true;
 			_compositeTestAgent.ServerConfiguration.EntityGuid = "entityguid";
 			_compositeTestAgent.PushConfiguration();
 
@@ -2084,5 +2082,68 @@ namespace CompositeTests
 		}
 
 		#endregion GetLinkingMetadata
+
+		#region Span Custom Attributes
+
+		[Test]
+		public void SpanCustomAttributes()
+		{
+			var agentWrapperApi = _compositeTestAgent.GetAgent();
+			var dtm1 = DateTime.Now;
+			var dtm2 = DateTimeOffset.Now;
+
+			// ACT
+			var transaction = agentWrapperApi.CreateTransaction(
+				isWeb: true,
+				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
+				transactionDisplayName: "name",
+				doNotTrackAsUnitOfWork: true);
+
+			var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
+
+			segment.AddCustomAttribute("key1", "val1");
+			segment.AddCustomAttribute("key2", 2.0d);
+			segment.AddCustomAttribute("key3", 3.1d);
+			segment.AddCustomAttribute("key4", 4.0f);
+			segment.AddCustomAttribute("key5", true);
+			segment.AddCustomAttribute("key6", dtm1);
+			segment.AddCustomAttribute("key7", dtm2);
+			segment.AddCustomAttribute("key8", null);
+			segment.AddCustomAttribute("", dtm2);
+
+			var expectedAttributes = new[]
+			{
+				new ExpectedAttribute(){Key = "key1", Value = "val1"},
+				new ExpectedAttribute(){Key = "key2", Value = 2.0d},
+				new ExpectedAttribute(){Key = "key3", Value = 3.1d},
+				new ExpectedAttribute(){Key = "key4", Value = 4.0d},
+				new ExpectedAttribute(){Key = "key5", Value = true},
+				new ExpectedAttribute(){Key = "key6", Value = dtm1.ToString("o")},
+				new ExpectedAttribute(){Key = "key7", Value = dtm2.ToString("o")},
+			};
+
+			var unexpectedAttributes = new[]
+			{
+				"key8",
+				string.Empty
+			};
+
+			segment.End();
+			transaction.End();
+
+			_compositeTestAgent.Harvest();
+
+			var allSpans = _compositeTestAgent.SpanEvents;
+			var testSpan = allSpans.LastOrDefault();
+
+			NrAssert.Multiple
+			(
+				() => Assert.AreEqual(2, allSpans.Count),
+				() => SpanAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, testSpan),
+				() => SpanAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, testSpan)
+			);
+		}
+
+		#endregion
 	}
 }

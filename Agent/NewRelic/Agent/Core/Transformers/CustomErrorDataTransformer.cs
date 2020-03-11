@@ -9,7 +9,7 @@ namespace NewRelic.Agent.Core.Transformers
 {
 	public interface ICustomErrorDataTransformer
 	{
-		void Transform<T>(ErrorData errorData, IEnumerable<KeyValuePair<string, T>> customAttributes, float priority);
+		void Transform(ErrorData errorData, float priority);
 	}
 
 	public class CustomErrorDataTransformer : ICustomErrorDataTransformer
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Transformers
 			_errorEventAggregator = errorEventAggregator;
 		}
 
-		public void Transform<T>(ErrorData errorData, IEnumerable<KeyValuePair<string, T>> customAttributes, float priority)
+		public void Transform(ErrorData errorData, float priority)
 		{
 			if (!_configurationService.Configuration.ErrorCollectorEnabled)
 				return;
@@ -46,10 +46,10 @@ namespace NewRelic.Agent.Core.Transformers
 			var errorEventAttributes = new AttributeCollection();
 			var errorTraceAttributes = new AttributeCollection();
 
-			if (customAttributes != null && _configurationService.Configuration.CaptureCustomParameters)
+			if (errorData.CustomAttributes != null && _configurationService.Configuration.CaptureCustomParameters)
 			{
-				errorEventAttributes.TryAddAll(Attribute.BuildCustomAttributeForError, customAttributes);
-				errorTraceAttributes.TryAddAll(Attribute.BuildCustomAttributeForError, customAttributes);
+				errorEventAttributes.TryAddAll(Attribute.BuildCustomAttributeForError, errorData.CustomAttributes);
+				errorTraceAttributes.TryAddAll(Attribute.BuildCustomAttributeForError, errorData.CustomAttributes);
 			}
 
 			// For Custom Errors (occurring outside a transaction), UI Error Analytics page co-opts the

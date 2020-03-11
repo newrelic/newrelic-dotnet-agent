@@ -16,6 +16,7 @@ using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.DistributedTracing;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -28,6 +29,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private ITransactionMetricNameMaker _transactionMetricNameMaker;
 		private ISegmentTreeMaker _segmentTreeMaker;
 		private ITransactionAttributeMaker _transactionAttributeMaker;
+		private IErrorService _errorService;
 		private static ITimerFactory _timerFactory;
 
 		[SetUp]
@@ -55,6 +57,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_timerFactory = new TimerFactory();
 
 			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
+			_errorService = new ErrorService(_configurationService);
 		}
 
 		[Test]
@@ -63,13 +66,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", isSynthetics: false, isCAT: false, referrerUri: "http://referrer.uri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
-			var errorData = ErrorData.TryGetErrorData(immutableTransaction, Enumerable.Empty<string>(), Enumerable.Empty<string>());
+			var errorData = transaction.TransactionMetadata.ErrorData;
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 
-			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), errorData, txStats);
+			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(15), txStats);
 
-			var errorEvent = _errorEventMaker.GetErrorEvent(errorData, immutableTransaction, attributes);
+			var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
 
 			var intrinsicAttributes = errorEvent.IntrinsicAttributes.Keys.ToArray();
 			var agentAttributes = errorEvent.AgentAttributes.Keys.ToArray();
@@ -102,19 +105,17 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes()
 		{
-			var error = new OutOfMemoryException("Out of Memory Message");
-			var errorData = ErrorData.FromParts(error.Message, "OutOfMemoryError", DateTime.UtcNow, false);
-
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", isSynthetics: false, isCAT: false, referrerUri: "http://referrer.uri");
+			transaction.NoticeError(new OutOfMemoryException("Out of Memory Message"));
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 
 			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
-				TimeSpan.FromSeconds(15), errorData, txStats);
+				TimeSpan.FromSeconds(15), txStats);
 
-			var errorEvent = _errorEventMaker.GetErrorEvent(errorData, immutableTransaction, attributes);
+			var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
 
 			var intrinsicAttributes = errorEvent.IntrinsicAttributes.Keys.ToArray();
 			var agentAttributes = errorEvent.AgentAttributes.Keys.ToArray();
@@ -147,8 +148,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorEvent_InTransaction_WithException_ContainsCorrectAttributes_FullAttributes()
 		{
-			var error = new OutOfMemoryException("Out of Memory Message");
-			var errorData = ErrorData.FromParts(error.Message, "OutOfMemoryError", DateTime.UtcNow, false);
+			var errorData = new ErrorData("Out of Memory Message", "OutOfMemoryError", null, DateTime.UtcNow, null);
 
 			var transaction = BuildTestTransaction(statusCode: 404,
 															customErrorData: errorData,
@@ -162,11 +162,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 
 			var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(10),
-				TimeSpan.FromSeconds(15), errorData, txStats);
+				TimeSpan.FromSeconds(15), txStats);
 
 			attributes.Add(GetIntrinsicAttributes());
 
-			var errorEvent = _errorEventMaker.GetErrorEvent(errorData, immutableTransaction, attributes);
+			var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
 
 			var intrinsicAttributes = errorEvent.IntrinsicAttributes.Keys.ToArray();
 			var agentAttributes = errorEvent.AgentAttributes.Keys.ToArray();
@@ -215,7 +215,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var customAttributes = new AttributeCollection();
 
 			customAttributes.Add(Attribute.BuildCustomAttribute("custom attribute name", "custom attribute value"));
-			var errorData = ErrorData.FromException(new System.NullReferenceException("NRE message"), false);
+			var errorData = _errorService.FromException(new System.NullReferenceException("NRE message"));
 
 			// Act
 			float priority = 0.5f;
@@ -253,7 +253,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			return attributes.ToArray();
 		}
 
-		private static IInternalTransaction BuildTestTransaction(bool isWebTransaction = true, string uri = null, string referrerUri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, bool isSynthetics = true, bool isCAT = true, bool includeUserAttributes = false)
+		private IInternalTransaction BuildTestTransaction(bool isWebTransaction = true, string uri = null, string referrerUri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", ErrorData exceptionData = null, ErrorData customErrorData = null, bool isSynthetics = true, bool isCAT = true, bool includeUserAttributes = false)
 		{
 			var name = isWebTransaction
 				? TransactionName.ForWebTransaction(transactionCategory, transactionName)
@@ -265,26 +265,26 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
 
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false);
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, 0.5f, false, string.Empty, null);
 
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>());
+			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService);
 			var transactionMetadata = internalTransaction.TransactionMetadata;
 			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
 			return internalTransaction;
 		}
 
-		private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeUserAttributes = false)
+		private void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData exceptionData = null, ErrorData customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeUserAttributes = false)
 		{
 			if (uri != null)
 				metadata.SetUri(uri);
 			if (statusCode != null)
-				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode);
+				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (referrerCrossProcessId != null)
 				metadata.SetCrossApplicationReferrerProcessId(referrerCrossProcessId);
 			if (statusCode != null)
-				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode);
+				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (exceptionData != null)
 				metadata.AddExceptionData((ErrorData)exceptionData);
 			if (customErrorData != null)

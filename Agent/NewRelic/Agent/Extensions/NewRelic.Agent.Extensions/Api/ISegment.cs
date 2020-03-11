@@ -2,7 +2,7 @@
 
 namespace NewRelic.Agent.Api
 {
-	public interface ISegment
+	public interface ISegment : ISpan
 	{
 		/// <summary>
 		/// Returns true if this is a real (not a no op) segment.

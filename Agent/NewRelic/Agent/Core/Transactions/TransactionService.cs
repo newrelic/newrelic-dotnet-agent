@@ -1,5 +1,7 @@
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Utilities;
@@ -56,8 +58,10 @@ namespace NewRelic.Agent.Core.Transactions
 		private readonly IDatabaseService _databaseService;
 		private readonly ITracePriorityManager _tracePriorityManager;
 		private IDatabaseStatementParser _databaseStatementParser;
+		private readonly IErrorService _errorService;
+		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
 
-		public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser)
+		public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler, IErrorService errorService)
 		{
 			_sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
 			_asyncContext = GetAsyncTransactionContext(factories);
@@ -66,6 +70,8 @@ namespace NewRelic.Agent.Core.Transactions
 			_databaseService = databaseService;
 			_tracePriorityManager = tracePriorityManager;
 			_databaseStatementParser = databaseStatementParser;
+			_errorService = errorService;
+			_distributedTracePayloadHandler = distributedTracePayloadHandler;
 		}
 
 		public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
@@ -142,7 +148,7 @@ namespace NewRelic.Agent.Core.Transactions
 				return null;
 			}
 			var priority = _tracePriorityManager.Create();
-			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority, _databaseStatementParser);
+			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority, _databaseStatementParser, _distributedTracePayloadHandler, _errorService);
 
 			try
 			{

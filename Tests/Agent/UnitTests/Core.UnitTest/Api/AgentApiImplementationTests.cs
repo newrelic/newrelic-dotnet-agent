@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NUnit.Framework;
@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Api
 
 			_wrapperApi = Mock.Create<IAgent>();
 
-			_agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null);
+			_agentApi = new AgentApiImplementation(null, null, null, null, null, null, null, configurationService, _wrapperApi, null, null, null);
 		}
 
 

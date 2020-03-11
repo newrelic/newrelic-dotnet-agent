@@ -11,6 +11,10 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// This is the key-part that the agent recognizes when trying to find a DistributedTracePayload, typically passed as a KeyValuePair in the header of a request.
 		/// </summary>
 		public const string DistributedTracePayloadKey = "Newrelic";
+
+		public const string TraceParentHeaderKey = "traceparent";
+
+		public const string TraceStateHeaderKey = "tracestate";
 	}
 
 	public enum WebTransactionType

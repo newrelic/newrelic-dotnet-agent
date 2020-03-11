@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Api
 					return _transaction;
 				}
 				
-				_transaction.SetCustomAttribute(key, value);
+				_transaction.AddCustomAttribute(key, value);
 			}
 			catch (Exception ex)
 			{
@@ -117,6 +117,34 @@ namespace NewRelic.Agent.Core.Api
 			}
 
 			return _transaction;
+		}
+
+		public SpanBridgeApi CurrentSpan
+		{
+			get
+			{
+				try
+				{
+					using (new IgnoreWork())
+					{
+						_apiSupportabilityMetricCounters.Record(ApiMethod.TransactionGetCurrentSpan);
+						var segment = _transaction.CurrentSegment;
+						return new SpanBridgeApi(segment, _apiSupportabilityMetricCounters, _configSvc);
+					}
+				}
+				catch (Exception ex)
+				{
+					try
+					{
+						Log.ErrorFormat("Failed to get CurrentSpan: {0}", ex);
+					}
+					catch (Exception)
+					{
+						//Swallow the error
+					}
+					return null;
+				}
+			}
 		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NUnit.Framework;
@@ -153,6 +154,28 @@ namespace CompositeTests
 
 			Assert.True(succeeded, builder.ToString());
 		}
+	}
+
+	internal static class SpanAssertions
+	{
+		public static void HasAttributes(IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, SpanEventWireModel span)
+		{
+			var errorMessageBuilder = new StringBuilder();
+			var actualAttributes = span.GetAttributes(attributeClassification);
+			var allAttributesMatch = ExpectedAttribute.CheckIfAllAttributesMatch(actualAttributes, expectedAttributes, errorMessageBuilder);
+
+			Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
+		}
+
+		public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, SpanEventWireModel span)
+		{
+			var errorMessageBuilder = new StringBuilder();
+			var actualAttributes = span.GetAttributes(attributeClassification);
+			var allAttributesNotFound = ExpectedAttribute.CheckIfAllAttributesNotFound(actualAttributes, unexpectedAttributes, errorMessageBuilder);
+
+			Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
+		}
+
 	}
 
 	internal static class TransactionTraceAssertions
@@ -371,6 +394,22 @@ namespace CompositeTests
 					return customEvent.IntrinsicAttributes.ToDictionary();
 				case AttributeClassification.UserAttributes:
 					return customEvent.UserAttributes.ToDictionary();
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
+
+		public static IDictionary<string, object> GetAttributes(this SpanEventWireModel span, AttributeClassification attributeClassification)
+		{
+			switch (attributeClassification)
+			{
+				case AttributeClassification.Intrinsics:
+					return span.IntrinsicAttributes;
+				case AttributeClassification.AgentAttributes:
+					return span.AgentAttributes;
+				case AttributeClassification.UserAttributes:
+					return span.UserAttributes;
 				default:
 					throw new NotImplementedException();
 			}

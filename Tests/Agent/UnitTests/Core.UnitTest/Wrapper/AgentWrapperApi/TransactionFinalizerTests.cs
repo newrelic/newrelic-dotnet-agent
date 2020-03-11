@@ -282,7 +282,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var duration = TimeSpan.FromSeconds(1);
 			var guid = Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false);
+			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false, 1.23f, false, string.Empty, null);
 		}
 
 		private static Segment GetUnfinishedSegment(DateTime transactionStartTime, DateTime startTime)

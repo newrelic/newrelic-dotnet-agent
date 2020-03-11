@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.TestUtilities;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -40,11 +41,18 @@ namespace NewRelic.Agent.Core.WireModels
 			// ACT
 			float priority = 0.5f;
 			var errorEventWireModel = new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, isSyntheticsEvent, priority);
-			var actualResult = JsonConvert.SerializeObject(errorEventWireModel);
+			var serialized = JsonConvert.SerializeObject(errorEventWireModel);
+			var deserialized = JsonConvert.DeserializeObject<IDictionary<string, object>[]>(serialized);
 
 			// ASSERT
-			const string expected = @"[{""databaseCallCount"":10,""errormessage"":""This is the error message"",""nr.pathHash"":""DCBA4321"",""nr.referringPathHash"":""1234ABCD"",""nr.referringTransactionGuid"":""DCBA43211234ABCD"",""nr.alternatePathHashes"":""55f97a7f,6fc8d18f,72827114,9a3ed934,a1744603,a7d2798f,be1039f5,ccadfd2c,da7edf2e,eaca716b""},{""identity.user"":""samw"",""identity.product"":""product""},{""Foo"":""Bar"",""Baz"":42}]";
-			Assert.AreEqual(expected, actualResult);
+			//const string expected = @"[{""databaseCallCount"":10,""errormessage"":""This is the error message"",""nr.pathHash"":""DCBA4321"",""nr.referringPathHash"":""1234ABCD"",""nr.referringTransactionGuid"":""DCBA43211234ABCD"",""nr.alternatePathHashes"":""55f97a7f,6fc8d18f,72827114,9a3ed934,a1744603,a7d2798f,be1039f5,ccadfd2c,da7edf2e,eaca716b""},{""identity.user"":""samw"",""identity.product"":""product""},{""Foo"":""Bar"",""Baz"":42}]";
+			var expected = new IDictionary<string, object>[3]{
+				intrinsicAttributes,
+				userAttributes,
+				agentAttributes
+			};
+
+			DictionaryComparer.CompareDictionaries(expected, deserialized);
 		}
 
 		[Test]

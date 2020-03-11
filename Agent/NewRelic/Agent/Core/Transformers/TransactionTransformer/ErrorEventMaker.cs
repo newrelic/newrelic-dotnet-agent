@@ -7,9 +7,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
 	public interface IErrorEventMaker
 	{
-		ErrorEventWireModel GetErrorEvent(ErrorData errorData, ImmutableTransaction immutableTransaction,
-			AttributeCollection transactionAttributes);
-
+		ErrorEventWireModel GetErrorEvent(ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes);
 		ErrorEventWireModel GetErrorEvent(ErrorData errorData, AttributeCollection customAttributes, float priority);
 	}
 
@@ -22,7 +20,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_attributeService = attributeService;
 		}
 
-		public ErrorEventWireModel GetErrorEvent(ErrorData errorData, ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes)
+		public ErrorEventWireModel GetErrorEvent(ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes)
 		{
 			var filteredAttributes = _attributeService.FilterAttributes(transactionAttributes, AttributeDestinations.ErrorEvent);
 
@@ -61,7 +59,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var transactionMetadata = immutableTransaction.TransactionMetadata;
 			var isSynthetics = transactionMetadata.IsSynthetics;
-			var priority = transactionMetadata.Priority;
+			var priority = immutableTransaction.Priority;
 
 			return new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, isSynthetics, priority);
 		}

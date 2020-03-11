@@ -117,6 +117,14 @@ namespace NewRelic.Agent.Core
 			ExtensionsLoader.Initialize(AgentInstallConfiguration.InstallPathExtensionsDirectory);
 
 			// Resolve all services once we've ensured that the agent is enabled
+			// The AgentApiImplementation needs to be resolved before the WrapperService, because
+			// resolving the WrapperService triggers an agent connect but it doesn't instantiate
+			// the CustomEventAggregator, so we need to resolve the AgentApiImplementation to
+			// get the CustomEventAggregator instantiated before the connect process is triggered.
+			// If that doesn't happen the CustomEventAggregator will not start its harvest timer
+			// when the agent connect response comes back. The agent DI, startup, and connect
+			// process really needs to be refactored so that it's more explicit in its behavior.
+			var agentApi = _container.Resolve<IAgentApi>();
 			_wrapperService = _container.Resolve<IWrapperService>();
 
 			//We need to attempt to auto start the agent once all services have resolved
@@ -125,7 +133,7 @@ namespace NewRelic.Agent.Core
 			AgentServices.StartServices(_container);
 
 			// Setup the internal API first so that AgentApi can use it.
-			InternalApi.SetAgentApiImplementation(_container.Resolve<IAgentApi>());
+			InternalApi.SetAgentApiImplementation(agentApi);
 			AgentApi.SetSupportabilityMetricCounters(_container.Resolve<IApiSupportabilityMetricCounters>());
 
 			Initialize();

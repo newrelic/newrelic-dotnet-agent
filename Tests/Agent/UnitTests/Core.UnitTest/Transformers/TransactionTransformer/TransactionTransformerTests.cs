@@ -73,6 +73,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		private ITransactionSegmentState _transactionSegmentState;
 		private IAgentTimerService _agentTimerService;
+		private IErrorService _errorService;
+		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
+
 
 		[SetUp]
 		public void SetUp()
@@ -112,8 +115,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_spanEventAggregator = Mock.Create<ISpanEventAggregator>();
 			_spanEventMaker = Mock.Create<ISpanEventMaker>();
 			_agentTimerService = Mock.Create<IAgentTimerService>();
+			_errorService = new ErrorService(_configurationService);
+			_distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>());
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService);
 		}
 
 		public IMetricBuilder GetSimpleMetricBuilder()
@@ -129,7 +134,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		public void TransformerTransaction_DoesNotGenerateData_IfTransactionIsIgnored()
 		{
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
 			transaction.Ignore();
 
 			_transactionTransformer.Transform(transaction);
@@ -280,11 +285,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				.DoInstead<TransactionMetricStatsCollection>(txStats => actualMetrics = txStats.GetUnscopedForTesting());
 
 			var transaction = TestTransactions.CreateDefaultTransaction(isWebTransaction, statusCode: (isError)? 503 : 200);
-			if (distributedTraceEnabled)
-			{
-				//make this a distributed trace participant
-				transaction.TransactionMetadata.HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
-			}
 
 			_transactionTransformer.Transform(transaction);
 
@@ -345,7 +345,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 					"DurationByCaller/Unknown/Unknown/Unknown/Unknown/all" +transactionType
 				});
 
-				if (transaction.TransactionMetadata.HasIncomingDistributedTracePayload)
+				if (transaction.TracingState != null)
 				{
 					expectedMetrics.AddRange(new[]
 					{
@@ -426,19 +426,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var transaction = TestTransactions.CreateDefaultTransaction(isWebTransaction: true, segments: new List<Segment>() { node1.Segment, node2.Segment, node3.Segment });
 
-			//make this a distributed trace participant
-			if (distributedTraceEnabled)
-			{
-				transaction.TransactionMetadata.HasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
-			}
-
 			_transactionTransformer.Transform(transaction);
 
 			var expected = 9;
 			if (_configuration.DistributedTracingEnabled)
 			{
 				expected += 2;
-				if (transaction.TransactionMetadata.HasIncomingDistributedTracePayload)
+				if (transaction.TracingState != null)
 				{
 					expected += 2;
 				}
@@ -472,7 +466,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("foo", "bar"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
 			transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
 			AddDummySegment(transaction);
 
@@ -497,7 +491,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(null as ErrorTraceWireModel);
 
 			var transaction = TestTransactions.CreateDefaultTransaction();
 			_transactionTransformer.Transform(transaction);
@@ -523,7 +517,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(null as ErrorTraceWireModel);
 
 			var immutableTransaction = new ImmutableTransactionBuilder()
 				.IsWebTransaction("category", "name")
@@ -550,7 +544,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(null as ErrorTraceWireModel);
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(null as ErrorTraceWireModel);
 
 			var immutableTransaction = new ImmutableTransactionBuilder()
 				.IsOtherTransaction("category", "name")
@@ -579,7 +573,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(GetError());
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(GetError());
 
 			var transaction = TestTransactions.CreateDefaultTransaction(statusCode: 404);
 			_transactionTransformer.Transform(transaction);
@@ -606,7 +600,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 			Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns((TimeSpan?)null);
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>())).Returns(GetError());
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(GetError());
 
 			var transaction = TestTransactions.CreateDefaultTransaction(false);
 			_transactionTransformer.Transform(transaction);
@@ -625,7 +619,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>()))
 				.Returns(GetError());
 
 			var transaction = TestTransactions.CreateDefaultTransaction(statusCode: 404);
@@ -646,7 +640,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>()))
 				.Returns(GetError());
 
 			var transaction = TestTransactions.CreateDefaultTransaction(false, statusCode: 404);
@@ -667,7 +661,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>()))
 			   .Returns(null as ErrorTraceWireModel);
 
 			var transaction = TestTransactions.CreateDefaultTransaction(false);
@@ -808,7 +802,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedSegmentTreeNodes = new List<ImmutableSegmentTreeNode> {BuildNode()};
 			var expectedTransactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-			Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<ErrorData>(), Arg.IsAny<TransactionMetricStatsCollection>()))
+			Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TransactionMetricStatsCollection>()))
 				.Returns(expectedAttributes);
 			Mock.Arrange(() => _segmentTreeMaker.BuildSegmentTrees(Arg.IsAny<IEnumerable<Segment>>()))
 				.Returns(expectedSegmentTreeNodes);
@@ -816,7 +810,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				.Returns(expectedTransactionMetricName);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
 			AddDummySegment(transaction);
 
 			// ACT
@@ -855,11 +849,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			// ARRANGE
 			var expectedAttributes = Mock.Create<AttributeCollection>();
-			Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<ErrorData>(), Arg.IsAny<TransactionMetricStatsCollection>()))
+			Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TransactionMetricStatsCollection>()))
 				.Returns(expectedAttributes);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
 			AddDummySegment(transaction);
 
 			// ACT
@@ -924,7 +918,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			// ARRANGE
 			var transactionName = "transactionName";
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
 			AddDummySegment(transaction);
 
 			// ACT
@@ -977,7 +971,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var expectedAttributes = Mock.Create<AttributeCollection>();
 			var expectedTransactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
 
-			Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<ErrorData>(), Arg.IsAny<TransactionMetricStatsCollection>()))
+			Mock.Arrange(() => _transactionAttributeMaker.GetAttributes(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<TimeSpan?>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TransactionMetricStatsCollection>()))
 				.Returns(expectedAttributes);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(Arg.IsAny<ITransactionName>()))
 				.Returns(expectedTransactionMetricName);
@@ -987,14 +981,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_transactionTransformer.Transform(transaction);
 
 			// ASSERT
-			Mock.Assert(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), expectedAttributes, expectedTransactionMetricName, Arg.IsAny<ErrorData>()));
+			Mock.Assert(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), expectedAttributes, expectedTransactionMetricName));
 		}
 
 		[Test]
 		public void ErrorTraceIsSentToAggregator()
 		{
 			var errorTraceWireModel = Mock.Create<ErrorTraceWireModel>();
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>()))
 				.Returns(errorTraceWireModel);
 			var transaction = TestTransactions.CreateDefaultTransaction(uri: "http://www.newrelic.com/test?param=value", statusCode: 404);
 
@@ -1008,7 +1002,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void ErrorTraceIsNotSentToAggregatorWhenErrorTraceIsNull()
 		{
-			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()))
+			Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>()))
 				.Returns(null as ErrorTraceWireModel);
 			var transaction = TestTransactions.CreateDefaultTransaction();
 			_transactionTransformer.Transform(transaction);
@@ -1022,14 +1016,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>());
+			var transaction = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", "transactionName"), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
 			AddDummySegment(transaction);
 
 			// ACT
 			_transactionTransformer.Transform(transaction);
 
 			// ASSERT
-			Mock.Assert(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<ErrorData>()), Occurs.Never());
+			Mock.Assert(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>(), Arg.IsAny<TransactionMetricName>()), Occurs.Never());
 			Mock.Assert(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>()), Occurs.Never());
 		}
 
@@ -1042,7 +1036,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			// ARRANGE
 			var errorEvent = Mock.Create<ErrorEventWireModel>();
-			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>())).Returns(errorEvent);
+			Mock.Arrange(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>())).Returns(errorEvent);
 			var transaction = TestTransactions.CreateDefaultTransaction(uri: "http://www.newrelic.com/test?param=value", statusCode: 404);
 
 			// ACT
@@ -1066,7 +1060,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			Mock.Assert(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>()), Occurs.Never());
-			Mock.Assert(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>()), Occurs.Never());
+			Mock.Assert(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>()), Occurs.Never());
 		}
 
 		[Test]
@@ -1081,7 +1075,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			// ASSERT
 			Mock.Assert(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>()), Occurs.Never());
-			Mock.Assert(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ErrorData>(), Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>()), Occurs.Never());
+			Mock.Assert(() => _errorEventMaker.GetErrorEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<AttributeCollection>()), Occurs.Never());
 		}
 
 		#endregion Error Events

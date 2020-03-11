@@ -257,8 +257,10 @@ namespace NewRelic.Agent.Api
 
 		ParsedSqlStatement GetParsedDatabaseStatement(DatastoreVendor datastoreVendor, CommandType commandType, string sql);
 
+		ITransaction AddCustomAttribute(string key, object value);
 
-		ITransaction SetCustomAttribute(string key, object value);
+		void InsertDistributedTraceHeaders(Action<string, string> setHeaders);
 
+		void AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType);
 	}
 }

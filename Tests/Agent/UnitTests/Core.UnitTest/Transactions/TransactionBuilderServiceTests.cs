@@ -1,6 +1,8 @@
-﻿using MoreLinq;
+using MoreLinq;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
@@ -37,7 +39,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 			var factory1 = CreateFactoryForTransactionContext(_highPriorityTransactionContext);
 			var factory2 = CreateFactoryForTransactionContext(_lowPriorityTransactionContext);
 
-			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>());
+			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
 		}
 
 		[TearDown]
