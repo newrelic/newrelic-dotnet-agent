@@ -15,6 +15,8 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.WireModels
 {
@@ -32,6 +34,8 @@ namespace NewRelic.Agent.Core.WireModels
 		private static readonly TimeSpan TotalCallTime = TimeSpan.FromSeconds(1);
 		private static readonly TimeSpan MinCallTime = TimeSpan.FromSeconds(1);
 		private static readonly TimeSpan MaxCallTime = TimeSpan.FromSeconds(1);
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
 		private readonly Dictionary<string, object> _parameterData = new Dictionary<string, object>();
 
@@ -39,6 +43,7 @@ namespace NewRelic.Agent.Core.WireModels
 		public void SetUp()
 		{
 			_sqlTraceWireModel = new SqlTraceWireModel(TrxDisplayName, Uri, SqlId, Sql, DatabaseMetricName, CallCount, TotalCallTime, MinCallTime, MaxCallTime, _parameterData);
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 		}
 
 		[Test]
@@ -72,14 +77,14 @@ namespace NewRelic.Agent.Core.WireModels
 			foreach (string query in queries)
 			{
 				var data = new DatastoreSegmentData(databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, null, null), query);
-				var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("typeName", "methodName", 1));
+				var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("typeName", "methodName", 1), new SpanAttributeValueCollection());
 				segment.SetSegmentData(data);
 
 				var segments = new List<Segment>()
 					{
 						new Segment(new TimeSpan(), TotalCallTime, segment, null)
 					};
-				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, duration, guid, false, false, false,1.2f, false, string.Empty, null);
+				var immutableTransaction = new ImmutableTransaction(name, segments, metadata, DateTime.Now, duration, duration, guid, false, false, false,1.2f, false, string.Empty, null, _attribDefs);
 
 				var sqlTraceData = sqlTraceMaker.TryGetSqlTrace(immutableTransaction, transactionMetricName, immutableTransaction.Segments.FirstOrDefault());
 				traceDatas.Add(sqlTraceData);

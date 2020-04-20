@@ -1,5 +1,6 @@
 ﻿using NewRelic.OpenTracing.AmazonLambda;
 using NewRelic.Core.DistributedTracing;
+using NewRelic.Agent.TestUtilities;
 using NUnit.Framework;
 using OpenTracing.Propagation;
 using System;
@@ -121,8 +122,8 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 			span.Finish();
 
 			Assert.That(span.Intrinsics.ContainsKey("traceId"), Is.True);
-			Assert.That((string)span.Intrinsics["traceId"], Is.EqualTo(_dtPayload.TraceId));
-			Assert.That((string)span.Intrinsics["traceId"], Is.Not.EqualTo(span.TransactionState.TransactionId));
+			Assert.That(span.Intrinsics["traceId"].IsEqualTo(_dtPayload.TraceId));
+			Assert.That(span.Intrinsics["traceId"].IsNotEqualTo(span.TransactionState.TransactionId));
 		}
 
 		[Test]
@@ -135,8 +136,8 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 			span.Finish();
 
 			Assert.That(span.Intrinsics.ContainsKey("traceId"), Is.True);
-			Assert.That((string)span.Intrinsics["traceId"], Is.Not.EqualTo(_dtPayload.TraceId));
-			Assert.That((string)span.Intrinsics["traceId"], Is.EqualTo(span.TransactionState.TransactionId));
+			Assert.That(span.Intrinsics["traceId"].IsNotEqualTo(_dtPayload.TraceId));
+			Assert.That(span.Intrinsics["traceId"].IsEqualTo(span.TransactionState.TransactionId));
 		}
 
 		[Test]

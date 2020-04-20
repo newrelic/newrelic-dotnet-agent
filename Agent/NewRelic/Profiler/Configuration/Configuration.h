@@ -158,6 +158,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 		{
 			//If it contains MsBuild, it is a build command and should not be profiled.
 			bool isMsBuildInvocation = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("MSBuild.dll"));
+			bool isKudu = NewRelic::Profiler::Strings::ContainsCaseInsensitive(commandLine, _X("Kudu.Services.Web.dll"));
 
 			std::vector<xstring_t> out;
 			Tokenize(commandLine, out);
@@ -193,7 +194,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration {
 				}
 			}
 
-			if (isMsBuildInvocation) {
+			if (isMsBuildInvocation || isKudu) {
 				LogInfo(L"This process will not be instrumented. Command line identified as invalid invocation for instrumentation");
 				return false;
 			}

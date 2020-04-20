@@ -1,5 +1,7 @@
 ﻿using NewRelic.Core.DistributedTracing;
 using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
@@ -13,7 +15,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		public void Header__Valid_Traceparent(string version, string traceId, string parentId, string traceFlags)
 		{
 			var traceparentValue = $"{version}-{traceId}-{parentId}-{traceFlags}";
-			var traceparent = W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue);
+			var traceparent = W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue);
 
 			Assert.That(traceparent.ToString(), Is.EqualTo(traceparentValue));
 			Assert.That(traceparent.Version.ToString("x2"), Is.EqualTo(version));
@@ -27,7 +29,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[TestCase("        ")]
 		public void Header_NullEmptyWhitespace(string traceparentValue)
 		{
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
 		}
 
 		[Test]
@@ -35,7 +37,8 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		{
 			var traceparentValue = "00-00000000000000000000000000000000-b7ad6b7169203331-00";
 
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
+
 		}
 
 		[Test]
@@ -43,15 +46,14 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		{
 			var traceparentValue = "00-0af7651916cd43dd8448eb211c80319c-0000000000000000-00";
 
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
 		}
 
 		[Test]
 		public void Header_VersionIs_FF()
 		{
 			var traceparentValue = "ff-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00";
-
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
 		}
 
 		[TestCase("00-0af7651916cd43dd8448ebc80319c-b7ad6b7169203331-00-00")]
@@ -61,7 +63,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[TestCase("00-000000000000000000000000000000000b7ad6b7169203331-00")]
 		public void Header_DoesNotHave_Four_Fields_HasCorrectLength(string traceparentValue)
 		{
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
 		}
 
 		[TestCase("000-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00")]
@@ -74,7 +76,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[TestCase("00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-0")]
 		public void Header_WrongLength(string traceparentValue)
 		{
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
 		}
 
 		[TestCase("AC-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00")]
@@ -83,7 +85,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[TestCase("ac-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-BB")]
 		public void Header_WrongCasing(string traceparentValue)
 		{
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
 		}
 
 		[TestCase("0z-0af7651916cd43dd8448ebc80319c-b7ad6b7169203331-00")]
@@ -100,7 +102,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[TestCase("00-0af7651916cd43dd8448ebc80319c-b7ad6b7169203331-\"0")]
 		public void Header_InvalidCharacters(string traceparentValue)
 		{
-			Assert.That(W3CTraceparent.GetW3CTraceparentFromHeader(traceparentValue), Is.Null);
+			Assert.That(W3CTraceparent.GetW3CTraceParentFromHeader(traceparentValue), Is.Null);
 		}
 	}
 }

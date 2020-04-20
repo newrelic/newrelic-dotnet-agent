@@ -492,7 +492,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		{
 			_localConfig.transactionTracer.explainThreshold = (float)local;
 			if (server != null)
-			{ 
+			{
 				_serverConfig.RpmConfig.TransactionTracerExplainThreshold = server;
 			}
 
@@ -554,8 +554,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.CaptureRequestParameters;
 		}
 
-		[TestCase(new[] {"local"}, new[] {"server"}, "request.parameters.server")]
-		[TestCase(new[] {"local"}, null, "request.parameters.local")]
+		[TestCase(new[] { "local" }, new[] { "server" }, "request.parameters.server")]
+		[TestCase(new[] { "local" }, null, "request.parameters.local")]
 		public void RequestParametersToIgnoreSetFromLocalServerOverrides(string[] local, string[] server, string expected)
 		{
 			_serverConfig.RpmConfig.ParametersToIgnore = server;
@@ -567,9 +567,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestCase(false, configurationTransactionTracerRecordSql.obfuscated, null, ExpectedResult = "obfuscated")]
 		[TestCase(false, configurationTransactionTracerRecordSql.off, null, ExpectedResult = "off")]
 		[TestCase(false, configurationTransactionTracerRecordSql.raw, null, ExpectedResult = "raw")]
-		[TestCase(false, configurationTransactionTracerRecordSql.obfuscated, "off", ExpectedResult = "off")] 
-		[TestCase(false, configurationTransactionTracerRecordSql.off, "obfuscated", ExpectedResult = "obfuscated")] 
-		[TestCase(false, configurationTransactionTracerRecordSql.raw, "off", ExpectedResult = "off")] 
+		[TestCase(false, configurationTransactionTracerRecordSql.obfuscated, "off", ExpectedResult = "off")]
+		[TestCase(false, configurationTransactionTracerRecordSql.off, "obfuscated", ExpectedResult = "obfuscated")]
+		[TestCase(false, configurationTransactionTracerRecordSql.raw, "off", ExpectedResult = "off")]
 		[TestCase(true, configurationTransactionTracerRecordSql.off, null, ExpectedResult = "off")]
 		[TestCase(true, configurationTransactionTracerRecordSql.obfuscated, null, ExpectedResult = "obfuscated")]
 		[TestCase(true, configurationTransactionTracerRecordSql.raw, null, ExpectedResult = "obfuscated")]
@@ -737,7 +737,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			Assert.IsFalse(_defaultConfig.CaptureRequestParameters);
 		}
 
-		
+
 
 		[TestCase("apdex_f", null, 5, ExpectedResult = 20000)]
 		[TestCase("1", null, 5, ExpectedResult = 1)]
@@ -765,7 +765,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_serverConfig.ApdexT = 42;
 			_localConfig.transactionTracer.transactionThreshold = "apdex_f";
 
-			Assert.AreEqual(42*4, _defaultConfig.TransactionTraceThreshold.TotalSeconds);
+			Assert.AreEqual(42 * 4, _defaultConfig.TransactionTraceThreshold.TotalSeconds);
 		}
 
 		[Test]
@@ -790,9 +790,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			{
 				_localConfig.parameterGroups.customParameters.enabledSpecified = deprecatedCustomParametersSpecified;
 				_localConfig.parameterGroups.customParameters.enabled = deprecatedCustomParametersEnabled;
-			} 
-			
-			if ( customParametersSpecified )
+			}
+
+			if (customParametersSpecified)
 			{
 				_localConfig.customParameters.enabledSpecified = customParametersSpecified;
 				_localConfig.customParameters.enabled = customParametersEnabled;
@@ -804,7 +804,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void CustomParametersToIgnoreSetFromLocal()
 		{
-			_localConfig.parameterGroups.customParameters.ignore = new List<string>() {"local"};
+			_localConfig.parameterGroups.customParameters.ignore = new List<string>() { "local" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("local"));
 		}
@@ -826,7 +826,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void IdentityParametersToIgnoreSetFromLocal()
 		{
-			_localConfig.parameterGroups.identityParameters.ignore = new List<string>() {"local"};
+			_localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "local" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.local"));
 		}
@@ -848,13 +848,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void ResponseHeaderParametersToIgnoreSetFromLocal()
 		{
-			_localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() {"local"};
+			_localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "local" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.local"));
 		}
 
-		[TestCase(new[] {"local"}, new[] {"server"}, ExpectedResult = "server")]
-		[TestCase(new[] {"local"}, null, ExpectedResult = "local")]
+		[TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server")]
+		[TestCase(new[] { "local" }, null, ExpectedResult = "local")]
 		public string ExceptionsToIgnoreSetFromLocalAndServerOverrides(string[] local, string[] server)
 		{
 			_serverConfig.RpmConfig.ErrorCollectorErrorsToIgnore = server;
@@ -874,8 +874,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.BrowserMonitoringJavaScriptAgentLoaderType;
 		}
 
-		[TestCase(new float[] {400, 404}, new[] {"500"}, ExpectedResult = "500")]
-		[TestCase(new float[] {400, 404}, null, ExpectedResult = "400")]
+		[TestCase(new float[] { 400, 404 }, new[] { "500" }, ExpectedResult = "500")]
+		[TestCase(new float[] { 400, 404 }, null, ExpectedResult = "400")]
 		public string StatusCodesToIgnoreSetFromLocalAndServerOverrides(float[] local, string[] server)
 		{
 			_serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
@@ -973,8 +973,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 	<ignoreMethod>Microsoft.Samples.Runtime.Remoting.Channels.Pipe.PipeConnection:WaitForConnect</ignoreMethod>
   </threadProfiling>
 </configuration>";
-			var root = new XmlRootAttribute {ElementName = "configuration", Namespace = "urn:newrelic-config"};
-			var serializer = new XmlSerializer(typeof (configuration), root);
+			var root = new XmlRootAttribute { ElementName = "configuration", Namespace = "urn:newrelic-config" };
+			var serializer = new XmlSerializer(typeof(configuration), root);
 
 			configuration localConfiguration;
 			using (var reader = new StringReader(xmlString))
@@ -1101,7 +1101,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void DeprecatedIgnoreIdentityParametersValueBecomesExclude()
 		{
-			_localConfig.parameterGroups.identityParameters.ignore = new List<string>() {"foo"};
+			_localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "foo" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.foo"));
 		}
@@ -1109,7 +1109,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void DeprecatedIgnoreCustomParametersValueBecomesExclude()
 		{
-			_localConfig.parameterGroups.customParameters.ignore = new List<string>() {"foo"};
+			_localConfig.parameterGroups.customParameters.ignore = new List<string>() { "foo" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("foo"));
 		}
@@ -1117,7 +1117,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void DeprecatedIgnoreResponseHeaderParametersValueBecomesExclude()
 		{
-			_localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() {"foo"};
+			_localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "foo" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.foo"));
 		}
@@ -1125,7 +1125,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void DeprecatedIgnoreRequestHeaderParametersValueBecomesExclude()
 		{
-			_localConfig.parameterGroups.requestHeaderParameters.ignore = new List<string>() {"foo"};
+			_localConfig.parameterGroups.requestHeaderParameters.ignore = new List<string>() { "foo" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.headers.foo"));
 		}
@@ -1133,7 +1133,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[Test]
 		public void Property_deprecated_ignore_requestParameters_value_becomes_exclude()
 		{
-			_localConfig.requestParameters.ignore = new List<string>() {"foo"};
+			_localConfig.requestParameters.ignore = new List<string>() { "foo" };
 
 			Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.parameters.foo"));
 		}
@@ -1214,7 +1214,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_DISTRIBUTED_TRACING_ENABLED")).Returns(environmentDistributedTracing);
 
-			return _defaultConfig.SpanEventsEnabled;
+			return _defaultConfig.DistributedTracingEnabled;
 		}
 
 		[TestCase(true, null, ExpectedResult = true)]
@@ -1659,7 +1659,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 			Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
 
-			_localConfig.application.name = new List<string> {"MyAppName1", "MyAppName2"};
+			_localConfig.application.name = new List<string> { "MyAppName1", "MyAppName2" };
 			Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("OtherAppName");
 			Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
 			Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
@@ -1748,7 +1748,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			Mock.Arrange(() => _environment.GetEnvironmentVariable(Arg.IsAny<string>())).Returns<string>(null);
 
 			Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
-			
+
 			_localConfig.application.name = new List<string>();
 
 			Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns<string>(null);
@@ -1904,7 +1904,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void PrimaryApplicationIdValue(string server, string expectedResult)
 		{
 			_serverConfig.PrimaryApplicationId = server;
-			
+
 			Assert.AreEqual(_defaultConfig.PrimaryApplicationId, expectedResult);
 		}
 
@@ -1914,18 +1914,18 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void TrustedAccountKeyValue(string server, string expectedResult)
 		{
 			_serverConfig.TrustedAccountKey = server;
-			
+
 			Assert.AreEqual(_defaultConfig.TrustedAccountKey, expectedResult);
 		}
 
-		
+
 		[Test]
 		[TestCase(null, null)]
 		[TestCase("AccountId", "AccountId")]
 		public void AccountIdValue(string server, string expectedResult)
 		{
 			_serverConfig.AccountId = server;
-			
+
 			Assert.AreEqual(_defaultConfig.AccountId, expectedResult);
 		}
 
@@ -1935,7 +1935,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void SamplingTargetValue(int server, int expectedResult)
 		{
 			_serverConfig.SamplingTarget = server;
-			
+
 			Assert.AreEqual(_defaultConfig.SamplingTarget, expectedResult);
 		}
 
@@ -1945,7 +1945,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		public void SamplingTargetPeriodInSecondsValue(int server, int expectedResult)
 		{
 			_serverConfig.SamplingTargetPeriodInSeconds = server;
-			
+
 			Assert.AreEqual(_defaultConfig.SamplingTargetPeriodInSeconds, expectedResult);
 		}
 
@@ -1998,17 +1998,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			Assert.AreEqual(TimeSpan.FromSeconds(5), _defaultConfig.SpanEventsHarvestCycle);
 		}
 
-		[Test]
-		public void SpanEventsMaxSamplesOf0ShouldDisableSpanEvents()
-		{
-			_serverConfig.EventHarvestConfig = new EventHarvestConfig
-			{
-				ReportPeriodMs = 5000,
-				HarvestLimits = new Dictionary<string, int> { { EventHarvestConfig.SpanEventHarvestLimitKey, 0 } }
-			};
-			Assert.IsFalse(_defaultConfig.SpanEventsEnabled);
-		}
-
 		[TestCase(false, false, false)]
 		[TestCase(false, true, false)]
 		[TestCase(true, true, true)]
@@ -2047,6 +2036,173 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			_localConfig.spanEvents.attributes.exclude = new List<string>(attributes);
 			Assert.AreEqual(expectedResult.Length, _defaultConfig.SpanEventsAttributesExclude.Count());
 		}
+
+		#endregion
+
+		#region InfiniteTracing
+
+		[TestCase(null,		null,	ExpectedResult =100000)]
+		[TestCase(null,		3824,	ExpectedResult = 3824)]
+		[TestCase("214",	null,	ExpectedResult = 214)]
+		[TestCase("",		3824,	ExpectedResult = 3824)]
+		[TestCase("6534",	3824,	ExpectedResult = 6534)]
+		[TestCase("abc",	203,	ExpectedResult = 203)]
+		[TestCase("-3",		null,	ExpectedResult = -3)]
+		[TestCase(null,		-623,	ExpectedResult = -623)]
+		public int InfiniteTracing_SpanQueueSize(string envConfigValue, int? localConfigValue)
+		{
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_QUEUE_SIZE")).Returns(envConfigValue);
+
+			if (localConfigValue.HasValue)
+			{
+				_localConfig.infiniteTracing.span_events.queue_size = localConfigValue.Value;
+			}
+			
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+			return defaultConfig.InfiniteTracingQueueSizeSpans;
+		}
+
+
+		[Test]
+		public void InfiniteTracing_TraceObserver
+		(
+			[Values("envHost.com","",null)] string envHost, 
+			[Values("443","",null)] string envPort,
+			[Values("localHost.com", "", null)] string localHost,
+			[Values("8080", "", null)] string localPort
+		)
+		{
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_HOST"))
+				.Returns(envHost);
+
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_PORT"))
+				.Returns(envPort);
+
+			_localConfig.infiniteTracing.trace_observer.host = localHost;
+			_localConfig.infiniteTracing.trace_observer.port = localPort;
+
+			var expectedHost = envHost != null
+				? envHost
+				: localHost;
+
+
+			var expectedPort = envHost != null	//This should be Host != null
+				? envPort
+				: localPort;
+
+
+			NrAssert.Multiple
+			(
+				() => Assert.AreEqual(expectedHost, _defaultConfig.InfiniteTracingTraceObserverHost),
+				() => Assert.AreEqual(expectedPort, _defaultConfig.InfiniteTracingTraceObserverPort)
+			);
+		}
+
+		[TestCase("10000",	"232",		ExpectedResult = 10000)]
+		[TestCase("-342",	"198",		ExpectedResult = -342)]
+		[TestCase(null,		null,		ExpectedResult = 2000)]
+		[TestCase("",		null,		ExpectedResult = 2000)]
+		[TestCase(null,		"",			ExpectedResult = 2000)]
+		[TestCase("",		"",			ExpectedResult = 2000)]
+		[TestCase("",		"",			ExpectedResult = 2000)]
+		[TestCase("XYZ",	"104",		ExpectedResult = 104)]
+		[TestCase("XYZ",	"ABC",		ExpectedResult = 2000)]
+		public int InfiniteTracing_TimeoutData(string envConfigVal, string appSettingsValue)
+		{
+			_localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutSend", value = appSettingsValue });
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Returns(envConfigVal);
+			
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+			return defaultConfig.InfiniteTracingTraceTimeoutMsSendData;
+		}
+
+		[TestCase("30000",	"232",		ExpectedResult = 30000)]
+		[TestCase("-342",	"198",		ExpectedResult = -342)]
+		[TestCase(null,		null,		ExpectedResult = 10000)]
+		[TestCase("",		null,		ExpectedResult = 10000)]
+		[TestCase(null,		"",			ExpectedResult = 10000)]
+		[TestCase("",		"",			ExpectedResult = 10000)]
+		[TestCase("XYZ",	"104",		ExpectedResult = 104)]
+		[TestCase("XYZ",	"ABC",		ExpectedResult = 10000)]
+		public int InfiniteTracing_TimeoutConnect(string envConfigVal, string appSettingsValue)
+		{
+			_localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutConnect", value = appSettingsValue });
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Returns(envConfigVal);
+
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+			return defaultConfig.InfiniteTracingTraceTimeoutMsConnect;
+		}
+
+
+		[TestCase("100",	"232",		ExpectedResult = 100f)]
+		[TestCase("-342",	"198",		ExpectedResult = -342f)]
+		[TestCase(null,		null,		ExpectedResult = null)]
+		[TestCase("",		null,		ExpectedResult = null)]
+		[TestCase(null,		"",			ExpectedResult = null)]
+		[TestCase("",		"",			ExpectedResult = null)]
+		[TestCase("",		"203",		ExpectedResult = 203f)]
+		[TestCase("XYZ",	"876",		ExpectedResult = 876f)]
+		[TestCase("XYZ",	"ABC",		ExpectedResult = null)]
+		[TestCase("103.98", "100",		ExpectedResult = 103.98f)]
+		[TestCase(null,		"98.6",		ExpectedResult = 98.6f)]
+		public float? InfiniteTracing_SpanTestFlaky(string envConfigVal, string appSettingsValue)
+		{
+			_localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsTestFlaky", value = appSettingsValue });
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY")).Returns(envConfigVal);
+
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+			return defaultConfig.InfiniteTracingTraceObserverTestFlaky;
+		}
+
+		[TestCase("100",	"232",		ExpectedResult = 100)]
+		[TestCase("-342",	"198",		ExpectedResult = -342)]
+		[TestCase(null,		null,		ExpectedResult = null)]
+		[TestCase("",		null,		ExpectedResult = null)]
+		[TestCase(null,		"",			ExpectedResult = null)]
+		[TestCase("",		"",			ExpectedResult = null)]
+		[TestCase("",		"203",		ExpectedResult = 203)]
+		[TestCase("XYZ",	"876",		ExpectedResult = 876)]
+		[TestCase("XYZ",	"ABC",		ExpectedResult = null)]
+		public int? InfiniteTracing_SpanTestDelay(string envConfigVal, string appSettingsValue)
+		{
+			_localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsTestDelay", value = appSettingsValue });
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_DELAY")).Returns(envConfigVal);
+
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+			return defaultConfig.InfiniteTracingTraceObserverTestDelayMs;
+		}
+
+		[Test]
+		public void InfiniteTracing_SpanStreamsCount
+		(	[Values("10","","abc",null)] string envConfigVal,
+			[Values("8","","def",null)] string appSettingsValue
+		)
+		{
+			var expectedResult = 20;	// System.Environment.ProcessorCount;
+
+			if (int.TryParse(envConfigVal, out var envValInt))
+			{
+				expectedResult = envValInt;
+			}
+			else if (int.TryParse(appSettingsValue, out var appValInt))
+			{
+				expectedResult = appValInt;
+			}
+
+			_localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsStreamsCount", value = appSettingsValue });
+			Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT")).Returns(envConfigVal);
+
+			var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+			Assert.AreEqual(expectedResult, defaultConfig.InfiniteTracingTraceCountConsumers);
+		}
+
+
 
 		#endregion
 
@@ -2278,7 +2434,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestCase(true, false, new[] { "att1", "att2" }, new string[] { })]
 		[TestCase(false, false, new[] { "att1", "att2" }, new string[] { })]
 		[TestCase(false, true, new[] { "att1", "att2" }, new[] { "att1", "att2" })]
-		public void CaptureBrowserMonitoringAttributesIncludes(bool highSecurity,bool localAttributesEnabled, string[] attributes, string[] expectedResult)
+		public void CaptureBrowserMonitoringAttributesIncludes(bool highSecurity, bool localAttributesEnabled, string[] attributes, string[] expectedResult)
 		{
 			_localConfig.highSecurity.enabled = highSecurity;
 			_localConfig.browserMonitoring.attributes.enabled = localAttributesEnabled;
@@ -2410,7 +2566,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 		[TestCase("envValue", null, ExpectedResult = true)]
 		[TestCase("envValue", "localValue", ExpectedResult = true)]
 		[TestCase("", "localValue", ExpectedResult = false)]    // non-intuitive result, but this behavior is
-		// consistent across all Env Var configs
+																// consistent across all Env Var configs
 		[TestCase("envValue", "", ExpectedResult = true)]
 		[TestCase("", "", ExpectedResult = false)]
 		public bool SecurityPoliciesTokenExists(string environmentValue, string localConfigValue)

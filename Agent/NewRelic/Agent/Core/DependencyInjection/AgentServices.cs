@@ -23,6 +23,7 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
@@ -118,6 +119,10 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			container.Register<IErrorEventAggregator, ErrorEventAggregator>();
 			container.Register<ICustomEventAggregator, CustomEventAggregator>();
 			container.Register<ISpanEventAggregator, SpanEventAggregator>();
+			container.Register<ISpanEventAggregatorInfiniteTracing, SpanEventAggregatorInfiniteTracing>();
+			container.Register<IGrpcWrapper<Span, RecordStatus>, SpanGrpcWrapper>();
+			container.Register<IDelayer, Delayer>();
+			container.Register<IDataStreamingService<Span, RecordStatus>, SpanStreamingService>();
 			container.Register<ISpanEventMaker, SpanEventMaker>();
 			container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
 			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
@@ -170,6 +175,8 @@ namespace NewRelic.Agent.Core.DependencyInjection
 			
 			container.Register<ITransactionService, TransactionService>();
 			container.Register<IAttributeService, AttributeService>();
+			container.Register<Func<IAttributeFilter, IAttributeDefinitions>>((filter)=>new AttributeDefinitions(filter));
+			container.Register<IAttributeDefinitionService, AttributeDefinitionService>();
 			container.Register<CommandService, CommandService>();
 			container.Register<ConfigurationTracker, ConfigurationTracker>();
 			container.Register<IDatabaseService, DatabaseService>();

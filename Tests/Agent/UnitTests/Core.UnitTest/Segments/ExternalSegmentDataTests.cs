@@ -6,6 +6,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
@@ -17,7 +18,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 		public static Segment createExternalSegmentBuilder(TimeSpan relativeStart, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> parameters, Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData, bool combinable)
 		{
 			var data = new ExternalSegmentData(uri, method, crossApplicationResponseData);
-			var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
+			var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(data);
 			segment.Combinable = combinable;
 

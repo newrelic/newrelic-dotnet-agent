@@ -9,7 +9,9 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
+using NewRelic.Agent.TestUtilities;
 using NUnit.Framework;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -268,8 +270,8 @@ namespace CompositeTests
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-			segment.End();
 			AgentApi.NoticeError(new Exception(ExceptionMessage));
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -292,6 +294,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "System.Exception" },
+				new ExpectedAttribute { Key = "error.message", Value = ExceptionMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -308,8 +323,8 @@ namespace CompositeTests
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-			segment.End();
 			AgentApi.NoticeError(new Exception(ExceptionMessage));
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -333,6 +348,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "System.Exception" },
+				new ExpectedAttribute { Key = "error.message", Value = StripExceptionMessagesMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -349,8 +377,8 @@ namespace CompositeTests
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-			segment.End();
 			AgentApi.NoticeError(new Exception(ExceptionMessage));
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -374,6 +402,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
 			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "System.Exception" },
+				new ExpectedAttribute { Key = "error.message", Value = StripExceptionMessagesMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -464,8 +505,9 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
+			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string> { { "attribute1", "value1" } });
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -501,6 +543,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "System.Exception" },
+				new ExpectedAttribute { Key = "error.message", Value = ExceptionMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -516,8 +571,9 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
+			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string> { { "attribute1", "value1" } });
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -553,6 +609,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "System.Exception" },
+				new ExpectedAttribute { Key = "error.message", Value = StripExceptionMessagesMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -568,8 +637,9 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.ASP),
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
-			_compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment").End();
+			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
 			AgentApi.NoticeError(new Exception(ExceptionMessage), new Dictionary<string, string> { { "attribute1", "value1" } });
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -605,6 +675,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "System.Exception" },
+				new ExpectedAttribute { Key = "error.message", Value = StripExceptionMessagesMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -752,8 +835,8 @@ namespace CompositeTests
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-			segment.End();
 			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -789,6 +872,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual(ExceptionMessage, errorEvent.IntrinsicAttributes["error.message"]);
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "Custom Error" },
+				new ExpectedAttribute { Key = "error.message", Value = ExceptionMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -805,8 +901,8 @@ namespace CompositeTests
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-			segment.End();
 			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -842,6 +938,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "Custom Error" },
+				new ExpectedAttribute { Key = "error.message", Value = StripExceptionMessagesMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -858,8 +967,8 @@ namespace CompositeTests
 				transactionDisplayName: "TransactionName",
 				doNotTrackAsUnitOfWork: true);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-			segment.End();
 			AgentApi.NoticeError(ExceptionMessage, new Dictionary<string, string>() { { "attribute1", "value1" } });
+			segment.End();
 			transaction.End();
 			_compositeTestAgent.Harvest();
 
@@ -895,6 +1004,19 @@ namespace CompositeTests
 			var errorEvent = _compositeTestAgent.ErrorEvents.First();
 			Assert.AreEqual(StripExceptionMessagesMessage, errorEvent.IntrinsicAttributes["error.message"]);
 			Assert.AreEqual("WebTransaction/ASP/TransactionName", errorEvent.IntrinsicAttributes["transactionName"]);
+			Assert.AreEqual(segment.SpanId, errorEvent.IntrinsicAttributes["spanId"]);
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "Custom Error" },
+				new ExpectedAttribute { Key = "error.message", Value = StripExceptionMessagesMessage },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		[Test]
@@ -2111,15 +2233,16 @@ namespace CompositeTests
 			segment.AddCustomAttribute("key8", null);
 			segment.AddCustomAttribute("", dtm2);
 
+
 			var expectedAttributes = new[]
 			{
-				new ExpectedAttribute(){Key = "key1", Value = "val1"},
-				new ExpectedAttribute(){Key = "key2", Value = 2.0d},
-				new ExpectedAttribute(){Key = "key3", Value = 3.1d},
-				new ExpectedAttribute(){Key = "key4", Value = 4.0d},
-				new ExpectedAttribute(){Key = "key5", Value = true},
-				new ExpectedAttribute(){Key = "key6", Value = dtm1.ToString("o")},
-				new ExpectedAttribute(){Key = "key7", Value = dtm2.ToString("o")},
+				new ExpectedAttribute(){ Key = "key1", Value = "val1"},
+				new ExpectedAttribute(){ Key = "key2", Value = 2.0d},
+				new ExpectedAttribute(){ Key = "key3", Value = 3.1d},
+				new ExpectedAttribute(){ Key = "key4", Value = 4.0d},
+				new ExpectedAttribute(){ Key = "key5", Value = true},
+				new ExpectedAttribute(){ Key = "key6", Value = dtm1.ToString("o")},
+				new ExpectedAttribute(){ Key = "key7", Value = dtm2.ToString("o")}
 			};
 
 			var unexpectedAttributes = new[]

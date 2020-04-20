@@ -43,6 +43,9 @@
     <None Update="CrossAgentTests\DistributedTracing\distributed_tracing.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="CrossAgentTests\DistributedTracing\trace_context.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="CrossAgentTests\SecurityPolicies\security_policies.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

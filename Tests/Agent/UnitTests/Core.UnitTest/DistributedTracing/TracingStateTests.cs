@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using NewRelic.Core.DistributedTracing;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 
@@ -14,31 +13,39 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		private const DistributedTracingParentType Type = DistributedTracingParentType.App;
 		private const string AccountId = "accountId";
 		private const string AppId = "appId";
-		private const string Guid = "guid";
-		private const string TraceId = "traceId";
-		private const string TrustKey = "trustKey";
+		private const string Guid = "5569065a5b1313bd";
+		private const string TraceId = "0af7651916cd43dd8448eb211c80319c";
+		private const string ParentId = "ad6b7169203331bb";
+		private const string TrustKey = "33";
+		private const string TransactionId = "transactionId";
 		private const float Priority = .65f;
 		private const bool Sampled = true;
 		private static DateTime Timestamp = DateTime.UtcNow;
-		private const string TransactionId = "transactionId";
+
+		private const string ValidTraceparent = "00-" + TraceId + "-" + ParentId + "-01";
+
+		//example ValidTracestate: "33@nr=0-0-33-5043-27ddd2d8890283b4-5569065a5b1313bd-1-1.23456-1518469636025,dd=YzRiMTIxODk1NmVmZTE4ZQ,44@nr=0-0-55-5043-1238890283aasdfs-4569065a5b131bbg-1-1.23456-1518469636020";
+		private static readonly string ValidTracestate = TrustKey + "@nr=0-" + (int)Type + "-" + AccountId + "-" + AppId + "-" + Guid + "-" + TransactionId + "-1-" + Priority + "-" + Timestamp.ToUnixTimeMilliseconds() + ",dd=YzRiMTIxODk1NmVmZTE4ZQ,44@nr=0-0-55-5043-1238890283aasdfs-4569065a5b131bbg-1-1.23456-1518469636020";
+
+		private const string NewRelicPayloadHeaderName = "newrelic";
+
+		// v:[2,5]
+		private const string NewRelicPayloadWithUnsupportedVersion = "{ \"v\":[2,5],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\",\"tx\":\"transactionId\",\"id\":\"guid\"}}";
+		// ti:0
+		private const string NewRelicPayloadWithInvalidTimestamp = "{ \"v\":[0,1],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\",\"tx\":\"transactionId\",\"id\":\"guid\"}}";
+		// missing tx: AND id:
+		private const string NewRelicPayloadUntraceable = "{ \"v\":[0,1],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\"}}";
+
+		#region NewRelic Payload
 
 		[Test]
 		public void AcceptDistributedTraceHeadersHydratesValidNewRelicPayload()
 		{
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
-			var headers = new Dictionary<string, string>()
-			{
-				{ "newrelic", encodedPayload }
-			};
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
 
-			var getHeader = new Func<string, IList<string>>((key) =>
-			{
-				string value;
-				headers.TryGetValue(key.ToLowerInvariant(), out value);
-				return string.IsNullOrEmpty(value) ? null : new List<string> { value };
-			});
+			var getHeader = GetHeaderFunctionFactory(NewRelicPayloadHeaderName, encodedPayload);
 
-			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.AMQP, TrustKey);
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow);
 
 			Assert.IsNotNull(tracingState);
 			Assert.AreEqual(Type, tracingState.Type);
@@ -52,10 +59,96 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		}
 
 		[Test]
+		public void AcceptDistributedTraceHeadersPopulatesErrorsIfNull()
+		{
+			var getHeader = GetHeaderFunctionFactory(NewRelicPayloadHeaderName, null);
+
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow);
+
+			Assert.IsNotNull(tracingState);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
+			Assert.IsNull(tracingState.AppId);
+			Assert.IsNull(tracingState.AccountId);
+			Assert.IsNull(tracingState.Guid);
+			Assert.IsNull(tracingState.TraceId);
+			Assert.IsNull(tracingState.TransactionId);
+			Assert.IsNull(tracingState.Sampled);
+			Assert.IsNull(tracingState.Priority);
+
+			Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.NullPayload), "TracingState IngestErrors should contain NullPayload");
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeadersPopulatesErrorsIfUnsupportedVersion()
+		{
+			var encodedPayload = Strings.Base64Encode(NewRelicPayloadWithUnsupportedVersion);
+
+			var getHeader = GetHeaderFunctionFactory(NewRelicPayloadHeaderName, encodedPayload);
+
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.Other, TrustKey, DateTime.UtcNow);
+
+			Assert.IsNotNull(tracingState);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
+			Assert.IsNull(tracingState.AppId);
+			Assert.IsNull(tracingState.AccountId);
+			Assert.IsNull(tracingState.Guid);
+			Assert.IsNull(tracingState.TraceId);
+			Assert.IsNull(tracingState.TransactionId);
+			Assert.IsNull(tracingState.Sampled);
+			Assert.IsNull(tracingState.Priority);
+
+			Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.Version), "TracingState IngestErrors should contain Version error.");
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeadersPopulatesErrorsIfInvalidTimestamp()
+		{
+			var encodedPayload = Strings.Base64Encode(NewRelicPayloadWithInvalidTimestamp);
+
+			var getHeader = GetHeaderFunctionFactory(NewRelicPayloadHeaderName, encodedPayload);
+
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.Other, TrustKey, DateTime.UtcNow);
+
+			Assert.IsNotNull(tracingState);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
+			Assert.IsNull(tracingState.AppId);
+			Assert.IsNull(tracingState.AccountId);
+			Assert.IsNull(tracingState.Guid);
+			Assert.IsNull(tracingState.TraceId);
+			Assert.IsNull(tracingState.TransactionId);
+			Assert.IsNull(tracingState.Sampled);
+			Assert.IsNull(tracingState.Priority);
+
+			Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.ParseException), "TracingState IngestErrors should contain ParseException.");
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeadersPopulatesErrorsIfNotTraceable()
+		{
+			var encodedPayload = Strings.Base64Encode(NewRelicPayloadUntraceable);
+
+			var getHeader = GetHeaderFunctionFactory(NewRelicPayloadHeaderName, encodedPayload);
+
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.Other, TrustKey, DateTime.UtcNow);
+
+			Assert.IsNotNull(tracingState);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
+			Assert.IsNull(tracingState.AppId);
+			Assert.IsNull(tracingState.AccountId);
+			Assert.IsNull(tracingState.Guid);
+			Assert.IsNull(tracingState.TraceId);
+			Assert.IsNull(tracingState.TransactionId);
+			Assert.IsNull(tracingState.Sampled);
+			Assert.IsNull(tracingState.Priority);
+
+			Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.ParseException), "TracingState IngestErrors should contain ParseException.");
+		}
+
+		[Test]
 		public void AcceptDistributedTracePayloadHydratesValidNewRelicPayload()
 		{
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
-			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey, DateTime.UtcNow);
 
 			Assert.IsNotNull(tracingState);
 			Assert.AreEqual(Type, tracingState.Type);
@@ -72,10 +165,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		public void AcceptDistributedTracePayloadPopulatesErrorsIfNull()
 		{
 			string _nullPayload = null;
-			var tracingState = TracingState.AcceptDistributedTracePayload(_nullPayload, TransportType.IronMQ, TrustKey);
+			var tracingState = TracingState.AcceptDistributedTracePayload(_nullPayload, TransportType.IronMQ, TrustKey, DateTime.UtcNow);
 
 			Assert.IsNotNull(tracingState);
-			Assert.AreEqual(DistributedTracingParentType.None, tracingState.Type);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
 			Assert.IsNull(tracingState.AppId);
 			Assert.IsNull(tracingState.AccountId);
 			Assert.IsNull(tracingState.Guid);
@@ -90,13 +183,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[Test]
 		public void AcceptDistributedTracePayloadPopulatesErrorsIfUnsupportedVersion()
 		{
-			// v:[2,5]
-			var serializedUnencodedPayload = "{ \"v\":[2,5],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\",\"tx\":\"transactionId\",\"id\":\"guid\"}}";
-			var encodedPayload = Strings.Base64Encode(serializedUnencodedPayload);
-			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey);
+			var encodedPayload = Strings.Base64Encode(NewRelicPayloadWithUnsupportedVersion);
+			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey, DateTime.UtcNow);
 
 			Assert.IsNotNull(tracingState);
-			Assert.AreEqual(DistributedTracingParentType.None, tracingState.Type);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
 			Assert.IsNull(tracingState.AppId);
 			Assert.IsNull(tracingState.AccountId);
 			Assert.IsNull(tracingState.Guid);
@@ -111,13 +202,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[Test]
 		public void AcceptDistributedTracePayloadPopulatesErrorsIfInvalidTimestamp()
 		{
-			// ti:0
-			var serializedUnencodedPayload = "{ \"v\":[0,1],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\",\"tx\":\"transactionId\",\"id\":\"guid\"}}";
-			var encodedPayload = Strings.Base64Encode(serializedUnencodedPayload);
-			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey);
+			var encodedPayload = Strings.Base64Encode(NewRelicPayloadWithInvalidTimestamp);
+			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey, DateTime.UtcNow);
 
 			Assert.IsNotNull(tracingState);
-			Assert.AreEqual(DistributedTracingParentType.None, tracingState.Type);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
 			Assert.IsNull(tracingState.AppId);
 			Assert.IsNull(tracingState.AccountId);
 			Assert.IsNull(tracingState.Guid);
@@ -132,13 +221,11 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		[Test]
 		public void AcceptDistributedTracePayloadPopulatesErrorsIfNotTraceable()
 		{
-			// missing tx: AND id:
-			var serializedUnencodedPayload = "{ \"v\":[0,1],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\"}}";
-			var encodedPayload = Strings.Base64Encode(serializedUnencodedPayload);
-			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey);
+			var encodedPayload = Strings.Base64Encode(NewRelicPayloadUntraceable);
+			var tracingState = TracingState.AcceptDistributedTracePayload(encodedPayload, TransportType.Other, TrustKey, DateTime.UtcNow);
 
 			Assert.IsNotNull(tracingState);
-			Assert.AreEqual(DistributedTracingParentType.None, tracingState.Type);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
 			Assert.IsNull(tracingState.AppId);
 			Assert.IsNull(tracingState.AccountId);
 			Assert.IsNull(tracingState.Guid);
@@ -149,6 +236,95 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.ParseException), "TracingState IngestErrors should contain ParseException.");
 		}
+
+		#endregion
+
+		#region Trace-Context
+
+		[Test]
+		public void AcceptDistributedTraceHeadersHydratesValidW3CTraceContext()
+		{
+			var headers = new Dictionary<string, string>()
+			{
+				{ "traceparent", ValidTraceparent },
+				{ "tracestate", ValidTracestate },
+			};
+
+			var getHeader = new Func<string, IList<string>>((key) =>
+			{
+				string value;
+				headers.TryGetValue(key.ToLowerInvariant(), out value);
+				return string.IsNullOrEmpty(value) ? null : new List<string> { value };
+			});
+
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow);
+
+			Assert.IsNotNull(tracingState);
+			Assert.AreEqual(DistributedTracingParentType.App, tracingState.Type);
+			Assert.AreEqual(AccountId, tracingState.AccountId);
+			Assert.AreEqual(AppId, tracingState.AppId);
+			Assert.AreEqual(Guid, tracingState.Guid);
+			Assert.AreEqual(TraceId, tracingState.TraceId);
+			Assert.AreEqual(Priority, tracingState.Priority);
+			Assert.AreEqual(Sampled, tracingState.Sampled);
+			Assert.AreEqual(TransactionId, tracingState.TransactionId);
+			Assert.AreEqual(ParentId, tracingState.ParentId);
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeadersHydratesValidW3CTraceContext_WithoutAValidNREntry()
+		{
+			var headers = new Dictionary<string, string>()
+			{
+				{ "traceparent", ValidTraceparent },
+				{ "tracestate", "aa=1,bb=2" },
+
+			};
+
+			var getHeader = new Func<string, IList<string>>((key) =>
+			{
+				string value;
+				headers.TryGetValue(key.ToLowerInvariant(), out value);
+				return string.IsNullOrEmpty(value) ? null : new List<string> { value };
+			});
+
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow);
+
+			Assert.IsNotNull(tracingState);
+			Assert.IsNull(tracingState.AccountId);
+			Assert.IsNull(tracingState.AppId);
+			Assert.IsNull(tracingState.Guid);
+			Assert.IsNull(tracingState.Priority);
+			Assert.IsNull(tracingState.Sampled);
+			Assert.IsNull(tracingState.TransactionId);
+			Assert.AreEqual(string.Join(",",tracingState.VendorStateEntries), "aa=1,bb=2");
+			Assert.AreEqual(TraceId, tracingState.TraceId);
+			Assert.AreEqual(ParentId, tracingState.ParentId);
+			Assert.AreEqual(DistributedTracingParentType.Unknown, tracingState.Type);
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeadersPopulateErrorIfTraceParentNotParsable()
+		{
+			var headers = new Dictionary<string, string>()
+			{
+				{ "traceparent", "abc" }, //invalid traceparent
+				{ "tracestate", ValidTracestate },
+			};
+
+			var getHeader = new Func<string, IList<string>>((key) =>
+			{
+				string value;
+				headers.TryGetValue(key.ToLowerInvariant(), out value);
+				return string.IsNullOrEmpty(value) ? null : new List<string> { value };
+			});
+
+			var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeader, TransportType.AMQP, TrustKey, DateTime.UtcNow);
+
+			Assert.IsNotNull(tracingState);
+			Assert.IsTrue(tracingState.IngestErrors.Contains(IngestErrorType.TraceParentParseException), "TracingState IngestErrors should contain TraceParentParseException.");
+		}
+		#endregion
 
 		#region helpers
 		private static DistributedTracePayload BuildSampleDistributedTracePayload()
@@ -166,6 +342,27 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				TransactionId);
 		}
 
-#endregion helpers
+		private static Func<string, IList<string>> GetHeaderFunctionFactory(string headerName, string headerValue)
+		{
+			var headers = new Dictionary<string, string>()
+			{
+				{ headerName, headerValue }
+			};
+
+			var getHeader = new Func<string, IList<string>>((key) =>
+			{
+				var headerValues = new List<string>();
+				string value;
+				if (headers.TryGetValue(key.ToLowerInvariant(), out value))
+				{
+					headerValues.Add(value);
+				}
+				return headerValues;
+			});
+
+			return getHeader;
+		}
+
+		#endregion helpers
 	}
 }

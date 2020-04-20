@@ -1,0 +1,53 @@
+﻿using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Segments;
+using NewRelic.Core.Logging;
+
+namespace NewRelic.Agent.Core.DataTransport
+{
+	public class SpanStreamingService : DataStreamingService<Span, RecordStatus>
+	{
+		public SpanStreamingService(IGrpcWrapper<Span, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
+			: base(grpcWrapper, delayer, configSvc, agentHealthReporter)
+		{
+		}
+
+		protected override string EndpointHostConfigValue => _configuration?.InfiniteTracingTraceObserverHost;
+		protected override string EndpointPortConfigValue  => _configuration?.InfiniteTracingTraceObserverPort;
+		protected override float? EndpointTestFlakyConfigValue => _configuration?.InfiniteTracingTraceObserverTestFlaky;
+		protected override int? EndpointTestDelayMsConfigValue => _configuration?.InfiniteTracingTraceObserverTestDelayMs;
+
+		protected override void HandleServerResponse(RecordStatus responseModel, int consumerId)
+		{
+			LogMessage(LogLevel.Finest, consumerId, $"Received gRPC Server response: {responseModel.MessagesSeen}");
+
+			RecordReceived(responseModel.MessagesSeen);
+		}
+
+		private void RecordReceived(ulong countItems)
+		{
+			_agentHealthReporter.ReportInfiniteTracingSpanEventsReceived(countItems);
+		}
+
+		protected override void RecordSuccessfulSend()
+		{
+			_agentHealthReporter.ReportInfiniteTracingSpanEventsSent();
+		}
+
+		protected override void RecordGrpcError(string  status)
+		{
+			_agentHealthReporter.ReportInfiniteTracingSpanGrpcError(status);
+		}
+
+		protected override void RecordResponseError()
+		{
+			_agentHealthReporter.ReportInfiniteTracingSpanResponseError();
+		}
+
+		protected override void RecordSendTimeout(int attemptId)
+		{
+			_agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout(attemptId);
+		}
+	}
+
+}

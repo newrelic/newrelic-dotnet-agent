@@ -22,8 +22,6 @@ namespace NewRelic.Agent.Core.Transactions
 		void AddRequestParameter(string key, string value);
 		void AddUserAttribute(string key, object value);
 		void SetHttpResponseStatusCode(int statusCode, int? subStatusCode, IErrorService errorService);
-		void AddExceptionData(ErrorData errorData);
-		void AddCustomErrorData(ErrorData errorData);
 		void SetCrossApplicationReferrerTripId(string tripId);
 		void SetCrossApplicationReferrerPathHash(string referrerPathHash);
 		void SetCrossApplicationReferrerProcessId(string referrerProcessId);
@@ -39,8 +37,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		long GetCrossApplicationReferrerContentLength();
 
-		bool CustomErrorWasIgnored { get; set; }
-		bool AgentNoticedErrorWasIgnored { get; set; }
+		ITransactionErrorState TransactionErrorState { get; }
 	}
 
 	/// <summary>
@@ -91,10 +88,6 @@ namespace NewRelic.Agent.Core.Transactions
 
 		private readonly ConcurrentDictionary<string, string> _requestParameters = new ConcurrentDictionary<string, string>();
 		private readonly ConcurrentDictionary<string, object> _userAttributes = new ConcurrentDictionary<string, object>();
-
-		private ErrorData _transactionExceptionData;
-		private ErrorData _customErrorData;
-		private ErrorData _statusCodeErrorData;
 
 		private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
 		private volatile bool _hasResponseCatHeaders;
@@ -155,37 +148,18 @@ namespace NewRelic.Agent.Core.Transactions
 			{
 				if (!errorService.ShouldIgnoreHttpStatusCode(statusCode, subStatusCode))
 				{
-					_statusCodeErrorData = errorService.FromErrorHttpStatusCode(statusCode, subStatusCode, DateTime.UtcNow);
+					var errorData = errorService.FromErrorHttpStatusCode(statusCode, subStatusCode, DateTime.UtcNow);
+					TransactionErrorState.AddStatusCodeErrorData(errorData);
 				}
 				else
 				{
-					AgentNoticedErrorWasIgnored = true;
+					TransactionErrorState.SetIgnoreAgentNoticedErrors();
 				}
 			}
 		}
 
-		public bool CustomErrorWasIgnored { get; set; }
-		public bool AgentNoticedErrorWasIgnored { get; set; }
-		public ErrorData ErrorData
-		{
-			get
-			{
-				if (CustomErrorWasIgnored) return null;
-				if (_customErrorData != null) return _customErrorData;
-				if (AgentNoticedErrorWasIgnored) return null;
-				return _transactionExceptionData != null ? _transactionExceptionData : _statusCodeErrorData;
-			}
-		}
-
-		public void AddExceptionData(ErrorData errorData)
-		{
-			if (_transactionExceptionData == null) _transactionExceptionData = errorData;
-		}
-
-		public void AddCustomErrorData(ErrorData errorData)
-		{
-			if (_customErrorData == null) _customErrorData = errorData;
-		}
+		public ITransactionErrorState TransactionErrorState { get; } = new TransactionErrorState();
+		public IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState => TransactionErrorState;
 
 		public void SetCrossApplicationReferrerPathHash(string referrerPathHash)
 		{

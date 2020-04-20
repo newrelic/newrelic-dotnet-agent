@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		/// <returns></returns>
 		public ErrorTraceWireModel GetErrorTrace(ImmutableTransaction immutableTransaction, AttributeCollection transactionAttributes, TransactionMetricName transactionMetricName)
 		{
-			var errorData = immutableTransaction.TransactionMetadata.ErrorData;
+			var errorData = immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData;
 
 			var stackTrace = GetFormattedStackTrace(errorData);
 

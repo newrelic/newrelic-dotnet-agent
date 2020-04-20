@@ -42,37 +42,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerTypeName, methodName);
 
-			return Delegates.GetDelegateFor<Task>(
-				onFailure: segment.End,
-				onSuccess: HandleSuccess
-			);
-
-			void HandleSuccess(Task task)
-			{
-				//TODO: This is littered throughout all async code... 
-				//is it necessary to prevent stacking w/ synchronous calls that follow?
-				//how are further calls appropriately stacked?
-				segment.RemoveSegmentFromCallStack();
-
-				if (task == null)
-				{
-					return;
-				}
-				
-				task.ContinueWith(OnTaskCompletion);
-			}
-
-			void OnTaskCompletion(Task completedTask)
-			{
-				try
-				{
-					segment.End();
-				}
-				catch (Exception ex)
-				{
-					agent.SafeHandleException(ex);
-				}
-			}
+			return Delegates.GetAsyncDelegateFor<Task>(agent, segment, TaskContinueWithOption.None);
 		}
 
 		private static string CreateTransactionName(ControllerActionDescriptor actionDescriptor)

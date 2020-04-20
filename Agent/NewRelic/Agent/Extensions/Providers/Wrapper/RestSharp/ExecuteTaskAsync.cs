@@ -47,37 +47,11 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 			var segment = agent.CurrentTransaction.StartExternalRequestSegment(instrumentedMethodCall.MethodCall, uri, method);
 			segment.GetExperimentalApi().SetSegmentData(externalSegmentData);
 
-			//Outbound CAT headers are added via AppendHeaders instrumentation.
+			return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true, InvokeTryProcessResponse);
 
-			return Delegates.GetDelegateFor<Task>(
-				onFailure: segment.End,
-				onSuccess: AfterWrapped
-			);
-
-			void AfterWrapped(Task task)
+			void InvokeTryProcessResponse(Task completedTask)
 			{
-				segment.RemoveSegmentFromCallStack();
-
-				if (task == null)
-				{
-					return;
-				}
-
-				//Since this finishes on a background thread, it is possible it will race the end of
-				//the transaction. This line of code prevents the transaction from ending early. 
-				transaction.Hold();
-
-				//Do not want to post to the sync context as this library is commonly used with the
-				//blocking TPL pattern of .Wait() or .Result. Posting to the sync context will result
-				//in recording time waiting for the current unit of work on the sync context to finish.
-
-				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
-				{
-					TryProcessResponse(agent, responseTask, transaction, segment, externalSegmentData);
-					segment.End();
-					transaction.Release();
-
-				}));
+				TryProcessResponse(agent, completedTask, transaction, segment, externalSegmentData);
 			}
 		}
 

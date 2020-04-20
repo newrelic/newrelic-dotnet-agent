@@ -32,6 +32,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
 		private IAttributeService _attributeService;
 
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -49,6 +52,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			_attributeService = Mock.Create<IAttributeService>();
 
 			_browserMonitoringScriptMaker = new BrowserMonitoringScriptMaker(configurationService, _transactionMetricNameMaker, _transactionAttributeMaker, _attributeService);
+
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+
 		}
 
 		[Test]
@@ -204,7 +210,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			Mock.Arrange(() => timer.Duration).Returns(time);
 
 			var priority = 0.5f;
-			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
+			var tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
 
 			if (queueTime != null)
 				tx.TransactionMetadata.SetQueueTime(queueTime.Value);

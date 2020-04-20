@@ -1,4 +1,4 @@
-using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Core;
 using NUnit.Framework;
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NewRelic.Agent.Core.Segments;
 
 namespace NewRelic.Collections.UnitTests
 {
@@ -431,8 +432,8 @@ namespace NewRelic.Collections.UnitTests
 	}
 
 	[TestFixture]
-	[TestOf(typeof(ConcurrentPriorityQueue<SpanEventWireModel>))]
-	public class ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests : ConcurrentPriorityQueueTestsBase<SpanEventWireModel>
+	[TestOf(typeof(ConcurrentPriorityQueue<ISpanEventWireModel>))]
+	public class ConcurrentPriorityQueuePrioritizedNodeSpanEventsTests : ConcurrentPriorityQueueTestsBase<ISpanEventWireModel>
 	{
 		[SetUp]
 		public void Setup()
@@ -440,12 +441,17 @@ namespace NewRelic.Collections.UnitTests
 			AllocPriorityQueue();
 		}
 
-		protected override PrioritizedNode<SpanEventWireModel> Create(float priority)
+		protected override PrioritizedNode<ISpanEventWireModel> Create(float priority)
 		{
 			Interlocked.Increment(ref CreateCount);
-			var attributes = new Agent.Core.Attributes.AttributeCollection();
-			attributes.Add(Agent.Core.Attributes.Attribute.BuildPriorityAttribute(priority));
-			return new PrioritizedNode<SpanEventWireModel>(new SpanEventWireModel(priority, attributes.GetIntrinsicsDictionary(), attributes.GetUserAttributesDictionary(), attributes.GetAgentAttributesDictionary()));
+
+			var attribSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+
+			var spanEvent = new SpanAttributeValueCollection();
+			spanEvent.Priority = priority;
+			attribSvc.AttributeDefs.Priority.TrySetValue(spanEvent, priority);
+
+			return new PrioritizedNode<ISpanEventWireModel>(spanEvent);
 		}
 
 		[TestCaseSource("ConstructPriorityQueueSizes")]

@@ -8,6 +8,7 @@ using NewRelic.Core;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Telerik.JustMock;
@@ -269,7 +270,7 @@ namespace CompositeTests
 			Mock.Arrange(() => configurationService.Configuration).Returns(() => _compositeTestAgent.CurrentConfiguration);
 
 			var syntheticsHeaderHandler = new SyntheticsHeaderHandler(configurationService);
-			SyntheticsHeader decodedSyntheticsHeader = syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(headers);
+			SyntheticsHeader decodedSyntheticsHeader = syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual("PV5DV11cSk0dAxwAEx0MAyYLRENNDAANLwtNSk0CCQEGEgAdLwtNOw==", headers["X-NewRelic-Synthetics"]),
@@ -279,6 +280,19 @@ namespace CompositeTests
 				() => Assert.AreEqual(decodedSyntheticsHeader.MonitorId, monitorId),
 				() => Assert.AreEqual(decodedSyntheticsHeader.ResourceId, resourceId) 
 			);
+
+			List<string> GetHeaderValue(string key)
+			{
+				var headerValues = new List<string>();
+				foreach (var item in headers)
+				{
+					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+					{
+						headerValues.Add(item.Value);
+					}
+				}
+				return headerValues;
+			}
 		}
 	}	
 }

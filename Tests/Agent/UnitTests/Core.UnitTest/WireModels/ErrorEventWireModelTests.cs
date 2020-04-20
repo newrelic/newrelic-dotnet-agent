@@ -52,7 +52,7 @@ namespace NewRelic.Agent.Core.WireModels
 				agentAttributes
 			};
 
-			DictionaryComparer.CompareDictionaries(expected, deserialized);
+			AttributeComparer.CompareDictionaries(expected, deserialized);
 		}
 
 		[Test]

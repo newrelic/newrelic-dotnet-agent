@@ -24,6 +24,7 @@ namespace NewRelic.Agent.Core.Segments
 
 		public Uri Uri { get; }
 		public string Method { get; }
+		public string Type { get; }
 
 		public ExternalSegmentData(Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData = null)
 		{
@@ -81,15 +82,15 @@ namespace NewRelic.Agent.Core.Segments
 			}
 		}
 
-		public override void AddSpanTypeSpecificAttributes(AttributeCollection attributes, Segment segment)
-		{
-			attributes.Add(Attribute.BuildSpanCategoryAttribute(SpanCategory.Http));
-			attributes.Add(Attribute.BuildHttpUrlAttribute(StringsHelper.CleanUri(Uri)));
-			attributes.Add(Attribute.BuildHttpMethodAttribute(Method));
-			attributes.Add(Attribute.BuildComponentAttribute(segment.MethodCallData.TypeName));
-			attributes.Add(Attribute.BuildSpanKindAttribute());
 
-			if (_httpStatusCode.HasValue) attributes.Add(Attribute.BuildHttpStatusCodeAttribute(_httpStatusCode.Value));
+		public override void RecordSpanTypeSpecificAttributes()
+		{
+			AttribDefs.SpanCategory.TrySetValue(AttribVals, SpanCategory.Http);
+			AttribDefs.HttpUrl.TrySetValue(AttribVals, Uri);
+			AttribDefs.HttpMethod.TrySetValue(AttribVals, Method);
+			AttribDefs.Component.TrySetValue(AttribVals, _segmentState.TypeName);
+			AttribDefs.SpanKind.TrySetDefault(AttribVals);
+			AttribDefs.HttpStatusCode.TrySetValue(AttribVals, _httpStatusCode);   //Attrib handles null
 		}
 
 		public override string GetTransactionTraceName()

@@ -107,7 +107,7 @@ namespace NewRelic.Agent.Core.WireModels
 			return new MetricDataWireModel(1, (float)totalTime.TotalSeconds, (float)totalExclusiveTime.TotalSeconds, (float)totalTime.TotalSeconds, (float)totalTime.TotalSeconds, (float)totalTime.TotalSeconds * (float)totalTime.TotalSeconds);
 		}
 
-		public static MetricDataWireModel BuildCountData(int callCount = 1)
+		public static MetricDataWireModel BuildCountData(long callCount = 1)
 		{
 			if (callCount < 0)
 			{

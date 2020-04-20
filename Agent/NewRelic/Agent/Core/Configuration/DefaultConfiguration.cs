@@ -53,8 +53,9 @@ namespace NewRelic.Agent.Core.Configuration
 		private Dictionary<string, string> _newRelicAppSettings { get; }
 
 		public bool UseResourceBasedNamingForWCFEnabled { get; }
+		public bool W3CEnabled { get; }
 		public bool EventListenerSamplersEnabled { get; set; }
-
+		
 		/// <summary>
 		/// Default configuration constructor.  It will contain reasonable default values for everything and never anything more.
 		/// </summary>
@@ -99,6 +100,7 @@ namespace NewRelic.Agent.Core.Configuration
 			_newRelicAppSettings = TransformAppSettings();
 
 			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
+			W3CEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.W3CEnabled", false);
 
 			EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
 		}
@@ -131,16 +133,40 @@ namespace NewRelic.Agent.Core.Configuration
 			return parsedBool;
 		}
 
+
+		private float TryGetAppSettingAsFloatWithDefault(string key, float defaultValue)
+		{
+			return TryGetAppSettingAsFloat(key).GetValueOrDefault(defaultValue);
+		}
+
+
+		private float? TryGetAppSettingAsFloat(string key)
+		{
+			if (_newRelicAppSettings.TryGetValue(key, out var valueStr))
+			{
+				if(float.TryParse(valueStr,out var valueFloat))
+				{
+					return valueFloat;
+				}
+			}
+			return null;
+		}
+
 		private int TryGetAppSettingAsIntWithDefault(string key, int defaultValue)
 		{
-			var value = _newRelicAppSettings.GetValueOrDefault(key);
+			return TryGetAppSettingAsInt(key).GetValueOrDefault(defaultValue);
+		}
 
-			int parsedInt;
-			var parsedSuccessfully = int.TryParse(value, out parsedInt);
-			if (!parsedSuccessfully)
-				return defaultValue;
-
-			return parsedInt;
+		private int? TryGetAppSettingAsInt(string key)
+		{
+			if (_newRelicAppSettings.TryGetValue(key, out var valueStr))
+			{
+				if (int.TryParse(valueStr, out var valueInt))
+				{
+					return valueInt;
+				}
+			}
+			return null;
 		}
 
 		public bool SecurityPoliciesTokenExists => !string.IsNullOrEmpty(SecurityPoliciesToken);
@@ -442,7 +468,7 @@ namespace NewRelic.Agent.Core.Configuration
 			&& (!_localConfiguration.analyticsEvents.captureAttributesSpecified || _localConfiguration.analyticsEvents.captureAttributes);
 
 		private HashSet<string> _transactionEventsAttributesInclude;
-		public  HashSet<string> TransactionEventsAttributesInclude
+		public HashSet<string> TransactionEventsAttributesInclude
 		{
 			get
 			{
@@ -458,7 +484,7 @@ namespace NewRelic.Agent.Core.Configuration
 		}
 
 		private HashSet<string> _transactionEventsAttributesExclude;
-		public  HashSet<string> TransactionEventsAttributesExclude
+		public HashSet<string> TransactionEventsAttributesExclude
 		{
 			get
 			{
@@ -824,13 +850,8 @@ namespace NewRelic.Agent.Core.Configuration
 		{
 			get
 			{
-				if (SpanEventsMaxSamplesStored == 0)
-				{
-					return false;
-				}
-
 				var enabled = ServerCanDisable(_serverConfiguration.SpanEventCollectionEnabled, EnvironmentOverrides(_localConfiguration.spanEvents.enabled, "NEW_RELIC_SPAN_EVENTS_ENABLED"));
-				return DistributedTracingEnabled && enabled;
+				return enabled && DistributedTracingEnabled;
 			}
 		}
 
@@ -902,6 +923,143 @@ namespace NewRelic.Agent.Core.Configuration
 		public bool ExcludeNewrelicHeader => _localConfiguration.distributedTracing.excludeNewrelicHeader;
 
 		#endregion Distributed Tracing
+
+		#region Infinite Tracing
+
+		private int? _infiniteTracingTimeoutMsConnect = null;
+		public int InfiniteTracingTraceTimeoutMsConnect => (_infiniteTracingTimeoutMsConnect 
+			?? (_infiniteTracingTimeoutMsConnect = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("InfiniteTracingTimeoutConnect", 10000), "NEW_RELIC_INFINITE_TRACING_TIMEOUT_CONNECT")).Value);
+
+		private int? _infiniteTracingTimeoutMsSendData = null;
+		public int InfiniteTracingTraceTimeoutMsSendData => (_infiniteTracingTimeoutMsSendData 
+			?? (_infiniteTracingTimeoutMsSendData = EnvironmentOverrides(
+				TryGetAppSettingAsIntWithDefault("InfiniteTracingTimeoutSend", 2000)
+				, "NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Value);
+		
+		private int? _infiniteTracingCountWorkers = null;
+		public int InfiniteTracingTraceCountConsumers => GetInfiniteTracingCountWorkers();
+
+		private int GetInfiniteTracingCountWorkers()
+		{
+			const int countWorkersDefault = 20; //System.Environment.ProcessorCount
+			return _infiniteTracingCountWorkers
+				?? (_infiniteTracingCountWorkers = EnvironmentOverrides(TryGetAppSettingAsIntWithDefault("InfiniteTracingSpanEventsStreamsCount", countWorkersDefault), "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_STREAMS_COUNT")).GetValueOrDefault();
+		}
+
+
+		private bool _infiniteTracingObserverObtained;
+		private void GetInfiniteTracingObserver()
+		{
+			_infiniteTracingTraceObserverHost = _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_HOST");
+			if (_infiniteTracingTraceObserverHost != null)
+			{
+				_infiniteTracingTraceObserverPort = _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_PORT");
+			}
+			else
+			{
+				_infiniteTracingTraceObserverHost = _localConfiguration.infiniteTracing?.trace_observer?.host;
+				_infiniteTracingTraceObserverPort = _localConfiguration.infiniteTracing?.trace_observer?.port;
+			}
+
+			_infiniteTracingObserverObtained = true;
+		}
+
+		private string _infiniteTracingTraceObserverHost = null;
+		public string InfiniteTracingTraceObserverHost
+		{
+			get
+			{
+				if (!_infiniteTracingObserverObtained)
+				{
+					GetInfiniteTracingObserver();
+				}
+
+				return _infiniteTracingTraceObserverHost;
+			}
+		}
+		
+		private string _infiniteTracingTraceObserverPort = null;
+		public string InfiniteTracingTraceObserverPort
+		{
+			get
+			{
+				if (!_infiniteTracingObserverObtained)
+				{
+					GetInfiniteTracingObserver();
+				}
+
+				return _infiniteTracingTraceObserverPort;
+			}
+		}
+		
+
+		private int? _infiniteTracingQueueSizeSpans;
+		public int InfiniteTracingQueueSizeSpans => GetInfiniteTracingQueueSizeSpans();
+
+		private int GetInfiniteTracingQueueSizeSpans()
+		{
+			return _infiniteTracingQueueSizeSpans
+				?? (_infiniteTracingQueueSizeSpans = EnvironmentOverrides(_localConfiguration.infiniteTracing?.span_events?.queue_size, "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_QUEUE_SIZE"))
+				.GetValueOrDefault(100000);
+		}
+
+		private bool _infiniteTracingObtainedSettingsForTest;
+		private void GetInfiniteTracingFlakyAndDelayTestSettings()
+		{
+
+			if (float.TryParse(_environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_FLAKY"), out var flakyVal))
+			{
+				_infiniteTracingObserverTestFlaky = flakyVal;
+			}
+			else
+			{
+				_infiniteTracingObserverTestFlaky = TryGetAppSettingAsFloat("InfiniteTracingSpanEventsTestFlaky");
+			}
+
+			if (int.TryParse(_environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_TEST_DELAY"), out var delayVal))
+			{
+				_infiniteTracingObserverTestDelayMs = delayVal;
+			}
+			else
+			{
+				_infiniteTracingObserverTestDelayMs = TryGetAppSettingAsInt("InfiniteTracingSpanEventsTestDelay");
+			}
+
+			_infiniteTracingObtainedSettingsForTest = true;
+		}
+
+		private float? _infiniteTracingObserverTestFlaky;
+		public float? InfiniteTracingTraceObserverTestFlaky
+		{
+			get
+			{
+				if (!_infiniteTracingObtainedSettingsForTest)
+				{
+					GetInfiniteTracingFlakyAndDelayTestSettings();
+				}
+
+				return _infiniteTracingObserverTestFlaky;
+			}
+		}
+
+		private int? _infiniteTracingObserverTestDelayMs;
+		public int? InfiniteTracingTraceObserverTestDelayMs 
+		{
+			get
+			{
+				if (!_infiniteTracingObtainedSettingsForTest)
+				{
+					GetInfiniteTracingFlakyAndDelayTestSettings();
+				}
+
+				return _infiniteTracingObserverTestDelayMs;
+			}
+		}
+
+		
+
+
+		#endregion
 
 		#region Errors
 
@@ -1594,6 +1752,15 @@ namespace NewRelic.Agent.Core.Configuration
 				.Where(value => value != null)
 				.FirstOrDefault()
 				?? local;
+		}
+
+		private uint? EnvironmentOverrides(uint? local, params string[] environmentVariableNames)
+		{
+			var env = environmentVariableNames
+				.Select(_environment.GetEnvironmentVariable)
+				.FirstOrDefault(value => value != null);
+
+			return uint.TryParse(env, out uint parsedValue) ? parsedValue : local;
 		}
 
 		private int? EnvironmentOverrides(int? local, params string[] environmentVariableNames)

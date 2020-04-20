@@ -72,33 +72,17 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 			// We cannot rely on SerializeHeadersWrapper to attach the headers because it is called on a thread that does not have access to the transaction
 			TryAttachHeadersToRequest(agent, httpRequestMessage);
 
-			return Delegates.GetDelegateFor<Task<HttpResponseMessage>>(
-				onFailure: segment.End, 
-				onSuccess: OnSuccess
-			);
+			// 1.  Since this finishes on a background thread, it is possible it will race the end of
+			//     the transaction. Using holdTransactionOpen = true to prevent the transaction from ending early.
+			// 2.  Do not want to post to the sync context as this library is commonly used with the
+			//     blocking TPL pattern of .Result or .Wait(). Posting to the sync context will result
+			//     in recording time waiting for the current unit of work on the sync context to finish.
+			//     This overload GetAsyncDelegateFor does not use the synchronization context's task scheduler.
+			return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment, true, InvokeTryProcessResponse);
 
-			void OnSuccess(Task<HttpResponseMessage> task)
+			void InvokeTryProcessResponse(Task<HttpResponseMessage> httpResponseMessage)
 			{
-				segment.RemoveSegmentFromCallStack();
-
-				if (task == null)
-				{
-					return;
-				}
-
-				//Since this finishes on a background thread, it is possible it will race the end of
-				//the transaction. This line of code prevents the transaction from ending early. 
-				transaction.Hold();
-
-				//Do not want to post to the sync context as this library is commonly used with the
-				//blocking TPL pattern of .Result or .Wait(). Posting to the sync context will result
-				//in recording time waiting for the current unit of work on the sync context to finish.
-				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
-				{
-					TryProcessResponse(agent, responseTask, transaction, segment, externalSegmentData);
-					segment.End();
-					transaction.Release();
-				}));
+				TryProcessResponse(agent, httpResponseMessage, transaction, segment, externalSegmentData);
 			}
 		}
 
@@ -122,16 +106,29 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
 		private static void TryAttachHeadersToRequest(IAgent agent, HttpRequestMessage httpRequestMessage)
 		{
+			var setHeaders = new Action<string, string>((key, value) =>
+			{
+				// "Add" will not replace an existing value, so we must remove it first
+				httpRequestMessage.Headers?.Remove(key);
+				httpRequestMessage.Headers?.Add(key, value);
+			});
+
 			try
 			{
-				var headers = agent.CurrentTransaction.GetRequestMetadata()
-					.Where(header => header.Key != null);
-
-				foreach (var header in headers)
+				if (!agent.Configuration.W3CEnabled)
 				{
-					// "Add" will not replace an existing value, so we must remove it first
-					httpRequestMessage.Headers?.Remove(header.Key);
-					httpRequestMessage.Headers?.Add(header.Key, header.Value);
+					var headers = agent.CurrentTransaction.GetRequestMetadata()
+						.Where(header => header.Key != null);
+
+					foreach (var header in headers)
+					{
+						setHeaders(header.Key, header.Value);
+					}
+				}
+
+				else
+				{
+					agent.CurrentTransaction.InsertDistributedTraceHeaders(setHeaders);
 				}
 			}
 			catch (Exception ex)

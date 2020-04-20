@@ -45,6 +45,7 @@ namespace ArtifactBuilder.Artifacts
 			coreAgentComponents.CopyComponents($@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic");
 			FileHelpers.CopyFile(coreAgentX86Components.WindowsProfiler, $@"{package.GetContentFilesDirectory("any", "netstandard2.0")}\newrelic\x86");
 			package.CopyToContentFiles(coreAgentComponents.LinuxProfiler, @"any\netstandard2.0\newrelic");
+			package.CopyToContentFiles(coreAgentComponents.GRPCExtensionsLibLinux, @"any\netstandard2.0\newrelic");
 			Directory.CreateDirectory($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs");
 			System.IO.File.Create($@"{StagingDirectory}\contentFiles\any\netstandard2.0\newrelic\logs\placeholder").Dispose();
 

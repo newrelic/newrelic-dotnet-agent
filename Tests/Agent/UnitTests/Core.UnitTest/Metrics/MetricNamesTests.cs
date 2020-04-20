@@ -1,4 +1,5 @@
-﻿using NewRelic.Agent.Core.AgentHealth;
+﻿using Grpc.Core;
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -292,6 +293,29 @@ namespace NewRelic.Agent.Core.Metrics
 		{
 			const string metricName = "WCFClient/BindingType/BasicHttpBinding";
 			Assert.That(MetricNames.GetSupportabilityName(metricName), Is.EqualTo($"Supportability/{metricName}"));
+		}
+
+		[TestCase(StatusCode.OK, ExpectedResult = "InfiniteTracing/Span/gRPC/OK")]
+		[TestCase(StatusCode.Cancelled, ExpectedResult = "InfiniteTracing/Span/gRPC/CANCELLED")]
+		[TestCase(StatusCode.Unknown, ExpectedResult = "InfiniteTracing/Span/gRPC/UNKNOWN")]
+		[TestCase(StatusCode.InvalidArgument, ExpectedResult = "InfiniteTracing/Span/gRPC/INVALID_ARGUMENT")]
+		[TestCase(StatusCode.DeadlineExceeded, ExpectedResult = "InfiniteTracing/Span/gRPC/DEADLINE_EXCEEDED")]
+		[TestCase(StatusCode.NotFound, ExpectedResult = "InfiniteTracing/Span/gRPC/NOT_FOUND")]
+		[TestCase(StatusCode.AlreadyExists, ExpectedResult = "InfiniteTracing/Span/gRPC/ALREADY_EXISTS")]
+		[TestCase(StatusCode.PermissionDenied, ExpectedResult = "InfiniteTracing/Span/gRPC/PERMISSION_DENIED")]
+		[TestCase(StatusCode.Unauthenticated, ExpectedResult = "InfiniteTracing/Span/gRPC/UNAUTHENTICATED")]
+		[TestCase(StatusCode.ResourceExhausted, ExpectedResult = "InfiniteTracing/Span/gRPC/RESOURCE_EXHAUSTED")]
+		[TestCase(StatusCode.FailedPrecondition, ExpectedResult = "InfiniteTracing/Span/gRPC/FAILED_PRECONDITION")]
+		[TestCase(StatusCode.Aborted, ExpectedResult = "InfiniteTracing/Span/gRPC/ABORTED")]
+		[TestCase(StatusCode.OutOfRange, ExpectedResult = "InfiniteTracing/Span/gRPC/OUT_OF_RANGE")]
+		[TestCase(StatusCode.Unimplemented, ExpectedResult = "InfiniteTracing/Span/gRPC/UNIMPLEMENTED")]
+		[TestCase(StatusCode.Internal, ExpectedResult = "InfiniteTracing/Span/gRPC/INTERNAL")]
+		[TestCase(StatusCode.Unavailable, ExpectedResult = "InfiniteTracing/Span/gRPC/UNAVAILABLE")]
+		[TestCase(StatusCode.DataLoss, ExpectedResult = "InfiniteTracing/Span/gRPC/DATA_LOSS")]
+		[TestCase((StatusCode)(-1), ExpectedResult = "InfiniteTracing/Span/gRPC/-1")]
+		public string MetricNamesTest_SupportabilityInfiniteTracingSpanGrpcError(StatusCode statusCode)
+		{
+			return MetricNames.SupportabilityInfiniteTracingSpanGrpcError(EnumNameCache<StatusCode>.GetNameToUpperSnakeCase(statusCode));
 		}
 	}
 }

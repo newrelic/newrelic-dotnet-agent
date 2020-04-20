@@ -14,12 +14,35 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="NewRelic.Core.BuildTimestamp">
+      <!--
+          This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Core.BuildTimestamp("637213171838522390")]
+          Parameters for the attribute are always strings. There is an open issue requesting support for non-string parameters.
+          https://github.com/microsoft/msbuild/issues/2281
+      -->
+      <_Parameter1>$([System.DateTime]::UtcNow.Ticks)</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
+    <PackageReference Include="Grpc" Version="2.28.1" />
+    <PackageReference Include="Grpc.Core" Version="2.28.1" />
+    <PackageReference Include="Grpc.Tools" Version="2.28.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="ILRepack" Version="2.0.16" />
     <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="SharpZipLib" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="**/*.proto" GrpcServices="Client">
+    </Protobuf>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
@@ -65,11 +88,6 @@
     -->
     <Compile Include="Config\Configuration.cs" Condition="!Exists('Config\Configuration.cs')" />
     <Compile Include="NewRelic.Agent.Core.Extension\Extension.cs" Condition="!Exists('NewRelic.Agent.Core.Extension\Extension.cs')" />
-    <Compile Include="AgentInstallConfiguration_Generated.cs" Condition="!Exists('AgentInstallConfiguration_Generated.cs')">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>AgentInstallConfiguration_Generated.tt</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(SolutionDir)NewRelicStrongNameKey.snk">
@@ -84,12 +102,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="AgentInstallConfiguration_Generated.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
-    </None>
   </ItemGroup>
 
   <Target Name="GenerateCode" BeforeTargets="DispatchToInnerBuilds;CoreCompile">
@@ -123,6 +135,11 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.LabelsService'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Core'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Parsing'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Google.Protobuf'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core.Api'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
+        <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
@@ -143,12 +160,11 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net45'">11</ILRepackIncludeCount>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">8</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net45'">16</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">13</ILRepackIncludeCount>
     </PropertyGroup>
     
-    <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude->Count())."
-           Condition="@(ILRepackInclude->Count()) != $(ILRepackIncludeCount)" />
+    <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />
 
     <ItemGroup>
       <ILRepackExclude Include="@(PossibleRefsForILRepack)" Exclude="@(ILRepackInclude)" />
@@ -170,15 +186,6 @@
   </Target>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-
-  <PropertyGroup>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <TransformOnBuild>true</TransformOnBuild>
-    <OverwriteReadOnlyOutputFiles>true</OverwriteReadOnlyOutputFiles>
-    <TransformOutOfDateOnly>false</TransformOutOfDateOnly>
-  </PropertyGroup>
-  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
 
   <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
 </Project>

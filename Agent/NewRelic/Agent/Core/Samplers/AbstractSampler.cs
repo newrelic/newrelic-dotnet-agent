@@ -35,6 +35,9 @@ namespace NewRelic.Agent.Core.Samplers
 
 		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
 		{
+			//TODO:  Perhaps this should be moved to OnAgentConnected instead so as to avoid the
+			//3x call to this method for each configuration source.
+
 			Stop();
 			Start();
 		}

@@ -6,6 +6,7 @@ using NewRelic.Parsing.ConnectionString;
 using NewRelic.Agent.Extensions.Parsing;
 using System.Linq;
 using NewRelic.Agent.Api;
+using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
@@ -105,7 +106,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 			}
 
 			return ExecuteAsAsync
-				? Delegates.GetAsyncDelegateFor(agent, segment)
+				? Delegates.GetAsyncDelegateFor<Task>(agent, segment)
 				: Delegates.GetDelegateFor(segment);
 		}
 

@@ -14,6 +14,8 @@ namespace NewRelic.Agent.Core.Transactions
 {
 	public class NoOpTransaction : ITransaction, ITransactionExperimental
 	{
+		public long? CatContentLength { get; set; }
+
 		public bool IsValid => false;
 		public bool IsFinished => false;
 		public ISegment CurrentSegment => Segment.NoOpSegment;
@@ -51,6 +53,16 @@ namespace NewRelic.Agent.Core.Transactions
 #if DEBUG
 			Log.Finest("Skipping StartExternalRequestSegment outside of a transaction");
 #endif
+			return Segment.NoOpSegment;
+		}
+
+		public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, Action<IExternalSegmentData> segmentDataDelegate)
+		{
+#if DEBUG
+			Log.Finest("Skipping StartExternalRequestSegment outside of a transaction");
+#endif
+			segmentDataDelegate?.Invoke(_noOpExternalSegmentData);
+
 			return Segment.NoOpSegment;
 		}
 
@@ -250,7 +262,7 @@ namespace NewRelic.Agent.Core.Transactions
 			return;
 		}
 
-		public void AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType)
+		public void AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType)
 		{
 			return;
 		}

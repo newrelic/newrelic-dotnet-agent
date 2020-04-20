@@ -52,6 +52,8 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationCrossApplicationTracer crossApplicationTracerField;
         
+        private configurationInfiniteTracing infiniteTracingField;
+        
         private configurationDistributedTracing distributedTracingField;
         
         private configurationSpanEvents spanEventsField;
@@ -109,6 +111,7 @@ namespace NewRelic.Agent.Core.Config
             this.highSecurityField = new configurationHighSecurity();
             this.spanEventsField = new configurationSpanEvents();
             this.distributedTracingField = new configurationDistributedTracing();
+            this.infiniteTracingField = new configurationInfiniteTracing();
             this.crossApplicationTracerField = new configurationCrossApplicationTracer();
             this.datastoreTracerField = new configurationDatastoreTracer();
             this.transactionTracerField = new configurationTransactionTracer();
@@ -335,6 +338,18 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.crossApplicationTracerField = value;
+            }
+        }
+        
+        public configurationInfiniteTracing infiniteTracing
+        {
+            get
+            {
+                return this.infiniteTracingField;
+            }
+            set
+            {
+                this.infiniteTracingField = value;
             }
         }
         
@@ -2640,6 +2655,106 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.enabledField = value;
+            }
+        }
+    }
+    
+    public partial class configurationInfiniteTracing
+    {
+        
+        private configurationInfiniteTracingTrace_observer trace_observerField;
+        
+        private configurationInfiniteTracingSpan_events span_eventsField;
+        
+        public configurationInfiniteTracing()
+        {
+            this.span_eventsField = new configurationInfiniteTracingSpan_events();
+            this.trace_observerField = new configurationInfiniteTracingTrace_observer();
+        }
+        
+        public configurationInfiniteTracingTrace_observer trace_observer
+        {
+            get
+            {
+                return this.trace_observerField;
+            }
+            set
+            {
+                this.trace_observerField = value;
+            }
+        }
+        
+        public configurationInfiniteTracingSpan_events span_events
+        {
+            get
+            {
+                return this.span_eventsField;
+            }
+            set
+            {
+                this.span_eventsField = value;
+            }
+        }
+    }
+    
+    public partial class configurationInfiniteTracingTrace_observer
+    {
+        
+        private string hostField;
+        
+        private string portField;
+        
+        public configurationInfiniteTracingTrace_observer()
+        {
+            this.portField = "443";
+        }
+        
+        public string host
+        {
+            get
+            {
+                return this.hostField;
+            }
+            set
+            {
+                this.hostField = value;
+            }
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute("443")]
+        public string port
+        {
+            get
+            {
+                return this.portField;
+            }
+            set
+            {
+                this.portField = value;
+            }
+        }
+    }
+    
+    public partial class configurationInfiniteTracingSpan_events
+    {
+        
+        private int queue_sizeField;
+        
+        public configurationInfiniteTracingSpan_events()
+        {
+            this.queue_sizeField = 100000;
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(100000)]
+        public int queue_size
+        {
+            get
+            {
+                return this.queue_sizeField;
+            }
+            set
+            {
+                this.queue_sizeField = value;
             }
         }
     }

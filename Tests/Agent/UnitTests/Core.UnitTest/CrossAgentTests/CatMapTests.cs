@@ -2,6 +2,7 @@ using MoreLinq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.BrowserMonitoring;
@@ -53,6 +54,9 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 		private ITransactionMetricNameMaker _transactionMetricNameMaker;
 
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -80,6 +84,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			_agent = new Agent(transactionBuilderService, Mock.Create<ITransactionTransformer>(), Mock.Create<IThreadPoolStatic>(), _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, Mock.Create<IDistributedTracePayloadHandler>(), _syntheticsHeaderHandler, Mock.Create<ITransactionFinalizer>(), Mock.Create<IBrowserMonitoringPrereqChecker>(), Mock.Create<IBrowserMonitoringScriptMaker>(), _configurationService, agentHealthReporter, Mock.Create<IAgentTimerService>(), Mock.Create<IMetricNameService>(), new TraceMetadataFactory(new AdaptiveSampler()), catSupportabilityCounters);
 
 			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 		}
 
 		[Test]
@@ -105,7 +110,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 				var transactionName = GetTransactionNameFromString(request.OutboundTxnName);
 				_transaction.CandidateTransactionName.TrySet(transactionName, (TransactionNamePriority)namePriority++);
 				var outboundHeaders = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
-				var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(outboundHeaders);
+				var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
 				var requestData = new CrossApplicationRequestData(
 					(string)request.ExpectedOutboundPayload[0],
 					(bool)request.ExpectedOutboundPayload[1],
@@ -114,6 +119,19 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 				);
 				expectedAndActualOutboundRequestPayloads.Add(requestData, actualOutboundPayload);
 				_transaction.TransactionMetadata.MarkHasCatResponseHeaders();
+
+				List<string> GetHeaderValue(string key)
+				{
+					var headerValues = new List<string>();
+					foreach (var item in outboundHeaders)
+					{
+						if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+						{
+							headerValues.Add(item.Value);
+						}
+					}
+					return headerValues;
+				}
 			});
 
 			// Simulate the transaction ending (this logic is normally performed by Agent.EndTransaction)
@@ -158,12 +176,12 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			}
 		}
 
-		private static IInternalTransaction GetTransactionBuilderFor(IConfiguration configuration, TestCase testCase)
+		private IInternalTransaction GetTransactionBuilderFor(IConfiguration configuration, TestCase testCase)
 		{
 			var transactionName = GetTransactionNameFromString(testCase.TransactionName);
 
 			var priority = 0.5f;
-			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
+			var transaction = new Transaction(configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
 
 			SetGuid(transaction, testCase.TransactionGuid);
 

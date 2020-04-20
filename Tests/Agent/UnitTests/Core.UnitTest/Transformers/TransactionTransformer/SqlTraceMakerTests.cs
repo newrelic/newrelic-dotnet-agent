@@ -13,6 +13,8 @@ using Telerik.JustMock;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -122,14 +124,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (statusCode != null)
 				txMetadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (transactionExceptionDatas != null)
-				transactionExceptionDatas.ForEach(data => txMetadata.AddExceptionData(data));
+				transactionExceptionDatas.ForEach(data => txMetadata.TransactionErrorState.AddExceptionData(data));
 
 			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var immutableMetadata = txMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, immutableMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null);
+			var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+
+			return new ImmutableTransaction(name, segments, immutableMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null, attribDefSvc.AttributeDefs);
 		}
 
 		private Segment BuildSegment(DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
@@ -138,7 +142,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				new ConnectionInfo(host, portPathOrId, databaseName));
 			methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(data);
 
 			return new Segment(startTime, duration, segment, parameters);

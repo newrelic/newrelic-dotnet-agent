@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using MoreLinq;
 
@@ -23,6 +24,10 @@ namespace NewRelic.Installer
 
 		[CommandLine.Option("configuration", Required = false, HelpText = "$(Configuration)")]
 		public string Configuration { get; set; }
+
+		[CommandLine.Option("nugetPackageDir", Required = false, HelpText = "$(NuGetPackageRoot)")]
+		public String NuGetPackageDir { get; set; }
+
 
 		private bool _isCoreClr = false;
 		private bool _isLinux = false;
@@ -69,6 +74,8 @@ namespace NewRelic.Installer
 		private string NewRelicConfigPath { get { return Path.Combine(SolutionPath, "Configuration", "newrelic.config") ?? string.Empty; } }
 		private string NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
 		private string ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
+
+		private string NewRelicAgentCoreCsprojPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj"); } }
 
 		private string LicenseSourceDirectoryPath { get { return Path.GetFullPath(Path.Combine(SolutionPath, "../licenses")); } }
 		private string LicenseFilePath => Path.Combine(LicenseSourceDirectoryPath, "LICENSE.txt");
@@ -206,6 +213,8 @@ namespace NewRelic.Installer
 
 			CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
 			CopyToDirectory(ThirdPartyNoticesFilePath, DestinationHomeDirectoryPath);
+			CopyOtherDependenciesGRPCCShapExtensions();
+
 
 			if (_isCoreClr)
 			{
@@ -218,6 +227,21 @@ namespace NewRelic.Installer
 			// We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.
 			var jetBrainsAnnotationsAssemblyPath = Path.Combine(AgentCoreBuildDirectoryPath, "JetBrains.Annotations.dll");
 			CopyToDirectory(jetBrainsAnnotationsAssemblyPath, DestinationExtensionsDirectoryPath);
+		}
+
+		private void CopyOtherDependenciesGRPCCShapExtensions()
+		{
+			var libFileNames = _isLinux
+				? new string[] { "libgrpc_csharp_ext.x64.so", "libgrpc_csharp_ext.x86.so" }
+				: new string[] { "grpc_csharp_ext.x64.dll", "grpc_csharp_ext.x86.dll" };
+
+			var libFolderPath = GetNuGetPackageFolderNativeLibPath(NewRelicAgentCoreCsprojPath, "Grpc.Core");
+
+			foreach (var libFileName in libFileNames)
+			{
+				var srcLibFilePath = Path.Combine(libFolderPath, libFileName);
+				CopyToDirectory(srcLibFilePath, DestinationHomeDirectoryPath);
+			}
 		}
 
 		private static void ReCreateDirectoryWithEveryoneAccess(string directoryPath)
@@ -381,5 +405,52 @@ namespace NewRelic.Installer
 
 			defaultParser.ParseArgumentsStrict(commandLineArguments, this);
 		}
+
+		private string GetNuGetPackageFolder(string csprojPath, string packageName)
+		{
+
+			Console.WriteLine($"Searching local Package Cache for '{packageName}' in {NuGetPackageDir}");
+
+			var version = GetNuGetPackageVersion(csprojPath, packageName);
+
+			var pkgFolder = Path.Combine(NuGetPackageDir.TrimEnd('"'), packageName, version);
+
+			Console.WriteLine($"Nuget Package Folder - {pkgFolder}");
+
+			return pkgFolder;
+		}
+
+		private string GetNuGetPackageFolderNativeLibPath(string csprojPath, string packageName)
+		{
+			var pkgFolder = GetNuGetPackageFolder(csprojPath, packageName);
+
+			pkgFolder = Path.Combine(pkgFolder, "runtimes");
+
+			pkgFolder = _isLinux
+				? Path.Combine(pkgFolder, "linux")
+				: Path.Combine(pkgFolder, "win");
+
+			pkgFolder = Path.Combine(pkgFolder, "native");
+
+			Console.WriteLine($"Nuget Package LibPath - {pkgFolder}");
+
+			return pkgFolder;
+		}
+
+		private string GetNuGetPackageVersion(string csprojPath, string packageName)
+		{
+			var regex = new Regex($@".*<PackageReference Include=""{packageName}"" Version=""(.*?)"" />");
+
+			var packageVersion = File.ReadAllLines(csprojPath)
+				.Select(line => regex.Match(line))
+				.Where(match => match.Success)
+				.Select(match => match.Groups[1].Value)
+				.FirstOrDefault();
+
+			Console.WriteLine($"Identified Package Reference to '{packageName}' for version {packageVersion} in {csprojPath}");
+
+			return packageVersion;
+		}
+
 	}
 }

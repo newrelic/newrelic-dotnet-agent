@@ -7,6 +7,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -39,6 +40,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 		private DefaultConfiguration _defaultConfig;
 
 		private ISpanEventAggregator _spanEventAggregator;
+		private ISpanEventAggregatorInfiniteTracing _spanEventAggregatorInfiniteTracing;
 		private ISpanEventMaker _spanEventMaker;
 		private ICustomEventAggregator _customEventAggregator;
 		private IAgentTimerService _agentTimerService;
@@ -83,7 +85,8 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
 			_transactionSegmentState = Mock.Create<ITransactionSegmentState>();
 			Mock.Arrange(() => _transactionSegmentState.GetRelativeTime()).Returns(() => TimeSpan.Zero);
-
+			Mock.Arrange(() => _transactionSegmentState.AttribDefs).Returns(() => new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings())));
+		
 			_segmentTreeMaker = Mock.Create<ISegmentTreeMaker>();
 
 			_metricNameService = Mock.Create<IMetricNameService>();
@@ -105,14 +108,22 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			_errorEventMaker = Mock.Create<IErrorEventMaker>();
 			_sqlTraceAggregator = Mock.Create<ISqlTraceAggregator>();
 			_sqlTraceMaker = Mock.Create<ISqlTraceMaker>();
+			
 			_spanEventAggregator = Mock.Create<ISpanEventAggregator>();
+			Mock.Arrange(() => _spanEventAggregator.IsServiceEnabled).Returns(() => _defaultConfig != null && _defaultConfig.SpanEventsEnabled && _defaultConfig.SpanEventsMaxSamplesStored > 0 && _defaultConfig.DistributedTracingEnabled);
+			Mock.Arrange(() => _spanEventAggregator.IsServiceAvailable).Returns(() => _defaultConfig != null && _defaultConfig.SpanEventsEnabled && _defaultConfig.SpanEventsMaxSamplesStored > 0 && _defaultConfig.DistributedTracingEnabled);
+
+			_spanEventAggregatorInfiniteTracing = Mock.Create<ISpanEventAggregatorInfiniteTracing>();
+			Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.IsServiceEnabled).Returns(() => !string.IsNullOrWhiteSpace(_defaultConfig?.InfiniteTracingTraceObserverHost));
+			Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.IsServiceAvailable).Returns(() => !string.IsNullOrWhiteSpace(_defaultConfig?.InfiniteTracingTraceObserverHost));
+		
 			_spanEventMaker = Mock.Create<ISpanEventMaker>();
 			_customEventAggregator = Mock.Create<ICustomEventAggregator>();
 			_attributeService = Mock.Create<IAttributeService>();
 			_errorService = Mock.Create<IErrorService>();
 
 			_agentTimerService = Mock.Create<IAgentTimerService>();
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService);
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing);
 			_customEventTransformer = new CustomEventTransformer(_configurationService, _attributeService, _customEventAggregator);
 		}
 
@@ -125,7 +136,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 			var errorTrace = Mock.Create<ErrorTraceWireModel>();
 			var transactionEvent = Mock.Create<TransactionEventWireModel>();
 			var transactionTrace = Mock.Create<TransactionTraceWireModel>();
-			var spanEvents = new List<SpanEventWireModel>(){ Mock.Create<SpanEventWireModel>()};
+			var spanEvents = new List<ISpanEventWireModel>(){ new SpanAttributeValueCollection() };
 			var customEvent = Mock.Create<CustomEventWireModel>();
 			var transaction = TestTransactions.CreateDefaultTransaction(uri: "http://www.newrelic.com/test?param=value", statusCode: 404);
 

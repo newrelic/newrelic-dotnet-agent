@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
 				var deserialized = JsonConvert.DeserializeObject<Dictionary<string,object>[]>(actualResult);
 
 				// ASSERT
-				DictionaryComparer.CompareDictionaries(expectedDictionaries, deserialized);
+				AttributeComparer.CompareDictionaries(expectedDictionaries, deserialized);
 			}
 
 			[Test]
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
 				var deserialized = JsonConvert.DeserializeObject<Dictionary<string, object>[]>(actualResult);
 
 				// Assert
-				DictionaryComparer.CompareDictionaries(expectedDictionaries, deserialized);
+				AttributeComparer.CompareDictionaries(expectedDictionaries, deserialized);
 			}
 
 			[Test]

@@ -1,5 +1,4 @@
 ﻿using NewRelic.Core;
-using NewRelic.Core.DistributedTracing;
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
 using System;
@@ -51,50 +50,12 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 		}
 
-		/// <summary>
-		/// Serializes <paramref name="data"/> to JSON and Base64 encodes it with <paramref name="encodingKey"/>
-		/// </summary>
-		/// <param name="data">The data to encode. Must not be null.</param>
-		/// <returns>The serialized and encoded data.</returns>
-		public static string SerializeAndEncodeDistributedTracePayload(DistributedTracePayload data)
-		{
-			var serializedData = data.ToJson();
-			if (serializedData == null)
-			{
-				throw new NullReferenceException("serializedData");
-			}
-
-			return Strings.Base64Encode(serializedData);
-		}
-
-		// This same method was added to DistributedTracePayload, no need for duplicate definitions
-		// TODO: Remove from here
-		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload(string encodedString)
-		{
-			var stringToConvert = encodedString?.Trim();
-			if (!string.IsNullOrEmpty(stringToConvert))
-			{
-				var firstChar = stringToConvert[0];
-				if (firstChar != '{' && firstChar != '[')
-				{
-					stringToConvert = Strings.TryBase64Decode(stringToConvert);
-					if (stringToConvert == null)
-					{
-						Log.Debug("Could not decode distributed trace payload string: " + encodedString);
-						return null;
-					}
-				}
-			}
-
-			return DistributedTracePayload.TryBuildIncomingPayloadFromJson(stringToConvert);
-		}
-
 		public static string EncodeSerializedData(string serializedData, string encodingKey)
 		{
 			return Strings.Base64Encode(serializedData, encodingKey);
 		}
 
-		public static string DecodeSerializedData(string encodedString, string encodingKey)
+		private static string DecodeSerializedData(string encodedString, string encodingKey)
 		{
 			if (encodedString == null)
 			{

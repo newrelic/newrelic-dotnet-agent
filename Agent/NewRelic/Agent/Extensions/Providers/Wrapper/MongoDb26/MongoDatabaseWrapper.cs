@@ -55,28 +55,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb26
 				return Delegates.GetDelegateFor(segment);
 			}
 
-			return Delegates.GetDelegateFor<Task>(
-				onFailure: segment.End,
-				onSuccess: AfterWrapped
-			);
-
-			void AfterWrapped(Task task)
-			{
-				segment.RemoveSegmentFromCallStack();
-
-				transaction.Hold();
-
-				if (task == null)
-				{
-					return;
-				}
-
-				task.ContinueWith(responseTask => agent.HandleExceptions(() =>
-				{
-					segment.End();
-					transaction.Release();
-				}));
-			}
+			return Delegates.GetAsyncDelegateFor<Task>(agent, segment, true);
 		}
 
 		private string TryGetModelName(InstrumentedMethodCall instrumentedMethodCall)

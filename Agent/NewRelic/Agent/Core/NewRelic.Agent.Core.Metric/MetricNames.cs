@@ -1,3 +1,4 @@
+using Grpc.Core;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -733,6 +734,50 @@ namespace NewRelic.Agent.Core.Metric
 		public const string SupportabilityDistributedTraceCreatePayloadException =
 			SupportabilityDistributedTraceCreatePayloadPs + "Exception";
 
+		///Trace Context
+
+		private const string SupportabilityTraceContextPs = SupportabilityPs + "TraceContext" + PathSeparator;
+
+		private const string SupportabilityTraceContextAcceptPs =
+			SupportabilityTraceContextPs + "Accept" + PathSeparator;
+
+		private const string SupportabilityTraceContextCreatePs =
+			SupportabilityTraceContextPs + "Create" + PathSeparator;
+
+		private const string SupportabilityTraceContextTraceParentPs =
+			SupportabilityTraceContextPs + "TraceParent" + PathSeparator;
+
+		private const string SupportabilityTraceContextTraceStatePs =
+			SupportabilityTraceContextPs + "TraceState" + PathSeparator;
+
+		public const string SupportabilityTraceContextAcceptSuccess =
+			SupportabilityTraceContextAcceptPs + "Success";
+
+		public const string SupportabilityTraceContextAcceptException =
+					SupportabilityTraceContextAcceptPs + "Exception";
+
+		public const string SupportabilityTraceContextCreateSuccess =
+			SupportabilityTraceContextCreatePs + "Success";
+
+		public const string SupportabilityTraceContextCreateException =
+					SupportabilityTraceContextCreatePs + "Exception";
+
+		public const string SupportabilityTraceContextTraceParentParseException =
+			SupportabilityTraceContextTraceParentPs + "Parse" + PathSeparator + "Exception";
+
+		public const string SupportabilityTraceContextTraceStateParseException =
+			SupportabilityTraceContextTraceStatePs + "Parse" + PathSeparator + "Exception";
+
+		public const string SupportabilityTraceContextTraceStateInvalidNrEntry =
+			SupportabilityTraceContextTraceStatePs + "InvalidNrEntry";
+
+		public const string SupportabilityTraceContextTraceStateNoNrEntry =
+			SupportabilityTraceContextTraceStatePs + "NoNrEntry";
+
+		//Note the following words from https://source.datanerd.us/agents/agent-specs/blob/master/distributed_tracing/Trace-Context-Payload.md
+		//In addition to these metrics agents are encouraged to add more specific metrics to assist in debugging issues parsing the payload. 
+		//More detailed parse exception metrics SHOULD start with 'Supportability/TraceContext/Parse/Exception'
+
 
 		public static string GetSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode)
 		{
@@ -885,6 +930,25 @@ namespace NewRelic.Agent.Core.Metric
 		public const string SupportabilitySpanEventsSeen = SupportabilitySpanEventsPs + "TotalEventsSeen";
 
 		#endregion Span Metrics
+
+		#region Infinite Tracing Metrics
+
+		private const string SupportabilityInfiniteTracing = "InfiniteTracing" + PathSeparator;
+		private const string SupportabilityInfiniteTracingSpan = SupportabilityInfiniteTracing + "Span" + PathSeparator;
+		public const string SupportabilityInfiniteTracingSpanResponseError = SupportabilityInfiniteTracingSpan + "Response/Error";
+		public const string SupportabilityInfiniteTracingSpanAgentQueueDumped = SupportabilityInfiniteTracingSpan + "AgentQueueDumped";
+		public const string SupportabilityInfiniteTracingSpanSeen = SupportabilityInfiniteTracingSpan + "Seen";
+		public const string SupportabilityInfiniteTracingSpanSent = SupportabilityInfiniteTracingSpan + "Sent";
+		public const string SupportabilityInfiniteTracingSpanReceived = SupportabilityInfiniteTracingSpan + "Received";
+		public const string SupportabilityInfiniteTracingSpanDropped = SupportabilityInfiniteTracingSpan + "Dropped";
+		public const string SupportabilityInfiniteTracingSpanGrpcTimeout = SupportabilityInfiniteTracingSpan + "gRPC" + PathSeparator + "Timeout";
+
+		public static string SupportabilityInfiniteTracingSpanGrpcError(string error)
+		{
+			return SupportabilityInfiniteTracingSpan + "gRPC" + PathSeparator + error;
+		}
+
+		#endregion
 
 		#region Performance Metrics
 

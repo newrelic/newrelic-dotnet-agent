@@ -5,6 +5,12 @@ using System.Threading.Tasks;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
+	public enum TaskContinueWithOption
+	{
+		None,
+		UseSynchronizationContext
+	}
+
 	/// <summary>
 	/// A delegate that is returned by a wrapper and will be called when the wrapped method completes.
 	/// </summary>
@@ -64,31 +70,123 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 			};
 		}
 
+		[Obsolete("Use GetAsyncDelegateFor<T>")]
 		public static AfterWrappedMethodDelegate GetAsyncDelegateFor(IAgent agent, ISegment segment)
+		{
+			return GetAsyncDelegateFor<Task>(agent, segment, TaskContinueWithOption.UseSynchronizationContext);
+		}
+
+		public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment) where T : Task
+		{
+			return GetAsyncDelegateFor<T>(agent, segment, TaskContinueWithOption.UseSynchronizationContext);
+		}
+
+		public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment, bool holdTransactionOpen, Action<T> onComplete) where T : Task
+		{
+			return GetDelegateFor<T>(
+				onFailure: segment.End,
+				onSuccess: InvokeOnSuccess
+			);
+
+			void InvokeOnSuccess(Task task)
+			{
+				OnSuccess(task, agent, segment, holdTransactionOpen, onComplete, TaskContinueWithOption.None, null);
+			}
+		}
+
+		public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment, bool holdTransactionOpen)
 		{
 			return GetDelegateFor<Task>(
 				onFailure: segment.End,
-				onSuccess: task =>
+				onSuccess: InvokeOnSuccess
+			);
+
+			void InvokeOnSuccess(Task task)
+			{
+				OnSuccess<Task>(task, agent, segment, holdTransactionOpen, null, TaskContinueWithOption.None, null);
+			}
+		}
+
+		public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment, TaskContinueWithOption options) where T : Task
+		{
+			return GetDelegateFor<Task>(
+				onFailure: segment.End,
+				onSuccess: InvokeOnSuccess
+			);
+
+			void InvokeOnSuccess(Task task)
+			{
+				OnSuccess<Task>(task, agent, segment, false, null, options, null);
+			}
+		}
+
+		public static AfterWrappedMethodDelegate GetAsyncDelegateFor<T>(IAgent agent, ISegment segment, TaskContinuationOptions continuationOptions)
+		{
+			return GetDelegateFor<Task>(
+				onFailure: segment.End,
+				onSuccess: InvokeOnSuccess
+			);
+
+			void InvokeOnSuccess(Task task)
+			{
+				OnSuccess<Task>(task, agent, segment, false, null, TaskContinueWithOption.None, continuationOptions);
+			}
+		}
+
+		private static void OnSuccess<T>(Task task, IAgent agent, ISegment segment, bool holdTransactionOpen, Action<T> onComplete, TaskContinueWithOption options, TaskContinuationOptions? continuationOptions) where T : Task
+		{
+			segment.RemoveSegmentFromCallStack();
+
+			if (task == null)
+			{
+				return;
+			}
+
+			ITransaction transaction = null;
+			if (holdTransactionOpen)
+			{
+				transaction = agent.CurrentTransaction;
+				transaction.Hold();
+			}
+
+			if (options == TaskContinueWithOption.None)
+			{
+				if (!continuationOptions.HasValue) task.ContinueWith(EndSegment);
+				else task.ContinueWith(EndSegment, continuationOptions.Value);
+			}
+			else
+			{
+				var context = SynchronizationContext.Current;
+				if (context != null)
 				{
-					segment.RemoveSegmentFromCallStack();
+					task.ContinueWith(EndSegment, TaskScheduler.FromCurrentSynchronizationContext());
+				}
+				else
+				{
+					task.ContinueWith(EndSegment, TaskContinuationOptions.ExecuteSynchronously);
+				}
+			}
 
-					if (task == null)
-					{
-						return;
-					}
+			void EndSegment(Task completedTask)
+			{
+				agent.HandleExceptions(EndSegmentWithPossibleException);
 
-					var context = SynchronizationContext.Current;
-					if (context != null)
+				void EndSegmentWithPossibleException()
+				{
+					onComplete?.Invoke(completedTask as T);
+
+					if (completedTask != null && completedTask.IsFaulted)
 					{
-						task.ContinueWith(responseTask => agent.HandleExceptions(segment.End), 
-							TaskScheduler.FromCurrentSynchronizationContext());
+						segment.End(completedTask.Exception);
 					}
 					else
 					{
-						task.ContinueWith(responseTask => agent.HandleExceptions(segment.End), 
-							TaskContinuationOptions.ExecuteSynchronously);
+						segment.End();
 					}
-				});
+
+					transaction?.Release();
+				}
+			}
 		}
 
 		/// <summary>
@@ -97,7 +195,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
 		/// <param name="segment"></param>
 		public static AfterWrappedMethodDelegate GetDelegateFor(ISegment segment)
 		{
-			return segment.IsValid ? GetDelegateFor(segment.End) : NoOp;
+			return segment.IsValid ? GetDelegateFor(null, segment.End, segment.End) : NoOp;
 		}
 	}
 }

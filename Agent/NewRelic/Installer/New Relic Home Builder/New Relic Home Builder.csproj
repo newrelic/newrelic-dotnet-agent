@@ -59,8 +59,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-        "New Relic Home Builder.exe" --solution="$(SolutionDir)\" --configuration=$(Configuration)
-    </PostBuildEvent>
+    <PostBuildEvent>"New Relic Home Builder.exe" --solution="$(SolutionDir)\" --configuration=$(Configuration) --nugetPackageDir="$(NuGetPackageRoot)"
+</PostBuildEvent>
   </PropertyGroup>
 </Project>

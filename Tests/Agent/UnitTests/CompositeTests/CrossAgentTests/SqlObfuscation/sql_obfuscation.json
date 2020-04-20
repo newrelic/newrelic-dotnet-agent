@@ -480,7 +480,7 @@
       //"cassandra",
       //"sqlite"
     ]
-  }
+  },
   //{
   //  "name": "end_of_string_backslash_and_line_comment_with_quite",
   //  "sql": "select * from users where user = 'user1\\' password = 'hunter 2' -- ->don't count this quote",
@@ -641,4 +641,32 @@
   //    "sqlite"
   //  ]
   //}
+  {
+    "name": "in_clause_digits",
+    "sql": "select * from foo where bar IN (123, 456, 789)",
+    "obfuscated": [
+      "select * from foo where bar IN (?, ?, ?)"
+    ],
+    "dialects": [
+      "mysql",
+      "postgres",
+      "oracle",
+      "cassandra",
+      "mssql"
+    ]
+  },
+  {
+    "name": "in_clause_strings",
+    "sql": "select * from foo where bar IN ('asdf', 'fdsa')",
+    "obfuscated": [
+      "select * from foo where bar IN (?, ?)"
+    ],
+    "dialects": [
+      "mysql",
+      "postgres",
+      "oracle",
+      "cassandra",
+      "mssql"
+    ]
+  }
 ]

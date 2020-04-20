@@ -4,13 +4,14 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Agent.Helpers;
+using System;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 {
 	public interface ISyntheticsHeaderHandler
 	{
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundSyntheticsRequestHeader(IInternalTransaction transaction);
-		SyntheticsHeader TryDecodeInboundRequestHeaders(IDictionary<string, string> headers);
+		SyntheticsHeader TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders);
 	}
 
 	public class SyntheticsHeaderHandler : ISyntheticsHeaderHandler
@@ -45,9 +46,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 			};
 		}
 
-		public SyntheticsHeader TryDecodeInboundRequestHeaders(IDictionary<string, string> headers)
+		public SyntheticsHeader TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders)
 		{
-			var syntheticsDataHttpHeader = headers.GetValueOrDefault(SyntheticsHeader.HeaderKey);
+			var syntheticsDataHttpHeader = getHeaders(SyntheticsHeader.HeaderKey)?.FirstOrDefault();
 
 			if (syntheticsDataHttpHeader == null)
 				return null;

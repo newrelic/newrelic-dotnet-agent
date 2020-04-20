@@ -5,6 +5,7 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using Newtonsoft.Json;
@@ -211,7 +212,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 					case "Span":
 						Assert.That(_compositeTestAgent.SpanEvents.Count, Is.EqualTo(2));	// fake parent and first segment
 						var spanEvent = _compositeTestAgent.SpanEvents.First();
-						ValidateAttributes(spanEvent.IntrinsicAttributes, testData, testData.IntrinsicSettings.Events?["Span"]);
+						ValidateAttributes(spanEvent.IntrinsicAttributes(), testData, testData.IntrinsicSettings.Events?["Span"]);
 						break;
 					case "Error":
 						var errorEvent = _compositeTestAgent.ErrorEvents.First();
@@ -223,7 +224,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 			}
 		}
 
-		private void ValidateAttributes(ReadOnlyDictionary<string, object> actualAttributes, DistributedTraceTestData testData, JToken eventSpecificAttributes = null)
+		private void ValidateAttributes(IDictionary<string, object> actualAttributes, DistributedTraceTestData testData, JToken eventSpecificAttributes = null)
 		{
 			// Common (for all target_events)
 			ValidateAttributeSettings(testData.IntrinsicSettings.CommonAttributes, actualAttributes);
@@ -232,8 +233,12 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 			ValidateAttributeSettings(eventSpecificAttributes?.ToObject<AttributesSettings>(), actualAttributes);
 		}
 
-		private void ValidateAttributeSettings(AttributesSettings testDataAttributesSettings, NewRelic.Agent.Core.ReadOnlyDictionary<string, object> actualEventAttributes)
+		private void ValidateAttributeSettings(AttributesSettings testDataAttributesSettings, IDictionary<string, object> actualEventAttributes)
 		{
+
+			//AttributeComparer.CompareDictionary(testDataAttributesSettings.Exact, actualEventAttributes);
+
+
 			testDataAttributesSettings?.Exact?.Keys.ToList().ForEach(attr =>
 			{
 				Assert.That(actualEventAttributes.ContainsKey(attr));
@@ -243,7 +248,7 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 				var attrType = attrValue.GetType();
 				var typedExpectedValue = Convert.ChangeType(expectedValue, attrType);
 
-				Assert.That(typedExpectedValue, Is.EqualTo(attrValue), $"{attr}");
+				Assert.That(typedExpectedValue.IsEqualTo(attrValue), $"{attr}");
 			});
 
 			testDataAttributesSettings?.Expected?.ToList().ForEach(attr =>

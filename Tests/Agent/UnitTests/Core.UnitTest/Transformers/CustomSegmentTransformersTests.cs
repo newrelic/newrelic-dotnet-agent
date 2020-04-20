@@ -7,6 +7,8 @@ using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -183,7 +185,7 @@ namespace NewRelic.Agent.Core.Transformers
 		private static Segment GetSegment(string name, double duration)
 		{
 			var methodCallData = new MethodCallData("foo", "bar", 1);
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(new CustomSegmentData(name));
 
 			return new Segment(new TimeSpan(), TimeSpan.FromSeconds(duration), segment, null);

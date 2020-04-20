@@ -38,6 +38,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private readonly ITransactionEventAggregator _transactionEventAggregator;
 		private readonly ITransactionEventMaker _transactionEventMaker;
 		private readonly ISpanEventAggregator _spanEventAggregator;
+		private readonly ISpanEventAggregatorInfiniteTracing _spanEventAggregatorInfiniteTracing;
 		private readonly ISpanEventMaker _spanEventMaker;
 		private readonly ITransactionAttributeMaker _transactionAttributeMaker;
 		private readonly IErrorTraceAggregator _errorTraceAggregator;
@@ -50,7 +51,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private readonly IAdaptiveSampler _adaptiveSampler;
 		private readonly IErrorService _errorService;
 
-		public TransactionTransformer(ITransactionMetricNameMaker transactionMetricNameMaker, ISegmentTreeMaker segmentTreeMaker, IMetricNameService metricNameService, IMetricAggregator metricAggregator, IConfigurationService configurationService, ITransactionTraceAggregator transactionTraceAggregator, ITransactionTraceMaker transactionTraceMaker, ITransactionEventAggregator transactionEventAggregator, ITransactionEventMaker transactionEventMaker, ITransactionAttributeMaker transactionAttributeMaker, IErrorTraceAggregator errorTraceAggregator, IErrorTraceMaker errorTraceMaker, IErrorEventAggregator errorEventAggregator, IErrorEventMaker errorEventMaker, ISqlTraceAggregator sqlTraceAggregator, ISqlTraceMaker sqlTraceMaker, ISpanEventAggregator spanEventAggregator, ISpanEventMaker spanEventMaker, IAgentTimerService agentTimerService, IAdaptiveSampler adaptiveSampler, IErrorService errorService)
+		public TransactionTransformer(ITransactionMetricNameMaker transactionMetricNameMaker, ISegmentTreeMaker segmentTreeMaker, IMetricNameService metricNameService, IMetricAggregator metricAggregator, IConfigurationService configurationService, ITransactionTraceAggregator transactionTraceAggregator, ITransactionTraceMaker transactionTraceMaker, ITransactionEventAggregator transactionEventAggregator, ITransactionEventMaker transactionEventMaker, ITransactionAttributeMaker transactionAttributeMaker, IErrorTraceAggregator errorTraceAggregator, IErrorTraceMaker errorTraceMaker, IErrorEventAggregator errorEventAggregator, IErrorEventMaker errorEventMaker, ISqlTraceAggregator sqlTraceAggregator, ISqlTraceMaker sqlTraceMaker, ISpanEventAggregator spanEventAggregator, ISpanEventMaker spanEventMaker, IAgentTimerService agentTimerService, 
+			IAdaptiveSampler adaptiveSampler, IErrorService errorService, ISpanEventAggregatorInfiniteTracing spanEventAggregatorInfiniteTracing)
 		{
 			_transactionMetricNameMaker = transactionMetricNameMaker;
 			_segmentTreeMaker = segmentTreeMaker;
@@ -69,6 +71,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_sqlTraceAggregator = sqlTraceAggregator;
 			_sqlTraceMaker = sqlTraceMaker;
 			_spanEventAggregator = spanEventAggregator;
+			_spanEventAggregatorInfiniteTracing = spanEventAggregatorInfiniteTracing;
 			_spanEventMaker = spanEventMaker;
 			_agentTimerService = agentTimerService;
 			_adaptiveSampler = adaptiveSampler;
@@ -85,7 +88,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			ComputeSampled(transaction);
 
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
-			
+
 			// Note: Metric names are normally handled internally by the IMetricBuilder. However, transactionMetricName is an exception because (sadly) it is used for more than just metrics. For example, transaction events need to use metric name, as does RUM and CAT.
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			if (transactionMetricName.ShouldIgnore)
@@ -119,13 +122,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			GenerateAndCollectSqlTrace(immutableTransaction, transactionMetricName, txStats);
 			GenerateAndCollectMetrics(immutableTransaction, apdexT, transactionApdexMetricName, totalTime, txStats);
-			
+
 			// defer the creation of attributes until something asks for them.
 			Func<AttributeCollection> attributes = () => _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
 			attributes = attributes.Memoize();
 
 			// Must generate errors first so other wire models get attribute updates
-			if (immutableTransaction.TransactionMetadata.ErrorData != null)
+			if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
 			{
 				GenerateAndCollectErrorEventTracesAndEvents(immutableTransaction, attributes.Invoke(), transactionMetricName);
 			}
@@ -199,7 +202,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				_errorTraceAggregator.Collect(errorTrace);
 			}
 
-			if (_configurationService.Configuration.ErrorCollectorCaptureEvents) {
+			if (_configurationService.Configuration.ErrorCollectorCaptureEvents)
+			{
 				var errorEvent = _errorEventMaker.GetErrorEvent(immutableTransaction, attributes);
 				using (_agentTimerService.StartNew("CollectErrorEvent"))
 				{
@@ -227,7 +231,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 				if (immutableTransaction.TracingState != null)
 				{
-					duration = Utilities.Helpers.ComputeDuration(immutableTransaction.StartTime, immutableTransaction.TracingState.Timestamp);
+					duration = immutableTransaction.TracingState.TransportDuration;
 					type = EnumNameCache<DistributedTracingParentType>.GetName(immutableTransaction.TracingState.Type);
 					account = immutableTransaction.TracingState.AccountId;
 					app = immutableTransaction.TracingState.AppId;
@@ -242,7 +246,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 					MetricBuilder.TryBuildDistributedTraceTransportDuration(type, account, app, transport, isWebTransaction, duration, txStats);
 				}
 
-				if (immutableTransaction.TransactionMetadata.ErrorData != null)
+				if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
 				{
 					MetricBuilder.TryBuildDistributedTraceErrorsByCaller(type, account, app, transport, isWebTransaction, txStats);
 				}
@@ -268,7 +272,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				GetApdexMetrics(immutableTransaction, apdexT.Value, transactionApdexMetricName, txStats);
 			}
 
-			if (immutableTransaction.TransactionMetadata.ErrorData != null)
+			if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
 			{
 				MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats);
 			}
@@ -303,16 +307,25 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 		private void GenerateAndCollectSpanEvents(ImmutableTransaction immutableTransaction, string transactionName)
 		{
-			if (!_configurationService.Configuration.SpanEventsEnabled)
-				return;
+			var useInfiniteTracing = _spanEventAggregatorInfiniteTracing.IsServiceEnabled && _spanEventAggregatorInfiniteTracing.IsServiceAvailable;
+			var useTraditionalTracing = !useInfiniteTracing && immutableTransaction.Sampled && _spanEventAggregator.IsServiceEnabled && _spanEventAggregator.IsServiceAvailable;
 
-			if (!immutableTransaction.Sampled)
+			if (!useInfiniteTracing && !useTraditionalTracing)
+			{
 				return;
+			}
 
 			var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, transactionName);
 			using (_agentTimerService.StartNew("CollectSpanEvents"))
 			{
-				_spanEventAggregator.Collect(spanEvents);
+				if (useInfiniteTracing)
+				{
+					_spanEventAggregatorInfiniteTracing.Collect(spanEvents.Select(x => x.Span));
+				}
+				else if(useTraditionalTracing)
+				{
+					_spanEventAggregator.Collect(spanEvents);
+				}
 			}
 		}
 
@@ -340,7 +353,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var txSqlTrStats = new SqlTraceStatsCollection();
 
-			foreach(var segment in immutableTransaction.Segments.Where(s => s.Data is DatastoreSegmentData))
+			foreach (var segment in immutableTransaction.Segments.Where(s => s.Data is DatastoreSegmentData))
 			{
 				var datastoreSegmentData = (DatastoreSegmentData)segment.Data;
 				if (datastoreSegmentData.CommandText != null &&
@@ -399,7 +412,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		}
 
 		private void GenerateSegmentMetrics(Segment segment, TransactionMetricStatsCollection txStats)
-		{ 
+		{
 			segment.AddMetricStats(txStats, _configurationService);
 		}
 
@@ -407,10 +420,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			var isWebTransaction = immutableTransaction.IsWebTransaction();
 
-			if (immutableTransaction.TransactionMetadata.ErrorData != null)
+			if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
 			{
 				MetricBuilder.TryBuildFrustratedApdexMetrics(isWebTransaction, transactionApdexMetricName, txStats);
-			} else {
+			}
+			else
+			{
 				MetricBuilder.TryBuildApdexMetrics(transactionApdexMetricName, isWebTransaction, immutableTransaction.ResponseTimeOrDuration, apdexT, txStats);
 			}
 		}

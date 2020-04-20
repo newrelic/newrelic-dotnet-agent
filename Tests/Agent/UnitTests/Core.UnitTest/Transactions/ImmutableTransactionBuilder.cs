@@ -1,7 +1,8 @@
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Attributes;
+using Telerik.JustMock;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Core;
-using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using System;
 using System.Collections.Concurrent;
@@ -14,7 +15,7 @@ namespace NewRelic.Agent.Core.Transactions
 	{
 		public KeyValuePair<string, string>[] RequestParameters { get; }
 		public KeyValuePair<string, object>[] UserAttributes { get; }
-		public ErrorData ErrorData { get; }
+
 
 		public string Uri { get; }
 		public string OriginalUri { get; }
@@ -48,6 +49,8 @@ namespace NewRelic.Agent.Core.Transactions
 		public bool HasCatResponseHeaders { get; }
 		public float Priority { get; }
 
+		public IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState { get; }
+
 		public TestImmutableTransactionMetadata(
 			string uri,
 			string originalUri,
@@ -55,6 +58,7 @@ namespace NewRelic.Agent.Core.Transactions
 			TimeSpan? queueTime,
 			ConcurrentDictionary<string, string> requestParameters,
 			ConcurrentDictionary<string, object> userAttributes,
+			ITransactionErrorState transactionErrorState,
 			int? httpResponseStatusCode,
 			int? httpResponseSubStatusCode,
 			string crossApplicationReferrerPathHash,
@@ -80,6 +84,8 @@ namespace NewRelic.Agent.Core.Transactions
 			// The following must use ToArray because ToArray is thread safe on a ConcurrentDictionary.
 			RequestParameters = requestParameters.ToArray();
 			UserAttributes = userAttributes.ToArray();
+
+			ReadOnlyTransactionErrorState = transactionErrorState;
 
 			HttpResponseStatusCode = httpResponseStatusCode;
 			HttpResponseSubStatusCode = httpResponseSubStatusCode;
@@ -136,6 +142,25 @@ namespace NewRelic.Agent.Core.Transactions
 			_distributedTraceTraceId = distributedTraceTraceId;
 			_distributedTraceSampled = distributedTraceSampled;
 			_hasIncomingDistributedTracePayload = hasIncomingDistributedTracePayload;
+			return this;
+		}
+
+		private DistributedTracing.ITracingState _tracingState;
+
+		public ImmutableTransactionBuilder WithW3CTracing(string guid, string parentId, List<string> vendorStateEntries)
+		{
+			 _tracingState = Mock.Create<DistributedTracing.ITracingState>();
+
+			Mock.Arrange(() => _tracingState.Guid).Returns(guid);
+			Mock.Arrange(() => _tracingState.ParentId).Returns(parentId);
+			Mock.Arrange(() => _tracingState.VendorStateEntries).Returns(vendorStateEntries);
+			Mock.Arrange(() => _tracingState.HasDataForParentAttributes).Returns(true);
+			Mock.Arrange(() => _tracingState.Timestamp).Returns(DateTime.UtcNow);
+			Mock.Arrange(() => _tracingState.TransportDuration).Returns(TimeSpan.FromSeconds(3));
+			Mock.Arrange(() => _tracingState.AccountId).Returns("accountId");
+			Mock.Arrange(() => _tracingState.AppId).Returns("appId");
+			Mock.Arrange(() => _tracingState.TransportType).Returns(Extensions.Providers.Wrapper.TransportType.Kafka);
+
 			return this;
 		}
 
@@ -206,6 +231,8 @@ namespace NewRelic.Agent.Core.Transactions
 			return this;
 		}
 
+		private ITransactionErrorState _transactionErrorState = new TransactionErrorState();
+
 		public ImmutableTransaction Build()
 		{
 			var metadata = new TestImmutableTransactionMetadata(
@@ -215,6 +242,7 @@ namespace NewRelic.Agent.Core.Transactions
 				queueTime: new TimeSpan(1),
 				requestParameters: new ConcurrentDictionary<string, string>(),
 				userAttributes: new ConcurrentDictionary<string, object>(),
+				transactionErrorState: _transactionErrorState,
 				httpResponseStatusCode: 200,
 				httpResponseSubStatusCode: 201,
 				crossApplicationReferrerPathHash: _crossApplicationReferrerPathHash,
@@ -232,7 +260,8 @@ namespace NewRelic.Agent.Core.Transactions
 				hasCatResponseHeaders: false,
 				priority: _priority);
 
-			return new ImmutableTransaction(_transactionName, _segments, metadata, _startTime, _duration, _responseTime, _transactionGuid, true, true, false, 0.5f, _distributedTraceSampled, _distributedTraceTraceId, null);
+			var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+			return new ImmutableTransaction(_transactionName, _segments, metadata, _startTime, _duration, _responseTime, _transactionGuid, true, true, false, 0.5f, _distributedTraceSampled, _distributedTraceTraceId, _tracingState, attribDefSvc.AttributeDefs);
 		}
 	}
 }

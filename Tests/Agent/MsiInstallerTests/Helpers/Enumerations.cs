@@ -3,6 +3,6 @@
 	public static class Enumerations
 	{
 		public enum EnvironmentSetting { Local, Remote, Developer };
-		public enum InstallFeatures { StartMenuShortcuts, InstrumentalAllNETFramework, NETFrameworkSupport, ASPNETTools, NETCoreSupport };
+		public enum InstallFeatures { StartMenuShortcuts, InstrumentAllNETFramework, NETFrameworkSupport, ASPNETTools, NETCoreSupport };
 	}
 }

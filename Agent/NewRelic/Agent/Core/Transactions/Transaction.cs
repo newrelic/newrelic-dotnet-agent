@@ -2,6 +2,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
@@ -52,7 +53,12 @@ namespace NewRelic.Agent.Core.Transactions
 					return Segment.NoOpSegment;
 				}
 
-				return Segments[currentSegmentIndex.Value] ?? Segment.NoOpSegment;
+				if(Segments[currentSegmentIndex.Value] != null)
+				{
+					return Segments[currentSegmentIndex.Value];
+				}
+
+				return Segment.NoOpSegment;
 			}
 		}
 
@@ -92,6 +98,8 @@ namespace NewRelic.Agent.Core.Transactions
 				}
 			}
 		}
+
+		public long? CatContentLength { get; set; }
 
 		public void End(bool captureResponseTime = true)
 		{
@@ -172,7 +180,9 @@ namespace NewRelic.Agent.Core.Transactions
 		{
 			var methodCallData = GetMethodCallData(methodCall);
 
-			return new Segment(this, methodCallData);
+			var attribValues = new SpanAttributeValueCollection();
+
+			return new Segment(this, methodCallData, attribValues);
 		}
 
 		public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)
@@ -182,9 +192,9 @@ namespace NewRelic.Agent.Core.Transactions
 			if (segmentName == null)
 				throw new ArgumentNullException(nameof(segmentName));
 
-			var customSegmentData = CreateCustomSegmentData(segmentName);
 
 			var segment = StartSegmentImpl(methodCall);
+			var customSegmentData = CreateCustomSegmentData(segmentName);
 
 			segment.SetSegmentData(customSegmentData);
 
@@ -215,9 +225,9 @@ namespace NewRelic.Agent.Core.Transactions
 			if (brokerVendorName == null)
 				throw new ArgumentNullException("brokerVendorName");
 
-			var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName);
 
 			var segment = StartSegmentImpl(methodCall);
+			var messageBrokerSegmentData = CreateMessageBrokerSegmentData(destinationType, operation, brokerVendorName, destinationName);
 
 			segment.SetSegmentData(messageBrokerSegmentData);
 
@@ -242,10 +252,10 @@ namespace NewRelic.Agent.Core.Transactions
 			if (Ignored)
 				return Segment.NoOpSegment;
 
-			var datastoreSegmentData = CreateDatastoreSegmentData(parsedSqlStatement, connectionInfo, commandText, queryParameters);
 
 			var segment = StartSegmentImpl(methodCall);
 			segment.IsLeaf = isLeaf;
+			var datastoreSegmentData = CreateDatastoreSegmentData(parsedSqlStatement, connectionInfo, commandText, queryParameters);
 
 			segment.SetSegmentData(datastoreSegmentData);
 
@@ -380,7 +390,7 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 		}
 
-		public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, bool isLeaf = false)
+		public ISegment StartExternalRequestSegmentImpl(MethodCall methodCall, Uri destinationUri, string method, bool isLeaf)
 		{
 			if (Ignored)
 				return Segment.NoOpSegment;
@@ -391,9 +401,9 @@ namespace NewRelic.Agent.Core.Transactions
 			if (!destinationUri.IsAbsoluteUri)
 				throw new ArgumentException("Must use an absolute URI, not a relative URI", nameof(destinationUri));
 
+			var segment = StartSegmentImpl(methodCall);
 			var externalSegmentData = CreateExternalSegmentData(destinationUri, method);
 
-			var segment = StartSegmentImpl(methodCall);
 			segment.IsLeaf = isLeaf;
 
 			segment.SetSegmentData(externalSegmentData);
@@ -402,7 +412,19 @@ namespace NewRelic.Agent.Core.Transactions
 
 			return segment;
 			// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
+
 		}
+
+		public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method)
+		{
+			return StartExternalRequestSegmentImpl(methodCall, destinationUri, method, false);
+		}
+
+		public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method, bool isLeaf = false)
+		{
+			return StartExternalRequestSegmentImpl(methodCall, destinationUri, method, isLeaf);
+		}
+
 
 		public IExternalSegmentData CreateExternalSegmentData(Uri destinationUri, string method)
 		{
@@ -425,10 +447,12 @@ namespace NewRelic.Agent.Core.Transactions
 			if (methodName == null)
 				throw new ArgumentNullException(nameof(methodName));
 
-			var methodSegmentData = CreateMethodSegmentData(typeName, methodName);
 
 			var segment = StartSegmentImpl(methodCall);
 			segment.IsLeaf = isLeaf;
+
+			var methodSegmentData = CreateMethodSegmentData(typeName, methodName);
+
 
 			segment.SetSegmentData(methodSegmentData);
 
@@ -456,9 +480,9 @@ namespace NewRelic.Agent.Core.Transactions
 			if (segmentDisplayName == null)
 				throw new ArgumentNullException("segmentDisplayName");
 
-			var simpleSegmentData = CreateSimpleSegmentData(segmentDisplayName);
 
 			var segment = StartSegmentImpl(methodCall);
+			var simpleSegmentData = CreateSimpleSegmentData(segmentDisplayName);
 
 			segment.SetSegmentData(simpleSegmentData);
 
@@ -555,12 +579,27 @@ namespace NewRelic.Agent.Core.Transactions
 
 			var isUnknownTransportType = transportType < TransportType.Unknown || transportType > TransportType.Other;
 
-			TracingState = Agent._distributedTracePayloadHandler.AcceptDistributedTracePayload(payload, isUnknownTransportType ? TransportType.Unknown : transportType);
+			TracingState = Agent._distributedTracePayloadHandler.AcceptDistributedTracePayload(payload, isUnknownTransportType ? TransportType.Unknown : transportType, StartTime);
 		}
 
-		public void AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType)
+		public void AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType)
 		{
-			TracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, transportType);
+			if (_configuration.DistributedTracingEnabled)
+			{
+				var isUnknownTransportType = transportType < TransportType.Unknown || transportType > TransportType.Other;
+
+				TracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, isUnknownTransportType ? TransportType.Unknown : transportType, StartTime);
+			}
+			else
+			{
+				// NOTE: the key for this dictionary should NOT be case sensitive since HTTP headers are not case sensitive.
+				// See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+
+				// get CAT headers X-NewRelic-Id, X-NewRelic-Transaction, X-NewRelic-App-Data
+				Agent.TryProcessCatRequestData(this, getHeaders);
+			}
+
+			Agent.TryProcessSyntheticsData(this, getHeaders);
 		}
 
 		public IDistributedTracePayload CreateDistributedTracePayload()
@@ -575,22 +614,31 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public void NoticeError(Exception exception)
 		{
-			Log.Debug($"Noticed application error: {exception}");
+			if (Log.IsDebugEnabled) Log.Debug($"Noticed application error: {exception}");
 
 			if (!_errorService.ShouldIgnoreException(exception))
 			{
 				var errorData = _errorService.FromException(exception);
-				TransactionMetadata.AddExceptionData(errorData);
+
+				TransactionMetadata.TransactionErrorState.AddExceptionData(errorData);
+				TryNoticeErrorOnCurrentSpan(errorData);
 			}
 			else
 			{
-				TransactionMetadata.AgentNoticedErrorWasIgnored = true;
+				TransactionMetadata.TransactionErrorState.SetIgnoreAgentNoticedErrors();
 			}
 		}
 
 		public void NoticeError(ErrorData errorData)
 		{
-			TransactionMetadata.AddCustomErrorData(errorData);
+			TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
+			TryNoticeErrorOnCurrentSpan(errorData);
+		}
+
+		private void TryNoticeErrorOnCurrentSpan(ErrorData errorData)
+		{
+			var currentSpan = CurrentSegment as IInternalSpan;
+			if (currentSpan != null) currentSpan.ErrorData = errorData;
 		}
 
 		public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode = null)
@@ -797,7 +845,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public IList<Segment> Segments { get => _segments; }
 
 		private readonly ITimer _timer;
-		private readonly DateTime _startTime;
+
 		private TimeSpan? _forcedDuration;
 
 		//leveraging boxing so that we can use Interlocked.CompareExchange instead of a lock
@@ -808,6 +856,7 @@ namespace NewRelic.Agent.Core.Transactions
 		private int _totalNestedTransactionAttempts;
 		private readonly int _transactionTracerMaxSegments;
 
+		public string TransactionGuid => _guid;
 		private string _guid;
 
 		private volatile bool _ignoreAutoBrowserMonitoring;
@@ -824,10 +873,14 @@ namespace NewRelic.Agent.Core.Transactions
 		private readonly IDatabaseService _databaseService;
 		private readonly IDatabaseStatementParser _databaseStatementParser;
 
+		public IErrorService ErrorService => _errorService;
 		private readonly IErrorService _errorService;
 		private readonly IConfiguration _configuration;
 
 		private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
+		public IAttributeDefinitions AttribDefs => _attribDefs;
+		private readonly IAttributeDefinitions _attribDefs;
+		
 		private object _wrapperToken;
 		private readonly object _sync = new object();
 		private volatile float _priority;
@@ -837,13 +890,13 @@ namespace NewRelic.Agent.Core.Transactions
 		public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
 			ITimer timer, DateTime startTime, ICallStackManager callStackManager, IDatabaseService databaseService,
 			float priority, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler,
-			IErrorService errorService)
+			IErrorService errorService, IAttributeDefinitions attribDefs)
 		{
 			CandidateTransactionName = new CandidateTransactionName(this, initialTransactionName);
 			_guid = GuidGenerator.GenerateNewRelicGuid();
 			_configuration = configuration;
 			Priority = priority;
-			_traceId = configuration.DistributedTracingEnabled ? Guid : null;
+			_traceId = configuration.DistributedTracingEnabled ? GuidGenerator.GenerateNewRelicTraceId() : null;
 			TransactionMetadata = new TransactionMetadata();
 
 			CallStackManager = callStackManager;
@@ -855,6 +908,7 @@ namespace NewRelic.Agent.Core.Transactions
 			_databaseStatementParser = databaseStatementParser;
 			_errorService = errorService;
 			_distributedTracePayloadHandler = distributedTracePayloadHandler;
+			_attribDefs = attribDefs;
 		}
 
 		public int Add(Segment segment)
@@ -871,7 +925,7 @@ namespace NewRelic.Agent.Core.Transactions
 			var transactionName = CandidateTransactionName.CurrentTransactionName;
 			var transactionMetadata = TransactionMetadata.ConvertToImmutableMetadata();
 
-			return new ImmutableTransaction(transactionName, Segments, transactionMetadata, _startTime, _forcedDuration ?? _timer.Duration, ResponseTime, _guid, _ignoreAutoBrowserMonitoring, _ignoreAllBrowserMonitoring, _ignoreApdex, Priority, Sampled, TraceId, TracingState);
+			return new ImmutableTransaction(transactionName, Segments, transactionMetadata, _startTime, _forcedDuration ?? _timer.Duration, ResponseTime, _guid, _ignoreAutoBrowserMonitoring, _ignoreAllBrowserMonitoring, _ignoreApdex, Priority, Sampled, TraceId, TracingState, AttribDefs);
 		}
 
 		public void LogFinest(string message)
@@ -931,6 +985,8 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public bool Ignored => _ignored;
 		public string Guid => _guid;
+
+		private readonly DateTime _startTime;
 		public DateTime StartTime => _startTime;
 
 		/// <summary>
@@ -1052,6 +1108,11 @@ namespace NewRelic.Agent.Core.Transactions
 			{
 				if (Log.IsFinestEnabled) LogFinest($"Segment end {{{segment.ToStringForFinestLogging()}}}");
 
+				if (segment.ErrorData != null)
+				{
+					TransactionMetadata.TransactionErrorState.TrySetSpanIdForErrorData(segment.ErrorData, segment.SpanId);
+				}
+
 				if (segment.UniqueId >= _transactionTracerMaxSegments)
 				{
 					// we're over the segment limit.  Null out the reference to the segment.
@@ -1091,7 +1152,18 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public void InsertDistributedTraceHeaders(Action<string, string> setHeaders)
 		{
-			_distributedTracePayloadHandler.InsertDistributedTraceHeaders(this, setHeaders);
+			if (_configuration.DistributedTracingEnabled)
+			{
+				_distributedTracePayloadHandler.InsertDistributedTraceHeaders(this, setHeaders);
+			}
+			else
+			{
+				var headers = GetRequestMetadata().Where(header => header.Key != null);
+				foreach (var header in headers)
+				{
+					setHeaders(header.Key, header.Value);
+				}
+			}
 		}
 	}
 }

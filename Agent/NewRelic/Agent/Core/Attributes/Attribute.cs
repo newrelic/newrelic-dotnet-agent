@@ -427,6 +427,11 @@ namespace NewRelic.Agent.Core.Attributes
 			return new StringAttribute("error.message", errorMessage, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
 		}
 
+		public static StringAttribute BuildErrorEventSpanIdAttribute(string spanId)
+		{
+			return new StringAttribute("spanId", spanId, AttributeClassification.Intrinsics, AttributeDestinations.ErrorEvent);
+		}
+
 		public static StringAttribute BuildParentTypeAttribute(string value)
 		{
 			return new StringAttribute("parent.type", value, AttributeClassification.Intrinsics, AttributeDestinations.TransactionTrace | AttributeDestinations.ErrorTrace | AttributeDestinations.SqlTrace | AttributeDestinations.TransactionEvent | AttributeDestinations.ErrorEvent);

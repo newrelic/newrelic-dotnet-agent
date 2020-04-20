@@ -4,9 +4,9 @@ namespace NewRelic.Agent.Core.Attributes
 {
 	internal static class AttributeFilterTrieNode
 	{
-		public static Clude GetClusion(this TrieNode<AttributeFilterNode> nodeBuilder, Attribute attribute, AttributeDestinations destination)
+		public static Clude GetClusion(this TrieNode<AttributeFilterNode> nodeBuilder, string name, AttributeDestinations destination)
 		{
-			var childClusion = nodeBuilder.GetClusionFromChildren(attribute, destination);
+			var childClusion = nodeBuilder.GetClusionFromChildren(name, destination);
 			if (childClusion != Clude.Unknown)
 				return childClusion;
 
@@ -20,35 +20,35 @@ namespace NewRelic.Agent.Core.Attributes
 
 			return Clude.Unknown;
 		}
-
-		private static Clude GetClusionFromChildren(this TrieNode<AttributeFilterNode> nodeBuilder, Attribute attribute, AttributeDestinations destination)
+				
+		private static Clude GetClusionFromChildren(this TrieNode<AttributeFilterNode> nodeBuilder, string name, AttributeDestinations destination)
 		{
-			var child = nodeBuilder.ApplicableChild(attribute);
-			var childClusion = child.GetChildClusion(attribute, destination);
+			var child = nodeBuilder.ApplicableChild(name);
+			var childClusion = child.GetChildClusion(name, destination);
 			return childClusion;
 		}
 
-		private static Clude GetChildClusion(this TrieNode<AttributeFilterNode> child, Attribute attribute, AttributeDestinations destination)
+		private static Clude GetChildClusion(this TrieNode<AttributeFilterNode> child, string name, AttributeDestinations destination)
 		{
 			if (child == null)
 				return Clude.Unknown;
 
-			return child.GetClusion(attribute, destination);
+			return child.GetClusion(name, destination);
 		}
-
-		private static bool NodeAppliesToAttribute(this TrieNode<AttributeFilterNode> nodeBuilder, Attribute attribute)
+				
+		private static bool NodeAppliesToAttribute(this TrieNode<AttributeFilterNode> nodeBuilder, string name)
 		{
 			if (nodeBuilder.Data.Wildcard)
-				return attribute.Key.StartsWith(nodeBuilder.Data.Key);
+				return name.StartsWith(nodeBuilder.Data.Key);
 			else
-				return attribute.Key == nodeBuilder.Data.Key;
+				return name == nodeBuilder.Data.Key;
 		}
 
-		private static TrieNode<AttributeFilterNode> ApplicableChild(this TrieNode<AttributeFilterNode> nodeBuilder, Attribute attribute)
+		private static TrieNode<AttributeFilterNode> ApplicableChild(this TrieNode<AttributeFilterNode> nodeBuilder, string name)
 		{
-			return nodeBuilder.Children
+				return nodeBuilder.Children
 				.Where(child => child != null)
-				.Where(child => child.NodeAppliesToAttribute(attribute))
+				.Where(child => child.NodeAppliesToAttribute(name))
 				.FirstOrDefault();
 		}
 	}

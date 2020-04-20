@@ -5,15 +5,18 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -27,6 +30,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
 		private TransactionFinalizedEvent _publishedEvent;
 		private EventSubscription<TransactionFinalizedEvent> _eventSubscription;
+		private AttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 		
 		private const float Priority = 0.5f;
 		private object _wrapperToken;
@@ -41,8 +46,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			_databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
 			_errorService = new ErrorService(configurationService);
 			_distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
-			
-			_transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+			_transaction = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
 			_publishedEvent = null;
 			_eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
 			_wrapperToken = new object();
@@ -158,12 +163,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var transactionName = TransactionName.ForWebTransaction("WebTransaction", "Test");
 
 
-			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
+			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
 
 			for (int i = 0; i < segmentCount; i++)
 			{
-				var segment = new Segment(transaction, new MethodCallData("foo" + i, "bar" + i, 1));
+				var segment = new Segment(transaction, new MethodCallData("foo" + i, "bar" + i, 1), new SpanAttributeValueCollection());
 				segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.test.com"), "method"));
+
 				segment.End();
 			}
 			
@@ -173,19 +179,27 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 		}
 
 		[Test]
-		public void ConstructedTransactionGuidShouldEqualDistributedTraceTraceId()
+		public void TransactionTraceIdShouldBe32Char()
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
-			var name = TransactionName.ForWebTransaction("foo", "bar");
-			var startTime = DateTime.Now;
-			var timer = Mock.Create<ITimer>();
-			var callStackManager = Mock.Create<ICallStackManager>();
-			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, _databaseService, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
+
+			var tx = new Transaction(
+				_configuration, 
+				Arg.IsAny<TransactionName>(),
+				Arg.IsAny<ITimer>(),
+				Arg.IsAny<DateTime>(),
+				Arg.IsAny<ICallStackManager>(),
+				Arg.IsAny<IDatabaseService>(),
+				Arg.IsAny<float>(),
+				Arg.IsAny<IDatabaseStatementParser>(),
+				Arg.IsAny<IDistributedTracePayloadHandler>(),
+				Arg.IsAny<IErrorService>(),
+				Arg.IsAny<IAttributeDefinitions>()
+			);
 
 			// Assert
-			Assert.That(tx.TraceId, Is.Not.Null);
-			Assert.That(tx.TraceId, Is.EqualTo(tx.Guid));
+			Assert.AreEqual(tx.TraceId.Length, 32);
 		}
 
 		/// <summary>
@@ -200,7 +214,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			var timer = Mock.Create<ITimer>();
 			var callStackManager = Mock.Create<ICallStackManager>();
 			var sqlObfuscator = Mock.Create<IDatabaseService>();
-			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService);
+			var tx = new Transaction(_configuration, name, timer, startTime, callStackManager, sqlObfuscator, Priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
 
 			// Assert
 			Assert.That(tx.Guid, Is.Not.Null);

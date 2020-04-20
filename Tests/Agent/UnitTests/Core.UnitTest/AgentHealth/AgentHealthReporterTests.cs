@@ -1,3 +1,4 @@
+using Grpc.Core;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -117,6 +118,36 @@ namespace NewRelic.Agent.Core.AgentHealth
 				() => Assert.AreEqual($"Supportability/AgentVersion/{agentVersion}", _publishedMetrics[0].MetricName.Name),
 				() => Assert.AreEqual(1, _publishedMetrics[0].Data.Value0)
 			);
+		}
+
+		[Test]
+		public void ReportsInfiniteTracingSupportabilityMetrics()
+		{
+			_agentHealthReporter.ReportInfiniteTracingSpanResponseError();
+			_agentHealthReporter.ReportInfiniteTracingSpanGrpcError(EnumNameCache<StatusCode>.GetNameToUpperSnakeCase(StatusCode.Unimplemented));
+			_agentHealthReporter.ReportInfiniteTracingSpanGrpcError(EnumNameCache<StatusCode>.GetNameToUpperSnakeCase(StatusCode.OutOfRange));
+			_agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout(1);
+			_agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout(3);
+			_agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(32);
+			_agentHealthReporter.ReportInfiniteTracingSpanEventsSeen(1);
+			_agentHealthReporter.ReportInfiniteTracingSpanEventsSent();
+			_agentHealthReporter.ReportInfiniteTracingSpanEventsReceived(1);
+			_agentHealthReporter.CollectMetrics();
+
+			var expectedMetricNamesAndValues = new Dictionary<string, long>
+			{
+				{ "Supportability/InfiniteTracing/Span/Response/Error", 1 },
+				{ "Supportability/InfiniteTracing/Span/gRPC/UNIMPLEMENTED", 1 },
+				{ "Supportability/InfiniteTracing/Span/gRPC/OUT_OF_RANGE", 1 },
+				{ "Supportability/InfiniteTracing/Span/gRPC/Timeout", 2 },
+				{ "Supportability/InfiniteTracing/Span/Dropped", 32 },
+				{ "Supportability/InfiniteTracing/Span/Seen", 1 },
+				{ "Supportability/InfiniteTracing/Span/Sent", 1 },
+				{ "Supportability/InfiniteTracing/Span/Received", 1 }
+			};
+			var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));
+
+			CollectionAssert.IsSubsetOf(expectedMetricNamesAndValues, actualMetricNamesAndValues);
 		}
 	}
 }

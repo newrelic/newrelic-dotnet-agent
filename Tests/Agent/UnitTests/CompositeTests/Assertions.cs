@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Core.Attributes;
-using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NUnit.Framework;
 
@@ -158,19 +159,20 @@ namespace CompositeTests
 
 	internal static class SpanAssertions
 	{
-		public static void HasAttributes(IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, SpanEventWireModel span)
+		public static void HasAttributes(IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, ISpanEventWireModel span)
 		{
+
 			var errorMessageBuilder = new StringBuilder();
-			var actualAttributes = span.GetAttributes(attributeClassification);
+			var actualAttributes = span.GetAttributeValues(attributeClassification);
 			var allAttributesMatch = ExpectedAttribute.CheckIfAllAttributesMatch(actualAttributes, expectedAttributes, errorMessageBuilder);
 
 			Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
 		}
 
-		public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, SpanEventWireModel span)
+		public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, ISpanEventWireModel span)
 		{
 			var errorMessageBuilder = new StringBuilder();
-			var actualAttributes = span.GetAttributes(attributeClassification);
+			var actualAttributes = span.GetAttributeValues(attributeClassification);
 			var allAttributesNotFound = ExpectedAttribute.CheckIfAllAttributesNotFound(actualAttributes, unexpectedAttributes, errorMessageBuilder);
 
 			Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
@@ -312,6 +314,11 @@ namespace CompositeTests
 		public string Key;
 		public object Value;
 
+		public static bool CheckIfAllAttributesMatch(IEnumerable<IAttributeValue> actualAttributes, IEnumerable<ExpectedAttribute> expectedAttributes, StringBuilder errorMessageBuilder)
+		{
+			return CheckIfAllAttributesMatch(actualAttributes.ToDictionary(x => x.AttributeDefinition.Name, x => x.Value), expectedAttributes, errorMessageBuilder);
+		}
+
 		public static bool CheckIfAllAttributesMatch(IDictionary<string, object> actualAttributes, IEnumerable<ExpectedAttribute> expectedAttributes, StringBuilder errorMessageBuilder)
 		{
 			var succeeded = true;
@@ -349,6 +356,11 @@ namespace CompositeTests
 				return string.Equals((string)actualValue, (string)expectedValue);
 
 			return actualValue.Equals(expectedValue);
+		}
+
+		public static bool CheckIfAllAttributesNotFound(IEnumerable<IAttributeValue> actualAttributes, IEnumerable<string> unexpectedAttributes, StringBuilder errorMessageBuilder)
+		{
+			return CheckIfAllAttributesNotFound(actualAttributes.ToDictionary(x => x.AttributeDefinition.Name, x => x.Value), unexpectedAttributes, errorMessageBuilder);
 		}
 
 		public static bool CheckIfAllAttributesNotFound(IDictionary<string, object> actualAttributes, IEnumerable<string> unexpectedAttributes, StringBuilder errorMessageBuilder)
@@ -400,16 +412,16 @@ namespace CompositeTests
 		}
 
 
-		public static IDictionary<string, object> GetAttributes(this SpanEventWireModel span, AttributeClassification attributeClassification)
+		public static IDictionary<string, object> GetAttributes(this ISpanEventWireModel span, AttributeClassification attributeClassification)
 		{
 			switch (attributeClassification)
 			{
 				case AttributeClassification.Intrinsics:
-					return span.IntrinsicAttributes;
+					return span.IntrinsicAttributes();
 				case AttributeClassification.AgentAttributes:
-					return span.AgentAttributes;
+					return span.AgentAttributes();
 				case AttributeClassification.UserAttributes:
-					return span.UserAttributes;
+					return span.UserAttributes();
 				default:
 					throw new NotImplementedException();
 			}

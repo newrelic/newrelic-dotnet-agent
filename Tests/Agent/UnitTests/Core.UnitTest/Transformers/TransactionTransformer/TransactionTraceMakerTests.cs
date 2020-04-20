@@ -13,6 +13,7 @@ using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -26,6 +27,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private IDatabaseService _databaseService;
 
 		private IConfigurationService _configurationService;
+
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
 		[SetUp]
 		public void SetUp()
@@ -42,6 +46,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				.Returns<AttributeCollection, AttributeDestinations>((attributes, _) => attributes);
 
 			_transactionTraceMaker = new TransactionTraceMaker(_attributeService, _configurationService);
+
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 		}
 
 		[Test]
@@ -320,7 +326,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"), "SELECT * FROM test_table");
 
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(data);
 
 			return new SegmentTreeNodeBuilder(
@@ -336,7 +342,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				"SELECT * FROM test_table",
 				new ConnectionInfo("My Host", "My Port", "My Database"));
 
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(data);
 
 			return new SegmentTreeNodeBuilder(new Segment(startTime, duration ?? TimeSpan.Zero, segment, null))
@@ -362,7 +368,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			duration = duration ?? TimeSpan.FromSeconds(1);
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration.Value, responseTime, guid, false, false, false, 1.2f, false, string.Empty, null);
+			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration.Value, responseTime, guid, false, false, false, 1.2f, false, string.Empty, null, _attribDefs);
 		}
 	}
 }

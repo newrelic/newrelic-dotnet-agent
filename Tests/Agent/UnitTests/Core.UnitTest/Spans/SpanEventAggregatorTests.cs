@@ -1,11 +1,13 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;
@@ -13,12 +15,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Telerik.JustMock;
+using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
 	internal class SpanEventAggregatorTests
 	{
 		private IDataTransportService _dataTransportService;
+		private IDataStreamingService<Span, RecordStatus> _spanStreamingService;
 		private IAgentHealthReporter _agentHealthReporter;
 		private SpanEventAggregator _spanEventAggregator;
 		private ConfigurationAutoResponder _configurationAutoResponder;
@@ -27,34 +31,58 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		private Action _harvestAction;
 		private TimeSpan? _harvestCycle;
 		private static readonly TimeSpan ConfiguredHarvestCycle = TimeSpan.FromSeconds(5);
+		
+		private bool _actualWillHarvest;
 
 		private const string TimeStampKey = "timestamp";
 		private const string PriorityKey = "priority";
-		private static readonly long TestTime = DateTime.UtcNow.ToUnixTimeMilliseconds();
+		private static readonly DateTime TestTime = DateTime.UtcNow;
 
-		private static readonly SpanEventWireModel[] SpanEvents = {
-			Mock.Create<SpanEventWireModel>(
-				0.654321f,
-				new Dictionary<string, object> {{TimeStampKey, TestTime}, {PriorityKey, 0.654321f}},
-				new Dictionary<string, object> {},
-				new Dictionary<string, object> {}),
-			Mock.Create<SpanEventWireModel>(
-				0.654321f,
-				new Dictionary<string, object> {{TimeStampKey, TestTime + 1}, {PriorityKey, 0.654321f}},
-				new Dictionary<string, object> {},
-				new Dictionary<string, object> {}),
-			Mock.Create<SpanEventWireModel>(
-				0.1f,
-				new Dictionary<string, object> {{TimeStampKey, TestTime}, {PriorityKey, 0.1f}},
-				new Dictionary<string, object> {},
-				new Dictionary<string, object> {})
-		};
+		private static readonly long TestTimeNbr = TestTime.ToUnixTimeMilliseconds();
+
+		private static ISpanEventWireModel[] CreateSpanEventModels()
+		{
+			var result = new List<ISpanEventWireModel>();
+
+			var attribSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+			var attribDefs = attribSvc.AttributeDefs;
+
+			{
+				var spanAttribs = new SpanAttributeValueCollection();
+				spanAttribs.Priority = 0.654321f;
+				attribDefs.Timestamp.TrySetValue(spanAttribs, TestTime);
+				attribDefs.Priority.TrySetValue(spanAttribs, spanAttribs.Priority);
+				result.Add(spanAttribs);
+			}
+
+			{
+				var spanAttribs = new SpanAttributeValueCollection();
+				spanAttribs.Priority = 0.654321f;
+				attribDefs.Timestamp.TrySetValue(spanAttribs, TestTime.AddMilliseconds(1));
+				attribDefs.Priority.TrySetValue(spanAttribs, spanAttribs.Priority);
+				result.Add(spanAttribs);
+			}
+
+			{
+				var spanAttribs = new SpanAttributeValueCollection();
+				spanAttribs.Priority = 0.1f;
+				attribDefs.Timestamp.TrySetValue(spanAttribs, TestTime);
+				attribDefs.Priority.TrySetValue(spanAttribs, spanAttribs.Priority);
+				result.Add(spanAttribs);
+			}
+
+
+			return result.ToArray();
+		}
+
+		private static readonly ISpanEventWireModel[] SpanEvents = CreateSpanEventModels();
 
 		#region Helpers
 		private static IConfiguration GetDefaultConfiguration(int? versionNumber = null)
 		{
 			var configuration = Mock.Create<IConfiguration>();
 			Mock.Arrange(() => configuration.SpanEventsEnabled).Returns(true);
+			Mock.Arrange(() => configuration.DistributedTracingEnabled).Returns(true);
 			Mock.Arrange(() => configuration.SpanEventsMaxSamplesStored).Returns(1000);
 			if (versionNumber.HasValue)
 				Mock.Arrange(() => configuration.ConfigurationVersion).Returns(versionNumber.Value);
@@ -80,12 +108,28 @@ namespace NewRelic.Agent.Core.Spans.Tests
 			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
 			_dataTransportService = Mock.Create<IDataTransportService>();
+			_spanStreamingService = Mock.Create<IDataStreamingService<Span, RecordStatus>>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_processStatic = Mock.Create<IProcessStatic>();
 
 			_scheduler = Mock.Create<IScheduler>();
+
 			Mock.Arrange(() => _scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
-				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => { _harvestAction = action; _harvestCycle = harvestCycle; });
+				.DoInstead<Action, TimeSpan, TimeSpan?>((action, harvestCycle, __) => 
+				{ 
+					_harvestAction = action; 
+					_harvestCycle = harvestCycle;
+					_actualWillHarvest = true;
+				});
+
+			Mock.Arrange(() => _scheduler.StopExecuting(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan?>()))
+				.DoInstead<Action, TimeSpan?>((action,  __) =>
+				{
+					_actualWillHarvest = false;
+				});
+
+			_actualWillHarvest = false;
+
 			_spanEventAggregator = new SpanEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
 
 			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
@@ -99,7 +143,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventsSendOnHarvest()
+		public void EventsSendOnHarvest()
 		{
 			// Arrange
 			const int EventCount = 3;
@@ -107,9 +151,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 			const int ExpectedEventsSeen = EventCount;
 			var actualReservoirSize = int.MaxValue;
 			var actualEventsSeen = int.MaxValue;
-			var sentEvents = null as IEnumerable<SpanEventWireModel>;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.DoInstead<EventHarvestData, IEnumerable<SpanEventWireModel>>((eventHarvestData, events) =>
+			var sentEvents = null as IEnumerable<ISpanEventWireModel>;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+				.DoInstead<EventHarvestData, IEnumerable<ISpanEventWireModel>>((eventHarvestData, events) =>
 				{
 					sentEvents = events;
 					actualReservoirSize = eventHarvestData.ReservoirSize;
@@ -122,15 +166,15 @@ namespace NewRelic.Agent.Core.Spans.Tests
 			_harvestAction();
 
 			// Assert
-			var spanEventWireModels = sentEvents as SpanEventWireModel[] ?? sentEvents.ToArray();
-			Assert.That(spanEventWireModels, Has.Exactly(EventCount).Items);
-			Assert.That(spanEventWireModels, Is.EqualTo(SpanEvents));
+			var SpanAttributeValueCollections = sentEvents as SpanAttributeValueCollection[] ?? sentEvents.ToArray();
+			Assert.That(SpanAttributeValueCollections, Has.Exactly(EventCount).Items);
+			Assert.That(SpanAttributeValueCollections, Is.EqualTo(SpanEvents));
 			Assert.That(actualReservoirSize, Is.EqualTo(ExpectedReservoirSize));
 			Assert.That(actualEventsSeen, Is.EqualTo(ExpectedEventsSeen));
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventSeenReportedOnCollect()
+		public void EventSeenReportedOnCollect()
 		{
 			const int eventCount = 1;
 			// Act
@@ -141,7 +185,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventsSentReportedOnHarvest()
+		public void EventsSentReportedOnHarvest()
 		{
 			const int eventCount = 1;
 			// Arrange
@@ -156,12 +200,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventsAreNotSentIfThereAreNoEventsToSend()
+		public void EventsAreNotSentIfThereAreNoEventsToSend()
 		{
 			// Arrange
 			var sendCalled = false;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+				.Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
 				{
 					sendCalled = true;
 					return DataTransportResponseStatus.RequestSuccessful;
@@ -175,12 +219,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventsAreNotRetainedAfterHarvestIfResponseEqualsDiscard()
+		public void EventsAreNotRetainedAfterHarvestIfResponseEqualsDiscard()
 		{
 			// Arrange
-			IEnumerable<SpanEventWireModel> sentEvents = null;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
+			IEnumerable<SpanAttributeValueCollection> sentEvents = null;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+				.Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
 				{
 					sentEvents = events;
 					return DataTransportResponseStatus.Discard;
@@ -198,13 +242,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_EventsAreRetainedAfterHarvestIfResponseEqualsRetain()
+		public void EventsAreRetainedAfterHarvestIfResponseEqualsRetain()
 		{
 			const int eventCount = 2;
 			// Arrange
 			var sentEventCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+				.Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.Retain;
@@ -224,14 +268,14 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
 		[Test]
-		public void SpanEventAggregatorTests_MetricsAreCorrectAfterHarvestRetryIfSendResponseEqualsDiscard()
+		public void MetricsAreCorrectAfterHarvestRetryIfSendResponseEqualsDiscard()
 		{
 			const int eventCount = 2;
 			// Arrange
 			var firstTime = true;
 			var sentEventCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+				.Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
 					var returnValue = firstTime ? DataTransportResponseStatus.Retain : DataTransportResponseStatus.RequestSuccessful;
@@ -261,14 +305,14 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_HalfOfTheEventsAreRetainedAfterHarvestIfResponseEqualsPostTooBigError()
+		public void HalfOfTheEventsAreRetainedAfterHarvestIfResponseEqualsPostTooBigError()
 		{
 			const int eventCount = 2;
 
 			// Arrange
 			var sentEventCount = int.MinValue;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+				.Returns<EventHarvestData, IEnumerable<ISpanEventWireModel>>((_, events) =>
 				{
 					sentEventCount = events.Count();
 					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
@@ -287,13 +331,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_ZeroEventsAreRetainedAfterHarvestIfResponseEqualsPostTooBigErrorWithOnlyOneEventInPost()
+		public void ZeroEventsAreRetainedAfterHarvestIfResponseEqualsPostTooBigErrorWithOnlyOneEventInPost()
 		{
 			const int eventCount = 1;
 			// Arrange
-			IEnumerable<SpanEventWireModel> sentEvents = null;
-			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
-				.Returns<EventHarvestData, IEnumerable<SpanEventWireModel>>((_, events) =>
+			IEnumerable<SpanAttributeValueCollection> sentEvents = null;
+			Mock.Arrange(() => _dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanAttributeValueCollection>>()))
+				.Returns<EventHarvestData, IEnumerable<SpanAttributeValueCollection>>((_, events) =>
 				{
 					sentEvents = events;
 					return DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard;
@@ -312,7 +356,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_WhenNoEventsArePublishedThenNoEventsAreReportedToAgentHealth()
+		public void WhenNoEventsArePublishedThenNoEventsAreReportedToAgentHealth()
 		{
 			// Act
 			_harvestAction();
@@ -323,7 +367,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_WhenEventIsCollectedThenEventsSeenIsReportedToAgentHealth()
+		public void WhenEventIsCollectedThenEventsSeenIsReportedToAgentHealth()
 		{
 			const int eventCount = 1;
 			// Act
@@ -334,7 +378,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void SpanEventAggregatorTests_WhenHarvestingEventsThenEventSentIsReportedToAgentHealth()
+		public void WhenHarvestingEventsThenEventSentIsReportedToAgentHealth()
 		{
 			const int eventCount = 3;
 			// Arrange
@@ -348,18 +392,21 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		}
 
 		[Test]
-		public void When_span_events_disabled_harvest_is_not_scheduled()
+		public void TraditionalTracingEnabled_HarvestScheduled
+		(	
+			[Values(true, false)] bool spanEventsEnabled,
+			[Values(true, false)] bool distributedTracingEnabled
+		)
 		{
-			_configurationAutoResponder.Dispose();
-			_spanEventAggregator.Dispose();
-			var configuration = Mock.Create<IConfiguration>();
-			Mock.Arrange(() => configuration.SpanEventsEnabled).Returns(false);
-			_configurationAutoResponder = new ConfigurationAutoResponder(configuration);
-			_spanEventAggregator = new SpanEventAggregator(_dataTransportService, _scheduler, _processStatic, _agentHealthReporter);
+			Mock.Arrange(() => _configurationAutoResponder.Configuration.SpanEventsEnabled).Returns(spanEventsEnabled);
+			Mock.Arrange(() => _configurationAutoResponder.Configuration.DistributedTracingEnabled).Returns(distributedTracingEnabled);
+			Mock.Arrange(() => _configurationAutoResponder.Configuration.SpanEventsMaxSamplesStored).Returns(10000);
+			
+			var expectedShouldHarvest = spanEventsEnabled && distributedTracingEnabled;
 
 			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
 
-			Mock.Assert(() => _scheduler.StopExecuting(null, null), Args.Ignore());
+			Assert.AreEqual(expectedShouldHarvest, _actualWillHarvest, "Is Harvesting");
 		}
 
 		[Test]
@@ -367,5 +414,29 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		{
 			Assert.AreEqual(ConfiguredHarvestCycle, _harvestCycle);
 		}
+
+		[Test]
+		public void IsEnabledBasedOnConfigSettings
+		(
+			[Values(true, false)] bool distributedTracingEnabled,
+			[Values(true, false)] bool spanEventsEnabled,
+			[Values(10000, 0,-1)] int reserviorSize
+		)
+		{
+			var expectedIsEnabled = distributedTracingEnabled && spanEventsEnabled && reserviorSize > 0;
+
+			Mock.Arrange(() => _configurationAutoResponder.Configuration.SpanEventsEnabled).Returns(spanEventsEnabled);
+			Mock.Arrange(() => _configurationAutoResponder.Configuration.DistributedTracingEnabled).Returns(distributedTracingEnabled);
+			Mock.Arrange(() => _configurationAutoResponder.Configuration.SpanEventsMaxSamplesStored).Returns(reserviorSize);
+
+			EventBus<AgentConnectedEvent>.Publish(new AgentConnectedEvent());
+
+			NrAssert.Multiple
+			(
+				() => Assert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceEnabled, "Service Enabled"),
+				() => Assert.AreEqual(expectedIsEnabled, _spanEventAggregator.IsServiceAvailable, "Service Enabled")
+			);
+		}
+
 	}
 }

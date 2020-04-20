@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
@@ -16,7 +17,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
 		public static Segment createMessageBrokerSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string vendor, string queue, MetricNames.MessageBrokerDestinationType type, MetricNames.MessageBrokerAction action, bool combinable)
 		{
-			var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
+			var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(new MessageBrokerSegmentData(vendor, queue, type, action));
 			segment.Combinable = combinable;
 

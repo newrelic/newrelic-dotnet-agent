@@ -117,10 +117,14 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 					if (methodReturnMessage.Exception != null)
 					{
 						HandleException(methodReturnMessage.Exception);
+						segment.End(methodReturnMessage.Exception);
+					}
+					else
+					{
+						segment.End();
 					}
 
 					TrySendInvocationMetric("Sync", agent);
-					segment.End();
 				}
 				else if (methodType.Equals(_taskServiceEnum))
 				{
@@ -136,10 +140,18 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 						if (protocolException != null)
 						{
 							HandleException(protocolException);
+							segment.End(protocolException);
+						}
+						else if (t.Exception != null)
+						{
+							segment.End(t.Exception);
+						}
+						else
+						{
+							segment.End();
 						}
 
 						TrySendInvocationMetric("TAP", agent);
-						segment.End();
 						transaction.Release();
 					}
 				}
@@ -156,10 +168,14 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 						if (exception != null)
 						{
 							HandleException(exception);
+							segment.End(exception);
+						}
+						else
+						{
+							segment.End();
 						}
 
 						TrySendInvocationMetric("APM", agent);
-						segment.End();
 						originalCallback?.Invoke(asyncResult);
 						transaction.Release();
 					}
@@ -169,7 +185,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 			void OnFailure(Exception exception)
 			{
 				HandleException(exception);
-				segment.End();
+				segment.End(exception);
 			}
 
 			void HandleException(Exception exception)

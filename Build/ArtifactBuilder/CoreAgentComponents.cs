@@ -56,7 +56,13 @@ namespace ArtifactBuilder
 
 			WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
 
-			var root = new[]
+			GRPCExtensionsLibWindows = new[]
+			{
+				$@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll",
+				$@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll"
+			};
+
+			var root = new List<string>()
 			{
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
@@ -66,10 +72,12 @@ namespace ArtifactBuilder
 				NewRelicXsd,
 				NewRelicLicenseFile,
 				NewRelicThirdPartyNoticesFile,
-				$@"{SourceHomeBuilderPath}\README.md",
+				$@"{SourceHomeBuilderPath}\README.md"
 			};
 
-			SetRootInstallDirectoryComponents(root);
+			root.AddRange(GRPCExtensionsLibWindows);
+
+			SetRootInstallDirectoryComponents(root.ToArray());
 
 			var extensions = agentDllsForExtensionDirectory
 				.Concat(storageProviders)
@@ -86,6 +94,12 @@ namespace ArtifactBuilder
 			LinuxProfiler = Platform == "x64" 
 				? $@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libNewRelicProfiler.so"
 				: null;
+
+			GRPCExtensionsLibLinux = new[]
+			{
+				$@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libgrpc_csharp_ext.x64.so",
+				$@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libgrpc_csharp_ext.x86.so"
+			};
 
 			AgentInfoJson = $@"{SourcePath}\Agent\Miscellaneous\{Platform}\agentinfo.json";
 

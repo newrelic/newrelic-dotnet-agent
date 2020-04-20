@@ -438,7 +438,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 			#region Supportability builders
 
-			public MetricWireModel TryBuildSupportabilityCountMetric(string metricName, int count)
+			public MetricWireModel TryBuildSupportabilityCountMetric(string metricName, long count)
 			{
 				var proposedName = MetricNames.GetSupportabilityName(metricName);
 				var data = MetricDataWireModel.BuildCountData(count);
@@ -762,6 +762,8 @@ namespace NewRelic.Agent.Core.WireModels
 			private MetricWireModel TryBuildSupportabilityDistributedTraceMetric(string proposedName, int count = 1) =>
 				BuildMetric(_metricNameService, proposedName, null, MetricDataWireModel.BuildCountData(count));
 
+			// New Relic Payload (Legacy DT) sup. metrics: https://source.datanerd.us/agents/agent-specs/blob/master/distributed_tracing/New-Relic-Payload.md
+
 			/// <summary>Created during harvest if one or more payloads were accepted.</summary>
 			public MetricWireModel TryBuildAcceptPayloadSuccess(int count) =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceAcceptPayloadSuccess, count);
@@ -801,6 +803,40 @@ namespace NewRelic.Agent.Core.WireModels
 			/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
 			public MetricWireModel TryBuildCreatePayloadException =>
 				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityDistributedTraceCreatePayloadException);
+
+			// Trace Context Supportability Metrics: https://source.datanerd.us/agents/agent-specs/blob/master/distributed_tracing/Trace-Context-Payload.md
+
+			/// <summary>The agent successfully accepted inbound traceparent and tracestate headers.</summary>
+			public MetricWireModel TryBuildTraceContextAcceptSuccess(int count) =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextAcceptSuccess, count);
+
+			/// <summary>The agent successfully created the outbound payloads.</summary>
+			public MetricWireModel TryBuildTraceContextCreateSuccess(int count) =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextCreateSuccess, count);
+
+			/// <summary>A generic exception occurred unrelated to parsing while accepting either payload.</summary>
+			public MetricWireModel TryBuildTraceContextAcceptException =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextAcceptException);
+
+			/// <summary>The inbound traceparent header could not be parsed.</summary>
+			public MetricWireModel TryBuildTraceContextTraceParentParseException =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextTraceParentParseException);
+
+			/// <summary>The inbound tracestate header could not be parsed.</summary>
+			public MetricWireModel TryBuildTraceContextTraceStateParseException =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextTraceStateParseException);
+
+			/// <summary>A generic exception occurred while creating the outbound payloads.</summary>
+			public MetricWireModel TryBuildTraceContextCreateException =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextCreateException);
+
+			/// <summary>The inbound tracestate header exists, and was accepted, but the New Relic entry was invalid.</summary>
+			public MetricWireModel TryBuildTraceContextTraceStateInvalidNrEntry =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextTraceStateInvalidNrEntry);
+
+			/// <summary>The traceparent header exists, and was accepted, but the tracestate header did not contain a trusted New Relic entry.</summary>
+			public MetricWireModel TryBuildTraceContextTraceStateNoNrEntry =>
+				TryBuildSupportabilityDistributedTraceMetric(MetricNames.SupportabilityTraceContextTraceStateNoNrEntry);
 
 
 			public MetricWireModel TryBuildSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode)

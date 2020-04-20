@@ -13,7 +13,7 @@ using NewRelic.Agent.Core.Instrumentation;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Requests;
-using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
@@ -67,7 +67,7 @@ namespace CompositeTests
 
 		public List<ErrorEventWireModel> ErrorEvents { get; } = new List<ErrorEventWireModel>();
 
-		public List<SpanEventWireModel> SpanEvents { get; } = new List<SpanEventWireModel>();
+		public List<ISpanEventWireModel> SpanEvents { get; } = new List<ISpanEventWireModel>();
 
 		public configuration LocalConfiguration { get; }
 
@@ -197,7 +197,7 @@ namespace CompositeTests
 				.Returns(SaveDataAndReturnSuccess(SqlTraces));
 			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ErrorEventWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, ErrorEvents));
-			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<SpanEventWireModel>>()))
+			Mock.Arrange(() => dataTransportService.Send(Arg.IsAny<EventHarvestData>(), Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
 				.Returns(SaveDataAndReturnSuccess(AdditionalHarvestData, SpanEvents));
 
 			EnableAggregators();

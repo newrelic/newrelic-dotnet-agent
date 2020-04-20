@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
@@ -26,6 +29,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private IPathHashMaker _pathHashMaker;
 
 		private ITransactionTransformer _transactionTransformer;
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+			
 
 		[SetUp]
 		public void SetUp()
@@ -34,7 +40,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_transactionMetricNameMaker = Mock.Create<ITransactionMetricNameMaker>();
 			_pathHashMaker = Mock.Create<IPathHashMaker>();
 			_transactionTransformer = Mock.Create<ITransactionTransformer>();
-
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 			_transactionFinalizer = new TransactionFinalizer(_agentHealthReporter, _transactionMetricNameMaker, _pathHashMaker, _transactionTransformer);
 		}
 
@@ -271,7 +277,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		#endregion OnTransactionFinalized
 
-		private static ImmutableTransaction BuildTestTransaction(IEnumerable<Segment> segments = null, DateTime? startTime = null)
+		private ImmutableTransaction BuildTestTransaction(IEnumerable<Segment> segments = null, DateTime? startTime = null)
 		{
 			var transactionMetadata = new TransactionMetadata();
 
@@ -282,7 +288,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			var duration = TimeSpan.FromSeconds(1);
 			var guid = Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false, 1.23f, false, string.Empty, null);
+			return new ImmutableTransaction(name, segments, metadata, startTime.Value, duration, duration, guid, false, false, false, 1.23f, false, string.Empty, null, _attribDefs);
 		}
 
 		private static Segment GetUnfinishedSegment(DateTime transactionStartTime, DateTime startTime)
@@ -292,7 +298,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 		private static Segment GetFinishedSegment(DateTime transactionStartTime, DateTime startTime, TimeSpan? duration)
 		{
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("type", "method", 1));
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("type", "method", 1), new SpanAttributeValueCollection());
 			segment.SetSegmentData(new SimpleSegmentData(""));
 
 			return new Segment(startTime - transactionStartTime, duration, segment, null);

@@ -3,7 +3,7 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
-using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -18,6 +18,21 @@ using System.Net.Sockets;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
+	public interface IDataTransportService
+	{
+		IEnumerable<CommandModel> GetAgentCommands();
+		void SendCommandResults(IDictionary<string, object> commandResults);
+		void SendThreadProfilingData(IEnumerable<ThreadProfilingModel> threadProfilingData);
+		DataTransportResponseStatus Send(IEnumerable<TransactionTraceWireModel> transactionSampleDatas);
+		DataTransportResponseStatus Send(IEnumerable<ErrorTraceWireModel> errorTraceDatas);
+		DataTransportResponseStatus Send(IEnumerable<MetricWireModel> metrics);
+		DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<TransactionEventWireModel> transactionEvents);
+		DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ErrorEventWireModel> errorEvents);
+		DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> enumerable);
+		DataTransportResponseStatus Send(IEnumerable<SqlTraceWireModel> sqlTraceWireModels);
+		DataTransportResponseStatus Send(IEnumerable<CustomEventWireModel> customEvents);
+	}
+
 	public class DataTransportService : ConfigurationBasedService, IDataTransportService
 	{
 		private readonly IConnectionManager _connectionManager;
@@ -64,7 +79,7 @@ namespace NewRelic.Agent.Core.DataTransport
 			return TrySendDataRequest("error_event_data", _configuration.AgentRunId, eventHarvestData, errorEvents);
 		}
 
-		public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<SpanEventWireModel> spanEvents)
+		public DataTransportResponseStatus Send(EventHarvestData eventHarvestData, IEnumerable<ISpanEventWireModel> spanEvents)
 		{
 			return TrySendDataRequest("span_event_data", _configuration.AgentRunId, eventHarvestData, spanEvents);
 		}

@@ -6,13 +6,18 @@ namespace NewRelic.Core.DistributedTracing
 	public class W3CTraceparent
 	{
 		public const byte SupportedVersion = 0;
+		public const byte NumberOfFieldsV0 = 4;
 		private const int TraceparentLengthV0 = 55;
+		private const int VersionIndex = 0;
 		private const int VersionLengthV0 = 2;
+		private const int TraceIdIndex = 1;
 		private const int TraceIdLengthV0 = 32;
+		private const int ParentIdIndex = 2;
 		private const int ParentIdLengthV0 = 16;
+		private const int TraceFlagsIndex = 3;
 		private const int TraceFlagsLengthV0 = 2;
-		private const string ZerodOutTraceId = "00000000000000000000000000000000";
-		private const string ZerodOutParentId = "0000000000000000";
+		private static readonly string ZerodOutTraceId = new string('0', 32);
+		private static readonly string ZerodOutParentId = new string('0', 16);
 		private const byte InvalidVersion255 = 255;
 		private const string InvalidVersionff = "ff";
 
@@ -66,32 +71,43 @@ namespace NewRelic.Core.DistributedTracing
 		/// </summary>
 		/// <param name="traceparentValue">The traceparent header value.</param>
 		/// <returns></returns>
-		public static W3CTraceparent GetW3CTraceparentFromHeader(string traceparentValue)
+		public static W3CTraceparent GetW3CTraceParentFromHeader(string traceparentValue)
 		{
-			if (string.IsNullOrWhiteSpace(traceparentValue) || traceparentValue.Length < TraceparentLengthV0)
+			if (string.IsNullOrEmpty(traceparentValue) || traceparentValue.Length < TraceparentLengthV0)
 			{
 				return null;
 			}
 
 			var traceparentData = traceparentValue.Split(_separator);
-			if (traceparentData.Length != 4)
+			if (traceparentData.Length < NumberOfFieldsV0)
 			{
 				return null;
 			}
 
-			if (!TryParseVersion(traceparentData[0], out var parsedVersion)
-				|| !ValidateTraceId(traceparentData[1])
-				|| !ValidateParentId(traceparentData[2])
-				|| !ValidateTraceFlags(traceparentData[3]))
+			// Attempt to get the version prior to checking number of fields to ensure we do the right thing
+			if (!TryParseVersion(traceparentData[VersionIndex], out var parsedVersion))
+			{
+				return null;
+			}
+
+			if(parsedVersion == SupportedVersion &&
+				traceparentData.Length != NumberOfFieldsV0)
+			{
+				return null;
+			}
+
+			if (!ValidateTraceId(traceparentData[TraceIdIndex])
+				|| !ValidateParentId(traceparentData[ParentIdIndex])
+				|| !ValidateTraceFlags(traceparentData[TraceFlagsIndex]))
 			{
 				return null;
 			}
 
 			return new W3CTraceparent(
 				version: parsedVersion,
-				traceId: traceparentData[1],
-				parentId: traceparentData[2],
-				traceFlags: traceparentData[3]);
+				traceId: traceparentData[TraceIdIndex],
+				parentId: traceparentData[ParentIdIndex],
+				traceFlags: traceparentData[TraceFlagsIndex]);
 		}
 
 		public KeyValuePair<string, string> ToHeaderFormat()

@@ -1,5 +1,7 @@
 using System;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Errors;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -11,6 +13,7 @@ namespace NewRelic.Agent.Core.Transactions
 		/// </summary>
 		/// <returns></returns>
 		TimeSpan GetRelativeTime();
+		DateTime StartTime { get; }
 
 		/// <summary>
 		/// Returns the segment id on the top of the current call stack;
@@ -33,5 +36,9 @@ namespace NewRelic.Agent.Core.Transactions
 		void CallStackPop(Segment segment, bool notifyParent = false);
 
 		int CurrentManagedThreadId { get; }
+
+		IAttributeDefinitions AttribDefs { get; }
+
+		IErrorService ErrorService { get; }
 	}
 }

@@ -2,6 +2,7 @@
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
@@ -76,7 +77,7 @@ namespace NewRelic.Providers.Wrapper.Sql
 			segment.MakeCombinable();
 
 			return ExecuteAsAsync
-				? Delegates.GetAsyncDelegateFor(agent, segment)
+				? Delegates.GetAsyncDelegateFor<Task>(agent, segment)
 				: Delegates.GetDelegateFor(segment);
 		}
 	}

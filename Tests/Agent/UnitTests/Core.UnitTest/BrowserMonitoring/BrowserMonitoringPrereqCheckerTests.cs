@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -224,7 +225,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 			Mock.Arrange(() => _internalTransaction.IgnoreAllBrowserMonitoring).Returns(ignoreAllBrowserMonitoring);
 			Mock.Arrange(() => _internalTransaction.IgnoreAutoBrowserMonitoring).Returns(ignoreAutoBrowserMonitoring);
 
-			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, ignoreAutoBrowserMonitoring, ignoreAllBrowserMonitoring, false, 0.5f, false, string.Empty, null);
+			var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, ignoreAutoBrowserMonitoring, ignoreAllBrowserMonitoring, false, 0.5f, false, string.Empty, null, attribDefSvc.AttributeDefs);
 		}
 	}
 }

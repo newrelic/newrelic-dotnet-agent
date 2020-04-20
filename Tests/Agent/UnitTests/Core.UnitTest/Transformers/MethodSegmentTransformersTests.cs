@@ -10,6 +10,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -170,7 +171,7 @@ namespace NewRelic.Agent.Core.Transformers
 
 		private static Segment GetSegment(string type, string method)
 		{
-			var builder = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var builder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			builder.SetSegmentData(new MethodSegmentData(type, method));
 			builder.End();
 			return builder;

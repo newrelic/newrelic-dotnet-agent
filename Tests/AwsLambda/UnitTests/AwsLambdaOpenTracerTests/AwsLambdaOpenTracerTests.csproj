@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\AwsLambda\AwsLambdaOpenTracer\Tracer.csproj" />
+    <ProjectReference Include="..\..\..\Agent\UnitTests\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>
 
 </Project>

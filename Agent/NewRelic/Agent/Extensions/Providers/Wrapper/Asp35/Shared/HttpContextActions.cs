@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions.Collections;
@@ -128,9 +129,32 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 		private static void ProcessHeaders(IAgent agent, HttpContext httpContext)
 		{
-			var headers = httpContext.Request.Headers.ToDictionary();
-			var contentLength = httpContext.Request.ContentLength;
-			agent.ProcessInboundRequest(headers, TransportType.HTTP, contentLength);
+			if (!agent.Configuration.W3CEnabled)
+			{
+				var transactionExperimental = agent.CurrentTransaction.GetExperimentalApi();
+				transactionExperimental.CatContentLength = httpContext.Request.ContentLength;
+				var headers = httpContext.Request.Headers.ToDictionary();
+				agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			}
+			else
+			{
+				agent.CurrentTransaction.AcceptDistributedTraceHeaders(GetHeaderValue, TransportType.HTTP);
+			}
+
+			IEnumerable<string> GetHeaderValue(string key)
+			{
+				string value = null;
+				if (key.Equals("Content-Length"))
+				{
+					value = httpContext.Request.ContentLength.ToString();
+				}
+				else
+				{
+					value = httpContext.Request.Headers[key];
+				}
+
+				return string.IsNullOrEmpty(value) ? null : new string[] { value };
+			}
 		}
 
 		private static void TryWriteResponseHeaders(IAgent agent, HttpContext httpContext)

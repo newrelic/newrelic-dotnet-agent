@@ -5,7 +5,6 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utilization;
-using NewRelic.Core;
 using NewRelic.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
@@ -264,7 +263,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				_dnsStatic.GetHostName(),
 				appNames,
 				AgentVersion.Version,
-				GetAgentVersionTimestamp(),
+				AgentInstallConfiguration.AgentVersionTimestamp,
 				new SecuritySettingsModel
 					(
 					_configuration.CaptureRequestParameters,
@@ -280,12 +279,6 @@ namespace NewRelic.Agent.Core.DataTransport
 				_configuration.SecurityPoliciesTokenExists ? new SecurityPoliciesSettingsModel(_configuration) : null,
 				new EventHarvestConfigModel(_configuration)
 			);
-		}
-
-		private long GetAgentVersionTimestamp()
-		{
-			var timestamp = AgentInstallConfiguration.AgentVersionTimestamp.ToUnixTimeMilliseconds();
-			return timestamp;
 		}
 
 		private string GetIdentifier()

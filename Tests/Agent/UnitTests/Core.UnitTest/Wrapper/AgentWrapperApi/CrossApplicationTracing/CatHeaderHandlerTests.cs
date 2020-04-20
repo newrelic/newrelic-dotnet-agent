@@ -1,4 +1,5 @@
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
@@ -31,6 +32,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
 		private IConfiguration _configuration;
 
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+
 		[SetUp]
 		public void SetUp()
 		{
@@ -40,6 +44,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 			var catMetrics = Mock.Create<ICATSupportabilityMetricCounters>();
 			_catHeaderHandler = new CatHeaderHandler(configurationService, catMetrics);
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 		}
 
 		#region inbound CAT request - outbound CAT response
@@ -53,9 +58,24 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{TransactionDataHttpHeader, Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
 
 			Assert.IsNull(responseData);
+
+			List<string> GetHeaderValue(string key)
+			{
+				var headerValues = new List<string>();
+				foreach (var item in headers)
+				{
+					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+					{
+						headerValues.Add(item.Value);
+					}
+				}
+				return headerValues;
+			}
+
+
 		}
 
 		[Test]
@@ -66,9 +86,22 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{"WRONG KEY", Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
 
 			Assert.IsNull(responseData);
+
+			List<string> GetHeaderValue(string key)
+			{
+				var headerValues = new List<string>();
+				foreach (var item in headers)
+				{
+					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+					{
+						headerValues.Add(item.Value);
+					}
+				}
+				return headerValues;
+			}
 		}
 
 		[Test]
@@ -79,9 +112,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{TransactionDataHttpHeader, "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]"}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
 
 			Assert.IsNull(responseData);
+
+			List<string> GetHeaderValue(string key)
+			{
+				var headerValues = new List<string>();
+				foreach (var item in headers)
+				{
+					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+					{
+						headerValues.Add(item.Value);
+					}
+				}
+				return headerValues;
+			}
+
 		}
 
 		[Test]
@@ -93,9 +140,23 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{"X-NewRelic-Transaction", "unexpectedValue"}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
 
 			Assert.IsNull(responseData);
+
+			List<string> GetHeaderValue(string key)
+			{
+				var headerValues = new List<string>();
+				foreach (var item in headers)
+				{
+					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+					{
+						headerValues.Add(item.Value);
+					}
+				}
+				return headerValues;
+			}
+
 		}
 
 		[Test]
@@ -107,7 +168,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{"X-NewRelic-Transaction", Strings.Base64Encode(@"[""guid"", ""false"", ""tripId"", ""pathHash""]")}
 			};
 
-			var requestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers);
+			var requestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
 
 			Assert.NotNull(requestData);
 			NrAssert.Multiple
@@ -117,6 +178,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				() => Assert.AreEqual("tripId", requestData.TripId),
 				() => Assert.AreEqual(false, requestData.Unused)
 			);
+
+			List<string> GetHeaderValue(string key)
+			{
+				var headerValues = new List<string>();
+				foreach (var item in headers)
+				{
+					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+					{
+						headerValues.Add(item.Value);
+					}
+				}
+				return headerValues;
+			}
 		}
 
 		[Test]
@@ -344,8 +418,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			ITimer timer = Mock.Create<ITimer>();
 			Mock.Arrange(() => timer.Duration).Returns(duration);
 
+			IAttributeDefinitionService attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+
 			var priority = 0.5f;
-			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
+			var tx = new Transaction(_configuration, name, timer, startTime, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(),Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), attribDefSvc.AttributeDefs);
 			tx.TransactionMetadata.SetCrossApplicationPathHash(pathHash);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid(referrerGuid);
 			tx.TransactionMetadata.SetCrossApplicationReferrerTripId(referrerTripId);

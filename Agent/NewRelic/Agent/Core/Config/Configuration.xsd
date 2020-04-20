@@ -967,7 +967,6 @@
           </xs:complexType>
         </xs:element>
 
-
         <xs:element name="crossApplicationTracer" minOccurs="0" maxOccurs="1">
           <xs:annotation>
             <xs:documentation>
@@ -986,6 +985,47 @@
           </xs:complexType>
         </xs:element>
 
+        <xs:element name="infiniteTracing" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:all>
+              <xs:element name="trace_observer" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                  <xs:attribute name="host" type="xs:string">
+                    <xs:annotation>
+                      <xs:documentation>
+                        The host name of the infinite tracing observer to which the agent should send spans.
+                        This host name should not include protocol (such as http: or https:) and should not
+                        include a port
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+                  <xs:attribute name="port" type="xs:string" default="443">
+                    <xs:annotation>
+                      <xs:documentation>
+                        The port on the trace observer to send spans to.
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="span_events" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                  <xs:attribute name="queue_size" type="xs:int" default="100000">
+                    <xs:annotation>
+                      <xs:documentation>
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+                </xs:complexType>
+              </xs:element>
+            </xs:all>
+          </xs:complexType>
+        </xs:element>
+        
         <xs:element name="distributedTracing" minOccurs="0" maxOccurs="1">
           <xs:annotation>
             <xs:documentation>
@@ -993,7 +1033,6 @@
               Default is false.
             </xs:documentation>
           </xs:annotation>
-
           <xs:complexType>
             <xs:attribute name="enabled" type="xs:boolean" default="false">
               <xs:annotation>

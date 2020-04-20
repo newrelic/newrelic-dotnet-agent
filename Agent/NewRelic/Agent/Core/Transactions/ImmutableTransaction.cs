@@ -4,6 +4,7 @@ using System.Linq;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Spans;
 using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 
 namespace NewRelic.Agent.Core.Transactions
@@ -30,8 +31,10 @@ namespace NewRelic.Agent.Core.Transactions
 		public readonly string TraceId;
 		public readonly ITracingState TracingState;
 
+		private readonly IAttributeDefinitions _attribDefs;
+
 		// The sqlObfuscator parameter should be the SQL obfuscator as defined by user configuration: obfuscate, off, or raw.
-		public ImmutableTransaction(ITransactionName transactionName, IEnumerable<Segment> segments, IImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, TimeSpan? responseTime, string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, float priority, bool? sampled, string traceId, ITracingState tracingState)
+		public ImmutableTransaction(ITransactionName transactionName, IEnumerable<Segment> segments, IImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, TimeSpan? responseTime, string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, float priority, bool? sampled, string traceId, ITracingState tracingState, IAttributeDefinitions attribDefs)
 		{
 			TransactionName = transactionName;
 			Segments = segments.Where(segment => segment != null).ToList();
@@ -47,22 +50,25 @@ namespace NewRelic.Agent.Core.Transactions
 			Sampled = sampled.HasValue ? sampled.Value : false; // TODO: only tests call this constructor except for TransactionFinalizer and TxTransformer, the latter setting sampled before calling it. 
 			TraceId = traceId;
 			TracingState = tracingState;
+			//TracingState = tracingState ?? new NoOpTracingState();
+
+			_attribDefs = attribDefs;
 		}
 
-		private Attribute[] _commonSpanAttributes;
-		public Attribute[] CommonSpanAttributes
+		private SpanAttributeValueCollection _commonSpanAttributes;
+		public SpanAttributeValueCollection CommonSpanAttributes
 		{
 			get
 			{
 				if (_commonSpanAttributes == null)
 				{
-					_commonSpanAttributes = new Attribute[] {
-						Attribute.BuildTypeAttribute(TypeAttributeValue.Span),
-						Attribute.BuildDistributedTraceIdAttributes(TraceId ?? Guid),
-						Attribute.BuildTransactionIdAttribute(Guid),
-						Attribute.BuildSampledAttribute(Sampled),
-						Attribute.BuildPriorityAttribute(Priority)
-					};
+					_commonSpanAttributes = new SpanAttributeValueCollection();
+
+					_attribDefs.Type.TrySetValue(_commonSpanAttributes, TypeAttributeValue.Span);
+					_attribDefs.DistributedTraceId.TrySetValue(_commonSpanAttributes, TraceId);
+					_attribDefs.TransactionId.TrySetValue(_commonSpanAttributes, Guid);
+					_attribDefs.Sampled.TrySetValue(_commonSpanAttributes, Sampled);
+					_attribDefs.Priority.TrySetValue(_commonSpanAttributes, Priority);
 				}
 
 				return _commonSpanAttributes;

@@ -16,6 +16,8 @@ using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -23,6 +25,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 	{
 		private static IDatabaseService _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
 		private static IErrorService _errorService = new ErrorService(Mock.Create<IConfigurationService>());
+		private static IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
 		public static IConfiguration GetDefaultConfiguration()
 		{
@@ -51,9 +54,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var placeholderMetadataBuilder = new TransactionMetadata();
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 			
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null);
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null, _attribDefSvc.AttributeDefs);
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(GetDefaultConfiguration(), immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService);
+			var internalTransaction = new Transaction(GetDefaultConfiguration(), immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService, _attribDefSvc.AttributeDefs);
 			if (segments.Any())
 			{
 				foreach (var segment in segments)
@@ -86,21 +89,23 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			var guid = Guid.NewGuid().ToString();
 
-			var transaction = new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null);
+			var transaction = new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null, _attribDefSvc.AttributeDefs);
 			return transaction;
 		}
 
 		public static Segment BuildSegment(ITransactionSegmentState txSegmentState, DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
 		{
 			if (txSegmentState == null)
-				txSegmentState = Mock.Create<ITransactionSegmentState>();
+				txSegmentState = TransactionSegmentStateHelpers.GetItransactionSegmentState();
+
 			methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 			var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, null), commandText, new ConnectionInfo(host, portPathOrId, databaseName));
-			var segment = new Segment(txSegmentState, methodCallData);
+			var segment = new Segment(txSegmentState, methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(data);
 
 			return new Segment(startTime, duration, segment, parameters);
 		}
+
 		private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null)
 		{
 			if (uri != null)

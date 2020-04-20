@@ -1,8 +1,8 @@
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Collections;
 using NewRelic.SystemInterfaces;
 using System;
@@ -10,38 +10,46 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace NewRelic.Agent.Core.Spans
+namespace NewRelic.Agent.Core.Aggregators
 {
 	public interface ISpanEventAggregator
 	{
-		void Collect(SpanEventWireModel wireModel);
-		void Collect(IEnumerable<SpanEventWireModel> wireModels);
+		void Collect(ISpanEventWireModel wireModel);
+		void Collect(IEnumerable<ISpanEventWireModel> wireModels);
+		bool IsServiceEnabled { get; }
+		bool IsServiceAvailable { get; }
 	}
 
-	public class SpanEventAggregator : AbstractAggregator<SpanEventWireModel>, ISpanEventAggregator
+	public class SpanEventAggregator : AbstractAggregator<ISpanEventWireModel>, ISpanEventAggregator
 	{
 		private const double ReservoirReductionSizeMultiplier = 0.5;
 		private readonly IAgentHealthReporter _agentHealthReporter;
 		private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
 
-		private ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>> _spanEvents = new ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>>(0);
+		private ConcurrentPriorityQueue<PrioritizedNode<ISpanEventWireModel>> _spanEvents = new ConcurrentPriorityQueue<PrioritizedNode<ISpanEventWireModel>>(0);
 
 		protected override TimeSpan HarvestCycle => _configuration.SpanEventsHarvestCycle;
-		protected override bool IsEnabled => _configuration.SpanEventsEnabled;
+
+		protected override bool IsEnabled => _configuration.SpanEventsEnabled
+			&& _configuration.SpanEventsMaxSamplesStored > 0 
+			&& _configuration.DistributedTracingEnabled;
+
+		public bool IsServiceEnabled => IsEnabled;
+		public bool IsServiceAvailable => IsEnabled;
 
 		/// <summary>
 		/// Atomically set a new ConcurrentPriorityQueue to _spanEvents and return the previous ConcurrentPriorityQueue reference;
 		/// </summary>
 		/// <returns>A reference to the previous ConcurrentPriorityQueue</returns>
-		private ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>> GetAndResetCollection()
+		private ConcurrentPriorityQueue<PrioritizedNode<ISpanEventWireModel>> GetAndResetCollection()
 		{
-			return Interlocked.Exchange(ref _spanEvents, new ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>>(_configuration.SpanEventsMaxSamplesStored));
+			return Interlocked.Exchange(ref _spanEvents, new ConcurrentPriorityQueue<PrioritizedNode<ISpanEventWireModel>>(_configuration.SpanEventsMaxSamplesStored));
 		}
 
-		private int AddWireModels(IEnumerable<SpanEventWireModel> wireModels)
+		private int AddWireModels(IEnumerable<ISpanEventWireModel> wireModels)
 		{
 			var nodes = wireModels.Where(model => null != model)
-				.Select(model => new PrioritizedNode<SpanEventWireModel>(model));
+				.Select(model => new PrioritizedNode<ISpanEventWireModel>(model));
 			return _spanEvents.Add(nodes);
 		}
 
@@ -59,14 +67,14 @@ namespace NewRelic.Agent.Core.Spans
 			_readerWriterLockSlim.Dispose();
 		}
 
-		public override void Collect(SpanEventWireModel wireModel)
+		public override void Collect(ISpanEventWireModel wireModel)
 		{
 			_agentHealthReporter.ReportSpanEventCollected(1);
 
 			_readerWriterLockSlim.EnterReadLock();
 			try
 			{
-				_spanEvents.Add(new PrioritizedNode<SpanEventWireModel>(wireModel));
+				_spanEvents.Add(new PrioritizedNode<ISpanEventWireModel>(wireModel));
 			}
 			finally
 			{
@@ -74,7 +82,7 @@ namespace NewRelic.Agent.Core.Spans
 			}
 		}
 
-		public void Collect(IEnumerable<SpanEventWireModel> wireModels)
+		public void Collect(IEnumerable<ISpanEventWireModel> wireModels)
 		{
 			int added;
 			_readerWriterLockSlim.EnterReadLock();
@@ -91,7 +99,7 @@ namespace NewRelic.Agent.Core.Spans
 
 		protected override void Harvest()
 		{
-			ConcurrentPriorityQueue<PrioritizedNode<SpanEventWireModel>> spanEventsPriorityQueue;
+			ConcurrentPriorityQueue<PrioritizedNode<ISpanEventWireModel>> spanEventsPriorityQueue;
 
 			_readerWriterLockSlim.EnterWriteLock();
 			try
@@ -123,12 +131,12 @@ namespace NewRelic.Agent.Core.Spans
 			_spanEvents.Resize(newSize);
 		}
 
-		private void RetainEvents(IEnumerable<SpanEventWireModel> wireModels)
+		private void RetainEvents(IEnumerable<ISpanEventWireModel> wireModels)
 		{
 			AddWireModels(wireModels);
 		}
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SpanEventWireModel> spanEvents)
+		private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<ISpanEventWireModel> spanEvents)
 		{
 			switch (responseStatus)
 			{

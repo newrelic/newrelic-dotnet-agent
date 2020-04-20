@@ -56,7 +56,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsErrorTrace_IfExceptionIsNoticed()
 		{
-			var errorDataIn = _errorService.FromParts("My message", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
+			var errorDataIn = _errorService.FromMessage("My message", (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual("My message", errorTrace.Message),
-				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
+				() => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
@@ -75,8 +75,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsFirstException_IfMultipleExceptionsNoticed()
 		{
-			var errorData1 = _errorService.FromParts("My message", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
-			var errorData2 = _errorService.FromParts("My message2", "My type name2", DateTime.UtcNow, (Dictionary<string, object>)null);
+			var errorData1 = _errorService.FromMessage("My message", (Dictionary<string, object>)null);
+			var errorData2 = _errorService.FromMessage("My message2", (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData1, errorData2 });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual("My message", errorTrace.Message),
-				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
+				() => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
@@ -95,7 +95,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		[Test]
 		public void GetErrorTrace_ReturnsExceptionsBeforeStatusCodes()
 		{
-			var errorDataIn = _errorService.FromParts("My message", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
+			var errorDataIn = _errorService.FromMessage("My message", (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorDataIn });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual("My message", errorTrace.Message),
-				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
+				() => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
@@ -116,7 +116,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			Mock.Arrange(() => _configurationService.Configuration.StripExceptionMessages).Returns(true);
 
-			var errorData = _errorService.FromParts("This message should be stripped.", "My type name", DateTime.UtcNow, (Dictionary<string, object>)null);
+			var errorData = _errorService.FromMessage("This message should be stripped.", (Dictionary<string, object>)null);
 			var transaction = BuildTestTransaction(uri: "http://www.newrelic.com/test?param=value", transactionExceptionDatas: new[] { errorData });
 			var attributes = new AttributeCollection();
 			var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.AreEqual("WebTransaction/Name", errorTrace.Path),
 				() => Assert.AreEqual(StripExceptionMessagesMessage, errorTrace.Message),
-				() => Assert.AreEqual("My type name", errorTrace.ExceptionClassName),
+				() => Assert.AreEqual("Custom Error", errorTrace.ExceptionClassName),
 				() => Assert.AreEqual(transaction.Guid, errorTrace.Guid)
 			);
 		}
@@ -140,14 +140,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (statusCode != null)
 				transactionMetadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (transactionExceptionDatas != null)
-				transactionExceptionDatas.ForEach(data => transactionMetadata.AddExceptionData(data));
+				transactionExceptionDatas.ForEach(data => transactionMetadata.TransactionErrorState.AddExceptionData(data));
 
 			var name = TransactionName.ForWebTransaction("foo", "bar");
 			var segments = Enumerable.Empty<Segment>();
 			var metadata = transactionMetadata.ConvertToImmutableMetadata();
 			guid = guid ?? Guid.NewGuid().ToString();
 
-			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null);
+			var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+
+			return new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null, attribDefSvc.AttributeDefs);
 		}
 	}
 }

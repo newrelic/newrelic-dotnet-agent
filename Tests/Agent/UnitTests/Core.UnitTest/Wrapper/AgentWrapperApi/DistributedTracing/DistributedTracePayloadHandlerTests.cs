@@ -2,10 +2,15 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
@@ -21,10 +26,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 	[TestFixture]
 	public class DistributedTracePayloadHandlerTests
 	{
-		private const string DistributedTraceHeaderName = "Newrelic";
+		private const string NewRelicPayloadHeaderName = "newrelic";
 		private const string TracestateHeaderName = "tracestate";
 		private const string TraceParentHeaderName = "traceparent";
-
+		private readonly DateTime mockStartTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(3));
 
 		private const DistributedTracingParentType DtTypeApp = DistributedTracingParentType.App;
 		private const DistributedTracingParentType IncomingDtType = DistributedTracingParentType.Mobile;
@@ -39,10 +44,31 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		private const float IncomingPriority = 0.75f;
 		private const string TransactionId = "b85cf40e58084c21";
 
+		private static DateTime Timestamp = DateTime.UtcNow;
+		private const string ParentId = "b7ad6b7169203331";
+
+
+		private const string ValidTraceparent = "00-" + IncomingDtTraceId + "-" + ParentId + "-01";
+		private const string InvalidTraceparent = "00-12345-56789-01";
+
+		private static readonly string ValidTracestate = IncomingTrustKey + "@nr=0-" + (int)DtTypeApp + "-" + AgentAccountId + "-" + AgentApplicationId + "-" + IncomingDtGuid + "-" + TransactionId + "-1-" + Priority + "-" + Timestamp.ToUnixTimeMilliseconds() + ",dd=YzRiMTIxODk1NmVmZTE4ZQ,44@nr=0-0-55-5043-1238890283aasdfs-4569065a5b131bbg-1-1.23456-1518469636020";
+		private static readonly string TracestateInvalidNrEntry = IncomingTrustKey + "@nr=-0-33-5043-27ddd2d8890283b4-5569065a5b1313bd-1-1.23456-1518469636025,aa=1111,bb=222";
+		private static readonly string TracestateNoNrEntry = (IncomingTrustKey + 1) + "@nr=-0-33-5043-27ddd2d8890283b4-5569065a5b1313bd-1-1.23456-1518469636025,aa=1111,bb=222";
+
+		// v:[2,5]
+		private const string NewRelicPayloadWithUnsupportedVersion = "{ \"v\":[2,5],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\",\"tx\":\"transactionId\",\"id\":\"guid\"}}";
+		// missing tx: AND id:
+		private const string NewRelicPayloadUntraceable = "{ \"v\":[0,1],\"d\":{\"ty\":\"HTTP\",\"ac\":\"accountId\",\"ap\":\"appId\",\"tr\":\"traceId\",\"pr\":0.65,\"sa\":true,\"ti\":0,\"tk\":\"trustKey\"}}";
+
+
 		private DistributedTracePayloadHandler _distributedTracePayloadHandler;
 		private IConfiguration _configuration;
 		private IAdaptiveSampler _adaptiveSampler;
 		private IAgentHealthReporter _agentHealthReporter;
+
+		private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
 		[SetUp]
 		public void SetUp()
@@ -61,6 +87,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 			_distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _adaptiveSampler);
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 		}
 
 		#region Accept Incoming Request
@@ -73,7 +100,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TransactionId = TransactionId;
 			payload.Guid = null;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 			
 			// Act
 			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -103,7 +130,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var payload = BuildSampleDistributedTracePayload();
 			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 
 			// Act
 			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -119,7 +146,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var payload = BuildSampleDistributedTracePayload();
 			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 			
 			// Act
 			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -138,7 +165,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TrustKey = null;
 			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 			
 			// Act
 			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -157,7 +184,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.TrustKey = null;
 			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 			
 			// Act
 			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -165,7 +192,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Assert
 			Assert.IsNotNull(decodedPayload);
 		}
-
 
 		[Test]
 		public void TryDecodeInboundSerializedDistributedTracePayload_ReturnsNull_IfHigherMajorVersion()
@@ -175,7 +201,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.Version = new[] {int.MaxValue, 1};
 			payload.TransactionId = TransactionId;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 			
 			// Act
 			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -191,7 +217,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var payload = BuildSampleDistributedTracePayload();
 			payload.Guid = null;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 			
 			// Act
 			var decodedPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -208,7 +234,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			payload.Guid = null;
 			payload.TransactionId = null;
 
-			var encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(payload);
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 			
 			// Act
 			_distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
@@ -216,7 +242,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadParseException(), Occurs.Once());
 		}
-
 
 		#endregion Accept Incoming Request
 
@@ -228,14 +253,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Arrange
 			var transaction = BuildMockTransaction(hasIncomingPayload: false);
 
-			Mock.Arrange(() => transaction.TraceId).Returns((string)null);
-
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 			var encodedJson = model.HttpSafe();
 
 			DistributedTracePayload dtPayload = null;
-			Assert.That(() => dtPayload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson), Is.Not.Null);
+			Assert.That(() => dtPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson), Is.Not.Null);
 
 			// Assert
 			NrAssert.Multiple(
@@ -243,7 +266,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				() => Assert.AreEqual(AgentAccountId, dtPayload.AccountId),
 				() => Assert.AreEqual(AgentApplicationId, dtPayload.AppId),
 				() => Assert.AreEqual(null, dtPayload.Guid),
-				() => Assert.AreEqual(transaction.Guid, dtPayload.TraceId),
+				() => Assert.AreEqual(transaction.TraceId, dtPayload.TraceId),
 				() => Assert.AreEqual(Priority, dtPayload.Priority),
 				() => Assert.That(dtPayload.Timestamp, Is.LessThan(DateTime.UtcNow)),
 				() => Assert.AreEqual($"{transaction.Guid}", dtPayload.TransactionId)
@@ -262,7 +285,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var encodedJson = model.HttpSafe();
 
 			DistributedTracePayload dtPayload = null;
-			Assert.That(() => dtPayload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson), Is.Not.Null);
+			Assert.That(() => dtPayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson), Is.Not.Null);
 
 			// Assert
 			NrAssert.Multiple(
@@ -287,8 +310,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
-
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 			// Assert
 			Assert.NotNull(payload);
 			Assert.AreEqual(IncomingTrustKey, payload.TrustKey);
@@ -305,7 +327,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.NotNull(payload);
@@ -319,7 +341,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
 
 			var transaction = BuildMockTransaction(sampled: true);
-			//transaction.TransactionMetadata.DistributedTraceSampled = true;
 
 			const string expectedGuid = "expectedId";
 			var segment = Mock.Create<ISegment>();
@@ -328,7 +349,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.NotNull(payload.Guid);
@@ -350,20 +371,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.IsNull(payload.Guid);
 		}
 
 		[Test]
-		public void PayloadShouldNotHaveGuidWhenSpansEnabledAndTransactionNotSampled()
+		public void PayloadShouldHaveGuidWhenSpansEnabledAndTransactionNotSampled()
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
 
 			var transaction = BuildMockTransaction(sampled: false);
-			//transaction.TransactionMetadata.DistributedTraceSampled = false;
 
 			const string expectedGuid = "expectedId";
 			var segment = Mock.Create<ISegment>();
@@ -372,10 +392,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
-			Assert.IsNull(payload.Guid);
+			Assert.AreEqual(expectedGuid, payload.Guid);
 		}
 
 		[Test]
@@ -439,7 +459,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.IsNull(payload.TransactionId);
@@ -456,7 +476,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.NotNull(payload.TransactionId);
@@ -477,6 +497,123 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 			// Assert
 			Assert.AreEqual(DistributedTraceApiModel.EmptyModel, payload);
+		}
+
+		[Test]
+		public void TryDecodeInboundSerializedDistributedTracePayload_ReturnsCorrectDeserializedObject()
+		{
+			var payload = BuildSampleDistributedTracePayload();
+			var encodedString = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
+			var deserializedObject = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedString);
+
+			NrAssert.Multiple(
+				() => Assert.NotNull(deserializedObject),
+				() => Assert.AreEqual(typeof(DistributedTracePayload), deserializedObject.GetType()),
+				() => Assert.AreEqual(payload.AccountId, deserializedObject.AccountId),
+				() => Assert.AreEqual(payload.AppId, deserializedObject.AppId),
+				() => Assert.AreEqual(payload.Guid, deserializedObject.Guid),
+				() => Assert.AreEqual(payload.Priority, deserializedObject.Priority),
+				() => Assert.AreEqual(payload.Sampled, deserializedObject.Sampled),
+				() => Assert.AreEqual(payload.TraceId, deserializedObject.TraceId),
+				() => Assert.AreEqual(payload.TrustKey, deserializedObject.TrustKey),
+				() => Assert.AreEqual(payload.Type, deserializedObject.Type),
+				() => Assert.AreEqual(payload.Version, deserializedObject.Version),
+				() => Assert.AreEqual(payload.TransactionId, deserializedObject.TransactionId)
+			);
+		}
+
+		[Test]
+		public void TryDecodeInboundSerializedDistributedTracePayload_UnencodedObject_ReturnsCorrectDeserializedObject()
+		{
+			var payload = BuildSampleDistributedTracePayload();
+			var deserializedObject = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(payload.ToJson());
+
+			NrAssert.Multiple(
+				() => Assert.NotNull(deserializedObject),
+				() => Assert.AreEqual(typeof(DistributedTracePayload), deserializedObject.GetType()),
+
+				() => Assert.AreEqual(payload.AccountId, deserializedObject.AccountId),
+				() => Assert.AreEqual(payload.AppId, deserializedObject.AppId),
+				() => Assert.AreEqual(payload.Guid, deserializedObject.Guid),
+				() => Assert.AreEqual(payload.Priority, deserializedObject.Priority),
+				() => Assert.AreEqual(payload.Sampled, deserializedObject.Sampled),
+				() => Assert.AreEqual(payload.Timestamp.ToUnixTimeMilliseconds(), deserializedObject.Timestamp.ToUnixTimeMilliseconds()),
+				() => Assert.AreEqual(payload.TraceId, deserializedObject.TraceId),
+				() => Assert.AreEqual(payload.TrustKey, deserializedObject.TrustKey),
+				() => Assert.AreEqual(payload.Type, deserializedObject.Type),
+				() => Assert.AreEqual(payload.Version, deserializedObject.Version),
+				() => Assert.AreEqual(payload.TransactionId, deserializedObject.TransactionId)
+			);
+		}
+
+		[Test]
+		public void TryDecodeInboundSerializedDistributedTracePayload_ReturnsNull_IfInvalidBase64()
+		{
+			var payload = BuildSampleDistributedTracePayload();
+			var encodedString = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
+			var badEncodedString = "badbasd64string" + encodedString;
+			var deserializedObject = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(badEncodedString);
+
+			Assert.IsNull(deserializedObject);
+		}
+
+		[Test]
+		public void BuildIncomingPayloadFromJson_ReturnsNull_WhenNeitherGuidOrTransactionIdSet()
+		{
+			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiOTEyMyIsImFwIjoiNTE0MjQiLCJ0ciI6IjMyMjFiZjA5YWEwYmNmMGQiLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNDgyOTU5NTI1NTc3fX0=";
+			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadParseException(), Occurs.Once());
+			Assert.Null(distributedTracePayload);
+		}
+
+		[Test]
+		public void BuildIncomingPayloadFromJson_ReturnsNotNull_WithSuccessMetricsEnabled()
+		{
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
+
+			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0=";
+
+			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Once());
+			Assert.NotNull(distributedTracePayload);
+		}
+
+		[Test]
+		public void BuildIncomingPayloadFromJson_ReturnsNotNull_WithSuccessMetricsDisabled()
+		{
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(false);
+
+			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0=";
+			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Never());
+			Assert.NotNull(distributedTracePayload);
+		}
+
+		[Test]
+		public void BuildOutgoingPayloadFromTransaction_ReturnsNotNull_WithSuccessMetricsEnabled()
+		{
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
+
+			var transaction = new Transaction(_configuration, _initialTransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), 1.0f, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess(), Occurs.Once());
+			Assert.NotNull(headers);
+		}
+
+		[Test]
+		public void BuildOutgoingPayloadFromTransaction_ReturnsNotNull_WithSuccessMetricsDisabled()
+		{
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(false);
+
+			var transaction = new Transaction(_configuration, _initialTransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), 1.0f, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
+			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess(), Occurs.Never());
+			Assert.NotNull(headers);
 		}
 
 		#region W3C Tests
@@ -500,8 +637,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var tracingState = Mock.Create<ITracingState>();
 			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
 
-			Mock.Arrange(() => transaction.AcceptDistributedTraceHeaders(Arg.IsAny<Func<string, IList<string>>>()
-				,Arg.IsAny<TransportType>())).DoInstead(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP));
+			Mock.Arrange(() => transaction.AcceptDistributedTraceHeaders(Arg.IsAny<Func<string, IList<string>>>(), Arg.IsAny<TransportType>())).DoInstead(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP, mockStartTime));
 
 			// Act
 			Assert.DoesNotThrow(() => transaction.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP));
@@ -514,6 +650,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
 
 			var transaction = BuildMockTransaction(hasIncomingPayload: hasIncomingPayload, sampled: true);
 			
@@ -544,7 +681,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			transaction.InsertDistributedTraceHeaders(setHeaders);
 
-			Assert.That(headers.Where(header => header.Key == DistributedTraceHeaderName).Count() > 0, "There must be at least a newrelic header");
+			Assert.That(headers.Where(header => header.Key == NewRelicPayloadHeaderName).Count() > 0, "There must be at least a newrelic header");
 			Assert.That(headers.Where(header => header.Key == TraceParentHeaderName).Count() > 0, "There must be at least a traceparent header");
 			Assert.That(headers.Where(header => header.Key == TracestateHeaderName).Count() > 0, "There must be at least a tracestate header");
 
@@ -564,8 +701,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var traceParentHeaderValue = headers.Where(header => header.Key == TraceParentHeaderName).Select(header => header.Value).FirstOrDefault();
 
 			var traceIdExpectedLength = 32;
-
-			var tracepararent = W3CTraceparent.GetW3CTraceparentFromHeader(traceParentHeaderValue);
+			var tracepararent = W3CTraceparent.GetW3CTraceParentFromHeader(traceParentHeaderValue);
 
 			var expectedTraceId = transaction.TraceId;
 			expectedTraceId = expectedTraceId.PadLeft(traceIdExpectedLength, '0').ToLowerInvariant();
@@ -577,8 +713,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Assert.That(tracepararent.ParentId == expectedParentId);
 			Assert.That(tracepararent.TraceFlags == "01");
 
-			var nrHeaderValue = headers.Where(header => header.Key == DistributedTraceHeaderName).Select(header => header.Value).FirstOrDefault();
+			var nrHeaderValue = headers.Where(header => header.Key == NewRelicPayloadHeaderName).Select(header => header.Value).FirstOrDefault();
 			Assert.NotNull(nrHeaderValue);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextCreateSuccess(), Occurs.Once());
 		}
 
 		[Test]
@@ -586,6 +724,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.ExcludeNewrelicHeader).Returns(true);
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
 
 			var transaction = BuildMockTransaction(hasIncomingPayload: true, sampled: true);
 
@@ -613,9 +752,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			transaction.InsertDistributedTraceHeaders(setHeaders);
 
 			Assert.That(headers.Count == 2);
-			Assert.That(headers.Where(header => header.Key == DistributedTraceHeaderName).Count() == 0, "There should not be a newrelic header");
+			Assert.That(headers.Where(header => header.Key == NewRelicPayloadHeaderName).Count() == 0, "There should not be a newrelic header");
 			Assert.That(headers.Where(header => header.Key == TraceParentHeaderName).Count() > 0, "There must be at least a traceparent header");
 			Assert.That(headers.Where(header => header.Key == TracestateHeaderName).Count() > 0, "There must be at least a tracestate header");
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextCreateSuccess(), Occurs.Once());
 		}
 
 		[TestCase(.1234567f,"0.123457")]
@@ -624,6 +764,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.ExcludeNewrelicHeader).Returns(true);
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
 
 			var transaction = BuildMockTransaction(sampled: true);
 			Mock.Arrange(() => transaction.Priority).Returns(testPriority);
@@ -655,6 +796,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var priorityIndex = 7;
 			var priorityString = tracestateHeaderValue[0].Split('-')[priorityIndex];
 			Assert.AreEqual(expectedPriorityString, priorityString);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextCreateSuccess(), Occurs.Once());
 		}
 
 		[TestCase("E6463956F2C14DDAA3F737104381714F", "e6463956f2c14ddaa3f737104381714f")]
@@ -664,6 +807,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		{
 			// Arrange
 			Mock.Arrange(() => _configuration.ExcludeNewrelicHeader).Returns(true);
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
 
 			var transaction = BuildMockTransaction(hasIncomingPayload: true, sampled: true);
 
@@ -749,7 +893,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.NotNull(payload.TraceId);
@@ -767,7 +911,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.NotNull(payload.TraceId);
@@ -782,7 +926,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
 			Assert.AreEqual(IncomingDtTraceId, payload.TraceId);
@@ -793,18 +938,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		{
 			// Arrange
 			var transaction = BuildMockTransaction();
-			Mock.Arrange(() => transaction.TraceId).Returns((string) null);
+
+			var txTraceId = GuidGenerator.GenerateNewRelicTraceId();
+			Mock.Arrange(() => transaction.TraceId).Returns(txTraceId);
 
 			var segment = Mock.Create<ISegment>();
-			var expectedTraceIdValue = transaction.Guid;
 
 			// Act
 			var model = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment);
 			var encodedJson = model.HttpSafe();
-			var payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(encodedJson);
+			var payload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedJson);
 
 			// Assert
-			Assert.AreEqual(expectedTraceIdValue, payload.TraceId);
+			Assert.AreEqual(txTraceId, payload.TraceId);
 		}
 
 		[Test]
@@ -820,11 +966,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var firstHeaders = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment1);
 
 			var firstEncodedJson = firstHeaders.HttpSafe();
-			var payload1 = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(firstEncodedJson);
+			var payload1 = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(firstEncodedJson);
 
 			var secondHeaders = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction, segment2);
 			var secondEncodedJson = secondHeaders.HttpSafe();
-			var payload2 = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(secondEncodedJson);
+			var payload2 = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(secondEncodedJson);
 
 			// Assert
 			Assert.AreEqual(payload1.TraceId, payload2.TraceId);
@@ -833,6 +979,112 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		#endregion TraceID Tests
 
 		#endregion
+
+		#region Supportability Metrics
+		[Test]
+		public void AcceptDistributedTraceHeaders_NewRelicPayload_CorrectPayload_GeneratesAcceptSuccessSupportabilityMetric_WithSuccessMetricsEnabled()
+		{
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
+
+			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
+
+			var getHeaders = GetHeaderFunctionFactory(new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), encodedPayload } });
+
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP, mockStartTime);
+
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Once());
+		}
+		[Test]
+		public void AcceptDistributedTraceHeaders_NewRelicPayload_UntraceablePayload_GeneratesParseExceptionSupportabilityMetric()
+		{
+			var getHeaders = GetHeaderFunctionFactory(new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), Strings.Base64Encode(NewRelicPayloadUntraceable) } });
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadParseException(), Occurs.Once());
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeaders_NewRelicPayload_UnsupportedVersion_GeneratesPayloadIgnoredSupportabilityMetric()
+		{
+			var getHeaders = GetHeaderFunctionFactory(new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), Strings.Base64Encode(NewRelicPayloadWithUnsupportedVersion) } });
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion(), Occurs.Once());
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeaders_TraceContext_CorrectPayload_GeneratesAcceptSuccessSupportabilityMetric_WithSucessMetricsEnabled()
+		{
+			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
+
+			var headers = new Dictionary<string, string>()
+			{
+				{ "traceparent", ValidTraceparent },
+				{ "tracestate", ValidTracestate },
+			};
+
+			var getHeaders = GetHeaderFunctionFactory(headers);
+
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextAcceptSuccess(), Occurs.Once());
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeaders_TraceContext_InvalidTraceParent_GeneratesTraceParentParseExceptionSupportabilityMetric()
+		{
+			var headers = new Dictionary<string, string>()
+			{
+				{ "traceparent", InvalidTraceparent },
+				{ "tracestate", ValidTracestate },
+			};
+
+			var getHeaders = GetHeaderFunctionFactory(headers);
+
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextTraceParentParseException(), Occurs.Once());
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeaders_TraceContext_TracestateInvalidNrEntry_GeneratesTraceStateInvalidNrEntrySupportabilityMetric()
+		{
+			var headers = new Dictionary<string, string>()
+			{
+				{ "traceparent", ValidTraceparent },
+				{ "tracestate", TracestateInvalidNrEntry },
+			};
+
+			var getHeaders = GetHeaderFunctionFactory(headers);
+
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextTraceStateInvalidNrEntry(), Occurs.Once());
+		}
+
+		[Test]
+		public void AcceptDistributedTraceHeaders_TraceContext_TracestateNoNrEntry_GeneratesTraceStateNoNrEntrySupportabilityMetric()
+		{
+			var headers = new Dictionary<string, string>()
+			{
+				{ "traceparent", ValidTraceparent },
+				{ "tracestate", TracestateNoNrEntry },
+			};
+
+			var getHeaders = GetHeaderFunctionFactory(headers);
+
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP, mockStartTime);
+
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextTraceStateNoNrEntry(), Occurs.Once());
+		}
+
+		#endregion Supportability Metrics
 
 		#region helpers
 
@@ -889,6 +1141,22 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 			return tracingState;
 		}
+		private static Func<string, IList<string>> GetHeaderFunctionFactory(Dictionary<string, string> headers)
+		{
+			var getHeader = new Func<string, IList<string>>((key) =>
+			{
+				var headerValues = new List<string>();
+				string value;
+				if (headers.TryGetValue(key.ToLowerInvariant(), out value))
+				{
+					headerValues.Add(value);
+				}
+				return headerValues;
+			});
+
+			return getHeader;
+		}
+
 
 		#endregion helpers
 	}

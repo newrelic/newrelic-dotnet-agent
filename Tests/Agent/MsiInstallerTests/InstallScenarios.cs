@@ -43,7 +43,7 @@ namespace FunctionalTests
 		[Description("Verifies the license key is correctly set when the user passes 'NR_LICENSE_KEY=[key]' via the command line to install only Framework.")]
 		public void LicenseKeySet_FrameworkOnly()
 		{
-			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentalAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools }, testName: nameof(LicenseKeySet_FrameworkOnly));
+			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools }, testName: nameof(LicenseKeySet_FrameworkOnly));
 			ComponentManager.TruncateComponents(_tServer);
 
 			// Check the value in the 'newrelic.config' for license
@@ -75,7 +75,7 @@ namespace FunctionalTests
 		[Description("Verifies the 'COR_ENABLE_PROFILING', 'COR_PROFILER', and 'NEWRELIC_INSTALL_PATH' environment variables are set when the 'AllAppsEnvironmentFeature' is selected.")]
 		public void EnvironmentVariablesSetWhenAllAppsFeatureSelected()
 		{
-			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentalAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools }, testName: nameof(EnvironmentVariablesSetWhenAllAppsFeatureSelected));
+			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools }, testName: nameof(EnvironmentVariablesSetWhenAllAppsFeatureSelected));
 			ComponentManager.TruncateComponents(_tServer);
 
 			// Verify the 'COR_ENABLE_PROFILING', 'COR_PROFILER' and 'NEWRELIC_INSTALL_PATH' environment variables were set
@@ -102,7 +102,7 @@ namespace FunctionalTests
 		[Description("Verifies that all Framework and Core environment variables are removed on uninstall.")]
 		public void EnvironmentVariablesRemovedOnUninstall_DefaultInstall()
 		{
-			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentalAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools, Enumerations.InstallFeatures.NETCoreSupport }, testName: nameof(EnvironmentVariablesRemovedOnUninstall_DefaultInstall));
+			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools, Enumerations.InstallFeatures.NETCoreSupport }, testName: nameof(EnvironmentVariablesRemovedOnUninstall_DefaultInstall));
 			ComponentManager.TruncateComponents(_tServer);
 			_tServer.CommandLineUninstall(testName: nameof(EnvironmentVariablesRemovedOnUninstall_DefaultInstall));
 
@@ -119,7 +119,7 @@ namespace FunctionalTests
 		[Description("Verifies that all Framework environment variables are removed on uninstall.")]
 		public void EnvironmentVariablesRemovedOnUninstall_Framework()
 		{
-			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentalAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools }, testName: nameof(EnvironmentVariablesRemovedOnUninstall_Framework));
+			_tServer.CommandLineInstall(Settings.LicenseKey, new List<Enumerations.InstallFeatures>() { Enumerations.InstallFeatures.StartMenuShortcuts, Enumerations.InstallFeatures.InstrumentAllNETFramework, Enumerations.InstallFeatures.NETFrameworkSupport, Enumerations.InstallFeatures.ASPNETTools }, testName: nameof(EnvironmentVariablesRemovedOnUninstall_Framework));
 			ComponentManager.TruncateComponents(_tServer);
 			_tServer.CommandLineUninstall(testName: nameof(EnvironmentVariablesRemovedOnUninstall_Framework));
 

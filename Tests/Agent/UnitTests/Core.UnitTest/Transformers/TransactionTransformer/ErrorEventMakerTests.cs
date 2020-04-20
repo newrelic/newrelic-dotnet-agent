@@ -17,6 +17,8 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.DistributedTracing;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
@@ -31,11 +33,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private ITransactionAttributeMaker _transactionAttributeMaker;
 		private IErrorService _errorService;
 		private static ITimerFactory _timerFactory;
-
+		private IAttributeDefinitionService _attribDefSvc;
+		
 		[SetUp]
 		public void SetUp()
 		{
 			_configuration = Mock.Create<IConfiguration>();
+
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
 			Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
 			Mock.Arrange(() => _configuration.ErrorCollectorCaptureEvents).Returns(true);
@@ -66,7 +71,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var transaction = BuildTestTransaction(statusCode: 404, uri: "http://www.newrelic.com/test?param=value", isSynthetics: false, isCAT: false, referrerUri: "http://referrer.uri");
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
-			var errorData = transaction.TransactionMetadata.ErrorData;
+			var errorData = transaction.TransactionMetadata.TransactionErrorState.ErrorData;
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
 
@@ -215,7 +220,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var customAttributes = new AttributeCollection();
 
 			customAttributes.Add(Attribute.BuildCustomAttribute("custom attribute name", "custom attribute value"));
-			var errorData = _errorService.FromException(new System.NullReferenceException("NRE message"));
+			var errorData = _errorService.FromException(new NullReferenceException("NRE message"));
 
 			// Act
 			float priority = 0.5f;
@@ -264,11 +269,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			var placeholderMetadataBuilder = new TransactionMetadata();
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
-
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, 0.5f, false, string.Empty, null);
+			var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+			
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, 0.5f, false, string.Empty, null, attribDefSvc.AttributeDefs);
 
 			var priority = 0.5f;
-			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService);
+			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService, _attribDefSvc.AttributeDefs);
 			var transactionMetadata = internalTransaction.TransactionMetadata;
 			PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
@@ -286,9 +292,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			if (statusCode != null)
 				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (exceptionData != null)
-				metadata.AddExceptionData((ErrorData)exceptionData);
+				metadata.TransactionErrorState.AddExceptionData(exceptionData);
 			if (customErrorData != null)
-				metadata.AddCustomErrorData((ErrorData)customErrorData);
+				metadata.TransactionErrorState.AddCustomErrorData(customErrorData);
 			if (referrerUri != null)
 				metadata.SetReferrerUri(referrerUri);
 			if (isCAT)
@@ -320,7 +326,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private static ImmutableSegmentTreeNode BuildNode(TimeSpan relativeStart = new TimeSpan(), TimeSpan? duration = null)
 		{
 			var methodCallData = new MethodCallData("typeName", "methodName", 1);
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(new SimpleSegmentData(""));
 
 			return new SegmentTreeNodeBuilder(

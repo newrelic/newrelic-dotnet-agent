@@ -1,3 +1,5 @@
+using Grpc.Core;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -8,6 +10,7 @@ using NewRelic.Collections;
 using NewRelic.Core.Logging;
 using NewRelic.SystemInterfaces;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 
@@ -27,6 +30,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 		private InterlockedCounter _payloadCreateSuccessCounter;
 		private InterlockedCounter _payloadAcceptSuccessCounter;
 
+		private InterlockedCounter _traceContextCreateSuccessCounter;
+		private InterlockedCounter _traceContextAcceptSuccessCounter;
+
 		public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler, IDnsStatic dnsStatic)
 		{
 			_metricBuilder = metricBuilder;
@@ -41,6 +47,8 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 			_payloadCreateSuccessCounter = new InterlockedCounter();
 			_payloadAcceptSuccessCounter = new InterlockedCounter();
+			_traceContextAcceptSuccessCounter = new InterlockedCounter();
+			_traceContextCreateSuccessCounter = new InterlockedCounter();
 		}
 
 		public override void Dispose()
@@ -67,7 +75,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 			}
 		}
 
-		public void ReportSupportabilityCountMetric(string metricName, int count = 1)
+		public void ReportSupportabilityCountMetric(string metricName, long count = 1)
 		{
 			var metric = _metricBuilder.TryBuildSupportabilityCountMetric(metricName, count);
 			TrySend(metric);
@@ -292,29 +300,167 @@ namespace NewRelic.Agent.Core.AgentHealth
 			{
 				TrySend(_metricBuilder.TryBuildAcceptPayloadSuccess(acceptCount));
 			}
-
-			bool TryGetCount(InterlockedCounter counter, out int metricCount)
-			{
-				metricCount = 0;
-				if (counter.Value > 0)
-				{
-					metricCount = counter.Exchange(0);
-					return true;
-				}
-
-				return false;
-			}
 		}
 
 		#endregion DistributedTrace
 
+		#region TraceContext
+
+		/// <summary>Incremented when the agent successfuly processes inbound tracestate and traceparent headers</summary>
+		public void ReportSupportabilityTraceContextAcceptSuccess()
+		{
+			_traceContextAcceptSuccessCounter.Increment();
+		}
+
+		/// <summary>Incremented when the agent successfully creates outbound trace context payloads</summary>
+		public void ReportSupportabilityTraceContextCreateSuccess()
+		{
+			_traceContextCreateSuccessCounter.Increment();
+		}
+
+		/// <summary>Created when a generic exception occurred unrelated to parsing while accepting either payload.</summary>
+		public void ReportSupportabilityTraceContextAcceptException() =>
+			TrySend(_metricBuilder.TryBuildTraceContextAcceptException);
+
+		/// <summary>Created when the inbound traceparent header could not be parsed.</summary>
+		public void ReportSupportabilityTraceContextTraceParentParseException() =>
+			TrySend(_metricBuilder.TryBuildTraceContextTraceParentParseException);
+
+		/// <summary>Created when the inbound tracestate header could not be parsed.</summary>
+		public void ReportSupportabilityTraceContextTraceStateParseException() =>
+			TrySend(_metricBuilder.TryBuildTraceContextTraceStateParseException);
+
+		/// <summary>Created when a generic exception occurred while creating the outbound payloads.</summary>
+		public void ReportSupportabilityTraceContextCreateException() =>
+			TrySend(_metricBuilder.TryBuildTraceContextCreateException);
+
+		/// <summary>Created when the inbound tracestate header exists, and was accepted, but the New Relic entry was invalid.</summary>
+		public void ReportSupportabilityTraceContextTraceStateInvalidNrEntry() =>
+			TrySend(_metricBuilder.TryBuildTraceContextTraceStateInvalidNrEntry);
+
+		/// <summary>Created when the traceparent header exists, and was accepted, but the tracestate header did not contain a trusted New Relic entry.</summary>
+		public void ReportSupportabilityTraceContextTraceStateNoNrEntry() =>
+			TrySend(_metricBuilder.TryBuildTraceContextTraceStateNoNrEntry);
+
+		/// <summary>Limits Collect calls to once per harvest per metric.</summary>
+		public void CollectTraceContextSuccessMetrics()
+		{
+			if (TryGetCount(_traceContextCreateSuccessCounter, out var createCount))
+			{
+				TrySend(_metricBuilder.TryBuildTraceContextCreateSuccess(createCount));
+			}
+
+			if (TryGetCount(_traceContextAcceptSuccessCounter, out var acceptCount))
+			{
+				TrySend(_metricBuilder.TryBuildTraceContextAcceptSuccess(acceptCount));
+			}
+		}
+
+		#endregion TraceContext
+
 		#region Span 
-		
+
 		public void ReportSpanEventCollected(int count) => TrySend(_metricBuilder.TryBuildSpanEventsSeenMetric(count));
 
 		public void ReportSpanEventsSent(int count) => TrySend(_metricBuilder.TryBuildSpanEventsSentMetric(count));
 
 		#endregion Span 
+
+		#region InfiniteTracing
+
+		private InterlockedLongCounter _infiniteTracingSpanResponseError = new InterlockedLongCounter();
+		public void ReportInfiniteTracingSpanResponseError()
+		{
+			_infiniteTracingSpanResponseError.Increment();
+		}
+
+
+		private InterlockedLongCounter _infiniteTracingSpanEventsDropped = new InterlockedLongCounter();
+		public void ReportInfiniteTracingSpanEventsDropped(long countSpans)
+		{
+			_infiniteTracingSpanEventsDropped.Add(countSpans);
+		}
+
+
+		private InterlockedLongCounter _infiniteTracingSpanEventsSeen = new InterlockedLongCounter();
+		public void ReportInfiniteTracingSpanEventsSeen(long countSpans)
+		{
+			_infiniteTracingSpanEventsSeen.Add(countSpans);
+		}
+
+		private InterlockedLongCounter _infiniteTracingSpanEventsSent = new InterlockedLongCounter();
+		public void ReportInfiniteTracingSpanEventsSent()
+		{
+			_infiniteTracingSpanEventsSent.Increment();
+		}
+
+		private InterlockedLongCounter _infiniteTracingSpanEventsReceived = new InterlockedLongCounter();
+		public void ReportInfiniteTracingSpanEventsReceived(ulong countSpans)
+		{
+			_infiniteTracingSpanEventsReceived.Add(countSpans);
+		}
+
+		private ConcurrentDictionary<string, InterlockedLongCounter> _infiniteTracingSpanGrpcErrorCounters = new ConcurrentDictionary<string, InterlockedLongCounter>();
+		public void ReportInfiniteTracingSpanGrpcError(string error)
+		{
+			var counter = _infiniteTracingSpanGrpcErrorCounters.GetOrAdd(error, CreateNewGrpcErrorInterlockedCounter);
+			counter.Increment();
+		}
+
+		private InterlockedCounter _infiniteTracingSpanGrpcTimeout = new InterlockedCounter();
+		public void ReportInfiniteTracingSpanGrpcTimeout(int attemptId)
+		{
+			_infiniteTracingSpanGrpcTimeout.Increment();
+		}
+
+		private static InterlockedLongCounter CreateNewGrpcErrorInterlockedCounter(string _)
+		{
+			return new InterlockedLongCounter();
+		}
+
+		private void CollectInfiniteTracingMetrics()
+		{
+			if (TryGetCount(_infiniteTracingSpanResponseError, out var errorCount))
+			{
+				ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanResponseError, errorCount);
+			}
+
+			if (TryGetCount(_infiniteTracingSpanEventsDropped, out var spansDropped))
+			{
+				ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanDropped, spansDropped);
+			}
+
+			if (TryGetCount(_infiniteTracingSpanEventsSeen, out var spanEventsSeen))
+			{
+				ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanSeen, spanEventsSeen);
+			}
+
+			if (TryGetCount(_infiniteTracingSpanEventsSent, out var spanEventsSent))
+			{
+				ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanSent, spanEventsSent);
+			}
+
+			if (TryGetCount(_infiniteTracingSpanEventsReceived, out var spanEventsReceived))
+			{
+				ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanReceived, spanEventsReceived);
+			}
+
+			if (TryGetCount(_infiniteTracingSpanGrpcTimeout, out var timeouts))
+			{
+				ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanGrpcTimeout, timeouts);
+			}
+
+			foreach (var errorCounterPair in _infiniteTracingSpanGrpcErrorCounters)
+			{
+				if (TryGetCount(errorCounterPair.Value, out var grpcErrorCount))
+				{
+					var metricName = MetricNames.SupportabilityInfiniteTracingSpanGrpcError(errorCounterPair.Key);
+					ReportSupportabilityCountMetric(metricName, grpcErrorCount);
+				}
+			}
+		}
+
+		#endregion
 
 		public void ReportAgentTimingMetric(string suffix, TimeSpan time)
 		{
@@ -344,10 +490,12 @@ namespace NewRelic.Agent.Core.AgentHealth
 		public void CollectMetrics()
 		{
 			CollectDistributedTraceSuccessMetrics();
+			CollectTraceContextSuccessMetrics();
 			ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
 			ReportIfHostIsLinuxOs();
 			ReportDotnetVersion();
 			ReportAgentInfo();
+			CollectInfiniteTracingMetrics();
 		}
 
 		public void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate)
@@ -382,6 +530,30 @@ namespace NewRelic.Agent.Core.AgentHealth
 				Log.Error(ex);
 			}
 		}
+		private bool TryGetCount(InterlockedCounter counter, out int metricCount)
+		{
+			metricCount = 0;
+			if (counter.Value > 0)
+			{
+				metricCount = counter.Exchange(0);
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool TryGetCount(InterlockedLongCounter counter, out long metricCount)
+		{
+			metricCount = 0;
+			if (counter.Value > 0)
+			{
+				metricCount = counter.Exchange(0);
+				return true;
+			}
+
+			return false;
+		}
+
 
 		private class RecurringLogData
 		{

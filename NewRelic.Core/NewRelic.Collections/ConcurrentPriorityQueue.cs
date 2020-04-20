@@ -15,9 +15,9 @@ namespace NewRelic.Collections
 
 		private readonly SortedSet<T> _sortedSet;
 
-		public int Size {  get; private set;  }
+		public int Size { get; private set; }
 
-		public int Count { get { lock(_syncroot) return _sortedSet.Count; } }
+		public int Count { get { lock (_syncroot) return _sortedSet.Count; } }
 
 		public bool IsReadOnly => false;
 

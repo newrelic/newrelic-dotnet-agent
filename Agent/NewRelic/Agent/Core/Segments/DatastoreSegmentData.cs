@@ -196,22 +196,26 @@ namespace NewRelic.Agent.Core.Segments
 			}
 		}
 
-		public override void AddSpanTypeSpecificAttributes(AttributeCollection attributes, Segment segment)
+		private string GetObfuscatedSQL()
 		{
-			attributes.Add(Attribute.BuildSpanCategoryAttribute(SpanCategory.Datastore));
-			attributes.Add(Attribute.BuildComponentAttribute(EnumNameCache<DatastoreVendor>.GetName(DatastoreVendorName)));
+			return _databaseService.GetObfuscatedSql(CommandText, DatastoreVendorName);
+		}
+
+		public override void RecordSpanTypeSpecificAttributes()
+		{
+			AttribDefs.SpanCategory.TrySetValue(AttribVals, SpanCategory.Datastore);
+			AttribDefs.Component.TrySetValue(AttribVals, EnumNameCache<DatastoreVendor>.GetName(DatastoreVendorName));
 
 			if (!string.IsNullOrWhiteSpace(CommandText))
 			{
-				var statement = _databaseService.GetObfuscatedSql(CommandText, DatastoreVendorName);
-				attributes.Add(Attribute.BuildDbStatementAttribute(statement));
+				AttribDefs.DbStatement.TrySetValue(AttribVals, GetObfuscatedSQL);
 			}
 
-			attributes.Add(Attribute.BuildDbCollectionAttribute(_parsedSqlStatement.Model));
-			attributes.Add(Attribute.BuildDbInstanceAttribute(DatabaseName));
-			attributes.Add(Attribute.BuildPeerAddress($"{Host}:{PortPathOrId}"));
-			attributes.Add(Attribute.BuildPeerHostname(Host));
-			attributes.Add(Attribute.BuildSpanKindAttribute());
+			AttribDefs.DbCollection.TrySetValue(AttribVals, _parsedSqlStatement.Model);
+			AttribDefs.DbInstance.TrySetValue(AttribVals, DatabaseName);
+			AttribDefs.PeerAddress.TrySetValue(AttribVals, $"{Host}:{PortPathOrId}");
+			AttribDefs.PeerHostname.TrySetValue(AttribVals, Host);
+			AttribDefs.SpanKind.TrySetDefault(AttribVals);
 		}
 	}
 }

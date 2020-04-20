@@ -1,5 +1,4 @@
 ﻿using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using NewRelic.Agent.Api;
@@ -42,27 +41,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
 
 			var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
 
-			return Delegates.GetDelegateFor<Task<HttpResponseMessage>>(
-				onFailure: segment.End,
-				onSuccess: task =>
-				{
-					segment.RemoveSegmentFromCallStack();
-
-					if (task == null)
-						return;
-
-					var context = SynchronizationContext.Current;
-					if (context != null)
-					{
-						task.ContinueWith(_ => agent.HandleExceptions(segment.End), 
-							TaskScheduler.FromCurrentSynchronizationContext());
-					}
-					else
-					{
-						task.ContinueWith(_ => agent.HandleExceptions(segment.End), 
-							TaskContinuationOptions.ExecuteSynchronously);
-					}
-				});
+			return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment);
 		}
 
 		private static string TryGetControllerName(HttpActionContext httpActionContext)

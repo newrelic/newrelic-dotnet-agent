@@ -1,3 +1,4 @@
+using Grpc.Core;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -88,6 +89,30 @@ namespace NewRelic.Agent.Core.AgentHealth
 		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
 		void ReportSupportabilityDistributedTraceCreatePayloadException();
 
+		/// <summary>Incremented when the agent successfuly processes inbound tracestate and traceparent headers</summary>
+		void ReportSupportabilityTraceContextAcceptSuccess();
+
+		/// <summary>Incremented when the agent successfully creates outbound trace context payloads</summary>
+		void ReportSupportabilityTraceContextCreateSuccess();
+
+		/// <summary>Created when a generic exception occurred unrelated to parsing while accepting either payload.</summary>
+		void ReportSupportabilityTraceContextAcceptException();
+
+		/// <summary>Created when the inbound traceparent header could not be parsed.</summary>
+		void ReportSupportabilityTraceContextTraceParentParseException();
+
+		/// <summary>Created when the inbound tracestate header could not be parsed.</summary>
+		void ReportSupportabilityTraceContextTraceStateParseException();
+
+		/// <summary>Created when a generic exception occurred while creating the outbound payloads.</summary>
+		void ReportSupportabilityTraceContextCreateException();
+
+		/// <summary>Created when the inbound tracestate header exists, and was accepted, but the New Relic entry was invalid.</summary>
+		void ReportSupportabilityTraceContextTraceStateInvalidNrEntry();
+
+		/// <summary>Created when the traceparent header exists, and was accepted, but the tracestate header did not contain a trusted New Relic entry.</summary>
+		void ReportSupportabilityTraceContextTraceStateNoNrEntry();
+
 		void ReportSupportabilityCollectorErrorException(string endpointMethod, TimeSpan responseDuration, HttpStatusCode? statusCode);
 
 		void ReportSpanEventCollected(int count);
@@ -100,6 +125,15 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 		void ReportAgentInfo();
 
-		void ReportSupportabilityCountMetric(string metricName, int count = 1);
+		void ReportSupportabilityCountMetric(string metricName, long count = 1);
+
+		void ReportInfiniteTracingSpanResponseError();
+		void ReportInfiniteTracingSpanEventsSeen(long count = 1);
+		void ReportInfiniteTracingSpanEventsSent();
+		void ReportInfiniteTracingSpanEventsReceived(ulong count);
+		void ReportInfiniteTracingSpanEventsDropped(long count = 1);
+		void ReportInfiniteTracingSpanGrpcError(string status);
+		void ReportInfiniteTracingSpanGrpcTimeout(int attemptId);
+
 	}
 }

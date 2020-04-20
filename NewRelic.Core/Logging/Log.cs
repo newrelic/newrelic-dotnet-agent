@@ -2,6 +2,15 @@
 
 namespace NewRelic.Core.Logging
 {
+	public enum LogLevel
+	{
+		Error,
+		Warn,
+		Info,
+		Debug,
+		Finest
+	}
+
 	public static class Log
 	{
 		private static ILogger Logger = new NoOpLogger();
@@ -17,7 +26,7 @@ namespace NewRelic.Core.Logging
 		/// True iff logging has been configured to include ERROR level logs.
 		/// </summary>
 		public static bool IsErrorEnabled => Logger.IsErrorEnabled;
-		
+
 		/// <summary>
 		/// Logs <paramref name="message"/> at the ERROR level. This log level should be used for information regarding problems in the agent that will adversely affect the user in some way (data loss, performance problems, reduced agent functionality, etc). Do not use if logging that information will create a performance problem (say, due to excessive logging).
 		/// </summary>
@@ -191,5 +200,58 @@ namespace NewRelic.Core.Logging
 
 		#endregion Finest
 
+		public static bool IsEnabledFor(LogLevel level)
+		{
+			switch (level)
+			{
+				case LogLevel.Error:
+					return IsErrorEnabled;
+				case LogLevel.Warn:
+					return IsWarnEnabled;
+				case LogLevel.Info:
+					return IsInfoEnabled;
+				case LogLevel.Debug:
+					return IsDebugEnabled;
+				case LogLevel.Finest:
+					return IsFinestEnabled;
+			}
+
+			return false;
+		}
+
+		public static void LogMessage(LogLevel level, string message)
+		{
+			if (!IsEnabledFor(level))
+			{
+				return;
+			}
+
+			switch (level)
+			{
+				case LogLevel.Error:
+					Error(message);
+					break;
+
+				case LogLevel.Warn:
+					Warn(message);
+					break;
+
+				case LogLevel.Info:
+					Info(message);
+					break;
+				case LogLevel.Debug:
+					Debug(message);
+					break;
+
+				case LogLevel.Finest:
+					Finest(message);
+					break;
+			}
+		}
+
+		public static void LogException(LogLevel level, Exception ex)
+		{
+			LogMessage(level, ex.ToString());
+		}
 	}
 }

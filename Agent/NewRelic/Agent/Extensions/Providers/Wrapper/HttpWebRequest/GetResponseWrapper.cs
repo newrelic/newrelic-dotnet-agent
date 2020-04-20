@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
 			var httpWebRequest = instrumentedMethodCall.MethodCall.InvocationTarget as System.Net.HttpWebRequest;
-			if(httpWebRequest == null)
+			if (httpWebRequest == null)
 				throw new NullReferenceException(nameof(httpWebRequest));
 
 			var uri = httpWebRequest.RequestUri;
@@ -38,10 +38,15 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 			segment.MakeCombinable();
 
 			return Delegates.GetDelegateFor<HttpWebResponse>(
-				onSuccess: response => TryProcessResponse(response, transaction, segment, externalSegmentData),
-				onFailure: exception => TryProcessResponse((exception as WebException)?.Response, transaction, segment, externalSegmentData),
-				onComplete: segment.End
-				);
+				onSuccess: response => { 
+					TryProcessResponse(response, transaction, segment, externalSegmentData);
+					segment.End();
+				},
+				onFailure: exception => {
+					TryProcessResponse((exception as WebException)?.Response, transaction, segment, externalSegmentData);
+					segment.End(exception);
+				}
+			);
 		}
 
 		private static void TryProcessResponse(WebResponse response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)

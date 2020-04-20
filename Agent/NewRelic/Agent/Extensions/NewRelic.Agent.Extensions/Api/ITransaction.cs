@@ -261,6 +261,6 @@ namespace NewRelic.Agent.Api
 
 		void InsertDistributedTraceHeaders(Action<string, string> setHeaders);
 
-		void AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType);
+		void AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType);
 	}
 }

@@ -3,9 +3,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Core.Logging;
+using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.Attributes
 {
+	public interface IAttributeFilter
+	{
+		IEnumerable<Attribute> FilterAttributes(IEnumerable<Attribute> attributes, AttributeDestinations destination);
+		IEnumerable<Attribute> FilterAttributes(IEnumerable<Attribute> attributes, AttributeDestinations destination, bool logInvalidAttribs);
+		bool ShouldExcludeAttribute(string name, AttributeDestinations defaultDestinations, AttributeDestinations destination);
+	}
+
 	public class AttributeFilter : IAttributeFilter
 	{
 		private const uint MaxCacheSize = 1000;
@@ -27,6 +35,50 @@ namespace NewRelic.Agent.Core.Attributes
 			_implicitAttributeTrie = CreateAttributeNodeTrie(implicitAttributeNodes);
 		}
 
+		public bool ShouldFilterAttribute(AttributeDestinations targetObjectType)
+		{
+			if (!_settings.AttributesEnabled)
+				return true;
+
+			switch (targetObjectType)
+			{
+				case AttributeDestinations.SpanEvent:
+					if (!_settings.SpanEventsEnabled)
+						return true;
+					break;
+				case AttributeDestinations.ErrorTrace:
+					if (!_settings.ErrorTraceEnabled)
+						return true;
+					break;
+				case AttributeDestinations.JavaScriptAgent:
+					if (!_settings.JavaScriptAgentEnabled)
+						return true;
+					break;
+				case AttributeDestinations.TransactionEvent:
+					if (!_settings.TransactionEventEnabled)
+						return true;
+					break;
+				case AttributeDestinations.TransactionTrace:
+					if (!_settings.TransactionTraceEnabled)
+						return true;
+					break;
+				case AttributeDestinations.ErrorEvent:
+					if (!_settings.ErrorEventsEnabled)
+						return true;
+					break;
+				case AttributeDestinations.SqlTrace:
+					break;
+				case AttributeDestinations.CustomEvent:
+					if (!_settings.CustomEventsEnabled)
+						return true;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException("destination", "Unexpected destination: " + targetObjectType);
+			}
+
+			return false;
+		}
+
 		public IEnumerable<Attribute> FilterAttributes(IEnumerable<Attribute> attributes, AttributeDestinations destination)
 		{
 			return FilterAttributes(attributes, destination, false);
@@ -34,45 +86,10 @@ namespace NewRelic.Agent.Core.Attributes
 
 		public IEnumerable<Attribute> FilterAttributes(IEnumerable<Attribute> attributes, AttributeDestinations destination, bool logInvalidAttribs)
 		{
-			if (!_settings.AttributesEnabled)
-				return Enumerable.Empty<Attribute>();
-
-			switch (destination)
+			if (ShouldFilterAttribute(destination))
 			{
-				case AttributeDestinations.SpanEvent:
-					if (!_settings.SpanEventsEnabled)
-						return Enumerable.Empty<Attribute>();
-					break;
-				case AttributeDestinations.ErrorTrace:
-					if (!_settings.ErrorTraceEnabled)
-						return Enumerable.Empty<Attribute>();
-					break;
-				case AttributeDestinations.JavaScriptAgent:
-					if (!_settings.JavaScriptAgentEnabled)
-						return Enumerable.Empty<Attribute>();
-					break;
-				case AttributeDestinations.TransactionEvent:
-					if (!_settings.TransactionEventEnabled)
-						return Enumerable.Empty<Attribute>();
-					break;
-				case AttributeDestinations.TransactionTrace:
-					if (!_settings.TransactionTraceEnabled)
-						return Enumerable.Empty<Attribute>();
-					break;
-				case AttributeDestinations.ErrorEvent:
-					if (!_settings.ErrorEventsEnabled)
-						return Enumerable.Empty<Attribute>();
-					break;
-				case AttributeDestinations.SqlTrace:
-					break;
-				case AttributeDestinations.CustomEvent:
-					if(!_settings.CustomEventsEnabled)
-						return Enumerable.Empty<Attribute>();
-					break;
-				default:
-					throw new ArgumentOutOfRangeException("destination", "Unexpected destination: " + destination);
+				return Enumerable.Empty<Attribute>();
 			}
-
 
 			var filteredAttributes = new List<Attribute>();
 			foreach (var attr in attributes)
@@ -86,7 +103,7 @@ namespace NewRelic.Agent.Core.Attributes
 					continue;
 				}
 
-				if (CheckOrAddAttributeClusionCache(attr, destination))
+				if (CheckOrAddAttributeClusionCache(attr.Key, attr.DefaultDestinations, destination))
 				{
 					filteredAttributes.Add(attr);
 				}
@@ -107,13 +124,13 @@ namespace NewRelic.Agent.Core.Attributes
 			if (attribute.IsInvalidValueNull) Log.Debug($"{destination} Attribute could not be added - Value is null (key='{attribute.Key}')");
 		}
 
-		private bool CheckOrAddAttributeClusionCache(Attribute attribute, AttributeDestinations destination)
+		private bool CheckOrAddAttributeClusionCache(string name, AttributeDestinations defaultDestinations, AttributeDestinations destination)
 		{
-			var cacheKey = GetAttributeClusionKey(attribute, destination);
+			var cacheKey = GetAttributeClusionKey(name, defaultDestinations, destination);
 
 			if (!_cachedClusions.TryGetValue(cacheKey, out var result))
 			{
-				result = !ShouldExcludeAttribute(attribute, destination);
+				result = !ShouldExcludeAttribute(name, defaultDestinations, destination);
 
 				if (_cachedClusions.Count <= MaxCacheSize)
 				{
@@ -124,39 +141,39 @@ namespace NewRelic.Agent.Core.Attributes
 			return result;
 		}
 
-		private static string GetAttributeClusionKey(Attribute attribute, AttributeDestinations destination)
+		private static string GetAttributeClusionKey(string name, AttributeDestinations defaultDestinations, AttributeDestinations destination)
 		{
 			// Enum is cast to byte to avoid enum.ToString which does reflection 
 			// The cache key includes both the intended destinations of the attribute (attribute.DefaultDestinations) 
 			// and the destination being tested.  This is because some attributes have the same name (like timestamp)
 			// but different destinations.  Without this cache key, the wrong value will be selected.
-			return attribute.Key + (((byte)destination << 8) + (byte)attribute.DefaultDestinations).ToString();
+			return name + (((byte)destination << 8) + (byte)defaultDestinations).ToString();
 		}
 
-		private bool ShouldExcludeAttribute(Attribute attribute, AttributeDestinations destination)
+		public bool ShouldExcludeAttribute(string name, AttributeDestinations defaultDestinations, AttributeDestinations destination)
 		{
-			var explicitClusion = CheckForExplicitClusion(attribute, destination);
+			var explicitClusion = CheckForExplicitClusion(name, destination);
 			if (explicitClusion != Clude.Unknown)
 				return KnownCludeToBoolean(explicitClusion);
 
-			var implicitClusion = CheckForImplicitClusion(attribute, destination);
+			var implicitClusion = CheckForImplicitClusion(name, defaultDestinations, destination);
 			if (implicitClusion != Clude.Unknown)
 				return KnownCludeToBoolean(implicitClusion);
 
 			return false;
 		}
 
-		private Clude CheckForExplicitClusion(Attribute attribute, AttributeDestinations destination)
+		private Clude CheckForExplicitClusion(string name, AttributeDestinations destination)
 		{
-			return _explicitAttributeTrie.GetClusion(attribute, destination);
+			return _explicitAttributeTrie.GetClusion(name, destination);
 		}
 
-		private Clude CheckForImplicitClusion(Attribute attribute, AttributeDestinations destination)
+		private Clude CheckForImplicitClusion(string name, AttributeDestinations defaultDestinations, AttributeDestinations destination)
 		{
-			if ((attribute.DefaultDestinations & destination) != destination)
+			if ((defaultDestinations & destination) != destination)
 				return Clude.Exclude;
 
-			return _implicitAttributeTrie.GetClusion(attribute, destination);
+			return _implicitAttributeTrie.GetClusion(name, destination);
 		}
 
 		private static bool KnownCludeToBoolean(Clude clude)
@@ -305,6 +322,46 @@ namespace NewRelic.Agent.Core.Attributes
 
 		public class Settings
 		{
+			//Used for filtering intrinsic attributess (or not filtering them)
+			public Settings()
+			{
+			}
+
+			public Settings(IConfiguration _configuration)
+			{
+				AttributesEnabled = _configuration.CaptureAttributes;
+				Includes = _configuration.CaptureAttributesIncludes;
+				Excludes = _configuration.CaptureAttributesExcludes;
+
+				ErrorTraceEnabled = _configuration.CaptureErrorCollectorAttributes;
+				ErrorTraceIncludes = _configuration.CaptureErrorCollectorAttributesIncludes;
+				ErrorTraceExcludes = _configuration.CaptureErrorCollectorAttributesExcludes;
+
+				JavaScriptAgentEnabled = _configuration.CaptureBrowserMonitoringAttributes;
+				JavaScriptAgentIncludes = _configuration.CaptureBrowserMonitoringAttributesIncludes;
+				JavaScriptAgentExcludes = _configuration.CaptureBrowserMonitoringAttributesExcludes;
+
+				TransactionEventEnabled = _configuration.TransactionEventsAttributesEnabled;
+				TransactionEventIncludes = _configuration.TransactionEventsAttributesInclude;
+				TransactionEventExcludes = _configuration.TransactionEventsAttributesExclude;
+
+				TransactionTraceEnabled = _configuration.CaptureTransactionTraceAttributes;
+				TransactionTraceIncludes = _configuration.CaptureTransactionTraceAttributesIncludes;
+				TransactionTraceExcludes = _configuration.CaptureTransactionTraceAttributesExcludes;
+
+				ErrorEventsEnabled = _configuration.ErrorCollectorCaptureEvents;
+				ErrorEventIncludes = _configuration.CaptureErrorCollectorAttributesIncludes;
+				ErrorEventExcludes = _configuration.CaptureErrorCollectorAttributesExcludes;
+
+				SpanEventsEnabled = _configuration.SpanEventsEnabled;
+				SpanEventIncludes = _configuration.SpanEventsAttributesInclude;
+				SpanEventExcludes = _configuration.SpanEventsAttributesExclude;
+
+				CustomEventsEnabled = _configuration.CustomEventsEnabled;
+				CustomEventIncludes = _configuration.CustomEventsAttributesInclude;
+				CustomEventExcludes = _configuration.CustomEventsAttributesExclude;
+			}
+
 			public bool AttributesEnabled = true;
 			public IEnumerable<string> Excludes = Enumerable.Empty<string>();
 			public IEnumerable<string> Includes = Enumerable.Empty<string>();
@@ -342,4 +399,6 @@ namespace NewRelic.Agent.Core.Attributes
 
 		}
 	}
+
+	
 }

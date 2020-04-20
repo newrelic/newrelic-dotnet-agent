@@ -13,7 +13,18 @@ namespace NewRelic.Core.DistributedTracing
 		ParseException,
 		OtherException,
 		NotTraceable,
-		NotTrusted
+		NotTrusted,
+
+		TraceParentParseException,
+		TraceStateParseException,
+		TraceStateInvalidNrEntry,
+		TraceStateNoNrEntry,
+
+		TraceContextAcceptException,
+		TraceContextCreateException,
+
+		None,
+
 	}
 
 	/// <remarks>
@@ -174,10 +185,10 @@ namespace NewRelic.Core.DistributedTracing
 		}
 
 		/// <summary>
-		/// Serializes <paramref name="data"/> to JSON and Base64 encodes it with <paramref name="encodingKey"/>
+		/// Serializes this DistributedTracePayload to JSON and Base64 encodes it."/>
 		/// </summary>
-		/// <param name="data">The data to encode. Must not be null.</param>
 		/// <returns>The serialized and encoded data.</returns>
+		/// used by Lambda
 		public string SerializeAndEncodeDistributedTracePayload()
 		{
 			var serializedData = ToJson();
@@ -189,7 +200,22 @@ namespace NewRelic.Core.DistributedTracing
 			return Strings.Base64Encode(serializedData);
 		}
 
-		// used by Lambda
+		/// <summary>
+		/// Serializes <paramref name="data"/> to JSON and Base64 encodes it./>
+		/// </summary>
+		/// <param name="data">The data to encode. Must not be null.</param>
+		/// <returns>The serialized and encoded data.</returns>
+		public static string SerializeAndEncodeDistributedTracePayload(DistributedTracePayload data)
+		{
+			var serializedData = data.ToJson();
+			if (serializedData == null)
+			{
+				throw new NullReferenceException("serializedData");
+			}
+
+			return Strings.Base64Encode(serializedData);
+		}
+
 		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload(string encodedString)
 		{
 			var stringToConvert = encodedString?.Trim();
@@ -210,7 +236,6 @@ namespace NewRelic.Core.DistributedTracing
 			return TryBuildIncomingPayloadFromJson(stringToConvert);
 		}
 
-		// used by TracingState
 		public static DistributedTracePayload TryDecodeAndDeserializeDistributedTracePayload(string encodedString, string agentTrustKey, List<IngestErrorType> errors)
 		{
 			var stringToConvert = encodedString?.Trim();

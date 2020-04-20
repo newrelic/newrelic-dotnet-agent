@@ -63,6 +63,14 @@ namespace NewRelic.Agent.Configuration
 		bool SpanEventsAttributesEnabled { get; }
 		HashSet<string> SpanEventsAttributesInclude { get; }
 		HashSet<string> SpanEventsAttributesExclude { get; }
+		int InfiniteTracingTraceCountConsumers { get; }
+		string InfiniteTracingTraceObserverHost { get; }
+		string InfiniteTracingTraceObserverPort { get; }
+		float? InfiniteTracingTraceObserverTestFlaky { get; }
+		int? InfiniteTracingTraceObserverTestDelayMs { get; }
+		int InfiniteTracingQueueSizeSpans { get; }
+		int InfiniteTracingTraceTimeoutMsConnect { get; }
+		int InfiniteTracingTraceTimeoutMsSendData { get; }
 		string PrimaryApplicationId { get; }
 		string TrustedAccountKey { get; }
 		string AccountId { get; }
@@ -145,6 +153,7 @@ namespace NewRelic.Agent.Configuration
 		string UtilizationFullHostName { get; }
 		bool DiagnosticsCaptureAgentTiming { get; }
 		bool UseResourceBasedNamingForWCFEnabled { get; }
+		bool W3CEnabled { get; }
 		bool EventListenerSamplersEnabled { get; set; }
 		int? SamplingTarget { get; }
 		int SpanEventsMaxSamplesStored { get; }

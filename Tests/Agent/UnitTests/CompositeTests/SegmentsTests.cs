@@ -1,4 +1,5 @@
 ﻿using NewRelic.Agent.Api;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -730,6 +731,34 @@ namespace CompositeTests
 			tx.End();
 
 			Assert.Greater(segment.ExclusiveDurationOrZero, TimeSpan.FromMilliseconds(100));
+		}
+
+		[Test]
+		public void SegmentEndWithExceptionCapturesErrorAttributes()
+		{
+			var tx = _agent.CreateTransaction(
+				isWeb: false,
+				category: "testing",
+				transactionDisplayName: "test",
+				doNotTrackAsUnitOfWork: true);
+			var segment = _agent.StartCustomSegmentOrThrow("parentSegment");
+			
+			segment.End(new Exception("Unhandled exception"));
+			tx.End();
+
+			_compositeTestAgent.Harvest();
+
+			var spanEvents = _compositeTestAgent.SpanEvents.ToArray();
+			Assert.AreEqual(2, spanEvents.Length);
+
+			var expectedSpanErrorAttributes = new List<ExpectedAttribute>
+			{
+				new ExpectedAttribute { Key = "error.class", Value = "System.Exception" },
+				new ExpectedAttribute { Key = "error.message", Value = "Unhandled exception" },
+			};
+
+			var spanWithError = spanEvents[1];
+			SpanAssertions.HasAttributes(expectedSpanErrorAttributes, AttributeClassification.AgentAttributes, spanWithError);
 		}
 
 		#region Helper methods

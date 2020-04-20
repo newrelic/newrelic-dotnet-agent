@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -30,6 +31,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 				throw new NullReferenceException("logicalMessage");
 
 			var headers = logicalMessage.Headers;
+
 			if (headers == null)
 				throw new NullReferenceException("headers");
 
@@ -42,7 +44,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
 			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Consume, brokerVendorName, queueName);
 
-			agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			ProcessHeaders(headers, agent);
 
 			return Delegates.GetDelegateFor(
 				onFailure: transaction.NoticeError,
@@ -51,6 +53,33 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 					segment.End();
 					transaction.End();
 				});
+		}
+
+		private void ProcessHeaders(Dictionary<string, string> headers, IAgent agent) 
+		{
+			if (agent.Configuration.W3CEnabled)
+			{
+				var getHeaders = new Func<string, IEnumerable<string>>((string key) =>
+				{
+					if (headers != null)
+					{
+						foreach (var item in headers)
+						{
+							if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+							{
+								return new string[] { item.Value };
+							}
+						}
+					}
+					return null;
+				});
+
+				agent.CurrentTransaction.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP);
+			}
+			else
+			{
+				agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			}
 		}
 
 		private static string TryGetQueueName(LogicalMessage logicalMessage)

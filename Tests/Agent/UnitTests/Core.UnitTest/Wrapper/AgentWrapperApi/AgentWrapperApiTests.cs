@@ -9,7 +9,9 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Segments.Tests;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -30,7 +32,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Telerik.JustMock;
-
+using NewRelic.Agent.Api.Experimental;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -74,14 +77,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private IMetricNameService _metricNameService;
 		private IErrorService _errorService;
 
-		private const string DistributedTraceHeaderName = "Newrelic";
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
+
+		private const string DistributedTraceHeaderName = "newrelic";
 
 		[SetUp]
 		public void SetUp()
 		{
 			_callStackManager = Mock.Create<ICallStackManager>();
 			_transaction = Mock.Create<IInternalTransaction>();
-			var transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+			var transactionSegmentState = TransactionSegmentStateHelpers.GetItransactionSegmentState();
 			Mock.Arrange(() => _transaction.CallStackManager).Returns(_callStackManager);
 			Mock.Arrange(() => _transaction.GetTransactionSegmentState()).Returns(transactionSegmentState);
 			Mock.Arrange(() => _transaction.Finish()).Returns(true);
@@ -121,7 +127,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
 			_traceMetadataFactory = Mock.Create<ITraceMetadataFactory>();
 			_errorService = new ErrorService(_configurationService);
-
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 			_agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics);
 		}
 
@@ -466,7 +472,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agent.CurrentTransaction.NoticeError(exception);
 
 			var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
-			var errorData = immutableTransactionMetadata.ErrorData;
+			var errorData = immutableTransactionMetadata.ReadOnlyTransactionErrorState.ErrorData;
 
 			NrAssert.Multiple(
 				() => Assert.AreEqual("My message", errorData.ErrorMessage),
@@ -487,9 +493,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns("referrerProcessId");
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
 			var headers = new Dictionary<string, string>();
@@ -506,9 +512,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns("referrerProcessId");
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
 			var headers = new Dictionary<string, string>();
@@ -527,14 +533,16 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns("referrerProcessId");
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
 			var headers = new Dictionary<string, string>();
+			var transactionExperimental = _agent.CurrentTransaction.GetExperimentalApi();
+			transactionExperimental.CatContentLength = 200;
 
-			_agent.ProcessInboundRequest(headers, TransportType.HTTP, 200);
+			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
 
 			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerTripId("referrerTripId"));
 			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerContentLength(200));
@@ -550,9 +558,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns("referrerProcessId");
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<IDictionary<string, string>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
 				.Returns("referrerProcessId");
 			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns("referrerProcessId");
 			var headers = new Dictionary<string, string>();
@@ -571,7 +579,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		public void ProcessInboundRequest_DoesNotThrow_IfContentLengthIsNull()
 		{
 			var headers = new Dictionary<string, string>();
-			_agent.ProcessInboundRequest(headers, TransportType.Unknown, null);
+			_agent.ProcessInboundRequest(headers, TransportType.Unknown);
 
 			// Simply not throwing is all this test needs to check for
 		}
@@ -669,8 +677,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			var headers = new Dictionary<string, string>();
 			var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			segment.SetSegmentData(externalSegmentData);
+
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
 
 			var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
@@ -685,7 +694,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(transaction);
 
 			var headers = new Dictionary<string, string>();
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
@@ -702,7 +711,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			var headers = new Dictionary<string, string>();
 			var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
-			var segmentBuilder = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var segmentBuilder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			segmentBuilder.SetSegmentData(externalSegmentData);
 
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segmentBuilder);
@@ -722,7 +731,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			var headers = new Dictionary<string, string>();
 			var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			segment.SetSegmentData(externalSegmentData);
 
 			_agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
@@ -866,7 +875,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => tracingState.Sampled).Returns(_sampled);
 			Mock.Arrange(() => tracingState.Priority).Returns(_priority);
 
-			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>())).Returns(tracingState);
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
 
 			// Act
 			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
@@ -1013,7 +1022,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private void SetupTransaction()
 		{
 			var transactionName = TransactionName.ForWebTransaction("foo", "bar");
-			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService);
+			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService, _attribDefs);
 
 			//_transactionService = Mock.Create<ITransactionService>();
 			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);
@@ -1026,7 +1035,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
 			var tracingState = Mock.Create<ITracingState>();
-			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>())).Returns(tracingState);
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
 
 			var payload = string.Empty;
 
@@ -1042,7 +1051,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(false);
 
 			var tracingState = Mock.Create<ITracingState>();
-			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>())).Returns(tracingState);
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
 
 			var payload = string.Empty;
 

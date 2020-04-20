@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.UnitTest
 				AgentShim.FinishTracer(tracer, null, null);
 
 				// ASSERT
-				Assert.AreEqual(0, _logger.MessageCount);
+				Assert.AreEqual(0, _logger.MessageCount, "Expected no log entries but got: " + _logger.ToString());
 			}
 
 			[Test]

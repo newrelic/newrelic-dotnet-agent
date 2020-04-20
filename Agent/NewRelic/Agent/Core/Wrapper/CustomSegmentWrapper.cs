@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -51,7 +52,7 @@ namespace NewRelic.Agent.Core.Wrapper
 			var segment = transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, segmentName);
 
 			return instrumentedMethodCall.IsAsync
-				? Delegates.GetAsyncDelegateFor(agent, segment)
+				? Delegates.GetAsyncDelegateFor<Task>(agent, segment)
 				: Delegates.GetDelegateFor(segment);
 		}
 	}

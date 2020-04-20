@@ -5,6 +5,7 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using NewRelic.SystemExtensions.Collections.Generic;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
@@ -15,7 +16,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
 		public static Segment createMethodSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string type, string method, bool combinable)
 		{
-			var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
+			var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(new MethodSegmentData(type, method));
 			segment.Combinable = combinable;
 

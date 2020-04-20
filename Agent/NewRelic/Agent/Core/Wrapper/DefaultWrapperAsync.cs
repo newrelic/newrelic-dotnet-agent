@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -48,7 +49,7 @@ namespace NewRelic.Agent.Core.Wrapper
 				transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
 			}
 
-			return Delegates.GetAsyncDelegateFor(agent, segment);
+			return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
 		}
 	}
 }

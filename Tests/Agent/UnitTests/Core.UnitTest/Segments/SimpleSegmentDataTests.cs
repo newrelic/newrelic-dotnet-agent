@@ -7,6 +7,8 @@ using NUnit.Framework;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
@@ -18,6 +20,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 		public static ITransactionSegmentState createTransactionSegmentState(int uniqueId, int? parentId, int managedThreadId = 1)
 		{
 			var segmentState = Mock.Create<ITransactionSegmentState>();
+			Mock.Arrange(() => segmentState.AttribDefs).Returns(() => new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings())));
 			Mock.Arrange(() => segmentState.ParentSegmentId()).Returns(parentId);
 			Mock.Arrange(() => segmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(uniqueId);
 			Mock.Arrange(() => segmentState.CurrentManagedThreadId).Returns(managedThreadId);
@@ -27,7 +30,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 		public static Segment createSimpleSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> parameters, string name, bool combinable, int managedThreadId = 1)
 		{
 			var segmentState = createTransactionSegmentState(uniqueId, parentId, managedThreadId);
-			var segment = new Segment(segmentState, methodCallData);
+			var segment = new Segment(segmentState, methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(new SimpleSegmentData(name));
 			segment.Combinable = combinable;
 
@@ -37,7 +40,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 		[Test]
 		public void ThreadIdIsSet()
 		{
-			var segment = new Segment(createTransactionSegmentState(3, null, 666), new MethodCallData("type", "method", 1));
+			var segment = new Segment(createTransactionSegmentState(3, null, 666), new MethodCallData("type", "method", 1), new SpanAttributeValueCollection());
 			segment.SetSegmentData(new SimpleSegmentData("test"));
 
 			Assert.AreEqual(666, segment.ThreadId);

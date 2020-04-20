@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace NewRelic.Core.DistributedTracing
 {
@@ -16,25 +15,41 @@ namespace NewRelic.Core.DistributedTracing
 		// ingested order must be maintained for outgoing header
 
 		private const string NRVendorString = "@nr";
-		private const int NumberOfEntries = 9;
-		private const int MaxDecimalPlaces = 6;
+		private const int NumberOfFieldsInSupportedVersion = 9;
 		private const int SupportedVersion = 0;
+		private const int VersionIndex = 0;
+		private const int ParentTypeIndex = 1;
+		private const int AccountIdIndex = 2;
+		private const int AppIdIndex = 3;
+		private const int SpanIdIndex = 4;
+		private const int TransactionIdIndex = 5;
+		private const int SampledIndex = 6;
+		private const int PriorityIndex = 7;
+		private const int MaxDecimalPlacesInPriority = 6;
+		private const int TimestampIndex = 8;
 
 		public List<string> VendorstateEntries { get; set; }	// nonNR, nonTrusted: 55@dd=string, 45@nr=string
 
 		// fields pulled from the trusted tracestate NR entry
-		public string AccountKey { get; set; }  // "33" from "33@nr"
+		public string AccountKey { get; set; }  // "33" from "33@nr" aka trusted_account_key, tenant_id
 		public int Version { get; set; }
 		public DistributedTracingParentType ParentType { get; set; }
 		public string AccountId { get; set; }
 		public string AppId { get; set; }
 		public string SpanId { get; set; }
 		public string TransactionId { get; set; }
-		public int Sampled { get; set; }
-		public float Priority { get; set; }
+		public int? Sampled { get; set; }
+		public float? Priority { get; set; }
 		public long Timestamp { get; set; }
 
-		public W3CTracestate(List<string> vendorstates, string accountKey, int version, int parentType, string accountId, string appId, string spanId, string transactionId, int sampled, float priority, long timestamp)
+		public IngestErrorType Error { get; }
+
+		public W3CTracestate(List<string> vendorstates, string accountKey, int version, int parentType, string accountId, string appId, string spanId, string transactionId, int? sampled, float? priority, long timestamp) :
+			this(vendorstates, accountKey, version, parentType, accountId, appId, spanId, transactionId, sampled, priority, timestamp, IngestErrorType.None)
+		{
+		}
+
+		private W3CTracestate(List<string> vendorstates, string accountKey, int version, int parentType, string accountId, string appId, string spanId, string transactionId, int? sampled, float? priority, long timestamp, IngestErrorType error) 
 		{
 			VendorstateEntries = vendorstates;
 			AccountKey = accountKey;
@@ -47,42 +62,13 @@ namespace NewRelic.Core.DistributedTracing
 			Sampled = sampled;
 			Priority = priority;
 			Timestamp = timestamp;
+
+			Error = error;
 		}
 
-		public List<string> GetVendorNames()
-		{
-			// TODO: better string management, linq ?
-			var names = new List<string>();
+		public override string ToString() => $"{AccountId}@nr={Version}-{(int)ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled}-{Priority}-{Timestamp}";
 
-			// pull the vendor names from VendorstateEntries
-			foreach (string entry in VendorstateEntries)
-			{
-				// parse out the vendor name and add to list
-				names.Add(entry.Substring(0, entry.IndexOf('=')));
-			}
-
-			return names;
-		}
-
-		public KeyValuePair<string, string> ToHeaderFormat()
-		{
-			var sb = new StringBuilder();
-
-			// TODO: deal with too long
-
-			sb.Append(this.ToString());
-
-			foreach (string vendorEntry in VendorstateEntries)
-			{
-				sb.Append($",{vendorEntry}");
-			}
-
-			return new KeyValuePair<string, string>("tracestate", sb.ToString());
-		}
-
-		public override string ToString() => $"{AccountId}@nr={Version}-{(int)ParentType}-{AccountId}-{AppId}-{SpanId}-{TransactionId}-{Sampled.ToString()}-{Priority}-{Timestamp}";
-
-		public static W3CTracestate GetW3CTracestateFromHeaders(IList<string> tracestateCollection, string trustedAccountKey) 
+		public static W3CTracestate GetW3CTracestateFromHeaders(IEnumerable<string> tracestateCollection, string trustedAccountKey) 
 		{
 			var tracestateEntries = TryExtractTracestateHeaders(tracestateCollection);
 
@@ -90,101 +76,86 @@ namespace NewRelic.Core.DistributedTracing
 			{
 				var newRelicTraceStateEntry = tracestateEntries.Where(entry => entry.Key.Equals($"{trustedAccountKey}{NRVendorString}")).FirstOrDefault();
 
-				if (!TracestateUtils.ValidateValue(newRelicTraceStateEntry.Value))
+				var vendorstates = tracestateEntries.Where(entry => !entry.Key.Contains($"{trustedAccountKey}{NRVendorString}")).Select(entry => $"{entry.Key}={entry.Value}").ToList();
+
+				if (string.IsNullOrEmpty(newRelicTraceStateEntry.Value))
 				{
-					return null;
+					return new W3CTracestate(vendorstates, null, default, (int)DistributedTracingParentType.Unknown, null, null, null, null, default, default, default, IngestErrorType.TraceStateNoNrEntry);
+				}
+
+				var traceStateWithInvalidNrEntry = new W3CTracestate(vendorstates, null, default, (int)DistributedTracingParentType.Unknown, null, null, null, null, default, default, default, IngestErrorType.TraceStateInvalidNrEntry);
+
+				if (!TracestateUtils.ValidateValue(newRelicTraceStateEntry.Value)) 
+				{
+					return traceStateWithInvalidNrEntry;
 				}
 
 				var splits = newRelicTraceStateEntry.Value.Split('-');
+				var fieldCount = splits.Count();
 
-				if(splits.Count() != NumberOfEntries) 
+				int version;
+
+				if (!int.TryParse(splits[VersionIndex], out version) ||
+					(version == SupportedVersion && fieldCount != NumberOfFieldsInSupportedVersion) ||
+					(version > SupportedVersion && fieldCount <= NumberOfFieldsInSupportedVersion))
 				{
-					return null;
+					return traceStateWithInvalidNrEntry;
 				}
 
-				var vendorstates = tracestateEntries.Where(entry => !entry.Key.Contains($"{trustedAccountKey}{NRVendorString}")).Select(entry => $"{entry.Key}={entry.Value}").ToList();
+				var accountId = string.IsNullOrWhiteSpace(splits[AccountIdIndex]) ? null : splits[AccountIdIndex];
+				var appId = string.IsNullOrWhiteSpace(splits[AppIdIndex]) ? null : splits[AppIdIndex];
+				var spanId = string.IsNullOrWhiteSpace(splits[SpanIdIndex]) ? null : splits[SpanIdIndex];
+				var transactionId = string.IsNullOrWhiteSpace(splits[TransactionIdIndex]) ? null : splits[TransactionIdIndex];
 
-				//required field
-				if (!int.TryParse(splits[0], out int version))
+				//required fields
+				if (!int.TryParse(splits[ParentTypeIndex], out int parentType) ||
+					parentType < (int)DistributedTracingParentType.App ||
+					parentType > (int)DistributedTracingParentType.Mobile ||
+					string.IsNullOrEmpty(accountId) ||
+					string.IsNullOrEmpty(appId))
 				{
-					return null;
-				}
-				else if(version != SupportedVersion) 
-				{
-					return null;
-				}
-
-				//required field
-				if(!int.TryParse(splits[1], out int parentType))
-				{
-					return null;
-				}
-				else if(parentType < (int)DistributedTracingParentType.App || parentType > (int)DistributedTracingParentType.Mobile) 
-				{
-					return null;
+					return traceStateWithInvalidNrEntry;
 				}
 
-				var accountId = splits[2];
+				int? sampled = null;
 
-				//required field
-				if (string.IsNullOrEmpty(accountId)) 
+				if (!string.IsNullOrEmpty(splits[SampledIndex]) &&
+					int.TryParse(splits[SampledIndex], out int parsedSampled) &&
+					(parsedSampled == (int)SampledEnum.IsTrue || parsedSampled == (int)SampledEnum.IsFalse))
 				{
-					return null;
+					sampled = parsedSampled;
 				}
 
-				var appId = splits[3];
-				
-				//required field
-				if (string.IsNullOrEmpty(appId))
-				{
-					return null;
-				}
+				float? priority = null;
 
-				var spanId = splits[4];
-				var transactionId = splits[5];
-
-				int sampled = default;
-				if(!string.IsNullOrEmpty(splits[6]))
+				if (!string.IsNullOrEmpty(splits[PriorityIndex]) && TryParseAndValidatePriority(splits[PriorityIndex], out float parsedPriority))
 				{
-					if (!int.TryParse(splits[6], out sampled))
-					{
-						return null;
-					}
-					else if (sampled != (int)SampledEnum.IsTrue && sampled != (int)SampledEnum.IsFalse)
-					{
-						return null;
-					}
-				}
-
-				float priority = default; 
-				if(!string.IsNullOrEmpty(splits[6]) && !TryParseAndValidatePriority(splits[7], out priority)) 
-				{
-					return null;
+					priority = parsedPriority;
 				}
 
 				//required field
-				if (!long.TryParse(splits[8], out long timestamp))
+				if (!long.TryParse(splits[TimestampIndex], out long timestamp))
 				{
-					return null;
+					return traceStateWithInvalidNrEntry;
 				}
 
 				return new W3CTracestate(vendorstates, trustedAccountKey, version, parentType,
 					accountId, appId, spanId, transactionId, sampled, priority, timestamp);
 			}
 
-			return null;
+			return new W3CTracestate(null, null, default, default, null, null, null, null, null, null, default, IngestErrorType.TraceStateNoNrEntry);
 		}
 
-		private static List<KeyValuePair<string, string>> TryExtractTracestateHeaders(IList<string> tracestateCollection)
+		private static List<KeyValuePair<string, string>> TryExtractTracestateHeaders(IEnumerable<string> tracestateCollection)
 		{
 			List<KeyValuePair<string, string>> tracestateEntries = new List<KeyValuePair<string, string>>();
 
 			if (tracestateCollection != null)
 			{
 				// Iterate in reverse order.
-				for (var i = tracestateCollection.Count - 1; i >= 0; i--)
+				foreach (var tracestateValue in tracestateCollection.Reverse())
 				{
-					if (!TracestateUtils.ParseTracestate(tracestateCollection[i], tracestateEntries))
+					if (!TracestateUtils.ParseTracestate(tracestateValue, tracestateEntries))
 					{
 						break;
 					}
@@ -202,12 +173,9 @@ namespace NewRelic.Core.DistributedTracing
 			//Checking if priority value is rounded to 6 decimal places
 			if (priorityString.IndexOf('.') > -1)
 			{
-				if (lastIndex - priorityString.IndexOf('.') > MaxDecimalPlaces)
-				{
-					return false;
-				}
+				priorityString = priorityString.TrimEnd(new char[] { '0' });
 
-				if (priorityString[lastIndex] == '0')
+				if (lastIndex - priorityString.IndexOf('.') > MaxDecimalPlacesInPriority)
 				{
 					return false;
 				}

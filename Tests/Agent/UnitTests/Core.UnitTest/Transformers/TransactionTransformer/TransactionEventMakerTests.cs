@@ -31,6 +31,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		private TransactionAttributeMaker _transactionAttributeMaker;
 		private ITransactionMetricNameMaker _transactionMetricNameMaker;
 		private IErrorService _errorService;
+		private IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
 		[SetUp]
 		public void SetUp()
@@ -51,6 +53,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			_transactionAttributeMaker = new TransactionAttributeMaker(_configurationService);
 
 			_errorService = new ErrorService(_configurationService);
+			_attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 		}
 
 		[Test]
@@ -80,7 +83,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var transaction = BuildTestTransaction(statusCode: 200, uri:"http://foo.com");
 			transaction.TransactionMetadata.AddUserAttribute("foo", "bar");
 			var errorData = MakeErrorData();
-			transaction.TransactionMetadata.AddCustomErrorData(errorData);
+			transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
 			
 			var immutableTransaction = transaction.ConvertToImmutableTransaction();
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
@@ -149,9 +152,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 				() => Assert.AreEqual(immutableTransaction.TracingState.AppId, transactionEvent.IntrinsicAttributes["parent.app"], "parent.app"),
 				() => Assert.AreEqual(immutableTransaction.TracingState.AccountId, transactionEvent.IntrinsicAttributes["parent.account"], "parent.account"),
 				() => Assert.AreEqual(EnumNameCache<TransportType>.GetName(immutableTransaction.TracingState.TransportType), transactionEvent.IntrinsicAttributes["parent.transportType"], "parent.transportType"),
-				() => Assert.AreEqual(Utilities.Helpers.ComputeDuration(immutableTransaction.StartTime, immutableTransaction.TracingState.Timestamp).TotalSeconds, (double)transactionEvent.IntrinsicAttributes["parent.transportDuration"], 0.000001d, "parent.transportDuration"),
+				() => Assert.AreEqual(immutableTransaction.TracingState.TransportDuration.TotalSeconds, (double)transactionEvent.IntrinsicAttributes["parent.transportDuration"], 0.000001d, "parent.transportDuration"),
 				() => Assert.AreEqual(immutableTransaction.TracingState.TransactionId, transactionEvent.IntrinsicAttributes["parentId"], "parentId"),
-				() => Assert.AreEqual(immutableTransaction.TracingState.Guid, transactionEvent.IntrinsicAttributes["parentSpanId"], "parentSpanId"),
+				() => Assert.AreEqual(immutableTransaction.TracingState.ParentId, transactionEvent.IntrinsicAttributes["parentSpanId"], "parentSpanId"),
 				() => Assert.AreEqual(immutableTransaction.TraceId, transactionEvent.IntrinsicAttributes["traceId"], "traceId"),
 				() => Assert.AreEqual(immutableTransaction.Priority, transactionEvent.IntrinsicAttributes["priority"], "priority"),
 				() => Assert.AreEqual(immutableTransaction.Sampled, transactionEvent.IntrinsicAttributes["sampled"], "sampled")
@@ -173,6 +176,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		private const string TransactionId = "transactionId";
 		private const bool Sampled = true;
 		private const float Priority = 1.56f;
+		private const string traceparentParentId = "parentId";
 
 		private ImmutableTransaction BuildTestImmutableTransaction(bool isWebTransaction = true, string guid = null, float priority = 0.5f, bool sampled = false, string traceId = "traceId")
 		{
@@ -183,7 +187,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var placeholderMetadataBuilder = new TransactionMetadata();
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, priority, sampled, traceId, BuildMockTracingState());
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, priority, sampled, traceId, BuildMockTracingState(), _attribDefs);
 
 			return immutableTransaction;
 		}
@@ -199,9 +203,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var placeholderMetadataBuilder = new TransactionMetadata();
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, priority, sampled, traceId, null);
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, priority, sampled, traceId, null, _attribDefs);
 
-			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
+			var internalTransaction = new Transaction(Mock.Create<IConfiguration>(), immutableTransaction.TransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
 
 			var adaptiveSampler = Mock.Create<IAdaptiveSampler>();
 			Mock.Arrange(() => adaptiveSampler.ComputeSampled(ref priority)).Returns(sampled);
@@ -224,9 +228,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			if (statusCode != null)
 				metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
 			if (exceptionData != null)
-				metadata.AddExceptionData((ErrorData)exceptionData);
+				metadata.TransactionErrorState.AddExceptionData((ErrorData)exceptionData);
 			if (customErrorData != null)
-				metadata.AddCustomErrorData((ErrorData)customErrorData);
+				metadata.TransactionErrorState.AddCustomErrorData((ErrorData)customErrorData);
 			if (referrerUri != null)
 				metadata.SetReferrerUri(referrerUri);
 			if (isCAT)
@@ -268,6 +272,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			Mock.Arrange(() => tracingState.TransactionId).Returns(TransactionId);
 			Mock.Arrange(() => tracingState.Sampled).Returns(Sampled);
 			Mock.Arrange(() => tracingState.Priority).Returns(Priority);
+			Mock.Arrange(() => tracingState.ParentId).Returns(traceparentParentId);
+			Mock.Arrange(() => tracingState.TraceContextWasAccepted).Returns(true);
+			Mock.Arrange(() => tracingState.HasDataForParentAttributes).Returns(true);
 
 			return tracingState;
 		}

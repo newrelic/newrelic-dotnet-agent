@@ -1,171 +1,115 @@
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Extensions.Providers;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using Telerik.JustMock;
 using NewRelic.Core.DistributedTracing;
-using NewRelic.Agent.Core.Errors;
+using NewRelic.Core;
 
 namespace NewRelic.Agent.Core.DistributedTracing
 {
 	[TestFixture]
 	public class DistributedTracePayloadTests
 	{
-		private const string _type = "HTTP";
-		private const string _accountId = "56789";
-		private const string _appId = "12345";
-		private const string _guid = "12345";
-		private const string _traceId = "12345";
-		private const string _trustKey = "12345";
-		private const float _priority = .5f;
-		private const bool _sampled = true;
-		private static DateTime _timestamp = DateTime.UtcNow;
-		private const string _transactionId = "12345";
+		private const string TransportType = "HTTP";
+		private const string AccountId = "56789";
+		private const string AppId = "12345";
+		private const string Guid = "12345";
+		private const string TraceId = "0af7651916cd43dd8448eb211c80319c";
+		private const string TrustKey = "12345";
+		private const float Priority = .5f;
+		private const bool Sampled = true;
+		private static DateTime Timestamp = DateTime.UtcNow;
+		private const string TransactionId = "12345";
 
-		private DistributedTracePayloadHandler _distributedTracePayloadHandler;
+		private const DistributedTracingParentType Type = DistributedTracingParentType.App;
+
 		private IConfiguration _configuration;
-		private IAdaptiveSampler _adaptiveSampler;
-		private IAgentHealthReporter _agentHealthReporter;
-
-		private readonly TransactionName _initialTransactionName = TransactionName.ForWebTransaction("initialCategory", "initialName");
 
 		[SetUp]
 		public void Setup()
 		{
 			_configuration = Mock.Create<IConfiguration>();
-			_adaptiveSampler = Mock.Create<IAdaptiveSampler>();
 
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
 			Mock.Arrange(() => _configuration.TransactionEventsEnabled).Returns(true);
-			Mock.Arrange(() => _configuration.AccountId).Returns(_accountId);
-			Mock.Arrange(() => _configuration.PrimaryApplicationId).Returns(_appId);
-			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns(_trustKey);
+			Mock.Arrange(() => _configuration.AccountId).Returns(AccountId);
+			Mock.Arrange(() => _configuration.PrimaryApplicationId).Returns(AppId);
+			Mock.Arrange(() => _configuration.TrustedAccountKey).Returns(TrustKey);
 
 			var configurationService = Mock.Create<IConfigurationService>();
-			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
-			
-			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
-			_distributedTracePayloadHandler = new DistributedTracePayloadHandler(configurationService, _agentHealthReporter, _adaptiveSampler);
+			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);			
 		}
 
-		[TestCase(null, _accountId, _appId, _traceId)]
-		[TestCase(_type, null, _appId, _traceId)]
-		[TestCase(_type, _accountId, null, _traceId)]
-		[TestCase(_type, _accountId, _appId, null)]
-		[TestCase("", _accountId, _appId, _traceId)]
-		[TestCase(_type, "", _appId, _traceId)]
-		[TestCase(_type, _accountId, "", _traceId)]
-		[TestCase(_type, _accountId, _appId, "")]
+		[TestCase(null, AccountId, AppId, TraceId)]
+		[TestCase(TransportType, null, AppId, TraceId)]
+		[TestCase(TransportType, AccountId, null, TraceId)]
+		[TestCase(TransportType, AccountId, AppId, null)]
+		[TestCase("", AccountId, AppId, TraceId)]
+		[TestCase(TransportType, "", AppId, TraceId)]
+		[TestCase(TransportType, AccountId, "", TraceId)]
+		[TestCase(TransportType, AccountId, AppId, "")]
 		public void BuildOutgoingPayload_ReturnsNull_WhenRequiredFieldsNotPresent(string type, string accountId, string appId, string traceId)
 		{
-			var payload = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, _guid, traceId, _trustKey, _priority, _sampled, _timestamp, _transactionId);
+			var payload = DistributedTracePayload.TryBuildOutgoingPayload(type, accountId, appId, Guid, traceId, TrustKey, Priority, Sampled, Timestamp, TransactionId);
 			Assert.Null(payload);
 		}
 
 		[TestCase(null, null)]
 		[TestCase("", "")]
-		public void BuildOutgoingPayload_ReturnsNull_WhenDoesNotContainGuidOrTransactionId(string guid, string transactionId)
+		public void TryBuildOutgoingPayload_ReturnsNull_WhenDoesNotContainGuidOrTransactionId(string guid, string transactionId)
 		{
-			var payload = DistributedTracePayload.TryBuildOutgoingPayload(_type, _accountId, _appId, guid, _traceId,
-				_trustKey, _priority, _sampled, _timestamp, transactionId);
+			var payload = DistributedTracePayload.TryBuildOutgoingPayload(TransportType, AccountId, AppId, guid, TraceId,
+				TrustKey, Priority, Sampled, Timestamp, transactionId);
 			Assert.Null(payload);
 		}
 
 		[Test]
-		public void BuildIncomingPayloadFromJson_ReturnsNull_WhenNeitherGuidOrTransactionIdSet()
+		public void SerializeAndEncodeDistributedTracePayload_CreatesCorrectEncodedString()
 		{
-			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkFwcCIsImFjIjoiOTEyMyIsImFwIjoiNTE0MjQiLCJ0ciI6IjMyMjFiZjA5YWEwYmNmMGQiLCJwciI6MC4xMjM0LCJzYSI6ZmFsc2UsInRpIjoxNDgyOTU5NTI1NTc3fX0=";
-			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
+			var payload = BuildSampleDistributedTracePayload();
+			var jsonString = payload.ToJson();
+			var encodedJsonString = Strings.Base64Encode(jsonString);
+			var serializedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 
-			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadParseException(), Occurs.Once());
-			Assert.Null(distributedTracePayload);
+			Assert.AreEqual(encodedJsonString, serializedPayload);
 		}
 
 		[Test]
-		public void BuildIncomingPayloadFromJson_ReturnsNotNull_WithSuccessMetricsEnabled()
+		public void TryDecodeAndDeserializeDistributedTracePayload_ThrowsException_IfInvalidVersion()
 		{
-			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
+			var payload = BuildSampleDistributedTracePayload();
+			payload.Version = new int[] { 9999, 1 };
+			var encodedString = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(payload);
 
-			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0=";
-
-			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
-
-			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Once());
-			Assert.NotNull(distributedTracePayload);
+			Assert.Throws<DistributedTraceAcceptPayloadVersionException>(() => DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(encodedString));
 		}
+
 
 		[Test]
-		public void BuildIncomingPayloadFromJson_ReturnsNotNull_WithSuccessMetricsDisabled()
+		public void TryDecodeAndDeserializeDistributedTracePayload_ThrowsException_IfEncodedAsInvalidType()
 		{
-			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(false);
-
-			var encodedPayload = "eyJ2IjpbMCwxXSwiZCI6eyJhYyI6IjEyMzQ1IiwiYXAiOiIyODI3OTAyIiwiaWQiOiI3ZDNlZmIxYjE3M2ZlY2ZhIiwidHgiOiJlOGI5MWExNTkyODlmZjc0IiwicHIiOjEuMjM0NTY3LCJzYSI6dHJ1ZSwidGkiOjE1MTg0Njk2MzYwMzUsInRyIjoiZDZiNGJhMGMzYTcxMmNhIiwidHkiOiJBcHAifX0=";
-			var distributedTracePayload = _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(encodedPayload);
-
-			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Never());
-			Assert.NotNull(distributedTracePayload);
+			// The following base64 string isn't an encoding of a DistributedTracePayload but it is valid base64.
+			var encodedString = "eyJ2IjpbMCwxXSwiZCI6eyJEaWZmZXJlbnQiOiJUeXBlIiwidHkiOiJBcHAiLCJhYyI6IjkxMjMiLCJhcCI6IjUxNDI0IiwiaWQiOiI1ZjQ3NGQ2NGI5Y2M5YjJhIiwidHIiOiIzMjIxYmYwOWFhMGJjZjBkIiwidGsiOiIxMjM0NSIsInByIjowLjEyMzQsInNhIjpmYWxzZSwidGkiOjE1Mjk0MjQxMzA2MDMsInR4IjoiMjc4NTZmNzBkM2QzMTRiNyJ9fQ==";
+			Assert.Throws<DistributedTraceAcceptPayloadParseException>(() => DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(encodedString));
 		}
 
-		[Test]
-		public void BuildOutgoingPayloadFromTransaction_ReturnsNotNull_WithSuccessMetricsEnabled()
+		#region helpers
+
+		private static DistributedTracePayload BuildSampleDistributedTracePayload()
 		{
-			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(true);
-
-			var transaction = new Transaction(_configuration, _initialTransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), 1.0f, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
-			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
-
-			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess(), Occurs.Once());
-			Assert.NotNull(headers);
+			return DistributedTracePayload.TryBuildOutgoingPayload(
+				Type.ToString(),
+				AccountId,
+				AppId,
+				Guid,
+				TraceId,
+				TrustKey,
+				Priority,
+				Sampled,
+				Timestamp,
+				TransactionId);
 		}
 
-		[Test]
-		public void BuildOutgoingPayloadFromTransaction_ReturnsNotNull_WithSuccessMetricsDisabled()
-		{
-			Mock.Arrange(() => _configuration.PayloadSuccessMetricsEnabled).Returns(false);
-
-			var transaction = new Transaction(_configuration, _initialTransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), 1.0f, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
-			var headers = _distributedTracePayloadHandler.TryGetOutboundDistributedTraceApiModel(transaction);
-
-
-			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceCreatePayloadSuccess(), Occurs.Never());
-			Assert.NotNull(headers);
-		}
-
-		private static IContextStorageFactory CreateFactoryForTransactionContext
-		{
-			get
-			{
-				var transactionContext = Mock.Create<IContextStorage<IInternalTransaction>>();
-
-				const string key = "TEST";
-				var dictionary = new Dictionary<string, object>();
-				Mock.Arrange(() => transactionContext.CanProvide).Returns(true);
-				Mock.Arrange(() => transactionContext.SetData((IInternalTransaction)Arg.AnyObject)).DoInstead((object value) =>
-				{
-					dictionary[key] = value;
-				});
-				Mock.Arrange(() => transactionContext.GetData()).Returns(() =>
-				{
-					if (!dictionary.ContainsKey(key))
-						return null;
-
-					object value;
-					dictionary.TryGetValue(key, out value);
-					return value as IInternalTransaction;
-
-				});
-
-				var transactionContextFactory = Mock.Create<IContextStorageFactory>();
-				Mock.Arrange(() => transactionContextFactory.CreateContext<IInternalTransaction>(Arg.AnyString)).Returns(transactionContext);
-				return transactionContextFactory;
-			}
-		}
+		#endregion helpers
 	}
 }

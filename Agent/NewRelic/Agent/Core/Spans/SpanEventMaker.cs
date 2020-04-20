@@ -3,109 +3,98 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Core;
-using Attribute = NewRelic.Agent.Core.Attributes.Attribute;
 
 namespace NewRelic.Agent.Core.Spans
 {
 	public interface ISpanEventMaker
 	{
-		IEnumerable<SpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName);
+		IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName);
 	}
 
 	public class SpanEventMaker : ISpanEventMaker
 	{
-		private readonly IAttributeService _attributeService;
+		private readonly IAttributeDefinitionService _attribDefSvc;
+		private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
 
-		public SpanEventMaker(IAttributeService attributeService)
+		public SpanEventMaker(IAttributeDefinitionService attribDefSvc)
 		{
-			_attributeService = attributeService;
+			_attribDefSvc = attribDefSvc;
 		}
 
-		public IEnumerable<SpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName)
+		public IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName)
 		{
-			var spanEvents = new List<SpanEventWireModel>();
+			var spanEvents = new List<ISpanEventWireModel>();
+
 			var rootSpanId = GuidGenerator.GenerateNewRelicGuid();
+
 			spanEvents.Add(GenerateRootSpan(rootSpanId, immutableTransaction, transactionName));
 
 			foreach (var segment in immutableTransaction.Segments)
 			{
-				var attributes = GetAttributes(segment, immutableTransaction, rootSpanId);
-				spanEvents.Add(GetSpanEvent(immutableTransaction, attributes));
+				SetAttributes(segment, immutableTransaction, rootSpanId);
+				
+				segment.AttribValues.MakeImmutable();
+
+				spanEvents.Add(segment.AttribValues);
 			}
 
 			return spanEvents;
 		}
 
-		private SpanEventWireModel GetSpanEvent(ImmutableTransaction immutableTransaction, AttributeCollection attributes)
-		{
-			var filteredAttributes = _attributeService.FilterAttributes(attributes, AttributeDestinations.SpanEvent);
-			var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();
-			var intrinsicAttributes = filteredAttributes.GetIntrinsicsDictionary();
-			var userAttributes = filteredAttributes.GetUserAttributesDictionary();
-
-			var transactionMetadata = immutableTransaction.TransactionMetadata;
-			var priority = immutableTransaction.Priority;
-
-			return new SpanEventWireModel(priority, intrinsicAttributes, userAttributes, agentAttributes);
-		}
-
 		/// <summary>
 		/// Creates a single root span, much like we do for Transaction Traces, since DT requires that there be only one parent-less span per txn (or at least the UI/Backend is expecting that). 
 		/// </summary>
-		private SpanEventWireModel GenerateRootSpan(string rootSpanId, ImmutableTransaction immutableTransaction, string transactionName)
+		private ISpanEventWireModel GenerateRootSpan(string rootSpanId, ImmutableTransaction immutableTransaction, string transactionName)
 		{
-			var spanAttributes = new AttributeCollection();
+			var spanAttributes = new SpanAttributeValueCollection();
+			spanAttributes.Priority = immutableTransaction.Priority;
 
-			spanAttributes.Add(immutableTransaction.CommonSpanAttributes);
+			spanAttributes.AddRange(immutableTransaction.CommonSpanAttributes);
 
-			// parentId should be null if very first span in trace, but should use DistributedTraceGuid otherwise.
-			if (immutableTransaction.TracingState != null && immutableTransaction.TracingState.Guid != null)
+			if (immutableTransaction.TracingState != null)
 			{
-				spanAttributes.Add(Attribute.BuildParentIdAttribute(immutableTransaction.TracingState.Guid));
+				_attribDefs.ParentId.TrySetValue(spanAttributes, immutableTransaction.TracingState.ParentId ?? immutableTransaction.TracingState.Guid);
+				_attribDefs.TrustedParentId.TrySetValue(spanAttributes, immutableTransaction.TracingState.Guid);
+				_attribDefs.TracingVendors.TrySetValue(spanAttributes, immutableTransaction.TracingState.VendorStateEntries ?? null);
 			}
 
-			spanAttributes.Add(Attribute.BuildGuidAttribute(rootSpanId));
-			spanAttributes.Add(Attribute.BuildTimestampAttribute(immutableTransaction.StartTime));
-			spanAttributes.Add(Attribute.BuildDurationAttribute(immutableTransaction.Duration));
-			spanAttributes.Add(Attribute.BuildNameAttributeForSpanEvent(transactionName));
+			if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+			{
+				_attribDefs.SpanErrorClass.TrySetValue(spanAttributes, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.ErrorTypeName);
+				_attribDefs.SpanErrorMessage.TrySetValue(spanAttributes, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.ErrorMessage);
+			}
 
-			spanAttributes.Add(Attribute.BuildSpanCategoryAttribute(SpanCategory.Generic));
-			spanAttributes.Add(Attribute.BuildNrEntryPointAttribute(true));
+			_attribDefs.Guid.TrySetValue(spanAttributes, rootSpanId);
+			_attribDefs.Timestamp.TrySetValue(spanAttributes, immutableTransaction.StartTime);
+			_attribDefs.Duration.TrySetValue(spanAttributes, immutableTransaction.Duration);
+			_attribDefs.NameForSpan.TrySetValue(spanAttributes, transactionName);
+			
+			_attribDefs.SpanCategory.TrySetValue(spanAttributes, SpanCategory.Generic);
+			_attribDefs.NrEntryPoint.TrySetValue(spanAttributes, true);
 
-			AddTransactionCustomAttributesToRootSpan(spanAttributes, immutableTransaction);
+			//Add Transaction Cutom Attributes to Root Span
+			foreach (var customAttrib in immutableTransaction.TransactionMetadata.UserAttributes)
+			{
+				_attribDefs.GetCustomAttributeForSpan(customAttrib.Key).TrySetValue(spanAttributes, customAttrib.Value);
+			}
 
-			return GetSpanEvent(immutableTransaction, spanAttributes);
-		}
-
-		private static AttributeCollection GetAttributes(Segment segment, ImmutableTransaction immutableTransaction, string rootSpanId)
-		{
-			var spanAttributes = new AttributeCollection();
-
-			spanAttributes.Add(immutableTransaction.CommonSpanAttributes);
-
-			// parentId, Should be either the spanId of the parent segment OR the spanId of the faux root span in the case the current segment has a null ParentUniqueId.
-			spanAttributes.Add(Attribute.BuildParentIdAttribute(GetParentSpanId(segment, immutableTransaction, rootSpanId)));
-			spanAttributes.Add(Attribute.BuildGuidAttribute(segment.SpanId));
-			spanAttributes.Add(Attribute.BuildTimestampAttribute(immutableTransaction.StartTime.Add(segment.RelativeStartTime)));
-			spanAttributes.Add(Attribute.BuildDurationAttribute(segment.DurationOrZero));
-			spanAttributes.Add(Attribute.BuildNameAttributeForSpanEvent(segment.GetTransactionTraceName()));
-
-			segment.Data.AddSpanTypeSpecificAttributes(spanAttributes, segment);
-
-			AddSegmentCustomAttributesToSpan(spanAttributes, segment);
+			spanAttributes.MakeImmutable();
 
 			return spanAttributes;
 		}
 
-		///  TODO:  This should pobably add the intrinsics, agents too.
-		private static void AddTransactionCustomAttributesToRootSpan(AttributeCollection attributes, ImmutableTransaction transaction)
+		private void SetAttributes(Segment segment, ImmutableTransaction immutableTransaction, string rootSpanId)
 		{
-			attributes.TryAddAll(Attribute.BuildCustomAttributeForSpan, transaction.TransactionMetadata.UserAttributes);
-		}
+			segment.AttribValues.AddRange(immutableTransaction.CommonSpanAttributes);
 
-		private static void AddSegmentCustomAttributesToSpan(AttributeCollection attributes, Segment segment)
-		{
-			attributes.TryAddAll(Attribute.BuildCustomAttributeForSpan, segment.CustomAttributes);
+			_attribDefs.Guid.TrySetValue(segment.AttribValues, segment.SpanId);
+			_attribDefs.Timestamp.TrySetValue(segment.AttribValues, immutableTransaction.StartTime.Add(segment.RelativeStartTime));
+			
+			segment.AttribValues.Priority = immutableTransaction.Priority;
+
+			segment.SetAttributeValues();
+
+			_attribDefs.ParentId.TrySetValue(segment.AttribValues, () => GetParentSpanId(segment, immutableTransaction, rootSpanId));
 		}
 
 		/// <summary>

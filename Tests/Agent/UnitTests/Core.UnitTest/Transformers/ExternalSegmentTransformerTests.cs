@@ -7,7 +7,8 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Segments.Tests;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transformers
 {
@@ -316,7 +317,7 @@ namespace NewRelic.Agent.Core.Transformers
 		private static Segment GetSegment(string uri, string method, CrossApplicationResponseData catResponseData = null)
 		{
 			var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
-			var builder = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var builder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			builder.SetSegmentData(data);
 			builder.End();
 			return builder;
@@ -327,7 +328,7 @@ namespace NewRelic.Agent.Core.Transformers
 			var methodCallData = new MethodCallData("foo", "bar", 1);
 
 			var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), methodCallData);
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
 			segment.SetSegmentData(data);
 
 			return new Segment(new TimeSpan(), TimeSpan.FromSeconds(duration), segment, null);

@@ -5,6 +5,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
+using System.Reflection;
 #if NET45
 using System.Web;
 using Microsoft.Win32;
@@ -41,6 +42,7 @@ namespace NewRelic.Agent.Core
 		public static string AppDomainName { get; }
 		public static string AppDomainAppVirtualPath { get; }
 		public static AgentInfo AgentInfo { get; }
+		public static long AgentVersionTimestamp { get; }
 
 		static AgentInstallConfiguration()
 		{
@@ -54,6 +56,7 @@ namespace NewRelic.Agent.Core
 			HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
 			RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
+			AgentVersionTimestamp = GetAgentVersionTimestamp();
 			IsNetstandardPresent = GetIsNetstandardPresent();
 			IsNet46OrAbove = GetIsNet46OrAbove();
 			IsNetCore30OrAbove = GetIsNetCore30OrAbove();
@@ -78,6 +81,18 @@ namespace NewRelic.Agent.Core
 			catch { }
 #endif
 			AgentInfo = GetAgentInfo();
+		}
+
+		private static long GetAgentVersionTimestamp()
+		{
+			try
+			{
+				return Assembly.GetExecutingAssembly().GetCustomAttribute<BuildTimestampAttribute>().BuildTimestamp.Value;
+			}
+			catch
+			{
+				return 0;
+			}
 		}
 
 		private static bool GetIsNetstandardPresent()

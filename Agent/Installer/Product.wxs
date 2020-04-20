@@ -48,7 +48,7 @@
       </FeatureRef>
 
       <FeatureRef Id="AllAppsEnvironmentFeature" IgnoreParent="yes">
-        <Feature Id="InstrumentalAllNETFramework" Display="hidden">
+        <Feature Id="InstrumentAllNETFramework" Display="hidden">
         </Feature>
       </FeatureRef>
       
@@ -280,6 +280,14 @@
 
       <Component Id="NewRelic.Agent.Extensions" Guid="{C2A377FD-A722-4767-81BE-42CE1C6E74CE}">
         <File Id="NewRelic.Agent.Extensions.dll" Name="NewRelic.Agent.Extensions.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\NewRelic.Agent.Extensions.dll"/>
+      </Component>
+ 
+      <!--Google gRPC CSharp Extensions-->
+      <Component Id="gRPCCSharpExtensionsLibx64" Guid="{D792750F-42D9-4DA0-A342-0222607DD357}">
+        <File Id="grpc_csharp_ext.x64.dll" Name="grpc_csharp_ext.x64.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\grpc_csharp_ext.x64.dll"/>
+      </Component>
+      <Component Id="gRPCCSharpExtensionsLibx86" Guid="{D792750F-42D9-4DA0-A342-0222607DD358}">
+        <File Id="grpc_csharp_ext.x86.dll" Name="grpc_csharp_ext.x86.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\grpc_csharp_ext.x86.dll"/>
       </Component>
       
       <!-- Configuration -->

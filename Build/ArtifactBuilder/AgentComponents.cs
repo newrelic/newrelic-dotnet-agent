@@ -51,6 +51,8 @@ namespace ArtifactBuilder
 		public string NewRelicLicenseFile;
 		public string NewRelicThirdPartyNoticesFile;
 		public string AgentInfoJson;
+		public string[] GRPCExtensionsLibWindows;
+		public string[] GRPCExtensionsLibLinux;
 
 		private List<string> AllComponents
 		{
@@ -60,14 +62,20 @@ namespace ArtifactBuilder
 					.Concat(ExtensionDirectoryComponents)
 					.Concat(WrapperXmlFiles)
 					.Append(ExtensionXsd)
-					.Append(AgentApiDll);
+					.Append(AgentApiDll)
+					.ToList();
 
 				if (!string.IsNullOrEmpty(LinuxProfiler))
 				{
-					list = list.Append(LinuxProfiler);
+					list.Add(LinuxProfiler);
 				}
 
-				return list.ToList();
+				if (GRPCExtensionsLibLinux != null)
+				{
+					list.AddRange(GRPCExtensionsLibLinux);
+				}
+
+				return list;
 			}
 		}
 		

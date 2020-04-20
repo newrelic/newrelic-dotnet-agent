@@ -12,5 +12,6 @@
 		/// <param name="metricName"></param>
 		/// <param name="count">Defaults to 1.0f</param>
 		void RecordSupportabilityMetric(string metricName, int count = 1);
+
 	}
 }

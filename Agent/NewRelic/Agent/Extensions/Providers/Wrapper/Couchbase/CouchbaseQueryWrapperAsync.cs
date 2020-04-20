@@ -1,6 +1,7 @@
 ﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Api;
+using System.Threading.Tasks;
 
 namespace NewRelic.Providers.Wrapper.Couchbase
 {
@@ -43,7 +44,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 				null,
 				commandText);
 
-			return Delegates.GetAsyncDelegateFor(agent, segment);
+			return Delegates.GetAsyncDelegateFor<Task>(agent, segment);
 		}
 	}
 }

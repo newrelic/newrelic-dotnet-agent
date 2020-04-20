@@ -110,6 +110,7 @@ namespace NewRelic.Agent.Core.WireModels
 
 		MetricWireModel TryBuildAgentTimingMetric(string suffix, TimeSpan time);
 
+		// Distributed Tracing (New Relic Payload)
 		/// <summary>Created when AcceptDistributedTracePayload was called successfully</summary>
 		MetricWireModel TryBuildAcceptPayloadSuccess(int count);
 
@@ -140,6 +141,33 @@ namespace NewRelic.Agent.Core.WireModels
 		/// <summary>Created when CreateDistributedTracePayload had a generic exception</summary>
 		MetricWireModel TryBuildCreatePayloadException { get; }
 
+		//Tracestate
+
+		/// <summary>The agent successfully accepted inbound traceparent and tracestate headers.</summary>
+		MetricWireModel TryBuildTraceContextAcceptSuccess(int count);
+
+		/// <summary>The agent successfully created the outbound payloads.</summary>
+		MetricWireModel TryBuildTraceContextCreateSuccess(int count);
+
+		/// <summary>A generic exception occurred unrelated to parsing while accepting either payload.</summary>
+		MetricWireModel TryBuildTraceContextAcceptException { get; }
+
+		/// <summary>The inbound traceparent header could not be parsed.</summary>
+		MetricWireModel TryBuildTraceContextTraceParentParseException { get; }
+
+		/// <summary>The inbound tracestate header could not be parsed.</summary>
+		MetricWireModel TryBuildTraceContextTraceStateParseException { get; }
+
+		/// <summary>A generic exception occurred while creating the outbound payloads.</summary>
+		MetricWireModel TryBuildTraceContextCreateException { get; }
+
+		/// <summary>The inbound tracestate header exists, and was accepted, but the New Relic entry was invalid.</summary>
+		MetricWireModel TryBuildTraceContextTraceStateInvalidNrEntry { get; }
+
+		/// <summary>The traceparent header exists, and was accepted, but the tracestate header did not contain a trusted New Relic entry.</summary>
+		MetricWireModel TryBuildTraceContextTraceStateNoNrEntry { get; }
+
+
 		MetricWireModel TryBuildSupportabilityErrorHttpStatusCodeFromCollector(HttpStatusCode statusCode);
 
 		MetricWireModel TryBuildSupportabilityEndpointMethodErrorAttempts(string endpointMethod);
@@ -158,6 +186,6 @@ namespace NewRelic.Agent.Core.WireModels
 
 		MetricWireModel TryBuildInstallTypeMetric(string installType);
 
-		MetricWireModel TryBuildSupportabilityCountMetric(string metricName, int count = 1);
+		MetricWireModel TryBuildSupportabilityCountMetric(string metricName, long count = 1);
 	}
 }

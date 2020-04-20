@@ -74,40 +74,8 @@ namespace NewRelic.Agent.Core.Attributes
 
 		private IAttributeFilter CreateAttributeFilter()
 		{
-			var attributeFilterSettings = new AttributeFilter.Settings
-			{
-				AttributesEnabled = _configuration.CaptureAttributes,
-				Includes = _configuration.CaptureAttributesIncludes,
-				Excludes = _configuration.CaptureAttributesExcludes,
-
-				ErrorTraceEnabled = _configuration.CaptureErrorCollectorAttributes,
-				ErrorTraceIncludes = _configuration.CaptureErrorCollectorAttributesIncludes,
-				ErrorTraceExcludes = _configuration.CaptureErrorCollectorAttributesExcludes,
-
-				JavaScriptAgentEnabled = _configuration.CaptureBrowserMonitoringAttributes,
-				JavaScriptAgentIncludes = _configuration.CaptureBrowserMonitoringAttributesIncludes,
-				JavaScriptAgentExcludes = _configuration.CaptureBrowserMonitoringAttributesExcludes,
-
-				TransactionEventEnabled = _configuration.TransactionEventsAttributesEnabled,
-				TransactionEventIncludes = _configuration.TransactionEventsAttributesInclude,
-				TransactionEventExcludes = _configuration.TransactionEventsAttributesExclude,
-
-				TransactionTraceEnabled = _configuration.CaptureTransactionTraceAttributes,
-				TransactionTraceIncludes = _configuration.CaptureTransactionTraceAttributesIncludes,
-				TransactionTraceExcludes = _configuration.CaptureTransactionTraceAttributesExcludes,
-
-				ErrorEventsEnabled = _configuration.ErrorCollectorCaptureEvents,
-				ErrorEventIncludes = _configuration.CaptureErrorCollectorAttributesIncludes,
-				ErrorEventExcludes = _configuration.CaptureErrorCollectorAttributesExcludes,
-
-				SpanEventsEnabled = _configuration.SpanEventsEnabled,
-				SpanEventIncludes = _configuration.SpanEventsAttributesInclude,
-				SpanEventExcludes = _configuration.SpanEventsAttributesExclude,
-
-				CustomEventsEnabled = _configuration.CustomEventsEnabled,
-				CustomEventIncludes = _configuration.CustomEventsAttributesInclude,
-				CustomEventExcludes = _configuration.CustomEventsAttributesExclude
-			};
+			var attributeFilterSettings = new AttributeFilter.Settings(_configuration);
+		
 			return new AttributeFilter(attributeFilterSettings);
 		}
 

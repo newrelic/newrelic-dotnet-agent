@@ -2,21 +2,23 @@ using System;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
-using Telerik.JustMock;
 using NewRelic.SystemExtensions.Collections.Generic;
-using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
+
 	[TestFixture]
 	public class ExternalSegmentTests
 	{
 		private const string TransactionGuidSegmentParameterKey = "transaction_guid";
 
+		
+
 		[Test]
 		public void Build_IncludesCatParameter_IfCatResponseDataIsSet()
 		{
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
 			segment.End();
 
@@ -27,7 +29,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 		[Test]
 		public void Build_DoesNotIncludeCatParameter_IfCatResponseDataIsNotSet()
 		{
-			var segment = new Segment(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1));
+			var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
 			segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
 			Assert.IsFalse(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));

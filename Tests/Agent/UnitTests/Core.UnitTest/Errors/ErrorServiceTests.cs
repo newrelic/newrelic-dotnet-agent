@@ -67,7 +67,16 @@ namespace NewRelic.Agent.Core.Errors
 		{
 			SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
 
-			var exception = new Exception("Oops.", new ArithmeticException());
+			var exception = new Exception("OuterException", new ArithmeticException("InnerException"));
+			Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
+		}
+
+		[Test]
+		public void ShouldIgnoreException_ReturnsTrue_IfOuterExceptionIsIgnored()
+		{
+			SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
+
+			var exception = new ArithmeticException("OuterException", new Exception("InnerException"));
 			Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
 		}
 

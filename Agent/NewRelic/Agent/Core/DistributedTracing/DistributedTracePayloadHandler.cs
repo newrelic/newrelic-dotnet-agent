@@ -3,7 +3,6 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
@@ -26,9 +25,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		DistributedTracePayload TryDecodeInboundSerializedDistributedTracePayload(string serializedPayload);
 
-		ITracingState AcceptDistributedTracePayload(string serializedPayload, TransportType transportType);
+		ITracingState AcceptDistributedTracePayload(string serializedPayload, TransportType transportType, DateTime transactionStartTime);
 
-		ITracingState AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType);
+		ITracingState AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType, DateTime transactionStartTime);
 
 		void InsertDistributedTraceHeaders(IInternalTransaction transaction, Action<string, string> setHeaders);
 	}
@@ -69,16 +68,38 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				{
 					//set "Newrelic" header
 					var distributedTracePayload = GetOutboundHeader(DistributedTraceHeaderType.NewRelic, transaction, timestamp);
-					setHeaders(Constants.DistributedTracePayloadKey, distributedTracePayload);
+					if (!string.IsNullOrWhiteSpace(distributedTracePayload))
+					{
+						setHeaders(Constants.DistributedTracePayloadKey, distributedTracePayload);
+					}
 				}
 
-				var traceparent = GetOutboundHeader(DistributedTraceHeaderType.W3cTraceparent, transaction, timestamp);
-				var tracestate = GetOutboundHeader(DistributedTraceHeaderType.W3cTracestate, transaction, timestamp);
+				var createOutboundTraceContextHeadersSuccess = false;
+				try
+				{
+					var traceparent = GetOutboundHeader(DistributedTraceHeaderType.W3cTraceparent, transaction, timestamp);
+					var tracestate = GetOutboundHeader(DistributedTraceHeaderType.W3cTracestate, transaction, timestamp);
 
-				setHeaders(Constants.TraceParentHeaderKey, traceparent);
-				setHeaders(Constants.TraceStateHeaderKey, tracestate);
+					createOutboundTraceContextHeadersSuccess = string.IsNullOrEmpty(tracestate) ? false : true;
+
+					if (createOutboundTraceContextHeadersSuccess)
+					{
+						setHeaders(Constants.TraceParentHeaderKey, traceparent);
+						setHeaders(Constants.TraceStateHeaderKey, tracestate);
+					}
+				}
+				catch (Exception ex)
+				{
+					_agentHealthReporter.ReportSupportabilityTraceContextCreateException();
+					Log.Error(ex);
+				}
+
+				if (createOutboundTraceContextHeadersSuccess && _configurationService.Configuration.PayloadSuccessMetricsEnabled)
+				{
+					_agentHealthReporter.ReportSupportabilityTraceContextCreateSuccess();
+				}
 			}
-			catch(Exception ex) 
+			catch (Exception ex) 
 			{
 				Log.Error(ex);
 			}
@@ -93,10 +114,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				case DistributedTraceHeaderType.W3cTracestate:
 					return BuildTracestate(transaction, timestamp);
 				case DistributedTraceHeaderType.NewRelic:
-					var distrubtedTracePayload = TryGetOutboundDistributedTraceApiModelInternal(transaction, transaction.CurrentSegment, timestamp);
-					if (!distrubtedTracePayload.IsEmpty())
+					var distributedTracePayload = TryGetOutboundDistributedTraceApiModelInternal(transaction, transaction.CurrentSegment, timestamp);
+					if (!distributedTracePayload.IsEmpty())
 					{
-						return distrubtedTracePayload.HttpSafe();
+						return distributedTracePayload.HttpSafe();
 					}
 					return string.Empty;
 			}
@@ -106,9 +127,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		private string BuildTraceParent(IInternalTransaction transaction)
 		{
-			var traceId = transaction.TraceId ?? transaction.Guid;
+			var traceId = transaction.TraceId;
 			traceId = FormatTraceId(traceId);
-			var parentId = _configurationService.Configuration.SpanEventsEnabled ? transaction.CurrentSegment.SpanId : GuidGenerator.GenerateNewRelicTraceId();
+			var parentId = _configurationService.Configuration.SpanEventsEnabled ? transaction.CurrentSegment.SpanId : GuidGenerator.GenerateNewRelicGuid();
 			var flags = transaction.Sampled.Value ? "01" : "00";
 			return $"{TraceParentVersion}-{traceId}-{parentId}-{flags}";
 		}
@@ -126,10 +147,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		private string BuildTracestate(IInternalTransaction transaction, DateTime timestamp)
 		{
-			var trustedAccountKey = _configurationService.Configuration.TrustedAccountKey;
+			var accountKey = _configurationService.Configuration.TrustedAccountKey;
 			var version = 0;
 			var parentType = ParentType;
-			var accountId = _configurationService.Configuration.AccountId;
+			var parentAccountId = _configurationService.Configuration.AccountId;
 			var appId = _configurationService.Configuration.PrimaryApplicationId;
 			var spanId = _configurationService.Configuration.SpanEventsEnabled ? transaction.CurrentSegment.SpanId : string.Empty;
 			var transactionId = _configurationService.Configuration.TransactionEventsEnabled ? transaction.Guid : string.Empty;
@@ -137,7 +158,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			var priority = string.Format(PriorityFormat, transaction.Priority);
 			var timestampInMillis = timestamp.ToUnixTimeMilliseconds();
 
-			var newRelicTracestate = $"{trustedAccountKey}@nr={version}-{parentType}-{accountId}-{appId}-{spanId}-{transactionId}-{sampled}-{priority}-{timestampInMillis}";
+			var newRelicTracestate = $"{accountKey}@nr={version}-{parentType}-{parentAccountId}-{appId}-{spanId}-{transactionId}-{sampled}-{priority}-{timestampInMillis}";
 			var otherVendorTracestates = string.Empty;
 
 			if (transaction.TracingState != null)
@@ -176,10 +197,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				return DistributedTraceApiModel.EmptyModel;
 			}
 
-			var payloadGuid = (_configurationService.Configuration.SpanEventsEnabled && transactionIsSampled.Value) ? segment?.SpanId : null;
+			var payloadGuid = _configurationService.Configuration.SpanEventsEnabled ? segment?.SpanId : null;
 			var trustKey = _configurationService.Configuration.TrustedAccountKey;
 			var transactionId = (_configurationService.Configuration.TransactionEventsEnabled) ? transaction.Guid : null;
-			var traceId = transaction.TraceId ?? transaction.Guid;
+			var traceId = transaction.TraceId;
 
 			var distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(
 				DistributedTraceTypeDefault,
@@ -202,7 +223,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			try
 			{
-				encodedPayload = HeaderEncoder.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
+				encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(distributedTracePayload);
 			}
 			catch (Exception ex)
 			{
@@ -225,9 +246,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		#region Incoming/Accept
 
-		public ITracingState AcceptDistributedTracePayload(string serializedPayload, TransportType transportType)
+		public ITracingState AcceptDistributedTracePayload(string serializedPayload, TransportType transportType, DateTime transactionStartTime)
 		{
-			var tracingState = TracingState.AcceptDistributedTracePayload(serializedPayload, transportType, _configurationService.Configuration.TrustedAccountKey);
+			var tracingState = TracingState.AcceptDistributedTracePayload(serializedPayload, transportType, _configurationService.Configuration.TrustedAccountKey, transactionStartTime);
 
 			if (tracingState.IngestErrors != null)
 			{
@@ -245,7 +266,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			return tracingState;
 		}
 
-		public ITracingState AcceptDistributedTraceHeaders(Func<string, IList<string>> getHeaders, TransportType transportType)
+		public ITracingState AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType, DateTime transactionStartTime)
 		{
 			if (getHeaders == null)
 			{
@@ -255,9 +276,29 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			try
 			{
-				var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeaders, transportType, _configurationService.Configuration.TrustedAccountKey);
+				var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeaders, transportType, _configurationService.Configuration.TrustedAccountKey, transactionStartTime);
+
+				if (tracingState?.IngestErrors != null)
+				{
+					ReportIncomingErrors(tracingState.IngestErrors);
+				}
+
+				if (_configurationService.Configuration.PayloadSuccessMetricsEnabled)
+				{
+					if (tracingState?.NewRelicPayloadWasAccepted == true)
+					{
+						_agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess();
+					}
+
+					if (tracingState?.TraceContextWasAccepted == true)
+					{
+						_agentHealthReporter.ReportSupportabilityTraceContextAcceptSuccess();
+					}
+				}
+
 				return tracingState;
-			} catch(Exception ex) 
+			} 
+			catch(Exception ex) 
 			{
 				Log.Error(ex);
 				return null;
@@ -296,6 +337,36 @@ namespace NewRelic.Agent.Core.DistributedTracing
 						_agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredUntrustedAccount();
 						break;
 
+					case IngestErrorType.TraceContextAcceptException:
+						Log.Debug($"Generic exception occurred when accepting tracing payloads.");
+						_agentHealthReporter.ReportSupportabilityTraceContextAcceptException();
+						break;
+
+					case IngestErrorType.TraceContextCreateException:
+						Log.Debug($"Generic exception occurred when creating tracing payloads.");
+						_agentHealthReporter.ReportSupportabilityTraceContextCreateException();
+						break;
+
+					case IngestErrorType.TraceParentParseException:
+						Log.Debug($"The incoming traceparent header could not be parsed.");
+						_agentHealthReporter.ReportSupportabilityTraceContextTraceParentParseException();
+						break;
+
+					case IngestErrorType.TraceStateParseException:
+						Log.Debug($"The incoming tracestate header could not be parsed.");
+						_agentHealthReporter.ReportSupportabilityTraceContextTraceStateParseException();
+						break;
+
+					case IngestErrorType.TraceStateInvalidNrEntry:
+						Log.Debug($"The incoming tracestate header has an invalid New Relic entry.");
+						_agentHealthReporter.ReportSupportabilityTraceContextTraceStateInvalidNrEntry();
+						break;
+
+					case IngestErrorType.TraceStateNoNrEntry:
+						Log.Debug($"The incoming tracestate header does not contain a trusted New Relic entry.");
+						_agentHealthReporter.ReportSupportabilityTraceContextTraceStateNoNrEntry();
+						break;
+
 					default:
 						break;
 				}
@@ -308,7 +379,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			try
 			{
-				payload = HeaderEncoder.TryDecodeAndDeserializeDistributedTracePayload(serializedPayload);
+				payload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(serializedPayload);
 			}
 			catch (DistributedTraceAcceptPayloadVersionException)
 			{

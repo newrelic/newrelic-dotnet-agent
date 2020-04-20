@@ -98,8 +98,13 @@ namespace ArtifactBuilder
 			NewRelicThirdPartyNoticesFile = $@"{SourceHomeBuilderPath}\THIRD_PARTY_NOTICES.txt";
 
 			WindowsProfiler = $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll";
+			
+			GRPCExtensionsLibWindows = new[]
+				{ 	$@"{SourceHomeBuilderPath}\grpc_csharp_ext.x86.dll",
+					$@"{SourceHomeBuilderPath}\grpc_csharp_ext.x64.dll"
+				};
 
-			var root = new[]
+			var root =   new List<string>()
 			{
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
 				$@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
@@ -110,7 +115,9 @@ namespace ArtifactBuilder
 				NewRelicThirdPartyNoticesFile
 			};
 
-			SetRootInstallDirectoryComponents(root);
+			root.AddRange(GRPCExtensionsLibWindows);
+
+			SetRootInstallDirectoryComponents(root.ToArray());
 
 			var extensions = agentDllsForExtensionDirectory
 				.Concat(storageProviders)

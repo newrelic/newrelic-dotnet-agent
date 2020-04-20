@@ -1,31 +1,12 @@
 ﻿using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Parsing.ConnectionString;
-using NewRelic.Reflection;
-using System;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 {
-	public class ExecuteSyncImplWrapper : IWrapper
+	public abstract class ExecuteSyncImplWrapper : IWrapper
 	{
-		private const string TypeName = "StackExchange.Redis.ConnectionMultiplexer";
-		private const string PropertyConfiguration = "Configuration";
-		private static string _assemblyName;
-
-		private static class Statics
-		{
-			private static Func<object, string> _propertyConfiguration;
-
-			public static readonly Func<object, string> GetPropertyConfiguration = AssignPropertyConfiguration();
-
-			private static Func<object, string> AssignPropertyConfiguration()
-			{
-				return _propertyConfiguration ??
-					(_propertyConfiguration =
-					VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(_assemblyName, TypeName, PropertyConfiguration));
-			}
-		}
+		protected abstract string AssemblyName { get; }
 
 		public bool IsTransactionRequired => true;
 
@@ -33,9 +14,9 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 		{
 			var method = methodInfo.Method;
 			var canWrap = method.MatchesAny(
-				assemblyNames: Common.AssemblyNames,
-				typeNames: new[] { "StackExchange.Redis.ConnectionMultiplexer" },
-				methodNames: new[] { "ExecuteSyncImpl" }
+				assemblyName: AssemblyName,
+				typeName: Common.ConnectionMultiplexerTypeName,
+				methodName: "ExecuteSyncImpl"
 			);
 
 			return new CanWrapResponse(canWrap);
@@ -43,36 +24,22 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 
 		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
 		{
-			var operation = Common.GetRedisCommand(instrumentedMethodCall.MethodCall);
-
-			//calling here to setup a static prior to actual bypasser init to speed up all subsequent calls..
-			AssignFullName(instrumentedMethodCall);
-			var connectionOptions = TryGetPropertyName(PropertyConfiguration, instrumentedMethodCall.MethodCall.InvocationTarget);
-			object GetConnectionInfo() => ConnectionInfoParser.FromConnectionString(DatastoreVendor.Redis, connectionOptions);
-
-			ConnectionInfo connectionInfo = null;
-			if (connectionOptions != null)
-			{
-				connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(connectionOptions, GetConnectionInfo);
-			}
+			var operation = Common.GetRedisCommand(instrumentedMethodCall.MethodCall, AssemblyName);
+			var connectionInfo = Common.GetConnectionInfoFromConnectionMultiplexer(instrumentedMethodCall.MethodCall, AssemblyName);
 
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, ParsedSqlStatement.FromOperation(DatastoreVendor.Redis, operation), connectionInfo);
+
 			return Delegates.GetDelegateFor(segment);
 		}
+	}
 
-		private static string TryGetPropertyName(string propertyName, object contextObject)
-		{
-			if (propertyName == PropertyConfiguration)
-			{
-				return Statics.GetPropertyConfiguration(contextObject);
-			}
+	public class RedisExecuteSyncImplWrapper : ExecuteSyncImplWrapper
+	{
+		protected override string AssemblyName => Common.RedisAssemblyName;
+	}
 
-			throw new Exception("Unexpected instrumented property in wrapper: " + contextObject + "." + propertyName);
-		}
-
-		private static string AssignFullName(InstrumentedMethodCall instrumentedMethodCall)
-		{
-			return _assemblyName ?? (_assemblyName = Common.ParseFullName(instrumentedMethodCall.MethodCall.Method.Type.Assembly.FullName));
-		}
+	public class RedisStrongNameExecuteSyncImplWrapper : ExecuteSyncImplWrapper
+	{
+		protected override string AssemblyName => Common.RedisAssemblyStrongName;
 	}
 }

@@ -5,6 +5,7 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Core.DistributedTracing;
@@ -57,11 +58,13 @@ namespace NewRelic.Agent.Core.Transactions
 		private readonly ICallStackManagerFactory _callStackManagerFactory;
 		private readonly IDatabaseService _databaseService;
 		private readonly ITracePriorityManager _tracePriorityManager;
-		private IDatabaseStatementParser _databaseStatementParser;
+		private readonly IDatabaseStatementParser _databaseStatementParser;
 		private readonly IErrorService _errorService;
-		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
+		private readonly IDistributedTracePayloadHandler _distributedTracePayloadHandler;
+		private readonly IAttributeDefinitionService _attribDefSvc;
 
-		public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser, IDistributedTracePayloadHandler distributedTracePayloadHandler, IErrorService errorService)
+		public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService, ITracePriorityManager tracePriorityManager, IDatabaseStatementParser databaseStatementParser,
+			IErrorService errorService, IDistributedTracePayloadHandler distributedTracePayloadHandler, IAttributeDefinitionService attribDefSvc)
 		{
 			_sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
 			_asyncContext = GetAsyncTransactionContext(factories);
@@ -72,6 +75,7 @@ namespace NewRelic.Agent.Core.Transactions
 			_databaseStatementParser = databaseStatementParser;
 			_errorService = errorService;
 			_distributedTracePayloadHandler = distributedTracePayloadHandler;
+			_attribDefSvc = attribDefSvc;
 		}
 
 		public bool IsAttachedToAsyncStorage => TryGetInternalTransaction(_asyncContext) != null;
@@ -148,7 +152,9 @@ namespace NewRelic.Agent.Core.Transactions
 				return null;
 			}
 			var priority = _tracePriorityManager.Create();
-			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority, _databaseStatementParser, _distributedTracePayloadHandler, _errorService);
+			var transaction = new Transaction(_configuration, initialTransactionName, _timerFactory.StartNewTimer(), 
+				DateTime.UtcNow, _callStackManagerFactory.CreateCallStackManager(), _databaseService, priority, 
+				_databaseStatementParser, _distributedTracePayloadHandler, _errorService, _attribDefSvc.AttributeDefs);
 
 			try
 			{

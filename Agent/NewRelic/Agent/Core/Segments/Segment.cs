@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Configuration;
@@ -10,13 +8,38 @@ using NewRelic.Core;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Errors;
 
 namespace NewRelic.Agent.Core.Segments
 {
-	public class Segment : ISegment, ISegmentExperimental, ISpan
+	/// <summary>
+	/// Interface that allows managed transfer of the segment's state
+	/// to the segment data objects.  This provides access to the attribute
+	/// system.
+	/// </summary>
+	public interface ISegmentDataState
 	{
-		public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData)
+		IAttributeDefinitions AttribDefs { get; }
+		SpanAttributeValueCollection AttribValues { get; }
+		string TypeName { get; }
+	}
+
+	public class Segment : IInternalSpan, ISegmentDataState
+	{
+		public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
+		public SpanAttributeValueCollection AttribValues => _attribValues;
+		public string TypeName => MethodCallData.TypeName;
+
+		private readonly SpanAttributeValueCollection _attribValues;
+		private Segment(SpanAttributeValueCollection attribValues)
+		{
+			_attribValues = attribValues;
+		}
+
+		public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData, SpanAttributeValueCollection attribValues)
+			: this(attribValues)
 		{
 			ThreadId = transactionSegmentState.CurrentManagedThreadId;
 			RelativeStartTime = transactionSegmentState.GetRelativeTime();
@@ -25,6 +48,7 @@ namespace NewRelic.Agent.Core.Segments
 			UniqueId = transactionSegmentState.CallStackPush(this);
 			MethodCallData = methodCallData;
 			Data = new MethodSegmentData(methodCallData.TypeName, methodCallData.MethodName);
+			Data.AttachSegmentDataState(this);
 			Combinable = false;
 			IsLeaf = false;
 		}
@@ -37,8 +61,12 @@ namespace NewRelic.Agent.Core.Segments
 		/// <param name="segment"></param>
 		/// <param name="parameters"></param>
 		public Segment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<string, object>> parameters)
+			: this(segment._attribValues)
 		{
-			Data = segment.Data;
+			//Attach this segment's data state to the data object.
+			this.SetSegmentData(segment.Data);
+
+
 			RelativeStartTime = relativeStartTime;
 			_transactionSegmentState = segment._transactionSegmentState;
 			ThreadId = _transactionSegmentState.CurrentManagedThreadId;
@@ -54,8 +82,6 @@ namespace NewRelic.Agent.Core.Segments
 			}
 
 			SpanId = segment.SpanId;
-
-			_customAttributes = segment.CustomAttributes;
 		}
 
 		public bool IsValid => true;
@@ -85,10 +111,12 @@ namespace NewRelic.Agent.Core.Segments
 
 				_transactionSegmentState.CallStackPop(this, true);
 			}
+		
 		}
 
 		public void End(Exception ex)
 		{
+			if (ex != null) ErrorData = _transactionSegmentState.ErrorService.FromException(ex);
 			End();
 		}
 
@@ -103,7 +131,7 @@ namespace NewRelic.Agent.Core.Segments
 		}
 
 		private const long NoEndTime = -1;
-		internal static ISegment NoOpSegment = new NoOpSegment();
+		internal static NoOpSegment NoOpSegment = new NoOpSegment();
 		protected readonly static IEnumerable<KeyValuePair<string, object>> EmptyImmutableParameters = new KeyValuePair<string, object>[0];
 
 		private readonly ITransactionSegmentState _transactionSegmentState;
@@ -129,8 +157,7 @@ namespace NewRelic.Agent.Core.Segments
 
 		public IEnumerable<KeyValuePair<string, object>> Parameters => _parameters ?? EmptyImmutableParameters;
 
-		private ConcurrentDictionary<string, object> _customAttributes;
-		public ConcurrentDictionary<string, object> CustomAttributes => _customAttributes;
+		public ErrorData ErrorData { get; set; }
 
 		public bool Combinable { get; set; }
 
@@ -197,6 +224,20 @@ namespace NewRelic.Agent.Core.Segments
 			_parameters = Data.Finish() ?? EmptyImmutableParameters;
 		}
 
+		public void SetAttributeValues()
+		{
+			AttribDefs.Duration.TrySetValue(_attribValues, DurationOrZero);
+			AttribDefs.NameForSpan.TrySetValue(_attribValues, () => GetTransactionTraceName());
+
+			if (ErrorData != null)
+			{
+				AttribDefs.SpanErrorClass.TrySetValue(_attribValues, ErrorData.ErrorTypeName);
+				AttribDefs.SpanErrorMessage.TrySetValue(_attribValues, ErrorData.ErrorMessage);
+			}
+
+			Data.RecordSpanTypeSpecificAttributes();
+		}
+
 		public void ForceEnd()
 		{
 			Unfinished = RelativeEndTime.HasValue == false;
@@ -249,6 +290,7 @@ namespace NewRelic.Agent.Core.Segments
 
 		public Segment CreateSimilar(TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
 		{
+			//I think this is correct.
 			return new Segment(newRelativeStartTime, newDuration, this, newParameters);
 		}
 
@@ -260,6 +302,7 @@ namespace NewRelic.Agent.Core.Segments
 		public ISegmentExperimental SetSegmentData(ISegmentData segmentData)
 		{
 			Data = (AbstractSegmentData)segmentData;
+			Data.AttachSegmentDataState(this);
 			return this;
 		}
 
@@ -271,13 +314,7 @@ namespace NewRelic.Agent.Core.Segments
 
 		public ISpan AddCustomAttribute(string key, object value)
 		{
-			if(_customAttributes == null)
-			{
-				_customAttributes = new ConcurrentDictionary<string, object>();
-			}
-
-			_customAttributes[key] = value;
-
+			AttribDefs.GetCustomAttributeForSpan(key).TrySetValue(_attribValues, value);
 			return this;
 		}
 	}

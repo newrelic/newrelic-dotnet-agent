@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -28,23 +29,39 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 			var queueName = TryGetQueueName(logicalMessage);
 			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, MessageBrokerDestinationType.Queue, MessageBrokerAction.Produce, brokerVendorName, queueName);
 
-			AttachCatHeaders(agent, logicalMessage);
-
+			CreateOutboundHeaders(agent, logicalMessage);
 			return Delegates.GetDelegateFor(segment);
 		}
 
-		private static void AttachCatHeaders(IAgent agent, LogicalMessage logicalMessage)
+		private static void CreateOutboundHeaders(IAgent agent, LogicalMessage logicalMessage)
 		{
 			if (logicalMessage.Headers == null)
 				return;
 
-			var headers = agent.CurrentTransaction
-				.GetRequestMetadata()
-				.Where(header => header.Value != null && header.Key != null);
-				
-			foreach(var header in headers)
+			if (agent.Configuration.W3CEnabled)
 			{
-				logicalMessage.Headers[header.Key] = header.Value;
+				var setHeaders = new Action<string, string>((key, value) =>
+				{
+					if (logicalMessage.Headers.ContainsKey(key)) 
+					{
+						logicalMessage.Headers.Remove(key);
+					}
+
+					logicalMessage.Headers.Add(key, value);
+				});
+
+				agent.CurrentTransaction.InsertDistributedTraceHeaders(setHeaders);
+			}
+			else
+			{
+				var headers = agent.CurrentTransaction
+					.GetRequestMetadata()
+					.Where(header => header.Value != null && header.Key != null);
+
+				foreach (var header in headers)
+				{
+					logicalMessage.Headers[header.Key] = header.Value;
+				}
 			}
 		}
 

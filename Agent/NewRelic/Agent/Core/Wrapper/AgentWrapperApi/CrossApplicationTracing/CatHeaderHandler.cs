@@ -19,8 +19,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction);
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName);
 		CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers);
-		string TryDecodeInboundRequestHeadersForCrossProcessId(IDictionary<string, string> headers);
-		CrossApplicationRequestData TryDecodeInboundRequestHeaders(IDictionary<string, string> headers);
+		string TryDecodeInboundRequestHeadersForCrossProcessId(Func<string, IEnumerable<string>> getHeaders);
+		CrossApplicationRequestData TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders);
 	}
 
 	public class CatHeaderHandler : ICatHeaderHandler
@@ -157,12 +157,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			}
 		}
 
-		public string TryDecodeInboundRequestHeadersForCrossProcessId(IDictionary<string, string> headers)
+		public string TryDecodeInboundRequestHeadersForCrossProcessId(Func<string, IEnumerable<string>> getHeaders)
 		{
 			if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
 				return null;
 
-			var encodedNewRelicIdHttpHeader = headers.GetValueOrDefault(NewRelicIdHttpHeader);
+			var encodedNewRelicIdHttpHeader = getHeaders(NewRelicIdHttpHeader)?.FirstOrDefault();
 			if (encodedNewRelicIdHttpHeader == null)
 				return null;
 
@@ -182,14 +182,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			return decodedCrossProcessId;
 		}
 
-		public CrossApplicationRequestData TryDecodeInboundRequestHeaders(IDictionary<string, string> headers)
+		public CrossApplicationRequestData TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders)
 		{
 			if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
 			{
 				return null;
 			}
 
-			var encodedTransactionDataHttpHeader = headers.GetValueOrDefault(TransactionDataHttpHeader);
+			var encodedTransactionDataHttpHeader = getHeaders(TransactionDataHttpHeader).FirstOrDefault();
 			if (encodedTransactionDataHttpHeader == null)
 			{
 				return null;

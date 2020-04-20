@@ -1,4 +1,5 @@
 using MoreLinq;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DistributedTracing;
@@ -39,7 +40,9 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 			var factory1 = CreateFactoryForTransactionContext(_highPriorityTransactionContext);
 			var factory2 = CreateFactoryForTransactionContext(_lowPriorityTransactionContext);
 
-			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>());
+			IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+
+			_transactionService = new TransactionService(new[] { factory1, factory2 }, Mock.Create<ITimerFactory>(), Mock.Create<ICallStackManagerFactory>(), Mock.Create<IDatabaseService>(), Mock.Create<ITracePriorityManager>(), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IErrorService>(), Mock.Create<IDistributedTracePayloadHandler>(), _attribDefSvc);
 		}
 
 		[TearDown]

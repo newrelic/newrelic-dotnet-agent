@@ -252,7 +252,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				var transaction = TryGetCurrentInternalTransaction();
 				if (IsErrorMessageIgnored(message)) return;
-				var errorData = _errorService.FromParts(message, "Custom Error", DateTime.UtcNow, customAttributes);
+				var errorData = _errorService.FromMessage(message, customAttributes);
 				ProcessNoticedError(errorData, transaction);
 			}
 		}
@@ -265,7 +265,7 @@ namespace NewRelic.Agent.Core.Api
 			{
 				var transaction = TryGetCurrentInternalTransaction();
 				if (IsErrorMessageIgnored(message)) return;
-				var errorData = _errorService.FromParts(message, "Custom Error", DateTime.UtcNow, customAttributes);
+				var errorData = _errorService.FromMessage(message, customAttributes);
 				ProcessNoticedError(errorData, transaction);
 			}
 		}
@@ -287,7 +287,7 @@ namespace NewRelic.Agent.Core.Api
 		{
 			if (_errorService.ShouldIgnoreException(exception))
 			{
-				if (transaction != null) transaction.TransactionMetadata.CustomErrorWasIgnored = true;
+				if (transaction != null) transaction.TransactionMetadata.TransactionErrorState.SetIgnoreCustomErrors();
 				return true;
 			}
 

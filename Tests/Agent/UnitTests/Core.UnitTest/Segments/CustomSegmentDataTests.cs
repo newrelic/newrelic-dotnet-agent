@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.Attributes;
 using System.Linq;
 using NUnit.Framework;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using Telerik.JustMock;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Segments.Tests
 {
@@ -17,6 +19,8 @@ namespace NewRelic.Agent.Core.Segments.Tests
 		public void SetUp()
 		{
 			_transactionSegmentState = Mock.Create<ITransactionSegmentState>();
+			Mock.Arrange(() => _transactionSegmentState.AttribDefs).Returns(() => new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings())));
+
 		}
 
 		#region IsCombinableWith
@@ -25,7 +29,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 		private Segment CreateCustomSegmentBuilder(MethodCallData methodCallData, string name, bool combinable)
 		{
 			var customSegmentData = new CustomSegmentData(name);
-			var segment = new Segment(_transactionSegmentState, methodCallData);
+			var segment = new Segment(_transactionSegmentState, methodCallData, new SpanAttributeValueCollection());
 			segment.Combinable = combinable;
 			segment.SetSegmentData(customSegmentData);
 

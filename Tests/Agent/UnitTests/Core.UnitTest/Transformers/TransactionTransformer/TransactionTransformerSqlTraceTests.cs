@@ -60,6 +60,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		private ISqlTraceMaker _sqlTraceMaker;
 
 		private ISpanEventAggregator _spanEventAggregator;
+		private ISpanEventAggregatorInfiniteTracing _spanEventAggregatorInfiniteTracing;
 
 		private ISpanEventMaker _spanEventMaker;
 
@@ -94,6 +95,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_errorEventAggregator = Mock.Create<IErrorEventAggregator>();
 			_errorEventMaker = Mock.Create<IErrorEventMaker>();
 			_spanEventAggregator = Mock.Create<ISpanEventAggregator>();
+			_spanEventAggregatorInfiniteTracing = Mock.Create<ISpanEventAggregatorInfiniteTracing>();
 			_spanEventMaker = Mock.Create<ISpanEventMaker>();
 			_agentTimerService = Mock.Create<IAgentTimerService>();
 
@@ -117,7 +119,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			_sqlTraceMaker = new SqlTraceMaker(_configurationService, _attributeService, new DatabaseService(Mock.Create<ICacheStatsReporter>()));
 
 			// create TransactionTransformer
-			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService);
+			_transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing);
 		}
 
 		[Test]
@@ -157,6 +159,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			int nextId = 0;
 			var txSegmentState = Mock.Create<ITransactionSegmentState>();
+			Mock.Arrange(()=> txSegmentState.AttribDefs).Returns(()=> new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings())));
 			Mock.Arrange(() => txSegmentState.ParentSegmentId()).Returns(() =>
 				nextId==0?(int?)null:nextId);
 			Mock.Arrange(() => txSegmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(() => ++nextId);

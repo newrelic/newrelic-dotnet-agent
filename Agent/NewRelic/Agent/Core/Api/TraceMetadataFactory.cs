@@ -40,12 +40,12 @@ namespace NewRelic.Agent.Core.Api
 		{
 			var traceId = transaction.TraceId;
 			var spanId = transaction.CurrentSegment.SpanId;
-			var isSampled = setIsSampled(transaction);
+			var isSampled = SetIsSampled(transaction);
 
 			return new TraceMetadata(traceId, spanId, isSampled);
 		}
 
-		private bool setIsSampled(IInternalTransaction transaction)
+		private bool SetIsSampled(IInternalTransaction transaction)
 		{
 			// if Sampled has not been set, compute it now
 			if (transaction.Sampled != null)
