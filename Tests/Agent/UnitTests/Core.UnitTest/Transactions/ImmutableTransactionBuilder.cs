@@ -1,13 +1,13 @@
-using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Attributes;
-using Telerik.JustMock;
+using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Segments.Tests;
-using NewRelic.Core;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public float CrossApplicationResponseTimeInSeconds { get; }
 
-		public bool HasOutgoingDistributedTracePayload { get; }
+		public bool HasOutgoingTraceHeaders { get; }
 
 		public int? HttpResponseSubStatusCode { get; }
 
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.Transactions
 			string crossApplicationReferrerProcessId,
 			string crossApplicationReferrerTripId,
 			float crossApplicationResponseTimeInSeconds,
-			bool hasOutgoingDistributedTracePayload,
+			bool hasOutgoingTraceHeaders,
 			string syntheticsResourceId,
 			string syntheticsJobId,
 			string syntheticsMonitorId,
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.Core.Transactions
 			CrossApplicationReferrerProcessId = crossApplicationReferrerProcessId;
 			CrossApplicationReferrerTripId = crossApplicationReferrerTripId;
 			CrossApplicationResponseTimeInSeconds = crossApplicationResponseTimeInSeconds;
-			HasOutgoingDistributedTracePayload = hasOutgoingDistributedTracePayload;
+			HasOutgoingTraceHeaders = hasOutgoingTraceHeaders;
 			SyntheticsResourceId = syntheticsResourceId;
 			SyntheticsJobId = syntheticsJobId;
 			SyntheticsMonitorId = syntheticsMonitorId;
@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core.Transactions
 			Mock.Arrange(() => _tracingState.VendorStateEntries).Returns(vendorStateEntries);
 			Mock.Arrange(() => _tracingState.HasDataForParentAttributes).Returns(true);
 			Mock.Arrange(() => _tracingState.Timestamp).Returns(DateTime.UtcNow);
-			Mock.Arrange(() => _tracingState.TransportDuration).Returns(TimeSpan.FromSeconds(3));
+			Mock.Arrange(() => _tracingState.TransportDuration).Returns(TimeSpan.FromMilliseconds(1));
 			Mock.Arrange(() => _tracingState.AccountId).Returns("accountId");
 			Mock.Arrange(() => _tracingState.AppId).Returns("appId");
 			Mock.Arrange(() => _tracingState.TransportType).Returns(Extensions.Providers.Wrapper.TransportType.Kafka);
@@ -252,7 +252,7 @@ namespace NewRelic.Agent.Core.Transactions
 				crossApplicationReferrerProcessId: _crossApplicationReferrerProcessId,
 				crossApplicationReferrerTripId: _crossApplicationReferrerTripId,
 				crossApplicationResponseTimeInSeconds: _crossApplicationResponseTimeInSeconds,
-				hasOutgoingDistributedTracePayload: false,
+				hasOutgoingTraceHeaders: false,
 				syntheticsResourceId: "syntheticsResourceId",
 				syntheticsJobId: "syntheticsJobId",
 				syntheticsMonitorId: "syntheticsMonitorId",

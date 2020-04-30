@@ -49,6 +49,19 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
 		#region inbound CAT request - outbound CAT response
 
+		private List<string> GetHeaderValue(Dictionary<string, string> headers, string key)
+		{
+			var headerValues = new List<string>();
+			foreach (var item in headers)
+			{
+				if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+				{
+					headerValues.Add(item.Value);
+				}
+			}
+			return headerValues;
+		}
+
 		[Test]
 		public void TryDecodeInboundRequestHeaders_ReturnsNull_IfCatIsDisabled()
 		{
@@ -58,24 +71,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{TransactionDataHttpHeader, Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
 			Assert.IsNull(responseData);
-
-			List<string> GetHeaderValue(string key)
-			{
-				var headerValues = new List<string>();
-				foreach (var item in headers)
-				{
-					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-					{
-						headerValues.Add(item.Value);
-					}
-				}
-				return headerValues;
-			}
-
-
 		}
 
 		[Test]
@@ -86,22 +84,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{"WRONG KEY", Strings.Base64Encode("[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]")}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
 			Assert.IsNull(responseData);
 
-			List<string> GetHeaderValue(string key)
-			{
-				var headerValues = new List<string>();
-				foreach (var item in headers)
-				{
-					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-					{
-						headerValues.Add(item.Value);
-					}
-				}
-				return headerValues;
-			}
 		}
 
 		[Test]
@@ -112,22 +98,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{TransactionDataHttpHeader, "[\"crossProcessId\",\"transactionName\",1.1,2.2,3,null,false]"}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
 			Assert.IsNull(responseData);
-
-			List<string> GetHeaderValue(string key)
-			{
-				var headerValues = new List<string>();
-				foreach (var item in headers)
-				{
-					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-					{
-						headerValues.Add(item.Value);
-					}
-				}
-				return headerValues;
-			}
 
 		}
 
@@ -140,22 +113,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{"X-NewRelic-Transaction", "unexpectedValue"}
 			};
 
-			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
+			var responseData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
 			Assert.IsNull(responseData);
-
-			List<string> GetHeaderValue(string key)
-			{
-				var headerValues = new List<string>();
-				foreach (var item in headers)
-				{
-					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-					{
-						headerValues.Add(item.Value);
-					}
-				}
-				return headerValues;
-			}
 
 		}
 
@@ -168,7 +128,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				{"X-NewRelic-Transaction", Strings.Base64Encode(@"[""guid"", ""false"", ""tripId"", ""pathHash""]")}
 			};
 
-			var requestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
+			var requestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(headers, GetHeaderValue);
 
 			Assert.NotNull(requestData);
 			NrAssert.Multiple
@@ -178,19 +138,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 				() => Assert.AreEqual("tripId", requestData.TripId),
 				() => Assert.AreEqual(false, requestData.Unused)
 			);
-
-			List<string> GetHeaderValue(string key)
-			{
-				var headerValues = new List<string>();
-				foreach (var item in headers)
-				{
-					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-					{
-						headerValues.Add(item.Value);
-					}
-				}
-				return headerValues;
-			}
 		}
 
 		[Test]

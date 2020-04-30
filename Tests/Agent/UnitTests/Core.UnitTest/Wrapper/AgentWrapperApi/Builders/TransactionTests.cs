@@ -199,7 +199,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 			);
 
 			// Assert
-			Assert.AreEqual(tx.TraceId.Length, 32);
+			Assert.AreEqual(32, tx.TraceId.Length);
 		}
 
 		/// <summary>

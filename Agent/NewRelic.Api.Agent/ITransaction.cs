@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Api.Agent
 {
@@ -20,7 +21,7 @@ namespace NewRelic.Api.Agent
 		///   transaction.AcceptDistributedTracePayload(metadata.Value, TransportType.Queue);
 		/// </code>
 		/// </example>
-		//[Obsolete("AcceptDistributedTracePayload is deprecated.")]
+		[Obsolete("AcceptDistributedTracePayload is deprecated.")]
 		void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown);
 
 		/// <summary>
@@ -34,9 +35,52 @@ namespace NewRelic.Api.Agent
 		/// </code>
 		/// </example>
 		/// <returns>Returns an object providing access to the outgoing payload.</returns>
-		//[Obsolete("CreateDistributedTracePayload is deprecated.")]
+		[Obsolete("CreateDistributedTracePayload is deprecated.")]
 		IDistributedTracePayload CreateDistributedTracePayload();
 
+		/// <summary>
+		/// Accept incoming Trace Context headers from another service.
+		/// </summary>
+		/// <typeparam name="T">Data type of the carrier</typeparam>
+		/// <param name="carrier">Source of incoming Trace Context headers.</param>
+		/// <param name="getter">A user defined function which instructs getting Trace Context data from the carrier.</param>
+		/// <param name="transportType">An enum value describing the transport of the incoming payload (e.g. http). Default is TransportType.Unknown.</param>
+		/// <example>
+		/// <code>
+		///   HttpContext httpContext = HttpContext.Current;
+		///   IAgent agent = GetAgent();
+		///   ITransaction currentTransaction = _agent.CurrentTransaction;
+		///   currentTransaction.AcceptDistributedTraceHeaders(httpContext, Getter, TransportType.HTTP);
+		///   
+		///   IEnumerable<string> Getter(HttpContext carrier, string key)
+		///   {
+		///      string value = carrier.Request.Headers[key];
+		///      return value == null ? null : new string[] { value };
+		///   }
+		/// </code>
+		/// </example>
+		void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType);
+
+		/// <summary>
+		/// Insert outgoing Trace Context headers in an outgoing request. 
+		/// </summary>
+		/// <typeparam name="T">Data type of the carrier</typeparam>
+		/// <param name="carrier">Container where Trace Context headers are inserted.</param>
+		/// <param name="setter">A user defined function which instructs setting new Trace Context data in the carrier.</param>
+		/// <example>
+		/// <code>
+		///   HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://remote-address");
+		///   IAgent agent = GetAgent();
+		///   ITransaction currentTransaction = _agent.CurrentTransaction;
+		///   currentTransaction.InsertDistributedTraceHeaders(requestMessage, Setter);
+		///   
+		///   void Setter(HttpRequestMessage carrier, string key)
+		///   {
+		///      carrier.Headers?.Add(key, value);
+		///   }
+		/// </code>
+		/// </example>
+		void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter);
 
 		/// <summary> Add a key/value pair to the transaction.  These are reported in errors and
 		/// transaction traces.</summary>

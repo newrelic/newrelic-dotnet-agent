@@ -32,11 +32,15 @@ namespace NewRelic.Agent.Core.DataTransport
 		private readonly IGrpcWrapper<TRequest, TResponse> _grpcWrapper;
 		private readonly IDelayer _delayer;
 		protected readonly IAgentHealthReporter _agentHealthReporter;
+		private readonly IAgentTimerService _agentTimerService;
 
 		private readonly IConfigurationService _configSvc;
 		protected IConfiguration _configuration => _configSvc?.Configuration;
 
 		private readonly string _modelType = typeof(TRequest).Name;
+		private readonly string _timerEventNameForSend = "gRPCSend" + typeof(TRequest).Name;
+		private readonly string _timerEventNameForChannel = "gRPCCreateChannel" + typeof(TRequest).Name;
+		private readonly string _timerEventNameForStream = "gRPCCreateStreams" + typeof(TRequest).Name;
 
 		private readonly int[] _backoffDelaySequenceData = new[]
 		{
@@ -117,11 +121,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
 		private BlockingCollection<TRequest> _collection;
 
-		protected DataStreamingService(IGrpcWrapper<TRequest, TResponse> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
+		protected DataStreamingService(IGrpcWrapper<TRequest, TResponse> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
 		{
 			_grpcWrapper = grpcWrapper;
 			_delayer = delayer;
 			_configSvc = configSvc;
+			_agentTimerService = agentTimerService;
 
 			_cancellationTokenSource = new CancellationTokenSource();
 			_agentHealthReporter = agentHealthReporter;
@@ -285,7 +290,14 @@ namespace NewRelic.Agent.Core.DataTransport
 			{
 				try
 				{
-					if(_grpcWrapper.CreateChannel(EndpointHost, EndpointPort, TimeoutConnectMs, cancellationToken, attemptId))
+
+					var createdChannel = false;
+					using (_agentTimerService.StartNew(_timerEventNameForChannel))
+					{
+						createdChannel = _grpcWrapper.CreateChannel(EndpointHost, EndpointPort, TimeoutConnectMs, cancellationToken, attemptId);
+					}
+
+					if (createdChannel)
 					{
 						LogMessage(LogLevel.Finest, $"gRPC channel to endpoint {EndpointHost}:{EndpointPort} connected.");
 						Task.Run(() => HandleChannelStateChanges(cancellationToken));
@@ -378,8 +390,11 @@ namespace NewRelic.Agent.Core.DataTransport
 		{
 			try
 			{
-				var requestStream = _grpcWrapper.CreateStreams(MetadataHeaders, cancellationToken, handleResponseFunc);
-				return requestStream;
+				using (_agentTimerService.StartNew(_timerEventNameForStream))
+				{
+					var requestStream = _grpcWrapper.CreateStreams(MetadataHeaders, cancellationToken, handleResponseFunc);
+					return requestStream;
+				}
 			}
 			catch (Exception ex)
 			{
@@ -485,7 +500,13 @@ namespace NewRelic.Agent.Core.DataTransport
 			var wasClosedStream = false;
 			try
 			{
-				if(_grpcWrapper.TrySendData(requestStream, item, TimeoutSendDataMs, cancellationToken, attemptId))
+				var sentData = false;
+				using (_agentTimerService.StartNew(_timerEventNameForSend))
+				{
+					sentData =_grpcWrapper.TrySendData(requestStream, item, TimeoutSendDataMs, cancellationToken, attemptId);
+				}
+
+				if(sentData)
 				{
 					LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send (attempt {attemptId}) - Success");
 					RecordSuccessfulSend();

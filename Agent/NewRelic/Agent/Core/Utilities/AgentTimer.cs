@@ -11,14 +11,14 @@ namespace NewRelic.Agent.Core.Utilities
 
 	public class AgentTimer : IAgentTimer
 	{
-		public AgentTimer(IAgentHealthReporter agentHealthReporter, params string[] nameParts)
+		public AgentTimer(IAgentHealthReporter agentHealthReporter, string eventName)
 		{
 			_agentHealthReporter = agentHealthReporter;
-			_nameParts = nameParts;
+			_eventName = eventName;
 		}
 
 		private readonly IAgentHealthReporter _agentHealthReporter;
-		private readonly string[] _nameParts;
+		private readonly string _eventName;
 		private System.Diagnostics.Stopwatch _stopWatch;
 
 		public void Start()
@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Utilities
 		public void StopAndRecordMetric()
 		{
 			_stopWatch.Stop();
-			_agentHealthReporter.ReportAgentTimingMetric(string.Join("/", _nameParts), _stopWatch.Elapsed);
+			_agentHealthReporter.ReportAgentTimingMetric(_eventName, _stopWatch.Elapsed);
 		}
 
 		public void Dispose()

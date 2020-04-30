@@ -106,30 +106,16 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
 		private static void TryAttachHeadersToRequest(IAgent agent, HttpRequestMessage httpRequestMessage)
 		{
-			var setHeaders = new Action<string, string>((key, value) =>
+			var setHeaders = new Action<HttpRequestMessage, string, string>((carrier, key, value) =>
 			{
-				// "Add" will not replace an existing value, so we must remove it first
-				httpRequestMessage.Headers?.Remove(key);
-				httpRequestMessage.Headers?.Add(key, value);
+				// "Add" will throw if value exists, so we must remove it first
+				carrier.Headers?.Remove(key);
+				carrier.Headers?.Add(key, value);
 			});
 
 			try
 			{
-				if (!agent.Configuration.W3CEnabled)
-				{
-					var headers = agent.CurrentTransaction.GetRequestMetadata()
-						.Where(header => header.Key != null);
-
-					foreach (var header in headers)
-					{
-						setHeaders(header.Key, header.Value);
-					}
-				}
-
-				else
-				{
-					agent.CurrentTransaction.InsertDistributedTraceHeaders(setHeaders);
-				}
+				agent.CurrentTransaction.InsertDistributedTraceHeaders(httpRequestMessage, setHeaders);
 			}
 			catch (Exception ex)
 			{

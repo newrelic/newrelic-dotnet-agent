@@ -14,23 +14,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		public List<string> VendorStateEntries =>Tracestate?.VendorstateEntries;
 
-		internal static W3CTraceContext TryGetTraceContextFromHeaders(Func<string, IEnumerable<string>> getHeaders, string trustedAccountKey, IList<IngestErrorType> errors)
+		internal static W3CTraceContext TryGetTraceContextFromHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, string trustedAccountKey, IList<IngestErrorType> errors)
 		{
 			var traceContext = new W3CTraceContext();
-			traceContext.Traceparent = traceContext.TryGetTraceParentHeaderFromHeaders(getHeaders, errors);
+			traceContext.Traceparent = traceContext.TryGetTraceParentHeaderFromHeaders(carrier, getter, errors);
 
 			if (traceContext.Traceparent != null)
 			{
-				traceContext.Tracestate = TryGetTracestateFromHeaders(getHeaders, trustedAccountKey, errors);
+				traceContext.Tracestate = TryGetTracestateFromHeaders(carrier, getter, trustedAccountKey, errors);
 				return traceContext;
 			}
 
 			return traceContext;
 		}
 
-		private W3CTraceparent TryGetTraceParentHeaderFromHeaders(Func<string, IEnumerable<string>> getHeaders, IList<IngestErrorType> errors)
+		private W3CTraceparent TryGetTraceParentHeaderFromHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, IList<IngestErrorType> errors)
 		{
-			var result = getHeaders("traceparent");
+			var result = getter(carrier, "traceparent");
 			if (result == null || result.Count() != 1)
 			{
 				return null;
@@ -48,9 +48,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			return traceparent;
 		}
 
-		private static W3CTracestate TryGetTracestateFromHeaders(Func<string, IEnumerable<string>> getHeaders, string trustedAccountKey, IList<IngestErrorType> errors)
+		private static W3CTracestate TryGetTracestateFromHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, string trustedAccountKey, IList<IngestErrorType> errors)
 		{
-			var result = getHeaders("tracestate");
+			var result = getter(carrier, "tracestate");
 
 			if(result == null || result.Count() == 0) 
 			{

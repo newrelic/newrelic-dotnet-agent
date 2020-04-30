@@ -9,10 +9,7 @@ namespace NewRelic.Agent.Api.Experimental
 	/// </summary>
 	public interface ITransactionExperimental
 	{
-		// used by instrumentation for CAT response headers
-		long? CatContentLength { get; set; }
-		
-			/// <summary>
+		/// <summary>
 		/// Returns the object that uniquely identifies the starting wrapper.
 		/// </summary>
 		/// <returns></returns>

@@ -1066,7 +1066,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				.Concat(attributes.GetUserAttributes())
 				.ToDictionary(attr => attr.Key, attr => attr);
 
-
 			Assert.True(transactionAttributes.ContainsKey(ParentSpanIdAttributeName), "Failed to find attribute: \"{0}\"", ParentSpanIdAttributeName);
 
 			var parentSpanIdAttribute = transactionAttributes[ParentSpanIdAttributeName];
@@ -1078,6 +1077,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 				() => Assert.AreEqual(IncomingParentId, parentSpanIdAttribute.Value)
 			);
 		}
+
 		[Test]
 		public void ShouldNotCreateParentSpanIdWhenDistributedTraceGuidNotInPayloadAndParentIdNotInPayload()
 		{
@@ -1150,8 +1150,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			Mock.Arrange(() => tracingState.AppId).Returns(IncomingAppId);
 			Mock.Arrange(() => tracingState.AccountId).Returns(IncomingAcctId);
 			Mock.Arrange(() => tracingState.TransportType).Returns(TransportType.HTTP);
-			Mock.Arrange(() => tracingState.TraceContextWasAccepted).Returns(hasFatalError ? false : true);
 			Mock.Arrange(() => tracingState.HasDataForParentAttributes).Returns(hasFatalError ? false : true);
+			Mock.Arrange(() => tracingState.HasDataForAttributes).Returns(hasFatalError ? false : true);
 
 			if (guidInPayload)
 			{

@@ -19,8 +19,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundRequestHeaders(IInternalTransaction transaction);
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundResponseHeaders(IInternalTransaction transaction, TransactionMetricName transactionMetricName);
 		CrossApplicationResponseData TryDecodeInboundResponseHeaders(IDictionary<string, string> headers);
-		string TryDecodeInboundRequestHeadersForCrossProcessId(Func<string, IEnumerable<string>> getHeaders);
-		CrossApplicationRequestData TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders);
+		string TryDecodeInboundRequestHeadersForCrossProcessId<T>(T carrier, Func<T, string, IEnumerable<string>> getter);
+		CrossApplicationRequestData TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter);
 	}
 
 	public class CatHeaderHandler : ICatHeaderHandler
@@ -157,12 +157,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			}
 		}
 
-		public string TryDecodeInboundRequestHeadersForCrossProcessId(Func<string, IEnumerable<string>> getHeaders)
+		public string TryDecodeInboundRequestHeadersForCrossProcessId<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
 		{
 			if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
 				return null;
 
-			var encodedNewRelicIdHttpHeader = getHeaders(NewRelicIdHttpHeader)?.FirstOrDefault();
+			var encodedNewRelicIdHttpHeader = getter(carrier, NewRelicIdHttpHeader)?.FirstOrDefault();
 			if (encodedNewRelicIdHttpHeader == null)
 				return null;
 
@@ -182,14 +182,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 			return decodedCrossProcessId;
 		}
 
-		public CrossApplicationRequestData TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders)
+		public CrossApplicationRequestData TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
 		{
 			if (!_configurationService.Configuration.CrossApplicationTracingEnabled)
 			{
 				return null;
 			}
 
-			var encodedTransactionDataHttpHeader = getHeaders(TransactionDataHttpHeader).FirstOrDefault();
+			var encodedTransactionDataHttpHeader = getter(carrier, TransactionDataHttpHeader).FirstOrDefault();
 			if (encodedTransactionDataHttpHeader == null)
 			{
 				return null;

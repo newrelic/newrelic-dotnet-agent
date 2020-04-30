@@ -30,32 +30,18 @@ namespace NewRelic.Providers.Wrapper.HttpWebRequest
 				throw new NullReferenceException("request.Headers");
 			}
 
-
-			var setHeaders = new Action<string, string>((key, value) =>
+			var setHeaders = new Action<System.Net.HttpWebRequest, string, string>((carrier, key, value) =>
 			{
-				request.Headers?.Set(key, value);
+				carrier.Headers?.Set(key, value);
 			});
 
-			if (!agent.Configuration.W3CEnabled)
+			try
 			{
-				var headers = transaction.GetRequestMetadata()
-				.Where(header => header.Key != null);
-
-				foreach (var header in headers)
-				{
-					setHeaders(header.Key, header.Value);
-				}
+				transaction.InsertDistributedTraceHeaders(request, setHeaders);
 			}
-			else
+			catch (Exception ex)
 			{
-				try
-				{
-					transaction.InsertDistributedTraceHeaders(setHeaders);
-				}
-				catch (Exception ex)
-				{
-					agent.HandleWrapperException(ex);
-				}
+				agent.HandleWrapperException(ex);
 			}
 
 			return Delegates.NoOp;

@@ -164,7 +164,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore", "NewRelic\Agen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RestSharp", "NewRelic\Agent\Extensions\Providers\Wrapper\RestSharp\RestSharp.csproj", "{B65A0C00-100D-4F27-BAC7-6B8A9FC7619D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Core.Tests", "..\Tests\NewRelic.Core.Tests\NewRelic.Core.Tests.csproj", "{6DC9A481-9A72-4D35-B312-43E02E36C241}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Core.Tests", "..\Tests\NewRelic.Core.Tests\NewRelic.Core.Tests.csproj", "{6DC9A481-9A72-4D35-B312-43E02E36C241}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Storage", "Storage", "{2D194040-0192-4A87-A076-2B640C7FA82F}"
 EndProject

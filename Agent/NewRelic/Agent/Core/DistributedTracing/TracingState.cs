@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 				if (_traceContext?.Tracestate != null)
 				{
-					return _type =_traceContext.Tracestate.ParentType;
+					return _type = _traceContext.Tracestate.ParentType;
 				}
 
 				if (_newRelicPayload?.Type != null)
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		{
 			get
 			{
-				if ( _traceContext?.Tracestate != null)
+				if (_traceContext?.Tracestate != null)
 				{
 					return _traceContext.Tracestate.AppId;
 				}
@@ -86,23 +86,23 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			}
 		}
 
-		public string ParentId =>  _traceContext?.Traceparent?.ParentId;
+		public string ParentId => _traceContext?.Traceparent?.ParentId;
 
-		public DateTime Timestamp 
+		public DateTime Timestamp
 		{
 			get
 			{
-				if (_timestamp != null)
+				if (_timestamp != default)
 				{
 					return _timestamp;
 				}
 
-				if (_traceContext?.Tracestate != null)
+				if (_traceContext?.Tracestate != null && _traceContext.Tracestate.Timestamp != default)
 				{
 					return _timestamp = _traceContext.Tracestate.Timestamp.FromUnixTimeMilliseconds();
 				}
 
-				if (_newRelicPayload?.Timestamp != null)
+				if (_newRelicPayload?.Timestamp != default)
 				{
 					return _timestamp = _newRelicPayload.Timestamp;
 				}
@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		{
 			get
 			{
-				var duration = Timestamp != default ? Timestamp - _transactionStartTime : TimeSpan.Zero;
+				var duration = Timestamp != default ? _transactionStartTime - Timestamp  : TimeSpan.Zero;
 				return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
 			}
 		}
@@ -126,7 +126,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			{
 				if (_traceContext?.Traceparent != null)
 				{
-					return  _traceContext.Traceparent.TraceId;
+					return _traceContext.Traceparent.TraceId;
 				}
 
 				return _newRelicPayload?.TraceId;
@@ -164,7 +164,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				{
 					return _sampled = _newRelicPayload.Sampled;
 				}
-				
+
 				return null;
 			}
 		}
@@ -191,6 +191,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		public bool TraceContextWasAccepted { get; private set; } = false;
 
 		public bool HasDataForParentAttributes => NewRelicPayloadWasAccepted || _validTracestateWasAccepted;
+		public bool HasDataForAttributes { get; private set; } = false;
 
 		public List<string> VendorStateEntries => (_traceContext?.VendorStateEntries);
 
@@ -214,27 +215,31 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				tracingState.IngestErrors = errors;
 			}
 
+			tracingState.HasDataForAttributes = tracingState.NewRelicPayloadWasAccepted;
 			tracingState.TransportType = transportType;
 
 			return tracingState;
 		}
 
-		public static ITracingState AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType, string agentTrustKey, DateTime transactionStartTime)
+		public static ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, string agentTrustKey, DateTime transactionStartTime)
 		{
 			var tracingState = new TracingState();
 			var errors = new List<IngestErrorType>();
 
 			// w3c
-			tracingState._traceContext = W3CTraceContext.TryGetTraceContextFromHeaders(getHeaders, agentTrustKey, errors);
-			tracingState.TraceContextWasAccepted = tracingState._traceContext != null ? true : false;
+			tracingState._traceContext = W3CTraceContext.TryGetTraceContextFromHeaders(carrier, getter, agentTrustKey, errors);
+			tracingState.TraceContextWasAccepted = 
+				tracingState._traceContext.TraceparentPresent && 
+				!errors.Contains(IngestErrorType.TraceParentParseException) ? true : false;
+
 			tracingState._validTracestateWasAccepted = tracingState._traceContext?.Tracestate?.AccountKey != null ? true : false;
-			tracingState._transactionStartTime = tracingState._validTracestateWasAccepted ? transactionStartTime : default;
+			
 			
 			// newrelic 
 			// if traceparent was present (regardless if valid), ignore newrelic header
 			if (!tracingState._traceContext.TraceparentPresent)
 			{
-				var newRelicHeaderList = getHeaders(Constants.DistributedTracePayloadKey);
+				var newRelicHeaderList = getter(carrier, Constants.DistributedTracePayloadKey);
 				if (newRelicHeaderList?.Count() > 0) // the Newrelic header key was present
 				{
 					tracingState._newRelicPayload = DistributedTracePayload.TryDecodeAndDeserializeDistributedTracePayload(newRelicHeaderList.FirstOrDefault(), agentTrustKey, errors);
@@ -247,6 +252,10 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				tracingState.IngestErrors = errors;
 			}
 
+			// if Traceparent was present (regardless if valid), generate TransactionAttributes
+			tracingState.HasDataForAttributes = tracingState._traceContext.TraceparentPresent == true || tracingState.NewRelicPayloadWasAccepted == true;
+
+			tracingState._transactionStartTime = tracingState._validTracestateWasAccepted || tracingState.NewRelicPayloadWasAccepted ? transactionStartTime : default;
 			tracingState.TransportType = transportType;
 
 			return tracingState;

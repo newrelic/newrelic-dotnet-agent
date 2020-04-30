@@ -13,6 +13,7 @@ using NewRelic.Agent.Configuration;
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -197,7 +198,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 		protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<Span, RecordStatus> grpcWrapper, IConfigurationService configSvc)
 		{
-			return new SpanStreamingService(grpcWrapper, delayer, configSvc, _agentHealthReporter);
+			return new SpanStreamingService(grpcWrapper, delayer, configSvc, _agentHealthReporter, _agentTimerService);
 		}
 
 		protected override Span GetRequestModel()
@@ -232,6 +233,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 		protected IConfiguration _currentConfiguration => _configSvc?.Configuration;
 		private TService _streamingSvc;
 		protected IAgentHealthReporter _agentHealthReporter;
+		protected IAgentTimerService _agentTimerService;
 
 		private StatusCode[] _grpcErrorStatusCodes;
 
@@ -257,6 +259,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 			_grpcWrapper = new MockGrpcWrapper<TRequest, TResponse>();
 			_delayer = Mock.Create<IDelayer>();
 			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+			_agentTimerService = Mock.Create<IAgentTimerService>();
 			_configSvc = Mock.Create<IConfigurationService>();
 			
 			var defaultConfig = GetDefaultConfiguration();

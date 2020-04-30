@@ -315,14 +315,32 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 			return _defaultConfig.InstrumentationLoggingEnabled;
 		}
 
-		[TestCase(true, ExpectedResult = true)]
-		[TestCase(false, ExpectedResult = false)]
-		public bool DiagnosticsCaptureAgentTimingSetFromLocal(bool local)
+		[Test]
+		public void DiagnosticsCaptureAgentTimingSetFromLocal
+		(	[Values(true,false,null)] bool? localIsEnabled, 
+			[Values(10,100,0,-1,null)] int? localFrequency
+		)
 		{
-			_localConfig.diagnostics.captureAgentTiming = local;
+			var expectedIsEnabled = localIsEnabled.GetValueOrDefault() && localFrequency.GetValueOrDefault(1) > 0;
+			var expectedFrequency = localFrequency.GetValueOrDefault(1);
 
-			return _defaultConfig.DiagnosticsCaptureAgentTiming;
+			if(localIsEnabled.HasValue)
+			{
+				_localConfig.diagnostics.captureAgentTiming = localIsEnabled.Value;
+			}
+
+			if(localFrequency.HasValue)
+			{
+				_localConfig.diagnostics.captureAgentTimingFrequency = localFrequency.Value;
+			}
+
+			NrAssert.Multiple
+			(
+				() => Assert.AreEqual(expectedIsEnabled, _defaultConfig.DiagnosticsCaptureAgentTiming, "Performance Timing Enabled"),
+				() => Assert.AreEqual(expectedFrequency, _defaultConfig.DiagnosticsCaptureAgentTimingFrequency, "Perforamcne Timing Frequency")
+			);
 		}
+
 
 		[TestCase(true, null, null, ExpectedResult = true)]
 		[TestCase(true, null, true, ExpectedResult = true)]

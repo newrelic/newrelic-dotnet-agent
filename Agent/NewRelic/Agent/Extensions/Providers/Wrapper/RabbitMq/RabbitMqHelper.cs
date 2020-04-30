@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.Api;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -45,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			return false;
 		}
 
-		public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, int basicPropertiesIndex)
+		public static ISegment CreateSegmentForPublishWrappers(InstrumentedMethodCall instrumentedMethodCall, ITransaction transaction, IConfiguration configuration, int basicPropertiesIndex)
 		{
 			// ATTENTION: We have validated that the use of dynamic here is appropriate based on the visibility of the data we're working with.
 			// If we implement newer versions of the API or new methods we'll need to re-evaluate.
@@ -64,22 +66,19 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 				return segment;
 			}
 
-			// We're relying on CreateDistibutedTracePayload to do all the necessary checking realated to whether we return an empty payload or not.
-			var distributedTracePayload = transaction.CreateDistributedTracePayload();
-
-			if (!distributedTracePayload.IsEmpty())
+			var setHeaders = new Action<dynamic, string, string>((carrier, key, value) =>
 			{
-				// if null, setup a new dictionary  and replace the null Headers property with it.
-				var headers = basicProperties.Headers as Dictionary<string, object>;
-
+				Dictionary<string, object> headers = carrier.Headers as Dictionary<string, object>;
 				if (headers == null)
 				{
 					headers = new Dictionary<string, object>();
-					basicProperties.Headers = headers;
+					carrier.Headers = headers;
 				}
 
-				headers[Constants.DistributedTracePayloadKey] = distributedTracePayload.HttpSafe();
-			}
+				headers[key] = value;
+			});
+
+			transaction.InsertDistributedTraceHeaders(basicProperties, setHeaders);
 
 			return segment;
 		}

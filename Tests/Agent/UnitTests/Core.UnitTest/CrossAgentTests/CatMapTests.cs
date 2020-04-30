@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 				var transactionName = GetTransactionNameFromString(request.OutboundTxnName);
 				_transaction.CandidateTransactionName.TrySet(transactionName, (TransactionNamePriority)namePriority++);
 				var outboundHeaders = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
-				var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(GetHeaderValue);
+				var actualOutboundPayload = _catHeaderHandler.TryDecodeInboundRequestHeaders(outboundHeaders, GetHeaderValue);
 				var requestData = new CrossApplicationRequestData(
 					(string)request.ExpectedOutboundPayload[0],
 					(bool)request.ExpectedOutboundPayload[1],
@@ -120,10 +120,10 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 				expectedAndActualOutboundRequestPayloads.Add(requestData, actualOutboundPayload);
 				_transaction.TransactionMetadata.MarkHasCatResponseHeaders();
 
-				List<string> GetHeaderValue(string key)
+				List<string> GetHeaderValue(Dictionary<string, string> headers,  string key)
 				{
 					var headerValues = new List<string>();
-					foreach (var item in outboundHeaders)
+					foreach (var item in headers)
 					{
 						if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
 						{

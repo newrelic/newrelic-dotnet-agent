@@ -1,9 +1,11 @@
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -49,21 +51,20 @@ namespace CompositeTests
 			var newRelicTransactionHeader = new KeyValuePair<string, string>("X-NewRelic-Transaction", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
 			var requestHeaders = new[] { newRelicIdHeader, newRelicTransactionHeader };
 
-
 			// ==== ACT ====
 			var tx = _agent.CreateTransaction(
 				isWeb: true,
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
 				transactionDisplayName: "name",
 				doNotTrackAsUnitOfWork: true);
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
+
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
+
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
 
 			_compositeTestAgent.Harvest();
-			// ==== ACT ====
-
 
 			// ASSERT
 			var unexpectedEventAttributes = new List<string>
@@ -112,20 +113,19 @@ namespace CompositeTests
 			var newRelicTransactionHeader = new KeyValuePair<string, string>("X-NeWrElIc-TranSACTion", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
 			var requestHeaders = new[] { newRelicIdHeader, newRelicTransactionHeader };
 
-
 			// ==== ACT ====
 			var tx = _agent.CreateTransaction(
 				isWeb: true,
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
 				transactionDisplayName: "name",
 				doNotTrackAsUnitOfWork: true);
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
+
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
+
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
 			_compositeTestAgent.Harvest();
-			// ==== ACT ====
-
 
 			// ASSERT
 			var unexpectedEventAttributes = new List<string>
@@ -165,20 +165,17 @@ namespace CompositeTests
 			_compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
 			_compositeTestAgent.PushConfiguration();
 
-
 			// ==== ACT ====
 			var tx = _agent.CreateTransaction(
 				isWeb: true,
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
 				transactionDisplayName: "name",
 				doNotTrackAsUnitOfWork: true);
-			_agent.ProcessInboundRequest(new KeyValuePair<string, string>[0], TransportType.HTTP);
+
 			var segment = _agent.StartTransactionSegmentOrThrow("segmentName");
 			segment.End();
 			tx.End();
 			_compositeTestAgent.Harvest();
-			// ==== ACT ====
-
 
 			// ASSERT
 			var unexpectedEventAttributes = new List<string>
@@ -223,8 +220,6 @@ namespace CompositeTests
 			segment.End();
 			tx.End();
 			_compositeTestAgent.Harvest();
-			// ==== ACT ====
-
 
 			// ASSERT
 			var unexpectedEventAttributes = new List<string>

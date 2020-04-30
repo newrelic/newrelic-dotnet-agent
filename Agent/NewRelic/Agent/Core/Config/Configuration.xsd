@@ -176,6 +176,13 @@
                 </xs:documentation>
               </xs:annotation>
             </xs:attribute>
+            <xs:attribute name="captureAgentTimingFrequency" type="xs:int" default="1">
+              <xs:annotation>
+                <xs:documentation>
+                  Determines how frequently the agent will capture timing information.  Number of events between samplings.
+                </xs:documentation>
+              </xs:annotation>
+            </xs:attribute>
           </xs:complexType>
         </xs:element>
 

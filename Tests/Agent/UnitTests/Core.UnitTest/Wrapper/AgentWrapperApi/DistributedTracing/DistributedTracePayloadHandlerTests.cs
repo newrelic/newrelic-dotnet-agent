@@ -12,6 +12,7 @@ using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
@@ -625,10 +626,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var transaction = Mock.Create<ITransaction>();
 			var headers = new List<KeyValuePair<string, string>>();
 
-			Func<string, IList<string>> getHeaders = null;
+			Func<IEnumerable<KeyValuePair<string, string>>, string, IList<string>> getHeaders = null;
 			if (testCaseName != "getHeaders is null")
 			{
-				getHeaders = new Func<string, IList<string>> ((key) =>
+				getHeaders = new Func<IEnumerable<KeyValuePair<string, string>>, string, IList<string>> ((carrier, key) =>
 				{
 					throw new Exception("Exception occurred in getHeaders.");
 				});
@@ -637,10 +638,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			var tracingState = Mock.Create<ITracingState>();
 			var vendorStateEntries = new List<string> { "k1=v1", "k2=v2" };
 
-			Mock.Arrange(() => transaction.AcceptDistributedTraceHeaders(Arg.IsAny<Func<string, IList<string>>>(), Arg.IsAny<TransportType>())).DoInstead(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP, mockStartTime));
+			Mock.Arrange(() => transaction.AcceptDistributedTraceHeaders(Arg.IsAny<IEnumerable<KeyValuePair<string, string>>>(), Arg.IsAny<Func<IEnumerable<KeyValuePair<string, string>>, string, IList<string>>>(), Arg.IsAny<TransportType>())).DoInstead(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, getHeaders, TransportType.HTTP, mockStartTime));
 
 			// Act
-			Assert.DoesNotThrow(() => transaction.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP));
+			Assert.DoesNotThrow(() => transaction.AcceptDistributedTraceHeaders(headers, getHeaders, TransportType.HTTP));
 			Assert.That(headers.Count == 0);
 		}
 
@@ -664,9 +665,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
 
 			var headers = new List<KeyValuePair<string, string>>();
-			var setHeaders = new Action<string, string>((key, value) =>
+			var setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
 			{
-				headers.Add(new KeyValuePair<string, string>(key, value));
+				carrier.Add(new KeyValuePair<string, string>(key, value));
 			});
 
 			var tracingState = Mock.Create<ITracingState>();
@@ -676,10 +677,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
 			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
 
-			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<List<KeyValuePair<string, string>>>(), Arg.IsAny<Action<List<KeyValuePair<string, string>>, string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, headers, setHeaders));
 
 			// Act
-			transaction.InsertDistributedTraceHeaders(setHeaders);
+			transaction.InsertDistributedTraceHeaders(headers, setHeaders);
 
 			Assert.That(headers.Where(header => header.Key == NewRelicPayloadHeaderName).Count() > 0, "There must be at least a newrelic header");
 			Assert.That(headers.Where(header => header.Key == TraceParentHeaderName).Count() > 0, "There must be at least a traceparent header");
@@ -735,9 +736,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
 
 			var headers = new List<KeyValuePair<string, string>>();
-			var setHeaders = new Action<string, string>((key, value) =>
+			var setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
 			{
-				headers.Add(new KeyValuePair<string, string>(key, value));
+				carrier.Add(new KeyValuePair<string, string>(key, value));
 			});
 
 			var tracingState = Mock.Create<ITracingState>();
@@ -746,10 +747,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
 			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
 
-			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<List<KeyValuePair<string, string>>>(), Arg.IsAny<Action<List<KeyValuePair<string, string>>, string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, headers, setHeaders));
 
 			// Act
-			transaction.InsertDistributedTraceHeaders(setHeaders);
+			transaction.InsertDistributedTraceHeaders(headers, setHeaders);
 
 			Assert.That(headers.Count == 2);
 			Assert.That(headers.Where(header => header.Key == NewRelicPayloadHeaderName).Count() == 0, "There should not be a newrelic header");
@@ -776,9 +777,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
 
 			var headers = new List<KeyValuePair<string, string>>();
-			var setHeaders = new Action<string, string>((key, value) =>
+			var setHeaders = new Action<List<KeyValuePair<string,string>>, string, string>((carrier, key, value) =>
 			{
-				headers.Add(new KeyValuePair<string, string>(key, value));
+				carrier.Add(new KeyValuePair<string, string>(key, value));
 			});
 
 			var tracingState = Mock.Create<ITracingState>();
@@ -787,10 +788,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
 			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
 
-			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<List<KeyValuePair<string, string>>>(), Arg.IsAny<Action<List<KeyValuePair<string, string>>, string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, headers, setHeaders));
 
 			// Act
-			transaction.InsertDistributedTraceHeaders(setHeaders);
+			transaction.InsertDistributedTraceHeaders(headers, setHeaders);
 
 			var tracestateHeaderValue = headers.Where(header => header.Key == TracestateHeaderName).Select(header => header.Value).ToList();
 			var priorityIndex = 7;
@@ -818,9 +819,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => transaction.CurrentSegment).Returns(segment);
 
 			var headers = new List<KeyValuePair<string, string>>();
-			var setHeaders = new Action<string, string>((key, value) =>
+			var setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
 			{
-				headers.Add(new KeyValuePair<string, string>(key, value));
+				carrier.Add(new KeyValuePair<string, string>(key, value));
 			});
 
 			var tracingState = Mock.Create<ITracingState>();
@@ -829,10 +830,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
 			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
 
-			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<List<KeyValuePair<string, string>>>(), Arg.IsAny<Action<List<KeyValuePair<string, string>>, string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, headers, setHeaders));
 
 			// Act
-			transaction.InsertDistributedTraceHeaders(setHeaders);
+			transaction.InsertDistributedTraceHeaders(headers, setHeaders);
 
 			var traceParentHeaderValue = headers.Where(header => header.Key == TraceParentHeaderName).Select(header => header.Value).ToList();
 			var traceIdIndex = 1;
@@ -855,10 +856,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 			var headers = new List<KeyValuePair<string, string>>();
 
-			Action<string, string> setHeaders = null;
+			Action<List<KeyValuePair<string, string>>, string, string> setHeaders = null;
 			if(testCaseName != "setHeaders is null") 
 			{
-				setHeaders = new Action<string, string>((key, value) =>
+				setHeaders = new Action<List<KeyValuePair<string, string>>, string, string>((carrier, key, value) =>
 				{
 					throw new Exception("Exception occurred in setHeaders.");
 				});
@@ -870,10 +871,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 			Mock.Arrange(() => tracingState.VendorStateEntries).Returns(vendorStateEntries);
 			Mock.Arrange(() => transaction.TracingState).Returns(tracingState);
 
-			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<Action<string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, setHeaders));
+			Mock.Arrange(() => transaction.InsertDistributedTraceHeaders(Arg.IsAny<List<KeyValuePair<string, string>>>(), Arg.IsAny<Action<List<KeyValuePair<string, string>>, string, string>>())).DoInstead(() => _distributedTracePayloadHandler.InsertDistributedTraceHeaders(transaction, headers, setHeaders));
 
 			// Act
-			Assert.DoesNotThrow(() => transaction.InsertDistributedTraceHeaders(setHeaders));
+			Assert.DoesNotThrow(() => transaction.InsertDistributedTraceHeaders(headers, setHeaders));
 			Assert.That(headers.Count == 0);
 		}
 
@@ -988,9 +989,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 			var encodedPayload = DistributedTracePayload.SerializeAndEncodeDistributedTracePayload(BuildSampleDistributedTracePayload());
 
-			var getHeaders = GetHeaderFunctionFactory(new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), encodedPayload } });
+			var headers = new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), encodedPayload } };
 
-			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP, mockStartTime);
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, GetHeaders, TransportType.HTTP, mockStartTime);
 
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadSuccess(), Occurs.Once());
@@ -998,8 +999,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		[Test]
 		public void AcceptDistributedTraceHeaders_NewRelicPayload_UntraceablePayload_GeneratesParseExceptionSupportabilityMetric()
 		{
-			var getHeaders = GetHeaderFunctionFactory(new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), Strings.Base64Encode(NewRelicPayloadUntraceable) } });
-			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+			var headers = new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), Strings.Base64Encode(NewRelicPayloadUntraceable) } };
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, GetHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
 
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadParseException(), Occurs.Once());
@@ -1008,8 +1009,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 		[Test]
 		public void AcceptDistributedTraceHeaders_NewRelicPayload_UnsupportedVersion_GeneratesPayloadIgnoredSupportabilityMetric()
 		{
-			var getHeaders = GetHeaderFunctionFactory(new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), Strings.Base64Encode(NewRelicPayloadWithUnsupportedVersion) } });
-			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+			var headers = new Dictionary<string, string>() { { NewRelicPayloadHeaderName.ToLower(), Strings.Base64Encode(NewRelicPayloadWithUnsupportedVersion) } };
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, GetHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
 
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMajorVersion(), Occurs.Once());
@@ -1026,9 +1027,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				{ "tracestate", ValidTracestate },
 			};
 
-			var getHeaders = GetHeaderFunctionFactory(headers);
-
-			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, GetHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
 
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextAcceptSuccess(), Occurs.Once());
@@ -1043,9 +1042,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				{ "tracestate", ValidTracestate },
 			};
 
-			var getHeaders = GetHeaderFunctionFactory(headers);
-
-			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, GetHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
 
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextTraceParentParseException(), Occurs.Once());
@@ -1060,9 +1057,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				{ "tracestate", TracestateInvalidNrEntry },
 			};
 
-			var getHeaders = GetHeaderFunctionFactory(headers);
-
-			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, GetHeaders, Extensions.Providers.Wrapper.TransportType.HTTP, mockStartTime);
 
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextTraceStateInvalidNrEntry(), Occurs.Once());
@@ -1077,9 +1072,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 				{ "tracestate", TracestateNoNrEntry },
 			};
 
-			var getHeaders = GetHeaderFunctionFactory(headers);
-
-			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP, mockStartTime);
+			var tracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, GetHeaders, TransportType.HTTP, mockStartTime);
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityTraceContextTraceStateNoNrEntry(), Occurs.Once());
 		}
@@ -1141,22 +1134,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
 			return tracingState;
 		}
-		private static Func<string, IList<string>> GetHeaderFunctionFactory(Dictionary<string, string> headers)
+
+		public static IList<string> GetHeaders(IEnumerable<KeyValuePair<string, string>> carrier, string key)
 		{
-			var getHeader = new Func<string, IList<string>>((key) =>
+			var headerValues = new List<string>();
+
+			foreach (var item in carrier)
 			{
-				var headerValues = new List<string>();
-				string value;
-				if (headers.TryGetValue(key.ToLowerInvariant(), out value))
+				if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
 				{
-					headerValues.Add(value);
+					headerValues.Add(item.Value);
 				}
-				return headerValues;
-			});
+			}
 
-			return getHeader;
+			return headerValues;
 		}
-
 
 		#endregion helpers
 	}

@@ -34,6 +34,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 		bool NewRelicPayloadWasAccepted { get; }
 		bool TraceContextWasAccepted { get; }
 		bool HasDataForParentAttributes { get; }
+		bool HasDataForAttributes { get; }
 
 		List<IngestErrorType> IngestErrors { get; }
 

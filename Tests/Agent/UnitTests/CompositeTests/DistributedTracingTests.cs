@@ -81,7 +81,8 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
 				transactionDisplayName: "name",
 				doNotTrackAsUnitOfWork: true);
-			_agent.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
+			
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(NewRelicHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow(null, DatastoreVendor.MSSQL, null, null, null,testHostName,testPort,testDBName);
 			segment.End();
@@ -127,7 +128,8 @@ namespace CompositeTests
 				category: EnumNameCache<WebTransactionType>.GetName(WebTransactionType.Action),
 				transactionDisplayName: "name",
 				doNotTrackAsUnitOfWork: true);
-			_agent.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
+			
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(NewRelicHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			var segment = _agent.StartDatastoreRequestSegmentOrThrow(null, DatastoreVendor.MSSQL, null, testCommand, null, testHostName, testPort, testDBName);
 			segment.End();
@@ -170,7 +172,9 @@ namespace CompositeTests
 				destinationType: MessageBrokerDestinationType.Queue,
 				brokerVendorName: vendorName,
 				destination: routingKey);
-			_agent.ProcessInboundRequest(NewRelicHeaders, TransportType.HTTP);
+
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(NewRelicHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
+
 			var segment = _agent.StartMessageBrokerSegmentOrThrow(vendorName, MessageBrokerDestinationType.Queue,
 				routingKey, MessageBrokerAction.Consume);
 			segment.End();

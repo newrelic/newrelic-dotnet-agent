@@ -1,4 +1,7 @@
-﻿namespace NewRelic.Api.Agent
+﻿using System;
+using System.Collections.Generic;
+
+namespace NewRelic.Api.Agent
 {
 	internal class NoOpTransaction : ITransaction
 	{
@@ -17,6 +20,14 @@
 		public ITransaction AddCustomAttribute(string key, object value)
 		{
 			return this;
+		}
+
+		public void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter)
+		{
+		}
+
+		public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType)
+		{
 		}
 
 		public ISpan CurrentSpan => _noOpSpan;

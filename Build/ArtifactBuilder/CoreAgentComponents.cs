@@ -97,8 +97,7 @@ namespace ArtifactBuilder
 
 			GRPCExtensionsLibLinux = new[]
 			{
-				$@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libgrpc_csharp_ext.x64.so",
-				$@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libgrpc_csharp_ext.x86.so"
+				$@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libgrpc_csharp_ext.x64.so"
 			};
 
 			AgentInfoJson = $@"{SourcePath}\Agent\Miscellaneous\{Platform}\agentinfo.json";

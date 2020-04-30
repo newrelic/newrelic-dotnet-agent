@@ -14,8 +14,6 @@ namespace NewRelic.Agent.Core.Transactions
 {
 	public class NoOpTransaction : ITransaction, ITransactionExperimental
 	{
-		public long? CatContentLength { get; set; }
-
 		public bool IsValid => false;
 		public bool IsFinished => false;
 		public ISegment CurrentSegment => Segment.NoOpSegment;
@@ -257,12 +255,12 @@ namespace NewRelic.Agent.Core.Transactions
 			return this;
 		}
 
-		public void InsertDistributedTraceHeaders(Action<string, string> setHeaders)
+		public void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter)
 		{
 			return;
 		}
 
-		public void AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType)
+		public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType)
 		{
 			return;
 		}

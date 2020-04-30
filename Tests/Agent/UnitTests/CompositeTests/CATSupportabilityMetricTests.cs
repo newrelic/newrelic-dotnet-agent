@@ -3,6 +3,7 @@ using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -88,8 +89,7 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			NrAssert.Multiple
 			(
@@ -126,8 +126,8 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			NrAssert.Multiple
 			(
@@ -135,7 +135,6 @@ namespace CompositeTests
 				() => TestConditionValue(conditionCounts, CATSupportabilityCondition.Request_Accept_Success, 1),
 				() => TestConditionValue(conditionCounts, CATSupportabilityCondition.Request_Accept_Multiple, 1)
 			);
-
 		}
 
 		[Test]
@@ -165,7 +164,6 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-
 			var badCrossProcessID = Strings.Base64Encode("1111:2222", _agent.Configuration.EncodingKey);
 			var badRequestHeaders = new List<KeyValuePair<string, string>>()
 			{
@@ -173,8 +171,9 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-			_agent.ProcessInboundRequest(goodRequestHeaders, TransportType.HTTP);
-			_agent.ProcessInboundRequest(badRequestHeaders, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(goodRequestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
+
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(badRequestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			NrAssert.Multiple
 			(
@@ -216,15 +215,13 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			NrAssert.Multiple
 			(
 				() => TestExistenceOfConditions(conditionCounts, CATSupportabilityCondition.Request_Accept_Failure),
 				() => TestConditionValue(conditionCounts, CATSupportabilityCondition.Request_Accept_Failure, 1)
 			);
-
 		}
 
 		[Test]
@@ -249,13 +246,13 @@ namespace CompositeTests
 				doNotTrackAsUnitOfWork: true);
 
 			var notTrustedXprocesID = Strings.Base64Encode("1111:2222", _agent.Configuration.EncodingKey);
-			var reqHeaders = new List<KeyValuePair<string, string>>()
+			var requestHeaders = new List<KeyValuePair<string, string>>()
 			{
 				new KeyValuePair<string, string>(NewRelicIdHttpHeader, notTrustedXprocesID),
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-			_agent.ProcessInboundRequest(reqHeaders, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			NrAssert.Multiple
 			(
@@ -291,7 +288,7 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, "This isn't encoded properly")
 			};
 
-			_agent.ProcessInboundRequest(badlyEncodedData, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(badlyEncodedData, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			NrAssert.Multiple
 			(
@@ -327,7 +324,7 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-			_agent.ProcessInboundRequest(badlyEncodedData, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(badlyEncodedData, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			NrAssert.Multiple
 			(
@@ -339,7 +336,6 @@ namespace CompositeTests
 		[Test]
 		public void SupportabilityMetric_Request_Create_Success()
 		{
-
 			//Collect the different metric counts in a dictionary that we can use
 			var conditionCounts = new Dictionary<CATSupportabilityCondition, int>();
 			Mock.Arrange(() => _catMetricCounters.Record(Arg.IsAny<CATSupportabilityCondition>()))
@@ -467,8 +463,7 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
-
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			trx.GetResponseMetadata();
 
@@ -483,7 +478,6 @@ namespace CompositeTests
 		[Test]
 		public void SupportabilityMetric_Response_Create_Failure_CrossProcessID ()
 		{
-
 			//Collect the different metric counts in a dictionary that we can use
 			var conditionCounts = new Dictionary<CATSupportabilityCondition, int>();
 			Mock.Arrange(() => _catMetricCounters.Record(Arg.IsAny<CATSupportabilityCondition>()))
@@ -508,13 +502,11 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
-
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			trx.GetResponseMetadata();
 			_compositeTestAgent.ServerConfiguration.CatId = null;
 			trx.GetResponseMetadata();
-
 
 			NrAssert.Multiple
 			(
@@ -561,8 +553,7 @@ namespace CompositeTests
 				new KeyValuePair<string, string>(TransactionDataHttpHeader, _reqDataEncoded)
 			};
 
-			_agent.ProcessInboundRequest(requestHeaders, TransportType.HTTP);
-
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestHeaders, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			trx.GetResponseMetadata();
 
@@ -610,12 +601,11 @@ namespace CompositeTests
 				transactionDisplayName: "service",
 				doNotTrackAsUnitOfWork: true);
 
-			_agent.ProcessInboundRequest(requestMetadata, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestMetadata, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			var responseMetaData = svcTrx.GetResponseMetadata();
 
 			clientTrx.ProcessInboundResponse(responseMetaData, clientSegment);
-
 
 			NrAssert.Multiple
 			(
@@ -630,9 +620,7 @@ namespace CompositeTests
 				() => TestConditionValue(conditionCounts, CATSupportabilityCondition.Request_Accept_Success, 1),
 				() => TestConditionValue(conditionCounts, CATSupportabilityCondition.Response_Accept_Success, 1)
 			);
-
 		}
-
 
 		[Test]
 		public void SupportabilityMetric_Response_Accept_MultipleResponses()
@@ -656,7 +644,6 @@ namespace CompositeTests
 				doNotTrackAsUnitOfWork: true);
 			var clientSegment = _agent.StartExternalRequestSegmentOrThrow(new Uri("http://test"), "get");
 
-
 			//Create the request Metadata
 			var requestMetadata = clientTrx.GetRequestMetadata();
 
@@ -666,7 +653,7 @@ namespace CompositeTests
 				transactionDisplayName: "service",
 				doNotTrackAsUnitOfWork: true);
 
-			_agent.ProcessInboundRequest(requestMetadata, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(requestMetadata, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			var responseMetaData = svcTrx.GetResponseMetadata().FirstOrDefault();
 
@@ -716,7 +703,6 @@ namespace CompositeTests
 				doNotTrackAsUnitOfWork: true);
 			var clientSegment = _agent.StartExternalRequestSegmentOrThrow(new Uri("http://test"), "get");
 
-
 			var dupResponseMetaData = new List<KeyValuePair<string, string>>()
 			{
 				new KeyValuePair<string,string>("X-NewRelic-App-Data", "123456"),
@@ -724,13 +710,11 @@ namespace CompositeTests
 
 			clientTrx.ProcessInboundResponse(dupResponseMetaData, clientSegment);
 
-
 			NrAssert.Multiple
 			(
 				() => TestExistenceOfConditions(conditionCounts, CATSupportabilityCondition.Response_Accept_Failure),
 				() => TestConditionValue(conditionCounts, CATSupportabilityCondition.Response_Accept_Failure, 1));
 		}
-
 
 		private void TestExistenceOfConditions(Dictionary<CATSupportabilityCondition, int> dic, params CATSupportabilityCondition[] conditions)
 		{

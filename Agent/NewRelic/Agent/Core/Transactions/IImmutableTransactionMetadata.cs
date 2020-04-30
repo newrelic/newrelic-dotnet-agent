@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Transactions
 		string CrossApplicationReferrerTripId { get; }
 		float CrossApplicationResponseTimeInSeconds { get; }
 
-		bool HasOutgoingDistributedTracePayload { get; }
+		bool HasOutgoingTraceHeaders { get; }
 		int? HttpResponseSubStatusCode { get; }
 		string SyntheticsResourceId { get; }
 		string SyntheticsJobId { get; }

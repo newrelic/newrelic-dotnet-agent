@@ -1,123 +1,19 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(SolutionDir)packages\NUnit3TestAdapter.3.9.0\build\net35\NUnit3TestAdapter.props" Condition="Exists('$(SolutionDir)packages\NUnit3TestAdapter.3.9.0\build\net35\NUnit3TestAdapter.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{6DC9A481-9A72-4D35-B312-43E02E36C241}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>NewRelic.Core.Tests</RootNamespace>
-    <AssemblyName>NewRelic.Core.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <FileAlignment>512</FileAlignment>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <TargetFrameworks>net451;netcoreapp2.1</TargetFrameworks>
   </PropertyGroup>
-  <PropertyGroup>
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\net451\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>bin\Release\net451\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="NewRelic.Cache\SimpleCacheTests.cs" />
-    <Compile Include="NewRelic.Collections\ConcurrentHashSet.cs" />
-    <Compile Include="NewRelic.Collections\ConcurrentList.cs" />
-    <Compile Include="NewRelic.Collections\ConcurrentQueueTests.cs" />
-    <Compile Include="NewRelic.Collections\DisposableCollection.cs" />
-    <Compile Include="NewRelic.Collections\PrioritizedNodeTests.cs" />
-    <Compile Include="NewRelic.Collections\StaticCounterTests.cs" />
-    <Compile Include="NewRelic.Memoization\MemozierTests.cs" />
-    <Compile Include="NewRelic.SystemExtensions\Collections\Generic\DictionaryExtensions.cs" />
-    <Compile Include="NewRelic.SystemExtensions\Collections\Generic\IEnumerableExtensionsTests.cs" />
-    <Compile Include="NewRelic.SystemExtensions\Collections\NameValueCollectionExtensions.cs" />
-    <Compile Include="NewRelic.SystemExtensions\ObjectArrayExtensionsTests.cs" />
-    <Compile Include="NewRelic.SystemExtensions\StringExtensions.cs" />
-    <Compile Include="NewRelic.SystemExtensions\Threading\ReaderWriterLockSlimExtensions.cs" />
-    <Compile Include="NewRelic.SystemExtensions\TimeSpanExtensionsTests.cs" />
-    <Compile Include="NewRelic.SystemInterfaces\DnsStaticTests.cs" />
-    <Compile Include="NewRelic.SystemInterfaces\NetworkDataTests.cs" />
-    <Compile Include="NewRelic.SystemInterfaces\PerformanceCounterProxyFactoryTests.cs" />
-    <Compile Include="NewRelic.TypeInstantiation\AppDomainExtensions.cs" />
-    <Compile Include="NewRelic.TypeInstantiation\TypeInstantiator.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)..\NewRelic.Core\NewRelic.Core.csproj">
-      <Project>{9784eaea-c32f-4dc4-bd84-4075bba541ab}</Project>
-      <Name>NewRelic.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="mscoree">
-      <Guid>{5477469E-83B1-11D2-8B49-00A0C9B7C9C4}</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="JustMock">
-      <Version>2020.1.113.1</Version>
-    </PackageReference>
-    <PackageReference Include="NUnit">
-      <Version>3.12.0</Version>
-    </PackageReference>
-    <PackageReference Include="NUnit3TestAdapter">
-      <Version>3.16.1</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="JustMock" Version="2020.1.113.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.0" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\NewRelic.Core\NewRelic.Core.csproj" />
+  </ItemGroup>
 </Project>

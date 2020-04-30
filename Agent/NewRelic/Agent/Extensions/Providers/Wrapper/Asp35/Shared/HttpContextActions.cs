@@ -129,31 +129,21 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
 		private static void ProcessHeaders(IAgent agent, HttpContext httpContext)
 		{
-			if (!agent.Configuration.W3CEnabled)
-			{
-				var transactionExperimental = agent.CurrentTransaction.GetExperimentalApi();
-				transactionExperimental.CatContentLength = httpContext.Request.ContentLength;
-				var headers = httpContext.Request.Headers.ToDictionary();
-				agent.ProcessInboundRequest(headers, TransportType.HTTP);
-			}
-			else
-			{
-				agent.CurrentTransaction.AcceptDistributedTraceHeaders(GetHeaderValue, TransportType.HTTP);
-			}
+			agent.CurrentTransaction.AcceptDistributedTraceHeaders(httpContext, GetHeaderValue, TransportType.HTTP);
 
-			IEnumerable<string> GetHeaderValue(string key)
+			IEnumerable<string> GetHeaderValue(HttpContext context, string key)
 			{
 				string value = null;
 				if (key.Equals("Content-Length"))
 				{
-					value = httpContext.Request.ContentLength.ToString();
+					value = context.Request.ContentLength.ToString();
 				}
 				else
 				{
-					value = httpContext.Request.Headers[key];
+					value = context.Request.Headers[key];
 				}
 
-				return string.IsNullOrEmpty(value) ? null : new string[] { value };
+				return value == null ? null : new string[] { value };
 			}
 		}
 

@@ -210,50 +210,6 @@ namespace NewRelic.Agent.Core
 
 		#region inbound CAT request, outbound CAT response
 
-		// TODO this method can be removed once all instrumentation is converted to use AcceptDistributedTraceHeaders
-		public void ProcessInboundRequest(IEnumerable<KeyValuePair<string, string>> headers, TransportType transportType)
-		{
-			var transaction = _transactionService.GetCurrentInternalTransaction();
-			if (transaction == null)
-			{
-				return;
-			}
-
-			if (_configurationService.Configuration.DistributedTracingEnabled)
-			{
-				var result = GetHeaderValue(Constants.DistributedTracePayloadKey);
-
-				if (result != null && result.Count() > 0)
-				{
-					var payload = result.FirstOrDefault();
-					CurrentTransaction.AcceptDistributedTracePayload(payload, transportType);
-				}
-			}
-			else
-			{
-				TryProcessCatRequestData(transaction, GetHeaderValue);
-				TryProcessSyntheticsData(transaction, GetHeaderValue);
-			}
-
-			IEnumerable<string> GetHeaderValue(string key)
-			{
-				if (headers != null)
-				{
-					var headerValues = new List<string>();
-					foreach (var item in headers)
-					{
-						if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-						{
-							headerValues.Add(item.Value);
-						}
-					}
-					return headerValues;
-				}
-
-				return null;
-			}
-		}
-
 		public bool TryGetDistributedTracePayloadFromHeaders<T>(IEnumerable<KeyValuePair<string, T>> headers, out T payload) where T : class
 		{
 			payload = null;
@@ -272,12 +228,12 @@ namespace NewRelic.Agent.Core
 			return false;
 		}
 
-		internal void TryProcessCatRequestData(IInternalTransaction transaction, Func<string, IEnumerable<string>> getHeaders)
+		internal void TryProcessCatRequestData<T>(IInternalTransaction transaction, T carrier, Func<T, string, IEnumerable<string>> getter)
 		{
 			try
 			{
 
-				var referrerCrossApplicationProcessId = GetReferrerCrossApplicationProcessId(transaction, getHeaders);
+				var referrerCrossApplicationProcessId = GetReferrerCrossApplicationProcessId(transaction, carrier, getter);
 				if (referrerCrossApplicationProcessId == null)
 				{
 					return;
@@ -285,13 +241,13 @@ namespace NewRelic.Agent.Core
 
 				UpdateReferrerCrossApplicationProcessId(transaction, referrerCrossApplicationProcessId);
 
-				var crossApplicationRequestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(getHeaders);
+				var crossApplicationRequestData = _catHeaderHandler.TryDecodeInboundRequestHeaders(carrier, getter);
 				if (crossApplicationRequestData == null)
 				{
 					return;
 				}
 
-				var contentLength = Configuration.W3CEnabled ? GetContentLength(getHeaders) : transaction.CatContentLength;
+				var contentLength = GetContentLength(carrier, getter);
 
 				UpdateTransactionMetadata(transaction, crossApplicationRequestData, contentLength);
 
@@ -303,9 +259,9 @@ namespace NewRelic.Agent.Core
 			}
 		}
 
-		internal void TryProcessSyntheticsData(IInternalTransaction transaction, Func<string, IEnumerable<string>> getHeaders)
+		internal void TryProcessSyntheticsData<T>(IInternalTransaction transaction, T carrier, Func<T, string, IEnumerable<string>> getter)
 		{
-			var syntheticsRequestData = _syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(getHeaders);
+			var syntheticsRequestData = _syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(carrier, getter);
 			if (syntheticsRequestData == null)
 			{
 				return;
@@ -447,7 +403,7 @@ namespace NewRelic.Agent.Core
 
 		#region Helpers
 
-		private string GetReferrerCrossApplicationProcessId(IInternalTransaction transaction, Func<string, IEnumerable<string>> getHeaders)
+		private string GetReferrerCrossApplicationProcessId<T>(IInternalTransaction transaction, T carrier, Func<T, string, IEnumerable<string>> getter)
 		{
 			var existingReferrerProcessId = transaction.TransactionMetadata.CrossApplicationReferrerProcessId;
 			if (existingReferrerProcessId != null)
@@ -457,7 +413,7 @@ namespace NewRelic.Agent.Core
 				return null;
 			}
 
-			return _catHeaderHandler?.TryDecodeInboundRequestHeadersForCrossProcessId(getHeaders);
+			return _catHeaderHandler?.TryDecodeInboundRequestHeadersForCrossProcessId(carrier, getter);
 		}
 
 
@@ -495,10 +451,10 @@ namespace NewRelic.Agent.Core
 			}
 		}
 
-		private long GetContentLength(Func<string, IEnumerable<string>> getHeaders)
+		private long GetContentLength<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
 		{
 			long contentLength = default;
-			var headers = getHeaders("Content-Length");
+			var headers = getter(carrier, "Content-Length");
 			if (headers.Count() > 0)
 			{
 				var contentLengthString = headers.FirstOrDefault();

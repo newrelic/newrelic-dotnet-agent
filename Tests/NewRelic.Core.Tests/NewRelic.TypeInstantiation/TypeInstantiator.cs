@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Linq;
@@ -378,3 +379,4 @@ public class Bar : IInterface {}"),
 		}
 	}
 }
+#endif

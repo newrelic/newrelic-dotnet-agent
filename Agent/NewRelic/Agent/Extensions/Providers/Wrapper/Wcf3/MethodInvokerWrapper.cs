@@ -154,7 +154,18 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 						retrievedHeaders.Add(new KeyValuePair<string, string>(headerName, httpRequestMessage.Headers[headerName]));
 					}
 
-					agent.ProcessInboundRequest(retrievedHeaders, TransportType.HTTP);
+					transaction.AcceptDistributedTraceHeaders(retrievedHeaders, GetHeaderValue, TransportType.HTTP);
+
+					IEnumerable<string> GetHeaderValue(List<KeyValuePair<string, string>> headers, string key)
+					{
+						string value = null;
+
+						value = retrievedHeaders.
+							Where(header => header.Key.Equals(key)).
+							FirstOrDefault().Value;
+
+						return value == null ? null : new string[] { value };
+					}
 				}
 			}
 

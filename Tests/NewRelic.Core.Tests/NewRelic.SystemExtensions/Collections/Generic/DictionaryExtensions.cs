@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NUnit.Framework;
@@ -203,3 +204,4 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 		}
 	}
 }
+#endif

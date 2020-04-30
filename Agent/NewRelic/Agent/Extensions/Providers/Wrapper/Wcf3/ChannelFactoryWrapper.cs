@@ -3,6 +3,7 @@ using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
@@ -112,7 +113,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				return null;
 			}
 
-			var headersToAdd = transactionWrapperApi.GetRequestMetadata();
 			HttpRequestMessageProperty httpRequestMessage;
 			if (request.Properties.TryGetValue(HttpRequestMessageProperty.Name, out object httpRequestMessageObject))
 			{
@@ -124,9 +124,19 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 				request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);
 			}
 
-			foreach (var header in headersToAdd)
+			var setHeaders = new Action<HttpRequestMessageProperty, string, string>((carrier, key, value) =>
 			{
-				httpRequestMessage.Headers.Add(header.Key, header.Value);
+				// 'Set' will replace an existing value
+				carrier.Headers?.Set(key, value);
+			});
+
+			try
+			{
+				_agent.CurrentTransaction.InsertDistributedTraceHeaders(httpRequestMessage, setHeaders);
+			}
+			catch (Exception ex)
+			{
+				_agent.HandleWrapperException(ex);
 			}
 
 			return correlationState;

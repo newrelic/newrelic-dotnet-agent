@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Reflection;
 
 namespace NewRelic.TypeInstantiation.UnitTests
@@ -79,3 +80,4 @@ namespace NewRelic.TypeInstantiation.UnitTests
 		}
 	}
 }
+#endif

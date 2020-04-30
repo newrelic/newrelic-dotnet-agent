@@ -89,7 +89,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
 			var isCatParticipant = IsCatParticipant(immutableTransaction);
 			var isSyntheticsParticipant = IsSyntheticsParticipant(immutableTransaction);
-			var isDistributedTraceParticipant = IsDistributedTraceParticipant(immutableTransaction);
+			var isDistributedTraceParticipant = immutableTransaction.TracingState != null && immutableTransaction.TracingState.HasDataForAttributes;
 			
 			if (_configurationService.Configuration.DistributedTracingEnabled == false)
 			{
@@ -197,16 +197,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			return (immutableTransaction.TransactionMetadata.SyntheticsResourceId != null && immutableTransaction.TransactionMetadata.SyntheticsJobId != null && immutableTransaction.TransactionMetadata.SyntheticsMonitorId != null);
 
-		}
-
-		private static bool IsDistributedTraceParticipant(ImmutableTransaction immutableTransaction)
-		{
-			if (immutableTransaction.TracingState?.TraceContextWasAccepted == true || immutableTransaction.TracingState?.NewRelicPayloadWasAccepted == true)
-			{
-				return true;
-			}
-
-			return false;
 		}
 	}
 }

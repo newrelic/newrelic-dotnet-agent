@@ -935,9 +935,12 @@ namespace NewRelic.Agent.Core.Config
         
         private bool captureAgentTimingField;
         
+        private int captureAgentTimingFrequencyField;
+        
         public configurationDiagnostics()
         {
             this.captureAgentTimingField = false;
+            this.captureAgentTimingFrequencyField = 1;
         }
         
         [System.ComponentModel.DefaultValueAttribute(false)]
@@ -950,6 +953,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.captureAgentTimingField = value;
+            }
+        }
+        
+        [System.ComponentModel.DefaultValueAttribute(1)]
+        public int captureAgentTimingFrequency
+        {
+            get
+            {
+                return this.captureAgentTimingFrequencyField;
+            }
+            set
+            {
+                this.captureAgentTimingFrequencyField = value;
             }
         }
     }

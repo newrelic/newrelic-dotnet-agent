@@ -29,7 +29,7 @@ namespace NewRelic.Agent.Core.Transactions
 		void SetCrossApplicationReferrerTransactionGuid(string transactionGuid);
 		void SetCrossApplicationPathHash(string pathHash);
 		void SetCrossApplicationResponseTimeInSeconds(float responseTimeInSeconds);
-		new bool HasOutgoingDistributedTracePayload { get; set; }
+		new bool HasOutgoingTraceHeaders { get; set; }
 		void SetSyntheticsResourceId(string syntheticsResourceId);
 		void SetSyntheticsJobId(string syntheticsJobId);
 		void SetSyntheticsMonitorId(string syntheticsMonitorId);
@@ -230,7 +230,7 @@ namespace NewRelic.Agent.Core.Transactions
 		public string LatestCrossApplicationPathHash => _latestCrossApplicationPathHash;
 		public float CrossApplicationResponseTimeInSeconds => _crossApplicationResponseTimeInSeconds;
 
-		public bool HasOutgoingDistributedTracePayload { get; set; }
+		public bool HasOutgoingTraceHeaders { get; set; }
 
 		public string Uri => _uri;
 		public string OriginalUri => _originalUri;

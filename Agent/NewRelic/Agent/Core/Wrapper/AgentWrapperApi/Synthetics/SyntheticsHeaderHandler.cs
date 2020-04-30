@@ -11,7 +11,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 	public interface ISyntheticsHeaderHandler
 	{
 		IEnumerable<KeyValuePair<string, string>> TryGetOutboundSyntheticsRequestHeader(IInternalTransaction transaction);
-		SyntheticsHeader TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders);
+		SyntheticsHeader TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter);
 	}
 
 	public class SyntheticsHeaderHandler : ISyntheticsHeaderHandler
@@ -46,9 +46,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 			};
 		}
 
-		public SyntheticsHeader TryDecodeInboundRequestHeaders(Func<string, IEnumerable<string>> getHeaders)
+		public SyntheticsHeader TryDecodeInboundRequestHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter)
 		{
-			var syntheticsDataHttpHeader = getHeaders(SyntheticsHeader.HeaderKey)?.FirstOrDefault();
+			var syntheticsDataHttpHeader = getter(carrier, SyntheticsHeader.HeaderKey)?.FirstOrDefault();
 
 			if (syntheticsDataHttpHeader == null)
 				return null;

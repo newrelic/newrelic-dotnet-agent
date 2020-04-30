@@ -38,31 +38,17 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 			if (logicalMessage.Headers == null)
 				return;
 
-			if (agent.Configuration.W3CEnabled)
+			var setHeaders = new Action<LogicalMessage, string, string>((carrier, key, value) =>
 			{
-				var setHeaders = new Action<string, string>((key, value) =>
+				if (carrier.Headers.ContainsKey(key)) 
 				{
-					if (logicalMessage.Headers.ContainsKey(key)) 
-					{
-						logicalMessage.Headers.Remove(key);
-					}
-
-					logicalMessage.Headers.Add(key, value);
-				});
-
-				agent.CurrentTransaction.InsertDistributedTraceHeaders(setHeaders);
-			}
-			else
-			{
-				var headers = agent.CurrentTransaction
-					.GetRequestMetadata()
-					.Where(header => header.Value != null && header.Key != null);
-
-				foreach (var header in headers)
-				{
-					logicalMessage.Headers[header.Key] = header.Value;
+					carrier.Headers.Remove(key);
 				}
-			}
+
+				carrier.Headers.Add(key, value);
+			});
+
+			agent.CurrentTransaction.InsertDistributedTraceHeaders(logicalMessage, setHeaders);
 		}
 
 		/// <summary>

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -33,10 +35,8 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 			// basicProperties is never null (framework supplies it), though the Headers property could be
 			var basicProperties = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<dynamic>(5);
 			var headers = (Dictionary<string, object>)basicProperties.Headers;
-			if (RabbitMqHelper.TryGetPayloadFromHeaders(headers, agent, out var payload))
-			{
-				transaction.AcceptDistributedTracePayload(payload, TransportType.AMQP);
-			}
+
+			agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.AMQP);
 
 			var segment = transaction.StartMessageBrokerSegment(instrumentedMethodCall.MethodCall, destType, MessageBrokerAction.Consume, RabbitMqHelper.VendorName, destName);
 
@@ -47,6 +47,25 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
 					segment.End();
 					transaction.End();
 				});
+
+			IEnumerable<string> GetHeaderValue(Dictionary<string, object> carrier, string key)
+			{
+				if (headers != null)
+				{
+					var headerValues = new List<string>();
+					foreach (var item in headers)
+					{
+						if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+						{
+							headerValues.Add(Encoding.UTF8.GetString((byte[])headers[key]));
+						}
+					}
+
+					return headerValues;
+				}
+
+				return null;
+			}
 		}
 	}
 }

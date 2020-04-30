@@ -213,7 +213,7 @@ namespace NewRelic.Installer
 
 			CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
 			CopyToDirectory(ThirdPartyNoticesFilePath, DestinationHomeDirectoryPath);
-			CopyOtherDependenciesGRPCCShapExtensions();
+			CopyOtherDependenciesGrpcCSharpExtensions();
 
 
 			if (_isCoreClr)
@@ -229,10 +229,10 @@ namespace NewRelic.Installer
 			CopyToDirectory(jetBrainsAnnotationsAssemblyPath, DestinationExtensionsDirectoryPath);
 		}
 
-		private void CopyOtherDependenciesGRPCCShapExtensions()
+		private void CopyOtherDependenciesGrpcCSharpExtensions()
 		{
 			var libFileNames = _isLinux
-				? new string[] { "libgrpc_csharp_ext.x64.so", "libgrpc_csharp_ext.x86.so" }
+				? new string[] { "libgrpc_csharp_ext.x64.so" }
 				: new string[] { "grpc_csharp_ext.x64.dll", "grpc_csharp_ext.x86.dll" };
 
 			var libFolderPath = GetNuGetPackageFolderNativeLibPath(NewRelicAgentCoreCsprojPath, "Grpc.Core");

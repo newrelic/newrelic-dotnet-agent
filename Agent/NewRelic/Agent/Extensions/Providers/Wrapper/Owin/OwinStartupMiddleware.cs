@@ -96,27 +96,13 @@ namespace NewRelic.Providers.Wrapper.Owin
 
 		private void ProcessHeaders(IOwinContext owinContext)
 		{
-			if (!_agent.Configuration.W3CEnabled)
-			{
-				owinContext.Request.Headers.TryGetValue("Content-Length", out var contentLengthValue);
-				var transactionExperimental = _agent.CurrentTransaction.GetExperimentalApi();
-				transactionExperimental.CatContentLength =
-					long.TryParse(contentLengthValue[0], out var contentLength) ?
-						contentLength :
-						(long?)null;
-				var headers = owinContext.Request.Headers.Select(header => new KeyValuePair<string, string>(header.Key, header.Value[0]));
-				_agent.ProcessInboundRequest(headers, TransportType.HTTP);
-			}
-			else
-			{
-				_agent.CurrentTransaction.AcceptDistributedTraceHeaders(GetHeaderValue, TransportType.HTTP);
-			}
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(owinContext, GetHeaderValue, TransportType.HTTP);
+		}
 
-			IEnumerable<string> GetHeaderValue(string key)
-			{
-				var value = owinContext.Request.Headers[key];
-				return string.IsNullOrEmpty(value) ? null : new string[] { value };
-			}
+		private IEnumerable<string> GetHeaderValue(IOwinContext owinContext, string key)
+		{
+			var value = owinContext.Request.Headers[key];
+			return value == null ? null : new string[] { value };
 		}
 
 		private ISegment SetupSegment(ITransaction transaction, IOwinContext owinContext)

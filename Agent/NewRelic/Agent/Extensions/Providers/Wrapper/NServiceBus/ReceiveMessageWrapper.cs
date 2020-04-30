@@ -57,29 +57,22 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
 
 		private void ProcessHeaders(Dictionary<string, string> headers, IAgent agent) 
 		{
-			if (agent.Configuration.W3CEnabled)
-			{
-				var getHeaders = new Func<string, IEnumerable<string>>((string key) =>
-				{
-					if (headers != null)
-					{
-						foreach (var item in headers)
-						{
-							if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
-							{
-								return new string[] { item.Value };
-							}
-						}
-					}
-					return null;
-				});
+			agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
+		}
 
-				agent.CurrentTransaction.AcceptDistributedTraceHeaders(getHeaders, TransportType.HTTP);
-			}
-			else
+		IEnumerable<string> GetHeaderValue(Dictionary<string, string> carrier, string key)
+		{
+			if (carrier != null)
 			{
-				agent.ProcessInboundRequest(headers, TransportType.HTTP);
+				foreach (var item in carrier)
+				{
+					if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+					{
+						return new string[] { item.Value };
+					}
+				}
 			}
+			return null;
 		}
 
 		private static string TryGetQueueName(LogicalMessage logicalMessage)

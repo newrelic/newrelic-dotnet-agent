@@ -259,8 +259,8 @@ namespace NewRelic.Agent.Api
 
 		ITransaction AddCustomAttribute(string key, object value);
 
-		void InsertDistributedTraceHeaders(Action<string, string> setHeaders);
+		void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter);
 
-		void AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType);
+		void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType);
 	}
 }

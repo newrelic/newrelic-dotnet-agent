@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -22,12 +23,13 @@ namespace NewRelic.Providers.Wrapper.RestSharp
 		{
 			var httpWebRequest = (HttpWebRequest) instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-			var headers = transaction.GetRequestMetadata();
-
-			foreach (var header in headers)
+			var setHeaders = new Action<HttpWebRequest, string, string>((carrier, key, value) =>
 			{
-				httpWebRequest.Headers[header.Key] = header.Value;
-			}
+				// 'Set' will replace an existing value
+				httpWebRequest.Headers?.Set(key, value);
+			});
+
+			agent.CurrentTransaction.InsertDistributedTraceHeaders(httpWebRequest, setHeaders);
 
 			return Delegates.NoOp;
 		}

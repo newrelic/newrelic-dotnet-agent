@@ -152,8 +152,8 @@ namespace NewRelic.Agent.Configuration
 		string UtilizationHostName { get; }
 		string UtilizationFullHostName { get; }
 		bool DiagnosticsCaptureAgentTiming { get; }
+		int DiagnosticsCaptureAgentTimingFrequency { get; }
 		bool UseResourceBasedNamingForWCFEnabled { get; }
-		bool W3CEnabled { get; }
 		bool EventListenerSamplersEnabled { get; set; }
 		int? SamplingTarget { get; }
 		int SpanEventsMaxSamplesStored { get; }

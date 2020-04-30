@@ -27,9 +27,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		ITracingState AcceptDistributedTracePayload(string serializedPayload, TransportType transportType, DateTime transactionStartTime);
 
-		ITracingState AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType, DateTime transactionStartTime);
+		ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, DateTime transactionStartTime);
 
-		void InsertDistributedTraceHeaders(IInternalTransaction transaction, Action<string, string> setHeaders);
+		void InsertDistributedTraceHeaders<T>(IInternalTransaction transaction, T carrier, Action<T, string, string> setter);
 	}
 
 	public class DistributedTracePayloadHandler : IDistributedTracePayloadHandler
@@ -52,9 +52,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 		#region Outgoing/Create
 
-		public void InsertDistributedTraceHeaders(IInternalTransaction transaction, Action<string, string> setHeaders) 
+		public void InsertDistributedTraceHeaders<T>(IInternalTransaction transaction, T carrier, Action<T, string, string> setter) 
 		{
-			if(setHeaders == null) 
+			if(setter == null) 
 			{
 				Log.Debug("setHeaders argument is null.");
 				return;
@@ -62,7 +62,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			try
 			{
-
 				var timestamp = DateTime.UtcNow;
 				if (!_configurationService.Configuration.ExcludeNewrelicHeader)
 				{
@@ -70,7 +69,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 					var distributedTracePayload = GetOutboundHeader(DistributedTraceHeaderType.NewRelic, transaction, timestamp);
 					if (!string.IsNullOrWhiteSpace(distributedTracePayload))
 					{
-						setHeaders(Constants.DistributedTracePayloadKey, distributedTracePayload);
+						setter(carrier, Constants.DistributedTracePayloadKey, distributedTracePayload);
 					}
 				}
 
@@ -84,8 +83,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 					if (createOutboundTraceContextHeadersSuccess)
 					{
-						setHeaders(Constants.TraceParentHeaderKey, traceparent);
-						setHeaders(Constants.TraceStateHeaderKey, tracestate);
+						setter(carrier, Constants.TraceParentHeaderKey, traceparent);
+						setter(carrier, Constants.TraceStateHeaderKey, tracestate);
+						transaction.TransactionMetadata.HasOutgoingTraceHeaders = true;
 					}
 				}
 				catch (Exception ex)
@@ -232,7 +232,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 				return DistributedTraceApiModel.EmptyModel;
 			}
 
-			transaction.TransactionMetadata.HasOutgoingDistributedTracePayload = true;
+			transaction.TransactionMetadata.HasOutgoingTraceHeaders = true;
 
 			if (_configurationService.Configuration.PayloadSuccessMetricsEnabled)
 			{
@@ -253,7 +253,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			if (tracingState.IngestErrors != null)
 			{
 				ReportIncomingErrors(tracingState.IngestErrors);
-				return null;
 			}
 			else
 			{
@@ -266,9 +265,9 @@ namespace NewRelic.Agent.Core.DistributedTracing
 			return tracingState;
 		}
 
-		public ITracingState AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType, DateTime transactionStartTime)
+		public ITracingState AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType, DateTime transactionStartTime)
 		{
-			if (getHeaders == null)
+			if (getter == null)
 			{
 				Log.Debug("getHeaders argument is null.");
 				return null;
@@ -276,7 +275,7 @@ namespace NewRelic.Agent.Core.DistributedTracing
 
 			try
 			{
-				var tracingState = TracingState.AcceptDistributedTraceHeaders(getHeaders, transportType, _configurationService.Configuration.TrustedAccountKey, transactionStartTime);
+				var tracingState = TracingState.AcceptDistributedTraceHeaders(carrier, getter, transportType, _configurationService.Configuration.TrustedAccountKey, transactionStartTime);
 
 				if (tracingState?.IngestErrors != null)
 				{

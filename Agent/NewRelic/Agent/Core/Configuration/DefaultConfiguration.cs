@@ -53,7 +53,6 @@ namespace NewRelic.Agent.Core.Configuration
 		private Dictionary<string, string> _newRelicAppSettings { get; }
 
 		public bool UseResourceBasedNamingForWCFEnabled { get; }
-		public bool W3CEnabled { get; }
 		public bool EventListenerSamplersEnabled { get; set; }
 		
 		/// <summary>
@@ -100,7 +99,6 @@ namespace NewRelic.Agent.Core.Configuration
 			_newRelicAppSettings = TransformAppSettings();
 
 			UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
-			W3CEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.W3CEnabled", false);
 
 			EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
 		}
@@ -1689,7 +1687,50 @@ namespace NewRelic.Agent.Core.Configuration
 
 		#endregion
 
-		public bool DiagnosticsCaptureAgentTiming => _localConfiguration.diagnostics.captureAgentTiming;
+		private bool? _diagnosticsCaptureAgentTiming;
+		public bool DiagnosticsCaptureAgentTiming
+		{
+			get
+			{
+				if (_diagnosticsCaptureAgentTiming == null)
+				{
+					UpdateDiagnosticsAgentTimingSettings();
+				}
+
+				return _diagnosticsCaptureAgentTiming.Value;
+
+			}
+		}
+
+		private int? _diagnosticsCaptureAgentTimingFrequency;
+		public int DiagnosticsCaptureAgentTimingFrequency
+		{
+			get
+			{
+				if(_diagnosticsCaptureAgentTimingFrequency == null)
+				{
+					UpdateDiagnosticsAgentTimingSettings();
+				}
+
+				return _diagnosticsCaptureAgentTimingFrequency.Value;
+				
+			}
+		}
+
+		private void UpdateDiagnosticsAgentTimingSettings()
+		{
+			var captureTiming = _localConfiguration.diagnostics.captureAgentTiming;
+			var configFreq = _localConfiguration.diagnostics.captureAgentTimingFrequency;
+
+			if(configFreq <= 0)
+			{
+				captureTiming = false;
+			}
+
+			_diagnosticsCaptureAgentTiming = captureTiming;
+			_diagnosticsCaptureAgentTimingFrequency = configFreq;
+		}
+			
 
 		private bool? _forceSynchronousTimingCalculationHttpClient;
 		public bool ForceSynchronousTimingCalculationHttpClient

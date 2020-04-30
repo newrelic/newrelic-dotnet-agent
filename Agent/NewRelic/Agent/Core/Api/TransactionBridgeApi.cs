@@ -4,6 +4,7 @@ using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core.Logging;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -79,7 +80,53 @@ namespace NewRelic.Agent.Core.Api
 				}
 			}
 		}
-		
+
+		public void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter)
+		{
+			try
+			{
+				using (new IgnoreWork())
+				{
+					_apiSupportabilityMetricCounters.Record(ApiMethod.InsertDistributedTraceHeaders);
+					_transaction.InsertDistributedTraceHeaders(carrier, setter);
+				}
+			}
+			catch (Exception ex)
+			{
+				try
+				{
+					Log.ErrorFormat("Error in InsertDistributedTraceHeaders<T>(T, Action<T, string, string>): {0}", ex);
+				}
+				catch (Exception)
+				{
+					//Swallow the error
+				}
+			}
+		}
+
+		public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, int transportType)
+		{
+			try
+			{
+				using (new IgnoreWork())
+				{
+					_apiSupportabilityMetricCounters.Record(ApiMethod.AcceptDistributedTraceHeaders);
+					_transaction.AcceptDistributedTraceHeaders(carrier, getter, GetTransportTypeValue(transportType));
+				}
+			}
+			catch (Exception ex)
+			{
+				try
+				{
+					Log.ErrorFormat("Error in AcceptDistributedTraceHeaders<T>(T, Func<T, string, IEnumerable<string>>, TransportType): {0}", ex);
+				}
+				catch (Exception)
+				{
+					//Swallow the error
+				}
+			}
+		}
+
 		private static TransportType GetTransportTypeValue(int transportType)
 		{
 			if (transportType >= 0 && transportType < TransportTypeMapping.Length)

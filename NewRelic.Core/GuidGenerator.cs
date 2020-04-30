@@ -1,5 +1,9 @@
-﻿using System;
+﻿using NewRelic.Core.Logging;
+using System;
+using System.Diagnostics;
+using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace NewRelic.Core
 {
@@ -9,6 +13,7 @@ namespace NewRelic.Core
 		/// library is threadsafe and is more performant than Random library when generating
 		/// random numbers during thread contention.
 		private static readonly RNGCryptoServiceProvider RngCryptoServiceProvider = new RNGCryptoServiceProvider();
+		private static Func<string> _traceGeneratorFunc = GetTraceIdFromCurrentActivity;
 
 		/// <summary>
 		/// Returns a newrelic style guid.
@@ -24,6 +29,29 @@ namespace NewRelic.Core
 
 		public static string GenerateNewRelicTraceId()
 		{
+			try
+			{
+				return _traceGeneratorFunc();
+			}
+			catch (Exception ex)
+			{
+				// If the app does not reference System.Diagnostics.DiagnosticSource then Activity.Current will not be available.
+				// A FileNotFoundException occurs when System.Diagnostics.DiagnosticSource is unavailble.
+
+				if (!(ex is FileNotFoundException))
+				{
+					Log.Warn($"Unexpected exception type when attempting to generate a trace ID from Activity.Current: {ex}");
+				}
+
+				// Fall back to using our standard method of generating traceIds.
+				Log.Info($"Trace IDs will be generated using the standard generator");
+				Interlocked.Exchange(ref _traceGeneratorFunc, GenerateTraceId);
+				return _traceGeneratorFunc();
+			}
+		}
+
+		private static string GenerateTraceId()
+		{
 			var rndBytes = new byte[16];
 			RngCryptoServiceProvider.GetBytes(rndBytes);
 
@@ -34,6 +62,16 @@ namespace NewRelic.Core
 			Array.Copy(rndBytes, 8, secondHalf, 0, 8);
 
 			return $"{BitConverter.ToUInt64(firstHalf, 0):x16}{BitConverter.ToUInt64(secondHalf, 0):x16}";
+		}
+
+		private static string GetTraceIdFromCurrentActivity()
+		{
+			if (Activity.Current != default && Activity.Current.IdFormat == ActivityIdFormat.W3C)
+			{
+				return Activity.Current.TraceId.ToString();
+			}
+
+			return GenerateTraceId();
 		}
 	}
 }

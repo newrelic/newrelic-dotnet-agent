@@ -1,5 +1,6 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
 using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Api.Agent
 {
@@ -15,7 +16,7 @@ namespace NewRelic.Api.Agent
 
 		private static bool _isAcceptDistributedTracePayloadAvailable = true;
 
-		//[Obsolete("AcceptDistributedTracePayload is deprecated.")]
+		[Obsolete("AcceptDistributedTracePayload is deprecated.")]
 		public void AcceptDistributedTracePayload(string payload, TransportType transportType = TransportType.Unknown)
 		{
 			if (!_isAcceptDistributedTracePayloadAvailable) return;
@@ -32,7 +33,7 @@ namespace NewRelic.Api.Agent
 
 		private static bool _isCreateDistributedTracePayloadAvailable = true;
 
-		//[Obsolete("CreateDistributedTracePayload is deprecated.")]
+		[Obsolete("CreateDistributedTracePayload is deprecated.")]
 		public IDistributedTracePayload CreateDistributedTracePayload()
 		{
 			if (!_isCreateDistributedTracePayloadAvailable) return _noOpTransaction.CreateDistributedTracePayload();
@@ -51,6 +52,38 @@ namespace NewRelic.Api.Agent
 			}
 
 			return _noOpTransaction.CreateDistributedTracePayload();
+		}
+
+		private static bool _isAcceptDistributedTraceHeadersAvailable = true;
+
+		public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType)
+		{
+			if (!_isAcceptDistributedTraceHeadersAvailable) return;
+
+			try
+			{
+				_wrappedTransaction.AcceptDistributedTraceHeaders(carrier, getter, (int)transportType);
+			}
+			catch (RuntimeBinderException)
+			{
+				_isAcceptDistributedTraceHeadersAvailable = false;
+			}
+		}
+
+		private static bool _isInsertDistributedTraceHeadersAvailable = true;
+
+		public void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter)
+		{
+			if (!_isInsertDistributedTraceHeadersAvailable) return;
+
+			try
+			{
+				_wrappedTransaction.InsertDistributedTraceHeaders(carrier, setter);
+			}
+			catch (RuntimeBinderException)
+			{
+				_isInsertDistributedTraceHeadersAvailable = false;
+			}
 		}
 
 		private static bool _isAddCustomAttributeAvailable = true;
@@ -73,7 +106,6 @@ namespace NewRelic.Api.Agent
 
 			return this;
 		}
-
 
 		private static bool _isCurrentSpanAvailable = true;
 		public ISpan CurrentSpan

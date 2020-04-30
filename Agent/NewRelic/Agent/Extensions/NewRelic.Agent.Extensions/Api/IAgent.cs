@@ -71,14 +71,6 @@ namespace NewRelic.Agent.Api
 		void EnableExplainPlans(ISegment segment, Func<object> allocateExplainPlanResources, Func<object, ExplainPlan> generateExplainPlan, Func<VendorExplainValidationResult> vendorValidateShouldExplain);
 
 		/// <summary>
-		/// Processes headers from an inbound request.
-		/// </summary>
-		/// <param name="headers">The headers to be processed. Must not be null.</param>
-		/// <param name="contentLength">The length of the content, in bytes, if available.</param>
-		/// <exception cref="ArgumentNullException"></exception>
-		void ProcessInboundRequest(IEnumerable<KeyValuePair<string, string>> headers, TransportType transportType);
-
-		/// <summary>
 		/// Tell the agent about an error that just occurred in the wrapper. Normally exceptions should just be thrown so that the agent can handle them directly, but this method is useful in situations where exceptions are happening outside the scope of the agent (for example, on another thread). This method is thread-safe.
 		/// </summary>
 		/// <param name="exception">The exception that occurred. Must not be null.</param>

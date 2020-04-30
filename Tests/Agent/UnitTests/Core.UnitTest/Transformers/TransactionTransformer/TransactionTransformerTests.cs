@@ -782,12 +782,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 		{
 			Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
 			var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
-			var expectedTransportDuration = 2d;
 
 			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
 			var immutableTransaction = new ImmutableTransactionBuilder()
-				.WithStartTime(DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(expectedTransportDuration)))
+				.WithStartTime(DateTime.UtcNow)
 				.IsWebTransaction("category", "name")
 				.WithDuration(TimeSpan.FromSeconds(3))
 				.WithResponseTime(TimeSpan.FromSeconds(1))
@@ -803,8 +802,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 			NrAssert.Multiple(
 				() => Assert.IsTrue(generatedMetrics.ContainsKey("TransportDuration/App/accountId/appId/Kafka/all"), $"Missing TransportDuration metric TransportDuration/App/accountId/appId/Kafka/all"),
 				() => Assert.IsTrue(generatedMetrics.ContainsKey("TransportDuration/App/accountId/appId/Kafka/allWeb"), $"Missing TransportDuration metric TransportDuration/App/accountId/appId/Kafka/allWeb"),
-				() => Assert.IsTrue(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/all"].Value1 >= expectedTransportDuration),
-				() => Assert.IsTrue(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/allWeb"].Value1 >= expectedTransportDuration)
+				() => Assert.IsTrue(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/all"].Value1 > 0),
+				() => Assert.IsTrue(generatedMetrics["TransportDuration/App/accountId/appId/Kafka/allWeb"].Value1 > 0)
 				);
 		}
 

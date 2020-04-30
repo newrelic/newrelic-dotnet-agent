@@ -99,8 +99,6 @@ namespace NewRelic.Agent.Core.Transactions
 			}
 		}
 
-		public long? CatContentLength { get; set; }
-
 		public void End(bool captureResponseTime = true)
 		{
 			if (IsFinished)
@@ -503,18 +501,24 @@ namespace NewRelic.Agent.Core.Transactions
 
 		public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
 		{
+			// start with an empty enumerable
+			var headers = Enumerable.Empty<KeyValuePair<string, string>>();
+
+			// Add the synthetics headers
+			headers = headers.Concat(Agent._syntheticsHeaderHandler.TryGetOutboundSyntheticsRequestHeader(this));
+
+			// DT/W3C
 			if (_configuration.DistributedTracingEnabled)
 			{
 				var payload = CreateDistributedTracePayload();
 				if (payload.IsEmpty())
 				{
-					return Enumerable.Empty<KeyValuePair<string, string>>();
+					return headers;
 				}
-				return new[] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKey, payload.HttpSafe()) };
+				return headers.Concat(new[] { new KeyValuePair<string, string>(Constants.DistributedTracePayloadKey, payload.HttpSafe()) } );
 			}
 
-			var headers = Enumerable.Empty<KeyValuePair<string, string>>();
-
+			// CAT
 			var currentTransactionName = CandidateTransactionName.CurrentTransactionName;
 			var currentTransactionMetricName =
 				Agent._transactionMetricNameMaker.GetTransactionMetricName(currentTransactionName);
@@ -522,8 +526,7 @@ namespace NewRelic.Agent.Core.Transactions
 			UpdatePathHash(currentTransactionMetricName);
 
 			return headers
-				.Concat(Agent._catHeaderHandler.TryGetOutboundRequestHeaders(this))
-				.Concat(Agent._syntheticsHeaderHandler.TryGetOutboundSyntheticsRequestHeader(this));
+				.Concat(Agent._catHeaderHandler.TryGetOutboundRequestHeaders(this));
 		}
 
 		public IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
@@ -566,7 +569,7 @@ namespace NewRelic.Agent.Core.Transactions
 			{
 				return;
 			}
-			if (TransactionMetadata.HasOutgoingDistributedTracePayload)
+			if (TransactionMetadata.HasOutgoingTraceHeaders)
 			{
 				Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept();
 				return;
@@ -582,13 +585,27 @@ namespace NewRelic.Agent.Core.Transactions
 			TracingState = Agent._distributedTracePayloadHandler.AcceptDistributedTracePayload(payload, isUnknownTransportType ? TransportType.Unknown : transportType, StartTime);
 		}
 
-		public void AcceptDistributedTraceHeaders(Func<string, IEnumerable<string>> getHeaders, TransportType transportType)
+		public void AcceptDistributedTraceHeaders<T>(T carrier, Func<T, string, IEnumerable<string>> getter, TransportType transportType)
 		{
 			if (_configuration.DistributedTracingEnabled)
 			{
-				var isUnknownTransportType = transportType < TransportType.Unknown || transportType > TransportType.Other;
+				// Headers have already been received, do not allow multiple calls to AcceptDistributedTraceHeaders
+				if (TracingState != null)
+				{
+					// using legacy supportability metric, as one for TraceContext was not spec'd
+					Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple();
+					return;
+				}
+				if (TransactionMetadata.HasOutgoingTraceHeaders)
+				{
+					Agent._agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredCreateBeforeAccept();
+					return;
+				}
 
-				TracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(getHeaders, isUnknownTransportType ? TransportType.Unknown : transportType, StartTime);
+				var isUnknownTransportType = transportType < TransportType.Unknown || transportType > TransportType.Other;
+				var normalizedTransportType = isUnknownTransportType ? TransportType.Unknown : transportType;
+
+				TracingState = _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(carrier, getter, normalizedTransportType, StartTime);
 			}
 			else
 			{
@@ -596,10 +613,10 @@ namespace NewRelic.Agent.Core.Transactions
 				// See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
 
 				// get CAT headers X-NewRelic-Id, X-NewRelic-Transaction, X-NewRelic-App-Data
-				Agent.TryProcessCatRequestData(this, getHeaders);
+				Agent.TryProcessCatRequestData(this, carrier, getter);
 			}
 
-			Agent.TryProcessSyntheticsData(this, getHeaders);
+			Agent.TryProcessSyntheticsData(this, carrier, getter);
 		}
 
 		public IDistributedTracePayload CreateDistributedTracePayload()
@@ -1150,18 +1167,18 @@ namespace NewRelic.Agent.Core.Transactions
 			_wrapperToken = wrapperToken;
 		}
 
-		public void InsertDistributedTraceHeaders(Action<string, string> setHeaders)
+		public void InsertDistributedTraceHeaders<T>(T carrier, Action<T, string, string> setter)
 		{
 			if (_configuration.DistributedTracingEnabled)
 			{
-				_distributedTracePayloadHandler.InsertDistributedTraceHeaders(this, setHeaders);
+				_distributedTracePayloadHandler.InsertDistributedTraceHeaders(this, carrier, setter);
 			}
 			else
 			{
 				var headers = GetRequestMetadata().Where(header => header.Key != null);
 				foreach (var header in headers)
 				{
-					setHeaders(header.Key, header.Value);
+					setter(carrier, header.Key, header.Value);
 				}
 			}
 		}

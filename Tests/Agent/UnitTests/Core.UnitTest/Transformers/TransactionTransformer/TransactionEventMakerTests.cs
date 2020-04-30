@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
-			var immutableTransaction = BuildTestImmutableTransaction(sampled: true, guid: "guid");
+			var immutableTransaction = BuildTestImmutableTransaction(sampled: true, guid: "guid", isDTParticipant: _configurationService.Configuration.DistributedTracingEnabled);
 
 			var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
 			var txStats = new TransactionMetricStatsCollection(transactionMetricName);
@@ -178,7 +178,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 		private const float Priority = 1.56f;
 		private const string traceparentParentId = "parentId";
 
-		private ImmutableTransaction BuildTestImmutableTransaction(bool isWebTransaction = true, string guid = null, float priority = 0.5f, bool sampled = false, string traceId = "traceId")
+		private ImmutableTransaction BuildTestImmutableTransaction(bool isWebTransaction = true, string guid = null, float priority = 0.5f, bool sampled = false, string traceId = "traceId", bool isDTParticipant = false)
 		{
 			var name = TransactionName.ForWebTransaction("category", "name");
 
@@ -187,7 +187,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			var placeholderMetadataBuilder = new TransactionMetadata();
 			var placeholderMetadata = placeholderMetadataBuilder.ConvertToImmutableMetadata();
 
-			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, priority, sampled, traceId, BuildMockTracingState(), _attribDefs);
+			var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), guid, false, false, false, priority, sampled, traceId, BuildMockTracingState(isDTParticipant), _attribDefs);
 
 			return immutableTransaction;
 		}
@@ -258,7 +258,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 				metadata.SetSyntheticsMonitorId("syntheticsMonitorId");
 			}
 		}
-		private static ITracingState BuildMockTracingState()
+		private static ITracingState BuildMockTracingState(bool isDTParticipant)
 		{
 			var tracingState = Mock.Create<ITracingState>();
 
@@ -273,8 +273,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 			Mock.Arrange(() => tracingState.Sampled).Returns(Sampled);
 			Mock.Arrange(() => tracingState.Priority).Returns(Priority);
 			Mock.Arrange(() => tracingState.ParentId).Returns(traceparentParentId);
-			Mock.Arrange(() => tracingState.TraceContextWasAccepted).Returns(true);
 			Mock.Arrange(() => tracingState.HasDataForParentAttributes).Returns(true);
+			Mock.Arrange(() => tracingState.HasDataForAttributes).Returns(isDTParticipant);
 
 			return tracingState;
 		}

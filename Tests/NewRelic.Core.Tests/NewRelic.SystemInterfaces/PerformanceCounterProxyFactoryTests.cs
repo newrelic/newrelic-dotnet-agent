@@ -1,4 +1,5 @@
-﻿using NewRelic.SystemInterfaces;
+﻿#if NETFRAMEWORK
+using NewRelic.SystemInterfaces;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -195,3 +196,4 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
 	}
 }
+#endif

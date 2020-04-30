@@ -9,9 +9,7 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.Testing.Assertions;
-using NewRelic.Agent.TestUtilities;
 using NUnit.Framework;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -2021,7 +2019,10 @@ namespace CompositeTests
 				doNotTrackAsUnitOfWork: true);
 			transaction.SetHttpResponseStatusCode(300);
 			var segment = _compositeTestAgent.GetAgent().StartTransactionSegmentOrThrow("segment");
-			_compositeTestAgent.GetAgent().ProcessInboundRequest(AgentApi.GetRequestMetadata(), TransportType.HTTP); // we test this elsewhere
+
+			var headers = AgentApi.GetRequestMetadata();
+			_compositeTestAgent.GetAgent().CurrentTransaction.AcceptDistributedTraceHeaders(headers, GetHeaderValue, TransportType.HTTP);
+
 			segment.End();
 			var responseMetadata = AgentApi.GetResponseMetadata().ToDictionary(x => x.Key, x => x.Value);
 			transaction.End();
@@ -2044,6 +2045,24 @@ namespace CompositeTests
 				() => Assert.NotNull(crossApplicationResponseData.ContentLength),
 				() => Assert.NotNull(crossApplicationResponseData.TransactionGuid)
 				);
+
+			IEnumerable<string> GetHeaderValue(IEnumerable<KeyValuePair<string, string>> carrier, string key)
+			{
+				if (carrier != null)
+				{
+					var headerValues = new List<string>();
+					foreach (var item in carrier)
+					{
+						if (item.Key.Equals(key, StringComparison.OrdinalIgnoreCase))
+						{
+							headerValues.Add(item.Value);
+						}
+					}
+					return headerValues;
+				}
+
+				return null;
+			}
 		}
 		#endregion
 
@@ -2203,7 +2222,7 @@ namespace CompositeTests
 			);
 		}
 
-		#endregion GetLinkingMetadata
+		#endregion GetLinkingMetadataCATS
 
 		#region Span Custom Attributes
 

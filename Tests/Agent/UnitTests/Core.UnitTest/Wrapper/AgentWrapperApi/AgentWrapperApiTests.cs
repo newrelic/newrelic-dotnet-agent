@@ -34,6 +34,7 @@ using System.Threading;
 using Telerik.JustMock;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Core.Spans;
+using NewRelic.Agent.TestUtilities;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
@@ -55,7 +56,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private IPathHashMaker _pathHashMaker;
 
 		private ICatHeaderHandler _catHeaderHandler;
-		
+
 		private IDistributedTracePayloadHandler _distributedTracePayloadHandler;
 
 		private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
@@ -81,6 +82,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		private IAttributeDefinitions _attribDefs => _attribDefSvc.AttributeDefs;
 
 		private const string DistributedTraceHeaderName = "newrelic";
+		private const string ReferrerTripId = "referrerTripId";
+		private const string ReferrerPathHash = "referrerPathHash";
+		private const string ReferrerTransactionGuid = "referrerTransactionGuid";
+		private const string ReferrerProcessId = "referrerProcessId";
 
 		[SetUp]
 		public void SetUp()
@@ -487,105 +492,101 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		#region inbound CAT request - outbound CAT response
 
 		[Test]
-		public void ProcessInboundRequest_SetsReferrerCrossProcessId()
+		public void AcceptDistributedTraceHeaders_SetsReferrerCrossProcessId()
 		{
-			var transactionName = TransactionName.ForWebTransaction("a", "b");
-			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
-			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
-			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
-				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
-				.Returns("referrerProcessId");
-			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
+			SetupTransaction();
+
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>()))
+				.Returns(ReferrerProcessId);
 			var headers = new Dictionary<string, string>();
 
-			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerProcessId("referrerProcessId"));
+			Assert.AreEqual(ReferrerProcessId, _transaction.TransactionMetadata.CrossApplicationReferrerProcessId, $"CrossApplicationReferrerProcessId");
 		}
 
 		[Test]
-		public void ProcessInboundRequest_SetsTransactionData()
+		public void AcceptDistributedTraceHeaders_SetsTransactionData()
 		{
-			var transactionName = TransactionName.ForWebTransaction("a", "b");
-			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
-			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
-			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
+			SetupTransaction();
+
+			var catRequestData = new CrossApplicationRequestData(ReferrerTransactionGuid, false, ReferrerTripId, ReferrerPathHash);
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func< Dictionary<string, string>, string, IEnumerable<string>>>()))
 				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
-				.Returns("referrerProcessId");
-			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
 			var headers = new Dictionary<string, string>();
 
-			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerTripId("referrerTripId"));
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerPathHash("referrerPathHash"));
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid("referrerTransactionGuid"));
+			Assert.AreEqual(ReferrerTripId, _transaction.TransactionMetadata.CrossApplicationReferrerTripId, $"CrossApplicationReferrerTripId");
+			Assert.AreEqual(ReferrerPathHash, _transaction.TransactionMetadata.CrossApplicationReferrerPathHash, $"CrossApplicationReferrerPathHash");
+			Assert.AreEqual(ReferrerTransactionGuid, _transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, $"CrossApplicationReferrerTransactionGuid");
 		}
 
 		[Test]
-		public void ProcessInboundRequest_SetsTransactionData_WithContentLength()
+		public void AcceptDistributedTraceHeaders_SetsTransactionData_WithContentLength()
 		{
-			var transactionName = TransactionName.ForWebTransaction("a", "b");
-			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
-			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
+			SetupTransaction();
+
 			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny< Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>()))
 				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
-				.Returns("referrerProcessId");
-			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
-			var headers = new Dictionary<string, string>();
+			var headers = new Dictionary<string, string>() { { "Content-Length", "200" } };
 			var transactionExperimental = _agent.CurrentTransaction.GetExperimentalApi();
-			transactionExperimental.CatContentLength = 200;
 
-			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerTripId("referrerTripId"));
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerContentLength(200));
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerPathHash("referrerPathHash"));
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid("referrerTransactionGuid"));
+			Assert.AreEqual(ReferrerTripId, _transaction.TransactionMetadata.CrossApplicationReferrerTripId, $"CrossApplicationReferrerTripId");
+			Assert.AreEqual(200, _transaction.TransactionMetadata.GetCrossApplicationReferrerContentLength(), $"CrossApplicationContentLength");
+			Assert.AreEqual(ReferrerPathHash, _transaction.TransactionMetadata.CrossApplicationReferrerPathHash, $"CrossApplicationReferrerPathHash");
+			Assert.AreEqual(ReferrerTransactionGuid, _transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, $"CrossApplicationReferrerTransactionGuid");
 		}
 
 		[Test]
-		public void ProcessInboundRequest_DoesNotSetTransactionDataIfCrossProcessIdAlreadyExists()
+		public void AcceptDistributedTraceHeaders_DoesNotSetTransactionDataIfCrossProcessIdAlreadyExists()
 		{
-			var transactionName = TransactionName.ForWebTransaction("a", "b");
-			Mock.Arrange(() => _transaction.CandidateTransactionName.CurrentTransactionName).Returns(transactionName);
-			Mock.Arrange(() => _transactionMetricNameMaker.GetTransactionMetricName(transactionName)).Returns(new TransactionMetricName("c", "d"));
-			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns("referrerProcessId");
-			var catRequestData = new CrossApplicationRequestData("referrerTransactionGuid", false, "referrerTripId", "referrerPathHash");
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Func<string, IEnumerable<string>>>()))
+			SetupTransaction();
+
+			var newReferrerProcessId = "newProcessId";
+			var newReferrerTransactionGuid = "newTxGuid";
+			var newReferrerTripId = "newTripId";
+			var newReferrerPathHash = "newPathHash";
+
+			// first request to set TransactionMetadata
+			var catRequestData = new CrossApplicationRequestData(ReferrerTransactionGuid, false, ReferrerTripId, ReferrerPathHash);
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>,string, IEnumerable<string>>>()))
 				.Returns(catRequestData);
-			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Func<string, IEnumerable<string>>>()))
-				.Returns("referrerProcessId");
-			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns("referrerProcessId");
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>()))
+				.Returns(ReferrerProcessId);
+
 			var headers = new Dictionary<string, string>();
 
-			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
-			Mock.Arrange(() => _transaction.TransactionMetadata.CrossApplicationReferrerProcessId).Returns(null as string);
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerProcessId(Arg.IsAny<string>()), Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerTripId("referrerTripId"), Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerContentLength(Arg.IsAny<int>()), Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerPathHash("referrerPathHash"), Occurs.Never());
-			Mock.Assert(() => _transaction.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid("referrerTransactionGuid"), Occurs.Never());
+			// new request
+			catRequestData = new CrossApplicationRequestData(newReferrerTransactionGuid, false, newReferrerTripId, newReferrerPathHash);
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeaders(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>,string, IEnumerable<string>>>()))
+				.Returns(catRequestData);
+			Mock.Arrange(() => _catHeaderHandler.TryDecodeInboundRequestHeadersForCrossProcessId(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>()))
+				.Returns(newReferrerProcessId);
+
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
+
+			// values are for first request
+			Assert.AreEqual(ReferrerProcessId, _transaction.TransactionMetadata.CrossApplicationReferrerProcessId, $"CrossApplicationReferrerProcessId");
+			Assert.AreEqual(ReferrerTripId, _transaction.TransactionMetadata.CrossApplicationReferrerTripId, $"CrossApplicationReferrerTripId");
+			Assert.AreEqual(ReferrerPathHash, _transaction.TransactionMetadata.CrossApplicationReferrerPathHash, $"CrossApplicationReferrerPathHash");
+			Assert.AreEqual(ReferrerTransactionGuid, _transaction.TransactionMetadata.CrossApplicationReferrerTransactionGuid, $"CrossApplicationReferrerTransactionGuid");
 		}
 
 		[Test]
-		public void ProcessInboundRequest_DoesNotThrow_IfContentLengthIsNull()
+		public void AcceptDistributedTraceHeaders_DoesNotThrow_IfContentLengthIsNull()
 		{
-			var headers = new Dictionary<string, string>();
-			_agent.ProcessInboundRequest(headers, TransportType.Unknown);
-
-			// Simply not throwing is all this test needs to check for
+			var headers = new Dictionary<string, string>();	
+			Assert.DoesNotThrow(() => _agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP));
 		}
 
 		[Test]
-		public void ProcessInboundRequest__ReportsSupportabilityMetric_NullPayload()
+		public void AcceptDistributedTraceHeaders__ReportsSupportabilityMetric_NullPayload()
 		{
 			_distributedTracePayloadHandler = new DistributedTracePayloadHandler(_configurationService, _agentHealthReporter, new AdaptiveSampler());
 			_agent = new Agent(_transactionService, _transactionTransformer, _threadPoolStatic, _transactionMetricNameMaker, _pathHashMaker, _catHeaderHandler, _distributedTracePayloadHandler, _syntheticsHeaderHandler, _transactionFinalizer, _browserMonitoringPrereqChecker, _browserMonitoringScriptMaker, _configurationService, _agentHealthReporter, _agentTimerService, _metricNameService, _traceMetadataFactory, _catMetrics);
@@ -593,19 +594,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
-			
 			var headers = new Dictionary<string, string>();
 			headers[DistributedTraceHeaderName] = null;
-			_agent.ProcessInboundRequest(headers, TransportType.HTTPS);
+			
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredNull(), Occurs.Once());
 		}
 
-
 		[Test]
 		public void GetResponseMetadata_ReturnsEmpty_IfNoCurrentTransaction()
 		{
-			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns((IInternalTransaction) null);
+			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns((IInternalTransaction)null);
 
 			var headers = _agent.CurrentTransaction.GetResponseMetadata();
 
@@ -754,7 +754,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void GetRequestMetadata_ReturnsEmpty_IfNoCurrentTransaction()
 		{
-			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns((IInternalTransaction) null);
+			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns((IInternalTransaction)null);
 
 			var headers = _agent.CurrentTransaction.GetRequestMetadata();
 
@@ -781,7 +781,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		{
 			SetupTransaction();
 
-			var catHeaders = new Dictionary<string, string> {{"key1", "value1"}, {"key2", "value2"}};
+			var catHeaders = new Dictionary<string, string> { { "key1", "value1" }, { "key2", "value2" } };
 			Mock.Arrange(() => _catHeaderHandler.TryGetOutboundRequestHeaders(Arg.IsAny<IInternalTransaction>())).Returns(catHeaders);
 
 			var headers = _agent.CurrentTransaction.GetRequestMetadata().ToDictionary();
@@ -798,13 +798,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		#region Distributed Trace
 
 		private static readonly string _accountId = "acctid";
-		private static readonly string _appId  = "appid";
-		private static readonly string _guid  = "guid";
+		private static readonly string _appId = "appid";
+		private static readonly string _guid = "guid";
 		private static readonly float _priority = .3f;
 		private static readonly bool _sampled = true;
-		private static readonly string _traceId  = "traceid";
+		private static readonly string _traceId = "traceid";
 		private static readonly string _trustKey = "trustedkey";
-		private static readonly DistributedTracingParentType _type  = DistributedTracingParentType.App;
+		private static readonly DistributedTracingParentType _type = DistributedTracingParentType.App;
 		private static readonly string _transactionId = "transactionId";
 
 		private readonly DistributedTracePayload _distributedTracePayload = DistributedTracePayload.TryBuildOutgoingPayload(_type.ToString(), _accountId, _appId, _guid, _traceId, _trustKey, _priority, _sampled, DateTime.UtcNow, _transactionId);
@@ -856,7 +856,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		}
 
 		[Test]
-		public void ProcessInboundRequest_SetsDTMetadataAndNotCATMetadata_IfDistributedTraceIsEnabled()
+		public void AcceptDistributedTraceHeaders_SetsDTMetadataAndNotCATMetadata_IfDistributedTraceIsEnabled()
 		{
 			// Arrange
 			SetupTransaction();
@@ -875,10 +875,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Mock.Arrange(() => tracingState.Sampled).Returns(_sampled);
 			Mock.Arrange(() => tracingState.Priority).Returns(_priority);
 
-			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTracePayload(Arg.IsAny<string>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(headers, Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
 
 			// Act
-			_agent.ProcessInboundRequest(headers, TransportType.HTTP);
+			_transaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			// Assert
 			var immutableTransactionMetadata = _transaction.TransactionMetadata.ConvertToImmutableMetadata();
@@ -896,35 +896,43 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		}
 
 		[Test]
-		public void ProcessInboundRequest_DoesNotSetTransactionMetadata_IfPayloadAlreadyAccepted()
+		public void AcceptDistributedTraceHeaders_DoesNotSetTransactionData_IfPayloadAlreadyAccepted()
 		{
 			// Arrange
+			SetupTransaction();
+
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
 
-			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).Returns(_distributedTracePayload);
+			var tracingState = Mock.Create<ITracingState>();
+
+			Mock.Arrange(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(Arg.IsAny<Dictionary<string, string> >(), Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>())).Returns(tracingState);
+
+			var headers = new Dictionary<string, string>();
+			_transaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			// Act
-			_agent.ProcessInboundRequest(new KeyValuePair<string, string>[] { }, TransportType.HTTP);
+			_transaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			// Assert
-			Mock.Assert(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>()), Occurs.Never());
-			Mock.Assert(() => _transaction.TracingState.AccountId, Occurs.Never());
+			Mock.Assert(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>()), Occurs.Once());
+			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple(), Occurs.Once());
 		}
 
 		[Test]
-		public void ProcessInboundRequest_DoesNotSetTransactionData_IfOutgoingPayloadCreated()
+		public void AcceptDistributedTraceHeaders_DoesNotSetTransactionData_IfOutgoingPayloadCreated()
 		{
 			// Arrange
-			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
+			SetupTransaction();
 
-			var transactionMetadata = new TransactionMetadata() { HasOutgoingDistributedTracePayload = true };
-			Mock.Arrange(() => _transaction.TransactionMetadata).Returns(transactionMetadata);
+			_transaction.TransactionMetadata.HasOutgoingTraceHeaders = true;
+
+			var headers = new Dictionary<string, string>();
 
 			// Act
-			_agent.ProcessInboundRequest(new KeyValuePair<string, string>[] { }, TransportType.HTTP);
+			_transaction.AcceptDistributedTraceHeaders(headers, HeaderFunctions.GetHeaders, TransportType.HTTP);
 
 			// Assert
-			Mock.Assert(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>()), Occurs.Never());
+			Mock.Assert(() => _distributedTracePayloadHandler.AcceptDistributedTraceHeaders(Arg.IsAny<Dictionary<string, string>>(), Arg.IsAny<Func<Dictionary<string, string>, string, IEnumerable<string>>>(), Arg.IsAny<TransportType>(), Arg.IsAny<DateTime>()), Occurs.Never());
 			Mock.Assert(() => _transaction.TracingState.AccountId, Occurs.Never());
 			Mock.Assert(() => _transaction.TracingState.AppId, Occurs.Never());
 			Mock.Assert(() => _transaction.TracingState.Guid, Occurs.Never());
@@ -935,6 +943,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		[Test]
 		public void AcceptDistributedTracePayload_ReportsSupportabilityMetric_IfAcceptCalledMultipleTimes()
 		{
+			// Arrange
 			SetupTransaction();
 
 			Mock.Arrange(() => _configurationService.Configuration.DistributedTracingEnabled).Returns(true);
@@ -944,9 +953,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			_agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
 
 			Mock.Arrange(() => _distributedTracePayloadHandler.TryDecodeInboundSerializedDistributedTracePayload(Arg.IsAny<string>())).CallOriginal();
+
+			// Act
 			_agent.CurrentTransaction.AcceptDistributedTracePayload(payload, TransportType.HTTPS);
 
-
+			// Assert
 			Mock.Assert(() => _agentHealthReporter.ReportSupportabilityDistributedTraceAcceptPayloadIgnoredMultiple(), Occurs.Once());
 		}
 
@@ -1017,15 +1028,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 			Assert.AreEqual(traceMetadata.TraceId, testTraceId);
 			Assert.AreEqual(traceMetadata.SpanId, testSpanId);
 			Assert.AreEqual(traceMetadata.IsSampled, testIsSampled);
-		}
-
-		private void SetupTransaction()
-		{
-			var transactionName = TransactionName.ForWebTransaction("foo", "bar");
-			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService, _attribDefs);
-
-			//_transactionService = Mock.Create<ITransactionService>();
-			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);
 		}
 
 		[Test]
@@ -1351,6 +1353,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 		}
 
 		#endregion GetLinkingMetadata
+
+		private void SetupTransaction()
+		{
+			var transactionName = TransactionName.ForWebTransaction("foo", "bar");
+			_transaction = new Transaction(_configurationService.Configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, _callStackManager, Mock.Create<IDatabaseService>(), default(float), Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+
+			Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(_transaction);
+		}
 	}
 }
 

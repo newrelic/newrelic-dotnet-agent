@@ -31,7 +31,9 @@ namespace NewRelic.Agent.Core.Metric
 		GetLinkingMetadata = 20,
 		TransactionAddCustomAttribute = 21,
 		TransactionGetCurrentSpan=22,
-		SpanAddCustomAttribute=23
+		SpanAddCustomAttribute=23,
+		InsertDistributedTraceHeaders = 24,
+		AcceptDistributedTraceHeaders = 25
 	}
 
 	public interface IApiSupportabilityMetricCounters : IOutOfBandMetricSource

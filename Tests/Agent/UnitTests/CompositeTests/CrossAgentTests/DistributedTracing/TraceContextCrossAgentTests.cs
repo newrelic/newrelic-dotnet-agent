@@ -102,15 +102,6 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 			_compositeTestAgent.ServerConfiguration.AccountId = testData.AccountId;
 			_compositeTestAgent.ServerConfiguration.PrimaryApplicationId = "primaryApplicationId";
 
-			// remove this block when Trace Context feature goes live
-			var enablerConfig = new NewRelic.Agent.Core.Config.configurationAdd
-			{
-				key = "NewRelic.W3CEnabled",
-				value = "true"
-			};
-			var appSettings = new List<NewRelic.Agent.Core.Config.configurationAdd>() { enablerConfig };
-			_compositeTestAgent.LocalConfiguration.appSettings = appSettings;
-
 			_compositeTestAgent.PushConfiguration();
 		}
 
@@ -138,14 +129,14 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 			}
 
 			Dictionary<string, string> insertedHeaders = new Dictionary<string, string>();
-			var setHeaders = new Action<string, string>((key, value) =>
+			var setHeaders = new Action<Dictionary<string, string>, string, string>((carrier, key, value) =>
 			{
-				insertedHeaders.Add(key, value);
+				carrier.Add(key, value);
 			});
 
 			testData.OutboundPayloadsSettings?.ForEach(payloadSettings =>
 			{
-				_agent.CurrentTransaction.InsertDistributedTraceHeaders(setHeaders);
+				_agent.CurrentTransaction.InsertDistributedTraceHeaders(insertedHeaders, setHeaders);
 
 				if (testData.OutboundPayloadsSettings != null)
 				{
@@ -202,12 +193,12 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 				transportType = (TransportType)(-1);
 			}
 
-			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(GetHeaderValue, transportType);
+			_agent.CurrentTransaction.AcceptDistributedTraceHeaders(testDataInboundHeaders, GetHeaderValue, transportType);
 
-			IEnumerable<string> GetHeaderValue(string key)
+			IEnumerable<string> GetHeaderValue(IEnumerable<KeyValuePair<string, string>> carrier, string key)
 			{
 				List<string> results = new List<string>();
-				foreach (KeyValuePair<string, string> header in testDataInboundHeaders)
+				foreach (KeyValuePair<string, string> header in carrier)
 				{
 					if (header.Key == key)
 					results.Add(header.Value);
@@ -263,8 +254,8 @@ namespace CompositeTests.CrossAgentTests.DistributedTracing
 							{"parent_application_id", tracestate.AppId },
 							{"span_id", tracestate.SpanId },
 							{"transaction_id", tracestate.TransactionId },
-							{"sampled",  Convert.ToBoolean(Convert.ToInt16(tracestate.Sampled)) },
-							{"priority", tracestate.Priority },
+							{"sampled", tracestate.Sampled },
+							{"priority", string.Format("{0:0.######}", tracestate.Priority) }, // cheating here: priority is stored as float, which may show in scientific notation; this formatting is performed when creating a new tracestate header in the agent so it will not be transmitted in scientific notation
 							{"timestamp", tracestate.Timestamp },
 							{"tenant_id",  tenantId },
 							{"vendors", new JArray(tracestate.VendorstateEntries.Select(vse => vse.Split('=')[0]).ToList()) }
