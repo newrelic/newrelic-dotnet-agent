@@ -1,0 +1,373 @@
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System;
+using NewRelic.Core.Logging;
+using NewRelic.Agent.Core.Utilities;
+using System.Linq;
+
+namespace NewRelic.Agent.Core.Attributes
+{
+    public interface IAttributeValueCollection
+    {
+        /// <summary>
+        /// Even this enum is Flags, this should only be one attributedestination
+        /// </summary>
+        AttributeDestinations[] TargetModelTypes { get; }
+
+        AttributeDestinations TargetModelTypesAsFlags { get; }
+
+        int Count { get; }
+
+        bool IsImmutable { get; }
+
+        void AddRange(IAttributeValueCollection fromCollection);
+
+        void MakeImmutable();
+
+        bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, TOutput value);
+
+        bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, Lazy<object> lazyImpl);
+
+        bool TrySetValue(IAttributeValue attrib);
+
+        IEnumerable<IAttributeValue> GetAttributeValues(AttributeClassification classification);
+
+        IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification);
+    }
+
+    public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCollection where TAttrib : IAttributeValue
+    {
+
+        private static AttributeDestinations[] _allTargetModelTypes;
+
+        public static AttributeDestinations[] AllTargetModelTypes  => _allTargetModelTypes
+            ?? (_allTargetModelTypes = Enum.GetValues(typeof(AttributeDestinations))
+            .Cast<AttributeDestinations>()
+            .Where(x => x != AttributeDestinations.All &&  x != AttributeDestinations.None)
+            .ToArray());
+
+        public const int MaxCountUserAttrib = 64;
+        public const int MaxCountAllAttrib = 255;
+
+        private readonly Dictionary<AttributeClassification, InterlockedCounter> _attribValueCountsDic = new Dictionary<AttributeClassification, InterlockedCounter>()
+        {
+            { AttributeClassification.Intrinsics, new InterlockedCounter() },
+            { AttributeClassification.UserAttributes, new InterlockedCounter() },
+            { AttributeClassification.AgentAttributes, new InterlockedCounter() }
+        };
+
+        public int Count => _attribValueCountsDic[AttributeClassification.UserAttributes].Value
+            + _attribValueCountsDic[AttributeClassification.AgentAttributes].Value
+            + _attribValueCountsDic[AttributeClassification.Intrinsics].Value;
+
+        public AttributeDestinations[] TargetModelTypes { get; private set; }
+        public AttributeDestinations TargetModelTypesAsFlags { get; private set; }
+
+        private bool ValidateCollectionLimits(AttributeClassification classification, string name)
+        {
+            if (classification == AttributeClassification.UserAttributes && _attribValueCountsDic[classification].Value >= MaxCountUserAttrib)
+            {
+                Log.Debug($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountUserAttrib} {classification} attributes may be supplied.");
+                return false;
+            }
+
+            if (Count >= MaxCountAllAttrib)
+            {
+                Log.Debug($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountAllAttrib} attributes may be supplied.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private AttributeValueCollectionBase(){}
+
+        protected AttributeValueCollectionBase(IAttributeValueCollection fromCollection, params AttributeDestinations[] targetModelTypes)
+            : this(targetModelTypes)
+        {
+            AddRange(fromCollection);
+        }
+
+        protected AttributeValueCollectionBase(params AttributeDestinations[] targetModelTypes)
+        {
+            TargetModelTypes = targetModelTypes;
+            foreach(var targetModelType in targetModelTypes)
+            {
+                TargetModelTypesAsFlags |= targetModelType;
+            }
+        }
+
+        public IEnumerable<IAttributeValue> GetAttributeValues(AttributeClassification classification)
+        {
+            return GetAttribValuesImpl(classification).Cast<IAttributeValue>();
+        }
+
+        public IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification)
+        {
+            return GetAttribValuesImpl(classification).Cast<IAttributeValue>().ToDictionary(x => x.AttributeDefinition.Name, x => x.Value);
+        }
+
+        public void AddRange(IAttributeValueCollection fromCollection)
+        {
+            foreach (var classification in _attribValueCountsDic.Keys)
+            {
+                foreach (var attribVal in fromCollection.GetAttributeValues(classification))
+                {
+                    
+                    if ((attribVal.AttributeDefinition.AttributeDestinations & TargetModelTypesAsFlags) == 0) 
+                    {
+                        continue;
+                    }
+
+                    TrySetValue(attribVal);
+                }
+            }
+        }
+
+        public bool IsImmutable { get; private set; } = false;
+
+        public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, TOutput val)
+        {
+            if (!ValidateCollectionLimits(attribDef.Classification, attribDef.Name))
+            {
+                return false;
+            }
+
+            if(!SetValueImpl(attribDef, val))
+            {
+                return false;
+            }
+
+            _attribValueCountsDic[attribDef.Classification].Increment();
+
+            return true;
+
+        }
+
+        public bool TrySetValue(IAttributeValue attribValue)
+        {
+            if (!ValidateCollectionLimits(attribValue.AttributeDefinition.Classification, attribValue.AttributeDefinition.Name))
+            {
+                return false;
+            }
+
+            if(!SetValueImpl(attribValue))
+            {
+                return false;
+            }
+
+            _attribValueCountsDic[attribValue.AttributeDefinition.Classification].Increment();
+
+            return true;
+
+        }
+
+        public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, Lazy<object> lazyValueImpl)
+        {
+            if (!ValidateCollectionLimits(attribDef.Classification, attribDef.Name) || lazyValueImpl == null)
+            {
+                return false;
+            }
+
+            if(!SetValueImpl(attribDef, lazyValueImpl))
+            {
+                return false;
+            }
+
+            _attribValueCountsDic[attribDef.Classification].Increment();
+
+            return true;
+        }
+
+
+        protected abstract bool SetValueImpl(IAttributeValue attribVal);
+
+        protected abstract bool SetValueImpl(AttributeDefinition attribDef, object value);
+
+        protected abstract bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue);
+
+        protected abstract void RemoveItemsImpl(IEnumerable<TAttrib> itemsToRemove);
+
+        protected abstract IEnumerable<TAttrib> GetAttribValuesImpl(AttributeClassification classification);
+
+        public void MakeImmutable()
+        {
+            if (IsImmutable)
+            {
+                return;
+            }
+
+            foreach (var classification in _attribValueCountsDic.Keys)
+            {
+                var itemsToRemove = new List<TAttrib>();
+                foreach (var attribVal in GetAttribValuesImpl(classification))
+                {
+                    try
+                    {
+                        attribVal.MakeImmutable();
+
+                        if (attribVal.Value == null)
+                        {
+                            //Nothing to log here because the ResolveLazyValue function
+                            //records the error message
+                            itemsToRemove.Add(attribVal);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Finest($"{attribVal.AttributeDefinition.Classification} Attribute '{attribVal.AttributeDefinition.Name}' was not recorded - exception occurred while resolving value (lazy) - {ex}");
+                        itemsToRemove.Add(attribVal);
+                    }
+                }
+
+                if (itemsToRemove.Count > 0)
+                {
+                    RemoveItemsImpl(itemsToRemove);
+                }
+            }
+
+            IsImmutable = true;
+        }
+    }
+
+    public class AttributeValueCollection : AttributeValueCollectionBase<AttributeValue>
+    {
+        public AttributeValueCollection(IAttributeValueCollection fromCollection, params AttributeDestinations[] targetModelTypes) : base(fromCollection, targetModelTypes)
+        {
+        }
+
+        public AttributeValueCollection(params AttributeDestinations[] targetModelTypes) : base(targetModelTypes)
+        {
+        }
+
+        private readonly Dictionary<AttributeClassification, ConcurrentDictionary<AttributeDefinition, AttributeValue>> _attribValues =
+            new Dictionary<AttributeClassification, ConcurrentDictionary<AttributeDefinition, AttributeValue>>()
+            {
+                {AttributeClassification.Intrinsics, new ConcurrentDictionary<AttributeDefinition, AttributeValue>() },
+                {AttributeClassification.AgentAttributes, new ConcurrentDictionary<AttributeDefinition, AttributeValue>() },
+                {AttributeClassification.UserAttributes, new ConcurrentDictionary<AttributeDefinition, AttributeValue>() },
+            };
+
+        protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
+        {
+            return _attribValues[classification].Values;
+        }
+
+        protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
+        {
+            foreach(var itemToRemove in itemsToRemove)
+            {
+                var dic = _attribValues[itemToRemove.AttributeDefinition.Classification];
+                dic.TryRemove(itemToRemove.AttributeDefinition, out _);
+            }
+        }
+
+        protected override bool SetValueImpl(IAttributeValue attribVal)
+        {
+            var attribValTyped = attribVal as AttributeValue;
+            if (attribValTyped != null)
+            {
+                return SetValueImplInternal(attribValTyped);
+            }
+
+            if(attribVal.Value != null)
+            {
+                return SetValueImpl(attribVal.AttributeDefinition, attribVal.Value);
+            }
+
+            if(attribVal.LazyValue != null)
+            {
+                return SetValueImpl(attribVal.AttributeDefinition, attribVal.LazyValue);
+            }
+
+            return false;
+        }
+
+        protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
+        {
+            if (IsImmutable)
+            {
+                return false;
+            }
+
+            var attribVal = new AttributeValue(attribDef);
+            attribVal.Value = value;
+
+            return SetValueImplInternal(attribVal);
+        }
+
+        protected override bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue)
+        {
+            if (IsImmutable)
+            {
+                return false;
+            }
+
+            var attribVal = new AttributeValue(attribDef);
+            attribVal.LazyValue = lazyValue;
+
+            return SetValueImplInternal(attribVal);
+        }
+
+        private bool SetValueImplInternal(AttributeValue attribVal)
+        {
+            if(IsImmutable)
+            {
+                return false;
+            }
+
+            var dic = _attribValues[attribVal.AttributeDefinition.Classification];
+            dic[attribVal.AttributeDefinition] = attribVal;
+
+            return true;
+        }
+    }
+
+    public class NoOpAttributeValueCollection : IAttributeValueCollection
+    {
+        public AttributeDestinations[] TargetModelTypes { get; } = new[] { AttributeDestinations.None };
+        public AttributeDestinations TargetModelTypesAsFlags => AttributeDestinations.None;
+
+        public bool IsImmutable => false;
+
+        public int Count => 0;
+
+        private static IEnumerable<IAttributeValue> _emptyAttribValues = new List<IAttributeValue>();
+        private static IDictionary<string, object> _emptyAttribDic = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+
+        public void MakeImmutable()
+        {
+        }
+
+        public IEnumerable<IAttributeValue> GetAttributeValues(AttributeClassification classification)
+        {
+            return _emptyAttribValues;
+        }
+
+        public void AddRange(IAttributeValueCollection fromCollection)
+        {
+            return;
+        }
+
+        public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, TOutput value)
+        {
+            return false;
+        }
+
+        public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, Lazy<object> lazyImpl)
+        {
+            return false;
+        }
+
+        public bool TrySetValue(IAttributeValue attrib)
+        {
+            return false;
+        }
+
+        public IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification)
+        {
+            return _emptyAttribDic;
+        }
+    }
+
+}

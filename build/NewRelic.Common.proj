@@ -1,0 +1,125 @@
+﻿<Project InitialTargets="VersionByGitTag">
+  <PropertyGroup>
+    <Authors>New Relic</Authors>
+    <Company>New Relic</Company>
+    <Copyright>Copyright © $([System.DateTime]::Now.ToString(yyyy))</Copyright>
+    <PackageIconUrl>http://newrelic.com/images/avatar-newrelic.png</PackageIconUrl>
+    <PackageProjectUrl>https://docs.newrelic.com/docs/agents/net-agent</PackageProjectUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Ignore SemVer 2.0.0 not supported on legacy NuGet clients -->
+    <NoWarn>$(NoWarn);NU5105</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    The VersionByGitTag target is used to version build artifacts based on git tags that conform to the following format:
+
+        <GitTagPrefix><Major>.<Minor>.<Patch>[-<PreReleaseMoniker>]
+
+        GitTagPrefix:       Defaults to 'v'. This can be overriden by setting the GitTagPrefix MSBuild property which
+                            allows for different projects in the same repository to be versioned independently from one another.
+
+        Major:              The major version.
+
+        Minor:              The minor version.
+
+        Patch:              The patch version.
+
+        PreReleaseMoniker:  Optional. If the tag contains a prerelese moniker (e.g., alpha, beta, preview, etc), NuGet artifacts
+                            will include the prerelease moniker followed by a dot plus the number of commits since the tag.
+                            For example, if the latest tag is v1.0.0-alpha and HEAD is 10 commits ahead of the tag, then NuGet
+                            packages will be versioned 1.0.0-alpha.10. This versioning conforms to SemVer 2.0.0 (https://semver.org/)
+                            which is supported by NuGet clients version 4.3 or later.
+-->
+
+  <Target Name="VersionByGitTag">
+    <PropertyGroup Condition="$(GitTagPrefix) == ''">
+      <GitTagPrefix>v</GitTagPrefix>
+    </PropertyGroup>
+
+    <Exec Command="git describe --match $(GitTagPrefix)* --abbrev=0 HEAD --tags" ConsoleToMSBuild="true" StandardOutputImportance="low" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="LatestTagVersion" />
+      <Output TaskParameter="ExitCode" PropertyName="GitExitCode" />
+    </Exec>
+    <Warning Condition="'$(GitExitCode)' > '0'" Text="No tag with prefix '$(GitTagPrefix)' found. Defaulting to version 1.0.0." />
+
+    <Exec Condition="'$(GitExitCode)' == '0'" Command="git rev-list $(LatestTagVersion)..HEAD --count HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitCommitCount" />
+    </Exec>
+
+    <PropertyGroup Condition="$(GitExitCode) == 0">
+      <Revision>$(GitCommitCount)</Revision>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(GitExitCode) != 0">
+      <Revision>0</Revision>
+      <LatestTagVersion>1.0.0</LatestTagVersion>
+    </PropertyGroup>
+
+    <ParseVersion VersionString="$(LatestTagVersion.Replace('$(GitTagPrefix)',''))">
+      <Output PropertyName="Major" TaskParameter="Major" />
+      <Output PropertyName="Minor" TaskParameter="Minor" />
+      <Output PropertyName="Build" TaskParameter="Patch" />
+      <Output PropertyName="PreReleaseMoniker" TaskParameter="PreReleaseMoniker" />
+    </ParseVersion>
+
+    <!-- If a tag with the correct GitTagPrefix for this product was not found on the commit we're building from, set the PreReleaseMoniker to 'unreleased'.
+         This will prevent the resulting NuGet packages from being pushed to MyGet by the Azure build pipeline. -->
+    <PropertyGroup Condition="$(GitExitCode) != 0 Or ($(PreReleaseMoniker) == '' And $(Revision) > 0)">
+      <PreReleaseMoniker>unreleased</PreReleaseMoniker>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <PreReleaseMonikerFormatted Condition="'$(PreReleaseMoniker)' != ''">-$(PreReleaseMoniker)</PreReleaseMonikerFormatted>
+      <PreReleaseRevisionFormatted Condition="'$(PreReleaseMoniker)' != '' And '$(Revision)' != '0'">.$(Revision)</PreReleaseRevisionFormatted>
+
+      <!-- Follows best practices from: https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/versioning -->
+      <Version>$(Major).$(Minor).$(Build).$(Revision)</Version>
+      <AssemblyVersion>$(Major).0.0.0</AssemblyVersion>
+      <FileVersion>$(Major).$(Minor).$(Build).$(Revision)</FileVersion>
+      <PackageVersion>$(Major).$(Minor).$(Build)$(PreReleaseMonikerFormatted)$(PreReleaseRevisionFormatted)</PackageVersion>
+    </PropertyGroup>
+  </Target>
+
+  <UsingTask TaskName="ParseVersion" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <VersionString ParameterType="System.String" Required="true" />
+      <Major ParameterType="System.Int32" Output="true" />
+      <Minor ParameterType="System.Int32" Output="true" />
+      <Patch ParameterType="System.Int32" Output="true" />
+      <PreReleaseMoniker ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        var preReleaseMonikerStart = VersionString.IndexOf('-');
+        var preReleaseMonikerLength = preReleaseMonikerStart < 0 ? 0 : VersionString.Substring(preReleaseMonikerStart).Length;
+        var preReleaseMoniker = preReleaseMonikerLength == 0 ? "" : VersionString.Substring(preReleaseMonikerStart + 1);
+        var majorVersionStart = 0;
+        var majorVersionLength = VersionString.IndexOf('.', majorVersionStart);
+        var minorVersionStart = 1 + majorVersionLength;
+        var minorVersionEnd = VersionString.IndexOf('.', minorVersionStart);
+        var minorVersionLength = minorVersionEnd - minorVersionStart;
+        var patchVersionStart = 1 + minorVersionEnd;
+        var patchVersionEnd = VersionString.Length - preReleaseMonikerLength;
+        var patchVersionLength = patchVersionEnd - patchVersionStart;
+        Major = int.Parse(VersionString.Substring(majorVersionStart, majorVersionLength));
+        Minor = int.Parse(VersionString.Substring(minorVersionStart, minorVersionLength));
+        Patch = int.Parse(VersionString.Substring(patchVersionStart, patchVersionLength));
+        PreReleaseMoniker = preReleaseMoniker;
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project>

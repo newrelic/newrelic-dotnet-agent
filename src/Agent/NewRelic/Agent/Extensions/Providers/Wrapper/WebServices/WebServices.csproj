@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFrameworks>net45</TargetFrameworks>
+    <RootNamespace>NewRelic.Providers.Wrapper.WebServices</RootNamespace>
+    <AssemblyName>NewRelic.Providers.Wrapper.WebServices</AssemblyName>
+    <Description>Web Services Wrapper Provider for New Relic .NET Agent</Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Services" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Instrumentation.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
+</Project>

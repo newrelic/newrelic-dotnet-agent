@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+    <PropertyGroup>
+        <TargetFramework>net45</TargetFramework>
+        <AssemblyName>NewRelic.Providers.Wrapper.NServiceBus</AssemblyName>
+        <RootNamespace>NewRelic.Providers.Wrapper.NServiceBus</RootNamespace>
+        <Description>NServiceBus Wrapper Provider for New Relic .NET Agent</Description>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="NServiceBus" Version="5.2.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="System" />
+        <Reference Include="System.Core" />
+        <Reference Include="System.Data.DataSetExtensions" />
+        <Reference Include="System.Xml.Linq" />
+        <Reference Include="Microsoft.CSharp" />
+        <Reference Include="System.Data" />
+        <Reference Include="System.Xml" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Instrumentation.xml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+        <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    </ItemGroup>
+    <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
+</Project>

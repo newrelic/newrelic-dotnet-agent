@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFrameworks>net45</TargetFrameworks>
+    <RootNamespace>NewRelic.Providers.CallStack.AsyncLocalTests</RootNamespace>
+    <AssemblyName>NewRelic.Providers.CallStack.AsyncLocalTests</AssemblyName>
+    <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
+    <RunSettingsFilePath>$(SolutionDir)test.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JustMock" Version="2020.1.113.1" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Collections.Immutable" Version="1.1.36" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Core\Core.csproj" />
+    <ProjectReference Include="$(RootProjectDirectory)\src\Agent\NewRelic\Agent\Extensions\Providers\Storage\CallContext\CallContext.csproj" />
+    <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+</Project>

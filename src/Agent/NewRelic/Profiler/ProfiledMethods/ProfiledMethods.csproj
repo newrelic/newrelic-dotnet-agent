@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProjectGuid>{BA254DEB-EA81-428A-8BA7-BA55B0395D7A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ProfiledMethods</RootNamespace>
+    <AssemblyName>ProfiledMethods</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Windows\System32\cmd.exe</StartProgram>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <StartArguments>/C $(OutputPath)debug.bat</StartArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x86'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <OutputPath>bin\Debug\x64\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <OutputPath>bin\Release\x64\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <OutputPath>bin\Debug\x86\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\Release\x86\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="NewRelic.Api.Agent">
+      <HintPath>..\packages\NewRelic.Agent.Api.4.2.185.0\lib\NewRelic.Api.Agent.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+  </ItemGroup>
+  <Choose>
+    <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+    <Otherwise />
+  </Choose>
+  <ItemGroup>
+    <Compile Include="GenericsTests.cs" />
+    <Compile Include="Interop.cs" />
+    <Compile Include="ProfiledMethods.cs" />
+    <Compile Include="ProfilerTestsBase.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestClasses.cs" />
+    <Compile Include="TracerParameters.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Instrumentation.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <None Include="newrelic.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="packages.config" />
+    <x86BatFile Include="debug-x86.bat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </x86BatFile>
+    <x64BatFiles Include="debug-x64.bat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </x64BatFiles>
+  </ItemGroup>
+  <Choose>
+    <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.CodedUITestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Extension, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITesting, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <BuildDependsOn>$(BuildDependsOn);MyCopyFiles</BuildDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TestNewRelicHomeDirectory>$(OutDir)\TestNewRelicHome\</TestNewRelicHomeDirectory>
+    <TestNewRelicHomeLogsDirectory>$(TestNewRelicHomeDirectory)\Logs\</TestNewRelicHomeLogsDirectory>
+    <TestNewRelicHomeExtensionsDirectory>$(TestNewRelicHomeDirectory)\Extensions\</TestNewRelicHomeExtensionsDirectory>
+  </PropertyGroup>
+  <Target Name="MyCreateDirectories">
+    <MakeDir Directories="$(TestNewRelicHomeDirectory)" />
+    <MakeDir Directories="$(TestNewRelicHomeLogsDirectory)" />
+    <MakeDir Directories="$(TestNewRelicHomeExtensionsDirectory)" />
+  </Target>
+  <Target Name="MyCopyFiles" DependsOnTargets="MyCreateDirectories">
+    <Copy SourceFiles="$(SolutionDir)MockCore\bin\$(Configuration)\net45\NewRelic.Agent.Core.dll" DestinationFolder="$(TestNewRelicHomeDirectory)" />
+    <Copy SourceFiles="$(ProjectDir)\..\..\..\_profilerBuild\$(Platform)-$(Configuration)\NewRelic.Profiler.dll" DestinationFolder="$(TestNewRelicHomeDirectory)" />
+    <Copy SourceFiles="$(OutDir)\Instrumentation.xml" DestinationFolder="$(TestNewRelicHomeExtensionsDirectory)" />
+    <Copy SourceFiles="$(OutDir)\newrelic.config" DestinationFolder="$(TestNewRelicHomeDirectory)" />
+    <Copy SourceFiles="debug-$(Platform).bat" DestinationFiles="$(OutDir)\debug.bat" />
+  </Target>
+</Project>

@@ -65,8 +65,8 @@ NDependOut/
 test-results
 
 # Ignore FullAgent build output
+src/_build/
 Agent/_build/
-Agent/NewRelic/Tray/_build/
 Build/_staging
 Build/BuildArtifacts
 
@@ -85,11 +85,11 @@ Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.idl
 Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.tlb
 
 # Ignore build output files copied to New Relic Home x86/x64
-Agent/New Relic Home*
+src/Agent/New Relic Home*
 
 # Ignore New Relic Home generated registry files
-Agent/New Relic Home x86.reg
-Agent/New Relic Home x64.reg
+src/Agent/New Relic Home x86.reg
+src/Agent/New Relic Home x64.reg
 
 # Ignore generated version files
 Agent/NewRelic.Agent.IL/NewRelicCoreVersion.h
@@ -99,8 +99,6 @@ Agent/NewRelic/Profiler/Profiler/VersionInfo.h
 # Ignore source files generated during build
 Agent/Installer/Core.wxs
 Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
-
-
 
 # Ignore license reviewer output files
 LicenseData/license_errors.txt
@@ -113,25 +111,28 @@ FunctionalTests/InstallUtil.InstallLog
 *.coverage
 TestResults/*
 *.pubxml.user
-IntegrationTests/Applications/*/Deploy/
-IntegrationTests/UnboundedApplications/*/Deploy/
-IntegrationTests/.vs/config/applicationhost.config
+tests/Agent/IntegrationTests/Applications/*/Deploy/
+tests/Agent/IntegrationTests/UnboundedApplications/*/Deploy/
+tests/Agent/IntegrationTests/.vs/config/applicationhost.config
 .DS_Store
 Agent/UpgradeLog*.htm
 
 #PlatformTests
-Tests/Agent/PlatformTests/packages/
-Tests/Agent/PlatformTests/Applications/ServiceFabricApplication/packages/
-Tests/Agent/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
-Tests/Agent/PlatformTests/Applications/WindowsContainerApplication/packages
+tests/Agent/PlatformTests/packages/
+tests/Agent/PlatformTests/Applications/ServiceFabricApplication/packages/
+tests/Agent/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
+tests/Agent/PlatformTests/Applications/WindowsContainerApplication/packages
 
 /Tests/Benchmarking/BenchmarkDotNet.Artifacts
 *.dgml
 
 # Include built binaries so that building the profiler is not necessary when only doing managed agent work
 # The Home Builder picks up profiler binaries from this location
-Agent/_profilerBuild/**/*.exp
-Agent/_profilerBuild/**/*.iobj
-Agent/_profilerBuild/**/*.ipdb
-Agent/_profilerBuild/**/*.lib
-Agent/_profilerBuild/**/*.pdb
+src/Agent/_profilerBuild/**/*.exp
+src/Agent/_profilerBuild/**/*.iobj
+src/Agent/_profilerBuild/**/*.ipdb
+src/Agent/_profilerBuild/**/*.lib
+src/Agent/_profilerBuild/**/*.pdb
+
+# Ignore any locally built profiler Debug-mode binaries
+src/Agent/_profilerBuild/*Debug

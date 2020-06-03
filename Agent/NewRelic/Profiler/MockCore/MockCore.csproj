@@ -1,7 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net35</TargetFrameworks>
-    <RootNamespace>NewRelic.Agent.Core</RootNamespace>
-    <AssemblyName>NewRelic.Agent.Core</AssemblyName>
-  </PropertyGroup>
-</Project>

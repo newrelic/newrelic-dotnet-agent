@@ -1,5 +1,0 @@
-Language:      Cpp
-BasedOnStyle:  WebKit
-CompactNamespaces: true
-UseTab:        Always
-TabWidth:      4

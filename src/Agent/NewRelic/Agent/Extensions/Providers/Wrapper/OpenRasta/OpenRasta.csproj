@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+    <PropertyGroup>
+        <TargetFramework>net45</TargetFramework>
+        <AssemblyName>NewRelic.Providers.Wrapper.OpenRasta</AssemblyName>
+        <RootNamespace>NewRelic.Providers.Wrapper.OpenRasta</RootNamespace>
+        <Description>OpenRasta Wrapper Provider for New Relic .NET Agent</Description>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="System.Web" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Instrumentation.xml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+        <ProjectReference Include="..\..\..\..\Parsing\Parsing.csproj" />
+        <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    </ItemGroup>
+    <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
+</Project>

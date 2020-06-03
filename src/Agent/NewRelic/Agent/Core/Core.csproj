@@ -1,0 +1,153 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <AssemblyName>NewRelic.Agent.Core</AssemblyName>
+    <RootNamespace>NewRelic.Agent.Core</RootNamespace>
+    <Description></Description>
+    <IntermediateOutputPath>$(MSBuildThisFileDirectory)\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="NewRelic.Core.BuildTimestamp">
+      <!--
+          This AssemblyAttribute item generates an assembly attribute as follows: [assembly: NewRelic.Core.BuildTimestamp("637213171838522390")]
+          Parameters for the attribute are always strings. There is an open issue requesting support for non-string parameters.
+          https://github.com/microsoft/msbuild/issues/2281
+      -->
+      <_Parameter1>$([System.DateTime]::UtcNow.Ticks)</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
+    <PackageReference Include="Grpc" Version="2.28.1" />
+    <PackageReference Include="Grpc.Core" Version="2.28.1" />
+    <PackageReference Include="Grpc.Tools" Version="2.28.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="ILRepack" Version="2.0.16" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="SharpZipLib" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="**/*.proto" GrpcServices="Client">
+    </Protobuf>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <PackageReference Include="Castle.Core" Version="3.3.0" />
+    <PackageReference Include="Castle.Windsor" Version="3.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Autofac" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dongle\Dongle.csproj" />
+    <ProjectReference Include="..\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    <ProjectReference Include="..\LabelsService\LabelsService.csproj" />
+    <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\Parsing\Parsing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <Reference Include="System.Web" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RootProjectDirectory)\src\Agent\Shared\SharedLog4NetRepository.cs">
+      <Link>Properties\SharedLog4NetRepository.cs</Link>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+    <ItemGroup>
+      <PossibleRefsForILRepack Include="$(OutputPath)*.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Dongle'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.LabelsService'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Core'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Parsing'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Google.Protobuf'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core.Api'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Grpc.Core'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
+        <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Castle.Core'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Castle.Windsor'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'ICSharpCode.SharpZipLib'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'log4net'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.ValueTuple'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Autofac'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'log4net'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'ICSharpCode.SharpZipLib'" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net45'">15</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">13</ILRepackIncludeCount>
+    </PropertyGroup>
+
+    <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />
+
+    <ItemGroup>
+      <ILRepackExclude Include="@(PossibleRefsForILRepack)" Exclude="@(ILRepackInclude)" />
+    </ItemGroup>
+
+    <Message Importance="High" Text="ILRepack Include: %(ILRepackInclude.FullPath)" />
+    <Message Importance="High" Text="ILRepack Exclude: %(ILRepackExclude.FullPath)" />
+
+    <PropertyGroup>
+      <ILRepackSearchDirOutputPath>$([System.String]::new("$(OutputPath)").Trim('\'))</ILRepackSearchDirOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <ILRepackCommand>"$(ILRepack)" --parallel --internalize --norepackres --keepotherversionreferences --keyfile:"$(AssemblyOriginatorKeyFile)" --lib:"$(ILRepackSearchDirOutputPath)" --out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
+    </PropertyGroup>
+
+    <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />
+    <Exec Command="$(ILRepackCommand)" />
+  </Target>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
+</Project>

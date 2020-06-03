@@ -1,0 +1,41 @@
+build_deb: 
+    build: ./build/deb 
+    command: bash -c "dos2unix /deb/build.sh && /deb/build.sh"
+    volumes: 
+        - ../../Agent:/data
+        - ./build/deb:/deb
+        - ../../Agent/_build/CoreArtifacts:/release
+        - ../../src/Agent/Miscellaneous:/docs
+        - ./build/common:/common
+    working_dir: /data
+
+build_rpm: 
+    build: ./build/rpm
+    command: bash -c "dos2unix /rpm/build.sh && /rpm/build.sh"
+    volumes: 
+        - ../../Agent:/data
+        - ./build/rpm:/rpm
+        - ../../Agent/_build/CoreArtifacts:/release
+        - ../../src/Agent/Miscellaneous:/docs
+        - ./build/common:/common
+        - ./keys:/keys
+    working_dir: /data
+
+test_debian: 
+    build: ./test/distros/debian
+    command: bash -c "dos2unix /test/test.sh &>/dev/null && /test/test.sh"
+    volumes:
+        - ./test/scripts:/test
+        - ./test/applications:/apps
+        - ../../Agent/_build/CoreArtifacts:/release
+    working_dir: /data
+
+test_centos: 
+    build: ./test/distros/centos
+    command: bash -c "dos2unix /test/test.sh &>/dev/null && /test/test.sh"
+    volumes:
+        - ./test/scripts:/test
+        - ./test/applications:/apps
+        - ../../Agent/_build/CoreArtifacts:/release
+    working_dir: /data
+
