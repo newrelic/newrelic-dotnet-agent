@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -59,13 +63,19 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> NrGuid { get; }
         AttributeDefinition<string, string> OriginalUrl { get; }
         AttributeDefinition<string, string> ParentAccount { get; }
+        AttributeDefinition<string, string> ParentAccountForSpan { get; }
         AttributeDefinition<string, string> ParentApp { get; }
+        AttributeDefinition<string, string> ParentAppForSpan { get; }
         AttributeDefinition<string, string> ParentId { get; }
         AttributeDefinition<string, string> ParentSpanId { get; }
         AttributeDefinition<TimeSpan, double> ParentTransportDuration { get; }
+        AttributeDefinition<TimeSpan, double> ParentTransportDurationForSpan { get; }
         AttributeDefinition<TransportType, string> ParentTransportType { get; }
+        AttributeDefinition<TransportType, string> ParentTransportTypeForSpan { get; }
         AttributeDefinition<TypeAttributeValue, string> ParentType { get; }
+        AttributeDefinition<TypeAttributeValue, string> ParentTypeForSpan { get; }
         AttributeDefinition<DistributedTracingParentType, string> ParentTypeForDistributedTracing { get; }
+        AttributeDefinition<DistributedTracingParentType, string> ParentTypeForDistributedTracingForSpan { get; }
         AttributeDefinition<string, string> PeerAddress { get; }
         AttributeDefinition<string, string> PeerHostname { get; }
         AttributeDefinition<float, double> Priority { get; }
@@ -92,6 +102,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> TransactionId { get; }
         AttributeDefinition<IEnumerable<string>, string> TracingVendors { get; }
         AttributeDefinition<string, string> TransactionName { get; }
+        AttributeDefinition<string, string> TransactionNameForSpan { get; }
         AttributeDefinition<string, string> TransactionNameForError { get; }
         AttributeDefinition<string, string> TripId { get; }
         AttributeDefinition<string, string> TrustedParentId { get; }
@@ -253,6 +264,7 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<string, string> RequestUri => _requestUri ?? (_requestUri =
             AttributeDefinitionBuilder.CreateString("request.uri", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .AppliesTo(AttributeDestinations.ErrorTrace)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
@@ -275,6 +287,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .AppliesTo(AttributeDestinations.ErrorTrace)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .WithConvert(x=>x.ToString())
@@ -519,6 +532,12 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .Build(_attribFilter));
 
+        private AttributeDefinition<string, string> _transactionNameForSpan;
+        public AttributeDefinition<string, string> TransactionNameForSpan => _transactionNameForSpan ?? (_transactionNameForSpan =
+            AttributeDefinitionBuilder.CreateString("transaction.name", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
         private AttributeDefinition<string, string> _transactionNameForError;       //Covers case for Custom Error				
         public AttributeDefinition<string, string> TransactionNameForError => _transactionNameForError ?? (_transactionNameForError =
             AttributeDefinitionBuilder.CreateString("transactionName", AttributeClassification.Intrinsics)
@@ -685,6 +704,13 @@ namespace NewRelic.Agent.Core.Attributes
                 .WithConvert(v => EnumNameCache<TypeAttributeValue>.GetName(v))
                 .Build(_attribFilter));
 
+        private AttributeDefinition<TypeAttributeValue, string> _parentTypeForSpan;
+        public AttributeDefinition<TypeAttributeValue, string> ParentTypeForSpan => _parentTypeForSpan ?? (_parentTypeForSpan =
+            AttributeDefinitionBuilder.CreateString<TypeAttributeValue>("parent.type", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithConvert(v => EnumNameCache<TypeAttributeValue>.GetName(v))
+                .Build(_attribFilter));
+
         private AttributeDefinition<DistributedTracingParentType, string> _parentTypeForDistributedTracing;
         public AttributeDefinition<DistributedTracingParentType, string> ParentTypeForDistributedTracing => _parentTypeForDistributedTracing ?? (_parentTypeForDistributedTracing =
             AttributeDefinitionBuilder.CreateString<DistributedTracingParentType>("parent.type", AttributeClassification.Intrinsics)
@@ -693,6 +719,13 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SqlTrace)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
+                .WithConvert(v => EnumNameCache<DistributedTracingParentType>.GetName(v))
+                .Build(_attribFilter));
+
+        private AttributeDefinition<DistributedTracingParentType, string> _parentTypeForDistributedTracingForSpan;
+        public AttributeDefinition<DistributedTracingParentType, string> ParentTypeForDistributedTracingForSpan => _parentTypeForDistributedTracingForSpan ?? (_parentTypeForDistributedTracingForSpan =
+            AttributeDefinitionBuilder.CreateString<DistributedTracingParentType>("parent.type", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .WithConvert(v => EnumNameCache<DistributedTracingParentType>.GetName(v))
                 .Build(_attribFilter));
 
@@ -706,6 +739,12 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .Build(_attribFilter));
 
+        private AttributeDefinition<string, string> _parentAccountForSpan;
+        public AttributeDefinition<string, string> ParentAccountForSpan => _parentAccountForSpan ?? (_parentAccountForSpan =
+            AttributeDefinitionBuilder.CreateString("parent.account", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .Build(_attribFilter));
+
         private AttributeDefinition<string, string> _parentApp;
         public AttributeDefinition<string, string> ParentApp => _parentApp ?? (_parentApp =
             AttributeDefinitionBuilder.CreateString("parent.app", AttributeClassification.Intrinsics)
@@ -714,6 +753,12 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SqlTrace)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<string, string> _parentAppForSpan;
+        public AttributeDefinition<string, string> ParentAppForSpan => _parentAppForSpan ?? (_parentAppForSpan =
+            AttributeDefinitionBuilder.CreateString("parent.app", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
         private AttributeDefinition<TransportType, string> _parentTransportType;
@@ -727,6 +772,13 @@ namespace NewRelic.Agent.Core.Attributes
                 .WithConvert((transportType) => EnumNameCache<TransportType>.GetName(transportType))
                 .Build(_attribFilter));
 
+        private AttributeDefinition<TransportType, string> _parentTransportTypeForSpan;
+        public AttributeDefinition<TransportType, string> ParentTransportTypeForSpan => _parentTransportTypeForSpan ?? (_parentTransportTypeForSpan =
+            AttributeDefinitionBuilder.CreateString<TransportType>("parent.transportType", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithConvert((transportType) => EnumNameCache<TransportType>.GetName(transportType))
+                .Build(_attribFilter));
+
         private AttributeDefinition<TimeSpan, double> _parentTransportDuration;
         public AttributeDefinition<TimeSpan, double> ParentTransportDuration => _parentTransportDuration ?? (_parentTransportDuration =
             AttributeDefinitionBuilder.CreateDouble<TimeSpan>("parent.transportDuration", AttributeClassification.Intrinsics)
@@ -735,6 +787,13 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SqlTrace)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
+                .WithConvert((v) => v.TotalSeconds)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<TimeSpan, double> _parentTransportDurationForSpan;
+        public AttributeDefinition<TimeSpan, double> ParentTransportDurationForSpan => _parentTransportDurationForSpan ?? (_parentTransportDurationForSpan =
+            AttributeDefinitionBuilder.CreateDouble<TimeSpan>("parent.transportDuration", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .WithConvert((v) => v.TotalSeconds)
                 .Build(_attribFilter));
 
@@ -816,6 +875,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .AppliesTo(AttributeDestinations.ErrorTrace)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .Build(_attribFilter));
 

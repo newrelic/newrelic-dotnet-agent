@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Segments;
 using NUnit.Framework;
@@ -72,9 +76,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             WithIsConnectedImpl
         { get; set; } = () => true;
 
-        public System.Func<string, int, Metadata, CancellationToken, bool>
+        public System.Func<string, int, bool, Metadata, CancellationToken, bool>
             WithCreateChannelImpl
-        { get; set; } = (host, port, headers, cancellationToken) => true;
+        { get; set; } = (host, port, ssl, headers, cancellationToken) => true;
 
         public System.Func<Metadata, CancellationToken, Tuple<IClientStreamWriter<TRequest>, MockResponseStream<TResponse>>>
             WithCreateStreamsImpl
@@ -107,9 +111,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         public bool IsConnected => WithIsConnectedImpl?.Invoke() ?? false;
 
-        public bool CreateChannel(string host, int port, Metadata headers, CancellationToken cancellationToken)
+        public bool CreateChannel(string host, int port, bool ssl, Metadata headers, CancellationToken cancellationToken)
         {
-            var connected = WithCreateChannelImpl?.Invoke(host, port, headers, cancellationToken) ?? false;
+            var connected = WithCreateChannelImpl?.Invoke(host, port, ssl, headers, cancellationToken) ?? false;
             return connected;
         }
 
@@ -323,7 +327,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
 
             Dictionary<string,string> actualConnectionMetadata = new Dictionary<string, string>();
-            _grpcWrapper.WithCreateChannelImpl = (uri, ssl, headers, token) =>
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
             {
                 actualConnectionMetadata = headers.ToDictionary(k => k.Key, v => v.Value);
 
@@ -386,7 +390,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var signalIsDone = new ManualResetEventSlim();
             int attemptsMade = 0;
-            _grpcWrapper.WithCreateChannelImpl = (uri, ssl, headers, token) =>
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
                 {
                     var attempt = attemptsMade++;
                     if (attempt == succeedOnAttempt)
@@ -763,7 +767,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var signalIsDone = new ManualResetEventSlim();
             var actualAttempts = 0;
-            _grpcWrapper.WithCreateChannelImpl = (uri, ssl, headers, token) =>
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
             {
                 var attempt = actualAttempts++;
                 if (attempt > statusCodesForNormalErrors.Length * 2)
@@ -907,50 +911,62 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
         //Valid host, various Port combos
-        [TestCase("infiniteTracing.com", "443", true, 443)]
-        [TestCase("infiniteTracing.com", null, true, 443)]
-        [TestCase("infiniteTracing.com", "", true, 443)]
-        [TestCase("infiniteTracing.com", "abc", false, -1)]
-        [TestCase("my8Tdomain", "-1", false, -1)]
-        [TestCase("my8Tdomain", "80", true, 80)]
-        [TestCase("my8Tdomain", "20", true, 20)]
-        [TestCase("my8Tdomain", "8080", true, 8080)]
+        [TestCase("infiniteTracing.com", "443", null, true, 443, true)]
+        [TestCase("infiniteTracing.com", null, "True", true, 443, true)]
+        [TestCase("infiniteTracing.com", "", null, true, 443, true)]
+        [TestCase("infiniteTracing.com", "abc", "False", false, -1, false)]
+        [TestCase("my8Tdomain", "-1", "False", false, -1, false)]
+        [TestCase("my8Tdomain", "80", "False", true, 80, false)]
+        [TestCase("my8Tdomain", "20", "True", true, 20, true)]
+        [TestCase("my8Tdomain", "8080", "False", true, 8080, false)]
 
         //No host means service always disabled
-        [TestCase(null, "443", false, -1)]
-        [TestCase(null, "", false, -1)]
-        [TestCase(null, null, false, -1)]
-        [TestCase(null, "abc", false, -1)]      //??
+        [TestCase(null, "443", null, false, -1, true)]
+        [TestCase(null, "", null, false, -1, true)]
+        [TestCase(null, null, "True", false, -1, true)]
+        [TestCase(null, "abc", "False", false, -1, true)]      //??
 
         //No host means service disabled
-        [TestCase("", "443", false, -1)]
-        [TestCase("", "", false, -1)]
-        [TestCase("", null, false, -1)]
-        [TestCase("", "abc", false, -1)]
+        [TestCase("", "443", "False", false, -1, true)]
+        [TestCase("", "", "True", false, -1, true)]
+        [TestCase("", null, "False", false, -1, true)]
+        [TestCase("", "abc", "True", false, -1, true)]
 
         //Hosts should not have scheme or port
-        [TestCase("http://infiniteTracing.com", "443", false, -1)]
-        [TestCase("http://infiniteTracing.com", null, false, -1)]
-        [TestCase("http://infiniteTracing.com", "", false, -1)]
-        [TestCase("http://infiniteTracing.com", "abc", false, -1)]
-        [TestCase("infiniteTracing.com:443", "443", false, -1)]
-        [TestCase("infiniteTracing.com:443", null, false, -1)]
+        [TestCase("http://infiniteTracing.com", "443", null, false, -1, true)]
+        [TestCase("http://infiniteTracing.com", null, null, false, -1, true)]
+        [TestCase("http://infiniteTracing.com", "", null, false, -1, true)]
+        [TestCase("http://infiniteTracing.com", "abc", null, false, -1, true)]
+        [TestCase("infiniteTracing.com:443", "443", null, false, -1, true)]
+        [TestCase("infiniteTracing.com:443", null, null, false, -1, true)]
 
         //Various invalid hosts
-        [TestCase("/relativeUrl", null, false, -1)]
-        [TestCase("//mydomain", null, false, -1)]
-        [TestCase("//mydomain/", null, false, -1)]
-        [TestCase("https:///", null, false, -1)]
-        [TestCase("my8Tdomain/some/path", null, false, -1)]
-        public void MalformedUriPreventsStartRecordSupportabilityMetric(string testHost, string testPort, bool expectedIsValidConfig, int expectedPort)
+        [TestCase("/relativeUrl", null, null, false, -1, true)]
+        [TestCase("//mydomain", null, null, false, -1, true)]
+        [TestCase("//mydomain/", null, null, false, -1, true)]
+        [TestCase("https:///", null, null, false, -1, true)]
+        [TestCase("my8Tdomain/some/path", null, null, false, -1, true)]
+
+        //various ssl setting
+        [TestCase("infiniteTracing.com", "443", "1", false, -1, true)]
+        [TestCase("infiniteTracing.com", "443", "0", false, -1, true)]
+        [TestCase("infiniteTracing.com", "443", "a", false, -1, true)]
+        [TestCase("infiniteTracing.com", "443", "", true, 443, true)]
+        [TestCase("infiniteTracing.com", "443", " ", true, 443, true)]
+        [TestCase("infiniteTracing.com", "443", null, true, 443, true)]
+        [TestCase("infiniteTracing.com", "443", "true", true, 443, true)]
+        [TestCase("infiniteTracing.com", "443", "false", true, 443, false)]
+        public void MalformedUriPreventsStartRecordSupportabilityMetric(string testHost, string testPort, string testSsl, bool expectedIsValidConfig, int expectedPort, bool expectedSsl)
         {
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverHost).Returns(testHost);
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverPort).Returns(testPort);
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverSsl).Returns(testSsl);
 
             var streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             var actualIsValidConfig = streamingSvc.ReadAndValidateConfiguration();
             var actualHost = streamingSvc.EndpointHost;
             var actualPort = streamingSvc.EndpointPort;
+            var actualSsl = streamingSvc.EndpointSsl;
 
 
             NrAssert.Multiple
@@ -963,7 +979,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 NrAssert.Multiple
                 (
                     () => Assert.IsNull(actualHost, "Invalid config shouldn't have host"),
-                    () => Assert.AreEqual(-1, actualPort, "Invalid config should have port -1")
+                    () => Assert.AreEqual(-1, actualPort, "Invalid config should have port -1"),
+                    () => Assert.AreEqual(true, actualSsl, "Invalid config should have SSL true")
                 );
             }
             else
@@ -971,7 +988,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 NrAssert.Multiple
                 (
                     () => Assert.AreEqual(testHost, actualHost, "Host"),
-                    () => Assert.AreEqual(expectedPort, actualPort, "Port")
+                    () => Assert.AreEqual(expectedPort, actualPort, "Port"),
+                    () => Assert.AreEqual(expectedSsl, actualSsl, "SSL")
                 );
             }
         }
@@ -1078,7 +1096,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualCountGeneralErrors++;
                 });
 
-            _grpcWrapper.WithCreateChannelImpl = (uri, ssl, headers, token) =>
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
             {
                 MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unimplemented, "Test gRPC Exception");
                 return false;
@@ -1267,7 +1285,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualCountGeneralErrors++;
                 });
 
-            _grpcWrapper.WithCreateChannelImpl = (uri, ssl, headers, token) =>
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
             {
                 MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.OK, "Test gRPC Exception");
                 return false;

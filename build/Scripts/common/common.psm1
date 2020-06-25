@@ -15,8 +15,6 @@ $ToolsDirectory = Resolve-Path "$BuildDirectory\Tools"
 $BuildArtifactsDirectory = Resolve-Path "$BuildDirectory\BuildArtifacts"
 $BuildPropertiesDirectory = Resolve-Path "$BuildArtifactsDirectory\_buildProperties"
 
-$ArtifactoryExe = Resolve-Path "$ToolsDirectory\Artifactory\jfrog.exe"
-$7ZipExe = Resolve-Path "$ToolsDirectory\7-Zip\7z.exe"
 $NuGetExe = Resolve-Path "$ToolsDirectory\NuGet\nuget.exe"
 
 $CommitHash = Get-Content "$BuildPropertiesDirectory\commithash.txt"
@@ -29,13 +27,13 @@ $agent.GitTagPrefix = ""
 
 $lambdaopentracer = New-Product
 $lambdaopentracer.ArtifactoryRootFolder = "NewRelic.OpenTracing.AmazonLambda.Tracer"
-$lambdaopentracer.PathsToArchive = "Build/BuildArtifacts/NugetAwsLambdaOpenTracer/* AwsLambda/**/* Agent/_build/AnyCPU-Release/NewRelic.Agent.Core/**/* Build/BuildArtifacts/_buildProperties/*"
+$lambdaopentracer.PathsToArchive = "build/BuildArtifacts/NugetAwsLambdaOpenTracer/* AwsLambda/**/* Agent/_build/AnyCPU-Release/NewRelic.Agent.Core/**/* build/BuildArtifacts/_buildProperties/*"
 $lambdaopentracer.Version = Get-Content "$BuildPropertiesDirectory\version_lambdaopentracer.txt"
 $lambdaopentracer.GitTagPrefix = "AwsLambdaOpenTracer_"
 
 $azuresiteextension = New-Product
 $azuresiteextension.ArtifactoryRootFolder = "AzureSiteExtension"
-$azuresiteextension.PathsToArchive = "Build/BuildArtifacts/AzureSiteExtension/* Build/BuildArtifacts/_buildProperties/*"
+$azuresiteextension.PathsToArchive = "build/BuildArtifacts/AzureSiteExtension/* build/BuildArtifacts/_buildProperties/*"
 $azuresiteextension.Version = Get-Content "$BuildPropertiesDirectory\version_azuresiteextension.txt"
 $azuresiteextension.GitTagPrefix = "AzureSiteExtension_"
 

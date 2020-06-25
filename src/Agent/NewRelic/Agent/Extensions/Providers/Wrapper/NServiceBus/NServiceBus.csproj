@@ -4,8 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.NServiceBus</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.NServiceBus</RootNamespace>
         <Description>NServiceBus Wrapper Provider for New Relic .NET Agent</Description>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="NServiceBus" Version="5.2.0" />
@@ -28,5 +26,4 @@
         <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
         <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
-    <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

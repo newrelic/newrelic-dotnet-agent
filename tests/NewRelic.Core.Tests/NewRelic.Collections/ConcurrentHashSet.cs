@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections;
 using System.Linq;
@@ -9,7 +13,6 @@ using NUnit.Framework;
 
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
     public class Class_ConcurrentHashSet
     {
         private readonly ConcurrentHashSet<int> _concurrentHashSet;
@@ -83,16 +86,12 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
-        // ReSharper disable RedundantAssignment
         private static void ExerciseFullApi(ConcurrentHashSet<int> hashSet, int[] numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             foreach (var number in numbersToAdd)
@@ -119,6 +118,5 @@ namespace NewRelic.Collections.UnitTests
             hashSet.Remove(numbersToAdd.First());
             hashSet.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }

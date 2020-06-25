@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Linq;
 using NUnit.Framework;
@@ -5,9 +9,7 @@ using NUnit.Framework;
 namespace NewRelic.Agent.Core.Utilities
 {
     [TestFixture]
-    // ReSharper disable InconsistentNaming
     public class Class_IEnumerableExtensions
-    // ReSharper restore InconsistentNaming
     {
         [Test]
         [TestCase(ExpectedResult = true, Description = "Single element sequence")]

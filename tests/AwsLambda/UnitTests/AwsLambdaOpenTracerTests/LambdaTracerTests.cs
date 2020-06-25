@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Core;
 using NewRelic.Core.DistributedTracing;
 using NewRelic.OpenTracing.AmazonLambda;

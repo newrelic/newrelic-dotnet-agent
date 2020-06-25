@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 # Function Install Tests (4.5+ only)
 
 # Elevate
@@ -35,7 +40,7 @@ Function RunFunctionalTests
     iisreset /stop
     Write-Host "SERVER is $env:SERVER"
 
-    $install = Get-ChildItem Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_x64_*.msi -Name
+    $install = Get-ChildItem build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_x64_*.msi -Name
     $version = $install.TrimStart('NewRelicAgent_x').TrimStart('{64,86}').TrimStart('_').TrimEnd('.msi')
 
     $appConfigPath = "$env:WORKSPACE\Tests\Agent\MsiInstallerTests\bin\Release\MsiInstallerTests.dll.config"

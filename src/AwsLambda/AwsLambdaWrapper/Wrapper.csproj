@@ -22,5 +22,4 @@
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.1" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.3" />
   </ItemGroup>
-  <Import Project="$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj" Condition="Exists('$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj')" />
 </Project>

@@ -4,8 +4,6 @@
     <AssemblyName>NewRelic.Providers.Storage.HttpContext</AssemblyName>
     <RootNamespace>NewRelic.Providers.Storage.HttpContext</RootNamespace>
     <Description></Description>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>  
@@ -16,6 +14,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>
-
-  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

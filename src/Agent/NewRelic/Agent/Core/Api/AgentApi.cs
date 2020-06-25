@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Core.CodeAttributes;
@@ -18,7 +22,6 @@ using System.Collections.Generic;
 // So, to avoid drift and confusion, do NOT document the API in this file; document it in the NewRelic.Api.Agent/NewRelic.cs file.
 
 // The namespace of this method CANNOT be changed. The profiler hard-codes "NewRelic.Agent.Core" as the expected namespace for the agent API.
-// ReSharper disable once CheckNamespace
 namespace NewRelic.Agent.Core
 {
     /// <summary>

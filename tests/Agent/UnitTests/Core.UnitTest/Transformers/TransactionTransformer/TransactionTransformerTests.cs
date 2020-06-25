@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -22,7 +26,7 @@ using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments.Tests;
 
-namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
+namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
     [TestFixture]
     public class TransactionTransformerTests
@@ -942,7 +946,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             _transactionTransformer.Transform(transaction);
 
             // ASSERT
-            Mock.Assert(_spanEventMaker.GetSpanEvents(transaction.ConvertToImmutableTransaction(), transactionName));
+            Mock.Assert(_spanEventMaker.GetSpanEvents(transaction.ConvertToImmutableTransaction(), transactionName, Arg.IsAny<IAttributeValueCollection>()));
         }
 
         [Test]
@@ -982,7 +986,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             (
                 () => Assert.AreEqual(expectTraditionalTracingCalled ? 1 : 0, actualCallCountTraditionalTracingAggregator, $"Traditional Tracing should {(expectTraditionalTracingCalled ? "" : "NOT ")}have been called"),
                 () => Assert.AreEqual(expect8TCalled ? 1 : 0, actualCallCountInfiniteTracingAggregator, $"Infinite Tracing should {(expect8TCalled ? "" : "NOT ")}have been called"),
-                () => Mock.Assert(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>()), expectedGetSpanEventsCalled ? Occurs.Once() : Occurs.Never(), $"GetSpanEvents should {(expectedGetSpanEventsCalled ? "" : "NOT ")} have been called.")
+                () => Mock.Assert(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>(), Arg.IsAny<IAttributeValueCollection>()), expectedGetSpanEventsCalled ? Occurs.Once() : Occurs.Never(), $"GetSpanEvents should {(expectedGetSpanEventsCalled ? "" : "NOT ")} have been called.")
             );
         }
 

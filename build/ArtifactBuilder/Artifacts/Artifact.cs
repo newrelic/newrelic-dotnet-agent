@@ -1,17 +1,23 @@
+using System;
+
 namespace ArtifactBuilder.Artifacts
 {
     public abstract class Artifact
     {
         public Artifact(string name)
         {
-            SourceDirectory = FileHelpers.GetSourceDirectory();
             Name = name;
-            StagingDirectory = $@"{SourceDirectory}\Build\_staging\{Name}";
-            PackageDirectory = $@"{SourceDirectory}\Build\Packaging\{Name}";
-            OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}";
+
+            RepoRootDirectory = FileHelpers.GetRepoRootDirectory();
+            StagingDirectory = $@"{RepoRootDirectory}\Build\_staging\{Name}";
+            PackageDirectory = $@"{RepoRootDirectory}\Build\Packaging\{Name}";
+            OutputDirectory = $@"{RepoRootDirectory}\Build\BuildArtifacts\{Name}";
+
+            HomeRootDirectory = FileHelpers.GetHomeRootDirectory();
         }
 
-        public string SourceDirectory { get; }
+        public string RepoRootDirectory { get; }
+        public string HomeRootDirectory { get; }
         public string Name { get; }
 
         protected string StagingDirectory;

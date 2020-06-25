@@ -6,6 +6,7 @@
     <title>NewRelic.Agent.Api</title>
     <authors>New Relic</authors>
     <owners>New Relic</owners>
+    <license type="expression">Apache-2.0</license>
     <projectUrl>https://docs.newrelic.com/docs/agents/net-agent/features/net-agent-api</projectUrl>
     <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

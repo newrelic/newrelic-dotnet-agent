@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System;
@@ -107,20 +111,25 @@ namespace NewRelic.Agent.Core.Attributes
             return GetAttribValuesImpl(classification).Cast<IAttributeValue>().ToDictionary(x => x.AttributeDefinition.Name, x => x.Value);
         }
 
+        public void AddRange(IEnumerable<IAttributeValue> attribValues)
+        {
+            foreach (var attribVal in attribValues)
+            {
+
+                if ((attribVal.AttributeDefinition.AttributeDestinations & TargetModelTypesAsFlags) == 0)
+                {
+                    continue;
+                }
+
+                TrySetValue(attribVal);
+            }
+        }
+
         public void AddRange(IAttributeValueCollection fromCollection)
         {
             foreach (var classification in _attribValueCountsDic.Keys)
             {
-                foreach (var attribVal in fromCollection.GetAttributeValues(classification))
-                {
-                    
-                    if ((attribVal.AttributeDefinition.AttributeDestinations & TargetModelTypesAsFlags) == 0) 
-                    {
-                        continue;
-                    }
-
-                    TrySetValue(attribVal);
-                }
+                AddRange(fromCollection.GetAttributeValues(classification));
             }
         }
 

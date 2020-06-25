@@ -1,3 +1,6 @@
+:: Copyright 2020 New Relic Corporation. All rights reserved.
+:: SPDX-License-Identifier: Apache-2.0
+
 @ECHO OFF
 REM install.cmd
 REM Collects and validates the user parameters before calling powershell with install.ps1

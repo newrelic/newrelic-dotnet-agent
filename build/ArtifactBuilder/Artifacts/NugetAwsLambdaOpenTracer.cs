@@ -13,7 +13,7 @@ namespace ArtifactBuilder.Artifacts
         protected override void InternalBuild()
         {
             var targetFrameworkMoniker = "netstandard2.0";
-            var component = $@"{SourceDirectory}\src\AwsLambda\AwsLambdaOpenTracer\bin\{Configuration}\{targetFrameworkMoniker}-ILRepacked\NewRelic.OpenTracing.AmazonLambda.Tracer.dll";
+            var component = $@"{RepoRootDirectory}\src\AwsLambda\AwsLambdaOpenTracer\bin\{Configuration}\{targetFrameworkMoniker}-ILRepacked\NewRelic.OpenTracing.AmazonLambda.Tracer.dll";
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
             package.CopyAll($@"{PackageDirectory}");
             package.CopyToLib(component, "netstandard2.0");

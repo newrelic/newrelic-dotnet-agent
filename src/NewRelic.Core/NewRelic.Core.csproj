@@ -1,11 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" InitialTargets="VersionByGitTag">
     <PropertyGroup>
         <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
         <AssemblyName>NewRelic.Core</AssemblyName>
         <RootNamespace>NewRelic.Core</RootNamespace>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
-        <description>NewRelic generic libraries</description>
+        <Description>New Relic Common Library</Description>
+        <GitTagPrefix>v</GitTagPrefix>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <IntermediateOutputPath>$(MSBuildThisFileDirectory)\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
         <OutputPath>$(MSBuildThisFileDirectory)\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
@@ -25,7 +24,6 @@
         <Reference Include="System.Data" />
         <Reference Include="System.Xml" />
     </ItemGroup>
-    <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
   
   <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
     <ItemGroup>

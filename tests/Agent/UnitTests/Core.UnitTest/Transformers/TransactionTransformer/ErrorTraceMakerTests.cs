@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +15,7 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
+namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
     [TestFixture]
     public class ErrorTraceMakerTests

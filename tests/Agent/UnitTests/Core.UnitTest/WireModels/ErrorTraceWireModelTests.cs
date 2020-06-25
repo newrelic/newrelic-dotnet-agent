@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.DataTransport;
@@ -10,10 +14,6 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using Telerik.JustMock;
-
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
-// ReSharper disable ClassNeverInstantiated.Global
 
 namespace NewRelic.Agent.Core.Errors.UnitTest
 {

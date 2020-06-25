@@ -1,3 +1,6 @@
+:: Copyright 2020 New Relic Corporation. All rights reserved.
+:: SPDX-License-Identifier: Apache-2.0
+
 @ECHO OFF
 REM uninstall.cmd
 REM Uninstalls the currently installed version of the .Net Agent

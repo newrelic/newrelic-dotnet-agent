@@ -1,4 +1,6 @@
-**Guide to Scripts**
+# CI Scripts
+
+The scripts in this folder are used by NR's internal CI.
 
 Most of the scripts should be easy to place, but the information below should help with the more complex stuff.
 

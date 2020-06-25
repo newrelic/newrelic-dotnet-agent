@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,7 +92,6 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
                 new KeyValuePair<int, int>(1, 3)
             };
 
-            // ReSharper disable once RedundantArgumentDefaultValue
             Assert.Throws<ArgumentException>(() => kvps.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.Throw));
         }
 

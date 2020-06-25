@@ -1,10 +1,13 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-    // ReSharper disable StaticFieldInGenericType
     /// <summary>
     /// A global request bus for publishing requests that need a response.
     /// </summary>
@@ -90,7 +93,6 @@ namespace NewRelic.Agent.Core.Utilities
             if (responses == null) return;
             foreach (var response in responses)
             {
-                // ReSharper disable once AssignNullToNotNullAttribute : The enumeration returned here cannot have null elements.
                 responseCallback(response);
                 return;
             }

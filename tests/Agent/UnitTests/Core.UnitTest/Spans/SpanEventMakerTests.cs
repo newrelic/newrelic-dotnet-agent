@@ -1,22 +1,39 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Agent.Core.Config;
+using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.Configuration.UnitTest;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Fixtures;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
+using NewRelic.Agent.Core.Transformers.TransactionTransformer;
+using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.TestUtilities;
 using NewRelic.Core;
 using NewRelic.Parsing;
+using NewRelic.SystemInterfaces;
+using NewRelic.SystemInterfaces.Web;
+using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Spans.Tests
+namespace NewRelic.Agent.Core.Spans.UnitTest
 {
     [TestFixture]
     public class SpanEventMakerTests
@@ -44,6 +61,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         private SpanEventMaker _spanEventMaker;
         private IDatabaseService _databaseService;
+        private ITransactionEventMaker _transactionEventMaker;
         private string _transactionGuid;
         private DateTime _startTime;
         private Segment _baseGenericSegment;
@@ -55,13 +73,83 @@ namespace NewRelic.Agent.Core.Spans.Tests
         private ParsedSqlStatement _parsedSqlStatement;
         private ConnectionInfo _connectionInfo;
 
+        private ConfigurationAutoResponder _configAutoResponder;
+        private IAttributeDefinitionService _attribDefSvc;
+        private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
+        private IMetricNameService _metricNameSvc;
+        private ITransactionMetricNameMaker _transactionMetricNameMaker;
+        private ITransactionAttributeMaker _transactionAttribMaker;
+        private TransactionMetricStatsCollection _metricStatsCollection;
+
+        private IConfiguration _config;
+        private int _configVersion = 1;
+        private IEnvironment _environment;
+        private IProcessStatic _processStatic;
+        private IHttpRuntimeStatic _httpRuntimeStatic;
+        private IConfigurationManagerStatic _configurationManagerStatic;
+        private IDnsStatic _dnsStatic;
+        private SecurityPoliciesConfiguration _securityPoliciesConfiguration;
+        private RunTimeConfiguration _runTimeConfiguration;
+        private ServerConfiguration _serverConfig;
+        private configuration _localConfig;
+
+
+        private void SetLocalConfigurationDefaults()
+        {
+            _localConfig = new configuration();
+
+            _localConfig.attributes.enabled = true;
+
+            _localConfig.distributedTracing.enabled = true;
+            _localConfig.spanEvents.enabled = true;
+            _localConfig.spanEvents.attributes.enabled = true;
+
+            _localConfig.transactionTracer.enabled = true;
+            _localConfig.transactionEvents.enabled = true;
+            _localConfig.transactionTracer.attributes.enabled = true;
+            _localConfig.transactionEvents.attributes.enabled = true;
+        }
+
+        private void PublishConfig()
+        {
+            var config = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfiguration, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+            _config = config;
+            EventBus<ConfigurationUpdatedEvent>.Publish(new ConfigurationUpdatedEvent(_config, ConfigurationUpdateSource.Local));
+        }
+
         [SetUp]
         public void SetUp()
         {
-            var attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+            _environment = Mock.Create<IEnvironment>();
+            _processStatic = Mock.Create<IProcessStatic>();
+            _httpRuntimeStatic = Mock.Create<IHttpRuntimeStatic>();
+            _configurationManagerStatic = Mock.Create<IConfigurationManagerStatic>();
+            _dnsStatic = Mock.Create<IDnsStatic>();
+            _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
+            
+            _runTimeConfiguration = new RunTimeConfiguration();
+            _serverConfig = new ServerConfiguration();
 
-            _spanEventMaker = new SpanEventMaker(attribDefSvc);
+            SetLocalConfigurationDefaults();
+            PublishConfig();
+
+            _configAutoResponder = new ConfigurationAutoResponder(_config);
+
+            var configSvc = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configSvc.Configuration).Returns(() => _config);
+
+            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
+
+            _metricNameSvc = new MetricNameService();
+            _transactionMetricNameMaker =  new TransactionMetricNameMaker(_metricNameSvc);
+
+            _transactionAttribMaker = new TransactionAttributeMaker(configSvc, _attribDefSvc);
+
+            _spanEventMaker = new SpanEventMaker(_attribDefSvc);
             _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
+
+            _transactionEventMaker =  new TransactionEventMaker(_attribDefSvc);
+
 
             _transactionGuid = GuidGenerator.GenerateNewRelicGuid();
             _startTime = new DateTime(2018, 7, 18, 7, 0, 0, DateTimeKind.Utc); // unixtime = 1531897200000
@@ -85,6 +173,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _baseHttpSegment.SetSegmentData(new ExternalSegmentData(new Uri(HttpUri), HttpMethod));
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _configAutoResponder?.Dispose();
+        }
+
         #region Generic and  General Tests
 
         [Test]
@@ -98,8 +192,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             };
             var immutableTransaction = BuildTestTransaction(segments, sampled: true, hasIncomingPayload: false);
 
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
 
             // ASSERT
             // +1 is for the faux root segment.
@@ -117,9 +215,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             };
 
             var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[2]; // look at child span only since it has all the values
             var spanEventIntrinsicAttributes = spanEvent.IntrinsicAttributes();
 
@@ -147,11 +248,14 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
             };
             var immutableTransaction = BuildTestTransaction(segments, true, true);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
-            var spanEvent = spanEvents.ToList()[1];
-            var rootSpanEvent = spanEvents.ToList()[0];
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs).ToList();
+            var spanEvent = spanEvents[1];
+            var rootSpanEvent = spanEvents[0];
 
             // ASSERT
             Assert.AreEqual((string)rootSpanEvent.IntrinsicAttributes()["guid"], (string)spanEvent.IntrinsicAttributes()["parentId"]);
@@ -170,8 +274,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 .WithW3CTracing(DistributedTraceGuid, W3cParentId, VendorStateEntries)
                 .Build();
 
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
             var rootSpanEvent = spanEvents.ToList()[0];
 
@@ -191,8 +300,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             };
             var immutableTransaction = BuildTestTransaction(segments, true, false);
 
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[0];
 
             // ASSERT
@@ -212,26 +325,34 @@ namespace NewRelic.Agent.Core.Spans.Tests
             {
                 _baseDatastoreSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
             };
+
             var immutableTransaction = BuildTestTransaction(segments, true, false);
 
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
             var spanEventIntrinsicAttributes = spanEvent.IntrinsicAttributes();
             var spanEventAgentAttributes = spanEvent.AgentAttributes();
 
             // ASSERT
-            Assert.AreEqual(DatastoreCategory, (string)spanEventIntrinsicAttributes["category"]);
-            Assert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]);
-            Assert.AreEqual(_parsedSqlStatement.Model, (string)spanEventAgentAttributes["db.collection"]);
+            NrAssert.Multiple
+            (
+                () => Assert.AreEqual(DatastoreCategory, (string)spanEventIntrinsicAttributes["category"]),
+                () => Assert.AreEqual(DatastoreVendor.MSSQL.ToString(), (string)spanEventIntrinsicAttributes["component"]),
+                () => Assert.AreEqual(_parsedSqlStatement.Model, (string)spanEventAgentAttributes["db.collection"]),
 
-            //This also tests the lazy instantiation on span event attrib values
-            Assert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]);
+                //This also tests the lazy instantiation on span event attrib values
+                () => Assert.AreEqual(_obfuscatedSql, (string)spanEventAgentAttributes["db.statement"]),
 
-            Assert.AreEqual(_connectionInfo.DatabaseName, (string)spanEventAgentAttributes["db.instance"]);
-            Assert.AreEqual($"{_connectionInfo.Host}:{_connectionInfo.PortPathOrId}", (string)spanEventAgentAttributes["peer.address"]);
-            Assert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["peer.hostname"]);
-            Assert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"]);
+                () => Assert.AreEqual(_connectionInfo.DatabaseName, (string)spanEventAgentAttributes["db.instance"]),
+                () => Assert.AreEqual($"{_connectionInfo.Host}:{_connectionInfo.PortPathOrId}", (string)spanEventAgentAttributes["peer.address"]),
+                () => Assert.AreEqual(_connectionInfo.Host, (string)spanEventAgentAttributes["peer.hostname"]),
+                () => Assert.AreEqual("client", (string)spanEventIntrinsicAttributes["span.kind"])
+            );
         }
 
         public void GetSpanEvent_ReturnsSpanEventPerSegment_DatastoreTruncateLongStatement()
@@ -261,9 +382,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                                     longDatastoreSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
                                 };
                 var immutableTransaction = BuildTestTransaction(segments, true, false);
+                var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+                var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+                var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
                 // ACT
-                var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+                var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
                 var spanEvent = spanEvents.ToList()[1];
 
                 // ASSERT
@@ -278,6 +402,139 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         #endregion
 
+        [Test]
+        public void RootSpanAttribFiltering_SpanFiltersIndependentOfTransactionFilters()
+        {
+            _localConfig.transactionEvents.attributes.exclude = new List<string> { "filterOnTrx*" };
+            _localConfig.spanEvents.attributes.exclude = new List<string> { "filterOnSpan*" };
+
+            PublishConfig();
+
+            var segments = new List<Segment>()
+            {
+                _baseDatastoreSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
+            };
+
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            _attribDefs.GetCustomAttributeForTransaction("filterOnTrx").TrySetValue(transactionAttribs, "trxCustomAttribValue1");
+            _attribDefs.GetCustomAttributeForTransaction("filterOnSpan").TrySetValue(transactionAttribs, "trxCustomAttribValue2");
+
+            var trxEvent = _transactionEventMaker.GetTransactionEvent(immutableTransaction, transactionAttribs);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+
+            var rootSpan = spanEvents.ToList()[0];
+
+            var rootSpanUserAttribDic = rootSpan.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+            var trxUserAttribDic = trxEvent.AttributeValues.GetAttributeValuesDic(AttributeClassification.UserAttributes);
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsFalse(trxUserAttribDic.ContainsKey("filterOnTrx")),
+                () => Assert.IsTrue(trxUserAttribDic.ContainsKey("filterOnSpan")),
+
+                () => Assert.IsTrue(rootSpanUserAttribDic.ContainsKey("filterOnTrx")),
+                () => Assert.IsFalse(rootSpanUserAttribDic.ContainsKey("filterOnSpan"))
+            );
+
+
+
+
+        }
+
+        [Test]
+        public void RootSpanEventHasTransactionNameSpecialSpanAttrib()
+        {
+            var segments = new List<Segment>()
+            {
+                _baseDatastoreSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
+            };
+
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
+            var rootSpan = spanEvents.ToList()[0];
+
+            var rootSpanIntrinsicsDic = rootSpan.GetAttributeValuesDic(AttributeClassification.Intrinsics);
+
+            NrAssert.Multiple
+            (
+                ()=> Assert.IsTrue(rootSpanIntrinsicsDic.ContainsKey("transaction.name")),
+                ()=> Assert.AreEqual(transactionMetricName.PrefixedName, rootSpanIntrinsicsDic["transaction.name"])
+            );
+        }
+         
+        [Test]
+        public void RootSpanEventHasTransactionsUserAndAgentAttributes([Values(true,false)] bool transactionEventsEnabled)
+        {
+            _localConfig.transactionEvents.enabled = false;
+
+            PublishConfig();
+
+
+            var segments = new List<Segment>()
+            {
+                _baseDatastoreSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
+            };
+
+            var immutableTransaction = BuildTestTransaction(segments, true, false);
+
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var allAttribValues = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            _attribDefs.GetCustomAttributeForTransaction("trxCustomAttrib").TrySetValue(allAttribValues, "trxCustomAttribValue");
+            _attribDefs.OriginalUrl.TrySetValue(allAttribValues, "http://www.test.com");
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, allAttribValues);
+            var rootSpan = spanEvents.ToList()[0];
+
+            var assertions = new List<Action>();
+            foreach (var classification in new[] { AttributeClassification.AgentAttributes, AttributeClassification.UserAttributes })
+            {
+                var classificationLocal = classification;
+                var trxAttribs = allAttribValues.GetAttributeValues(classification);
+                var rootSpanAttribsDic = rootSpan.GetAttributeValuesDic(classification);
+
+                var hasExistCheck = false;
+                var hasNotExistCheck = false;
+
+                foreach (var trxAttrib in trxAttribs)
+                {
+                    var attribName = trxAttrib.AttributeDefinition.Name;
+
+                    if (trxAttrib.AttributeDefinition.IsAvailableForAny(AttributeDestinations.SpanEvent))
+                    {
+                        hasExistCheck = true;
+                        assertions.Add(() => Assert.IsTrue(rootSpanAttribsDic.ContainsKey(attribName), $"{classificationLocal} attributes should have attribute {attribName}"));
+                        assertions.Add(() => Assert.AreEqual(trxAttrib.Value, rootSpanAttribsDic[attribName], $"{classificationLocal} attribute '{attribName}'"));
+                    }
+                    else
+                    {
+                        hasNotExistCheck = true;
+                        assertions.Add(() => Assert.IsFalse(rootSpanAttribsDic.ContainsKey(attribName), $"{classificationLocal} attributes should have attribute {attribName}"));
+                    }
+                }
+
+                assertions.Add(() => Assert.IsTrue(hasExistCheck, $"Didn't validate existence of any {classificationLocal} attrib on root span"));
+            }
+
+            NrAssert.Multiple(assertions.ToArray());
+        }
+
+
+
+
         #region Http (Externals)
 
         [Test]
@@ -289,9 +546,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 _baseHttpSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
             };
             var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
 
             // ASSERT
@@ -307,9 +567,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 _baseHttpSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>()),
             };
             var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
             var spanEventIntrinsicAttributes = spanEvent.IntrinsicAttributes();
             var spanEventAgentAttributes = spanEvent.AgentAttributes();
@@ -330,9 +593,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 _baseHttpSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
             };
             var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
 
             // ASSERT
@@ -351,9 +617,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             externalSegmentData.SetHttpStatusCode(200);
 
             var immutableTransaction = BuildTestTransaction(segments, true, false);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttribs = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
 
             // ACT
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttribs);
             var spanEvent = spanEvents.ToList()[1];
 
             // ASSERT

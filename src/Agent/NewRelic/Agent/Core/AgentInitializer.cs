@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Runtime.CompilerServices;
 
@@ -9,7 +13,6 @@ namespace NewRelic.Agent.Core
 
         static AgentInitializer()
         {
-            // ReSharper disable once ConvertClosureToMethodGroup
             InitializeAgent = () => CallOnce.TouchMe();
         }
 
@@ -30,7 +33,6 @@ namespace NewRelic.Agent.Core
                 LoggerBootstrapper.Initialize();
 
                 // Force agent to be initialized
-                // ReSharper disable once UnusedVariable
                 var agent = AgentManager.Instance;
             }
 

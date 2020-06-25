@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.DistributedTracing;
@@ -237,7 +241,6 @@ namespace NewRelic.Agent.Core.DistributedTracing
             {
                 var currentValue = priority;
                 //This comparison is safe, because we are not comparing the bits of priority against itself not the boosted value
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (currentValue == Interlocked.CompareExchange(ref priority, TracePriorityManager.Adjust(currentValue, PriorityBoost), currentValue))
                 {
                     break;

@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using NUnit.Framework;
 
@@ -58,7 +62,6 @@ namespace NewRelic.SystemExtensions.UnitTests
         [TestCase("foobar", true, new[] { "foo", "baz" })]
         public void ContainsAny_ReturnsTrue_IfSourceStringContainsAnyOfTargetStrings_WhileIgnoringCase(string source, bool expectedResult, params string[] searchTargets)
         {
-            // ReSharper disable once RedundantArgumentDefaultValue
             var result = source.ContainsAny(searchTargets, StringComparison.InvariantCultureIgnoreCase);
 
             Assert.AreEqual(expectedResult, result);

@@ -12,9 +12,6 @@ namespace ArtifactBuilder.Artifacts
         {
             Platform = platform;
             Configuration = configuration;
-            StagingDirectory = $@"{SourceDirectory}\Build\_staging\{Name}";
-            PackageDirectory = $@"{SourceDirectory}\Build\Packaging\{Name}";
-            OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}";
         }
 
         public string Configuration { get; }
@@ -25,7 +22,7 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            _agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, SourceDirectory);
+            _agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             _agentComponents.ValidateComponents();
 
             var package = new NugetPackage(StagingDirectory, OutputDirectory);

@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 param($installPath, $toolsPath, $package, $project)
 
 $extensionFile = $project.ProjectItems.Item("newrelic").ProjectItems.Item("extensions").ProjectItems.Item("extension.xsd")

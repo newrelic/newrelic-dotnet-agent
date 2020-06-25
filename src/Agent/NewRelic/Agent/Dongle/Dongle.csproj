@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-  <PropertyGroup>
-    <RootNamespace>Dongle</RootNamespace>
-    <AssemblyName>Dongle</AssemblyName>
-    <Description></Description>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-  </PropertyGroup>
-  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
-</Project>

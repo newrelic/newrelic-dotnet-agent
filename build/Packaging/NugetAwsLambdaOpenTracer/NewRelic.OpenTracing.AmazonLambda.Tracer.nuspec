@@ -7,7 +7,7 @@
     <authors>New Relic</authors>
     <projectUrl>https://docs.newrelic.com/docs/serverless-function-monitoring/aws-lambda-monitoring</projectUrl>
     <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
-    <license type="file">LICENSE.txt</license>
+    <license type="expression">Apache-2.0</license>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>NewRelic Amazon AWS Lambda OpenTracing</tags>
     <dependencies>

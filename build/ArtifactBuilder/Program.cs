@@ -12,7 +12,6 @@ namespace ArtifactBuilder
         {
             try
             {
-                var sourceDirectory = FileHelpers.GetSourceDirectory();
                 var package = args[0].ToLower();
 
                 switch (package)
@@ -84,7 +83,7 @@ namespace ArtifactBuilder
         private static void BuildDownloadSite(string[] args)
         {
             var configuration = args[1];
-            new DowloadSiteArtifact(configuration).Build();
+            new DownloadSiteArtifact(configuration).Build();
         }
 
         private static void BuildMsiInstaller(string[] args)

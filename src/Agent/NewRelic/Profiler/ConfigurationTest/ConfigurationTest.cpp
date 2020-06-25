@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 #include <functional>
 #include "stdafx.h"
 #define LOGGER_DEFINE_STDLOG

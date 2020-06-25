@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -12,7 +16,7 @@ namespace NewRelic.Agent.Core.Configuration
     public class AgentSettingsTests
     {
         TimeSpan ApdexT = new TimeSpan(0, 0, 10);
-        const string CatId = "273070#123456";
+        const string CatId = "acctId#appId";
         const string EncodingKey = "thisistheencodingkey";
         List<long> TrustedAccountIds = new List<long> { 123456, 098765 };
         const int MaxStackTraceLines = 100;
@@ -86,7 +90,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             var json = JsonConvert.SerializeObject(agentSettings);
 
-            const string expectedJson = @"{""apdex_t"":10.0,""cross_process_id"":""273070#123456"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""using_server_side_config"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_errors"":[""401"",""404""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000}";
+            const string expectedJson = @"{""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""using_server_side_config"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_errors"":[""401"",""404""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000}";
 
             Assert.AreEqual(expectedJson, json);
         }

@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -138,7 +142,6 @@ namespace NewRelic.SystemExtensions.Collections.Generic
         public static void ForEachNow<T>(this IEnumerable<T> source, Action<T> action)
         {
             var enumerable = source.ForEachLazy(action);
-            // ReSharper disable once UnusedVariable
             foreach (var item in enumerable)
             {
                 // do nothing, we just want to force enumeration

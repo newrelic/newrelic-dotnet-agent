@@ -381,7 +381,7 @@ Use an exerciser alone to ensure that code functions properly under contention o
 ```
 
 * **Throughput changes**<br>
-Ensuring that throughput changes as expected when a performance enhancement, such as chaching, is applied.
+Ensuring that throughput changes as expected when a performance enhancement, such as caching, is applied.
 
 ```c#
 	[Test]

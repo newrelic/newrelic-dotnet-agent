@@ -11,16 +11,16 @@ namespace ArtifactBuilder.Artifacts
             var version = ReadVersionFromFile();
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
             package.CopyAll($@"{PackageDirectory}");
-            package.CopyToContent($@"{SourceDirectory}\Build\NewRelic.NuGetHelper\bin\NewRelic.NuGetHelper.dll");
-            package.CopyToContent($@"{SourceDirectory}\Build\NewRelic.NuGetHelper\bin\NuGet.Core.dll");
-            package.CopyToContent($@"{SourceDirectory}\Build\NewRelic.NuGetHelper\bin\Microsoft.Web.XmlTransform.dll");
+            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\NewRelic.NuGetHelper.dll");
+            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\NuGet.Core.dll");
+            package.CopyToContent($@"{RepoRootDirectory}\build\NewRelic.NuGetHelper\bin\Microsoft.Web.XmlTransform.dll");
             package.SetVersion(version);
             package.Pack();
         }
 
         private string ReadVersionFromFile()
         {
-            var versionFile = $@"{SourceDirectory}\Build\BuildArtifacts\_buildProperties\version_azuresiteextension.txt";
+            var versionFile = $@"{RepoRootDirectory}\build\BuildArtifacts\_buildProperties\version_azuresiteextension.txt";
 
             if (!System.IO.File.Exists(versionFile))
             {

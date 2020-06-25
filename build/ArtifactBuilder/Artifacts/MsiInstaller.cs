@@ -26,8 +26,8 @@ namespace ArtifactBuilder.Artifacts
         {
             Platform = platform;
             Configuration = configuration;
-            MsiDirectory = $@"{SourceDirectory}\src\_build\{Platform}-{Configuration}\Installer";
-            OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}-{Platform}";
+            MsiDirectory = $@"{RepoRootDirectory}\src\_build\{Platform}-{Configuration}\Installer";
+            OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}-{Platform}";
         }
 
         protected override void InternalBuild()
@@ -56,10 +56,10 @@ namespace ArtifactBuilder.Artifacts
         private void ValidateWxsDefinitionFileForInstaller()
         {
             //Verify that the expected agent components are in the homebuilder for the installer
-            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, SourceDirectory);
+            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             frameworkAgentComponents.ValidateComponents();
 
-            var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, Platform, SourceDirectory);
+            var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             coreAgentComponents.ValidateComponents();
 
             var productWxs = GetParsedProductWxsData();
@@ -145,7 +145,7 @@ namespace ArtifactBuilder.Artifacts
 
         private Wix GetParsedProductWxsData()
         {
-            using (var xmlReader = XmlReader.Create($@"{SourceDirectory}\src\Agent\MsiInstaller\Installer\Product.wxs"))
+            using (var xmlReader = XmlReader.Create($@"{RepoRootDirectory}\src\Agent\MsiInstaller\Installer\Product.wxs"))
             {
                 var serializer = new XmlSerializer(typeof(Wix));
                 return (Wix)serializer.Deserialize(xmlReader);
@@ -162,7 +162,7 @@ namespace ArtifactBuilder.Artifacts
                     throw new PackagingException($"Product.wxs file {file.Id} did not have KeyPath set to yes, but was {file.KeyPath}.");
                 }
 
-                var expectedSourcePath = isCore ? $@"$(var.SolutionDir)New Relic Home $(var.Platform) CoreClr\Extensions\{file.Name}" : $@"$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\{file.Name}";
+                var expectedSourcePath = isCore ? $@"$(var.SolutionDir)newrelichome_$(var.Platform)_coreclr\extensions\{file.Name}" : $@"$(var.SolutionDir)newrelichome_$(var.Platform)\extensions\{file.Name}";
                 if (file.Source != expectedSourcePath)
                 {
                     throw new PackagingException($"Product.wxs file {file.Id} did not have the expected source path of {expectedSourcePath}, but was {file.Source}");

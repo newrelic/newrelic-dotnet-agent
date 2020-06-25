@@ -1,9 +1,12 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Api;
 using System;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
-    // ReSharper disable once InconsistentNaming
     public static class IAgentWrapperExtensions
     {
         public static void HandleExceptions(this IAgent agent, Action action)

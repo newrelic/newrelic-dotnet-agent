@@ -12,8 +12,8 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", SourceDirectory);
-            var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", SourceDirectory);
+            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
+            var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
             frameworkAgentComponents.ValidateComponents();
             coreAgentComponents.ValidateComponents();
 

@@ -4,8 +4,6 @@
     <RootNamespace>NewRelic.Providers.Wrapper.WebServices</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.WebServices</AssemblyName>
     <Description>Web Services Wrapper Provider for New Relic .NET Agent</Description>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -22,5 +20,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

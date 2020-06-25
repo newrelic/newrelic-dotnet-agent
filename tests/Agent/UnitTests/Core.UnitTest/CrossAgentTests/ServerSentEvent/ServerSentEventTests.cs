@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
@@ -145,7 +149,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IAttributeValueCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(errorTrace);
             Mock.Arrange(() => _transactionEventMaker.GetTransactionEvent(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IAttributeValueCollection>())).Returns(transactionEvent);
             Mock.Arrange(() => _transactionTraceMaker.GetTransactionTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IEnumerable<ImmutableSegmentTreeNode>>(), Arg.IsAny<TransactionMetricName>(), Arg.IsAny<IAttributeValueCollection>())).Returns(transactionTrace);
-            Mock.Arrange(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>())).Returns(spanEvents);
+            Mock.Arrange(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>(), Arg.IsAny<IAttributeValueCollection>())).Returns(spanEvents);
 
             Action assertAction = null;
 

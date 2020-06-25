@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Globalization;
 using System.Linq;
@@ -60,7 +64,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
         private static int GetHash(string appName, string txName)
         {
-            var md5Hash = new MD5();
+            var md5Hash = new Md5();
             var formattedInput = appName + PathHashSeparator + txName;
             md5Hash.ValueAsByte = Encoding.UTF8.GetBytes(formattedInput);
             var hashBytes = md5Hash.HashAsByteArray;

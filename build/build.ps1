@@ -1,27 +1,55 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 Param(
     [ValidateSet("Debug","Release")][string]$Configuration = "Release",
-    [string]$gpgKeyPath = ""
+    [ValidateSet("All", "Windows", "Linux","Framework", "CoreAll","CoreWindows","CoreLinux")][string]$Type = "All",
+    [ValidateSet("All","x64","x86")][string]$Architecture = "All",
+    [string]$HomePath = "$env:NR_DEV_HOMEROOT",
+    [string]$gpgKeyPath = "",
+    [switch]$SkipProfilerBuild = $false,
+    [switch]$KeepNewRelicConfig = $false,
+    [switch]$SetSystemEnvironment = $false,
+    [switch]$SetSessionEnvironment = $false
 )
 
 $ErrorActionPreference = "Stop"
 
+
+##############################
+# Validation  and param setup#
+##############################
+
+Write-Host "Performing validation"
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\.."
-$nugetPath = (Resolve-Path "$rootDirectory\Build\Tools\nuget.exe").Path
-$vsWhere = (Resolve-Path "$rootDirectory\Build\Tools\vswhere.exe").Path
+$nugetPath = (Resolve-Path "$rootDirectory\build\Tools\nuget.exe").Path
+$vsWhere = (Resolve-Path "$rootDirectory\build\Tools\vswhere.exe").Path
 $msBuildPath = & "$vsWhere" -products 'Microsoft.VisualStudio.Product.BuildTools' -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
 if (!$msBuildPath) {
     $msBuildPath = & "$vsWhere" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
 }
 
-##################
-# Profiler Build #
-##################
+# Linux cannot be x86
+if (($Type -like "Linux" -or $Type -like "All" -or $Type -like "CoreAll" -or $Type -like "CoreLinux") -and $Architecture -like "x86") {
+    Write-Host "Linux does not support x86, will build x64 instead."
+}
 
-$profilerBuildScript = "$rootDirectory\src\Agent\NewRelic\Profiler\build\build.ps1"
-& $profilerBuildScript
-if ($LastExitCode -ne 0) {
-    Write-Host "Error in Profiler build script. Exiting with code: $LastExitCode.."
-    exit $LastExitCode
+. "$rootDirectory\build\build_functions.ps1"
+$HomePath = Get-HomeRootPath $HomePath
+
+######################################
+# Profiler Build (Windows and Linux) #
+######################################
+
+if (-Not $SkipProfilerBuild) {
+    $profilerBuildScript = "$rootDirectory\src\Agent\NewRelic\Profiler\build\build.ps1"
+    & $profilerBuildScript
+    if ($LastExitCode -ne 0) {
+        Write-Host "Error in Profiler build script. Exiting with code: $LastExitCode.."
+        exit $LastExitCode
+    }
 }
 
 #######################
@@ -53,11 +81,15 @@ foreach ($sln in $solutions.Keys) {
 # Build #
 #########
 
+$env:NR_DEV_BUILD_HOME = "true"
+$env:KeepNewRelicConfig = $KeepNewRelicConfig
+$env:SetSystemEnvironment = $SetSystemEnvironment
+$env:SetSessionEnvironment = $SetSessionEnvironment
 Write-Host "Building solutions"
 foreach ($sln in $solutions.Keys) {
     foreach ($config in $solutions.Item($sln)) {
-        Write-Host "-- Building $sln : '. $msBuildPath /m /p:$($config) $sln'"
-        . $msBuildPath /m /p:$($config) $sln
+        Write-Host "-- Building $sln : '. $msBuildPath -m -p:$($config) $sln'"
+        . $msBuildPath -nologo -m -p:$($config) $sln
         Write-Host "MSBuild Exit code: $LastExitCode"
         if ($LastExitCode -ne 0) {
             Write-Host "Error building solution $sln. Exiting with code: $LastExitCode.."
@@ -68,9 +100,9 @@ foreach ($sln in $solutions.Keys) {
 
 $agentVersion = (Get-Item "$rootDirectory\src\_build\AnyCPU-$Configuration\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll").VersionInfo.FileVersion
 
-###############
-# Linux build #
-###############
+###################
+# Linux Packaging #
+###################
 
 if (!($gpgKeyPath -eq "")) {
     Write-Host "===================================="
@@ -108,4 +140,5 @@ Write-Host "Cleaning up old containers"
 Write-Host 'Running command: docker container prune --force --filter "until=60m"'
 docker container prune --force --filter "until=60m"
 
+Write-Host "Completed build.ps1"
 exit $LastExitCode

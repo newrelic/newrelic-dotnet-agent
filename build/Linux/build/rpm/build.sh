@@ -66,7 +66,7 @@ mkdir "${TARBALL_ROOT}"
 TARBALL_CONTENT_PATH="${TARBALL_ROOT}${TARGET_SYSTEM_INSTALL_PATH}"
 mkdir -p "${TARBALL_CONTENT_PATH}"
 
-cp -R /data/"New Relic Home x64 CoreClr_Linux"/* "${TARBALL_CONTENT_PATH}"
+cp -R /data/newrelichome_x64_coreclr_linux/* "${TARBALL_CONTENT_PATH}"
 
 pushd ${TARBALL_CONTENT_PATH}
 
@@ -76,8 +76,6 @@ rm -rf logs Logs
 cp /common/setenv.sh .
 cp /common/run.sh .
 cp /docs/netcore20-agent-readme.md ./README.md
-
-mv Extensions extensions
 
 dos2unix *.x* extensions/*.x* *.sh
 

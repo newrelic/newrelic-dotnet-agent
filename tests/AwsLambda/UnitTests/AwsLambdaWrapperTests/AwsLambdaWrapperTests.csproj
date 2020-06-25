@@ -5,6 +5,7 @@
     <RootNamespace>NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests</RootNamespace>
     <AssemblyName>NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>7.3</LangVersion>
@@ -36,7 +37,5 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\AwsLambda\AwsLambdaOpenTracer\Tracer.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\src\AwsLambda\AwsLambdaWrapper\Wrapper.csproj" />
   </ItemGroup>
-
-  <Import Project="$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj" Condition="Exists('$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj')" />
 
 </Project>

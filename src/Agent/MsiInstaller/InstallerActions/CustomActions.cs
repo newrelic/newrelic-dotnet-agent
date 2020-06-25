@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -189,9 +193,7 @@ namespace InstallerActions
 
     internal abstract class MySession
     {
-        // ReSharper disable InconsistentNaming
         protected Session session { get; private set; }
-        // ReSharper restore InconsistentNaming
 
         protected MySession(Session session)
         {

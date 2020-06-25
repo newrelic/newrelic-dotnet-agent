@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 # install_agent.ps1
 #
 # Installs the New Relic .Net Core Agent. Run script with -Help switch to view usage information. Additional

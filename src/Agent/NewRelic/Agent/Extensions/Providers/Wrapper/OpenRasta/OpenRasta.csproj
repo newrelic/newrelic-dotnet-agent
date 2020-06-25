@@ -4,8 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.OpenRasta</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.OpenRasta</RootNamespace>
         <Description>OpenRasta Wrapper Provider for New Relic .NET Agent</Description>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System.Web" />
@@ -20,5 +18,4 @@
         <ProjectReference Include="..\..\..\..\Parsing\Parsing.csproj" />
         <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
-    <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

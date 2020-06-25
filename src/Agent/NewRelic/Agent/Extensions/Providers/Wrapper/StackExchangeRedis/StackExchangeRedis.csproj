@@ -4,8 +4,6 @@
     <RootNamespace>NewRelic.Providers.Wrapper.StackExchangeRedis</RootNamespace>
     <AssemblyName>NewRelic.Providers.Wrapper.StackExchangeRedis</AssemblyName>
     <Description>StackExchange.Redis Wrapper Provider for New Relic .NET Agent</Description>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <Reference Include="System" />
@@ -27,5 +25,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

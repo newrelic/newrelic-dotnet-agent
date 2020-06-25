@@ -1,7 +1,12 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
+using NewRelic.Agent.Core.Labels;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utilization;
@@ -262,7 +267,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 _configuration.ProcessHostDisplayName,
                 _dnsStatic.GetHostName(),
                 appNames,
-                AgentVersion.Version,
+                AgentInstallConfiguration.AgentVersion,
                 AgentInstallConfiguration.AgentVersionTimestamp,
                 new SecuritySettingsModel
                     (

@@ -21,10 +21,10 @@ namespace ArtifactBuilder.Artifacts
         protected override void InternalBuild()
         {
             var rootDirectory = $@"{StagingDirectory}\content\newrelic";
-            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", SourceDirectory);
-            var frameworkAgentX86Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x86", SourceDirectory);
-            var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", SourceDirectory);
-            var coreAgentX86Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x86", SourceDirectory);
+            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
+            var frameworkAgentX86Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x86", RepoRootDirectory, HomeRootDirectory);
+            var coreAgentComponents = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
+            var coreAgentX86Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x86", RepoRootDirectory, HomeRootDirectory);
             frameworkAgentComponents.ValidateComponents();
             frameworkAgentX86Components.ValidateComponents();
             coreAgentComponents.ValidateComponents();

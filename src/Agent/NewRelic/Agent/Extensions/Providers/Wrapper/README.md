@@ -59,7 +59,6 @@ using System.Reflection;
 
 1. Add the following NuGet packages to your project. It is strongly recommended that you use the NuGet Package Manager Console accessible Tools -> NuGet Package Manager -> Package Manager Console, and that you specify the exact version of each of these assemblies.
 	
-	* **Zoltu.Versioning**
 	* **NewRelic.Agent.Extensions**
     * **NewRelic.Core** (Not Required)
 

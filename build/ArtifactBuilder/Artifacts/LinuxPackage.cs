@@ -14,8 +14,8 @@ namespace ArtifactBuilder.Artifacts
         {
             _packagePlatform = packagePlatform;
             _fileExtension = fileExtension;
-            _buildOutputDirectory = $@"{SourceDirectory}\Agent\_build\CoreArtifacts";
-            OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}";
+            _buildOutputDirectory = $@"{RepoRootDirectory}\src\_build\CoreArtifacts";
+            OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}";
         }
 
         protected override void InternalBuild()

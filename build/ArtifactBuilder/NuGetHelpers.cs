@@ -8,7 +8,7 @@ namespace ArtifactBuilder
 {
     public static class NuGetHelpers
     {
-        private static string _nugetPath = Path.Combine(FileHelpers.GetSourceDirectory(), @"Build\Tools\nuget.exe");
+        private static string _nugetPath = Path.Combine(FileHelpers.GetRepoRootDirectory(), @"Build\Tools\nuget.exe");
 
         public static void Pack(string nuspecFilePath, string outputDirectory)
         {

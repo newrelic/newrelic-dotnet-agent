@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -19,6 +23,7 @@ namespace NewRelic.Agent.Core.DataTransport
         bool IsServiceEnabled { get; }
         string EndpointHost { get; }
         int EndpointPort { get; }
+        bool EndpointSsl { get; }
         float? EndpointTestFlaky { get; }
         int? EndpointTestDelayMs { get; }
         int TimeoutConnectMs { get; }
@@ -111,11 +116,13 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public string EndpointHost { get; private set; }
         public int EndpointPort { get; private set; }
+        public bool EndpointSsl { get; private set; }
         public float? EndpointTestFlaky { get; private set; }
         public int? EndpointTestDelayMs { get; private set; }
 
         protected abstract string EndpointHostConfigValue { get; }
         protected abstract string EndpointPortConfigValue { get; }
+        protected abstract string EndpointSslConfigValue { get; }
         protected abstract float? EndpointTestFlakyConfigValue { get; }
         protected abstract int? EndpointTestDelayMsConfigValue { get; }
 
@@ -162,12 +169,18 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 configPortStr = "443";
             }
+            var configSslStr = EndpointSslConfigValue;
+            if (string.IsNullOrWhiteSpace(configSslStr))
+            {
+                configSslStr = "True";
+            }
 
             //Infinite Tracing Disabled
             if (string.IsNullOrWhiteSpace(configHost))
             {
                 EndpointHost = null;
                 EndpointPort = -1;
+                EndpointSsl = true;
                 EndpointTestFlaky = null;
                 EndpointTestDelayMs = null;
 
@@ -176,15 +189,17 @@ namespace NewRelic.Agent.Core.DataTransport
 
             var isValidHost = Uri.CheckHostName(configHost) != UriHostNameType.Unknown;
             var isValidPort = int.TryParse(configPortStr, out var configPort) && configPort > 0 && configPort <= 65535;
+            var isValidSsl = bool.TryParse(configSslStr, out var configSsl);
             var isValidFlaky = EndpointTestFlakyConfigValue == null || (EndpointTestFlakyConfigValue >= 0 && EndpointTestFlakyConfigValue <= 100);
             var isValidDelay = EndpointTestDelayMsConfigValue == null || (EndpointTestDelayMsConfigValue >= 0);
             var isValidTimeoutConnect = TimeoutConnectMs > 0;
             var isValidTimeoutSend = TimeoutSendDataMs > 0;
 
-            if (isValidHost && isValidPort && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend)
+            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend)
             {
                 EndpointHost = configHost;
                 EndpointPort = configPort;
+                EndpointSsl = configSsl;
                 EndpointTestFlaky = EndpointTestFlakyConfigValue;
                 EndpointTestDelayMs = EndpointTestDelayMsConfigValue;
 
@@ -193,6 +208,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             EndpointHost = null;
             EndpointPort = -1;
+            EndpointSsl = true;
             EndpointTestFlaky = null;
             EndpointTestDelayMs = null;
 
@@ -204,6 +220,11 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!isValidPort)
             {
                 LogMessage(LogLevel.Info, $"Invalid Configuration.  Endpoint Port '{configPortStr}' is not valid.  Infinite Tracing will NOT be started.");
+            }
+
+            if (!isValidSsl)
+            {
+                LogMessage(LogLevel.Info, $"Invalid Configuration.  Endpoint SSL '{configSslStr}' is not valid.  Infinite Tracing will NOT be started.");
             }
 
             if (!isValidFlaky)
@@ -279,6 +300,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             LogMessage(LogLevel.Info, $"Configuration Setting - Host - {EndpointHost}");
             LogMessage(LogLevel.Info, $"Configuration Setting - Port - {EndpointPort}");
+            LogMessage(LogLevel.Finest, $"Configuration Setting - SSL - {EndpointSsl}");
             LogMessage(LogLevel.Info, $"Configuration Setting - Consumers - {_configuration.InfiniteTracingTraceCountConsumers}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Flaky - {EndpointTestFlaky?.ToString() ?? "NULL"}");
             LogMessage(LogLevel.Finest, $"Configuration Setting - Test Delay (ms) - {EndpointTestDelayMs?.ToString() ?? "NULL"}");
@@ -300,7 +322,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     var createdChannel = false;
                     using (_agentTimerService.StartNew(_timerEventNameForChannel))
                     {
-                        createdChannel = _grpcWrapper.CreateChannel(EndpointHost, EndpointPort, MetadataHeaders, cancellationToken);
+                        createdChannel = _grpcWrapper.CreateChannel(EndpointHost, EndpointPort, EndpointSsl, MetadataHeaders, cancellationToken);
                     }
 
                     if (createdChannel)

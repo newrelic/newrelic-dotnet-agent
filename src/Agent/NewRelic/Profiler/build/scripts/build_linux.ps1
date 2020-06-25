@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 Write-Host ""
 Write-Host "********"
 Write-Host "Build Linux profiler shared object (.so)"

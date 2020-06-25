@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Metric;
@@ -131,6 +135,10 @@ namespace NewRelic.Agent.Core.Configuration
             return parsedBool;
         }
 
+        private string TryGetAppSettingAsString(string key)
+        {
+            return _newRelicAppSettings.TryGetValue(key, out var valueStr) ? valueStr : null;
+        }
 
         private float TryGetAppSettingAsFloatWithDefault(string key, float defaultValue)
         {
@@ -951,11 +959,13 @@ namespace NewRelic.Agent.Core.Configuration
             if (_infiniteTracingTraceObserverHost != null)
             {
                 _infiniteTracingTraceObserverPort = _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_PORT");
+                _infiniteTracingTraceObserverSsl = _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_SSL");
             }
             else
             {
                 _infiniteTracingTraceObserverHost = _localConfiguration.infiniteTracing?.trace_observer?.host;
                 _infiniteTracingTraceObserverPort = _localConfiguration.infiniteTracing?.trace_observer?.port;
+                _infiniteTracingTraceObserverSsl = TryGetAppSettingAsString("InfiniteTracingTraceObserverSsl");
             }
 
             _infiniteTracingObserverObtained = true;
@@ -986,6 +996,20 @@ namespace NewRelic.Agent.Core.Configuration
                 }
 
                 return _infiniteTracingTraceObserverPort;
+            }
+        }
+
+        private string _infiniteTracingTraceObserverSsl = null;
+        public string InfiniteTracingTraceObserverSsl
+        {
+            get
+            {
+                if (!_infiniteTracingObserverObtained)
+                {
+                    GetInfiniteTracingObserver();
+                }
+
+                return _infiniteTracingTraceObserverSsl;
             }
         }
 
@@ -1748,7 +1772,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Helpers
 
-        // ReSharper restore PossibleNullReferenceException
         private TimeSpan ParseTransactionThreshold(string threshold, Func<double, TimeSpan> numberToTimeSpanConverter)
         {
             if (string.IsNullOrEmpty(threshold))

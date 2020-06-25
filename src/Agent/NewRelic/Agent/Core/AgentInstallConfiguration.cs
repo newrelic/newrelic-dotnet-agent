@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.IO;
 using System.Linq;
@@ -6,6 +10,8 @@ using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Diagnostics;
+using NewRelic.Core.Logging;
 #if NET45
 using System.Web;
 using Microsoft.Win32;
@@ -42,6 +48,7 @@ namespace NewRelic.Agent.Core
         public static string AppDomainName { get; }
         public static string AppDomainAppVirtualPath { get; }
         public static AgentInfo AgentInfo { get; }
+        public static string AgentVersion { get; }
         public static long AgentVersionTimestamp { get; }
 
         static AgentInstallConfiguration()
@@ -56,6 +63,7 @@ namespace NewRelic.Agent.Core
             HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
             RuntimeHomeExtensionsDirectory = HomeExtensionsDirectory != null ? Path.Combine(HomeExtensionsDirectory, RuntimeDirectoryName) : null;
             InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
+            AgentVersion = GetAgentVersion();
             AgentVersionTimestamp = GetAgentVersionTimestamp();
             IsNetstandardPresent = GetIsNetstandardPresent();
             IsNet46OrAbove = GetIsNet46OrAbove();
@@ -81,6 +89,19 @@ namespace NewRelic.Agent.Core
             catch { }
 #endif
             AgentInfo = GetAgentInfo();
+        }
+
+        private static string GetAgentVersion()
+        {
+            try
+            {
+                return FileVersionInfo.GetVersionInfo(typeof(AgentInstallConfiguration).Assembly.Location).FileVersion;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to determine agent version. {ex}");
+                return "?.?.?.?";
+            }
         }
 
         private static long GetAgentVersionTimestamp()

@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Attributes;
@@ -1919,7 +1923,7 @@ namespace CompositeTests
             // ACT
             AgentApi.StartAgent();
             _compositeTestAgent.Harvest();
-            var agentVersion = AgentVersion.Version;
+            var agentVersion = AgentInstallConfiguration.AgentVersion;
 
             // ASSERT
             var expectedMetrics = new List<ExpectedMetric>

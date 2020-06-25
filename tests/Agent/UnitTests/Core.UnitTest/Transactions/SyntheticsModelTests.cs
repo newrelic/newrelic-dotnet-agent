@@ -1,10 +1,12 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Core;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System.Collections.Generic;
 
-// ReSharper disable CheckNamespace
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Transactions.UnitTest
 {
     [TestFixture]

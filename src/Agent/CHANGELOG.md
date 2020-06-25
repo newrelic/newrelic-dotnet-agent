@@ -1,12 +1,35 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 ### New Features
-### Fixes
 
+* **Additional Transaction Information applied to Span Events** <br/>
+When Distributed Tracing and/or Infinite Tracing are enabled, the Agent will now incorporate additional information from the Transaction Event on to the root Span Event of the transaction.
+
+    * The following items are affected:
+
+        * Request Parameters `request.parameter.*`
+        * Custom Attribute Values applied to the Transaction via API Calls [`AddCustomParameter`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/add-custom-parameter) and [`ITransaction.AddCustomAttribute`](https://docs.newrelic.com/docs/agents/net-agent/net-agent-api/itransaction#addcustomattribute).
+        * `request.uri`
+        * `response.status`
+        * `host.displayName`
+    * **Security Recommendation** <br>
+    Review your [Transaction Attributes](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#transaction_events) configuration.  Any attribute include or exclude settings specific to Transaction Events, should be applied to your [Span Attributes](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#span_events) configuration or your [Global Attributes](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#agent-attributes) configuration.
+    
+### Fixes
+Fixes issue where updating custom instrumentation while application is running could cause application to crash.
+
+## [8.28] - 2020-06-04
+### New Features
+### Fixes
+* Fixes issue with Infinite Tracing where a communication error can result in consuming too much CPU.
+* Fixes issue with Infinite Tracing where a communication error did not clean up its corresponding communication threads.
+* Fixes issue in .NET Framework ASP.NET MVC applications where transactions started on one thread would flow to background threads (e.g., started with `Task.Run`) in some scenarios but not others. Transaction state used to only flow to a background thread if the transaction originated from an async controller action. Transaction state now flows to background threads regardless of whether the controller action is async or not.
+* Fixes issue in .NET Framework ASP.NET MVC applications where agent instrumentation of an MVC controller action could cause an `InvalidProgramException`.
 
 ## [8.27] - 2020-04-30
 ### New Features
@@ -104,9 +127,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.28...HEAD
+[Unreleased]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.28.0...HEAD
 
-[8.27]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.27...r8.27.139.0
-[8.26]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.26...r8.26.630.0
-[8.25]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.25...r8.25.214.0
-[8.24]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.24...r8.24.244.0
+[8.28]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.27.139...v8.28.0
+[8.27]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.26.630...v8.27.139
+[8.26]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.25.214...v8.26.630
+[8.25]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.24.244...v8.25.214
+[8.24]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.23.107...v8.24.244

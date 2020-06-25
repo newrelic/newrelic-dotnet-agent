@@ -1,11 +1,13 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System.Reflection;
 using NewRelic.Agent.Core.Tracer;
 using NUnit.Framework;
 using System;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.UnitTest
 {
     public class Class_AgentShim

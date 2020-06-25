@@ -1,24 +1,44 @@
-[![Community Project header](https://github.com/newrelic/open-source-office/raw/master/examples/categories/images/Community_Project.png)](https://github.com/newrelic/open-source-office/blob/master/examples/categories/index.md#community-project)
-
 # New Relic .NET Agent Integration Tests
 
-Tests the integration of the New Relic .NET Agent with various .NET applications.  
+Tests the integration of the New Relic .NET Agent with various .NET applications. This test suite will only run on Windows.
 
 ## Installation
 
-### Install required .NET SDKs and runtimes
-Tests cover the integration of applications that target different versions of .NET Framework and .NET Core. The following versions of .NET Framework and Core are required:
-1. .NET Framework 4.5.1
-2. .NET Framework 4.5.2
-3. .NET Framework 4.6.1
-4. .NET Core 2.0
-5. .NET Core 3.0
-6. .NET Core 3.1
-
-### Install required Windows features
-The following Windows features are also required:
-1. IIS Hostable Web Core
-2. MSMQ Server
+### Additional items to install
+* ASP.NET and web development workload for Visual Studio 2019.
+* Required Windows Features
+  * Windows features can be enabled as follows:
+    ```
+    Enable-WindowsOptionalFeature -Online -FeatureName <featuren name>
+    ```
+  * IIS-ApplicationDevelopment
+  * IIS-ASPNET45
+  * IIS-CommonHttpFeatures
+  * IIS-DefaultDocument
+  * IIS-DirectoryBrowsing
+  * IIS-HealthAndDiagnostics
+  * IIS-HostableWebCore
+  * IIS-HttpCompressionStatic
+  * IIS-HttpErrors
+  * IIS-HttpLogging
+  * IIS-ISAPIExtensions
+  * IIS-ISAPIFilter
+  * IIS-ManagementConsole
+  * IIS-NetFxExtensibility45
+  * IIS-Performance
+  * IIS-RequestFiltering
+  * IIS-Security
+  * IIS-StaticContent
+  * IIS-WebServer
+  * IIS-WebServerManagementTools
+  * IIS-WebServerRole
+  * MSMQ-Container
+  * MSMQ-Multicast
+  * MSMQ-Server
+  * MSMQ-Triggers
+  * MSRDC-Infrastructure
+  * WCF-Services45
+  * WCF-TCP-PortSharing45 
 
 ### Set up test secrets
 A New Relic license key is required to run the tests. Some tests require special New Relic license keys for high security mode (HSM) and configurable security policies (CSP). Follow the steps below to set these license keys.

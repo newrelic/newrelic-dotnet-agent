@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Linq;
 using System.Net;
@@ -59,7 +63,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _disposableCollection.Dispose();
         }
 
-        // Technically these tests should be run against every public API method instead of just SendTransactionEventWireModels, but writing all those tests would be a big pain in the ass
+        // Technically these tests should be run against every public API method instead of just SendTransactionEventWireModels, but writing all those tests would be a pain
 
         [Test]
         public void SendXyz_ReturnsSuccessful_IfRequestSuccessful()

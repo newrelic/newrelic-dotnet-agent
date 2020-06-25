@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using Grpc.Core;
 using System.Threading;
@@ -48,7 +52,7 @@ namespace NewRelic.Agent.Core.DataTransport
     public interface IGrpcWrapper<TRequest, TResponse>
     {
         bool IsConnected { get; }
-        bool CreateChannel(string host, int port, Metadata headers, CancellationToken cancellationToken);
+        bool CreateChannel(string host, int port, bool ssl, Metadata headers, CancellationToken cancellationToken);
         IClientStreamWriter<TRequest> CreateStreams(Metadata headers, CancellationToken cancellationToken, Action<TResponse> responseDelegate);
         bool TrySendData(IClientStreamWriter<TRequest> stream, TRequest item, int timeoutWindowMs, CancellationToken cancellationToken);
         void TryCloseRequestStream(IClientStreamWriter<TRequest> requestStream);
@@ -64,17 +68,16 @@ namespace NewRelic.Agent.Core.DataTransport
 
         protected ChannelBase _channel { get; private set; }
 
-        private readonly List<IClientStreamWriter<TRequest>> _requestStreams = new List<IClientStreamWriter<TRequest>>();
-
         protected abstract AsyncDuplexStreamingCall<TRequest, TResponse> CreateStreamsImpl(Metadata headers, CancellationToken cancellationToken);
 
         public bool IsConnected => _channel != null;
 
-        public bool CreateChannel(string host, int port, Metadata headers, CancellationToken cancellationToken)
+        public bool CreateChannel(string host, int port, bool ssl, Metadata headers, CancellationToken cancellationToken)
         {
             try
             {
-                _channel = new Channel(host, port, new SslCredentials());
+                var credentials = ssl ? new SslCredentials() : ChannelCredentials.Insecure;
+                _channel = new Channel(host, port, credentials);
 
                 return TestChannel(headers, cancellationToken);
             }
@@ -108,8 +111,6 @@ namespace NewRelic.Agent.Core.DataTransport
             try
             {
                 var streams = CreateStreamsImpl(headers, cancellationToken);
-
-                _requestStreams.Add(streams.RequestStream);
 
                 if (responseDelegate != null)
                 {
@@ -177,11 +178,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 return;
             }
 
-            foreach (var requestStream in _requestStreams)
-            {
-                TryCloseRequestStream(requestStream);
-            }
-
             try
             {
                 _channel.ShutdownAsync();
@@ -194,7 +190,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
             }
 
-            _requestStreams.Clear();
             _channel = null;
         }
 

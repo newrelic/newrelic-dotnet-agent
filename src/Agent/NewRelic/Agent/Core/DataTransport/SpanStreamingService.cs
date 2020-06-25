@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Segments;
@@ -15,6 +19,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         protected override string EndpointHostConfigValue => _configuration?.InfiniteTracingTraceObserverHost;
         protected override string EndpointPortConfigValue => _configuration?.InfiniteTracingTraceObserverPort;
+        protected override string EndpointSslConfigValue => _configuration?.InfiniteTracingTraceObserverSsl;
         protected override float? EndpointTestFlakyConfigValue => _configuration?.InfiniteTracingTraceObserverTestFlaky;
         protected override int? EndpointTestDelayMsConfigValue => _configuration?.InfiniteTracingTraceObserverTestDelayMs;
 

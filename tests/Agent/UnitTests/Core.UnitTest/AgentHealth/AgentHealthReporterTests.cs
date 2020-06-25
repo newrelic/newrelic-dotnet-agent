@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using Grpc.Core;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
@@ -112,7 +116,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void CollectMetrics_ReportsAgentVersion()
         {
-            var agentVersion = AgentVersion.Version;
+            var agentVersion = AgentInstallConfiguration.AgentVersion;
             _agentHealthReporter.CollectMetrics();
             NrAssert.Multiple(
                 () => Assert.AreEqual($"Supportability/AgentVersion/{agentVersion}", _publishedMetrics[0].MetricName.Name),

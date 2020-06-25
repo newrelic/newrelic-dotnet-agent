@@ -5,14 +5,10 @@
       <AssemblyName>NewRelic.Providers.Storage.AsyncLocal</AssemblyName>
       <RootNamespace>NewRelic.Providers.Storage.AsyncLocal</RootNamespace>
       <Description>Async call stack and transaction tracking for New Relic .NET Agent</Description>
-      <SignAssembly>true</SignAssembly>
-      <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>
-
-  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 
 </Project>

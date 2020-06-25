@@ -57,18 +57,23 @@
     </WixExtension>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
+
+  <PropertyGroup>
+    <WindowsSdkPathBin>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSDKLocation('Windows', '10.0'))bin</WindowsSdkPathBin>
+    <WindowsSdkPath>$(WindowsSdkPathBin)\10.0.18362.0</WindowsSdkPath>
+    <SignToolPath>$(WindowsSdkPath)\x64\signtool.exe</SignToolPath>
+  </PropertyGroup>
+
   <Target Name="SignInstaller">
-    <Exec Command="&quot;$(SolutionDir)SignTool\signtool.exe&quot; sign /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)\$(OutputName).msi&quot;" />
+    <Exec Command="&quot;$(SignToolPath)&quot; sign /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;" StandardOutputImportance="high" />
     <ReadFileVersionFromDll FilePath="$(SolutionDir)..\..\_build\AnyCPU-$(Configuration)\NewRelic.Agent.Core\net45\NewRelic.Agent.Core.dll">
       <Output PropertyName="FileVersionString" TaskParameter="FileVersionString" />
     </ReadFileVersionFromDll>
     <Copy SourceFiles="$(OutputPath)\$(OutputName).msi" DestinationFiles="$(OutputPath)\NewRelicAgent_$(Platform)_$(FileVersionString).msi" />
     <Delete Files="$(OutputPath)\$(OutputName).msi" />
   </Target>
+  
   <Target Name="AfterBuild" DependsOnTargets="SignInstaller" />
-  <PropertyGroup>
-    <PreBuildEvent />
-  </PropertyGroup>
 
   <UsingTask TaskName="ReadFileVersionFromDll" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>

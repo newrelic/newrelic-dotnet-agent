@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -41,8 +45,8 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using NewRelicCore = NewRelic.Core;
+using NewRelic.Agent.Core.Labels;
 
-// ReSharper disable RedundantTypeArgumentsOfMethod
 namespace NewRelic.Agent.Core.DependencyInjection
 {
     public static class AgentServices

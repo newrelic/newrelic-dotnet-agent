@@ -7,6 +7,7 @@
     <authors>New Relic</authors>
     <owners>New Relic</owners>
     <projectUrl>https://newrelic.com/.NET</projectUrl>
+    <license type="expression">Apache-2.0</license>
     <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This package is meant to be used on conjunction with the New Relic .Net Agent thin installer scripts</description>

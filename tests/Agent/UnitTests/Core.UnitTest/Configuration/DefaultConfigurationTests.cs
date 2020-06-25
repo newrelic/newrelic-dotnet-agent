@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,8 +15,6 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     internal class TestableDefaultConfiguration : DefaultConfiguration
@@ -1477,7 +1479,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 }
             };
 
-            // ReSharper disable AssignNullToNotNullAttribute
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.TransactionNameWhitelistRules.Count()),
 
@@ -1493,7 +1494,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 () => Assert.NotNull(_defaultConfig.TransactionNameWhitelistRules["mango/peach"]),
                 () => Assert.AreEqual(0, _defaultConfig.TransactionNameWhitelistRules["mango/peach"].Count())
                 );
-            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         [TestCase(null, null, ExpectedResult = "coconut")]
@@ -2088,8 +2088,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         (
             [Values("envHost.com", "", null)] string envHost,
             [Values("443", "", null)] string envPort,
+            [Values("False", "", null)] string envSsl,
             [Values("localHost.com", "", null)] string localHost,
-            [Values("8080", "", null)] string localPort
+            [Values("8080", "", null)] string localPort,
+            [Values("False", "", null)] string localSsl
         )
         {
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_HOST"))
@@ -2098,8 +2100,17 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_PORT"))
                 .Returns(envPort);
 
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_TRACE_OBSERVER_SSL"))
+                .Returns(envSsl);
+
             _localConfig.infiniteTracing.trace_observer.host = localHost;
             _localConfig.infiniteTracing.trace_observer.port = localPort;
+            if (localSsl != null)
+            {
+                _localConfig.appSettings.Add(new configurationAdd() { key = "InfiniteTracingTraceObserverSsl", value = localSsl });
+            }
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             var expectedHost = envHost != null
                 ? envHost
@@ -2110,11 +2121,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 ? envPort
                 : localPort;
 
+            var expectedSsl = envHost != null
+                ? envSsl
+                : localSsl;
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(expectedHost, _defaultConfig.InfiniteTracingTraceObserverHost),
-                () => Assert.AreEqual(expectedPort, _defaultConfig.InfiniteTracingTraceObserverPort)
+                () => Assert.AreEqual(expectedHost, defaultConfig.InfiniteTracingTraceObserverHost),
+                () => Assert.AreEqual(expectedPort, defaultConfig.InfiniteTracingTraceObserverPort),
+                () => Assert.AreEqual(expectedSsl, defaultConfig.InfiniteTracingTraceObserverSsl)
             );
         }
 

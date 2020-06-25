@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -34,7 +38,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.DistributedTracing
 
         private const DistributedTracingParentType DtTypeApp = DistributedTracingParentType.App;
         private const DistributedTracingParentType IncomingDtType = DistributedTracingParentType.Mobile;
-        private const string AgentAccountId = "273070";
+        private const string AgentAccountId = "111111";
         private const string IncomingAccountId = "222222";
         private const string AgentApplicationId = "238575";
         private const string IncomingApplicationId = "888888";

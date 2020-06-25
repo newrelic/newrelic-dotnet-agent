@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Attributes;
@@ -137,7 +141,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             GenerateAndCollectTransactionTrace(immutableTransaction, transactionMetricName, attributes);
 
-            GenerateAndCollectSpanEvents(immutableTransaction, transactionMetricName.PrefixedName);
+            GenerateAndCollectSpanEvents(immutableTransaction, transactionMetricName.PrefixedName, attributes.Invoke());
         }
 
         private static void FinishSegments(IEnumerable<Segment> segments)
@@ -305,7 +309,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             }
         }
 
-        private void GenerateAndCollectSpanEvents(ImmutableTransaction immutableTransaction, string transactionName)
+        private void GenerateAndCollectSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection attribValues)
         {
             var useInfiniteTracing = _spanEventAggregatorInfiniteTracing.IsServiceEnabled && _spanEventAggregatorInfiniteTracing.IsServiceAvailable;
             var useTraditionalTracing = !useInfiniteTracing && immutableTransaction.Sampled && _spanEventAggregator.IsServiceEnabled && _spanEventAggregator.IsServiceAvailable;
@@ -315,7 +319,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 return;
             }
 
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, transactionName);
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, transactionName, attribValues);
             using (_agentTimerService.StartNew("CollectSpanEvents"))
             {
                 if (useInfiniteTracing)

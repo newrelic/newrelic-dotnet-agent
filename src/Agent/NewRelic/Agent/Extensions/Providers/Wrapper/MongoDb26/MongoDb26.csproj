@@ -4,8 +4,6 @@
 		<AssemblyName>NewRelic.Providers.Wrapper.MongoDb26</AssemblyName>
 		<RootNamespace>NewRelic.Providers.Wrapper.MongoDb26</RootNamespace>
 		<Description>MongoDb 2.6 Wrapper Provider for New Relic .NET Agent</Description>
-		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 	<ItemGroup>
 	  <Content Include="Instrumentation.xml">
@@ -26,5 +24,4 @@
 		<Reference Include="System.Data" />
 		<Reference Include="System.Xml" />
 	</ItemGroup>
-	<Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

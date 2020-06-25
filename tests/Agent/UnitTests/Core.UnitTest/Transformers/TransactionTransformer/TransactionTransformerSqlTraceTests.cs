@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
@@ -18,7 +22,7 @@ using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Errors;
 
-namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
+namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
     [TestFixture]
     public class TransactionTransformerSqlTraceTests

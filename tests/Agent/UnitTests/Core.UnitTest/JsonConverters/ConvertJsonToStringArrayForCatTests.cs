@@ -1,9 +1,12 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System.Linq;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Utilities
 {
     [TestFixture]

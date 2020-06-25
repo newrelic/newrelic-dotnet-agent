@@ -1,9 +1,14 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Utilization;
 using Newtonsoft.Json;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
+using NewRelic.Agent.Core.Labels;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -40,8 +45,6 @@ namespace NewRelic.Agent.Core.DataTransport
         public readonly EventHarvestConfigModel EventHarvestConfig;
 
         /// <summary>
-        /// This identifier field is provided to avoid https://newrelic.atlassian.net/browse/DSCORE-778
-        ///
         /// This identifier is used by the collector to look up the real agent. If an identifier isn't provided, the collector will create its own based on the first appname, which prevents a single daemon from connecting "a;b" and "a;c" at the same time.
         ///
         /// Providing this identifier works around this issue and allows users more flexibility in using application rollups.

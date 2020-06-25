@@ -1,5 +1,10 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Runtime.InteropServices;
+using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core
 {
@@ -18,7 +23,15 @@ namespace NewRelic.Agent.Core
 
         public int InstrumentationRefresh()
         {
-            return ExternInstrumentationRefresh();
+            try
+            {
+                return ExternInstrumentationRefresh();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"LinuxNativeMethods.InstrumentationRefresh() exception: {ex}");
+                return -1;
+            }
         }
 
         public int AddCustomInstrumentation(string fileName, string xml)
@@ -79,7 +92,15 @@ namespace NewRelic.Agent.Core
 
         public int InstrumentationRefresh()
         {
-            return ExternInstrumentationRefresh();
+            try
+            {
+                return ExternInstrumentationRefresh();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"WindowsNativeMethods.InstrumentationRefresh() exception: {ex}");
+                return -1;
+            }
         }
 
         public int AddCustomInstrumentation(string fileName, string xml)

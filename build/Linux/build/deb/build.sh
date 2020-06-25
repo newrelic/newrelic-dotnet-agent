@@ -23,7 +23,7 @@ INSTALL_LOCATION=${INSTALL_ROOT}/usr/local/${PACKAGE_NAME}
 
 mkdir -p ${INSTALL_LOCATION}
 
-cp -R "New Relic Home x64 CoreClr_Linux"/* ${INSTALL_LOCATION}
+cp -R newrelichome_x64_coreclr_linux/* ${INSTALL_LOCATION}
 
 pushd ${INSTALL_LOCATION}
 
@@ -33,8 +33,6 @@ rm -rf logs Logs
 cp /common/setenv.sh .
 cp /common/run.sh .
 cp /docs/netcore20-agent-readme.md ./README.md
-
-mv Extensions extensions
 
 dos2unix *.x* extensions/*.x* *.sh
 

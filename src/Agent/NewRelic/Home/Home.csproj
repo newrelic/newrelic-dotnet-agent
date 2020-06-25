@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>NewRelic.Home</RootNamespace>
+    <AssemblyName>NewRelic.Home</AssemblyName>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Condition="'$(NR_DEV_BUILD_HOME)' != 'false'" Command="del /s /q &quot;$(TargetDir)*.*&quot;&#xD;&#xA;cd $(SolutionDir)Build&#xD;&#xA;powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File .\build_home.ps1 -Configuration $(ConfigurationName)" />
+  </Target>
+
+</Project>

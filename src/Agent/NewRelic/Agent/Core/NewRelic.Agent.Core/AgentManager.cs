@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Commands;
@@ -17,12 +21,6 @@ using System;
 
 namespace NewRelic.Agent.Core
 {
-    public static class AgentVersion
-    {
-        // put in a separate class to avoid the static initializer on Agent being hit in testing
-        public static readonly string Version = typeof(AgentVersion).Assembly.GetName().Version.ToString();
-    }
-
     sealed public class AgentManager : IAgentManager, IDisposable
     {
         private readonly IContainer _container;
@@ -172,7 +170,7 @@ namespace NewRelic.Agent.Core
 
         private void LogInitialized()
         {
-            Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentVersion.Version, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
+            Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
             //Log here for debugging configuration issues
             if (Log.IsDebugEnabled)
             {
@@ -259,7 +257,7 @@ namespace NewRelic.Agent.Core
 
                 Log.Debug("Shutting down public agent services...");
                 StopServices();
-                Log.InfoFormat("The New Relic .NET Agent v{0} has shutdown (pid {1}) on app domain '{2}'", AgentVersion.Version, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
+                Log.InfoFormat("The New Relic .NET Agent v{0} has shutdown (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, AgentInstallConfiguration.ProcessId, AgentInstallConfiguration.AppDomainAppVirtualPath ?? AgentInstallConfiguration.AppDomainName);
             }
             catch (Exception e)
             {

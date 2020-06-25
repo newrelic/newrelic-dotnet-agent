@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 # Scripted Installer Tests
 
 # Elevate
@@ -25,8 +30,8 @@ Write-Host "Elevated"
 $ErrorActionPreference = "Stop"
 
 
-$install = Get-ChildItem -Path $env:WORKSPACE\Build\BuildArtifacts\ScriptableInstaller -Include NewRelic.Agent.Installer.*.zip -Force -Name
-$installFullPath = $env:WORKSPACE + "\Build\BuildArtifacts\ScriptableInstaller\" + $install
+$install = Get-ChildItem -Path $env:WORKSPACE\build\BuildArtifacts\ScriptableInstaller -Include NewRelic.Agent.Installer.*.zip -Force -Name
+$installFullPath = $env:WORKSPACE + "\build\BuildArtifacts\ScriptableInstaller\" + $install
 $AgentVersion = $install.TrimStart('NewRelic.Agent.Installer.').TrimEnd('.zip')
 
 $Destination = "C:\AgentThinInstaller"

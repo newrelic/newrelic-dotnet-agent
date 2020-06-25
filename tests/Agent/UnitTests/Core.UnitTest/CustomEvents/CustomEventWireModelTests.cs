@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Core.Attributes;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Core.Attributes;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Collections.Generic;

@@ -10,7 +10,7 @@ namespace ArtifactBuilder.Artifacts
             : base(nameof(NugetAgentExtensions))
         {
             Configuration = configuration;
-            NugetPackagePath = $@"{SourceDirectory}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\{configuration}";
+            NugetPackagePath = $@"{RepoRootDirectory}\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\bin\{configuration}";
         }
 
         public string Configuration { get; }
@@ -31,6 +31,7 @@ namespace ArtifactBuilder.Artifacts
 
             var fileInfo = new FileInfo(packagePath);
             File.Copy(fileInfo.FullName, $@"{OutputDirectory}\{fileInfo.Name}", true);
+            Console.WriteLine($"Successfully created package {nameof(NugetAgentExtensions)}");
         }
     }
 }

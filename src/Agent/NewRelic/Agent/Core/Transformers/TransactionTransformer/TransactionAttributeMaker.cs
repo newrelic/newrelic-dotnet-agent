@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
@@ -127,6 +131,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             {
                 _attribDefs.ParentSpanId.TrySetValue(attribValues, immutableTransaction.TracingState.ParentId ?? immutableTransaction.TracingState.Guid);
                 _attribDefs.ParentTransportType.TrySetValue(attribValues, immutableTransaction.TracingState.TransportType);
+                _attribDefs.ParentTransportTypeForSpan.TrySetValue(attribValues, immutableTransaction.TracingState.TransportType);
 
                 if (immutableTransaction.TracingState.HasDataForParentAttributes)
                 {
@@ -135,6 +140,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                     _attribDefs.ParentAccount.TrySetValue(attribValues, immutableTransaction.TracingState.AccountId);
                     _attribDefs.ParentId.TrySetValue(attribValues, immutableTransaction.TracingState.TransactionId);
                     _attribDefs.ParentTransportDuration.TrySetValue(attribValues, immutableTransaction.TracingState.TransportDuration);
+
+                    _attribDefs.ParentTypeForDistributedTracingForSpan.TrySetValue(attribValues, immutableTransaction.TracingState.Type);
+                    _attribDefs.ParentAppForSpan.TrySetValue(attribValues, immutableTransaction.TracingState.AppId);
+                    _attribDefs.ParentAccountForSpan.TrySetValue(attribValues, immutableTransaction.TracingState.AccountId);
+                    _attribDefs.ParentTransportDurationForSpan.TrySetValue(attribValues, immutableTransaction.TracingState.TransportDuration);
                 }
             }
 

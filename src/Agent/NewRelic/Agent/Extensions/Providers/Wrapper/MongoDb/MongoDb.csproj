@@ -4,8 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.MongoDb</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.MongoDb</RootNamespace>
         <Description>MongoDb Wrapper Provider for New Relic .NET Agent</Description>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="mongocsharpdriver" Version="1.10.0" />
@@ -28,5 +26,4 @@
         <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
         <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
-    <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

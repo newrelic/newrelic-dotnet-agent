@@ -1,6 +1,7 @@
-//**********************************************************************************
-// Copyright 2020 New Relic Corporation. All Rights Reserved.
-//**********************************************************************************
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 #pragma once
 #include <memory>
 #include <mutex>

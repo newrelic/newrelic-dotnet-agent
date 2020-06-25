@@ -4,8 +4,6 @@
     <AssemblyName>NewRelic.Providers.Storage.CallContext</AssemblyName>
     <RootNamespace>NewRelic.Providers.Storage.CallContext</RootNamespace>
     <Description>AsyncLocal Call Stack Tracking Provider for New Relic .NET Agent</Description>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +19,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>
-
-  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 
 </Project>

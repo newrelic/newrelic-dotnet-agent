@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 Param(
   [Parameter(Mandatory=$True)]
   [string]$configuration,
@@ -5,8 +10,8 @@ Param(
 )
 
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\.."
-& "$rootDirectory\Build\generateBuildProperties.ps1" -outputPath "$rootDirectory\Build\BuildArtifacts\_buildProperties"
-$artifactBuilderCsproj = "$rootDirectory\Build\ArtifactBuilder\ArtifactBuilder.csproj"
+& "$rootDirectory\build\generateBuildProperties.ps1" -outputPath "$rootDirectory\build\BuildArtifacts\_buildProperties"
+$artifactBuilderCsproj = "$rootDirectory\build\ArtifactBuilder\ArtifactBuilder.csproj"
 
 $packagesToBuild = @(
     "dotnet run --project '$artifactBuilderCsproj' AzureSiteExtension",

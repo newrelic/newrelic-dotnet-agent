@@ -5,7 +5,7 @@
     <version>REPLACE_WITH_VERSION</version>
     <title>New Relic</title>
     <authors>New Relic</authors>
-    <licenseUrl>http://newrelic.com/terms</licenseUrl>
+    <license type="expression">Apache-2.0</license>
     <projectUrl>https://docs.newrelic.com/docs/agents/net-agent/azure-installation/azure-web-sites</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>This extension adds the New Relic .NET Agent to your Azure WebSite.</description>

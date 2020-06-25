@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 param(
     [ValidateNotNullOrEmpty()]
     [ValidateSet('all','linux','windows','x64','x86')]
@@ -15,8 +20,8 @@ function ExitIfFailLastExitCode {
 }
 
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\..\..\..\..\.."
-$nugetPath = (Resolve-Path "$rootDirectory\Build\Tools\nuget.exe").Path
-$vsWhere = (Resolve-Path "$rootDirectory\Build\Tools\vswhere.exe").Path
+$nugetPath = (Resolve-Path "$rootDirectory\build\Tools\nuget.exe").Path
+$vsWhere = (Resolve-Path "$rootDirectory\build\Tools\vswhere.exe").Path
 $msBuildPath = & "$vsWhere" -products 'Microsoft.VisualStudio.Product.BuildTools' -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
 if (!$msBuildPath) {
     $msBuildPath = & "$vsWhere" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
@@ -24,7 +29,7 @@ if (!$msBuildPath) {
 
 Write-Host "Building Platform=$Platform and Configuration=$Configuration"
 
-$nugetPath = "$rootDirectory\Build\Tools\nuget.exe"
+$nugetPath = "$rootDirectory\build\Tools\nuget.exe"
 $profilerRoot = "$rootDirectory\src\Agent\NewRelic\Profiler"
 $profilerSolutionPath = "$profilerRoot\NewRelic.Profiler.sln"
 $outputPath = "$rootDirectory\src\Agent\_profilerBuild"

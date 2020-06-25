@@ -75,7 +75,4 @@
     <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(LambdaWrapperILRepackCommand)" />
     <Exec Command="$(LambdaWrapperILRepackCommand)" />
   </Target>
-
-  <Import Project="$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj" Condition="Exists('$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj')" />
-
 </Project>

@@ -1,10 +1,13 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Segments;
-using NewRelic.Agent.Core.Spans;
 
 namespace NewRelic.Agent.Core.Transactions
 {

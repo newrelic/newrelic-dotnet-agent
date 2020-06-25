@@ -4,8 +4,6 @@
         <AssemblyName>NewRelic.Providers.Wrapper.RabbitMq</AssemblyName>
         <RootNamespace>NewRelic.Providers.Wrapper.RabbitMq</RootNamespace>
         <Description>RabbitMq Wrapper Provider for New Relic .NET Agent</Description>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
     <ItemGroup>
         <Content Include="Instrumentation.xml">
@@ -19,5 +17,4 @@
         <ProjectReference Include="$(RootProjectDirectory)\src\NewRelic.Core\NewRelic.Core.csproj" />
         <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
-    <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

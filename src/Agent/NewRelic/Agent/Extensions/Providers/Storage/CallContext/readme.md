@@ -6,7 +6,7 @@
 * Global / not instance based
 * Will hop application domains and follow remoting calls 
 
-Data is tracked via logical call context data in pattern dubbed “AsyncLocal” before `AsyncLocal` was created for real by Microsoft. Logical call context data (as opposed to illogical) will flow with the `ExecutionContext` across async and thread boundaries. 
+Data is tracked via logical call context data in pattern dubbed “AsyncLocal” before `AsyncLocal` was created officially by Microsoft. Logical call context data will flow with the `ExecutionContext` across async and thread boundaries. 
 
 Writing data from a “true async” method creates a new copy of the `ExecutionContext` which will only flow to children of that method. There are multiple benefits to this but one key one is that you do not need to worry about the data remaining on the original thread when this happens. The original `ExecutionContext` is not modified.
 

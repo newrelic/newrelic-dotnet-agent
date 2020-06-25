@@ -1,5 +1,9 @@
-# Core Agent Install Tests
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
 
+# Core Agent Install Tests
 
 $installfilesPath = Join-Path (pwd) "install_files"
 $destination = Join-Path (pwd) "install_location"

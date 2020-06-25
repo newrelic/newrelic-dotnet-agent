@@ -4,8 +4,6 @@
     <AssemblyName>NewRelic.Providers.Storage.OperationContext</AssemblyName>
     <RootNamespace>NewRelic.Providers.Storage.OperationContext</RootNamespace>
     <Description>WCF 3 Transaction Context Provider for New Relic .NET Agent</Description>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +19,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
   </ItemGroup>
-
-  <Import Project="$(SolutionDir)build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)build\NewRelic.Agent.proj')" />
 </Project>

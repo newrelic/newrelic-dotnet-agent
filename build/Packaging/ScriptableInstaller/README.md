@@ -1,14 +1,8 @@
-# NewRelic.DotNet.Agent.Headless.Installer
+# New Relic .NET Agent Scriptable Installer
 
 ### Overview
 
-This addresses the need to install the .NET agent where using the traditional installer does not work for the given environment.  This also makes the automation and distribution of the agent more simplistic in extremely large enterprise environments. This method of installing the agent provides the user with the greatest amount of flexibility while still providing the standard functionality of the current agent where web applications will be automatically instrumented.
-
-### This repository
-
-This repository only contains the scripts and necessary tools for installing/uninstalling the agent. It does not contain the actual agent files. This installer is meant to be able to be run "offline", so in order to run it, you must download a full distribution from:
-
-http://download.newrelic.com/dot_net_agent/release/scriptable_installer/NewRelic.Agent.Installer.zip
+This addresses the need to install the .NET Agent where using the traditional installer does not work for the given environment.  This also makes the automation and distribution of the agent more simplistic in extremely large enterprise environments. This method of installing the agent provides the user with the greatest amount of flexibility while still providing the standard functionality of the current agent where web applications will be automatically instrumented.
 
 ### Requirements
 * Powershell V2 or higher
@@ -92,11 +86,6 @@ Run the installer with the following command (must be an elevated administrator 
 
       [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Wow6432Node\CLSID\{71DA0A04-7777-4EC6-9643-7D28B46A8A41}\Version]
       @="AGENT_VERSION_STRING"
-
-###### Installed files
-
-TODO: Add file hierarchy
-
 
 ###### Environment variables
 When `instrumentAll` is used, the following environment variables are defined.

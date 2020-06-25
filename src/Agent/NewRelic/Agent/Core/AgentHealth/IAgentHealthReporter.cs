@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using Grpc.Core;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;

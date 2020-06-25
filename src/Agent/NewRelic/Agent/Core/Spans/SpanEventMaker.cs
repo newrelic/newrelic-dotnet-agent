@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
@@ -8,7 +12,7 @@ namespace NewRelic.Agent.Core.Spans
 {
     public interface ISpanEventMaker
     {
-        IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName);
+        IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues);
     }
 
     public class SpanEventMaker : ISpanEventMaker
@@ -21,13 +25,11 @@ namespace NewRelic.Agent.Core.Spans
             _attribDefSvc = attribDefSvc;
         }
 
-        public IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName)
+        public IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues)
         {
-            var spanEvents = new List<SpanAttributeValueCollection>();
-
             var rootSpanId = GuidGenerator.GenerateNewRelicGuid();
 
-            spanEvents.Add(GenerateRootSpan(rootSpanId, immutableTransaction, transactionName));
+            yield return GenerateRootSpan(rootSpanId, immutableTransaction, transactionName, transactionAttribValues);
 
             foreach (var segment in immutableTransaction.Segments)
             {
@@ -35,18 +37,22 @@ namespace NewRelic.Agent.Core.Spans
 
                 segment.AttribValues.MakeImmutable();
 
-                spanEvents.Add(segment.AttribValues);
+                yield return segment.AttribValues;
             }
-
-            return spanEvents;
         }
 
         /// <summary>
         /// Creates a single root span, much like we do for Transaction Traces, since DT requires that there be only one parent-less span per txn (or at least the UI/Backend is expecting that). 
         /// </summary>
-        private SpanAttributeValueCollection GenerateRootSpan(string rootSpanId, ImmutableTransaction immutableTransaction, string transactionName)
+        private SpanAttributeValueCollection GenerateRootSpan(string rootSpanId, ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues)
         {
             var spanAttributes = new SpanAttributeValueCollection();
+
+            spanAttributes.AddRange(transactionAttribValues.GetAttributeValues(AttributeClassification.AgentAttributes));
+            
+            _attribDefs.TransactionNameForSpan.TrySetValue(spanAttributes, transactionName);
+
+
             spanAttributes.Priority = immutableTransaction.Priority;
 
             spanAttributes.AddRange(immutableTransaction.CommonSpanAttributes);
@@ -67,16 +73,13 @@ namespace NewRelic.Agent.Core.Spans
             _attribDefs.Guid.TrySetValue(spanAttributes, rootSpanId);
             _attribDefs.Timestamp.TrySetValue(spanAttributes, immutableTransaction.StartTime);
             _attribDefs.Duration.TrySetValue(spanAttributes, immutableTransaction.Duration);
+
             _attribDefs.NameForSpan.TrySetValue(spanAttributes, transactionName);
 
             _attribDefs.SpanCategory.TrySetValue(spanAttributes, SpanCategory.Generic);
             _attribDefs.NrEntryPoint.TrySetValue(spanAttributes, true);
 
-            //Add Transaction Cutom Attributes to Root Span
-            foreach (var customAttrib in immutableTransaction.TransactionMetadata.UserAttributes)
-            {
-                _attribDefs.GetCustomAttributeForSpan(customAttrib.Key).TrySetValue(spanAttributes, customAttrib.Value);
-            }
+            spanAttributes.AddRange(transactionAttribValues.GetAttributeValues(AttributeClassification.UserAttributes));
 
             spanAttributes.MakeImmutable();
 

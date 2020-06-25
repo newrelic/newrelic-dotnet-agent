@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 # Tests that agent MSI install fails on systems that do not have .NET Framework 4.5 or above.
 
 # Elevate
@@ -34,14 +39,14 @@ Function CheckForInstallFailure([string] $frameworkVersion)
 
     iisreset /stop
 
-    $install = Get-ChildItem Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_x64_*.msi -Name
+    $install = Get-ChildItem build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_x64_*.msi -Name
 
     # Gets version of install
     $version = $install.TrimStart('NewRelicAgent_x').TrimStart('{64,86}').TrimStart('_').TrimEnd('.msi')
 
     Write-Host "Attempting to install version $version of the .NET Agent"
     $product = (Get-WmiObject -List | Where-Object -FilterScript {$_.Name -eq "Win32_Product"})
-    $result = $product.Install("Build\BuildArtifacts\MsiInstaller-x64\$install")
+    $result = $product.Install("build\BuildArtifacts\MsiInstaller-x64\$install")
 
     if ($result.ReturnValue)
     {

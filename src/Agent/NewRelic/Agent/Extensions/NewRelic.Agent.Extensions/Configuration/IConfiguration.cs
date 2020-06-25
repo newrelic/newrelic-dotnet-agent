@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -66,6 +70,7 @@ namespace NewRelic.Agent.Configuration
         int InfiniteTracingTraceCountConsumers { get; }
         string InfiniteTracingTraceObserverHost { get; }
         string InfiniteTracingTraceObserverPort { get; }
+        string InfiniteTracingTraceObserverSsl { get; }
         float? InfiniteTracingTraceObserverTestFlaky { get; }
         int? InfiniteTracingTraceObserverTestDelayMs { get; }
         int InfiniteTracingQueueSizeSpans { get; }

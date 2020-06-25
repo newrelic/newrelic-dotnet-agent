@@ -85,7 +85,9 @@ Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.idl
 Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.tlb
 
 # Ignore build output files copied to New Relic Home x86/x64
+newrelichome_*
 src/Agent/New Relic Home*
+
 
 # Ignore New Relic Home generated registry files
 src/Agent/New Relic Home x86.reg
@@ -122,6 +124,7 @@ tests/Agent/PlatformTests/packages/
 tests/Agent/PlatformTests/Applications/ServiceFabricApplication/packages/
 tests/Agent/PlatformTests/Applications/ServiceFabricApplication/ServiceFabricApplication/pkg
 tests/Agent/PlatformTests/Applications/WindowsContainerApplication/packages
+tests/Agent/PlatformTests/Applications/NetFrameworkBasicApplication/packages
 
 /Tests/Benchmarking/BenchmarkDotNet.Artifacts
 *.dgml

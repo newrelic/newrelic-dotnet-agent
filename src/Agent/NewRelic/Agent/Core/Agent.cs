@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Configuration;
@@ -278,8 +282,6 @@ namespace NewRelic.Agent.Core
         public void HandleWrapperException(Exception exception)
         {
             // This method should never throw
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            // ReSharper disable once HeuristicUnreachableCode
             if (exception == null)
             {
                 return;

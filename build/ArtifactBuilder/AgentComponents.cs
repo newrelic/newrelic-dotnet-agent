@@ -9,25 +9,26 @@ namespace ArtifactBuilder
 {
     public abstract class AgentComponents
     {
-        public AgentComponents(string configuration, string platform, string sourcePath)
+        public AgentComponents(string configuration, string platform, string repoRootDirectory, string homeRootPath)
         {
             Configuration = configuration;
             Platform = platform;
-            SourcePath = $@"{sourcePath}\Agent";
+            SourcePath = $@"{repoRootDirectory}\src\Agent";
+            HomeRootPath = homeRootPath;
         }
 
         public string Configuration { get; }
 
-        public static AgentComponents GetAgentComponents(AgentType agentType, string configuration, string platform, string sourceDirectory)
+        public static AgentComponents GetAgentComponents(AgentType agentType, string configuration, string platform, string repoRootDirectory, string homeRootPath)
         {
             AgentComponents agentComponents;
             switch (agentType)
             {
                 case AgentType.Framework:
-                    agentComponents = new FrameworkAgentComponents(configuration, platform, sourceDirectory);
+                    agentComponents = new FrameworkAgentComponents(configuration, platform, repoRootDirectory, homeRootPath);
                     break;
                 case AgentType.Core:
-                    agentComponents = new CoreAgentComponents(configuration, platform, sourceDirectory);
+                    agentComponents = new CoreAgentComponents(configuration, platform, repoRootDirectory, homeRootPath);
                     break;
                 default:
                     throw new Exception("Invalid AgentType");
@@ -38,6 +39,7 @@ namespace ArtifactBuilder
 
         public string Platform { get; }
         public string SourcePath { get; }
+        public string HomeRootPath { get; }
         public IReadOnlyCollection<string> ExtensionDirectoryComponents { get; private set; }
         public IReadOnlyCollection<string> WrapperXmlFiles { get; private set; }
         public IReadOnlyCollection<string> RootInstallDirectoryComponents { get; private set; }

@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -473,17 +477,17 @@ namespace FunctionalTests
             // Uninstall the agent
             FileOperations.DeleteFileOrDirectory(_mgmtScope, @"C:\\uninstallLog.txt");
 
-            if (File.Exists($@"{Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi"))
+            if (File.Exists($@"{Settings.Workspace}\build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi"))
             {
-                Common.Log($@"Found {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
+                Common.Log($@"Found {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
             }
             else
             {
-                Common.Log($@"ERROR: Did not find: {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
+                Common.Log($@"ERROR: Did not find: {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
             }
 
             var command =
-                $@"msiexec.exe /x {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /norestart /quiet /lv* C:\uninstallLog.txt";
+                $@"msiexec.exe /x {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /norestart /quiet /lv* C:\uninstallLog.txt";
             Common.Log($"MSIEXEC command: {command}", testName);
             WMI.MakeWMICall(_mgmtScope, "Win32_Process", command);
 
@@ -531,17 +535,17 @@ namespace FunctionalTests
             // Make a call to perform the repair
             FileOperations.DeleteFileOrDirectory(_mgmtScope, @"C:\\repairLog.txt");
 
-            if (File.Exists($@"{Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi"))
+            if (File.Exists($@"{Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi"))
             {
-                Common.Log($@"Found {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
+                Common.Log($@"Found {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
             }
             else
             {
-                Common.Log($@"ERROR: Did not find: {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
+                Common.Log($@"ERROR: Did not find: {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
             }
 
             var command =
-                $@"msiexec.exe /f {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /quiet /lv* C:\repairLog.txt";
+                $@"msiexec.exe /f {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /quiet /lv* C:\repairLog.txt";
             Common.Log($"MSIEXEC command: {command}", testName);
             WMI.MakeWMICall(_mgmtScope, "Win32_Process", command);
 
@@ -567,19 +571,19 @@ namespace FunctionalTests
             var command = String.Empty;
             FileOperations.DeleteFileOrDirectory(_mgmtScope, @"C:\\installLog.txt");
 
-            if (File.Exists($@"{Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi"))
+            if (File.Exists($@"{Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi"))
             {
-                Common.Log($@"Found {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
+                Common.Log($@"Found {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
             }
             else
             {
-                Common.Log($@"ERROR: Did not find: {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
+                Common.Log($@"ERROR: Did not find: {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi", testName);
             }
 
             if (allFeatures)
             {
                 command =
-                    $@"msiexec.exe /i {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /norestart /quiet{addKey} INSTALLLEVEL=50 /lv* C:\installLog.txt";
+                    $@"msiexec.exe /i {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /norestart /quiet{addKey} INSTALLLEVEL=50 /lv* C:\installLog.txt";
             }
             else
             {
@@ -590,7 +594,7 @@ namespace FunctionalTests
                 }
 
                 command =
-                    $@"msiexec.exe /i {Settings.Workspace}\Build\BuildArtifacts\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /norestart /quiet{addKey}{featuresList} /lv* C:\installLog.txt";
+                    $@"msiexec.exe /i {Settings.Workspace}\build\BuildArtifacts\\MsiInstaller-x64\NewRelicAgent_{_processorArchitecture}_{Settings.AgentVersion}.msi /norestart /quiet{addKey}{featuresList} /lv* C:\installLog.txt";
             }
 
             Common.Log($"MSIEXEC command: {command}", testName);

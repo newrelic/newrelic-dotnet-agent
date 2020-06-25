@@ -1,3 +1,8 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+
 using System.Reflection;
 
 // General Information about an assembly is controlled through the following 

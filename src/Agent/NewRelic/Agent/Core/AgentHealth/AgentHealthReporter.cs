@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using Grpc.Core;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.SharedInterfaces;
@@ -491,7 +495,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             CollectDistributedTraceSuccessMetrics();
             CollectTraceContextSuccessMetrics();
-            ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
+            ReportAgentVersion(AgentInstallConfiguration.AgentVersion, _dnsStatic.GetHostName());
             ReportIfHostIsLinuxOs();
             ReportDotnetVersion();
             ReportAgentInfo();

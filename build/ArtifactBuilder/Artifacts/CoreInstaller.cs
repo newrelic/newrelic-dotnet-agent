@@ -17,8 +17,8 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            var x64Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", SourceDirectory);
-            var x86Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x86", SourceDirectory);
+            var x64Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
+            var x86Components = AgentComponents.GetAgentComponents(AgentType.Core, Configuration, "x86", RepoRootDirectory, HomeRootDirectory);
             x64Components.ValidateComponents();
             x86Components.ValidateComponents();
 
@@ -32,8 +32,8 @@ namespace ArtifactBuilder.Artifacts
             agentInfox64.WriteToDisk($@"{StagingDirectory}\x64");
             agentInfox64.WriteToDisk($@"{StagingDirectory}\x86");
 
-            FileHelpers.CopyFile($@"{SourceDirectory}\Build\Packaging\CoreInstaller\installAgent.ps1", StagingDirectory);
-            FileHelpers.CopyFile($@"{SourceDirectory}\Build\Packaging\CoreInstaller\installAgentUsage.txt", StagingDirectory);
+            FileHelpers.CopyFile($@"{RepoRootDirectory}\build\Packaging\CoreInstaller\installAgent.ps1", StagingDirectory);
+            FileHelpers.CopyFile($@"{RepoRootDirectory}\build\Packaging\CoreInstaller\installAgentUsage.txt", StagingDirectory);
 
             var zipFilePath = $@"{OutputDirectory}\newrelic-netcore20-agent-win-installer_{x64Components.Version}.zip";
             Directory.CreateDirectory(OutputDirectory);
@@ -42,18 +42,19 @@ namespace ArtifactBuilder.Artifacts
 
             // For now, the DotNet-Core20-Agent-DeployToS3 job expects core agent artifacts to be in the following directory
             // At some point we should change the job to pull from the new location under the Build\BuildArtifacts directory
-            FileHelpers.CopyFile(zipFilePath, $@"{SourceDirectory}\Agent\_build\CoreArtifacts");
+            FileHelpers.CopyFile(zipFilePath, $@"{RepoRootDirectory}\src\_build\CoreArtifacts");
 
             // We put a readme file for the core agent on the download site: http://download.newrelic.com/dot_net_agent/core_20/current/
             // This readme also gets picked up by the DotNet-Core20-Agent-DeployToS3 job.
             CopyCoreReadme();
+            Console.WriteLine($"Successfully created artifact for {nameof(CoreInstaller)}.");
         }
 
         private void CopyCoreReadme()
         {
             var readmeFileName = "netcore20-agent-readme.md";
-            var srcReadmeFile = Path.Combine(SourceDirectory, "src", "Agent", "Miscellaneous", readmeFileName);
-            var dstReadmeFilePath = Path.Combine(SourceDirectory, "Agent", "_build", "CoreArtifacts");
+            var srcReadmeFile = Path.Combine(RepoRootDirectory, "src", "Agent", "Miscellaneous", readmeFileName);
+            var dstReadmeFilePath = Path.Combine(RepoRootDirectory, "src", "_build", "CoreArtifacts");
             var dstReadmeFile = Path.Combine(dstReadmeFilePath, readmeFileName);
             FileHelpers.CopyFile(srcReadmeFile, dstReadmeFilePath);
             var renamedReadmeFile = dstReadmeFile.Replace(readmeFileName, "README.md");

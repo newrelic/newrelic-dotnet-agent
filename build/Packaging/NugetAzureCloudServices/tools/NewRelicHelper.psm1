@@ -1,4 +1,8 @@
-﻿
+﻿############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 function create_dialog([System.String]$title, [System.String]$msg){
 	[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
 	[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") 

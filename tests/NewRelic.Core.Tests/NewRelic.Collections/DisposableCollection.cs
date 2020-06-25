@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using NUnit.Framework;
 
@@ -5,7 +9,6 @@ using NUnit.Framework;
 namespace NewRelic.Collections.UnitTests
 {
     [TestFixture]
-    // ReSharper disable once InconsistentNaming
     public class Class_DisposableCollection
     {
         private class Disposable : IDisposable

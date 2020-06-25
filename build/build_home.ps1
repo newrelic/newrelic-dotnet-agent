@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 ####################################################################################
 # build_home - Builds a set of home folders to test and run the agent on a dev box #
 ####################################################################################
@@ -6,9 +11,7 @@ Param(
     [ValidateSet("Debug","Release")][string]$Configuration = "Debug",
     [ValidateSet("All", "Windows", "Linux","Framework", "CoreAll","CoreWindows","CoreLinux")][string]$Type = "All",
     [ValidateSet("All","x64","x86")][string]$Architecture = "All",
-    [Parameter(Mandatory=$true)][string]$HomePath,
-    [string]$gpgKeyPath = "",
-    [switch]$BuildHomeOnly = $false,
+    [string]$HomePath = "$env:NR_DEV_HOMEROOT",
     [switch]$KeepNewRelicConfig = $false,
     [switch]$SetSystemEnvironment = $false,
     [switch]$SetSessionEnvironment = $false
@@ -16,93 +19,153 @@ Param(
 
 $ErrorActionPreference = "Stop"
 
-##############
-# Validation #
-##############
+##############################
+# Setup and resolve pathing  #
+##############################
 
-# Setup the HomePath if it doesn't exist
-if ( -Not (Test-Path $HomePath )) {
-    New-Item -Path $HomePath -ItemType Directory -Force
-}
-
-# Linux cannot be x86
-if (($Type -like "Linux" -or $Type -like "All" -or $Type -like "CoreAll" -or $Type -like "CoreLinux") -and $Architecture -like "x86") {
-    Write-Host "Linux does not support x86, setting up x64 architecture for Linux only."
-}
-
-####################################
-# Setup and resolve pathing Part 1 #
-####################################
+Write-Host "Setting up params"
 
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\.."
-$HomePath = "$HomePath".TrimEnd("\")
+$extRootDir = "$rootDirectory\src\Agent\NewRelic\Agent\Extensions"
+$wrappersRootDir = "$extRootDir\Providers\Wrapper"
+$storageRootDir = "$extRootDir\Providers\Storage"
 
-######################
-# Build all projects #
-######################
+if ($env:KeepNewRelicConfig) {
+    $KeepNewRelicConfig = [System.Convert]::ToBoolean($env:KeepNewRelicConfig)
+}
 
-if (-Not $BuildHomeOnly) {
-    . $rootDirectory\Build\build.ps1 -Configuration $Configuration -gpgKeyPath $gpgKeyPath
+if ($env:SetSystemEnvironment) {
+    $SetSystemEnvironment = [System.Convert]::ToBoolean($env:SetSystemEnvironment)
+}
 
-    if ($LastExitCode -ne 0) {
-        exit $LastExitCode
+if ($env:SetSessionEnvironment) {
+    $SetSessionEnvironment = [System.Convert]::ToBoolean($env:SetSessionEnvironment)
+}
+
+. "$rootDirectory\build\build_functions.ps1"
+$HomePath = Get-HomeRootPath $HomePath
+
+################################
+# Gather data for home folders #
+################################
+
+$net45WrapperHash = @{}
+$netstandard20WrapperHash = @{}
+
+$wrapperDirs = Get-ChildItem -LiteralPath "$wrappersRootDir" -Directory
+foreach ($wrapperDir in $wrapperDirs) {
+    $wrapperDirPath = $wrapperDir.FullName
+    $wrapperName = $wrapperDir.Name
+    if ($net45path = Resolve-Path "$wrapperDirPath\bin\$Configuration\net4*") {
+        $dllObject = Get-ChildItem -File -Path "$net45path" -Filter NewRelic.Providers.Wrapper.$wrapperName.dll
+        $xmlObject = Get-ChildItem -File -Path "$net45path" -Filter Instrumentation.xml
+        $net45WrapperHash.Add($dllObject, $xmlObject)
+    }
+
+    if ($netstandard20path = Resolve-Path "$wrapperDirPath\bin\$Configuration\netstandard2.*") {
+        $dllObject = Get-ChildItem -File -Path "$netstandard20path" -Filter NewRelic.Providers.Wrapper.$wrapperName.dll
+        $xmlObject = Get-ChildItem -File -Path "$netstandard20path" -Filter Instrumentation.xml
+        $netstandard20WrapperHash.Add($dllObject, $xmlObject)
     }
 }
 
-####################################
-# Setup and resolve pathing Part 2 #
-####################################
+# AspNetCore needs to be in net45 as well netstandard2.0
+if ($apsNetCorePath = Resolve-Path "$wrappersRootDir\AspNetCore\bin\$Configuration\netstandard2.*") {
+    $dllObject = Get-ChildItem -File -Path "$apsNetCorePath" -Filter NewRelic.Providers.Wrapper.AspNetCore.dll
+    $xmlObject = Get-ChildItem -File -Path "$apsNetCorePath" -Filter Instrumentation.xml
+    $net45WrapperHash.Add($dllObject, $xmlObject)
+}
 
-$stagingPath = Resolve-Path "$rootDirectory\Build\_staging"
-$frameworkBasePath = "$stagingPath\ZipArchiveFramework"
-$coreBasePath = "$stagingPath\ZipArchiveCore"
+$net45StorageArray = @()
+$netstandard20StorageArray = @()
+
+$storageDirs = Get-ChildItem -LiteralPath "$storageRootDir" -Directory
+foreach ($storageDir in $storageDirs) {
+    $storageDirPath = $storageDir.FullName
+    $storageName = $storageDir.Name
+
+    if ($net45path = Resolve-Path "$storageDirPath\bin\$Configuration\net4*") {
+        $dllObject = Get-ChildItem -File -Path "$net45path" -Filter NewRelic.Providers.Storage.$storageName.dll
+        $net45StorageArray += $dllObject
+    }
+
+    if ($netstandard20path = Resolve-Path "$storageDirPath\bin\$Configuration\netstandard2.*") {
+        $dllObject = Get-ChildItem -File -Path "$netstandard20path" -Filter NewRelic.Providers.Storage.$storageName.dll
+        $netstandard20StorageArray += $dllObject
+    }
+}
+
 
 #######################
 # Create home folders #
 #######################
 
+Write-Host "Creating home folders"
+
 if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "Framework") {
     if ($Architecture -like "All" -or $Architecture -like "x64") {
-        robocopy "$frameworkBasePath-x64\" "$HomePath\newrelichome_x64" /e /xf newrelic.config
+        New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64"
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64" -Extensions $net45WrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64" -Extensions $net45StorageArray
+        Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64" -Configuration "$Configuration" -Type "Framework"
+        Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64" -Configuration "$Configuration" -Type "Framework" -Architecture "x64"
 
         if (-Not $KeepNewRelicConfig) {
-            Copy-Item -Force -Verbose "$frameworkBasePath-x64\newrelic.config" -Destination "$HomePath\newrelichome_x64\"
+            Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64\"
         }
     }
 
     if ($Architecture -like "All" -or $Architecture -like "x86") {
-        robocopy "$frameworkBasePath-x86\" "$HomePath\newrelichome_x86" /e /xf newrelic.config
+        New-HomeStructure -Path "$HomePath" -Name "newrelichome_x86"
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x86" -Extensions $net45WrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x86" -Extensions $net45StorageArray
+        Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86" -Configuration "$Configuration" -Type "Framework"
+        Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86" -Configuration "$Configuration" -Type "Framework" -Architecture "x86"
 
         if (-Not $KeepNewRelicConfig) {
-            Copy-Item -Force -Verbose "$frameworkBasePath-x86\newrelic.config" -Destination "$HomePath\newrelichome_x86\"
+            Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86\"
         }
     }
 }
 
 if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "CoreAll" -or $Type -like "CoreWindows") {
     if ($Architecture -like "All" -or $Architecture -like "x64") {
-        robocopy "$coreBasePath-x64\" "$HomePath\newrelichome_x64_coreclr" /e /xf newrelic.config
+        New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64_coreclr"
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr" -Extensions $netstandard20WrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr" -Configuration "$Configuration" -Type "Core"
+        Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr" -Configuration "$Configuration" -Type "Core" -Architecture "x64"
+        Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr" -Configuration "$Configuration" -Type "Core"
 
         if (-Not $KeepNewRelicConfig) {
-            Copy-Item -Force -Verbose "$coreBasePath-x64\newrelic.config" -Destination "$HomePath\newrelichome_x64_coreclr\"
+            Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr\"
         }
     }
 
     if ($Architecture -like "All" -or $Architecture -like "x86") {
-        robocopy "$coreBasePath-x86\" "$HomePath\newrelichome_x86_coreclr" /e /xf newrelic.config
+        New-HomeStructure -Path "$HomePath" -Name "newrelichome_x86_coreclr"
+        Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x86_coreclr" -Extensions $netstandard20WrapperHash
+        Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x86_coreclr" -Extensions $netstandard20StorageArray
+        Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86_coreclr" -Configuration "$Configuration" -Type "Core"
+        Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86_coreclr" -Configuration "$Configuration" -Type "Core" -Architecture "x86"
+        Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86_coreclr" -Configuration "$Configuration" -Type "Core"
 
         if (-Not $KeepNewRelicConfig) {
-            Copy-Item -Force -Verbose "$coreBasePath-x86\newrelic.config" -Destination "$HomePath\newrelichome_x86_coreclr\"
+            Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x86_coreclr\"
         }
     }
 }
 
 if($Type -like "All" -or $Type -like "Linux" -or $Type -like "CoreAll" -or $Type -like "CoreLinux") {
-    robocopy "$coreBasePath-x64\" "$HomePath\newrelichome_x64_coreclr_linux" /e /xf newrelic.config
-    Copy-item -Force -Verbose "$stagingPath\NugetAgent\contentFiles\any\netstandard2.0\newrelic\*.so" -Destination "$HomePath\newrelichome_x64_coreclr_linux\"
+    New-HomeStructure -Path "$HomePath" -Name "newrelichome_x64_coreclr_linux"
+    Copy-ExtensionsInstrumentation -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20WrapperHash
+    Copy-ExtensionsStorage -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Extensions $netstandard20StorageArray
+    Copy-ExtensionsOther -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
+    Copy-AgentRoot  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core" -Architecture "x64" -Linux
+    Copy-AgentApi  -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux" -Configuration "$Configuration" -Type "Core"
 
     if (-Not $KeepNewRelicConfig) {
-        Copy-Item -Force -Verbose "$coreBasePath-x64\newrelic.config" -Destination "$HomePath\newrelichome_x64_coreclr_linux\"
+        Copy-NewRelicConfig -RootDirectory "$rootDirectory" -Destination "$HomePath\newrelichome_x64_coreclr_linux\"
     }
 }
 
@@ -111,59 +174,9 @@ if($Type -like "All" -or $Type -like "Linux" -or $Type -like "CoreAll" -or $Type
 ##################
 
 if ($SetSystemEnvironment) {
-    Write-Host "Setting up system environment variables for the agent."
-    if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "Framework") {
-        [Environment]::SetEnvironmentVariable("COR_ENABLE_PROFILING", "1", "Machine")
-        [Environment]::SetEnvironmentVariable("COR_PROFILER", "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}", "Machine")
-        if($Architecture -like "All" -or $Architecture -like "x64") {
-            [Environment]::SetEnvironmentVariable("COR_PROFILER_PATH", "$HomePath\newrelichome_x64\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x64", "Machine")
-        }
-        else {
-            [Environment]::SetEnvironmentVariable("COR_PROFILER_PATH", "$HomePath\newrelichome_x86\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x86", "Machine")
-        }
-    }
-
-    if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "CoreAll" -or $Type -like "CoreWindows") {
-        [Environment]::SetEnvironmentVariable("CORECLR_ENABLE_PROFILING", "1", "Machine")
-        [Environment]::SetEnvironmentVariable("CORECLR_PROFILER", "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}", "Machine")
-        if($Architecture -like "All" -or $Architecture -like "x64") {
-            [Environment]::SetEnvironmentVariable("CORECLR_PROFILER_PATH", "$HomePath\newrelichome_x64_coreclr\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x64", "Machine")
-        }
-        else {
-            [Environment]::SetEnvironmentVariable("CORECLR_PROFILER_PATH", "$HomePath\newrelichome_x86_coreclr\NewRelic.Profiler.dll", "Machine")
-            [Environment]::SetEnvironmentVariable("NEWRELIC_HOME", "$HomePath\newrelichome_x86", "Machine")
-        }
-    }
+    Set-SystemEnvironment -Type "$Type" -Architecture "$Architecture" -HomePath "$HomePath"
 }
 
 if ($SetSessionEnvironment) {
-    Write-Host "Setting up session environment variables for the agent."
-    if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "Framework") {
-        $env:COR_ENABLE_PROFILING = 1
-        $env:COR_PROFILER =  "{71DA0A04-7777-4EC6-9643-7D28B46A8A41}"
-        if($Architecture -like "All" -or $Architecture -like "x64") {
-            $env:COR_PROFILER_PATH = "$HomePath\newrelichome_x64\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x64"
-        }
-        else {
-            $env:COR_PROFILER_PATH = "$HomePath\newrelichome_x86\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x86"
-        }
-    }
-
-    if ($Type -like "All" -or $Type -like "Windows" -or $Type -like "CoreAll" -or $Type -like "CoreWindows") {
-        $env:CORECLR_ENABLE_PROFILING = 1
-        $env:CORECLR_PROFILER = "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"
-        if($Architecture -like "All" -or $Architecture -like "x64") {
-            $env:CORECLR_PROFILER_PATH = "$HomePath\newrelichome_x64_coreclr\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x64"
-        }
-        else {
-            $env:CORECLR_PROFILER_PATH = "$HomePath\newrelichome_x86_coreclr\NewRelic.Profiler.dll"
-            $env:NEWRELIC_HOME = "$HomePath\newrelichome_x86"
-        }
-    }
+    Set-SessionEnvironment -Type "$Type" -Architecture "$Architecture" -HomePath "$HomePath"
 }

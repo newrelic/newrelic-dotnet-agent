@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.Asp35.Shared;
@@ -163,7 +167,6 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 
         private object GetBeforeExecutionStep(MethodCall methodCall, IAgent agent, string eventName, HttpApplication httpApplication)
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
             EventHandler beforePipelineEventHandler = (sender, args) => BeforeEvent(methodCall, agent, eventName, sender as HttpApplication);
             beforePipelineEventHandler = GetExceptionSafeEventHandler(beforePipelineEventHandler, agent);
 
@@ -176,7 +179,6 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
 
         private object GetAfterExecutionStep(MethodCall methodCall, IAgent agent, string eventName, HttpApplication httpApplication)
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
             EventHandler afterPipelineEventHandler = (sender, args) => AfterEvent(methodCall, agent, eventName, sender as HttpApplication);
             afterPipelineEventHandler = GetExceptionSafeEventHandler(afterPipelineEventHandler, agent);
 

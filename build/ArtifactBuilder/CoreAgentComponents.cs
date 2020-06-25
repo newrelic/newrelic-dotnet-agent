@@ -5,49 +5,49 @@ namespace ArtifactBuilder
 {
     public class CoreAgentComponents : AgentComponents
     {
-        public CoreAgentComponents(string configuration, string platform, string sourcePath)
-            : base(configuration, platform, sourcePath) { }
+        public CoreAgentComponents(string configuration, string platform, string repoRootDirectory, string homeRootPath)
+            : base(configuration, platform, repoRootDirectory, homeRootPath) { }
 
-        protected override string SourceHomeBuilderPath => $@"{SourcePath}\New Relic Home {Platform} CoreClr";
+        protected override string SourceHomeBuilderPath => $@"{HomeRootPath}\newrelichome_{Platform}_coreclr";
 
         protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
-            $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Core.Instrumentation.xml",
-            $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Parsing.Instrumentation.xml"
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.Instrumentation.xml",
+            $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.Instrumentation.xml"
         };
 
         protected override void CreateAgentComponents()
         {
             var agentDllsForExtensionDirectory = new List<string>()
             {
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Core.dll",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Parsing.dll"
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Core.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Parsing.dll"
             };
 
             var storageProviders = new List<string>()
             {
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Storage.AsyncLocal.dll",
             };
 
             var wrapperProviders = new List<string>()
             {
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.HttpClient.dll",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.MongoDb26.dll",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Sql.dll",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpClient.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.dll",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll",
             };
 
             var wrapperXmls = new[]
             {
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
-                $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.AspNetCore.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Misc.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.MongoDb26.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml",
+                $@"{SourceHomeBuilderPath}\extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml",
             };
 
-            ExtensionXsd = $@"{SourceHomeBuilderPath}\Extensions\extension.xsd";
+            ExtensionXsd = $@"{SourceHomeBuilderPath}\extensions\extension.xsd";
             NewRelicXsd = $@"{SourceHomeBuilderPath}\newrelic.xsd";
             NewRelicConfig = $@"{SourceHomeBuilderPath}\newrelic.config";
 
@@ -89,15 +89,15 @@ namespace ArtifactBuilder
 
             SetWrapperXmlFiles(wrapperXmls);
 
-            AgentApiDll = $@"{SourcePath}\..\src\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
+            AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\netstandard2.0\NewRelic.Api.Agent.dll";
 
             LinuxProfiler = Platform == "x64"
-                ? $@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libNewRelicProfiler.so"
+                ? $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libNewRelicProfiler.so"
                 : null;
 
             GRPCExtensionsLibLinux = new[]
             {
-                $@"{SourcePath}\New Relic Home x64 CoreClr_Linux\libgrpc_csharp_ext.x64.so"
+                $@"{HomeRootPath}\newrelichome_x64_coreclr_linux\libgrpc_csharp_ext.x64.so"
             };
 
             AgentInfoJson = $@"{SourcePath}\..\src\Agent\Miscellaneous\{Platform}\agentinfo.json";

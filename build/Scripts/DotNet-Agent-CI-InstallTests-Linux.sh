@@ -1,8 +1,13 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 #!/bin/bash
 
 # To run locally, run this script from the same directory as the docker-compose.yml file for the Linux packaging stuff is located,
-# which currently is in Build/Linux.  So, do the following:
-# cd $AGENT_REPO_PATH/Build/Linux
+# which currently is in build/Linux.  So, do the following:
+# cd $AGENT_REPO_PATH/build/Linux
 # ../Scripts/DotNet-Agent-CI-InstallTests-Linux.sh
 
 EXIT_STATUS=0

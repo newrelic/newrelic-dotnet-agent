@@ -5,6 +5,7 @@
     <RootNamespace>NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests</RootNamespace>
     <AssemblyName>NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +22,5 @@
     <ProjectReference Include="$(RootProjectDirectory)\src\AwsLambda\AwsLambdaOpenTracer\Tracer.csproj" />
     <ProjectReference Include="$(RootProjectDirectory)\tests\Agent\UnitTests\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj" />
   </ItemGroup>
-
-  <Import Project="$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj" Condition="Exists('$(SolutionDir)build\NewRelic.OpenTracing.AmazonLambda.proj')" />
 
 </Project>

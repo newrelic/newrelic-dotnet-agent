@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Exceptions;
@@ -167,7 +171,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             request.Timeout = (int)_configuration.CollectorTimeout;
             request.ContentType = "application/octet-stream";
-            request.UserAgent = $"NewRelic-DotNetAgent/{AgentVersion.Version}";
+            request.UserAgent = $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}";
 
             request.Method = _configuration.PutForDataSend ? "PUT" : "POST";
             request.ContentLength = requestCollectorRequestPayload.Data.Length;

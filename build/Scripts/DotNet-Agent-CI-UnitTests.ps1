@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 Write-Host "Creating TestResults directory to temporarily get around nunit limitation"
 mkdir TestResults
 

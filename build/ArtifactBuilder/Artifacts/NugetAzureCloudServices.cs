@@ -18,14 +18,14 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", SourceDirectory);
+            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
             frameworkAgentComponents.ValidateComponents();
 
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
             package.CopyAll(PackageDirectory);
             DoInstallerReplacements($"NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
             package.CopyToLib(frameworkAgentComponents.AgentApiDll);
-            package.CopyToContent($@"{SourceDirectory}\src\_build\x64-{Configuration}\Installer\NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
+            package.CopyToContent($@"{RepoRootDirectory}\src\_build\x64-{Configuration}\Installer\NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
             package.SetVersion(frameworkAgentComponents.Version);
             package.Pack();
         }

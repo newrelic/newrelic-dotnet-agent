@@ -1,3 +1,8 @@
+############################################################
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+############################################################
+
 # Combined Install Test  
 
 # Elevate
@@ -35,14 +40,10 @@ Function RunFunctionalTests
     iisreset /start
     Write-Host "SERVER is $env:SERVER"
 
-    # $install = Get-ChildItem $env:WORKSPACE\Agent\_build\x64-Release\Installer\NewRelicAgent_x64_*.msi -Name
-    # $version = $install.TrimStart('NewRelicAgent_x').TrimStart('{64,86}').TrimStart('_').TrimEnd('.msi')
-
     $appConfigPath = "$env:WORKSPACE\FunctionalTests\bin\Release\net45\FunctionalTests.dll.config"
     [Xml]$appConfig = Get-Content $appConfigPath
     $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='Environment']").Value = "Local"
     $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='RemoteServers']").Value = "localhost"
-    # $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='AgentVersion']").Value = $version
     $appConfig.SelectSingleNode("/configuration/appSettings/add[@key='TestApplicationsPath']").Value = "C:\TestApplications"
     $appConfig.Save($appConfigPath)
 
@@ -60,8 +61,6 @@ Function RunFunctionalTests
         Write-Host "Tests failed, exiting."
         exit $exitCode
     }
-
-    # Remove-Item -Path "c:\$install" -Force
 }
 
 Function CreateAppInRPM
@@ -125,10 +124,6 @@ Function CreateAppInRPM
 Stop-Service -Name DotNet-Functional-WindowsService
 $exitCode = 0
 
-# CLR-ec2-i300, CLR-ec2-i350, CLR-ec2-i400, CLR-ec2-i451
-#$env:SERVER = "CLR-ec2-i300"
-
-# CreateAppInRPM
 RunFunctionalTests
 
 exit $exitCode

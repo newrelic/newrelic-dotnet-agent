@@ -13,7 +13,6 @@ namespace ArtifactBuilder.Artifacts
             : base(nameof(ScriptableInstaller))
         {
             Configuration = configuration;
-
             FilesToZipFolderName = $@"{StagingDirectory}\FilesToZip";
         }
 
@@ -21,8 +20,8 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            var x64Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", SourceDirectory);
-            var x86Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x86", SourceDirectory);
+            var x64Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
+            var x86Components = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x86", RepoRootDirectory, HomeRootDirectory);
             x64Components.ValidateComponents();
             x86Components.ValidateComponents();
 

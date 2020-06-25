@@ -1,8 +1,10 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using NUnit.Framework;
 
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-// ReSharper disable PossibleNullReferenceException
 namespace NewRelic.Testing.Assertions.UnitTests
 {
     [TestFixture]
@@ -205,6 +207,3 @@ namespace NewRelic.Testing.Assertions.UnitTests
         #endregion Throws
     }
 }
-
-// ReSharper restore PossibleNullReferenceException
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed

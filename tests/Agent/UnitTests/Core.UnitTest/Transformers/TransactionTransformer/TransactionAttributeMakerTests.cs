@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
@@ -31,7 +35,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Telerik.JustMock;
 
-namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
+namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
     [TestFixture]
     public class TransactionAttributeMakerTests
@@ -769,7 +773,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         [Test]
         public void ShouldNotIncludeTripIdWhenDistributedTracingEnabled()
         {
-
             _localConfig.distributedTracing.enabled = true;
             _serverConfig.TrustedAccountKey = "1234";
             UpdateConfiguration();
@@ -786,12 +789,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
 
             // ACQUIRE
-            var transactionAttributes = attributes.ToDictionary();
+            var intrinsicAttribs = attributes.GetAttributeValuesDic(AttributeClassification.Intrinsics);
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.False(transactionAttributes.ContainsKey("nr.tripId"), "nr.tripId should not have been included"),
-                () => Assert.False(transactionAttributes.ContainsKey("trip_id"), "trip_id should not have been included")
+                () => Assert.False(intrinsicAttribs.ContainsKey("nr.tripId"), "nr.tripId should not have been included"),
+                () => Assert.False(intrinsicAttribs.ContainsKey("trip_id"), "trip_id should not have been included")
             );
         }
 
@@ -814,32 +817,40 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
 
             // ACQUIRE
-            var transactionAttributes = attributes.ToDictionary();
+            var intrinsicAttribValues = attributes.GetAttributeValuesDic(AttributeClassification.Intrinsics);
+            var agentAttribValues = attributes.GetAttributeValuesDic(AttributeClassification.AgentAttributes);
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(21, GetCount(attributes)),  // Assert that only these attributes are generated
-                () => Assert.AreEqual("Transaction", transactionAttributes["type"]),
-                () => Assert.True(transactionAttributes.ContainsKey("timestamp")),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["name"]),
-                () => Assert.AreEqual("WebTransaction/TransactionName", transactionAttributes["transactionName"]),
-                () => Assert.True(transactionAttributes.ContainsKey("duration")),
-                () => Assert.AreEqual(1, transactionAttributes["totalTime"]),
-                () => Assert.True(transactionAttributes.ContainsKey("webDuration")),
-                () => Assert.True(transactionAttributes.ContainsKey("nr.apdexPerfZone")),
-                () => Assert.AreEqual("/Unknown", transactionAttributes["request.uri"]),
-                () => Assert.AreEqual(IncomingTraceId, transactionAttributes["traceId"]),
-                () => Assert.AreEqual(IncomingType.ToString(), transactionAttributes["parent.type"]),
-                () => Assert.AreEqual(IncomingAppId, transactionAttributes["parent.app"]),
-                () => Assert.AreEqual(IncomingAcctId, transactionAttributes["parent.account"]),
-                () => Assert.AreEqual(IncomingTransportType, transactionAttributes["parent.transportType"]),
-                () => Assert.True(transactionAttributes.ContainsKey("parent.transportDuration")),
-                () => Assert.AreEqual(IncomingTransactionId, transactionAttributes["parentId"]),
-                () => Assert.AreEqual(immutableTransaction.Guid, transactionAttributes["guid"]),
-                () => Assert.AreEqual(IncomingPriority, transactionAttributes["priority"]),
-                () => Assert.AreEqual(IncomingSampled, transactionAttributes["sampled"]),
-                () => Assert.AreEqual(IncomingGuid, transactionAttributes["parentSpanId"]),
-                () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+                () => Assert.AreEqual(26, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual("Transaction", intrinsicAttribValues["type"]),
+                () => Assert.True(intrinsicAttribValues.ContainsKey("timestamp")),
+                () => Assert.AreEqual("WebTransaction/TransactionName", intrinsicAttribValues["name"]),
+                () => Assert.AreEqual("WebTransaction/TransactionName", intrinsicAttribValues["transactionName"]),
+                () => Assert.True(intrinsicAttribValues.ContainsKey("duration")),
+                () => Assert.AreEqual(1, intrinsicAttribValues["totalTime"]),
+                () => Assert.True(intrinsicAttribValues.ContainsKey("webDuration")),
+                () => Assert.True(intrinsicAttribValues.ContainsKey("nr.apdexPerfZone")),
+                () => Assert.AreEqual("/Unknown", agentAttribValues["request.uri"]),
+                () => Assert.AreEqual(IncomingTraceId, intrinsicAttribValues["traceId"]),
+                () => Assert.AreEqual(IncomingType.ToString(), intrinsicAttribValues["parent.type"]),
+                () => Assert.AreEqual(IncomingAppId, intrinsicAttribValues["parent.app"]),
+                () => Assert.AreEqual(IncomingAcctId, intrinsicAttribValues["parent.account"]),
+                () => Assert.AreEqual(IncomingTransportType, intrinsicAttribValues["parent.transportType"]),
+                () => Assert.True(intrinsicAttribValues.ContainsKey("parent.transportDuration")),
+
+                () => Assert.AreEqual(IncomingType.ToString(), agentAttribValues["parent.type"]),
+                () => Assert.AreEqual(IncomingAppId, agentAttribValues["parent.app"]),
+                () => Assert.AreEqual(IncomingAcctId, agentAttribValues["parent.account"]),
+                () => Assert.AreEqual(IncomingTransportType, agentAttribValues["parent.transportType"]),
+                () => Assert.True(agentAttribValues.ContainsKey("parent.transportDuration")),
+
+                () => Assert.AreEqual(IncomingTransactionId, intrinsicAttribValues["parentId"]),
+                () => Assert.AreEqual(immutableTransaction.Guid, intrinsicAttribValues["guid"]),
+                () => Assert.AreEqual(IncomingPriority, intrinsicAttribValues["priority"]),
+                () => Assert.AreEqual(IncomingSampled, intrinsicAttribValues["sampled"]),
+                () => Assert.AreEqual(IncomingGuid, intrinsicAttribValues["parentSpanId"]),
+                () => Assert.True(agentAttribValues.ContainsKey("host.displayName"))
             );
         }
 
@@ -927,31 +938,28 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             // ACT
             var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
 
-            // ACQUIRE
-            var transactionAttributes = attributes;
-
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(21, GetCount(attributes)),  // Assert that only these attributes are generated
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"type", AttributeDestinations.TransactionEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"timestamp", AttributeDestinations.TransactionEvent, AttributeDestinations.SpanEvent, AttributeDestinations.CustomEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"name", AttributeDestinations.TransactionEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"transactionName", AttributeDestinations.ErrorEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"duration", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"webDuration", AttributeDestinations.TransactionEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"totalTime", AttributeDestinations.TransactionEvent, AttributeDestinations.TransactionTrace),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"nr.apdexPerfZone", AttributeDestinations.TransactionEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"parent.type", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"parent.app", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"parent.account", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"parent.transportType", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"parent.transportDuration", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,ParentSpanIdAttributeName, AttributeDestinations.TransactionEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"parentId", AttributeDestinations.TransactionEvent, AttributeDestinations.SpanEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"priority", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"sampled", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes,"parentSpanId", AttributeDestinations.TransactionEvent),
-                () => AssertAttributeShouldBeAvailableFor(transactionAttributes, "request.uri", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.SqlTrace)
+                () => Assert.AreEqual(26, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => AssertAttributeShouldBeAvailableFor(attributes,"type", AttributeDestinations.TransactionEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"timestamp", AttributeDestinations.TransactionEvent, AttributeDestinations.SpanEvent, AttributeDestinations.CustomEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"name", AttributeDestinations.TransactionEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"transactionName", AttributeDestinations.ErrorEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"duration", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"webDuration", AttributeDestinations.TransactionEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"totalTime", AttributeDestinations.TransactionEvent, AttributeDestinations.TransactionTrace),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"nr.apdexPerfZone", AttributeDestinations.TransactionEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"parent.type", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"parent.app", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"parent.account", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"parent.transportType", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"parent.transportDuration", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,ParentSpanIdAttributeName, AttributeDestinations.TransactionEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"parentId", AttributeDestinations.TransactionEvent, AttributeDestinations.SpanEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"priority", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"sampled", AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorTrace, AttributeDestinations.SqlTrace, AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes,"parentSpanId", AttributeDestinations.TransactionEvent),
+                () => AssertAttributeShouldBeAvailableFor(attributes, "request.uri", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.SqlTrace)
             );
         }
 
@@ -978,7 +986,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(21, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(26, GetCount(attributes)),  // Assert that only these attributes are generated
                 () => CollectionAssert.Contains(intrinsicAttributes, "type"),
                 () => CollectionAssert.Contains(intrinsicAttributes, "timestamp"),
                 () => CollectionAssert.Contains(intrinsicAttributes, "name"),
