@@ -58,6 +58,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var streamingSvc = Mock.Create<IDataStreamingService<Span, RecordStatus>>();
             Mock.Arrange(() => streamingSvc.IsServiceEnabled).Returns(enabled);
             Mock.Arrange(() => streamingSvc.IsServiceAvailable).Returns(available);
+            Mock.Arrange(() => streamingSvc.IsStreaming).Returns(true);
 
             return streamingSvc;
         }
@@ -155,7 +156,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualQueue = c;
                 });
 
-            Mock.Arrange(() => streamingSvc.Shutdown()).DoInstead(() =>
+            Mock.Arrange(() => streamingSvc.Shutdown(Arg.IsAny<bool>())).DoInstead(() =>
              {
                  countShutdown++;
              });
@@ -168,7 +169,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             for (var i = 0; i < 5; i++)
             {
-                aggregator.Collect(new Span());
+                aggregator.Collect(new SpanAttributeValueCollection());
             }
 
             NrAssert.Multiple
@@ -226,7 +227,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualQueue = c;
                 });
 
-            Mock.Arrange(() => streamingSvc.Shutdown())
+            Mock.Arrange(() => streamingSvc.Shutdown(Arg.IsAny<bool>()))
                 .DoInstead(() =>
                 {
                     actualShudownCalls++;
@@ -243,12 +244,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var aggregator = CreateAggregator(streamingSvc);
             FireAgentConnectedEvent();
 
-            var testItems = new List<Span>();
+            var testItems = new List<ISpanEventWireModel>();
 
             //add too many items to the queue w/o servicing it.
             for (var i = 0; i < expectedInitialCapacity; i++)
             {
-                testItems.Add(new Span());
+                testItems.Add(new SpanAttributeValueCollection());
             }
 
             aggregator.Collect(testItems);
@@ -272,7 +273,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             // configured and has the correct items
             if (expectedInitialCapacity > 0)
             {
-                var expectedQueueItems = testItems.Take(expectedInitialCapacity).ToList();
+                var expectedQueueItems = testItems
+                    .Take(expectedInitialCapacity)
+                    .Select(x=>x.Span).ToList();
 
                 NrAssert.Multiple
                 (
@@ -293,7 +296,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             // configured and has the correct items
             if (expectedUpdatedCapacity > 0)
             {
-                var expectedQueueItems = testItems.Take(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity)).ToList();
+                var expectedQueueItems = testItems.Take(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity)).Select(x=>x.Span).ToList();
 
                 NrAssert.Multiple
                 (
@@ -375,10 +378,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
             FireAgentConnectedEvent();
 
             //Act
-            var items = new List<Span>();
+            var items = new List<ISpanEventWireModel>();
             for (var i = 0; i < expectedSeen; i++)
             {
-                var item = new Span();
+                var item = new SpanAttributeValueCollection();
                 if (addAsSingleItems)
                 {
                     aggregator.Collect(item);

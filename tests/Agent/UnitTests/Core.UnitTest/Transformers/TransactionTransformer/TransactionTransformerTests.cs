@@ -963,9 +963,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.IsServiceAvailable).Returns(infiniteTracingServiceAvailable);
             Mock.Arrange(() => _spanEventAggregator.IsServiceEnabled).Returns(traditionalTracingEnabled);
             Mock.Arrange(() => _spanEventAggregator.IsServiceAvailable).Returns(traditionalTracingEnabled);
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.HasCapacity(Arg.IsAny<int>())).Returns(true);
 
             var actualCallCountInfiniteTracingAggregator = 0;
-            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.Collect(Arg.IsAny<IEnumerable<Span>>()))
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.Collect(Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
                 .DoInstead(() => actualCallCountInfiniteTracingAggregator++);
 
             var actualCallCountTraditionalTracingAggregator = 0;

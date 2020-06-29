@@ -21,6 +21,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         bool IsServiceAvailable { get; }
         bool IsServiceEnabled { get; }
+        bool IsStreaming { get; }
         string EndpointHost { get; }
         int EndpointPort { get; }
         bool EndpointSsl { get; }
@@ -28,7 +29,7 @@ namespace NewRelic.Agent.Core.DataTransport
         int? EndpointTestDelayMs { get; }
         int TimeoutConnectMs { get; }
         int TimeoutSendDataMs { get; }
-        void Shutdown();
+        void Shutdown(bool withRestart);
         void StartConsumingCollection(BlockingCollection<TRequest> collection);
         bool ReadAndValidateConfiguration();
     }
@@ -37,6 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
         where TRequest : class, IStreamingModel
     {
         private const string UnimplementedStatus = "UNIMPLEMENTED";
+        private const string UnavailableStatus = "UNAVAILABLE";
         private const string OkStatus = "OK";
         private readonly IGrpcWrapper<TRequest, TResponse> _grpcWrapper;
         private readonly IDelayer _delayer;
@@ -45,6 +47,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private readonly IConfigurationService _configSvc;
         protected IConfiguration _configuration => _configSvc?.Configuration;
+
+        private bool _hasAnyStreamStarted;
+        public bool IsStreaming { get; private set; }
 
         private readonly string _modelType = typeof(TRequest).Name;
         private readonly string _timerEventNameForSend = "gRPCSend" + typeof(TRequest).Name;
@@ -133,9 +138,14 @@ namespace NewRelic.Agent.Core.DataTransport
         protected abstract void RecordResponseError();
         protected abstract void RecordSendTimeout();
 
+        private volatile bool _shouldRestart = false;
+
         private bool? _isServiceEnabled;
         public bool IsServiceEnabled => _isServiceEnabled ?? (_isServiceEnabled = ReadAndValidateConfiguration()).Value;
-        public bool IsServiceAvailable => IsServiceEnabled && _grpcWrapper.IsConnected && IsConfigurationValid;
+        public bool IsServiceAvailable => IsServiceEnabled &&
+            _grpcWrapper.IsConnected &&
+            IsConfigurationValid &&
+            _hasAnyStreamStarted;
 
         private BlockingCollection<TRequest> _collection;
 
@@ -256,17 +266,25 @@ namespace NewRelic.Agent.Core.DataTransport
 
             _collection = collection;
 
-            if (StartService())
+            do
             {
-                StartConsumers();
-            }
+                _shouldRestart = false;
+
+                if (StartService())
+                {
+                    StartConsumers(); //This blocks until the cancellation token is triggered
+                }
+            } while (_shouldRestart);
         }
 
         private void StartConsumers()
         {
+            _hasAnyStreamStarted = false;
+            IsStreaming = false;
+
             //Check to make sure that we actually connected to the grpcService and that
             //streaming is enabled
-            if (!IsServiceAvailable)
+            if (!_grpcWrapper.IsConnected)
             {
                 return;
             }
@@ -276,6 +294,11 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 Task.Run(() => ExecuteConsumer(_collection));
             }
+
+            CancellationToken.WaitHandle.WaitOne();
+
+            _hasAnyStreamStarted = false;
+            IsStreaming = false;
         }
 
         private bool StartService()
@@ -322,7 +345,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     var createdChannel = false;
                     using (_agentTimerService.StartNew(_timerEventNameForChannel))
                     {
-                        createdChannel = _grpcWrapper.CreateChannel(EndpointHost, EndpointPort, EndpointSsl, MetadataHeaders, cancellationToken);
+                        createdChannel = _grpcWrapper.CreateChannel(EndpointHost, EndpointPort, EndpointSsl, MetadataHeaders, TimeoutConnectMs, cancellationToken);
                     }
 
                     if (createdChannel)
@@ -351,7 +374,7 @@ namespace NewRelic.Agent.Core.DataTransport
                         if (grpcWrapperEx.Status == UnimplementedStatus)
                         {
                             LogMessage(LogLevel.Error, $"The gRPC endpoint defined at {EndpointHost}:{EndpointPort} is not available and no reconnection attempts will be made.");
-                            Shutdown();
+                            Shutdown(false);
                             return false;
                         }
 
@@ -383,7 +406,7 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             try
             {
-                Shutdown();
+                Shutdown(false);
             }
             catch (Exception ex)
             {
@@ -391,10 +414,11 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        public void Shutdown()
+        public void Shutdown(bool withRestart)
         {
             LogMessage(LogLevel.Debug, "Shutdown Request Received");
 
+            _shouldRestart = withRestart;
             _cancellationTokenSource.Cancel();
             MetadataHeaders = null;
             _grpcWrapper.Shutdown();
@@ -414,7 +438,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     using (_agentTimerService.StartNew(_timerEventNameForStream))
                     {
-                        var requestStream = _grpcWrapper.CreateStreams(MetadataHeaders, cancellationToken, handleResponseFunc);
+                        var requestStream = _grpcWrapper.CreateStreams(MetadataHeaders, TimeoutConnectMs, cancellationToken, handleResponseFunc);
 
                         if (requestStream != null)
                         {
@@ -441,7 +465,14 @@ namespace NewRelic.Agent.Core.DataTransport
                         if (grpcWrapperEx.Status == UnimplementedStatus)
                         {
                             LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is no longer available and no reconnection attempts will be made.");
-                            Shutdown();
+                            Shutdown(false);
+                            return null;
+                        }
+
+                        if (grpcWrapperEx.Status == UnavailableStatus)
+                        {
+                            LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is no longer available so we will restart this service.");
+                            Shutdown(true);
                             return null;
                         }
 
@@ -513,7 +544,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
                 catch (Exception ex)
                 {
-                    LogMessage(LogLevel.Finest, "Got exception while attempting to StreamRequests.", ex);
+                    LogMessage(LogLevel.Finest, "Received an exception while attempting to StreamRequests.", ex);
                 }
 
                 if (!cancellationToken.IsCancellationRequested)
@@ -539,7 +570,9 @@ namespace NewRelic.Agent.Core.DataTransport
                     return false;
                 }
 
-                while (!serviceCancellationToken.IsCancellationRequested && IsServiceAvailable)
+                _hasAnyStreamStarted = true;
+
+                while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
                     TRequest item;
                     item = collection.Take(serviceCancellationToken);
@@ -553,11 +586,16 @@ namespace NewRelic.Agent.Core.DataTransport
                     var trySendStatus = TrySend(consumerId, requestStream, item, serviceCancellationToken);
                     if (trySendStatus != TrySendStatus.Success)
                     {
-                        collection.Add(item);
+                        if (!collection.TryAdd(item))
+                        {
+                            _agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(1);
+                        }
                         _grpcWrapper.TryCloseRequestStream(requestStream);
                         streamCancellationTokenSource.Cancel();
                         return trySendStatus == TrySendStatus.ErrorWithImmediateRetry;
                     }
+
+                    IsStreaming = true;
                 }
 
                 streamCancellationTokenSource.Cancel();
@@ -608,7 +646,14 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 if (grpcEx.Status == UnimplementedStatus)
                 {
-                    Shutdown();
+                    Shutdown(false);
+                    return TrySendStatus.Error;
+                }
+
+                if (grpcEx.Status == UnavailableStatus)
+                {
+                    LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send - Channel not available, requesting restart");
+                    Shutdown(true);
                     return TrySendStatus.Error;
                 }
 

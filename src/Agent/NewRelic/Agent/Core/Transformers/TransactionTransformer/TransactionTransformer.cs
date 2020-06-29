@@ -141,7 +141,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             GenerateAndCollectTransactionTrace(immutableTransaction, transactionMetricName, attributes);
 
-            GenerateAndCollectSpanEvents(immutableTransaction, transactionMetricName.PrefixedName, attributes.Invoke());
+            GenerateAndCollectSpanEvents(immutableTransaction, transactionMetricName.PrefixedName, attributes);
         }
 
         private static void FinishSegments(IEnumerable<Segment> segments)
@@ -309,7 +309,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             }
         }
 
-        private void GenerateAndCollectSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection attribValues)
+        private void GenerateAndCollectSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, Func<IAttributeValueCollection> attributes)
         {
             var useInfiniteTracing = _spanEventAggregatorInfiniteTracing.IsServiceEnabled && _spanEventAggregatorInfiniteTracing.IsServiceAvailable;
             var useTraditionalTracing = !useInfiniteTracing && immutableTransaction.Sampled && _spanEventAggregator.IsServiceEnabled && _spanEventAggregator.IsServiceAvailable;
@@ -319,12 +319,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 return;
             }
 
-            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, transactionName, attribValues);
+            var countProposedSpans = immutableTransaction.Segments.Count + 1;
+
+            if (useInfiniteTracing && !_spanEventAggregatorInfiniteTracing.HasCapacity(countProposedSpans))
+            {
+                _spanEventAggregatorInfiniteTracing.RecordDroppedSpans(countProposedSpans);
+                return;
+            }
+
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, transactionName, attributes.Invoke());
             using (_agentTimerService.StartNew("CollectSpanEvents"))
             {
                 if (useInfiniteTracing)
                 {
-                    _spanEventAggregatorInfiniteTracing.Collect(spanEvents.Select(x => x.Span));
+                    _spanEventAggregatorInfiniteTracing.Collect(spanEvents);
                 }
                 else
                 {

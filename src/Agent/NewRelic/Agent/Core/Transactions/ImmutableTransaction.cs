@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Transactions
     {
         public readonly ITransactionName TransactionName;
 
-        public readonly IEnumerable<Segment> Segments;
+        public readonly IList<Segment> Segments;
 
         public readonly IImmutableTransactionMetadata TransactionMetadata;
 

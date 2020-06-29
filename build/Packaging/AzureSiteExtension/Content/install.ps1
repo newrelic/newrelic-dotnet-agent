@@ -39,7 +39,8 @@ function CheckIfAppIs35
 	
 	}catch
 	{
-		exit "Unable to detect if CLR 2.0 is being used. Failed to install .NET Agent." 
+		WriteToInstallLog "Unable to detect if CLR 2.0 is being used. Failed to install .NET Agent."
+		exit 1
 	}
 }
 
@@ -170,6 +171,12 @@ function CopyAgentInfo($agentInfoDestination)
 	try
 	{
 		$agentInfoDestinationFilePath = $agentInfoDestination + "\agentinfo.json"
+
+		if(-Not(Test-Path $agentInfoDestinationFilePath -PathType Leaf))
+		{
+			return
+		}
+
 		$agentInfoJson = Get-Content "$agentInfoDestinationFilePath" -Raw | ConvertFrom-Json
 		$agentInfoJson | Add-Member -NotePropertyName "azure_site_extension" -NotePropertyValue $true -Force
 		$agentInfoJson | ConvertTo-Json -depth 32| set-content "$agentInfoDestinationFilePath"
@@ -180,130 +187,153 @@ function CopyAgentInfo($agentInfoDestination)
 	}
 }
 
-WriteToInstallLog "Start executing install.ps1"
-
-#Loading helper assemblies.
-[Reflection.Assembly]::LoadFile((Get-ChildItem NuGet.Core.dll).FullName)
-[Reflection.Assembly]::LoadFile((Get-ChildItem NewRelic.NuGetHelper.dll).FullName)
-[Reflection.Assembly]::LoadFile((Get-ChildItem Microsoft.Web.XmlTransform.dll).FullName)
-
-$nugetSource = "https://www.nuget.org/api/v2/"
-
-$nugetPackageForFrameworkApp = "NewRelic.Azure.WebSites"
-$nugetPackageForCoreApp = "NewRelic.Agent"
-
-if ($env:PROCESSOR_ARCHITECTURE -ne "x86")
+try
 {
-	$nugetPackageForFrameworkApp = "NewRelic.Azure.WebSites.x64"
-}
+	WriteToInstallLog "Start executing install.ps1"
 
-$is35App = CheckIfAppIs35
-$agentVersion = ""
+	#Using Tls12
+	[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bOR [Net.SecurityProtocolType]::Tls12
 
-if ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null)
-{
+	#Loading helper assemblies.
+	[Reflection.Assembly]::LoadFile((Get-ChildItem NuGet.Core.dll).FullName)
+	[Reflection.Assembly]::LoadFile((Get-ChildItem NewRelic.NuGetHelper.dll).FullName)
+	[Reflection.Assembly]::LoadFile((Get-ChildItem Microsoft.Web.XmlTransform.dll).FullName)
+
+	$nugetSource = "https://www.nuget.org/api/v2/"
+
+	$nugetPackageForFrameworkApp = "NewRelic.Azure.WebSites"
+	$nugetPackageForCoreApp = "NewRelic.Agent"
+
+	if ($env:PROCESSOR_ARCHITECTURE -ne "x86")
+	{
+		$nugetPackageForFrameworkApp = "NewRelic.Azure.WebSites.x64"
+	}
+
+	$is35App = CheckIfAppIs35
+	$agentVersion = ""
+
+	if ($env:NEWRELIC_AGENT_VERSION_OVERRIDE -ne $null)
+	{
+		try
+		{
+			$version = [System.Version]$env:NEWRELIC_AGENT_VERSION_OVERRIDE.ToString()
+			$agentVersion = $version.ToString()
+		}
+		catch
+		{
+			WriteToInstallLog "NEWRELIC_AGENT_VERSION_OVERRIDE environment variable has an incorrect Agent version number. Failed to install."
+			exit 1
+		}
+	}
+	elseif ($is35App -eq $TRUE)
+	{
+		$MAX_6X_AGENT_VERSION = "6.999.999"
+		$latest6XPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($nugetPackageForFrameworkApp, $MAX_6X_AGENT_VERSION, $nugetSource)
+		$agentVersion = $latest6XPackage.Version
+	}
+	else
+	{
+		$latestPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($nugetPackageForFrameworkApp,[NullString]::Value, $nugetSource)
+		$agentVersion = $latestPackage.Version
+	}
+
+
+	if ($env:NEWRELIC_LICENSEKEY -eq $null -and $env:NEW_RELIC_LICENSE_KEY -eq $null)
+	{
+		WriteToInstallLog "The environment variable NEWRELIC_LICENSEKEY or NEW_RELIC_LICENSE_KEY must be set. Please make sure to add one."
+	}
+
 	try
 	{
-		$version = [System.Version]$env:NEWRELIC_AGENT_VERSION_OVERRIDE.ToString()
-		$agentVersion = $version.ToString()
+		if (Test-Path -Path "NewRelicPackage")
+		{
+			Remove-Item -Recurse NewRelicPackage -ErrorAction Stop
+		}
 	}
 	catch
 	{
-		exit "NEWRELIC_AGENT_VERSION_OVERRIDE environment variable has an incorrect Agent version number. Failed to install."
+		WriteToInstallLog "Unable to remove 'NewRelicPackage' directory"
+		exit 1
 	}
-}
-elseif ($is35App -eq $TRUE)
-{
-	$MAX_6X_AGENT_VERSION = "6.999.999"
-	$latest6XPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($nugetPackageForFrameworkApp, $MAX_6X_AGENT_VERSION, $nugetSource)
-	$agentVersion = $latest6XPackage.Version
-}
-else
-{
-	$latestPackage = [NewRelic.NuGetHelper.Utils]::FindPackage($nugetPackageForFrameworkApp,[NullString]::Value, $nugetSource)
-	$agentVersion = $latestPackage.Version
-}
 
-
-if ($env:NEWRELIC_LICENSEKEY -eq $null -and $env:NEW_RELIC_LICENSE_KEY -eq $null)
-{
-	WriteToInstallLog "The environment variable NEWRELIC_LICENSEKEY or NEW_RELIC_LICENSE_KEY must be set. Please make sure to add one."
-}
-
-try
-{
-	if (Test-Path -Path "NewRelicPackage")
+	try
 	{
-		Remove-Item -Recurse NewRelicPackage -ErrorAction Stop
+		if (Test-Path -Path "NewRelicCorePackage")
+		{
+			Remove-Item -Recurse NewRelicCorePackage -ErrorAction Stop
+		}
 	}
+	catch {
+		WriteToInstallLog "Unable to remove 'NewRelicCorePackage' directory"
+		exit 1
+	}
+
+	if ([System.Version]$agentVersion -ge [System.Version]"8.17.438")
+	{
+		$nugetPackageForFrameworkApp = $nugetPackageForCoreApp
+	}
+	else
+	{
+		$xPaths = @("/configuration/system.webServer/runtime/environmentVariables/add[@name='COR_PROFILER_PATH_32']",
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='COR_PROFILER_PATH_64']",
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_ENABLE_PROFILING']",
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER']",
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_32']",
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_64']",
+					"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_NEWRELIC_HOME']")
+		$file = resolve-path(".\applicationHost.xdt")
+		RemoveXmlElements $file $xPaths
+	}
+
+	$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
+	$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
+	$newRelicInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
+	$newRelicNugetContentPaths = $(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
+
+	#Check to see if the old Agent is currently being used
+
+	For ($i=0; $i -lt $packageNames.Count; $i++)
+	{
+		$packageName = $packageNames[$i]
+		$stagingFolder = $stagingFolders[$i]
+		$newRelicInstallPath= $newRelicInstallPaths[$i]
+		$newRelicNugetContentPath = $newRelicNugetContentPaths[$i]
+
+		if($packageName -eq "NewRelic.Agent" -and [System.Version]$agentVersion -lt [System.Version]"8.17.438")
+		{
+			WriteToInstallLog "New Relic Site Extension does not install .NET Core Agent version less than 8.17.438"
+			Break
+		}
+
+		New-Item $stagingFolder -ItemType directory
+		cd $stagingFolder
+		WriteToInstallLog "Excecute Command: nuget install $packageName -Version $agentVersion -Source $nugetSource"
+
+		# Using Start-Process with the -NoNewWindow switch because running executables within Kudu can often fail with "Window title cannot be longer than 1023 characters". See: https://github.com/projectkudu/kudu/issues/2635.
+		Start-Process nuget -ArgumentList "install $packageName -Version $agentVersion -Source $nugetSource" -NoNewWindow -PassThru -Wait
+
+		if (-Not (Test-Path -Path "$packageName.$agentVersion"))
+		{
+			WriteToInstallLog "$packageName.$agentVersion folder does not exists."
+			exit 1
+		}
+
+		cd "$packageName.$agentVersion"
+
+		InstallNewAgent $newRelicNugetContentPath $newRelicInstallPath
+
+		CopyAgentInfo $newRelicInstallPath
+
+		cd ..\..
+	}
+
+	WriteToInstallLog "End executing install.ps1."
+	WriteToInstallLog "-----------------------------"
+	exit $LASTEXITCODE
 }
 catch
 {
-	exit "Unable to remove 'NewRelicPackage' directory"
+	$errorMessage = $_.Exception.Message
+	WriteToInstallLog $errorMessage
+	exit 1
 }
-
-try
-{
-	if (Test-Path -Path "NewRelicCorePackage")
-	{
-		Remove-Item -Recurse NewRelicCorePackage -ErrorAction Stop
-	}
-}
-catch {
-	exit "Unable to remove 'NewRelicCorePackage' directory"
-}
-
-if ([System.Version]$agentVersion -ge [System.Version]"8.17.438")
-{
-	$nugetPackageForFrameworkApp = $nugetPackageForCoreApp
-}
-else
-{
-	$xPaths = @("/configuration/system.webServer/runtime/environmentVariables/add[@name='COR_PROFILER_PATH_32']",
-				"/configuration/system.webServer/runtime/environmentVariables/add[@name='COR_PROFILER_PATH_64']",
-				"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_ENABLE_PROFILING']",
-				"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER']",
-				"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_32']",
-				"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_PROFILER_PATH_64']",
-				"/configuration/system.webServer/runtime/environmentVariables/add[@name='CORECLR_NEWRELIC_HOME']")
-	$file = resolve-path(".\applicationHost.xdt")
-	RemoveXmlElements $file $xPaths
-}
-
-$packageNames = @($nugetPackageForFrameworkApp, $nugetPackageForCoreApp)
-$stagingFolders = @("NewRelicPackage", "NewRelicCorePackage")
-$newRelicInstallPaths = @("$env:WEBROOT_PATH\newrelic", "$env:WEBROOT_PATH\newrelic_core")
-$newRelicNugetContentPaths = $(".\content\newrelic", ".\contentFiles\any\netstandard2.0\newrelic")
-
-#Check to see if the old Agent is currently being used
-
-For ($i=0; $i -lt $packageNames.Count; $i++)
-{
-	$packageName = $packageNames[$i]
-	$stagingFolder = $stagingFolders[$i]
-	$newRelicInstallPath= $newRelicInstallPaths[$i]
-	$newRelicNugetContentPath = $newRelicNugetContentPaths[$i]
-
-	if($packageName -eq "NewRelic.Agent" -and [System.Version]$agentVersion -lt [System.Version]"8.17.438")
-	{
-		WriteToInstallLog "New Relic Site Extension does not install .NET Core Agent version less than 8.17.438"
-		Break
-	}
-
-	New-Item $stagingFolder -ItemType directory
-	cd $stagingFolder
-	WriteToInstallLog "Excecute Command: nuget install $packageName -Version $agentVersion -Source $nugetSource"
-	nuget install $packageName -Version $agentVersion -Source $nugetSource 
-
-	cd $packageName*
-
-	InstallNewAgent $newRelicNugetContentPath $newRelicInstallPath
-
-	CopyAgentInfo $newRelicInstallPath
-
-	cd ..\..
-}
-
-WriteToInstallLog "End executing install.ps1."
-WriteToInstallLog "-----------------------------"
-exit $LASTEXITCODE

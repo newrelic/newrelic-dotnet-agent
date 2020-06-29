@@ -111,13 +111,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         public bool IsConnected => WithIsConnectedImpl?.Invoke() ?? false;
 
-        public bool CreateChannel(string host, int port, bool ssl, Metadata headers, CancellationToken cancellationToken)
+        public bool CreateChannel(string host, int port, bool ssl, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
             var connected = WithCreateChannelImpl?.Invoke(host, port, ssl, headers, cancellationToken) ?? false;
             return connected;
         }
 
-        public IClientStreamWriter<TRequest> CreateStreams(Metadata headers, CancellationToken cancellationToken, Action<TResponse> responseDelegate)
+        public IClientStreamWriter<TRequest> CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, Action<TResponse> responseDelegate)
         {
             var streams = WithCreateStreamsImpl?.Invoke(headers, cancellationToken);
 
@@ -269,22 +269,48 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [TearDown]
         public void Teardown()
         {
-            _streamingSvc?.Shutdown();
+            _streamingSvc?.Shutdown(false);
             _agentHealthReporter = null;
         }
 
         [TestCase(false, false, false)]
-        [TestCase(false, true, false)]
-        [TestCase(true, false, false)]
-        [TestCase(true, true, true)]
+        [TestCase(false, true,  false)]
+        [TestCase(true, false,  false)]
+        [TestCase(true, true,   true)]
         public void IsServiceEnabledTests(bool isServiceEnabled, bool isChannelConnected, bool expectedIsServiceAvailable)
         {
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverHost).Returns(isServiceEnabled ? _validHost : null as string);
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
 
-            _grpcWrapper.WithIsConnectedImpl = () => isChannelConnected;
+			var signalIsDone = new ManualResetEventSlim();
+			var countSends = 0;
 
+			_grpcWrapper.WithIsConnectedImpl = () => isChannelConnected;
+            _grpcWrapper.WithTrySendDataImpl = (requestStream, request, timeoutMs, CancellationToken) =>
+            {
+				countSends++;
+				if(countSends > 1)
+                {
+					signalIsDone.Set();
+                }
+
+				return true;
+            };
+
+			if(!isServiceEnabled || !isChannelConnected)
+            {
+				signalIsDone.Set();
+			}
+
+			var collection = new BlockingCollection<TRequest>(10);
+			collection.Add(GetRequestModel());
+			collection.Add(GetRequestModel());
+			collection.Add(GetRequestModel());
+
+			_streamingSvc.StartConsumingCollection(collection);
+
+			Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)));
             Assert.AreEqual(expectedIsServiceAvailable, _streamingSvc.IsServiceAvailable, $"If IsServiceEnabled={isServiceEnabled} and IsGrpcChannelConnected={isChannelConnected}, IsServiceAvailable should be {expectedIsServiceAvailable}");
         }
 
@@ -676,7 +702,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 if (attempt > 0)
                 {
                     signalIsDone.Set();
-                    _streamingSvc.Shutdown();
+                    _streamingSvc.Shutdown(false);
                     return true;
                 }
 
@@ -1186,6 +1212,228 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
 
         [Test]
+        public void GrpcUnavailableDuringTrySendDataRestartsService()
+        {
+            var actualCountGrpcErrors = 0;
+            var actualCountGeneralErrors = 0;
+            var actualCountSpansSent = 0;
+
+            var expectedCountGrpcErrors = 1;
+            var expectedCountGeneralErrors = 1;
+            var expectedCountSpansSent = 1;
+            var expectedCreateChannelCount = 2;
+
+            var signalIsDone = new ManualResetEventSlim();
+
+            var actualDelays = new List<int>();
+
+            Mock.Arrange(() => _delayer.Delay(Arg.IsAny<int>(), Arg.IsAny<CancellationToken>()))
+                .DoInstead<int, CancellationToken>((delay, token) =>
+                {
+                    actualDelays.Add(delay);
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanGrpcError(Arg.IsAny<string>()))
+                .DoInstead<string>((sc) =>
+                {
+                    actualCountGrpcErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanResponseError())
+                .DoInstead(() =>
+                {
+                    actualCountGeneralErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent())
+                .DoInstead(() =>
+                {
+                    actualCountSpansSent++;
+                    signalIsDone.Set();
+                });
+
+            var sendInvocationId = 0;
+            _grpcWrapper.WithTrySendDataImpl = (stream, item, timeoutMs, token) =>
+            {
+                var localInvocationId = Interlocked.Increment(ref sendInvocationId);
+
+                if (localInvocationId == 1)
+                {
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unavailable, "Test gRPC Exception");
+                    return false;
+                }
+
+                return true;
+            };
+
+            var createChannelInvocationCount = 0;
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, metadata, token) =>
+            {
+                Interlocked.Increment(ref createChannelInvocationCount);
+                return true;
+            };
+
+            var queue = new BlockingCollection<TRequest>();
+            queue.Add(GetRequestModel());
+
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc.StartConsumingCollection(queue);
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
+                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
+                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
+                () => CollectionAssert.IsEmpty(actualDelays, "The service should restart without triggering a delay"),
+                () => Assert.AreEqual(expectedCreateChannelCount, createChannelInvocationCount, "CreateChannel call count")
+            );
+        }
+
+        [Test]
+        public void GrpcUnavailableDuringConnectIsTreatedAsAnError()
+        {
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+
+            var actualCountGrpcErrors = 0;
+            var actualCountGeneralErrors = 0;
+            var actualDelays = new List<int>();
+
+            var expectedCountGrpcErrors = 1;
+            var expectedCountGeneralErrors = 1;
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanGrpcError(Arg.IsAny<string>()))
+                .DoInstead<string>((sc) =>
+                {
+                    actualCountGrpcErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanResponseError())
+                .DoInstead(() =>
+                {
+                    actualCountGeneralErrors++;
+                });
+
+            Mock.Arrange(() => _delayer.Delay(Arg.IsAny<int>(), Arg.IsAny<CancellationToken>()))
+                .DoInstead<int, CancellationToken>((delay, token) =>
+                {
+                    actualDelays.Add(delay);
+                });
+
+            var channelCreationCallCount = 0;
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
+            {
+                Interlocked.Increment(ref channelCreationCallCount);
+                if (channelCreationCallCount == 1)
+                {
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unavailable, "Test gRPC Exception");
+                    return false;
+                }
+
+                return true;
+            };
+
+            var sourceCollection = new BlockingCollection<TRequest>();
+            sourceCollection.Add(GetRequestModel());
+
+            var waitForConsumptionTask = Task.Run(() =>
+            {
+                while (sourceCollection.Count > 0)
+                {
+                    Thread.Sleep(TimeSpan.FromMilliseconds(250));
+                }
+            });
+
+            _streamingSvc.StartConsumingCollection(sourceCollection);
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete"),
+                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
+                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
+                () => CollectionAssert.AreEqual(_expectedDelaySequenceConnect.Take(1), actualDelays, "The delay sequence did not match")
+            );
+        }
+
+        [Test]
+        public void GrpcUnavailableDuringCreateStreamRestartsService()
+        {
+            var actualDelays = new List<int>();
+
+            Mock.Arrange(() => _delayer.Delay(Arg.IsAny<int>(), Arg.IsAny<CancellationToken>()))
+                .DoInstead<int, CancellationToken>((delay, token) =>
+                {
+                    actualDelays.Add(delay);
+                });
+
+            var actualCountGrpcErrors = 0;
+            var actualCountGeneralErrors = 0;
+            var actualCountSpansSent = 0;
+
+            var expectedCountGrpcErrors = 1;
+            var expectedCountGeneralErrors = 1;
+            var expectedCountSpansSent = 1;
+            var expectedCreateChannelCount = 2;
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanGrpcError(Arg.IsAny<string>()))
+                .DoInstead<string>((sc) =>
+                {
+                    actualCountGrpcErrors++;
+                });
+
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanResponseError())
+                .DoInstead(() =>
+                {
+                    actualCountGeneralErrors++;
+                });
+
+            var signalIsDone = new ManualResetEventSlim();
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent())
+                .DoInstead(() =>
+                {
+                    actualCountSpansSent++;
+                    signalIsDone.Set();
+                });
+
+            var countCreateStreamsCalls = 0;
+            _grpcWrapper.WithCreateStreamsImpl = (metadata, CancellationToken) =>
+            {
+                Interlocked.Increment(ref countCreateStreamsCalls);
+
+                if (countCreateStreamsCalls == 1)
+                {
+                    MockGrpcWrapper<TRequest, TResponse>.ThrowGrpcWrapperException(StatusCode.Unavailable, "Test gRPC Exception");
+                    return null;
+                }
+
+                return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+            };
+
+            var createChannelInvocationCount = 0;
+            _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, metadata, token) =>
+            {
+                Interlocked.Increment(ref createChannelInvocationCount);
+                return true;
+            };
+
+            var sourceCollection = new BlockingCollection<TRequest>();
+            sourceCollection.Add(GetRequestModel());
+
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc.StartConsumingCollection(sourceCollection);
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
+                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
+                () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
+                () => CollectionAssert.IsEmpty(actualDelays, "The service should restart without a delay"),
+                () => Assert.AreEqual(expectedCreateChannelCount, createChannelInvocationCount, "CreateChannel call count")
+            );
+        }
+
+        [Test]
         public void GrpcOkDuringTrySendDataCreatesNewStreamImmediately()
         {
             var actualCountGrpcErrors = 0;
@@ -1269,6 +1517,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
+            var actualDelays = new List<int>();
 
             var expectedCountGrpcErrors = 1;
             var expectedCountGeneralErrors = 1;
@@ -1283,6 +1532,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 .DoInstead(() =>
                 {
                     actualCountGeneralErrors++;
+                });
+
+            Mock.Arrange(() => _delayer.Delay(Arg.IsAny<int>(), Arg.IsAny<CancellationToken>()))
+                .DoInstead<int, CancellationToken>((delay, token) =>
+                {
+                    actualDelays.Add(delay);
                 });
 
             _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
@@ -1308,7 +1563,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
             (
                 () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete"),
                 () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
-                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count")
+                () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
+                () => CollectionAssert.IsEmpty(actualDelays, "There should be no delays")
             );
         }
 

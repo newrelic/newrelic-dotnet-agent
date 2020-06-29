@@ -52,9 +52,9 @@ namespace NewRelic.Agent.Core.DataTransport
     public interface IGrpcWrapper<TRequest, TResponse>
     {
         bool IsConnected { get; }
-        bool CreateChannel(string host, int port, bool ssl, Metadata headers, CancellationToken cancellationToken);
-        IClientStreamWriter<TRequest> CreateStreams(Metadata headers, CancellationToken cancellationToken, Action<TResponse> responseDelegate);
-        bool TrySendData(IClientStreamWriter<TRequest> stream, TRequest item, int timeoutWindowMs, CancellationToken cancellationToken);
+        bool CreateChannel(string host, int port, bool ssl, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken);
+        IClientStreamWriter<TRequest> CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, Action<TResponse> responseDelegate);
+        bool TrySendData(IClientStreamWriter<TRequest> stream, TRequest item, int sendTimeoutMs, CancellationToken cancellationToken);
         void TryCloseRequestStream(IClientStreamWriter<TRequest> requestStream);
         void Shutdown();
         void ManageResponseStream(CancellationToken cancellationToken, IAsyncStreamReader<TResponse> responseStream, Action<TResponse> responseDelegate);
@@ -62,24 +62,34 @@ namespace NewRelic.Agent.Core.DataTransport
 
     public abstract class GrpcWrapper<TRequest, TResponse> : IGrpcWrapper<TRequest, TResponse>
     {
+        private readonly List<ChannelState> _notConnectedStates = new List<ChannelState> { ChannelState.TransientFailure, ChannelState.Shutdown };
+
         protected GrpcWrapper()
         {
         }
 
-        protected ChannelBase _channel { get; private set; }
+        private Channel _channel { get; set; }
 
-        protected abstract AsyncDuplexStreamingCall<TRequest, TResponse> CreateStreamsImpl(Metadata headers, CancellationToken cancellationToken);
+        protected abstract AsyncDuplexStreamingCall<TRequest, TResponse> CreateStreamsImpl(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken);
 
-        public bool IsConnected => _channel != null;
+        public bool IsConnected => _channel != null && !_notConnectedStates.Contains(_channel.State);
 
-        public bool CreateChannel(string host, int port, bool ssl, Metadata headers, CancellationToken cancellationToken)
+        public bool CreateChannel(string host, int port, bool ssl, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
             try
             {
-                var credentials = ssl ? new SslCredentials() : ChannelCredentials.Insecure;
-                _channel = new Channel(host, port, credentials);
+                _channel = null;
 
-                return TestChannel(headers, cancellationToken);
+                var credentials = ssl ? new SslCredentials() : ChannelCredentials.Insecure;
+                var channel = new Channel(host, port, credentials);
+
+                if (TestChannel(channel, headers, connectTimeoutMs, cancellationToken))
+                {
+                    _channel = channel;
+                    return true;
+                }
+
+                return false;
             }
             catch (Exception ex)
             {
@@ -98,19 +108,31 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private bool TestChannel(Metadata headers, CancellationToken cancellationToken)
-        {
-            using (CreateStreamsImpl(headers, cancellationToken))
-            {
-                return true;
-            }
-        }
-
-        public IClientStreamWriter<TRequest> CreateStreams(Metadata headers, CancellationToken cancellationToken, Action<TResponse> responseDelegate)
+        private bool TestChannel(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
         {
             try
             {
-                var streams = CreateStreamsImpl(headers, cancellationToken);
+                if (!channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken) || _notConnectedStates.Contains(channel.State))
+                {
+                    return false;
+                }
+
+                using (CreateStreamsImpl(channel, headers, connectTimeoutMs, cancellationToken))
+                {
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public IClientStreamWriter<TRequest> CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, Action<TResponse> responseDelegate)
+        {
+            try
+            {
+                var streams = CreateStreamsImpl(_channel, headers, connectTimeoutMs, cancellationToken);
 
                 if (responseDelegate != null)
                 {
@@ -139,7 +161,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
 
-        public bool TrySendData(IClientStreamWriter<TRequest> requestStream, TRequest item, int timeoutWindowMs, CancellationToken cancellationToken)
+        public bool TrySendData(IClientStreamWriter<TRequest> requestStream, TRequest item, int sendTimeoutMs, CancellationToken cancellationToken)
         {
             try
             {
@@ -149,7 +171,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     return false;
                 }
 
-                return requestStream.WriteAsync(item).Wait(timeoutWindowMs, cancellationToken);
+                return requestStream.WriteAsync(item).Wait(sendTimeoutMs, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -225,9 +247,21 @@ namespace NewRelic.Agent.Core.DataTransport
             }
             catch (Exception ex)
             {
-                if (Log.IsDebugEnabled)
+                var logLevel = LogLevel.Finest;
+
+                var aggEx = ex as AggregateException;
+                if (aggEx != null && aggEx.InnerException != null)
                 {
-                    Log.Debug($"Exception encountered while handling gRPC server responses: {ex}");
+                    var rpcEx = aggEx.InnerException as RpcException;
+
+                    logLevel = (rpcEx != null && rpcEx.StatusCode == StatusCode.Cancelled)
+                        ? LogLevel.Finest
+                        : LogLevel.Debug;
+                }
+
+                if (Log.IsEnabledFor(logLevel))
+                {
+                    Log.LogMessage(logLevel, $"Exception encountered while handling gRPC server responses: {ex}");
                 }
             }
         }
