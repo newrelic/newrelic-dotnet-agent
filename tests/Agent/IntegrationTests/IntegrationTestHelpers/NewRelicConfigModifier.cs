@@ -1,0 +1,209 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+
+using System;
+using System.Collections.Generic;
+
+namespace NewRelic.Agent.IntegrationTestHelpers
+{
+    public class NewRelicConfigModifier
+    {
+        private readonly string _configFilePath;
+
+        public NewRelicConfigModifier(string configFilePath)
+        {
+            _configFilePath = configFilePath;
+        }
+
+        public void SetLicenseKey(string key)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },
+                "licenseKey", key);
+        }
+
+        public void SetSecurityToken(string token)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "securityPoliciesToken",
+                token);
+        }
+
+        public void SetHighSecurityMode(bool value)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "highSecurity" },
+                "enabled", value.ToString().ToLower());
+        }
+
+        public void SetAttributesInclude(string includes)
+        {
+            CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "attributes" }, "include",
+                includes);
+        }
+
+        public void SetEnableRequestParameters(bool value)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "requestParameters" },
+                "enabled", value.ToString().ToLower());
+        }
+
+        public void SetAutoStart(bool value)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_configFilePath, new[] { "configuration", "service" },
+                new[] { new KeyValuePair<string, string>("autoStart", value.ToString().ToLower()) });
+        }
+
+        public void SetTransactionTracerRecordSql(string value)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
+                "recordSql", value);
+        }
+
+        public void SetHost(string host)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "host",
+                host);
+        }
+
+        public void SetRequestTimeout(TimeSpan duration)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "service" }, "requestTimeout",
+                duration.TotalMilliseconds.ToString());
+        }
+
+
+        public NewRelicConfigModifier ForceTransactionTraces()
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
+                "transactionThreshold", "1");
+            return this;
+        }
+
+        public void AutoInstrumentBrowserMonitoring(bool shouldAutoInstrument)
+        {
+            var stringValue = shouldAutoInstrument.ToString().ToLower(); //We don't seem to handle the uppercase parse
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "browserMonitoring" },
+                "autoInstrument", stringValue);
+        }
+
+        public void BrowserMonitoringEnableAttributes(bool shouldEnableAttributes)
+        {
+            var stringValue = shouldEnableAttributes.ToString().ToLower(); //We don't seem to handle the uppercase parse
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+                new[] { "configuration", "browserMonitoring", "attributes" }, "enabled", stringValue);
+        }
+
+        public void PutForDataSend()
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "dataTransmission" },
+                "putForDataSend", "true");
+        }
+
+        public void CompressedContentEncoding(string contentEncoding)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "dataTransmission" },
+                "compressedContentEncoding", contentEncoding);
+        }
+
+        public void SetReportingDatastoreInstance(bool isEnabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+                new[] { "configuration", "datastoreTracer", "instanceReporting" }, "enabled", "true");
+        }
+
+        public void SetReportingDatabaseName(bool isEnabled = true)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath,
+                new[] { "configuration", "datastoreTracer", "databaseNameReporting" }, "enabled", "true");
+        }
+
+        public void ForceSqlTraces()
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
+                "explainThreshold", "1");
+        }
+
+        public void SetLogLevel(string level)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "level",
+                level);
+        }
+
+        public void SetLogDirectory(string directoryName)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "directory",
+                directoryName);
+        }
+
+        public void SetLogFileName(string fileName)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "log" }, "fileName",
+                fileName);
+        }
+
+
+        public NewRelicConfigModifier EnableCat()
+        {
+            return SetCATEnabled(true);
+        }
+
+        public NewRelicConfigModifier SetCATEnabled(bool enabled)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration" }, "crossApplicationTracingEnabled", enabled.ToString().ToLower());
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "crossApplicationTracer" }, "enabled", enabled.ToString().ToLower());
+
+            if (enabled)
+            {
+                SetOrDeleteDistributedTraceEnabled(null);
+            }
+
+            return this;
+        }
+
+        public void EnableSpanEvents(bool? value)
+        {
+            SetOrDeleteDistributedTraceEnabled(value);
+            SetOrDeleteSpanEventsEnabled(value);
+        }
+
+        /// <summary>
+        /// Sets or deletes the distributed trace enabled setting in the newrelic.config.
+        /// </summary>
+        /// <param name="enabled">If null, the setting will be deleted; otherwise, the setting will be set to the value of this parameter.</param>
+        public void SetOrDeleteDistributedTraceEnabled(bool? enabled)
+        {
+            const string config = "configuration";
+            const string distributedTracing = "distributedTracing";
+            if (null == enabled)
+            {
+                CommonUtils.DeleteXmlNodeFromNewRelicConfig(_configFilePath, new[] { config }, distributedTracing);
+            }
+            else
+            {
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, distributedTracing },
+                    "enabled", enabled.Value ? "true" : "false");
+            }
+        }
+
+        public void SetOrDeleteSpanEventsEnabled(bool? enabled)
+        {
+            const string config = "configuration";
+            const string spanEvents = "spanEvents";
+            if (null == enabled)
+            {
+                CommonUtils.DeleteXmlNodeFromNewRelicConfig(_configFilePath, new[] { config }, spanEvents);
+            }
+            else
+            {
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { config, spanEvents },
+                    "enabled", enabled.Value ? "true" : "false");
+            }
+        }
+
+        public void SetCustomHostName(string customHostName)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "processHost" },
+                    "displayName", customHostName);
+        }
+    }
+}
