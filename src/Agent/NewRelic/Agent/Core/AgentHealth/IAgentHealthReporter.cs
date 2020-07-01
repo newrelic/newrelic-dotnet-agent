@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         void ReportInfiniteTracingSpanResponseError();
         void ReportInfiniteTracingSpanEventsSeen(long count = 1);
-        void ReportInfiniteTracingSpanEventsSent();
+        void ReportInfiniteTracingSpanEventsSent(long count = 1);
         void ReportInfiniteTracingSpanEventsReceived(ulong count);
         void ReportInfiniteTracingSpanEventsDropped(long count = 1);
         void ReportInfiniteTracingSpanGrpcError(string status);

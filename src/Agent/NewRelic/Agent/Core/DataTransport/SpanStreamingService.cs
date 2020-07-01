@@ -10,9 +10,9 @@ using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-    public class SpanStreamingService : DataStreamingService<SpanBatch, RecordStatus>
+    public class SpanStreamingService : DataStreamingService<Span, SpanBatch, RecordStatus>
     {
-        public SpanStreamingService(IGrpcWrapper<Span, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
+        public SpanStreamingService(IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
             : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService)
         {
         }
@@ -41,9 +41,9 @@ namespace NewRelic.Agent.Core.DataTransport
             _agentHealthReporter.ReportInfiniteTracingSpanEventsReceived(countItems);
         }
 
-        protected override void RecordSuccessfulSend()
+        protected override void RecordSuccessfulSend(int countItems)
         {
-            _agentHealthReporter.ReportInfiniteTracingSpanEventsSent();
+            _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(countItems);
         }
 
         protected override void RecordGrpcError(string status)
@@ -59,6 +59,13 @@ namespace NewRelic.Agent.Core.DataTransport
         protected override void RecordSendTimeout()
         {
             _agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout();
+        }
+
+        protected override SpanBatch CreateBatch(Span[] items)
+        {
+            var batch = new SpanBatch();
+            batch.Spans.AddRange(items);
+            return batch;
         }
     }
 
