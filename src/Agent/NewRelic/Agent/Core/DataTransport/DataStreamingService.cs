@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public readonly int ConsumerID;
         
         private bool _isInvalid = false;
-        public bool IsInvalid => _streamCancellationToken.IsCancellationRequested || _isInvalid;
+        public bool IsInvalid => _streamCancellationToken.IsCancellationRequested || _isInvalid || (_task?.IsFaulted).GetValueOrDefault(false);
 
 
         private readonly IAsyncStreamReader<TResponse> _responseStream;
@@ -48,8 +48,24 @@ namespace NewRelic.Agent.Core.DataTransport
             catch (Exception ex)
             {
                 success = false;
-            }
 
+                var logLevel = LogLevel.Finest;
+
+                var aggEx = ex as AggregateException;
+                if (aggEx != null && aggEx.InnerException != null)
+                {
+                    var rpcEx = aggEx.InnerException as RpcException;
+
+                    logLevel = (rpcEx != null && rpcEx.StatusCode == StatusCode.Cancelled)
+                        ? LogLevel.Finest
+                        : LogLevel.Debug;
+                }
+
+                if (Log.IsEnabledFor(logLevel))
+                {
+                    Log.LogMessage(logLevel, $"Exception encountered while handling gRPC server responses: {ex}");
+                }
+            }
 
             _isInvalid = !success || _streamCancellationToken.IsCancellationRequested;
 
@@ -341,7 +357,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 //Remove anything that should not be there
                 foreach(var x in _responseStreamsDic.Values.Where(x=>x.IsInvalid).ToList())
                 {
-                    LogMessage(LogLevel.Debug, x.ConsumerID, "Response Stream Manager - Removing Stream");
+                    LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
                     _responseStreamsDic.TryRemove(x.ConsumerID, out _);
                 }
 
