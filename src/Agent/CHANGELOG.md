@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+### Fixes
+
+## [8.29] - 2020-06-25
+### New Features
 
 * **Additional Transaction Information applied to Span Events** <br/>
 When Distributed Tracing and/or Infinite Tracing are enabled, the Agent will now incorporate additional information from the Transaction Event on to the root Span Event of the transaction.
@@ -127,10 +131,11 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.28.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.29.0...HEAD
 
-[8.28]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.27.139...v8.28.0
-[8.27]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.26.630...v8.27.139
-[8.26]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.25.214...v8.26.630
-[8.25]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.24.244...v8.25.214
-[8.24]: https://source.datanerd.us/dotNetAgent/dotnet_agent/compare/v8.23.107...v8.24.244
+[8.29]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.28.0...v8.29.0
+[8.28]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.27.139...v8.28.0
+[8.27]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.26.630...v8.27.139
+[8.26]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.25.214...v8.26.630
+[8.25]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.24.244...v8.25.214
+[8.24]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.23.107...v8.24.244
