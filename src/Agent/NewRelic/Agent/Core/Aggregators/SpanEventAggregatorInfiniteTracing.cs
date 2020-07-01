@@ -8,7 +8,9 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Collections;
 using NewRelic.Core.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,18 +26,21 @@ namespace NewRelic.Agent.Core.Aggregators
         bool IsServiceAvailable { get; }
         bool HasCapacity(int proposedItems);
         void RecordDroppedSpans(int countDroppedSpans);
+        int Capacity { get; }
     }
 
     public class SpanEventAggregatorInfiniteTracing : DisposableService, ISpanEventAggregatorInfiniteTracing
     {
-        private BlockingCollection<Span> _spanEvents;
+        private PartitionedBlockingCollection<Span> _spanEvents;
         private readonly IDataStreamingService<Span, RecordStatus> _spanStreamingService;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IConfigurationService _configSvc;
         private IConfiguration _configuration => _configSvc?.Configuration;
 
+        public int Capacity => (_spanEvents?.Capacity).GetValueOrDefault(0);
+
         public SpanEventAggregatorInfiniteTracing(IDataStreamingService<Span, RecordStatus> spanStreamingService, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
-        {
+        {   
             _spanStreamingService = spanStreamingService;
             _subscriptions.Add<AgentConnectedEvent>(AgentConnected);
             _agentHealthReporter = agentHealthReporter;
@@ -50,38 +55,49 @@ namespace NewRelic.Agent.Core.Aggregators
         private void AgentConnected(AgentConnectedEvent _)
         {
             _spanStreamingService.Shutdown(false);
-            var newCapacity = _configuration.InfiniteTracingQueueSizeSpans;
 
-            if (!IsServiceEnabled || newCapacity <= 0)
+            var oldCapacity = (_spanEvents?.Capacity).GetValueOrDefault(0);
+            var oldPartitionCount = (_spanEvents?.PartitionCount).GetValueOrDefault(0);
+            var oldCount = (_spanEvents?.Count).GetValueOrDefault(0);
+
+            var oldCollection = _spanEvents != null
+                ? Interlocked.Exchange(ref _spanEvents, null)
+                : null;
+
+            var newCapacity = _configuration.InfiniteTracingQueueSizeSpans;
+            var newPartitionCount = Math.Min(_configuration.InfiniteTracingQueueSizeSpans, _configuration.InfiniteTracingPartitionCountSpans);
+
+            if (!IsServiceEnabled || newCapacity <= 0 || newPartitionCount <= 0 || newPartitionCount > 62)
             {
-                if (_spanEvents != null)
+                if (oldCount > 0)
                 {
-                    var oldqueue = Interlocked.Exchange(ref _spanEvents, null);
-                    RecordDroppedSpans(oldqueue.Count);
+                    RecordDroppedSpans(oldCount);
                 }
+
+                if(IsServiceEnabled)
+                {
+                    LogConfiguration();
+                }
+
                 return;
             }
 
-            if (_spanEvents == null || newCapacity != _spanEvents.BoundedCapacity)
+            if (oldCapacity == newCapacity && oldPartitionCount == newPartitionCount && oldCollection != null)
             {
-                var oldCollection = _spanEvents;
-
-                if (_spanEvents != null)
-                {
-                    Interlocked.Exchange(ref _spanEvents, new BlockingCollection<Span>(new ConcurrentQueue<Span>(_spanEvents.ToArray().Take(newCapacity)), newCapacity));
-                }
-                else
-                {
-                    _spanEvents = new BlockingCollection<Span>(newCapacity);
-                }
-
-                if (oldCollection != null && oldCollection.Count > newCapacity)
-                {
-                    var countDropped = oldCollection.Count - newCapacity;
-                    RecordDroppedSpans(countDropped);
-                }
+                _spanEvents = oldCollection;
             }
+            else
+            {
+                var overflowCount = oldCount - newCapacity;
+                if (overflowCount > 0)
+                {
+                    RecordDroppedSpans(overflowCount);
+                }
 
+                _spanEvents = oldCollection != null
+                    ? new PartitionedBlockingCollection<Span>(newCapacity, newPartitionCount, oldCollection)
+                    : new PartitionedBlockingCollection<Span>(newCapacity, newPartitionCount);
+            }
 
             LogConfiguration();
 
@@ -102,12 +118,13 @@ namespace NewRelic.Agent.Core.Aggregators
                 ? .9
                 : .1;
 
-            return _spanEvents != null && (_spanEvents.Count + proposedItems) < (_spanEvents.BoundedCapacity * capacityFactor);
+            return _spanEvents != null && (_spanEvents.Count + proposedItems) < (Capacity * capacityFactor);
         }
 
         private void LogConfiguration()
         {
             Log.Info($"SpanEventAggregatorInfiniteTracing: Configuration Setting - Queue Size - {_configuration.InfiniteTracingQueueSizeSpans}");
+            Log.Info($"SpanEventAggregatorInfiniteTracing: Configuration Setting - Queue Partitions - {_configuration.InfiniteTracingPartitionCountSpans}");
         }
 
         public bool IsServiceEnabled => _spanStreamingService.IsServiceEnabled;

@@ -211,7 +211,7 @@ namespace NewRelic.Agent.Core.Segments
 
             if (!string.IsNullOrWhiteSpace(CommandText))
             {
-                AttribDefs.DbStatement.TrySetValue(AttribVals, GetObfuscatedSQL);
+                AttribDefs.DbStatement.TrySetValue(AttribVals, GetObfuscatedSQL());
             }
 
             AttribDefs.DbCollection.TrySetValue(AttribVals, _parsedSqlStatement.Model);
