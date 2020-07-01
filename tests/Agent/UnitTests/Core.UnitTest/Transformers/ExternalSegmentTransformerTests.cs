@@ -321,7 +321,7 @@ namespace NewRelic.Agent.Core.Transformers
         private static Segment GetSegment(string uri, string method, CrossApplicationResponseData catResponseData = null)
         {
             var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
-            var builder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var builder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             builder.SetSegmentData(data);
             builder.End();
             return builder;
@@ -332,7 +332,7 @@ namespace NewRelic.Agent.Core.Transformers
             var methodCallData = new MethodCallData("foo", "bar", 1);
 
             var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(data);
 
             return new Segment(new TimeSpan(), TimeSpan.FromSeconds(duration), segment, null);

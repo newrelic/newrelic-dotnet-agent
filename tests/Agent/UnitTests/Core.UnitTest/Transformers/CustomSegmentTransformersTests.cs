@@ -189,7 +189,7 @@ namespace NewRelic.Agent.Core.Transformers
         private static Segment GetSegment(string name, double duration)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(new CustomSegmentData(name));
 
             return new Segment(new TimeSpan(), TimeSpan.FromSeconds(duration), segment, null);

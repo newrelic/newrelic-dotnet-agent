@@ -33,11 +33,11 @@ namespace NewRelic.Agent.Core.Spans
 
             foreach (var segment in immutableTransaction.Segments)
             {
-                SetAttributes(segment, immutableTransaction, rootSpanId);
+                var segmentAttribValues = GetAttributeValues(segment, immutableTransaction, rootSpanId);
 
-                segment.AttribValues.MakeImmutable();
+                segmentAttribValues.MakeImmutable();
 
-                yield return segment.AttribValues;
+                yield return segmentAttribValues;
             }
         }
 
@@ -86,18 +86,20 @@ namespace NewRelic.Agent.Core.Spans
             return spanAttributes;
         }
 
-        private void SetAttributes(Segment segment, ImmutableTransaction immutableTransaction, string rootSpanId)
+        private SpanAttributeValueCollection GetAttributeValues(Segment segment, ImmutableTransaction immutableTransaction, string rootSpanId)
         {
-            segment.AttribValues.AddRange(immutableTransaction.CommonSpanAttributes);
+            var attribValues = segment.GetAttributeValues();
 
-            _attribDefs.Guid.TrySetValue(segment.AttribValues, segment.SpanId);
-            _attribDefs.Timestamp.TrySetValue(segment.AttribValues, immutableTransaction.StartTime.Add(segment.RelativeStartTime));
+            attribValues.AddRange(immutableTransaction.CommonSpanAttributes);
 
-            segment.AttribValues.Priority = immutableTransaction.Priority;
+            _attribDefs.Guid.TrySetValue(attribValues, segment.SpanId);
+            _attribDefs.Timestamp.TrySetValue(attribValues, immutableTransaction.StartTime.Add(segment.RelativeStartTime));
 
-            segment.SetAttributeValues();
+            attribValues.Priority = immutableTransaction.Priority;
 
-            _attribDefs.ParentId.TrySetValue(segment.AttribValues, GetParentSpanId(segment, immutableTransaction, rootSpanId));
+            _attribDefs.ParentId.TrySetValue(attribValues, GetParentSpanId(segment, immutableTransaction, rootSpanId));
+
+            return attribValues;
         }
 
         /// <summary>

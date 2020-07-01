@@ -175,7 +175,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         private static Segment GetSegment(string type, string method)
         {
-            var builder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var builder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             builder.SetSegmentData(new MethodSegmentData(type, method));
             builder.End();
             return builder;

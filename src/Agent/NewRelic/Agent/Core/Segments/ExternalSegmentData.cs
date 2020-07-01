@@ -86,14 +86,14 @@ namespace NewRelic.Agent.Core.Segments
         }
 
 
-        public override void RecordSpanTypeSpecificAttributes()
+        public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
         {
-            AttribDefs.SpanCategory.TrySetValue(AttribVals, SpanCategory.Http);
-            AttribDefs.HttpUrl.TrySetValue(AttribVals, Uri);
-            AttribDefs.HttpMethod.TrySetValue(AttribVals, Method);
-            AttribDefs.Component.TrySetValue(AttribVals, _segmentState.TypeName);
-            AttribDefs.SpanKind.TrySetDefault(AttribVals);
-            AttribDefs.HttpStatusCode.TrySetValue(AttribVals, _httpStatusCode);   //Attrib handles null
+            AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Http);
+            AttribDefs.HttpUrl.TrySetValue(attribVals, Uri);
+            AttribDefs.HttpMethod.TrySetValue(attribVals, Method);
+            AttribDefs.Component.TrySetValue(attribVals, _segmentState.TypeName);
+            AttribDefs.SpanKind.TrySetDefault(attribVals);
+            AttribDefs.HttpStatusCode.TrySetValue(attribVals, _httpStatusCode);   //Attrib handles null
         }
 
         public override string GetTransactionTraceName()

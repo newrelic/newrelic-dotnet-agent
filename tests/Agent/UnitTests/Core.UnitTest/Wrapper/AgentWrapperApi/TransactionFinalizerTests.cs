@@ -302,7 +302,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         private static Segment GetFinishedSegment(DateTime transactionStartTime, DateTime startTime, TimeSpan? duration)
         {
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("type", "method", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("type", "method", 1));
             segment.SetSegmentData(new SimpleSegmentData(""));
 
             return new Segment(startTime - transactionStartTime, duration, segment, null);

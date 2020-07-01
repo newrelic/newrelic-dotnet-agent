@@ -1146,7 +1146,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         private Segment GetSegment(string name)
         {
-            var builder = new Segment(_transactionSegmentState, new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var builder = new Segment(_transactionSegmentState, new MethodCallData("foo", "bar", 1));
             builder.SetSegmentData(new SimpleSegmentData(name));
             builder.End();
             return builder;

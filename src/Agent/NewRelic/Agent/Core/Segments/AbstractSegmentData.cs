@@ -17,7 +17,6 @@ namespace NewRelic.Agent.Core.Segments
     {
         protected ISegmentDataState _segmentState;
 
-        protected IAttributeValueCollection AttribVals => _segmentState.AttribValues;
         protected IAttributeDefinitions AttribDefs => _segmentState.AttribDefs;
 
         public virtual SpanCategory SpanCategory => SpanCategory.Generic;
@@ -41,9 +40,9 @@ namespace NewRelic.Agent.Core.Segments
         public abstract string GetTransactionTraceName();
         public abstract void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService);
 
-        public virtual void RecordSpanTypeSpecificAttributes()
+        public virtual void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
         {
-            AttribDefs.SpanCategory.TrySetValue(AttribVals, SpanCategory.Generic);
+            AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Generic);
         }
 
         internal virtual void AddTransactionTraceParameters(IConfigurationService configurationService, Segment segment, IDictionary<string, object> segmentParameters, ImmutableTransaction immutableTransaction)

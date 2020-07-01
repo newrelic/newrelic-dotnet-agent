@@ -681,7 +681,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var headers = new Dictionary<string, string>();
             var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(externalSegmentData);
 
             _agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
@@ -698,7 +698,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             Mock.Arrange(() => _transactionService.GetCurrentInternalTransaction()).Returns(transaction);
 
             var headers = new Dictionary<string, string>();
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
             _agent.CurrentTransaction.ProcessInboundResponse(headers, segment);
@@ -715,7 +715,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var headers = new Dictionary<string, string>();
             var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
-            var segmentBuilder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var segmentBuilder = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segmentBuilder.SetSegmentData(externalSegmentData);
 
             _agent.CurrentTransaction.ProcessInboundResponse(headers, segmentBuilder);
@@ -735,7 +735,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var headers = new Dictionary<string, string>();
             var externalSegmentData = new ExternalSegmentData(new Uri("http://www.google.com"), "method");
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(externalSegmentData);
 
             _agent.CurrentTransaction.ProcessInboundResponse(headers, segment);

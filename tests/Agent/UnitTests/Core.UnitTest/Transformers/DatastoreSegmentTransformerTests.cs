@@ -278,7 +278,7 @@ namespace NewRelic.Agent.Core.Transformers
         private Segment GetSegment(DatastoreVendor vendor, string operation, string model)
         {
             var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, operation));
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(data);
 
             return segment;
@@ -288,7 +288,7 @@ namespace NewRelic.Agent.Core.Transformers
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(vendor, model, operation), null, new ConnectionInfo(host, portPathOrId, null));
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(data);
 
             return segment.CreateSimilar(new TimeSpan(), TimeSpan.FromSeconds(duration), null);

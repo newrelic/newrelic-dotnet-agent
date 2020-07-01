@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         private Segment CreateCustomSegmentBuilder(MethodCallData methodCallData, string name, bool combinable)
         {
             var customSegmentData = new CustomSegmentData(name);
-            var segment = new Segment(_transactionSegmentState, methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(_transactionSegmentState, methodCallData);
             segment.Combinable = combinable;
             segment.SetSegmentData(customSegmentData);
 
