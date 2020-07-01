@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void End_WithException_HasErrorData()
         {
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("Type", "Method", 1));
 
             segment.End(new Exception("Unhandled exception"));
 

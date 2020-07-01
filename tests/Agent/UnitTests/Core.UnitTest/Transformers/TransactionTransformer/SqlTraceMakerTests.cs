@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 new ConnectionInfo(host, portPathOrId, databaseName));
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(data);
 
             return new Segment(startTime, duration, segment, parameters);

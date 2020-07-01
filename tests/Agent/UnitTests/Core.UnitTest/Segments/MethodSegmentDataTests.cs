@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
         public static Segment createMethodSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string type, string method, bool combinable)
         {
-            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
             segment.SetSegmentData(new MethodSegmentData(type, method));
             segment.Combinable = combinable;
 

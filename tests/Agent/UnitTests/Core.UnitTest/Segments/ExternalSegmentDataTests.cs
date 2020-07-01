@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         public static Segment createExternalSegmentBuilder(TimeSpan relativeStart, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> parameters, Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData, bool combinable)
         {
             var data = new ExternalSegmentData(uri, method, crossApplicationResponseData);
-            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
             segment.SetSegmentData(data);
             segment.Combinable = combinable;
 

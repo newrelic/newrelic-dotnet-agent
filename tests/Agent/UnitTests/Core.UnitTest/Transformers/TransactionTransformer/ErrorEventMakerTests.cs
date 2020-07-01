@@ -330,7 +330,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         private static ImmutableSegmentTreeNode BuildNode(TimeSpan relativeStart = new TimeSpan(), TimeSpan? duration = null)
         {
             var methodCallData = new MethodCallData("typeName", "methodName", 1);
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(new SimpleSegmentData(""));
 
             return new SegmentTreeNodeBuilder(

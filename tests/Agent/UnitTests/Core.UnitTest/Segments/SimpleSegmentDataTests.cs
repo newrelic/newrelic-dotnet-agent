@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         public static Segment createSimpleSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> parameters, string name, bool combinable, int managedThreadId = 1)
         {
             var segmentState = createTransactionSegmentState(uniqueId, parentId, managedThreadId);
-            var segment = new Segment(segmentState, methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(segmentState, methodCallData);
             segment.SetSegmentData(new SimpleSegmentData(name));
             segment.Combinable = combinable;
 
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void ThreadIdIsSet()
         {
-            var segment = new Segment(createTransactionSegmentState(3, null, 666), new MethodCallData("type", "method", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(createTransactionSegmentState(3, null, 666), new MethodCallData("type", "method", 1));
             segment.SetSegmentData(new SimpleSegmentData("test"));
 
             Assert.AreEqual(666, segment.ThreadId);

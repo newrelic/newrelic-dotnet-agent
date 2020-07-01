@@ -21,7 +21,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
 
         public static Segment createMessageBrokerSegmentBuilder(TimeSpan start, TimeSpan duration, int uniqueId, int? parentId, MethodCallData methodCallData, IEnumerable<KeyValuePair<string, object>> enumerable, string vendor, string queue, MetricNames.MessageBrokerDestinationType type, MetricNames.MessageBrokerAction action, bool combinable)
         {
-            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(SimpleSegmentDataTests.createTransactionSegmentState(uniqueId, parentId), methodCallData);
             segment.SetSegmentData(new MessageBrokerSegmentData(vendor, queue, type, action));
             segment.Combinable = combinable;
 

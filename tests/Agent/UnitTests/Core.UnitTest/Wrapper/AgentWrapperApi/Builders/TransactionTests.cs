@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
             for (int i = 0; i < segmentCount; i++)
             {
-                var segment = new Segment(transaction, new MethodCallData("foo" + i, "bar" + i, 1), new SpanAttributeValueCollection());
+                var segment = new Segment(transaction, new MethodCallData("foo" + i, "bar" + i, 1));
                 segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.test.com"), "method"));
 
                 segment.End();

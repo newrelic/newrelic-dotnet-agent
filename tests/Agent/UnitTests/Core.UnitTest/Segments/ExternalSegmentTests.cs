@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void Build_IncludesCatParameter_IfCatResponseDataIsSet()
         {
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method", new CrossApplicationResponseData("cpId", "name", 1.1f, 2.2f, 3, "guid", false)));
             segment.End();
 
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Segments.Tests
         [Test]
         public void Build_DoesNotIncludeCatParameter_IfCatResponseDataIsNotSet()
         {
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1), new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("foo", "bar", 1));
             segment.SetSegmentData(new ExternalSegmentData(new Uri("http://www.google.com"), "method"));
 
             Assert.IsFalse(segment.Parameters.ToDictionary().ContainsKey(TransactionGuidSegmentParameterKey));

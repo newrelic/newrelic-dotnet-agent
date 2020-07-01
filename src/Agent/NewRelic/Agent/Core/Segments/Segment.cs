@@ -15,6 +15,7 @@ using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Errors;
+using System.Collections.Concurrent;
 
 namespace NewRelic.Agent.Core.Segments
 {
@@ -26,24 +27,17 @@ namespace NewRelic.Agent.Core.Segments
     public interface ISegmentDataState
     {
         IAttributeDefinitions AttribDefs { get; }
-        SpanAttributeValueCollection AttribValues { get; }
         string TypeName { get; }
     }
 
     public class Segment : IInternalSpan, ISegmentDataState
     {
         public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
-        public SpanAttributeValueCollection AttribValues => _attribValues;
         public string TypeName => MethodCallData.TypeName;
 
-        private readonly SpanAttributeValueCollection _attribValues;
-        private Segment(SpanAttributeValueCollection attribValues)
-        {
-            _attribValues = attribValues;
-        }
+        private SpanAttributeValueCollection _customAttribValues;
 
-        public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData, SpanAttributeValueCollection attribValues)
-            : this(attribValues)
+        public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData)
         {
             ThreadId = transactionSegmentState.CurrentManagedThreadId;
             RelativeStartTime = transactionSegmentState.GetRelativeTime();
@@ -65,11 +59,9 @@ namespace NewRelic.Agent.Core.Segments
         /// <param name="segment"></param>
         /// <param name="parameters"></param>
         public Segment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<string, object>> parameters)
-            : this(segment._attribValues)
         {
             //Attach this segment's data state to the data object.
             this.SetSegmentData(segment.Data);
-
 
             RelativeStartTime = relativeStartTime;
             _transactionSegmentState = segment._transactionSegmentState;
@@ -228,18 +220,22 @@ namespace NewRelic.Agent.Core.Segments
             _parameters = Data.Finish() ?? EmptyImmutableParameters;
         }
 
-        public void SetAttributeValues()
+        public SpanAttributeValueCollection GetAttributeValues()
         {
-            AttribDefs.Duration.TrySetValue(_attribValues, DurationOrZero);
-            AttribDefs.NameForSpan.TrySetValue(_attribValues, GetTransactionTraceName());
+            var attribValues = _customAttribValues ?? new SpanAttributeValueCollection();
+
+            AttribDefs.Duration.TrySetValue(attribValues, DurationOrZero);
+            AttribDefs.NameForSpan.TrySetValue(attribValues, GetTransactionTraceName());
 
             if (ErrorData != null)
             {
-                AttribDefs.SpanErrorClass.TrySetValue(_attribValues, ErrorData.ErrorTypeName);
-                AttribDefs.SpanErrorMessage.TrySetValue(_attribValues, ErrorData.ErrorMessage);
+                AttribDefs.SpanErrorClass.TrySetValue(attribValues, ErrorData.ErrorTypeName);
+                AttribDefs.SpanErrorMessage.TrySetValue(attribValues, ErrorData.ErrorMessage);
             }
 
-            Data.RecordSpanTypeSpecificAttributes();
+            Data.SetSpanTypeSpecificAttributes(attribValues);
+
+            return attribValues;
         }
 
         public void ForceEnd()
@@ -313,9 +309,18 @@ namespace NewRelic.Agent.Core.Segments
             return this;
         }
 
+        private readonly object _customAttribValuesSyncRoot = new object();
+
         public ISpan AddCustomAttribute(string key, object value)
         {
-            AttribDefs.GetCustomAttributeForSpan(key).TrySetValue(_attribValues, value);
+            SpanAttributeValueCollection customAttribValues;
+            lock (_customAttribValuesSyncRoot)
+            {
+                customAttribValues = _customAttribValues ?? (_customAttribValues = new SpanAttributeValueCollection());
+            }
+
+            AttribDefs.GetCustomAttributeForSpan(key).TrySetValue(customAttribValues, value);
+
             return this;
         }
     }

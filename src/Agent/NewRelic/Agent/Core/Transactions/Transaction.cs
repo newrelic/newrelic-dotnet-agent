@@ -182,9 +182,7 @@ namespace NewRelic.Agent.Core.Transactions
         {
             var methodCallData = GetMethodCallData(methodCall);
 
-            var attribValues = new SpanAttributeValueCollection();
-
-            return new Segment(this, methodCallData, attribValues);
+            return new Segment(this, methodCallData);
         }
 
         public ISegment StartCustomSegment(MethodCall methodCall, string segmentName)

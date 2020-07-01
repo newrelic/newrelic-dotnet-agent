@@ -82,7 +82,7 @@ namespace NewRelic.Agent.Core.WireModels
             foreach (string query in queries)
             {
                 var data = new DatastoreSegmentData(databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, null, null), query);
-                var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("typeName", "methodName", 1), new SpanAttributeValueCollection());
+                var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), new MethodCallData("typeName", "methodName", 1));
                 segment.SetSegmentData(data);
 
                 var segments = new List<Segment>()

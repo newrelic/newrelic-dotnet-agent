@@ -325,7 +325,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var data = new DatastoreSegmentData(_databaseService, new ParsedSqlStatement(DatastoreVendor.MSSQL, "test_table", "SELECT"), "SELECT * FROM test_table");
 
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(data);
 
             return new SegmentTreeNodeBuilder(
@@ -341,7 +341,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 "SELECT * FROM test_table",
                 new ConnectionInfo("My Host", "My Port", "My Database"));
 
-            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData, new SpanAttributeValueCollection());
+            var segment = new Segment(TransactionSegmentStateHelpers.GetItransactionSegmentState(), methodCallData);
             segment.SetSegmentData(data);
 
             return new SegmentTreeNodeBuilder(new Segment(startTime, duration ?? TimeSpan.Zero, segment, null))
