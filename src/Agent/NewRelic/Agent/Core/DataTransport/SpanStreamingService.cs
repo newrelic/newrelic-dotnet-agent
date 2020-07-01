@@ -10,7 +10,7 @@ using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-    public class SpanStreamingService : DataStreamingService<Span, RecordStatus>
+    public class SpanStreamingService : DataStreamingService<SpanBatch, RecordStatus>
     {
         public SpanStreamingService(IGrpcWrapper<Span, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
             : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService)

@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.DataTransport
         bool ReadAndValidateConfiguration();
     }
 
-    public abstract class DataStreamingService<TRequest, TResponse> : IDataStreamingService<TRequest, TResponse>
+    public abstract class DataStreamingService<TRequest, TRequestBatch, TResponse> : IDataStreamingService<TRequest, TResponse>
         where TRequest : class, IStreamingModel
     {
         private const string UnimplementedStatus = "UNIMPLEMENTED";
