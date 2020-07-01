@@ -707,7 +707,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 _hasAnyStreamStarted = true;
 
-                _responseStreamsDic[consumerId] = new ResponseStreamWrapper<TResponse>(consumerId, responseStream, streamCancellationTokenSource.Token);
+                _responseStreamsDic[consumerId] = new ResponseStreamWrapper<TResponse>(consumerId, responseStream, serviceAndStreamCancellationTokenSource.Token);
 
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
