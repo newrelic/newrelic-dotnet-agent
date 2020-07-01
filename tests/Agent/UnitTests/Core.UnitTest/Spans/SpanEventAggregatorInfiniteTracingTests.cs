@@ -16,6 +16,7 @@ using Telerik.JustMock;
 using System.Collections.Concurrent;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -50,6 +51,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => config.InfiniteTracingQueueSizeSpans).Returns(10);
             Mock.Arrange(() => config.InfiniteTracingTraceObserverHost).Returns("Seven8TNine");
             Mock.Arrange(() => config.InfiniteTracingTraceObserverPort).Returns("443");
+            Mock.Arrange(() => config.InfiniteTracingPartitionCountSpans).Returns(62);
             return config;
         }
 
@@ -80,10 +82,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void Queue_SizeIsBasedOnConfig()
         {
-            var actualQueue = null as BlockingCollection<Span>;
+            var actualQueue = null as PartitionedBlockingCollection<Span>;
             var streamingSvc = GetMockStreamingService(true, true);
-            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<BlockingCollection<Span>>()))
-                .DoInstead<BlockingCollection<Span>>((c) =>
+            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<PartitionedBlockingCollection<Span>>()))
+                .DoInstead<PartitionedBlockingCollection<Span>>((c) =>
                 {
                     actualQueue = c;
                 });
@@ -93,7 +95,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var aggregator = CreateAggregator(streamingSvc);
             FireAgentConnectedEvent();
 
-            Assert.AreEqual(expectedQueueCapacity, actualQueue.BoundedCapacity, "Queue Capacity");
+            Assert.AreEqual(expectedQueueCapacity, actualQueue.Capacity, "Queue Capacity");
         }
 
         /// <summary>
@@ -103,10 +105,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void Queue_SizeRespondsToConfigChange()
         {
-            var actualQueue = null as BlockingCollection<Span>;
+            var actualQueue = null as PartitionedBlockingCollection<Span>;
             var streamingSvc = GetMockStreamingService(true, true);
-            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<BlockingCollection<Span>>()))
-                .DoInstead<BlockingCollection<Span>>((c) =>
+            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<PartitionedBlockingCollection<Span>>()))
+                .DoInstead<PartitionedBlockingCollection<Span>>((c) =>
                 {
                     actualQueue = c;
                 });
@@ -115,13 +117,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
             FireAgentConnectedEvent();
 
             var expectedCapacityInitial = _currentConfiguration.InfiniteTracingQueueSizeSpans;
-            var actualCapacityInitial = actualQueue.BoundedCapacity;
+            var actualCapacityInitial = actualQueue.Capacity;
 
             var expectedCapacityUpdated = _currentConfiguration.InfiniteTracingQueueSizeSpans * 3;
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(expectedCapacityUpdated);
             FireAgentConnectedEvent();
 
-            var actualCapacityUpdated = actualQueue.BoundedCapacity;
+            var actualCapacityUpdated = actualQueue.Capacity;
 
             NrAssert.Multiple
             (
@@ -146,11 +148,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             var countShutdown = 0;
             var countStartConsuming = 0;
-            var actualQueue = null as BlockingCollection<Span>;
+            var actualQueue = null as PartitionedBlockingCollection<Span>;
 
             var streamingSvc = GetMockStreamingService(true, true);
-            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<BlockingCollection<Span>>()))
-                .DoInstead<BlockingCollection<Span>>((c) =>
+            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<PartitionedBlockingCollection<Span>>()))
+                .DoInstead<PartitionedBlockingCollection<Span>>((c) =>
                 {
                     countStartConsuming++;
                     actualQueue = c;
@@ -184,7 +186,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 (
                     () => Assert.AreEqual(1, countStartConsuming, "StartConsuming SHOULD have been called"),
                     () => Assert.IsNotNull(actualQueue),
-                    () => Assert.AreEqual(configQueueSize, actualQueue.BoundedCapacity),
+                    () => Assert.AreEqual(configQueueSize, actualQueue.Capacity),
                     () => Assert.AreEqual(Math.Min(5, configQueueSize), actualQueue.Count, "Items in the queue")
                 );
             }
@@ -212,7 +214,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [TestCase(5, 0, 2, 1, 5, "Valid to invalid")]      //a new invalid config should prevent restart of the consumer
         public void Queue_SizeConfigChangeScenarios(int expectedInitialCapacity, int expectedUpdatedCapacity, int expectedShutdownCalls, int expectedStartCalls, int expectedDroppedSpans, string _)
         {
-            var actualQueue = null as BlockingCollection<Span>;
+            var actualQueue = null as PartitionedBlockingCollection<Span>;
             var actualStartConsumingCalls = 0;
             var actualShudownCalls = 0;
             long actualCountSpansSeen = 0;
@@ -220,8 +222,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             //Set up Streaming Service that does not dequeue items, that captures a reference to the collection
             var streamingSvc = GetMockStreamingService(true, true);
-            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<BlockingCollection<Span>>()))
-                .DoInstead<BlockingCollection<Span>>((c) =>
+            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<PartitionedBlockingCollection<Span>>()))
+                .DoInstead<PartitionedBlockingCollection<Span>>((c) =>
                 {
                     actualStartConsumingCalls++;
                     actualQueue = c;
@@ -255,12 +257,15 @@ namespace NewRelic.Agent.Core.Spans.Tests
             aggregator.Collect(testItems);
 
             var initialQueue = actualQueue;
+            var initialQueueItems = actualQueue?.ToList();
+
             actualQueue = null;
 
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(expectedUpdatedCapacity);
             FireAgentConnectedEvent();
 
             var updatedQueue = actualQueue;
+            var updatedQueueItems = actualQueue?.ToList();
             actualQueue = null;
 
             NrAssert.Multiple
@@ -275,13 +280,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             {
                 var expectedQueueItems = testItems
                     .Take(expectedInitialCapacity)
-                    .Select(x=>x.Span).ToList();
-
+                    .Select(x => x.Span).ToList();
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(expectedInitialCapacity, initialQueue.BoundedCapacity, $"Initial Queue Size."),
-                    () => Assert.AreEqual(expectedInitialCapacity, initialQueue.Count),
-                    () => CollectionAssert.AreEqual(expectedQueueItems, initialQueue.ToList(), "Initial Queue Items")
+                    () => Assert.AreEqual(expectedInitialCapacity, initialQueue.Capacity, $"Initial Queue Size."),
+                    () => Assert.AreEqual(expectedInitialCapacity, initialQueueItems.Count),
+                    () => CollectionAssert.AreEqual(expectedQueueItems, initialQueueItems, "Initial Queue Items")
                 );
             }
             else
@@ -296,13 +300,15 @@ namespace NewRelic.Agent.Core.Spans.Tests
             // configured and has the correct items
             if (expectedUpdatedCapacity > 0)
             {
-                var expectedQueueItems = testItems.Take(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity)).Select(x=>x.Span).ToList();
+                var expectedQueueItems = testItems
+                    .Take(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity))
+                    .Select(x => x.Span).ToList();
 
                 NrAssert.Multiple
                 (
-                    () => Assert.AreEqual(expectedUpdatedCapacity, updatedQueue.BoundedCapacity, $"Updated Queue Size."),
-                    () => Assert.AreEqual(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity), updatedQueue.Count),
-                    () => CollectionAssert.AreEqual(expectedQueueItems, updatedQueue.ToList(), "Items In updated queue")
+                    () => Assert.AreEqual(expectedUpdatedCapacity, updatedQueue.Capacity, $"Updated Queue Size."),
+                    () => Assert.AreEqual(Math.Min(expectedInitialCapacity, expectedUpdatedCapacity), updatedQueueItems.Count),
+                    () => CollectionAssert.AreEqual(expectedQueueItems, updatedQueueItems, "Items In updated queue")
                 );
             }
 
@@ -402,5 +408,91 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 () => Assert.AreEqual(expectedCountDrops, actualCountSpansDropped, $"{(addAsSingleItems ? "Single Adds" : "Collection")} - Count Dropped")
             );
         }
+
+
+        /// <summary>
+        /// If the queue size is invalid (<=0), 
+        /// 1.  The data streaming service should stop streaming events
+        /// 2.  Items in the queue should be dropped
+        /// 3.  Supportabiilty metric should be recorded
+        /// </summary>
+        [TestCase(-1, ExpectedResult = false)]
+        [TestCase(0, ExpectedResult = false)]
+        [TestCase(1, ExpectedResult = true)]
+        [TestCase(2, ExpectedResult = true)]
+        [TestCase(62, ExpectedResult = true)]
+        [TestCase(63, ExpectedResult = false)]
+        [TestCase(200, ExpectedResult = false)]
+        public bool PartitionCount_ValidConfigSetting(int configPartitionCount)
+        {
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingPartitionCountSpans).Returns(configPartitionCount);
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(10000);
+
+            var streamingSvc = GetMockStreamingService(true, true);
+
+            var aggregator = CreateAggregator(streamingSvc);
+            FireAgentConnectedEvent();
+
+            return aggregator.IsServiceAvailable;
+        }
+
+
+        [TestCase(10000, 10, ExpectedResult = 10)]
+        [TestCase(10000, null, ExpectedResult = 62)]
+        [TestCase(20, 62, ExpectedResult = 20)]
+        [TestCase(20, 10, ExpectedResult = 10)]
+        public int PartitionCount_IsApplied(int configQueueSize, int? configPartitionCount)
+        {
+            if (configPartitionCount.HasValue)
+            {
+                Mock.Arrange(() => _currentConfiguration.InfiniteTracingPartitionCountSpans).Returns(configPartitionCount.Value);
+            }
+
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(configQueueSize);
+
+            var streamingSvc = GetMockStreamingService(true, true);
+
+            PartitionedBlockingCollection<Span> actualCollection = default;
+
+            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<PartitionedBlockingCollection<Span>>()))
+                .DoInstead<PartitionedBlockingCollection<Span>>((c) => { actualCollection = c; });
+
+            var aggregator = CreateAggregator(streamingSvc);
+
+            FireAgentConnectedEvent();
+
+            return (actualCollection?.PartitionCount).GetValueOrDefault(0);
+        }
+
+        [TestCase(10000, 10)]
+        [TestCase(10000, 62)]
+        [TestCase(10000, 7)]
+        [TestCase(9999, 2)]
+        [TestCase(20, 62)]
+        [TestCase(20, 10)]
+        public void QueueSize_PartitionedCorrectly(int configQueueSize, int configPartitionCount)
+        {
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingPartitionCountSpans).Returns(configPartitionCount);
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(configQueueSize);
+
+            var streamingSvc = GetMockStreamingService(true, true);
+
+            PartitionedBlockingCollection<Span> actualCollection = default;
+
+            Mock.Arrange(() => streamingSvc.StartConsumingCollection(Arg.IsAny<PartitionedBlockingCollection<Span>>()))
+                .DoInstead<PartitionedBlockingCollection<Span>>((c) => { actualCollection = c; });
+
+            var aggregator = CreateAggregator(streamingSvc);
+
+            FireAgentConnectedEvent();
+
+            NrAssert.Multiple
+            (
+                () => Assert.AreEqual(configQueueSize, aggregator.Capacity),
+                () => Assert.AreEqual(configQueueSize, actualCollection.Capacity)
+            );
+        }
+
+
     }
 }

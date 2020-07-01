@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
+using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -303,10 +304,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 				signalIsDone.Set();
 			}
 
-			var collection = new BlockingCollection<TRequest>(10);
-			collection.Add(GetRequestModel());
-			collection.Add(GetRequestModel());
-			collection.Add(GetRequestModel());
+            var collection = new PartitionedBlockingCollection<TRequest>(10, 3);
+			collection.TryAdd(GetRequestModel());
+			collection.TryAdd(GetRequestModel());
+			collection.TryAdd(GetRequestModel());
 
 			_streamingSvc.StartConsumingCollection(collection);
 
@@ -377,7 +378,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 }
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(10, 3);
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
@@ -433,7 +434,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     return false;
                 };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
@@ -487,7 +488,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return null;
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
@@ -526,14 +527,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     return true;
                 };
 
-            var queue = new ConcurrentQueue<TRequest>();
-            var sourceCollection = new BlockingCollection<TRequest>(queue);
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(100, 5);
 
-            sourceCollection.Add(item1);
-            sourceCollection.Add(item2);
-            sourceCollection.Add(item3);
-            sourceCollection.Add(item4);
-            sourceCollection.Add(item5);
+            sourceCollection.TryAdd(item1);
+            sourceCollection.TryAdd(item2);
+            sourceCollection.TryAdd(item3);
+            sourceCollection.TryAdd(item4);
+            sourceCollection.TryAdd(item5);
 
             var waitForConsumptionTask = Task.Run(() =>
             {
@@ -585,10 +585,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-            var queue = new ConcurrentQueue<TRequest>();
-            var sourceCollection = new BlockingCollection<TRequest>(queue);
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
 
-            sourceCollection.Add(item1);
+            sourceCollection.TryAdd(item1);
 
             var waitForConsumptionTask = Task.Run(() =>
             {
@@ -617,11 +616,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
 
             var actualItems = new List<TRequest>();
-            var expectedItems = new ConcurrentBag<TRequest>();
+            var requestItems = new ConcurrentBag<TRequest>();
             for (var i = 0; i < 100; i++)
             {
-                expectedItems.Add(GetRequestModel());
+                requestItems.Add(GetRequestModel());
             }
+
+            var expectedItems = requestItems.ToList();
 
             _grpcWrapper.WithTrySendDataImpl = (stream, request, timeout, token) =>
                 {
@@ -629,7 +630,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     return true;
                 };
 
-            var sourceCollection = new BlockingCollection<TRequest>(new ConcurrentQueue<TRequest>(expectedItems));
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(requestItems.Count + 100,3, requestItems);
 
             var waitForConsumptionTask = Task.Run(() =>
             {
@@ -637,13 +638,15 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 {
                     Thread.Sleep(TimeSpan.FromMilliseconds(250));
                 }
+
+                Thread.Sleep(TimeSpan.FromMilliseconds(250));
             });
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(10)), "Task didn't complete"),
+                () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(60)), "Task didn't complete"),
                 () => CollectionAssert.AreEquivalent(expectedItems, actualItems.ToList())
             );
         }
@@ -673,9 +676,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
             };
 
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
 
-            var queue = new BlockingCollection<TRequest>();
-            queue.Add(GetRequestModel());
+            queue.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(queue);
@@ -716,8 +719,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             };
 
 
-            var queue = new BlockingCollection<TRequest>();
-            queue.Add(GetRequestModel());
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+
+            queue.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(queue);
@@ -757,7 +761,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
 
-                _streamingSvc.StartConsumingCollection(new BlockingCollection<TRequest>());
+                _streamingSvc.StartConsumingCollection(new PartitionedBlockingCollection<TRequest>(1000, 3));
 
                 Assert.IsTrue(gotResponseReceivedEvent.WaitOne(TimeSpan.FromSeconds(10)), "Trigger Didn't Fire");
                 Assert.AreEqual(5, responseMessagesSeen);
@@ -816,8 +820,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             };
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
-            _streamingSvc.StartConsumingCollection(new BlockingCollection<TRequest>());
-
+            _streamingSvc.StartConsumingCollection(new PartitionedBlockingCollection<TRequest>(1000, 3));
 
             NrAssert.Multiple
             (
@@ -850,8 +853,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
             };
 
 
-            var queue = new BlockingCollection<TRequest>();
-            queue.Add(GetRequestModel());
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            queue.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(queue);
@@ -921,8 +924,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return false;
             };
 
-            var queue = new BlockingCollection<TRequest>();
-            queue.Add(GetRequestModel());
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            queue.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(queue);
@@ -1080,12 +1083,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 }
             };
 
-            var queue = new BlockingCollection<TRequest>();
-            queue.Add(GetRequestModel());
-            queue.Add(GetRequestModel());
-            queue.Add(GetRequestModel());
-            queue.Add(GetRequestModel());
-            queue.Add(GetRequestModel());
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            queue.TryAdd(GetRequestModel());
+            queue.TryAdd(GetRequestModel());
+            queue.TryAdd(GetRequestModel());
+            queue.TryAdd(GetRequestModel());
+            queue.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(queue);
@@ -1143,7 +1146,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 }
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
@@ -1199,7 +1202,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 }
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
@@ -1273,8 +1276,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-            var queue = new BlockingCollection<TRequest>();
-            queue.Add(GetRequestModel());
+
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            queue.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(queue);
@@ -1333,8 +1337,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
-            sourceCollection.Add(GetRequestModel());
+  
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            sourceCollection.TryAdd(GetRequestModel());
 
             var waitForConsumptionTask = Task.Run(() =>
             {
@@ -1416,8 +1421,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
-            sourceCollection.Add(GetRequestModel());
+
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            sourceCollection.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(sourceCollection);
@@ -1494,8 +1500,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return true;
             };
 
-            var queue = new BlockingCollection<TRequest>();
-            queue.Add(GetRequestModel());
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            queue.TryAdd(GetRequestModel());
 
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
             _streamingSvc.StartConsumingCollection(queue);
@@ -1546,8 +1552,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return false;
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
-            sourceCollection.Add(GetRequestModel());
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            sourceCollection.TryAdd(GetRequestModel());
 
             var waitForConsumptionTask = Task.Run(() =>
             {
@@ -1621,7 +1627,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
             };
 
-            var sourceCollection = new BlockingCollection<TRequest>();
+            var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
 
             _streamingSvc.StartConsumingCollection(sourceCollection);
 

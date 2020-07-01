@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core.Spans
 
             segment.SetAttributeValues();
 
-            _attribDefs.ParentId.TrySetValue(segment.AttribValues, () => GetParentSpanId(segment, immutableTransaction, rootSpanId));
+            _attribDefs.ParentId.TrySetValue(segment.AttribValues, GetParentSpanId(segment, immutableTransaction, rootSpanId));
         }
 
         /// <summary>

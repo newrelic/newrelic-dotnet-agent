@@ -231,7 +231,7 @@ namespace NewRelic.Agent.Core.Segments
         public void SetAttributeValues()
         {
             AttribDefs.Duration.TrySetValue(_attribValues, DurationOrZero);
-            AttribDefs.NameForSpan.TrySetValue(_attribValues, () => GetTransactionTraceName());
+            AttribDefs.NameForSpan.TrySetValue(_attribValues, GetTransactionTraceName());
 
             if (ErrorData != null)
             {

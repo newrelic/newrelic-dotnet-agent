@@ -13,6 +13,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
 using System.Text;
 using System.Linq;
+using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -30,7 +31,7 @@ namespace NewRelic.Agent.Core.DataTransport
         int TimeoutConnectMs { get; }
         int TimeoutSendDataMs { get; }
         void Shutdown(bool withRestart);
-        void StartConsumingCollection(BlockingCollection<TRequest> collection);
+        void StartConsumingCollection(PartitionedBlockingCollection<TRequest> collection);
         bool ReadAndValidateConfiguration();
     }
 
@@ -147,7 +148,7 @@ namespace NewRelic.Agent.Core.DataTransport
             IsConfigurationValid &&
             _hasAnyStreamStarted;
 
-        private BlockingCollection<TRequest> _collection;
+        private PartitionedBlockingCollection<TRequest> _collection;
 
         protected DataStreamingService(IGrpcWrapper<TRequest, TResponse> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
         {
@@ -260,7 +261,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return false;
         }
 
-        private void Restart(BlockingCollection<TRequest> collection)
+        private void Restart(PartitionedBlockingCollection<TRequest> collection)
         {
             _grpcWrapper.Shutdown();
 
@@ -507,7 +508,7 @@ namespace NewRelic.Agent.Core.DataTransport
         /// Designed to be called by the aggregator.
         /// </summary>
         /// <param name="collection"></param>
-        public void StartConsumingCollection(BlockingCollection<TRequest> collection)
+        public void StartConsumingCollection(PartitionedBlockingCollection<TRequest> collection)
         {
             if (collection == null)
             {
@@ -526,7 +527,7 @@ namespace NewRelic.Agent.Core.DataTransport
         /// in the event of unforeseen failures.
         /// </summary>
         /// <param name="collection"></param>
-        private void ExecuteConsumer(BlockingCollection<TRequest> collection)
+        private void ExecuteConsumer(PartitionedBlockingCollection<TRequest> collection)
         {
             var cancellationToken = CancellationToken;
 
@@ -555,7 +556,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private bool StreamRequests(BlockingCollection<TRequest> collection, CancellationToken serviceCancellationToken)
+        private bool StreamRequests(PartitionedBlockingCollection<TRequest> collection, CancellationToken serviceCancellationToken)
         {
             var consumerId = _consumerId.Increment();
             using (var streamCancellationTokenSource = new CancellationTokenSource())
@@ -574,8 +575,11 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
-                    TRequest item;
-                    item = collection.Take(serviceCancellationToken);
+
+                    if(!collection.Take(out var item, serviceCancellationToken))
+                    {
+                        return false;
+                    }
 
                     if (item == null)
                     {
@@ -590,8 +594,10 @@ namespace NewRelic.Agent.Core.DataTransport
                         {
                             _agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(1);
                         }
+
                         _grpcWrapper.TryCloseRequestStream(requestStream);
                         streamCancellationTokenSource.Cancel();
+
                         return trySendStatus == TrySendStatus.ErrorWithImmediateRetry;
                     }
 
