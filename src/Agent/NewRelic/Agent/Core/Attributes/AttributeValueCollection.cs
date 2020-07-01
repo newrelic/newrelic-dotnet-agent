@@ -6,8 +6,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System;
 using NewRelic.Core.Logging;
-using NewRelic.Agent.Core.Utilities;
 using System.Linq;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Attributes
 {
@@ -53,23 +53,36 @@ namespace NewRelic.Agent.Core.Attributes
         public const int MaxCountUserAttrib = 64;
         public const int MaxCountAllAttrib = 255;
 
-        private readonly Dictionary<AttributeClassification, InterlockedCounter> _attribValueCountsDic = new Dictionary<AttributeClassification, InterlockedCounter>()
-        {
-            { AttributeClassification.Intrinsics, new InterlockedCounter() },
-            { AttributeClassification.UserAttributes, new InterlockedCounter() },
-            { AttributeClassification.AgentAttributes, new InterlockedCounter() }
-        };
+        protected static readonly AttributeClassification[] _allClassifications = new[] { AttributeClassification.Intrinsics, AttributeClassification.AgentAttributes, AttributeClassification.UserAttributes };
 
-        public int Count => _attribValueCountsDic[AttributeClassification.UserAttributes].Value
-            + _attribValueCountsDic[AttributeClassification.AgentAttributes].Value
-            + _attribValueCountsDic[AttributeClassification.Intrinsics].Value;
+        private int _attribCountIntrinsicAttribs;
+        private int _attribCountAgentAttribs;
+        private int _attribCountUserAttribs;
+
+        public int Count => _attribCountIntrinsicAttribs + _attribCountAgentAttribs + _attribCountUserAttribs;
 
         public AttributeDestinations[] TargetModelTypes { get; private set; }
         public AttributeDestinations TargetModelTypesAsFlags { get; private set; }
 
         private bool ValidateCollectionLimits(AttributeClassification classification, string name)
         {
-            if (classification == AttributeClassification.UserAttributes && _attribValueCountsDic[classification].Value >= MaxCountUserAttrib)
+            int attribCount = 0;
+            switch(classification)
+            {
+                case AttributeClassification.Intrinsics:
+                    attribCount = _attribCountIntrinsicAttribs;
+                    break;
+
+                case AttributeClassification.AgentAttributes:
+                    attribCount = _attribCountAgentAttribs;
+                    break;
+
+                case AttributeClassification.UserAttributes:
+                    attribCount = _attribCountUserAttribs;
+                    break;
+            }
+
+            if (classification == AttributeClassification.UserAttributes && attribCount >= MaxCountUserAttrib)
             {
                 Log.Debug($"{classification} Attribute '{name}' was not recorded - A max of {MaxCountUserAttrib} {classification} attributes may be supplied.");
                 return false;
@@ -127,13 +140,32 @@ namespace NewRelic.Agent.Core.Attributes
 
         public void AddRange(IAttributeValueCollection fromCollection)
         {
-            foreach (var classification in _attribValueCountsDic.Keys)
+            foreach (var classification in _allClassifications)
             {
                 AddRange(fromCollection.GetAttributeValues(classification));
             }
         }
 
         public bool IsImmutable { get; private set; } = false;
+
+        private void IncrementAttribCount(AttributeClassification classification)
+        {
+            switch (classification)
+            {
+                case AttributeClassification.Intrinsics:
+                    Interlocked.Increment(ref _attribCountIntrinsicAttribs);
+                    break;
+
+                case AttributeClassification.AgentAttributes:
+                    Interlocked.Increment(ref _attribCountAgentAttribs);
+                    break;
+
+                case AttributeClassification.UserAttributes:
+                    Interlocked.Increment(ref _attribCountUserAttribs);
+                    break;
+
+            }
+        }
 
         public bool TrySetValue<TInput, TOutput>(AttributeDefinition<TInput, TOutput> attribDef, TOutput val)
         {
@@ -147,7 +179,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            _attribValueCountsDic[attribDef.Classification].Increment();
+            IncrementAttribCount(attribDef.Classification);
 
             return true;
 
@@ -165,7 +197,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            _attribValueCountsDic[attribValue.AttributeDefinition.Classification].Increment();
+            IncrementAttribCount(attribValue.AttributeDefinition.Classification);
 
             return true;
 
@@ -183,7 +215,8 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            _attribValueCountsDic[attribDef.Classification].Increment();
+
+            IncrementAttribCount(attribDef.Classification);
 
             return true;
         }
@@ -206,7 +239,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return;
             }
 
-            foreach (var classification in _attribValueCountsDic.Keys)
+            foreach (var classification in _allClassifications)
             {
                 var itemsToRemove = new List<TAttrib>();
                 foreach (var attribVal in GetAttribValuesImpl(classification))
@@ -247,27 +280,52 @@ namespace NewRelic.Agent.Core.Attributes
 
         public AttributeValueCollection(params AttributeDestinations[] targetModelTypes) : base(targetModelTypes)
         {
+
         }
 
-        private readonly Dictionary<AttributeClassification, ConcurrentDictionary<AttributeDefinition, AttributeValue>> _attribValues =
-            new Dictionary<AttributeClassification, ConcurrentDictionary<AttributeDefinition, AttributeValue>>()
+
+        private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesIntrinsicAttribs;
+        private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesAgentAttribs;
+        private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesUserAttribs;
+
+        private ConcurrentDictionary<AttributeDefinition, AttributeValue> GetValueDictionary(AttributeClassification classification, bool withCreate)
+        {
+            switch(classification)
             {
-                {AttributeClassification.Intrinsics, new ConcurrentDictionary<AttributeDefinition, AttributeValue>() },
-                {AttributeClassification.AgentAttributes, new ConcurrentDictionary<AttributeDefinition, AttributeValue>() },
-                {AttributeClassification.UserAttributes, new ConcurrentDictionary<AttributeDefinition, AttributeValue>() },
-            };
+                case AttributeClassification.Intrinsics:
+                    return withCreate
+                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new ConcurrentDictionary<AttributeDefinition, AttributeValue>())
+                        : _attribValuesIntrinsicAttribs;
+
+                case AttributeClassification.AgentAttributes:
+                    return withCreate
+                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new ConcurrentDictionary<AttributeDefinition, AttributeValue>())
+                        : _attribValuesAgentAttribs;
+
+                case AttributeClassification.UserAttributes:
+                    return withCreate
+                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new ConcurrentDictionary<AttributeDefinition, AttributeValue>())
+                        : _attribValuesUserAttribs;
+            }
+
+            return null;
+        }
 
         protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
         {
-            return _attribValues[classification].Values;
+            var dic = GetValueDictionary(classification, false);
+
+            return dic == null
+                ? Enumerable.Empty<AttributeValue>()
+                : dic.Values.AsEnumerable();
         }
 
         protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
         {
             foreach(var itemToRemove in itemsToRemove)
             {
-                var dic = _attribValues[itemToRemove.AttributeDefinition.Classification];
-                dic.TryRemove(itemToRemove.AttributeDefinition, out _);
+                var dic = GetValueDictionary(itemToRemove.AttributeDefinition.Classification,false);
+                dic?.TryRemove(itemToRemove.AttributeDefinition, out _);
             }
         }
 
@@ -325,7 +383,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var dic = _attribValues[attribVal.AttributeDefinition.Classification];
+            var dic = GetValueDictionary(attribVal.AttributeDefinition.Classification, true);
             dic[attribVal.AttributeDefinition] = attribVal;
 
             return true;
