@@ -25,9 +25,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
         protected override void HandleServerResponse(RecordStatus responseModel, int consumerId)
         {
+            if (responseModel.MessagesSeen == 0)
+            {
+                return;
+            }
+
             LogMessage(LogLevel.Finest, consumerId, $"Received gRPC Server response: {responseModel.MessagesSeen}");
 
             RecordReceived(responseModel.MessagesSeen);
+                
         }
 
         private void RecordReceived(ulong countItems)
