@@ -851,12 +851,18 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Span Events
 
+        bool? _spanEventsEnabled = null;
         public virtual bool SpanEventsEnabled
         {
             get
             {
-                var enabled = ServerCanDisable(_serverConfiguration.SpanEventCollectionEnabled, EnvironmentOverrides(_localConfiguration.spanEvents.enabled, "NEW_RELIC_SPAN_EVENTS_ENABLED"));
-                return enabled && DistributedTracingEnabled;
+                if (!_spanEventsEnabled.HasValue)
+                {
+                    var enabled = ServerCanDisable(_serverConfiguration.SpanEventCollectionEnabled, EnvironmentOverrides(_localConfiguration.spanEvents.enabled, "NEW_RELIC_SPAN_EVENTS_ENABLED"));
+                    _spanEventsEnabled = enabled && DistributedTracingEnabled;
+                }
+
+                return _spanEventsEnabled.Value;
             }
         }
 

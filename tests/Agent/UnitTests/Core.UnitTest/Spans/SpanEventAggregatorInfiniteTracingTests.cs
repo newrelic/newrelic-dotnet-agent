@@ -348,6 +348,32 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
+        [Test]
+        public void AggregatorIsEnabledShouldRespondsToConfig
+        (
+            [Values(true, false)] bool streamingSvcEnabled,
+            [Values(true, false)] bool distributedTracingEnabled,
+            [Values(true, false)] bool spanEventsEnabled)
+        {
+            bool expectedIsServiceEnabledValue = streamingSvcEnabled && distributedTracingEnabled && spanEventsEnabled;
+
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverHost).Returns(streamingSvcEnabled ? "infiniteTracing.net" : null);
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(10);
+            Mock.Arrange(() => _currentConfiguration.DistributedTracingEnabled).Returns(distributedTracingEnabled);
+            Mock.Arrange(() => _currentConfiguration.SpanEventsEnabled).Returns(spanEventsEnabled);
+
+            var streamingSvc = GetMockStreamingService(streamingSvcEnabled, true);
+
+            var aggregator = CreateAggregator(streamingSvc);
+
+            FireAgentConnectedEvent();
+
+            NrAssert.Multiple
+            (
+                () => Assert.AreEqual(expectedIsServiceEnabledValue, aggregator.IsServiceEnabled)
+            );
+        }
+
 
         /// <summary>
         /// 
