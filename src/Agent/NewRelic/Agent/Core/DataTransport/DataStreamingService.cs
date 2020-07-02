@@ -3,7 +3,6 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -11,12 +10,81 @@ using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Configuration;
-using System.Text;
 using System.Linq;
 using NewRelic.Collections;
+using System.Collections.Concurrent;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
+
+    public class ResponseStreamWrapper<TResponse>
+    {
+        public readonly int ConsumerID;
+        
+        private bool _isInvalid = false;
+        public bool IsInvalid => _streamCancellationToken.IsCancellationRequested || _isInvalid || (_task?.IsFaulted).GetValueOrDefault(false);
+
+
+        private readonly IAsyncStreamReader<TResponse> _responseStream;
+        private readonly CancellationToken _streamCancellationToken;
+
+        private Task<int> _task;
+
+        public ResponseStreamWrapper(int consumerID, IAsyncStreamReader<TResponse> responseStream, CancellationToken streamCancellationToken)
+        {
+            ConsumerID = consumerID;
+            _responseStream = responseStream;
+            _streamCancellationToken = streamCancellationToken;
+        }
+
+        private async Task<int> WaitForResponse()
+        {
+            var success = false;
+
+            try
+            {
+                success = await _responseStream.MoveNext(_streamCancellationToken);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+
+                var logLevel = LogLevel.Finest;
+
+                var aggEx = ex as AggregateException;
+                if (aggEx != null && aggEx.InnerException != null)
+                {
+                    var rpcEx = aggEx.InnerException as RpcException;
+
+                    logLevel = (rpcEx != null && rpcEx.StatusCode == StatusCode.Cancelled)
+                        ? LogLevel.Finest
+                        : LogLevel.Debug;
+                }
+
+                if (Log.IsEnabledFor(logLevel))
+                {
+                    Log.LogMessage(logLevel, $"Exception encountered while handling gRPC server responses: {ex}");
+                }
+            }
+
+            _isInvalid = !success || _streamCancellationToken.IsCancellationRequested;
+
+            return ConsumerID;
+        }
+
+        public Task<int> GetAwaiter()
+        {
+            return _task ?? (_task = WaitForResponse());
+        }
+
+        public TResponse RetrieveResponse()
+        {
+            _task = null;
+            return _responseStream.Current;
+        }
+    }
+
+
     public interface IDataStreamingService<TRequest, TResponse> : IDisposable
         where TRequest : IStreamingModel
     {
@@ -278,6 +346,75 @@ namespace NewRelic.Agent.Core.DataTransport
             } while (_shouldRestart);
         }
 
+        private readonly ConcurrentDictionary<int, ResponseStreamWrapper<TResponse>> _responseStreamsDic = new ConcurrentDictionary<int, ResponseStreamWrapper<TResponse>>();
+
+        private static readonly TimeSpan _responseStreamResponseInterval = TimeSpan.FromSeconds(2);
+
+        private void ManageResponseStreams(CancellationToken serviceCancellationToken)
+        {
+            while (!serviceCancellationToken.IsCancellationRequested)
+            {
+                //Remove anything that should not be there
+                foreach(var x in _responseStreamsDic.Values.Where(x=>x.IsInvalid).ToList())
+                {
+                    LogMessage(LogLevel.Finest, x.ConsumerID, "Response Stream Manager - Removing Stream");
+                    _responseStreamsDic.TryRemove(x.ConsumerID, out _);
+                }
+
+                var tasksToWaitFor = _responseStreamsDic.Values
+                    .Where(x => !x.IsInvalid)
+                    .Select(x => x.GetAwaiter())
+                    .ToArray();
+
+                if(tasksToWaitFor.Length == 0)
+                {
+                    Thread.Sleep(_responseStreamResponseInterval);
+                    continue;
+                }
+
+                //Wait for task to complete or expire after interval window
+                var taskIdx = Task.WaitAny(tasksToWaitFor, _responseStreamResponseInterval);
+
+                //Service is being shutdown
+                if(serviceCancellationToken.IsCancellationRequested)
+                {
+                    LogMessage(LogLevel.Debug, "Response Stream Manager - Shutting Down");
+                    break;
+                }
+
+                //None of the tasks completed, no results to process
+                if(taskIdx < 0)
+                {
+                    continue;
+                }
+
+                var task = tasksToWaitFor[taskIdx];
+
+                if (task.IsFaulted)
+                {
+                    LogMessage(LogLevel.Debug, $"Response Stream Manager - Task {taskIdx} Faulted",task.Exception);
+                    continue;
+                }
+
+                var consumerId = task.Result;
+
+                if (_responseStreamsDic.TryGetValue(consumerId, out var responseStreamInfo))
+                {
+                    if (responseStreamInfo.IsInvalid)
+                    {
+                        LogMessage(LogLevel.Finest, consumerId, "Response Stream has been marked invalid");
+                    }
+                    else
+                    {
+                        var responseMsg = responseStreamInfo.RetrieveResponse();
+                        HandleServerResponse(responseMsg, consumerId);
+                    }
+                }
+            }
+
+            _responseStreamsDic.Clear();
+        }
+
         private void StartConsumers()
         {
             _hasAnyStreamStarted = false;
@@ -289,6 +426,9 @@ namespace NewRelic.Agent.Core.DataTransport
             {
                 return;
             }
+
+            _responseStreamsDic.Clear();
+            Task.Run(() => ManageResponseStreams(CancellationToken));
 
             //Start up the workers
             for (var i = 0; i < _configuration.InfiniteTracingTraceCountConsumers; i++)
@@ -425,9 +565,12 @@ namespace NewRelic.Agent.Core.DataTransport
             _grpcWrapper.Shutdown();
         }
 
-        private IClientStreamWriter<TRequest> GetRequestStreamWithRetry(int consumerId, CancellationToken cancellationToken)
+        private bool GetRequestStreamWithRetry(int consumerId, CancellationToken cancellationToken, out IClientStreamWriter<TRequest> requestStream, out IAsyncStreamReader<TResponse> responseStream)
         {
             var attemptId = 0;
+
+            requestStream = null;
+            responseStream = null;
 
             LogMessage(LogLevel.Finest, consumerId, $"Creating gRPC request stream (attempt {attemptId}).");
 
@@ -439,12 +582,10 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     using (_agentTimerService.StartNew(_timerEventNameForStream))
                     {
-                        var requestStream = _grpcWrapper.CreateStreams(MetadataHeaders, TimeoutConnectMs, cancellationToken, handleResponseFunc);
-
-                        if (requestStream != null)
+                        if (_grpcWrapper.CreateStreams(MetadataHeaders, TimeoutConnectMs, cancellationToken, out requestStream, out responseStream))
                         {
                             LogMessage(LogLevel.Finest, consumerId, $"gRPC request stream connected (attempt {attemptId}).");
-                            return requestStream;
+                            return true;
                         }
                     }
 
@@ -467,14 +608,14 @@ namespace NewRelic.Agent.Core.DataTransport
                         {
                             LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is no longer available and no reconnection attempts will be made.");
                             Shutdown(false);
-                            return null;
+                            return false;
                         }
 
                         if (grpcWrapperEx.Status == UnavailableStatus)
                         {
                             LogMessage(LogLevel.Error, consumerId, $"The gRPC request stream could not be created because the gRPC endpoint defined at {EndpointHost}:{EndpointPort} is no longer available so we will restart this service.");
                             Shutdown(true);
-                            return null;
+                            return false;
                         }
 
                         if (grpcWrapperEx.Status == OkStatus)
@@ -496,12 +637,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 attemptId = shouldRetryImmediately ? 0 : attemptId + 1;
             }
 
-            return null;
-
-            void handleResponseFunc(TResponse responseMsg)
-            {
-                HandleServerResponse(responseMsg, consumerId);
-            }
+            return false;
         }
 
         /// <summary>
@@ -562,9 +698,7 @@ namespace NewRelic.Agent.Core.DataTransport
             using (var streamCancellationTokenSource = new CancellationTokenSource())
             using (var serviceAndStreamCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(serviceCancellationToken, streamCancellationTokenSource.Token))
             {
-                var requestStream = GetRequestStreamWithRetry(consumerId, serviceAndStreamCancellationTokenSource.Token);
-
-                if (requestStream == null)
+                if (!GetRequestStreamWithRetry(consumerId, serviceAndStreamCancellationTokenSource.Token, out var requestStream, out var responseStream))
                 {
                     LogMessage(LogLevel.Debug, consumerId, "Unable to obtain Stream, exiting consumer");
                     streamCancellationTokenSource.Cancel();
@@ -572,6 +706,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 }
 
                 _hasAnyStreamStarted = true;
+
+                _responseStreamsDic[consumerId] = new ResponseStreamWrapper<TResponse>(consumerId, responseStream, serviceAndStreamCancellationTokenSource.Token);
 
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {

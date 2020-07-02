@@ -53,11 +53,10 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         bool IsConnected { get; }
         bool CreateChannel(string host, int port, bool ssl, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken);
-        IClientStreamWriter<TRequest> CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, Action<TResponse> responseDelegate);
+        bool CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, out IClientStreamWriter<TRequest> requestStream, out IAsyncStreamReader<TResponse> responseStream);
         bool TrySendData(IClientStreamWriter<TRequest> stream, TRequest item, int sendTimeoutMs, CancellationToken cancellationToken);
         void TryCloseRequestStream(IClientStreamWriter<TRequest> requestStream);
         void Shutdown();
-        void ManageResponseStream(CancellationToken cancellationToken, IAsyncStreamReader<TResponse> responseStream, Action<TResponse> responseDelegate);
     }
 
     public abstract class GrpcWrapper<TRequest, TResponse> : IGrpcWrapper<TRequest, TResponse>
@@ -128,22 +127,23 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        public IClientStreamWriter<TRequest> CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, Action<TResponse> responseDelegate)
+        public bool CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, out IClientStreamWriter<TRequest> requestStream, out IAsyncStreamReader<TResponse> responseStream)
         {
+            requestStream = null;
+            responseStream = null;
+
             try
             {
                 var streams = CreateStreamsImpl(_channel, headers, connectTimeoutMs, cancellationToken);
 
-                if (responseDelegate != null)
-                {
-                    Task.Run(() => ManageResponseStream(cancellationToken, streams.ResponseStream, responseDelegate));
-                }
+                requestStream = streams.RequestStream;
+                responseStream = streams.ResponseStream;
 
-                return streams.RequestStream;
+                return true;
             }
             catch (GrpcWrapperChannelNotAvailableException)
             {
-                return null;
+                return false;
             }
             catch (Exception ex)
             {
@@ -227,41 +227,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 {
                     Log.Finest($"{this.GetType().Name}: Error encountered closing gRPC request channel: {ex}");
 
-                }
-            }
-        }
-
-        public void ManageResponseStream(CancellationToken cancellationToken, IAsyncStreamReader<TResponse> responseStream, Action<TResponse> responseDelegate)
-        {
-            try
-            {
-                while (responseStream.MoveNext(cancellationToken).Result)
-                {
-                    var response = responseStream.Current;
-
-                    if (response != null)
-                    {
-                        responseDelegate(response);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                var logLevel = LogLevel.Finest;
-
-                var aggEx = ex as AggregateException;
-                if (aggEx != null && aggEx.InnerException != null)
-                {
-                    var rpcEx = aggEx.InnerException as RpcException;
-
-                    logLevel = (rpcEx != null && rpcEx.StatusCode == StatusCode.Cancelled)
-                        ? LogLevel.Finest
-                        : LogLevel.Debug;
-                }
-
-                if (Log.IsEnabledFor(logLevel))
-                {
-                    Log.LogMessage(logLevel, $"Exception encountered while handling gRPC server responses: {ex}");
                 }
             }
         }

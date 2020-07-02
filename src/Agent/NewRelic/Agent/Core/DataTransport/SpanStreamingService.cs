@@ -28,6 +28,7 @@ namespace NewRelic.Agent.Core.DataTransport
             LogMessage(LogLevel.Finest, consumerId, $"Received gRPC Server response: {responseModel.MessagesSeen}");
 
             RecordReceived(responseModel.MessagesSeen);
+                
         }
 
         private void RecordReceived(ulong countItems)

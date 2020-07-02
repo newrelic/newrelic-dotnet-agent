@@ -19,6 +19,7 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
+using Telerik.JustMock.AutoMock.Ninject.Activation;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -36,14 +37,17 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         public Task<bool> MoveNext(CancellationToken cancellationToken)
         {
-            if (_responses.TryTake(out var responseItem))
+
+            try
             {
-                Current = responseItem;
+                Current = _responses.Take(cancellationToken);
                 return Task.FromResult(true);
             }
-
-            Current = null;
-            return Task.FromResult(false);
+            catch
+            {
+                Current = null;
+                return Task.FromResult(false);
+            }
         }
     }
 
@@ -73,42 +77,18 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return new Tuple<IClientStreamWriter<TRequest>, MockResponseStream<TResponse>>(requestStream, responseStream);
         }
 
-        public System.Func<bool>
-            WithIsConnectedImpl
-        { get; set; } = () => true;
+        public System.Func<bool> WithIsConnectedImpl { get; set; } = () => true;
 
-        public System.Func<string, int, bool, Metadata, CancellationToken, bool>
-            WithCreateChannelImpl
-        { get; set; } = (host, port, ssl, headers, cancellationToken) => true;
+        public System.Func<string, int, bool, Metadata, CancellationToken, bool> WithCreateChannelImpl { get; set; } = (host, port, ssl, headers, cancellationToken) => true;
 
-        public System.Func<Metadata, CancellationToken, Tuple<IClientStreamWriter<TRequest>, MockResponseStream<TResponse>>>
-            WithCreateStreamsImpl
-        { get; set; } = (metadata, CancellationToken) =>
-{
-    return CreateStreams();
-};
+        public System.Func<Metadata, CancellationToken, Tuple<IClientStreamWriter<TRequest>, MockResponseStream<TResponse>>> WithCreateStreamsImpl { get; set; } = (metadata, CancellationToken) =>
+        { 
+            return CreateStreams();
+        };
 
-        public System.Action
-            WithShutdownImpl
-        { get; set; } = () => { };
+        public System.Action WithShutdownImpl { get; set; } = () => { };
 
-        public System.Func<IClientStreamWriter<TRequest>, TRequest, int, CancellationToken, bool> WithTrySendDataImpl { get; set; }
-            = (requestStream, request, timeoutMs, CancellationToken) => true;
-
-        public Action<CancellationToken, IAsyncStreamReader<TResponse>, Action<TResponse>>
-            WithManageResponseStreamImpl
-        { get; set; } = (cancellationToken, responseStream, responseDelegate) =>
-{
-    while (responseStream.MoveNext(cancellationToken).Result)
-    {
-        var response = responseStream.Current;
-
-        if (response != null)
-        {
-            responseDelegate(response);
-        }
-    }
-};
+        public System.Func<IClientStreamWriter<TRequest>, TRequest, int, CancellationToken, bool> WithTrySendDataImpl { get; set; } = (requestStream, request, timeoutMs, CancellationToken) => true;
 
         public bool IsConnected => WithIsConnectedImpl?.Invoke() ?? false;
 
@@ -118,18 +98,14 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return connected;
         }
 
-        public IClientStreamWriter<TRequest> CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, Action<TResponse> responseDelegate)
+        public bool CreateStreams(Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken, out IClientStreamWriter<TRequest> requestStream, out IAsyncStreamReader<TResponse> responseStream)
         {
             var streams = WithCreateStreamsImpl?.Invoke(headers, cancellationToken);
+            
+            requestStream = streams?.Item1;
+            responseStream = streams?.Item2;
 
-            if (streams == null)
-            {
-                return null;
-            }
-
-            ManageResponseStream(cancellationToken, streams.Item2, responseDelegate);
-
-            return streams.Item1;
+            return streams != null;
         }
 
         public void Shutdown()
@@ -144,25 +120,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
         public bool TrySendData(IClientStreamWriter<TRequest> stream, TRequest item, int timeoutWindowMs, CancellationToken cancellationToken)
         {
             return WithTrySendDataImpl(stream, item, timeoutWindowMs, cancellationToken);
-        }
-
-        public void ManageResponseStream(CancellationToken cancellationToken, IAsyncStreamReader<TResponse> responseStream, Action<TResponse> responseDelegate)
-        {
-            try
-            {
-                while (responseStream.MoveNext(cancellationToken).Result)
-                {
-                    var response = responseStream.Current;
-
-                    if (response != null)
-                    {
-                        responseDelegate(response);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-            }
         }
     }
 
