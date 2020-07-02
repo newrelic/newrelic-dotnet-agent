@@ -2133,15 +2133,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             );
         }
 
-        [TestCase("10000", "232", ExpectedResult = 10000)]
+        [TestCase("12000", "232", ExpectedResult = 12000)]
         [TestCase("-342", "198", ExpectedResult = -342)]
-        [TestCase(null, null, ExpectedResult = 2000)]
-        [TestCase("", null, ExpectedResult = 2000)]
-        [TestCase(null, "", ExpectedResult = 2000)]
-        [TestCase("", "", ExpectedResult = 2000)]
-        [TestCase("", "", ExpectedResult = 2000)]
+        [TestCase(null, null, ExpectedResult = 10000)]
+        [TestCase("", null, ExpectedResult = 10000)]
+        [TestCase(null, "", ExpectedResult = 10000)]
+        [TestCase("", "", ExpectedResult = 10000)]
+        [TestCase("", "", ExpectedResult = 10000)]
         [TestCase("XYZ", "104", ExpectedResult = 104)]
-        [TestCase("XYZ", "ABC", ExpectedResult = 2000)]
+        [TestCase("XYZ", "ABC", ExpectedResult = 10000)]
         public int InfiniteTracing_TimeoutData(string envConfigVal, string appSettingsValue)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingTimeoutSend", value = appSettingsValue });
