@@ -2,6 +2,7 @@
 * Copyright 2020 New Relic Corporation. All rights reserved.
 * SPDX-License-Identifier: Apache-2.0
 */
+using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Segments;
@@ -61,7 +62,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout();
         }
 
-        protected override SpanBatch CreateBatch(Span[] items)
+        protected override SpanBatch CreateBatch(IList<Span> items)
         {
             var batch = new SpanBatch();
             batch.Spans.AddRange(items);

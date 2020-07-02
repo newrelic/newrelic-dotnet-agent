@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
     }
 
-    internal class SpanStreamingServiceTests : DataStreamingServiceTests<SpanStreamingService, Span, RecordStatus>
+    internal class SpanStreamingServiceTests : DataStreamingServiceTests<SpanStreamingService, Span, SpanBatch, RecordStatus>
     {
         public override IConfiguration GetDefaultConfiguration()
         {
@@ -145,7 +145,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return config;
         }
 
-        protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<Span, RecordStatus> grpcWrapper, IConfigurationService configSvc)
+        protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IConfigurationService configSvc)
         {
             return new SpanStreamingService(grpcWrapper, delayer, configSvc, _agentHealthReporter, _agentTimerService);
         }
@@ -162,8 +162,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
     }
 
     [TestFixture]
-    internal abstract class DataStreamingServiceTests<TService, TRequest, TResponse>
-        where TService : IDataStreamingService<TRequest, TResponse>
+    internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatch, TResponse>
+        where TService : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
         where TResponse : class
     {
@@ -173,7 +173,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected const string DefaultAgentRunToken = "defaultagentruntoken";
 
         public abstract IConfiguration GetDefaultConfiguration();
-        protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequest, TResponse> grpcWrapper, IConfigurationService configSvc);
+        protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IConfigurationService configSvc);
         protected abstract TRequest GetRequestModel();
         protected abstract TResponse GetResponseModel(ulong messagesSeen);
 
@@ -181,7 +181,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected int? TestDelayValue;
         protected Dictionary<string, string> TestRequestHeadersMap;
 
-        private MockGrpcWrapper<TRequest, TResponse> _grpcWrapper;
+        private MockGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private IDelayer _delayer;
         private IConfigurationService _configSvc;
         protected IConfiguration _currentConfiguration => _configSvc?.Configuration;
@@ -214,7 +214,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             TestDelayValue = null;
             TestRequestHeadersMap = null;
 
-            _grpcWrapper = new MockGrpcWrapper<TRequest, TResponse>();
+            _grpcWrapper = new MockGrpcWrapper<TRequestBatch, TResponse>();
             _delayer = Mock.Create<IDelayer>();
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _agentTimerService = Mock.Create<IAgentTimerService>();
@@ -434,7 +434,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 if (attempt == succeedOnAttempt)
                 {
                     signalIsDone.Set();
-                    return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+                    return MockGrpcWrapper<TRequestBatch, TResponse>.CreateStreams();
                 }
 
                 if (throwExceptionDuringCreateStream)

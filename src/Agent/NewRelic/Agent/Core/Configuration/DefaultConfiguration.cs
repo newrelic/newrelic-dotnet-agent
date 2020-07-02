@@ -938,7 +938,7 @@ namespace NewRelic.Agent.Core.Configuration
         private int? _infiniteTracingTimeoutMsSendData = null;
         public int InfiniteTracingTraceTimeoutMsSendData => (_infiniteTracingTimeoutMsSendData
             ?? (_infiniteTracingTimeoutMsSendData = EnvironmentOverrides(
-                TryGetAppSettingAsIntWithDefault("InfiniteTracingTimeoutSend", 2000)
+                TryGetAppSettingAsIntWithDefault("InfiniteTracingTimeoutSend", 10000)
                 , "NEW_RELIC_INFINITE_TRACING_TIMEOUT_SEND")).Value);
 
         private int? _infiniteTracingCountWorkers = null;

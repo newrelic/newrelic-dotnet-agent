@@ -393,9 +393,9 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         private InterlockedLongCounter _infiniteTracingSpanEventsSent = new InterlockedLongCounter();
-        public void ReportInfiniteTracingSpanEventsSent()
+        public void ReportInfiniteTracingSpanEventsSent(long countSpans)
         {
-            _infiniteTracingSpanEventsSent.Increment();
+            _infiniteTracingSpanEventsSent.Add(countSpans);
         }
 
         private InterlockedLongCounter _infiniteTracingSpanEventsReceived = new InterlockedLongCounter();
