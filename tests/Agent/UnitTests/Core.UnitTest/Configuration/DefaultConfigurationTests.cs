@@ -2216,7 +2216,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
 
-        [TestCase("100", "232", ExpectedResult = 62)]
+        [TestCase("100", "232", ExpectedResult = 100)]
         [TestCase("-342", "198", ExpectedResult = -342)]
         [TestCase(null, null, ExpectedResult = 62)]
         [TestCase("", null, ExpectedResult = 62)]
@@ -2226,7 +2226,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("XYZ", "876", ExpectedResult = 876)]
         [TestCase("XYZ", "ABC", ExpectedResult = 62)]
         [TestCase("103.98", null, ExpectedResult = 62)]
-        [TestCase("103.98", "200", ExpectedResult = 62)]
+        [TestCase("103.98", "200", ExpectedResult = 200)]
         [TestCase(null, "98.6", ExpectedResult = 62)]
         public int InfiniteTracing_SpanPartitionCount(string envConfigVal, string appSettingVal)
         {
