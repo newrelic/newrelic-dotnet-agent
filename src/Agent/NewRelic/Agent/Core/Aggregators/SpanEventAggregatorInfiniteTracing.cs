@@ -76,6 +76,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
                 if(IsServiceEnabled)
                 {
+
+                    Log.Info($"SpanEventAggregatorInfiniteTracing: Configuration is invalid - Infinite Tracing will NOT be enabled.");
                     LogConfiguration();
                 }
 

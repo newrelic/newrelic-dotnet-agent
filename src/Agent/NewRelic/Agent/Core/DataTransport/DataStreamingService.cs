@@ -79,6 +79,7 @@ namespace NewRelic.Agent.Core.DataTransport
         string EndpointHost { get; }
         int EndpointPort { get; }
         bool EndpointSsl { get; }
+        int BatchSizeConfigValue { get; }
         float? EndpointTestFlaky { get; }
         int? EndpointTestDelayMs { get; }
         int TimeoutConnectMs { get; }
@@ -178,12 +179,14 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool EndpointSsl { get; private set; }
         public float? EndpointTestFlaky { get; private set; }
         public int? EndpointTestDelayMs { get; private set; }
+        public abstract int BatchSizeConfigValue { get; }
 
         protected abstract string EndpointHostConfigValue { get; }
         protected abstract string EndpointPortConfigValue { get; }
         protected abstract string EndpointSslConfigValue { get; }
         protected abstract float? EndpointTestFlakyConfigValue { get; }
         protected abstract int? EndpointTestDelayMsConfigValue { get; }
+
 
         protected abstract void HandleServerResponse(TResponse responseModel, int consumerId);
 
@@ -258,8 +261,9 @@ namespace NewRelic.Agent.Core.DataTransport
             var isValidDelay = EndpointTestDelayMsConfigValue == null || (EndpointTestDelayMsConfigValue >= 0);
             var isValidTimeoutConnect = TimeoutConnectMs > 0;
             var isValidTimeoutSend = TimeoutSendDataMs > 0;
+            var isValidBatchSize = BatchSizeConfigValue > 0;
 
-            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend)
+            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend && isValidBatchSize)
             {
                 EndpointHost = configHost;
                 EndpointPort = configPort;
@@ -309,6 +313,11 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!isValidTimeoutSend)
             {
                 LogMessage(LogLevel.Info, $"Invalid Configuration.  Timeout Send Ms '{TimeoutSendDataMs}' is not valid.  Infinite Tracing will NOT be started.");
+            }
+
+            if (!isValidBatchSize)
+            {
+                LogMessage(LogLevel.Info, $"Invalid Configuration. Batch Size '{BatchSizeConfigValue}' is not valid.  Infinite Tracing will NOT be started.");
             }
 
             return false;
@@ -739,7 +748,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
 
-                    if(!DequeueItems(collection, 500, serviceCancellationToken, out var items))
+                    if(!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
                     {
                         return false;
                     }

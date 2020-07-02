@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
     internal class SpanEventAggregatorTests
     {
         private IDataTransportService _dataTransportService;
-        private IDataStreamingService<Span, RecordStatus> _spanStreamingService;
+        private IDataStreamingService<Span, SpanBatch, RecordStatus> _spanStreamingService;
         private IAgentHealthReporter _agentHealthReporter;
         private SpanEventAggregator _spanEventAggregator;
         private ConfigurationAutoResponder _configurationAutoResponder;
@@ -112,7 +112,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _configurationAutoResponder = new ConfigurationAutoResponder(configuration);
 
             _dataTransportService = Mock.Create<IDataTransportService>();
-            _spanStreamingService = Mock.Create<IDataStreamingService<Span, RecordStatus>>();
+            _spanStreamingService = Mock.Create<IDataStreamingService<Span, SpanBatch, RecordStatus>>();
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _processStatic = Mock.Create<IProcessStatic>();
 
