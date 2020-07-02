@@ -621,6 +621,52 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
+        [TestCase(3, 10, new int[] { 3, 3, 3, 1 })]
+        [TestCase(100, 10, new int[] { 10 })]
+        public void BatchSizeConfigIsHonored(int configBatchSize, int expectedCountItems, int[] expectedBatchSizes)
+        {
+            var signalIsDone = new ManualResetEventSlim();
+
+            var config = GetDefaultConfiguration();
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans).Returns(configBatchSize);
+
+            var actualBatchSizes = new List<int>();
+            _grpcWrapper.WithTrySendDataImpl = (stream, batch, timeoutMs, token) =>
+            {
+                var items = GetBatchItems(batch);
+                actualBatchSizes.Add(items.Count());
+
+                if(actualBatchSizes.Sum(x=>x) >= expectedCountItems)
+                {
+                    signalIsDone.Set();
+                }
+
+                return true;
+            };
+
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 2);
+            for(var i =0; i < expectedCountItems; i++)
+            {
+                queue.TryAdd(GetRequestModel());
+            }
+
+            var queueCount = queue.Count;
+
+
+
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc.StartConsumingCollection(queue);
+
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                () => Assert.AreEqual(expectedCountItems, queueCount, "Collection count"),
+                () => Assert.AreEqual(expectedBatchSizes.Length, actualBatchSizes.Count, "Number of Batches"),
+                () => CollectionAssert.AreEqual(expectedBatchSizes, actualBatchSizes.ToArray(), "Batch Sizes")
+            );
+        }
+
         [Test]
         public void ErrorsWithTheRequestStream_ShouldShutdownResponseStream()
         {
@@ -1646,5 +1692,24 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             Assert.AreEqual(expectedIsConfigValid, actualIsConfigValid, "Is Config Valid");
         }
+
+        [TestCase(-1, false)]
+        [TestCase(0, false)]
+        [TestCase(1, true)]
+        [TestCase(10, true)]
+        [TestCase(500, true)]
+        public void ConfigSettingValidBatchSize(int configValue, bool expectedIsConfigValid)
+        {
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans)
+                .Returns(configValue);
+
+            var svc = GetService(_delayer, _grpcWrapper, _configSvc);
+
+            var actualIsConfigValid = svc.ReadAndValidateConfiguration();
+
+            Assert.AreEqual(expectedIsConfigValid, actualIsConfigValid, "Is Config Valid");
+        }
+
+
     }
 }
