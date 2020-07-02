@@ -127,7 +127,9 @@ namespace NewRelic.Agent.Core.Aggregators
             Log.Info($"SpanEventAggregatorInfiniteTracing: Configuration Setting - Queue Partitions - {_configuration.InfiniteTracingPartitionCountSpans}");
         }
 
-        public bool IsServiceEnabled => _spanStreamingService.IsServiceEnabled;
+        public bool IsServiceEnabled => _configuration.SpanEventsEnabled
+            && _configuration.DistributedTracingEnabled
+            && _spanStreamingService.IsServiceEnabled;
         public bool IsServiceAvailable => IsServiceEnabled && _spanEvents != null && _spanStreamingService.IsServiceAvailable;
 
         public void RecordDroppedSpans(int countDroppedSpans)
