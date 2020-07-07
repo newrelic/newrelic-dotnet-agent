@@ -1,0 +1,35 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)Common.prod.props" />
+
+  <PropertyGroup>
+    <GitTagPrefix>v</GitTagPrefix>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)..\Build\NewRelic.Common.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Common.proj')" />
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
+    <Product>New Relic .NET Agent</Product>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <Product>New Relic .NET CoreCLR Agent</Product>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
+    <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
+  </PropertyGroup>
+
+  <!-- We override some of the work done in VersionByGitTag for the agent because the agent's build process expects AssemblyVersion to be the full version -->
+  <Target Name="AfterVersionByGitTag" AfterTargets="VersionByGitTag">
+    <PropertyGroup>
+      <AssemblyVersion>$(Version)</AssemblyVersion>
+
+      <!-- Microsoft best pracitces say to not set InformationalVersion, though the agent is not consumed as a library so we don't care. -->
+      <GitBranchNameSanitized Condition="'$(GitBranchName)' != 'net35/main' And '$(GitBranchName)' != 'HEAD'">.branch.$(GitBranchName.Replace('/','-'))</GitBranchNameSanitized>
+      <InformationalVersion>$(PackageVersion)+sha.$(GitHash)$(GitBranchNameSanitized)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+</Project>

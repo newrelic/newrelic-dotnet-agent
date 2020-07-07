@@ -1,0 +1,39 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>New Relic</Authors>
+    <Company>New Relic</Company>
+    <Copyright>Copyright © $([System.DateTime]::Now.ToString(yyyy))</Copyright>
+
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile Condition="'$(AssemblyOriginatorKeyFile)' == ''">$(MSBuildThisFileDirectory)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
+
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/newrelic/dotnet-agent</RepositoryUrl>
+    <PackageTags>NewRelic;Tracing;Monitoring</PackageTags>
+    <PackageIcon>newrelic-icon.png</PackageIcon>
+    <PackageProjectUrl>https://docs.newrelic.com/docs/agents/net-agent</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)newrelic-icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <PropertyGroup Label="SourceLink">
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+</Project>
