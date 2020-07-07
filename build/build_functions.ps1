@@ -155,7 +155,7 @@ function Copy-AgentRoot {
 
     $grpcDir = Get-GrpcPackagePath $RootDirectory
     if ($Linux) {
-        Copy-Item -Path "$grpcDir\runtimes\linux\native\*.so" -Destination "$Destination" -Force 
+        Copy-Item -Path "$grpcDir\runtimes\linux\native\libgrpc_csharp_ext.x64.so" -Destination "$Destination" -Force 
         Copy-Item -Path "$RootDirectory\src\Agent\_profilerBuild\linux-release\libNewRelicProfiler.so" -Destination "$Destination" -Force 
     }
     else {
