@@ -33,7 +33,7 @@
     <ItemGroup>
         <ProjectReference Include="..\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
-    <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+    <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
     <Target Name="AfterBuild">
         <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.Xml" OutputPaths="$(TargetDir)\AgentApi.html" />
     </Target>
