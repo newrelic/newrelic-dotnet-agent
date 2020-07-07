@@ -780,8 +780,6 @@ namespace NewRelic.Agent.Core.DataTransport
                     {
                         ProcessFailedItems(items, collection);
 
-                        
-
                         _grpcWrapper.TryCloseRequestStream(requestStream);
                         streamCancellationTokenSource.Cancel();
 
