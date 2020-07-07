@@ -2263,7 +2263,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             [Values("8", "", "def", null)] string appSettingsValue
         )
         {
-            var expectedResult = 10;    // System.Environment.ProcessorCount;
+            var expectedResult = 10;
 
             if (int.TryParse(envConfigVal, out var envValInt))
             {
