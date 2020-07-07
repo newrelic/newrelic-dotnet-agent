@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.AgentHealth
 {
@@ -82,6 +83,12 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportSupportabilityCountMetric(string metricName, long count = 1)
         {
             var metric = _metricBuilder.TryBuildSupportabilityCountMetric(metricName, count);
+            TrySend(metric);
+        }
+
+        public void ReportSupportabilitySummaryMetric(string metricName, float totalSize, int countSamples, float minValue, float maxValue)
+        {
+            var metric = _metricBuilder.TryBuildSupportabilitySummaryMetric(metricName, totalSize, countSamples, minValue, maxValue);
             TrySend(metric);
         }
 
@@ -393,9 +400,23 @@ namespace NewRelic.Agent.Core.AgentHealth
         }
 
         private InterlockedLongCounter _infiniteTracingSpanEventsSent = new InterlockedLongCounter();
+        private InterlockedCounter _infiniteTracingSpanBatchCount = new InterlockedCounter();
+        private long _infiniteTracingSpanBatchSizeMin = long.MaxValue;
+        private long _infiniteTracingSpanBatchSizeMax = long.MinValue;
+
+        private readonly object _syncRootMetrics = new object();
+
         public void ReportInfiniteTracingSpanEventsSent(long countSpans)
         {
             _infiniteTracingSpanEventsSent.Add(countSpans);
+            _infiniteTracingSpanBatchCount.Increment();
+
+            lock(_syncRootMetrics)
+            {
+                _infiniteTracingSpanBatchSizeMin = Math.Min(_infiniteTracingSpanBatchSizeMin, countSpans);
+                _infiniteTracingSpanBatchSizeMax = Math.Max(_infiniteTracingSpanBatchSizeMax, countSpans);
+            }
+
         }
 
         private InterlockedLongCounter _infiniteTracingSpanEventsReceived = new InterlockedLongCounter();
@@ -439,9 +460,18 @@ namespace NewRelic.Agent.Core.AgentHealth
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanSeen, spanEventsSeen);
             }
 
-            if (TryGetCount(_infiniteTracingSpanEventsSent, out var spanEventsSent))
+            if (TryGetCount(_infiniteTracingSpanEventsSent, out var spanEventsSent) && TryGetCount(_infiniteTracingSpanBatchCount, out var spanBatchCount))
             {
+
+                var minBatchSize = Interlocked.Exchange(ref _infiniteTracingSpanBatchSizeMin, long.MaxValue);
+                var maxBatchSize = Interlocked.Exchange(ref _infiniteTracingSpanBatchSizeMax, long.MinValue);
+
                 ReportSupportabilityCountMetric(MetricNames.SupportabilityInfiniteTracingSpanSent, spanEventsSent);
+
+                if(minBatchSize < long.MaxValue && maxBatchSize > long.MinValue)
+                {
+                    ReportSupportabilitySummaryMetric(MetricNames.SupportabilityInfiniteTracingSpanSentBatchSize, spanEventsSent, spanBatchCount, minBatchSize, maxBatchSize);
+                }
             }
 
             if (TryGetCount(_infiniteTracingSpanEventsReceived, out var spanEventsReceived))

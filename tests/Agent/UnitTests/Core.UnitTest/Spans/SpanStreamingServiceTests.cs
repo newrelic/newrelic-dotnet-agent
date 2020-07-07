@@ -19,6 +19,10 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
+using NewRelic.Agent.Core.WireModels;
+using NewRelic.Agent.Core.Time;
+using NewRelic.SystemInterfaces;
+using NewRelic.Agent.Core.SharedInterfaces;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -124,6 +128,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
     internal class SpanStreamingServiceTests : DataStreamingServiceTests<SpanStreamingService, Span, SpanBatch, RecordStatus>
     {
+        public SpanStreamingServiceTests() : base("Span")
+        {
+        }
+
         public override IConfiguration GetDefaultConfiguration()
         {
             var config = Mock.Create<IConfiguration>();
@@ -146,9 +154,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return config;
         }
 
-        protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IConfigurationService configSvc)
+        protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
         {
-            return new SpanStreamingService(grpcWrapper, delayer, configSvc, _agentHealthReporter, _agentTimerService);
+            return new SpanStreamingService(grpcWrapper, delayer, configSvc, agentHealthReporter, _agentTimerService);
         }
 
         protected override Span GetRequestModel()
@@ -171,6 +179,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
     internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatch, TResponse>
         where TService : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
+        where TRequestBatch: class, IStreamingBatchModel<TRequest>
         where TResponse : class
     {
         protected const string _validHost = "infiniteTracing.net";
@@ -179,7 +188,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected const string DefaultAgentRunToken = "defaultagentruntoken";
 
         public abstract IConfiguration GetDefaultConfiguration();
-        protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IConfigurationService configSvc);
+        protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter);
         protected abstract TRequest GetRequestModel();
         protected abstract TResponse GetResponseModel(ulong messagesSeen);
         protected abstract IEnumerable<TRequest> GetBatchItems(TRequestBatch batch);
@@ -187,6 +196,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected float? TestFlakyValue;
         protected int? TestDelayValue;
         protected Dictionary<string, string> TestRequestHeadersMap;
+        protected readonly string _requestObjectTypeName;
 
         private MockGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private IDelayer _delayer;
@@ -198,8 +208,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         private StatusCode[] _grpcErrorStatusCodes;
 
-        public DataStreamingServiceTests()
+        public DataStreamingServiceTests(string requestObjectTypeName)
         {
+            _requestObjectTypeName = requestObjectTypeName;
+
             var statusCodes = new List<StatusCode>();
             foreach (var statusCodeObj in Enum.GetValues(typeof(StatusCode)))
             {
@@ -246,7 +258,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverHost).Returns(isServiceEnabled ? _validHost : null as string);
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
 			var signalIsDone = new ManualResetEventSlim();
 			var countSends = 0;
@@ -315,7 +327,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 expectedMetadata["rhm_key2"] = "Rhm_Value2"; //The key is expected to be lower-cased, but the value should be unmodified
             }
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             Dictionary<string,string> actualConnectionMetadata = new Dictionary<string, string>();
             _grpcWrapper.WithCreateChannelImpl = (host, port, ssl, headers, token) =>
@@ -367,7 +379,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [TestCase(8, true)]
         public void BackoffRetry_Connect_DelaySequence(int succeedOnAttempt, bool throwExceptionDuringConnect)
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var expectedDelays = _expectedDelaySequenceConnect.Take(succeedOnAttempt).ToList();
             var actualDelays = new List<int>();
@@ -421,7 +433,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [TestCase(8, true)]
         public void BackoffRetry_CreateStream_DelaySequence(int succeedOnAttempt, bool throwExceptionDuringCreateStream)
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var expectedDelays = _expectedDelaySequenceConnect.Take(succeedOnAttempt).ToList();
             var actualDelays = new List<int>();
@@ -467,7 +479,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void FailedItemsReturnedToQueue()
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualAttempts = new List<TRequest>();
             var haveProcessedFailure = false;
@@ -522,7 +534,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void DelayCallingRecordSpanAfterAnErrorStreamingASpan()
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualDelays = new List<int>();
 
@@ -581,7 +593,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans).Returns(4);
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceCountConsumers).Returns(3);
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualItems = new List<TRequest>();
             var requestItems = new ConcurrentBag<TRequest>();
@@ -654,7 +666,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
 
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
 
@@ -696,7 +708,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             queue.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
             NrAssert.Multiple
@@ -739,7 +751,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             queue.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
             NrAssert.Multiple
@@ -775,7 +787,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                         gotResponseReceivedEvent.Set();
                     });
 
-                _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+                _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
                 _streamingSvc.StartConsumingCollection(new PartitionedBlockingCollection<TRequest>(1000, 3));
 
@@ -835,7 +847,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 return false;
             };
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(new PartitionedBlockingCollection<TRequest>(1000, 3));
 
             NrAssert.Multiple
@@ -872,7 +884,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
             queue.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
             NrAssert.Multiple
@@ -943,7 +955,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
             queue.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
             NrAssert.Multiple
@@ -953,6 +965,89 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count")
             );
         }
+
+
+        [Test]
+        public void SupportabilityMetrics_ItemsSent_BatchSizeAndCount()
+        {
+            const int maxBatchSize = 17;
+
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceCountConsumers).Returns(3);
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans).Returns(maxBatchSize);
+
+            var signalIsDone = new ManualResetEventSlim();
+            const int countItemsToProcess = 987;
+
+            var countBatchesSent = 0;
+            var countItemsSent = 0;
+            _grpcWrapper.WithTrySendDataImpl = (requestStream, request, timeoutMs, CancellationToken) =>
+            {
+                Interlocked.Increment(ref countBatchesSent);
+                if (Interlocked.Add(ref countItemsSent, request.Count) == countItemsToProcess)
+                {
+                    signalIsDone.Set();
+                }
+
+                return true;
+            };
+
+            var metricBuilder = Mock.Create<IMetricBuilder>();
+
+            float? actualBatchSizeTotal = null;
+            int? actualBatchCountSamples = null;
+            float? actualBatchSizeMin = null;
+            float? actualBatchSizeMax = null;
+            float? actualAvgBatchSize = null;
+
+            Mock.Arrange(() => metricBuilder.TryBuildSupportabilitySummaryMetric($"InfiniteTracing/{_requestObjectTypeName}/BatchSize", Arg.IsAny<float>(), Arg.IsAny<int>(), Arg.IsAny<float>(), Arg.IsAny<float>()))
+                .DoInstead<string, float, int, float, float>((metricName, total, count, min, max) =>
+                {
+                    actualBatchSizeTotal = total;
+                    actualBatchCountSamples = count;
+                    actualBatchSizeMin = min;
+                    actualBatchSizeMax = max;
+                    actualAvgBatchSize = total / count;
+                });
+
+            long? actualCountSent = null;
+            Mock.Arrange(() => metricBuilder.TryBuildSupportabilityCountMetric($"InfiniteTracing/{_requestObjectTypeName}/Sent", Arg.IsAny<long>()))
+                .DoInstead<string, long>((metricName, countSent) =>
+                {
+                    actualCountSent = countSent;
+                 
+                });
+
+            var agentHealthReporter = new AgentHealthReporter(metricBuilder, Mock.Create<IScheduler>(), Mock.Create<IDnsStatic>());
+
+            agentHealthReporter.RegisterPublishMetricHandler(metric => { });
+
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, agentHealthReporter);
+
+            var collection = new PartitionedBlockingCollection<TRequest>(1000, 3);
+            for(var i = 0; i < countItemsToProcess; i++)
+            {
+                collection.TryAdd(GetRequestModel());
+            }
+
+            _streamingSvc.StartConsumingCollection(collection);
+
+            Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(5)), "Signal Didn't fire");
+
+            agentHealthReporter.CollectMetrics();
+
+            NrAssert.Multiple
+            (
+
+                () => Assert.AreEqual(actualCountSent, countItemsToProcess, "All Items Processed through GRPC"),
+                () => Assert.AreEqual(actualBatchSizeTotal, countItemsToProcess, "All items reported through Agent Health Reporter"),
+                () => Assert.LessOrEqual(actualBatchSizeMin, actualBatchSizeMax, "Min batch size should be less than max"),
+                () => Assert.LessOrEqual(actualBatchSizeMin, actualAvgBatchSize, "Avg batch size should be greater than min"),
+                () => Assert.LessOrEqual(actualAvgBatchSize, actualBatchSizeMax, "Avg batch size should be less than than max"),
+                () => Assert.LessOrEqual(actualBatchSizeMax, maxBatchSize, "Max Batch Size should not exceed the constrained value")
+            );
+        }
+
+
 
 
         //Valid host, various Port combos
@@ -1007,7 +1102,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverPort).Returns(testPort);
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceObserverSsl).Returns(testSsl);
 
-            var streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            var streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             var actualIsValidConfig = streamingSvc.ReadAndValidateConfiguration();
             var actualHost = streamingSvc.EndpointHost;
             var actualPort = streamingSvc.EndpointPort;
@@ -1106,7 +1201,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             queue.TryAdd(GetRequestModel());
             queue.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
             NrAssert.Multiple
@@ -1121,7 +1216,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void GrpcUnimplementedDuringConnectShutsDownService()
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1177,7 +1272,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void GrpcUnimplementedDuringCreateStreamShutsDownService()
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1296,7 +1391,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
             queue.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
             NrAssert.Multiple
@@ -1313,7 +1408,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void GrpcUnavailableDuringConnectIsTreatedAsAnError()
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1442,7 +1537,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
             sourceCollection.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(sourceCollection);
 
             NrAssert.Multiple
@@ -1520,7 +1615,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
             queue.TryAdd(GetRequestModel());
 
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
             _streamingSvc.StartConsumingCollection(queue);
 
             NrAssert.Multiple
@@ -1536,7 +1631,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void GrpcOkDuringConnectIsTreatedAsASuccessfulConnection()
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
@@ -1594,7 +1689,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void GrpcOkDuringCreateStreamRetriesImmediately()
         {
-            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualDelays = new List<int>();
 
@@ -1670,7 +1765,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceTimeoutMsConnect)
                 .Returns(configValue);
 
-            var svc = GetService(_delayer, _grpcWrapper, _configSvc);
+            var svc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualIsConfigValid = svc.ReadAndValidateConfiguration();
 
@@ -1686,7 +1781,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceTimeoutMsSendData)
                 .Returns(configValue);
 
-            var svc = GetService(_delayer, _grpcWrapper, _configSvc);
+            var svc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualIsConfigValid = svc.ReadAndValidateConfiguration();
 
@@ -1703,7 +1798,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans)
                 .Returns(configValue);
 
-            var svc = GetService(_delayer, _grpcWrapper, _configSvc);
+            var svc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
             var actualIsConfigValid = svc.ReadAndValidateConfiguration();
 

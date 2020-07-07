@@ -191,5 +191,7 @@ namespace NewRelic.Agent.Core.WireModels
         MetricWireModel TryBuildInstallTypeMetric(string installType);
 
         MetricWireModel TryBuildSupportabilityCountMetric(string metricName, long count = 1);
+
+        MetricWireModel TryBuildSupportabilitySummaryMetric(string metricName, float totalValue, int countSamples, float minValue, float maxValue);
     }
 }

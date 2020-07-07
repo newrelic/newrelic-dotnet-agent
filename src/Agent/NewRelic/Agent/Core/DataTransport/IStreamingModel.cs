@@ -9,4 +9,9 @@ namespace NewRelic.Agent.Core.DataTransport
         string DisplayName { get; }
     }
 
+    public interface IStreamingBatchModel<TRequest> where TRequest:IStreamingModel
+    {
+        int Count { get; }
+    }
+
 }
