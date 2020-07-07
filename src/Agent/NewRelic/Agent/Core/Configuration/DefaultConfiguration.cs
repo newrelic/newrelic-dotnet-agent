@@ -1031,9 +1031,12 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         private int? _infiniteTracingPartitionCountSpans;
-        public int InfiniteTracingPartitionCountSpans => (_infiniteTracingPartitionCountSpans
-                ?? (_infiniteTracingPartitionCountSpans = TryGetAppSettingAsIntWithDefault("InfiniteTracingSpanEventsPartitionCount", 62))).Value;
+        public int InfiniteTracingPartitionCountSpans => _infiniteTracingPartitionCountSpans
+                ?? (_infiniteTracingPartitionCountSpans = EnvironmentOverrides(TryGetAppSettingAsInt("InfiniteTracingSpanEventsPartitionCount"), "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT").GetValueOrDefault(62)).Value;
 
+        private int? _infiniteTracingBatchSizeSpans;
+        public int InfiniteTracingBatchSizeSpans => _infiniteTracingBatchSizeSpans
+                ?? (_infiniteTracingBatchSizeSpans = EnvironmentOverrides(TryGetAppSettingAsInt("InfiniteTracingSpanEventsBatchSize"), "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE").GetValueOrDefault(500)).Value;
 
         private bool _infiniteTracingObtainedSettingsForTest;
         private void GetInfiniteTracingFlakyAndDelayTestSettings()

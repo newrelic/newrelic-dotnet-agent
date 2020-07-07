@@ -29,4 +29,25 @@ namespace NewRelic.Agent.Core.DataTransport
         }
     }
 
+    public class SpanBatchGrpcWrapper : GrpcWrapper<SpanBatch, RecordStatus>, IGrpcWrapper<SpanBatch, RecordStatus>
+    {
+        protected override AsyncDuplexStreamingCall<SpanBatch, RecordStatus> CreateStreamsImpl(Channel channel, Metadata headers, int connectTimeoutMs, CancellationToken cancellationToken)
+        {
+            if (channel == null)
+            {
+                throw new GrpcWrapperChannelNotAvailableException();
+            }
+
+            if (!channel.ConnectAsync().Wait(connectTimeoutMs, cancellationToken))
+            {
+                throw new GrpcWrapperChannelNotAvailableException();
+            }
+
+            var client = new IngestService.IngestServiceClient(channel);
+            var streams = client.RecordSpanBatch(headers: headers, cancellationToken: cancellationToken);
+
+            return streams;
+        }
+    }
+
 }

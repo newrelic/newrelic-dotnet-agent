@@ -75,6 +75,7 @@ namespace NewRelic.Agent.Configuration
         int? InfiniteTracingTraceObserverTestDelayMs { get; }
         int InfiniteTracingQueueSizeSpans { get; }
         int InfiniteTracingPartitionCountSpans { get; }
+        int InfiniteTracingBatchSizeSpans { get; }
         int InfiniteTracingTraceTimeoutMsConnect { get; }
         int InfiniteTracingTraceTimeoutMsSendData { get; }
         string PrimaryApplicationId { get; }

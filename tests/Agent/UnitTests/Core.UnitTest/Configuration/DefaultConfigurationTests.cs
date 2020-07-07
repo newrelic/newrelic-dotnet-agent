@@ -2192,6 +2192,52 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return defaultConfig.InfiniteTracingTraceObserverTestFlaky;
         }
 
+
+        [TestCase("100", "232", ExpectedResult = 100)]
+        [TestCase("-342", "198", ExpectedResult = -342)]
+        [TestCase(null, null, ExpectedResult = 500)]
+        [TestCase("", null, ExpectedResult = 500)]
+        [TestCase(null, "", ExpectedResult = 500)]
+        [TestCase("", "", ExpectedResult = 500)]
+        [TestCase("", "203", ExpectedResult = 203)]
+        [TestCase("XYZ", "876", ExpectedResult = 876)]
+        [TestCase("XYZ", "ABC", ExpectedResult = 500)]
+        [TestCase("103.98", null, ExpectedResult = 500)]
+        [TestCase("103.98", "200", ExpectedResult = 200)]
+        [TestCase(null, "98.6", ExpectedResult = 500)]
+        public int InfiniteTracing_SpanBatchSize(string envConfigVal, string appSettingVal)
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsBatchSize", value = appSettingVal });
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE")).Returns(envConfigVal);
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            return defaultConfig.InfiniteTracingBatchSizeSpans;
+        }
+
+
+        [TestCase("100", "232", ExpectedResult = 100)]
+        [TestCase("-342", "198", ExpectedResult = -342)]
+        [TestCase(null, null, ExpectedResult = 62)]
+        [TestCase("", null, ExpectedResult = 62)]
+        [TestCase(null, "", ExpectedResult = 62)]
+        [TestCase("", "", ExpectedResult = 62)]
+        [TestCase("", "203", ExpectedResult = 203)]
+        [TestCase("XYZ", "876", ExpectedResult = 876)]
+        [TestCase("XYZ", "ABC", ExpectedResult = 62)]
+        [TestCase("103.98", null, ExpectedResult = 62)]
+        [TestCase("103.98", "200", ExpectedResult = 200)]
+        [TestCase(null, "98.6", ExpectedResult = 62)]
+        public int InfiniteTracing_SpanPartitionCount(string envConfigVal, string appSettingVal)
+        {
+            _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsPartitionCount", value = appSettingVal });
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_PARTITION_COUNT")).Returns(envConfigVal);
+
+            var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            return defaultConfig.InfiniteTracingPartitionCountSpans;
+        }
+
         [TestCase("100", "232", ExpectedResult = 100)]
         [TestCase("-342", "198", ExpectedResult = -342)]
         [TestCase(null, null, ExpectedResult = null)]

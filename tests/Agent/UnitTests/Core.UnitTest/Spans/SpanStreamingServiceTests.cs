@@ -19,7 +19,6 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
-using Telerik.JustMock.AutoMock.Ninject.Activation;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -123,7 +122,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
     }
 
-    internal class SpanStreamingServiceTests : DataStreamingServiceTests<SpanStreamingService, Span, RecordStatus>
+    internal class SpanStreamingServiceTests : DataStreamingServiceTests<SpanStreamingService, Span, SpanBatch, RecordStatus>
     {
         public override IConfiguration GetDefaultConfiguration()
         {
@@ -141,11 +140,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => config.InfiniteTracingTraceObserverTestFlaky).Returns(() => TestFlakyValue);
             Mock.Arrange(() => config.InfiniteTracingTraceObserverTestDelayMs).Returns(() => TestDelayValue);
             Mock.Arrange(() => config.RequestHeadersMap).Returns(() => TestRequestHeadersMap);
+            Mock.Arrange(() => config.InfiniteTracingBatchSizeSpans).Returns(1);
+            Mock.Arrange(() => config.InfiniteTracingPartitionCountSpans).Returns(62);
 
             return config;
         }
 
-        protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<Span, RecordStatus> grpcWrapper, IConfigurationService configSvc)
+        protected override SpanStreamingService GetService(IDelayer delayer, IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IConfigurationService configSvc)
         {
             return new SpanStreamingService(grpcWrapper, delayer, configSvc, _agentHealthReporter, _agentTimerService);
         }
@@ -155,6 +156,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return new Span();
         }
 
+        protected override IEnumerable<Span> GetBatchItems(SpanBatch batch)
+        {
+            return batch.Spans;
+        }
+
         protected override RecordStatus GetResponseModel(ulong messagesSeen)
         {
             return new RecordStatus { MessagesSeen = messagesSeen };
@@ -162,8 +168,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
     }
 
     [TestFixture]
-    internal abstract class DataStreamingServiceTests<TService, TRequest, TResponse>
-        where TService : IDataStreamingService<TRequest, TResponse>
+    internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatch, TResponse>
+        where TService : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
         where TResponse : class
     {
@@ -173,15 +179,16 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected const string DefaultAgentRunToken = "defaultagentruntoken";
 
         public abstract IConfiguration GetDefaultConfiguration();
-        protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequest, TResponse> grpcWrapper, IConfigurationService configSvc);
+        protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IConfigurationService configSvc);
         protected abstract TRequest GetRequestModel();
         protected abstract TResponse GetResponseModel(ulong messagesSeen);
+        protected abstract IEnumerable<TRequest> GetBatchItems(TRequestBatch batch);
 
         protected float? TestFlakyValue;
         protected int? TestDelayValue;
         protected Dictionary<string, string> TestRequestHeadersMap;
 
-        private MockGrpcWrapper<TRequest, TResponse> _grpcWrapper;
+        private MockGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private IDelayer _delayer;
         private IConfigurationService _configSvc;
         protected IConfiguration _currentConfiguration => _configSvc?.Configuration;
@@ -214,7 +221,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             TestDelayValue = null;
             TestRequestHeadersMap = null;
 
-            _grpcWrapper = new MockGrpcWrapper<TRequest, TResponse>();
+            _grpcWrapper = new MockGrpcWrapper<TRequestBatch, TResponse>();
             _delayer = Mock.Create<IDelayer>();
             _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
             _agentTimerService = Mock.Create<IAgentTimerService>();
@@ -434,7 +441,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 if (attempt == succeedOnAttempt)
                 {
                     signalIsDone.Set();
-                    return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+                    return MockGrpcWrapper<TRequestBatch, TResponse>.CreateStreams();
                 }
 
                 if (throwExceptionDuringCreateStream)
@@ -471,11 +478,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var item4 = GetRequestModel();
             var item5 = GetRequestModel();
 
-            _grpcWrapper.WithTrySendDataImpl = (stream, request, timeout, token) =>
+            _grpcWrapper.WithTrySendDataImpl = (stream, requestBatch, timeout, token) =>
                 {
-                    actualAttempts.Add(request);
+                    var requests = GetBatchItems(requestBatch);
+                    actualAttempts.AddRange(requests);
 
-                    if (request == item3 && !haveProcessedFailure)
+                    if (requests.Contains(item3) && !haveProcessedFailure)
                     {
                         haveProcessedFailure = true;
                         return false;
@@ -529,11 +537,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var item1 = GetRequestModel();
 
-            _grpcWrapper.WithTrySendDataImpl = (stream, request, timeout, token) =>
+            _grpcWrapper.WithTrySendDataImpl = (stream, requestBatch, timeout, token) =>
             {
-                actualAttempts.Add(request);
 
-                if (request == item1 && !haveProcessedFailure)
+                var requests = GetBatchItems(requestBatch);
+                actualAttempts.AddRange(requests);
+
+                if (requests.Contains(item1) && !haveProcessedFailure)
                 {
                     haveProcessedFailure = true;
                     return false;
@@ -569,6 +579,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [Test]
         public void MultpleConsumersItemsSentOnlyOnce()
         {
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans).Returns(4);
             Mock.Arrange(() => _currentConfiguration.InfiniteTracingTraceCountConsumers).Returns(3);
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
 
@@ -581,9 +592,11 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var expectedItems = requestItems.ToList();
 
-            _grpcWrapper.WithTrySendDataImpl = (stream, request, timeout, token) =>
+            _grpcWrapper.WithTrySendDataImpl = (stream, requestBatch, timeout, token) =>
                 {
-                    actualItems.Add(request);
+                    var requests = GetBatchItems(requestBatch);
+                    actualItems.AddRange(requests);
+
                     return true;
                 };
 
@@ -605,6 +618,52 @@ namespace NewRelic.Agent.Core.Spans.Tests
             (
                 () => Assert.IsTrue(waitForConsumptionTask.Wait(TimeSpan.FromSeconds(60)), "Task didn't complete"),
                 () => CollectionAssert.AreEquivalent(expectedItems, actualItems.ToList())
+            );
+        }
+
+        [TestCase(3, 10, new int[] { 3, 3, 3, 1 })]
+        [TestCase(100, 10, new int[] { 10 })]
+        public void BatchSizeConfigIsHonored(int configBatchSize, int expectedCountItems, int[] expectedBatchSizes)
+        {
+            var signalIsDone = new ManualResetEventSlim();
+
+            var config = GetDefaultConfiguration();
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans).Returns(configBatchSize);
+
+            var actualBatchSizes = new List<int>();
+            _grpcWrapper.WithTrySendDataImpl = (stream, batch, timeoutMs, token) =>
+            {
+                var items = GetBatchItems(batch);
+                actualBatchSizes.Add(items.Count());
+
+                if(actualBatchSizes.Sum(x=>x) >= expectedCountItems)
+                {
+                    signalIsDone.Set();
+                }
+
+                return true;
+            };
+
+            var queue = new PartitionedBlockingCollection<TRequest>(1000, 2);
+            for(var i =0; i < expectedCountItems; i++)
+            {
+                queue.TryAdd(GetRequestModel());
+            }
+
+            var queueCount = queue.Count;
+
+
+
+            _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc);
+            _streamingSvc.StartConsumingCollection(queue);
+
+
+            NrAssert.Multiple
+            (
+                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                () => Assert.AreEqual(expectedCountItems, queueCount, "Collection count"),
+                () => Assert.AreEqual(expectedBatchSizes.Length, actualBatchSizes.Count, "Number of Batches"),
+                () => CollectionAssert.AreEqual(expectedBatchSizes, actualBatchSizes.ToArray(), "Batch Sizes")
             );
         }
 
@@ -630,7 +689,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _grpcWrapper.WithCreateStreamsImpl = (metadata, cancellationToken) =>
             {
                 streamCancellationTokens.Add(cancellationToken);
-                return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+                return MockGrpcWrapper<TRequestBatch, TResponse>.CreateStreams();
             };
 
             var queue = new PartitionedBlockingCollection<TRequest>(1000, 3);
@@ -672,7 +731,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _grpcWrapper.WithCreateStreamsImpl = (metadata, cancellationToken) =>
             {
                 streamCancellationTokens.Add(cancellationToken);
-                return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+                return MockGrpcWrapper<TRequestBatch, TResponse>.CreateStreams();
             };
 
 
@@ -703,7 +762,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
                 _grpcWrapper.WithCreateStreamsImpl = (metadata, CancellationToken) =>
                 {
-                    var streams = MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+                    var streams = MockGrpcWrapper<TRequestBatch, TResponse>.CreateStreams();
                     streams.Item2.AddResponse(GetResponseModel(5));
 
                     return streams;
@@ -985,7 +1044,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
-            var actualCountSpansSent = 0;
+            var actualCountSpansSent = 0L;
 
             var expectedCountGrpcErrors = 1;
             var expectedCountGeneralErrors = 1;
@@ -1007,10 +1066,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualCountGeneralErrors++;
                 });
 
-            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent())
-                .DoInstead(() =>
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(Arg.IsAny<long>()))
+                .DoInstead<long>((cnt) =>
                 {
-                    actualCountSpansSent++;
+                    actualCountSpansSent += cnt;
                 });
 
 
@@ -1176,7 +1235,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
-            var actualCountSpansSent = 0;
+            var actualCountSpansSent = 0L;
 
             var expectedCountGrpcErrors = 1;
             var expectedCountGeneralErrors = 1;
@@ -1205,10 +1264,10 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualCountGeneralErrors++;
                 });
 
-            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent())
-                .DoInstead(() =>
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(Arg.IsAny<long>()))
+                .DoInstead<long>((cnt) =>
                 {
-                    actualCountSpansSent++;
+                    actualCountSpansSent += cnt;
                     signalIsDone.Set();
                 });
 
@@ -1242,7 +1301,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(10)), "Signal didn't fire"),
+                () => Assert.IsTrue(signalIsDone.Wait(TimeSpan.FromSeconds(1000)), "Signal didn't fire"),
                 () => Assert.AreEqual(expectedCountGrpcErrors, actualCountGrpcErrors, "gRPC Error Count"),
                 () => Assert.AreEqual(expectedCountGeneralErrors, actualCountGeneralErrors, "General Error Count"),
                 () => Assert.AreEqual(expectedCountSpansSent, actualCountSpansSent, "Span Sent Events"),
@@ -1330,7 +1389,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
-            var actualCountSpansSent = 0;
+            var actualCountSpansSent = 0L;
 
             var expectedCountGrpcErrors = 1;
             var expectedCountGeneralErrors = 1;
@@ -1350,12 +1409,13 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 });
 
             var signalIsDone = new ManualResetEventSlim();
-            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent())
-                .DoInstead(() =>
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(Arg.IsAny<long>()))
+                .DoInstead<long>((cnt) =>
                 {
-                    actualCountSpansSent++;
+                    actualCountSpansSent += cnt;
                     signalIsDone.Set();
                 });
+
 
             var countCreateStreamsCalls = 0;
             _grpcWrapper.WithCreateStreamsImpl = (metadata, CancellationToken) =>
@@ -1368,7 +1428,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     return null;
                 }
 
-                return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+                return MockGrpcWrapper<TRequestBatch, TResponse>.CreateStreams();
             };
 
             var createChannelInvocationCount = 0;
@@ -1401,7 +1461,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             var actualCountGrpcErrors = 0;
             var actualCountGeneralErrors = 0;
-            var actualCountSpansSent = 0;
+            var actualCountSpansSent = 0L;
 
             var expectedCountGrpcErrors = 3;
             var expectedCountGeneralErrors = 3;
@@ -1429,12 +1489,12 @@ namespace NewRelic.Agent.Core.Spans.Tests
                     actualCountGeneralErrors++;
                 });
 
-            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent())
-                .DoInstead(() =>
-                {
-                    actualCountSpansSent++;
-                    signalIsDone.Set();
-                });
+            Mock.Arrange(() => _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(Arg.IsAny<long>()))
+                            .DoInstead<long>((cnt) =>
+                            {
+                                actualCountSpansSent += cnt;
+                                signalIsDone.Set();
+                            });
 
 
             var invocationId = 0;
@@ -1581,7 +1641,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 }
 
                 signalIsDone.Set();
-                return MockGrpcWrapper<TRequest, TResponse>.CreateStreams();
+                return MockGrpcWrapper<TRequestBatch, TResponse>.CreateStreams();
             };
 
             var sourceCollection = new PartitionedBlockingCollection<TRequest>(1000, 3);
@@ -1632,5 +1692,24 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
             Assert.AreEqual(expectedIsConfigValid, actualIsConfigValid, "Is Config Valid");
         }
+
+        [TestCase(-1, false)]
+        [TestCase(0, false)]
+        [TestCase(1, true)]
+        [TestCase(10, true)]
+        [TestCase(500, true)]
+        public void ConfigSettingValidBatchSize(int configValue, bool expectedIsConfigValid)
+        {
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingBatchSizeSpans)
+                .Returns(configValue);
+
+            var svc = GetService(_delayer, _grpcWrapper, _configSvc);
+
+            var actualIsConfigValid = svc.ReadAndValidateConfiguration();
+
+            Assert.AreEqual(expectedIsConfigValid, actualIsConfigValid, "Is Config Valid");
+        }
+
+
     }
 }

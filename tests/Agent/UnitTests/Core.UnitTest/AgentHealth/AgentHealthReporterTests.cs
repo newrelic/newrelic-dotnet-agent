@@ -134,7 +134,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout();
             _agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(32);
             _agentHealthReporter.ReportInfiniteTracingSpanEventsSeen(1);
-            _agentHealthReporter.ReportInfiniteTracingSpanEventsSent();
+            _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(13);
             _agentHealthReporter.ReportInfiniteTracingSpanEventsReceived(1);
             _agentHealthReporter.CollectMetrics();
 
@@ -146,7 +146,7 @@ namespace NewRelic.Agent.Core.AgentHealth
                 { "Supportability/InfiniteTracing/Span/gRPC/Timeout", 2 },
                 { "Supportability/InfiniteTracing/Span/Dropped", 32 },
                 { "Supportability/InfiniteTracing/Span/Seen", 1 },
-                { "Supportability/InfiniteTracing/Span/Sent", 1 },
+                { "Supportability/InfiniteTracing/Span/Sent", 13 },
                 { "Supportability/InfiniteTracing/Span/Received", 1 }
             };
             var actualMetricNamesAndValues = _publishedMetrics.Select(x => new KeyValuePair<string, long>(x.MetricName.Name, x.Data.Value0));

@@ -32,14 +32,14 @@ namespace NewRelic.Agent.Core.Aggregators
     public class SpanEventAggregatorInfiniteTracing : DisposableService, ISpanEventAggregatorInfiniteTracing
     {
         private PartitionedBlockingCollection<Span> _spanEvents;
-        private readonly IDataStreamingService<Span, RecordStatus> _spanStreamingService;
+        private readonly IDataStreamingService<Span, SpanBatch, RecordStatus> _spanStreamingService;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IConfigurationService _configSvc;
         private IConfiguration _configuration => _configSvc?.Configuration;
 
         public int Capacity => (_spanEvents?.Capacity).GetValueOrDefault(0);
 
-        public SpanEventAggregatorInfiniteTracing(IDataStreamingService<Span, RecordStatus> spanStreamingService, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
+        public SpanEventAggregatorInfiniteTracing(IDataStreamingService<Span, SpanBatch, RecordStatus> spanStreamingService, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
         {   
             _spanStreamingService = spanStreamingService;
             _subscriptions.Add<AgentConnectedEvent>(AgentConnected);
@@ -76,6 +76,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
                 if(IsServiceEnabled)
                 {
+
+                    Log.Info($"SpanEventAggregatorInfiniteTracing: Configuration is invalid - Infinite Tracing will NOT be enabled.");
                     LogConfiguration();
                 }
 

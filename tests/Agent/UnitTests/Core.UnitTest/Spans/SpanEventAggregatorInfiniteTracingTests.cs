@@ -55,9 +55,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return config;
         }
 
-        private IDataStreamingService<Span, RecordStatus> GetMockStreamingService(bool enabled, bool available)
+        private IDataStreamingService<Span, SpanBatch, RecordStatus> GetMockStreamingService(bool enabled, bool available)
         {
-            var streamingSvc = Mock.Create<IDataStreamingService<Span, RecordStatus>>();
+            var streamingSvc = Mock.Create<IDataStreamingService<Span, SpanBatch, RecordStatus>>();
             Mock.Arrange(() => streamingSvc.IsServiceEnabled).Returns(enabled);
             Mock.Arrange(() => streamingSvc.IsServiceAvailable).Returns(available);
             Mock.Arrange(() => streamingSvc.IsStreaming).Returns(true);
@@ -65,7 +65,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return streamingSvc;
         }
 
-        private ISpanEventAggregatorInfiniteTracing CreateAggregator(IDataStreamingService<Span, RecordStatus> streamingSvc)
+        private ISpanEventAggregatorInfiniteTracing CreateAggregator(IDataStreamingService<Span, SpanBatch, RecordStatus> streamingSvc)
         {
             var aggregator = new SpanEventAggregatorInfiniteTracing(streamingSvc, _mockConfigService, _mockAgentHealthReporter);
             return aggregator;

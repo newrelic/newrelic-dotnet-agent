@@ -2,6 +2,7 @@
 * Copyright 2020 New Relic Corporation. All rights reserved.
 * SPDX-License-Identifier: Apache-2.0
 */
+using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Segments;
@@ -10,9 +11,9 @@ using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-    public class SpanStreamingService : DataStreamingService<Span, RecordStatus>
+    public class SpanStreamingService : DataStreamingService<Span, SpanBatch, RecordStatus>
     {
-        public SpanStreamingService(IGrpcWrapper<Span, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
+        public SpanStreamingService(IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
             : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService)
         {
         }
@@ -22,6 +23,7 @@ namespace NewRelic.Agent.Core.DataTransport
         protected override string EndpointSslConfigValue => _configuration?.InfiniteTracingTraceObserverSsl;
         protected override float? EndpointTestFlakyConfigValue => _configuration?.InfiniteTracingTraceObserverTestFlaky;
         protected override int? EndpointTestDelayMsConfigValue => _configuration?.InfiniteTracingTraceObserverTestDelayMs;
+        public override int BatchSizeConfigValue => (_configuration?.InfiniteTracingBatchSizeSpans).GetValueOrDefault(0);
 
         protected override void HandleServerResponse(RecordStatus responseModel, int consumerId)
         {
@@ -36,9 +38,9 @@ namespace NewRelic.Agent.Core.DataTransport
             _agentHealthReporter.ReportInfiniteTracingSpanEventsReceived(countItems);
         }
 
-        protected override void RecordSuccessfulSend()
+        protected override void RecordSuccessfulSend(int countItems)
         {
-            _agentHealthReporter.ReportInfiniteTracingSpanEventsSent();
+            _agentHealthReporter.ReportInfiniteTracingSpanEventsSent(countItems);
         }
 
         protected override void RecordGrpcError(string status)
@@ -54,6 +56,13 @@ namespace NewRelic.Agent.Core.DataTransport
         protected override void RecordSendTimeout()
         {
             _agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout();
+        }
+
+        protected override SpanBatch CreateBatch(IList<Span> items)
+        {
+            var batch = new SpanBatch();
+            batch.Spans.AddRange(items);
+            return batch;
         }
     }
 

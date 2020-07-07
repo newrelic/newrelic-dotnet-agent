@@ -13,6 +13,7 @@ using NewRelic.Agent.Configuration;
 using System.Linq;
 using NewRelic.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -85,7 +86,7 @@ namespace NewRelic.Agent.Core.DataTransport
     }
 
 
-    public interface IDataStreamingService<TRequest, TResponse> : IDisposable
+    public interface IDataStreamingService<TRequest, TRequestBatch, TResponse> : IDisposable
         where TRequest : IStreamingModel
     {
         bool IsServiceAvailable { get; }
@@ -94,6 +95,7 @@ namespace NewRelic.Agent.Core.DataTransport
         string EndpointHost { get; }
         int EndpointPort { get; }
         bool EndpointSsl { get; }
+        int BatchSizeConfigValue { get; }
         float? EndpointTestFlaky { get; }
         int? EndpointTestDelayMs { get; }
         int TimeoutConnectMs { get; }
@@ -103,13 +105,13 @@ namespace NewRelic.Agent.Core.DataTransport
         bool ReadAndValidateConfiguration();
     }
 
-    public abstract class DataStreamingService<TRequest, TResponse> : IDataStreamingService<TRequest, TResponse>
+    public abstract class DataStreamingService<TRequest, TRequestBatch, TResponse> : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
     {
         private const string UnimplementedStatus = "UNIMPLEMENTED";
         private const string UnavailableStatus = "UNAVAILABLE";
         private const string OkStatus = "OK";
-        private readonly IGrpcWrapper<TRequest, TResponse> _grpcWrapper;
+        private readonly IGrpcWrapper<TRequestBatch, TResponse> _grpcWrapper;
         private readonly IDelayer _delayer;
         protected readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IAgentTimerService _agentTimerService;
@@ -193,6 +195,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public bool EndpointSsl { get; private set; }
         public float? EndpointTestFlaky { get; private set; }
         public int? EndpointTestDelayMs { get; private set; }
+        public abstract int BatchSizeConfigValue { get; }
 
         protected abstract string EndpointHostConfigValue { get; }
         protected abstract string EndpointPortConfigValue { get; }
@@ -200,9 +203,10 @@ namespace NewRelic.Agent.Core.DataTransport
         protected abstract float? EndpointTestFlakyConfigValue { get; }
         protected abstract int? EndpointTestDelayMsConfigValue { get; }
 
+
         protected abstract void HandleServerResponse(TResponse responseModel, int consumerId);
 
-        protected abstract void RecordSuccessfulSend();
+        protected abstract void RecordSuccessfulSend(int countItems);
         protected abstract void RecordGrpcError(string status);
         protected abstract void RecordResponseError();
         protected abstract void RecordSendTimeout();
@@ -218,7 +222,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private PartitionedBlockingCollection<TRequest> _collection;
 
-        protected DataStreamingService(IGrpcWrapper<TRequest, TResponse> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
+        protected DataStreamingService(IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
         {
             _grpcWrapper = grpcWrapper;
             _delayer = delayer;
@@ -273,8 +277,9 @@ namespace NewRelic.Agent.Core.DataTransport
             var isValidDelay = EndpointTestDelayMsConfigValue == null || (EndpointTestDelayMsConfigValue >= 0);
             var isValidTimeoutConnect = TimeoutConnectMs > 0;
             var isValidTimeoutSend = TimeoutSendDataMs > 0;
+            var isValidBatchSize = BatchSizeConfigValue > 0;
 
-            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend)
+            if (isValidHost && isValidPort && isValidSsl && isValidFlaky && isValidDelay && isValidTimeoutConnect && isValidTimeoutSend && isValidBatchSize)
             {
                 EndpointHost = configHost;
                 EndpointPort = configPort;
@@ -324,6 +329,11 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!isValidTimeoutSend)
             {
                 LogMessage(LogLevel.Info, $"Invalid Configuration.  Timeout Send Ms '{TimeoutSendDataMs}' is not valid.  Infinite Tracing will NOT be started.");
+            }
+
+            if (!isValidBatchSize)
+            {
+                LogMessage(LogLevel.Info, $"Invalid Configuration. Batch Size '{BatchSizeConfigValue}' is not valid.  Infinite Tracing will NOT be started.");
             }
 
             return false;
@@ -565,7 +575,7 @@ namespace NewRelic.Agent.Core.DataTransport
             _grpcWrapper.Shutdown();
         }
 
-        private bool GetRequestStreamWithRetry(int consumerId, CancellationToken cancellationToken, out IClientStreamWriter<TRequest> requestStream, out IAsyncStreamReader<TResponse> responseStream)
+        private bool GetRequestStreamWithRetry(int consumerId, CancellationToken cancellationToken, out IClientStreamWriter<TRequestBatch> requestStream, out IAsyncStreamReader<TResponse> responseStream)
         {
             var attemptId = 0;
 
@@ -692,6 +702,48 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
+        private bool DequeueItems(PartitionedBlockingCollection<TRequest> collection, int maxBatchSize, CancellationToken cancellationToken, out IList<TRequest> items)
+        {
+            items = null;
+            if(!collection.Take(out var firstItem, cancellationToken))
+            {
+                return false;
+            }
+
+            if(cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            items = new List<TRequest>();
+            items.Add(firstItem);
+
+            for(var i = 0; i < maxBatchSize-1 && !cancellationToken.IsCancellationRequested && collection.TryTake(out var item); i++)
+            {
+                items.Add(item);
+            }
+
+            if(cancellationToken.IsCancellationRequested)
+            {
+                ProcessFailedItems(items, collection);   
+            }
+
+            return true;
+        }
+
+        protected abstract TRequestBatch CreateBatch(IList<TRequest> items);
+
+        private void ProcessFailedItems(IList<TRequest> items, PartitionedBlockingCollection<TRequest> collection)
+        {
+            foreach (var item in items)
+            {
+                if (!collection.TryAdd(item))
+                {
+                    _agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(1);
+                }
+            }
+        }
+
         private bool StreamRequests(PartitionedBlockingCollection<TRequest> collection, CancellationToken serviceCancellationToken)
         {
             var consumerId = _consumerId.Increment();
@@ -712,24 +764,23 @@ namespace NewRelic.Agent.Core.DataTransport
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
 
-                    if(!collection.Take(out var item, serviceCancellationToken))
+                    if(!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
                     {
                         return false;
                     }
 
-                    if (item == null)
+                    if (items == null || items.Count == 0)
                     {
                         LogMessage(LogLevel.Debug, consumerId, $"Expected a {_modelType} from the collection, but it was null");
                         continue;
                     }
 
-                    var trySendStatus = TrySend(consumerId, requestStream, item, serviceCancellationToken);
+                    var trySendStatus = TrySend(consumerId, requestStream, items, serviceCancellationToken);
                     if (trySendStatus != TrySendStatus.Success)
                     {
-                        if (!collection.TryAdd(item))
-                        {
-                            _agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(1);
-                        }
+                        ProcessFailedItems(items, collection);
+
+                        
 
                         _grpcWrapper.TryCloseRequestStream(requestStream);
                         streamCancellationTokenSource.Cancel();
@@ -746,7 +797,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return false;
         }
 
-        private TrySendStatus TrySend(int consumerId, IClientStreamWriter<TRequest> requestStream, TRequest item, CancellationToken cancellationToken)
+        private TrySendStatus TrySend(int consumerId, IClientStreamWriter<TRequestBatch> requestStream, IList<TRequest> items, CancellationToken cancellationToken)
         {
             //If there is no channel, return
             if (cancellationToken.IsCancellationRequested)
@@ -754,34 +805,36 @@ namespace NewRelic.Agent.Core.DataTransport
                 return TrySendStatus.CancellationRequested;
             }
 
-            LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send");
+            LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s).");
+
+            var batch = CreateBatch(items);
 
             try
             {
                 var sentData = false;
                 using (_agentTimerService.StartNew(_timerEventNameForSend))
                 {
-                    sentData = _grpcWrapper.TrySendData(requestStream, item, TimeoutSendDataMs, cancellationToken);
+                    sentData = _grpcWrapper.TrySendData(requestStream, batch, TimeoutSendDataMs, cancellationToken);
                 }
 
                 if (sentData)
                 {
-                    LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send - Success");
-                    RecordSuccessfulSend();
+                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Success");
+                    RecordSuccessfulSend(items.Count);
                     return TrySendStatus.Success;
                 }
 
                 RecordSendTimeout();
-                LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send - Timed Out");
+                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Timed Out");
             }
             catch (GrpcWrapperStreamNotAvailableException streamNotAvailEx)
             {
-                LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send - Request stream closed.", streamNotAvailEx);
+                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Request stream closed.", streamNotAvailEx);
                 RecordResponseError();
             }
             catch (GrpcWrapperException grpcEx) when (!string.IsNullOrWhiteSpace(grpcEx.Status))
             {
-                LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send - gRPC Exception: {grpcEx.Status}", grpcEx);
+                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - gRPC Exception: {grpcEx.Status}", grpcEx);
 
                 RecordResponseError();
                 RecordGrpcError(grpcEx.Status);
@@ -794,20 +847,20 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 if (grpcEx.Status == UnavailableStatus)
                 {
-                    LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send - Channel not available, requesting restart");
+                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - Channel not available, requesting restart");
                     Shutdown(true);
                     return TrySendStatus.Error;
                 }
 
                 if (grpcEx.Status == OkStatus)
                 {
-                    LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send - New stream requested");
+                    LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s) - New stream requested");
                     return TrySendStatus.ErrorWithImmediateRetry;
                 }
             }
             catch (Exception ex)
             {
-                LogMessage(LogLevel.Finest, consumerId, item, $"Attempting to send", ex);
+                LogMessage(LogLevel.Finest, consumerId, $"Attempting to send {items.Count} item(s)", ex);
                 RecordResponseError();
             }
 
