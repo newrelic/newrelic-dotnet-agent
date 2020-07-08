@@ -2,7 +2,6 @@
 * Copyright 2020 New Relic Corporation. All rights reserved.
 * SPDX-License-Identifier: Apache-2.0
 */
-using Grpc.Core;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
@@ -86,14 +85,14 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(metric);
         }
 
-        public void ReportSupportabilitySummaryMetric(string metricName, float totalSize, int countSamples, float minValue, float maxValue)
+        private void ReportSupportabilitySummaryMetric(string metricName, float totalSize, int countSamples, float minValue, float maxValue)
         {
             var metric = _metricBuilder.TryBuildSupportabilitySummaryMetric(metricName, totalSize, countSamples, minValue, maxValue);
             TrySend(metric);
         }
 
 
-        public void ReportSupportabilityGaugeMetric(string metricName, float value)
+        private void ReportSupportabilityGaugeMetric(string metricName, float value)
         {
             var metric = _metricBuilder.TryBuildSupportabilityGaugeMetric(metricName, value);
             TrySend(metric);
