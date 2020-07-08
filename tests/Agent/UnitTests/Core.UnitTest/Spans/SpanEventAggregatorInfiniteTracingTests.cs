@@ -63,7 +63,6 @@ namespace NewRelic.Agent.Core.Spans.Tests
             Mock.Arrange(() => streamingSvc.IsServiceEnabled).Returns(enabled);
             Mock.Arrange(() => streamingSvc.IsServiceAvailable).Returns(available);
             Mock.Arrange(() => streamingSvc.CountConsumersThatAreStreaming).Returns(1);
-            //Mock.Arrange(() => streamingSvc.IsStreaming).Returns(true);
 
             return streamingSvc;
         }
