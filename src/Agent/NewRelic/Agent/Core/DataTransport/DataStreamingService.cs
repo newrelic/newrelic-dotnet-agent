@@ -431,7 +431,6 @@ namespace NewRelic.Agent.Core.DataTransport
         {
             _hasAnyStreamStarted = false;
             _countConsumersThatAreStreaming = 0;
-            LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming}");
 
             //Check to make sure that we actually connected to the grpcService and that
             //streaming is enabled
@@ -765,16 +764,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 _responseStreamsDic[consumerId] = new ResponseStreamWrapper<TResponse>(consumerId, responseStream, serviceAndStreamCancellationTokenSource.Token);
 
-                var hasUpdatedStreamingCount = false;
+                var isStreaming = false;
 
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
                     if(!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
                     {
-                        if(hasUpdatedStreamingCount)
+                        if(isStreaming)
                         {
                             Interlocked.Decrement(ref _countConsumersThatAreStreaming);
-                            LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [-1]");
                         }
 
                         return false;
@@ -794,27 +792,24 @@ namespace NewRelic.Agent.Core.DataTransport
                         _grpcWrapper.TryCloseRequestStream(requestStream);
                         streamCancellationTokenSource.Cancel();
 
-                        if (hasUpdatedStreamingCount)
+                        if (isStreaming)
                         {
                             Interlocked.Decrement(ref _countConsumersThatAreStreaming);
-                            LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [-1]");
                         }
 
                         return trySendStatus == TrySendStatus.ErrorWithImmediateRetry;
                     }
 
-                    if(!hasUpdatedStreamingCount)
+                    if(!isStreaming)
                     {
-                        hasUpdatedStreamingCount = true;
+                        isStreaming = true;
                         Interlocked.Increment(ref _countConsumersThatAreStreaming);
-                        LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [+1]");
                     }
                 }
 
-                if (hasUpdatedStreamingCount)
+                if (isStreaming)
                 {
                     Interlocked.Decrement(ref _countConsumersThatAreStreaming);
-                    LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [-1]");
                 }
 
                 streamCancellationTokenSource.Cancel();
