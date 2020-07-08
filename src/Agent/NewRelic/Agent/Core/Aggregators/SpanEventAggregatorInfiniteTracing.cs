@@ -14,6 +14,7 @@ using NewRelic.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -33,6 +34,7 @@ namespace NewRelic.Agent.Core.Aggregators
     public class SpanEventAggregatorInfiniteTracing : DisposableService, ISpanEventAggregatorInfiniteTracing
     {
         private PartitionedBlockingCollection<Span> _spanEvents;
+        private float _configCountConsumers = 1;
         private readonly IDataStreamingService<Span, SpanBatch, RecordStatus> _spanStreamingService;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IConfigurationService _configSvc;
@@ -58,6 +60,8 @@ namespace NewRelic.Agent.Core.Aggregators
         /// <param name="_"></param>
         private void AgentConnected(AgentConnectedEvent _)
         {
+            _configCountConsumers = Math.Max(_configuration.InfiniteTracingTraceCountConsumers, 1);
+
             _spanStreamingService.Shutdown(false);
             _schedulerSvc.StopExecuting(ReportSupportabilityMetrics);
 
@@ -127,9 +131,11 @@ namespace NewRelic.Agent.Core.Aggregators
         /// <returns></returns>
         public bool HasCapacity(int proposedItems)
         {
-            var capacityFactor = _spanStreamingService.IsStreaming
-                ? .9
-                : .1;
+            var countActiveConsumers = Math.Max(0, _spanStreamingService.CountConsumersThatAreStreaming);
+
+            var capacity = Math.Min(1, countActiveConsumers / _configCountConsumers);
+
+            var capacityFactor = (capacity * .8) + .1;
 
             return _spanEvents != null && (_spanEvents.Count + proposedItems) < (Capacity * capacityFactor);
         }

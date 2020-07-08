@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         bool IsServiceAvailable { get; }
         bool IsServiceEnabled { get; }
-        bool IsStreaming { get; }
+        int CountConsumersThatAreStreaming { get; }
         string EndpointHost { get; }
         int EndpointPort { get; }
         bool EndpointSsl { get; }
@@ -121,7 +121,8 @@ namespace NewRelic.Agent.Core.DataTransport
         protected IConfiguration _configuration => _configSvc?.Configuration;
 
         private bool _hasAnyStreamStarted;
-        public bool IsStreaming { get; private set; }
+        private int _countConsumersThatAreStreaming;
+        public int CountConsumersThatAreStreaming => _countConsumersThatAreStreaming;
 
         private readonly string _modelType = typeof(TRequest).Name;
         private readonly string _timerEventNameForSend = "gRPCSend" + typeof(TRequest).Name;
@@ -429,7 +430,8 @@ namespace NewRelic.Agent.Core.DataTransport
         private void StartConsumers()
         {
             _hasAnyStreamStarted = false;
-            IsStreaming = false;
+            _countConsumersThatAreStreaming = 0;
+            LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming}");
 
             //Check to make sure that we actually connected to the grpcService and that
             //streaming is enabled
@@ -450,7 +452,8 @@ namespace NewRelic.Agent.Core.DataTransport
             CancellationToken.WaitHandle.WaitOne();
 
             _hasAnyStreamStarted = false;
-            IsStreaming = false;
+            _countConsumersThatAreStreaming = 0;
+            LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming}");
         }
 
         private bool StartService()
@@ -762,11 +765,18 @@ namespace NewRelic.Agent.Core.DataTransport
 
                 _responseStreamsDic[consumerId] = new ResponseStreamWrapper<TResponse>(consumerId, responseStream, serviceAndStreamCancellationTokenSource.Token);
 
+                var hasUpdatedStreamingCount = false;
+
                 while (!serviceCancellationToken.IsCancellationRequested && _grpcWrapper.IsConnected)
                 {
-
                     if(!DequeueItems(collection, BatchSizeConfigValue, serviceCancellationToken, out var items))
                     {
+                        if(hasUpdatedStreamingCount)
+                        {
+                            Interlocked.Decrement(ref _countConsumersThatAreStreaming);
+                            LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [-1]");
+                        }
+
                         return false;
                     }
 
@@ -784,10 +794,27 @@ namespace NewRelic.Agent.Core.DataTransport
                         _grpcWrapper.TryCloseRequestStream(requestStream);
                         streamCancellationTokenSource.Cancel();
 
+                        if (hasUpdatedStreamingCount)
+                        {
+                            Interlocked.Decrement(ref _countConsumersThatAreStreaming);
+                            LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [-1]");
+                        }
+
                         return trySendStatus == TrySendStatus.ErrorWithImmediateRetry;
                     }
 
-                    IsStreaming = true;
+                    if(!hasUpdatedStreamingCount)
+                    {
+                        hasUpdatedStreamingCount = true;
+                        Interlocked.Increment(ref _countConsumersThatAreStreaming);
+                        LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [+1]");
+                    }
+                }
+
+                if (hasUpdatedStreamingCount)
+                {
+                    Interlocked.Decrement(ref _countConsumersThatAreStreaming);
+                    LogMessage(LogLevel.Info, $"Count Consumers Actively Streaming {_countConsumersThatAreStreaming} [-1]");
                 }
 
                 streamCancellationTokenSource.Cancel();

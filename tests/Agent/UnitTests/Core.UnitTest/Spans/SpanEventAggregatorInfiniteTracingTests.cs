@@ -62,7 +62,8 @@ namespace NewRelic.Agent.Core.Spans.Tests
             var streamingSvc = Mock.Create<IDataStreamingService<Span, SpanBatch, RecordStatus>>();
             Mock.Arrange(() => streamingSvc.IsServiceEnabled).Returns(enabled);
             Mock.Arrange(() => streamingSvc.IsServiceAvailable).Returns(available);
-            Mock.Arrange(() => streamingSvc.IsStreaming).Returns(true);
+            Mock.Arrange(() => streamingSvc.CountConsumersThatAreStreaming).Returns(1);
+            //Mock.Arrange(() => streamingSvc.IsStreaming).Returns(true);
 
             return streamingSvc;
         }
