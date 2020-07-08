@@ -7,11 +7,11 @@ using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Segments;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Collections;
 using NewRelic.Core.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Aggregators
         bool IsServiceAvailable { get; }
         bool HasCapacity(int proposedItems);
         void RecordDroppedSpans(int countDroppedSpans);
+        void ReportSupportabilityMetrics();
         int Capacity { get; }
     }
 
@@ -35,16 +36,19 @@ namespace NewRelic.Agent.Core.Aggregators
         private readonly IDataStreamingService<Span, SpanBatch, RecordStatus> _spanStreamingService;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IConfigurationService _configSvc;
+        private readonly IScheduler _schedulerSvc;
+
         private IConfiguration _configuration => _configSvc?.Configuration;
 
         public int Capacity => (_spanEvents?.Capacity).GetValueOrDefault(0);
 
-        public SpanEventAggregatorInfiniteTracing(IDataStreamingService<Span, SpanBatch, RecordStatus> spanStreamingService, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter)
+        public SpanEventAggregatorInfiniteTracing(IDataStreamingService<Span, SpanBatch, RecordStatus> spanStreamingService, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IScheduler scheduler)
         {   
             _spanStreamingService = spanStreamingService;
             _subscriptions.Add<AgentConnectedEvent>(AgentConnected);
             _agentHealthReporter = agentHealthReporter;
             _configSvc = configSvc;
+            _schedulerSvc = scheduler;
         }
 
         /// <summary>
@@ -55,6 +59,7 @@ namespace NewRelic.Agent.Core.Aggregators
         private void AgentConnected(AgentConnectedEvent _)
         {
             _spanStreamingService.Shutdown(false);
+            _schedulerSvc.StopExecuting(ReportSupportabilityMetrics);
 
             var oldCapacity = (_spanEvents?.Capacity).GetValueOrDefault(0);
             var oldPartitionCount = (_spanEvents?.PartitionCount).GetValueOrDefault(0);
@@ -103,7 +108,13 @@ namespace NewRelic.Agent.Core.Aggregators
 
             LogConfiguration();
 
+            _schedulerSvc.ExecuteEvery(ReportSupportabilityMetrics, TimeSpan.FromMinutes(1));
             _spanStreamingService.StartConsumingCollection(_spanEvents);
+        }
+
+        public void ReportSupportabilityMetrics()
+        {
+            _agentHealthReporter.ReportInfiniteTracingSpanQueueSize(_spanEvents.Count);
         }
 
         /// <summary>

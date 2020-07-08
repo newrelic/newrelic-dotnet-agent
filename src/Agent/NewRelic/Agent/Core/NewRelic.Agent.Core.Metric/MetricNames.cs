@@ -944,6 +944,7 @@ namespace NewRelic.Agent.Core.Metric
         public const string SupportabilityInfiniteTracingSpanSeen = SupportabilityInfiniteTracingSpan + "Seen";
         public const string SupportabilityInfiniteTracingSpanSent = SupportabilityInfiniteTracingSpan + "Sent";
         public const string SupportabilityInfiniteTracingSpanSentBatchSize = SupportabilityInfiniteTracingSpan + "BatchSize";
+        public const string SupportabilityInfiniteTracingSpanQueueSize = SupportabilityInfiniteTracingSpan + "QueueSize";
         public const string SupportabilityInfiniteTracingSpanReceived = SupportabilityInfiniteTracingSpan + "Received";
         public const string SupportabilityInfiniteTracingSpanDropped = SupportabilityInfiniteTracingSpan + "Dropped";
         public const string SupportabilityInfiniteTracingSpanGrpcTimeout = SupportabilityInfiniteTracingSpan + "gRPC" + PathSeparator + "Timeout";

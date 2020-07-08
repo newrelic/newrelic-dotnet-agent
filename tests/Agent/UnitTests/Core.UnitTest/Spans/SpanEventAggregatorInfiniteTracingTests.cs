@@ -13,10 +13,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Telerik.JustMock;
-using System.Collections.Concurrent;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Collections;
+using NewRelic.Agent.Core.Time;
 
 namespace NewRelic.Agent.Core.Spans.Tests
 {
@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         private IConfigurationService _mockConfigService;
         private IConfiguration _currentConfiguration => _mockConfigService?.Configuration;
         private IAgentHealthReporter _mockAgentHealthReporter;
+        private IScheduler _mockScheduler;
 
         [SetUp]
         public void SetUp()
@@ -34,6 +35,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             _mockConfigService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _mockConfigService.Configuration).Returns(defaultConfig);
             _mockAgentHealthReporter = Mock.Create<IAgentHealthReporter>();
+            _mockScheduler = Mock.Create<IScheduler>();
         }
 
         [TearDown]
@@ -67,7 +69,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         private ISpanEventAggregatorInfiniteTracing CreateAggregator(IDataStreamingService<Span, SpanBatch, RecordStatus> streamingSvc)
         {
-            var aggregator = new SpanEventAggregatorInfiniteTracing(streamingSvc, _mockConfigService, _mockAgentHealthReporter);
+            var aggregator = new SpanEventAggregatorInfiniteTracing(streamingSvc, _mockConfigService, _mockAgentHealthReporter, _mockScheduler);
             return aggregator;
         }
 
@@ -389,7 +391,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         [TestCase(3, 1, false)]
         [TestCase(3, 3, false)]
         [TestCase(3, 5, false)]
-        public void SupportabilityMetrics(int queueSize, int expectedSeen, bool addAsSingleItems)
+        public void SupportabilityMetrics_SeenAndDropped(int queueSize, int expectedSeen, bool addAsSingleItems)
         {
             long actualCountSpansSeen = 0;
             long actualCountSpansDropped = 0;
@@ -433,6 +435,36 @@ namespace NewRelic.Agent.Core.Spans.Tests
                 () => Assert.AreEqual(expectedSeen, actualCountSpansSeen, $"{(addAsSingleItems ? "Single Adds" : "Collection")} - Count Seen Items"),
                 () => Assert.AreEqual(expectedCountDrops, actualCountSpansDropped, $"{(addAsSingleItems ? "Single Adds" : "Collection")} - Count Dropped")
             );
+        }
+
+        [Test]
+        public void SupportabilityMetrics_SpanQueueSize()
+        {
+            Mock.Arrange(() => _currentConfiguration.InfiniteTracingQueueSizeSpans).Returns(1000);
+
+            int? rptQueueSize = null;
+            Mock.Arrange(() => _mockAgentHealthReporter.ReportInfiniteTracingSpanQueueSize(Arg.IsAny<int>()))
+                .DoInstead<int>((queueSize) =>
+                {
+                    rptQueueSize = queueSize;
+                });
+
+
+            const int collectionSize = 72;
+            var streamingSvc = GetMockStreamingService(true, true);
+
+            var aggregator = CreateAggregator(streamingSvc);
+
+            FireAgentConnectedEvent();
+
+            for (var i = 0; i < collectionSize; i++)
+            {
+                aggregator.Collect(new SpanAttributeValueCollection());
+            }
+
+            aggregator.ReportSupportabilityMetrics();
+
+            Assert.AreEqual(rptQueueSize, collectionSize, "Queue Size Supportability Metric");
         }
 
 
@@ -519,6 +551,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
             );
         }
 
+        
 
     }
 }

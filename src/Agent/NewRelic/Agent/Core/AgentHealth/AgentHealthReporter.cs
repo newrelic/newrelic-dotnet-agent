@@ -92,6 +92,13 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(metric);
         }
 
+
+        public void ReportSupportabilityGaugeMetric(string metricName, float value)
+        {
+            var metric = _metricBuilder.TryBuildSupportabilityGaugeMetric(metricName, value);
+            TrySend(metric);
+        }
+
         public void ReportDotnetVersion()
         {
 #if NET45
@@ -383,6 +390,11 @@ namespace NewRelic.Agent.Core.AgentHealth
         public void ReportInfiniteTracingSpanResponseError()
         {
             _infiniteTracingSpanResponseError.Increment();
+        }
+
+        public void ReportInfiniteTracingSpanQueueSize(int queueSize)
+        {
+            ReportSupportabilityGaugeMetric(MetricNames.SupportabilityInfiniteTracingSpanQueueSize, queueSize);
         }
 
 
