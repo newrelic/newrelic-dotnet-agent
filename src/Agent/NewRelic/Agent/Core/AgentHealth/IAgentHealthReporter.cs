@@ -130,7 +130,6 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportAgentInfo();
 
         void ReportSupportabilityCountMetric(string metricName, long count = 1);
-        void ReportSupportabilitySummaryMetric(string metricName, float totalSize, int countSamples, float minValue, float maxValue);
 
         void ReportInfiniteTracingSpanResponseError();
         void ReportInfiniteTracingSpanEventsSeen(long count = 1);
@@ -139,6 +138,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportInfiniteTracingSpanEventsDropped(long count = 1);
         void ReportInfiniteTracingSpanGrpcError(string status);
         void ReportInfiniteTracingSpanGrpcTimeout();
+        void ReportInfiniteTracingSpanQueueSize(int queueSize);
 
     }
 }
