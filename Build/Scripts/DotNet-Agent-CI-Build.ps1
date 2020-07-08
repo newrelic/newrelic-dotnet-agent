@@ -5,7 +5,8 @@ $ErrorActionPreference = "Stop"
 ###############
 
 $nugetPath = (Resolve-Path ".\Build\Tools\nuget.exe").Path
-$applicationsFull = @("Agent\FullAgent.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln")
+#$applicationsFull = @("Agent\FullAgent.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln")
+$applicationsFull = @("Agent\FullAgent.sln")
 
 Write-Host "Restoring NuGet packages"
 foreach ($application in $applicationsFull) {
@@ -19,8 +20,8 @@ foreach ($application in $applicationsFull) {
 $msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
 
 $applicationsFull = [Ordered]@{"Agent\FullAgent.sln" = "Configuration=Release;Platform=x86;AllowUnsafeBlocks=true";
-    "IntegrationTests\IntegrationTests.sln"          = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
-    "IntegrationTests\UnboundedIntegrationTests.sln" = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy"
+#    "IntegrationTests\IntegrationTests.sln"          = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
+#    "IntegrationTests\UnboundedIntegrationTests.sln" = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy"
 }
 
 Write-Host "Building for full build"
