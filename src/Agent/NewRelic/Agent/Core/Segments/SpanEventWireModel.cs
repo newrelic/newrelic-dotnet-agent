@@ -22,6 +22,11 @@ namespace NewRelic.Agent.Core.Segments
         public string DisplayName => $"{TraceId}.{SpanId}";
     }
 
+    public partial class SpanBatch : IStreamingBatchModel<Span>
+    {
+        public int Count => (Spans?.Count).GetValueOrDefault(0);
+    }
+
     [JsonConverter(typeof(SpanEventWireModelSerializer))]
     public interface ISpanEventWireModel : IAttributeValueCollection, IHasPriority
     {
