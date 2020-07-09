@@ -3,7 +3,7 @@
         <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AssemblyName>NewRelic.Api.Agent</AssemblyName>
         <RootNamespace>NewRelic.Api.Agent</RootNamespace>
-        <Description>The New Relic .NET Agent Api</Description>
+        <Description>New Relic .NET Agent API</Description>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile> 
         <DocumentationFile>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\NewRelic.Api.Agent.XML</DocumentationFile>
@@ -34,7 +34,17 @@
         <ProjectReference Include="..\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
     <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
+
     <Target Name="AfterBuild">
-        <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.Xml" OutputPaths="$(TargetDir)\AgentApi.html" />
+        <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.xml" OutputPaths="$(TargetDir)\AgentApi.html" />
+    </Target>
+
+    <!--  We used to increment the minor version of the AssemblyVersion with each release. Last released version following this pattern was 8.27.
+            Fixing AssemblyVersion to 8.50.0.0 for all future 8.x releases - 8.50 is arbitrary, it just needs to be higher than 8.27.
+            If we do a 9.x release this target can be deleted. -->
+    <Target Name="CustomVersion" AfterTargets="VersionByGitTag" Condition="$(AssemblyVersion.StartsWith('8.'))">
+        <PropertyGroup>
+        <AssemblyVersion>8.50.0.0</AssemblyVersion>
+        </PropertyGroup>
     </Target>
 </Project>
