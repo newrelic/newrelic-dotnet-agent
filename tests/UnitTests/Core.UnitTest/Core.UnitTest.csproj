@@ -4,7 +4,7 @@
     <RootNamespace>NewRelic.Agent.Core</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core.UnitTest</AssemblyName>
     <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\..\NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\..\src\NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
     <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
   </PropertyGroup>
   <ItemGroup>
@@ -28,24 +28,24 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\AttributeFilter\AttributeFilter.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Core\Core.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\AttributeFilter\AttributeFilter.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Core\Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Agent\Shared\SharedLog4NetRepository.cs">
+    <Compile Include="..\..\..\src\Agent\Shared\SharedLog4NetRepository.cs">
       <Link>Properties\SharedLog4NetRepository.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\NewRelicStrongNameKey.snk">
+    <None Include="..\..\..\src\NewRelicStrongNameKey.snk">
       <Link>NewRelicStrongNameKey.snk</Link>
     </None>
     <Content Include="BrowserMonitoring\rum_loader_insertion_location\basic.html">

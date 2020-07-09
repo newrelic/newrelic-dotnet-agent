@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\..\Build\RepackAssemblies\RepackAssemblies.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\..\..\build\RepackAssemblies\RepackAssemblies.csproj" />
     <ProjectReference Include="..\..\..\..\Core\Core.csproj" />
   </ItemGroup>
 
@@ -50,7 +50,7 @@
     <None Remove="AsyncLocal.v2.ncrunchproject" />
   </ItemGroup>
 
-  <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+  <Import Project="$(SolutionDir)..\build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\build\Common.Project.Import.proj')" />
 
   <PropertyGroup>
     <PostBuildEvent>"NewRelic.Build.RepackAssemblies.exe" --solution="$(SolutionDir)\" --configuration="$(Configuration)" --repackTarget="AsyncLocal"</PostBuildEvent>

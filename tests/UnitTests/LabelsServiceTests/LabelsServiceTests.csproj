@@ -22,11 +22,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Configuration\Configuration.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Agent\Shared\SharedLog4NetRepository.cs">
+    <Compile Include="..\..\..\src\Agent\Shared\SharedLog4NetRepository.cs">
       <Link>Properties\SharedLog4NetRepository.cs</Link>
     </Compile>
   </ItemGroup>

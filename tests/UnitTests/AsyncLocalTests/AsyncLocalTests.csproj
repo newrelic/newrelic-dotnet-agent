@@ -20,8 +20,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Core\Core.csproj" />
-    <ProjectReference Include="..\..\..\Agent\NewRelic\Agent\Extensions\Providers\CallStack\AsyncLocal\AsyncLocal.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Core\Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Extensions\Providers\CallStack\AsyncLocal\AsyncLocal.csproj" />
     <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
   </ItemGroup>
   <ItemGroup>
