@@ -726,7 +726,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if(cancellationToken.IsCancellationRequested)
             {
-                ProcessFailedItems(items, collection);   
+                ProcessFailedItems(items, collection);
+                return false;
             }
 
             return true;

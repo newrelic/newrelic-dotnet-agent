@@ -2,6 +2,7 @@
 * Copyright 2020 New Relic Corporation. All rights reserved.
 * SPDX-License-Identifier: Apache-2.0
 */
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +17,14 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         public void Delay(int milliseconds, CancellationToken token)
         {
-            Task.Delay(milliseconds).Wait(token);
+            try
+            {
+                Task.Delay(milliseconds).Wait(token);
+            }
+            catch (OperationCanceledException)
+            {
+                //A cancelation was triggered and we don't need the Delayer to bubble up the exception
+            }
         }
     }
 
