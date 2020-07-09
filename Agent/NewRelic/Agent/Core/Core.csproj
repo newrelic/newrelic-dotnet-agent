@@ -137,5 +137,4 @@
         <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
       </None>
     </ItemGroup>
-    <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
 </Project>

@@ -50,7 +50,7 @@
     <None Remove="AsyncLocal.v2.ncrunchproject" />
   </ItemGroup>
 
-  <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
+
 
   <PropertyGroup>
     <PostBuildEvent>"NewRelic.Build.RepackAssemblies.exe" --solution="$(SolutionDir)\" --configuration="$(Configuration)" --repackTarget="AsyncLocal"</PostBuildEvent>

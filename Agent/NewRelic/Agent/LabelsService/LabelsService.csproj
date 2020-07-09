@@ -44,5 +44,5 @@
       <Link>Properties\SharedLog4NetRepository.cs</Link>
     </Compile>
   </ItemGroup>
-  <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
+
 </Project>

@@ -40,5 +40,5 @@
         <ProjectReference Include="..\..\..\..\NewRelic.Core\NewRelic.Core.csproj" />
         <ProjectReference Include="..\..\..\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
     </ItemGroup>
-    <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
+  
 </Project>

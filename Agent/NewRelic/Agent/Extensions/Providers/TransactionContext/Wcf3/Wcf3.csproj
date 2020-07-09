@@ -30,5 +30,5 @@
     <None Remove="Wcf3.v2.ncrunchproject" />
   </ItemGroup>  
   
-  <Import Project="$(SolutionDir)..\Build\NewRelic.Agent.proj" Condition="Exists('$(SolutionDir)..\Build\NewRelic.Agent.proj')" />
+
 </Project>
