@@ -216,46 +216,46 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Couchbase", "NewRelic\Agent
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMq", "NewRelic\Agent\Extensions\Providers\Wrapper\RabbitMq\RabbitMq.csproj", "{00B0CD4C-D7DE-4243-8185-79A912E48291}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BADDAE10-27A9-4452-9432-BFDBC3C62E87}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BADDAE10-27A9-4452-9432-BFDBC3C62E87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarking", "..\Tests\Benchmarking\Benchmarking\Benchmarking.csproj", "{FBD561F5-BA22-46D5-85D4-3BB24B82A85F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarking", "..\tests\Benchmarking\Benchmarking\Benchmarking.csproj", "{FBD561F5-BA22-46D5-85D4-3BB24B82A85F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConcurrentBenchmarking", "..\Tests\Benchmarking\ConcurrentBenchmarking\ConcurrentBenchmarking.csproj", "{4E32935B-8C6E-4885-9B15-19D632040ABA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConcurrentBenchmarking", "..\tests\Benchmarking\ConcurrentBenchmarking\ConcurrentBenchmarking.csproj", "{4E32935B-8C6E-4885-9B15-19D632040ABA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Agent.Extensions", "NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj", "{686AE051-BC8C-4AEC-803D-237AEB807CA9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Core", "NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj", "{9784EAEA-C32F-4DC4-BD84-4075BBA541AB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{C0BB7A5D-6820-4058-AC47-0111ECC34015}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{C0BB7A5D-6820-4058-AC47-0111ECC34015}"
 	ProjectSection(SolutionItems) = preProject
-		..\Build\Common.Project.Import.proj = ..\Build\Common.Project.Import.proj
+		..\build\Common.Project.Import.proj = ..\build\Common.Project.Import.proj
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AttributeFilterTests", "..\Tests\UnitTests\AttributeFilterTests\AttributeFilterTests.csproj", "{AB1B7CF4-6F33-479A-95EE-535DC5E1012A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AttributeFilterTests", "..\tests\UnitTests\AttributeFilterTests\AttributeFilterTests.csproj", "{AB1B7CF4-6F33-479A-95EE-535DC5E1012A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositeTests", "..\Tests\UnitTests\CompositeTests\CompositeTests.csproj", "{33F999A9-88AE-44DE-9BAA-267CF55FACA2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompositeTests", "..\tests\UnitTests\CompositeTests\CompositeTests.csproj", "{33F999A9-88AE-44DE-9BAA-267CF55FACA2}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C} = {2A932B62-8787-4963-8D53-F83BF6ACBB5C}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core.UnitTest", "..\Tests\UnitTests\Core.UnitTest\Core.UnitTest.csproj", "{6D177CB0-32F2-46F5-9C6A-9A6EB9F68892}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core.UnitTest", "..\tests\UnitTests\Core.UnitTest\Core.UnitTest.csproj", "{6D177CB0-32F2-46F5-9C6A-9A6EB9F68892}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Agent.Extensions.Tests", "..\Tests\UnitTests\NewRelic.Agent.Extensions.Tests\NewRelic.Agent.Extensions.Tests.csproj", "{B30142E5-36A2-4D91-A20C-4B8C9632EC41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Agent.Extensions.Tests", "..\tests\UnitTests\NewRelic.Agent.Extensions.Tests\NewRelic.Agent.Extensions.Tests.csproj", "{B30142E5-36A2-4D91-A20C-4B8C9632EC41}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncLocalTests", "..\Tests\UnitTests\AsyncLocalTests\AsyncLocalTests.csproj", "{D5509D1E-4FF5-425E-894F-9E5226E87864}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncLocalTests", "..\tests\UnitTests\AsyncLocalTests\AsyncLocalTests.csproj", "{D5509D1E-4FF5-425E-894F-9E5226E87864}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2A932B62-8787-4963-8D53-F83BF6ACBB5C} = {2A932B62-8787-4963-8D53-F83BF6ACBB5C}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LabelsServiceTests", "..\Tests\UnitTests\LabelsServiceTests\LabelsServiceTests.csproj", "{1CE9BC32-15ED-44B1-BD20-9CDFA2540844}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LabelsServiceTests", "..\tests\UnitTests\LabelsServiceTests\LabelsServiceTests.csproj", "{1CE9BC32-15ED-44B1-BD20-9CDFA2540844}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Agent.TestUtilities", "..\Tests\UnitTests\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj", "{37FFBAD3-4263-4CDD-9072-CADEE1CD5B37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewRelic.Agent.TestUtilities", "..\tests\UnitTests\NewRelic.Agent.TestUtilities\NewRelic.Agent.TestUtilities.csproj", "{37FFBAD3-4263-4CDD-9072-CADEE1CD5B37}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParsingTests", "..\Tests\UnitTests\ParsingTests\ParsingTests.csproj", "{3E734568-9142-4163-B651-F5BDC3D04F4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParsingTests", "..\tests\UnitTests\ParsingTests\ParsingTests.csproj", "{3E734568-9142-4163-B651-F5BDC3D04F4A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrieTests", "..\Tests\UnitTests\TrieTests\TrieTests.csproj", "{6E806FD6-F90C-4359-8654-CF580401F871}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrieTests", "..\tests\UnitTests\TrieTests\TrieTests.csproj", "{6E806FD6-F90C-4359-8654-CF580401F871}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepackAssemblies", "..\Build\RepackAssemblies\RepackAssemblies.csproj", "{E8E86D79-D419-47CE-9299-869E14F3EFB4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepackAssemblies", "..\build\RepackAssemblies\RepackAssemblies.csproj", "{E8E86D79-D419-47CE-9299-869E14F3EFB4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore", "NewRelic\Agent\Extensions\Providers\Wrapper\AspNetCore\AspNetCore.csproj", "{2FB30555-65A4-43D7-82AA-56BF203D3A96}"
 EndProject
@@ -265,7 +265,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Owin3", "NewRelic\Agent\Ext
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RestSharp", "NewRelic\Agent\Extensions\Providers\Wrapper\RestSharp\RestSharp.csproj", "{B65A0C00-100D-4F27-BAC7-6B8A9FC7619D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Core.Tests", "..\Tests\UnitTests\NewRelic.Core.Tests\NewRelic.Core.Tests.csproj", "{6DC9A481-9A72-4D35-B312-43E02E36C241}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Core.Tests", "..\tests\UnitTests\NewRelic.Core.Tests\NewRelic.Core.Tests.csproj", "{6DC9A481-9A72-4D35-B312-43E02E36C241}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreInstaller", "CoreInstaller", "{50FE074A-0573-46A5-8B68-837041225182}"
 	ProjectSection(SolutionItems) = preProject
@@ -273,7 +273,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreInstaller", "CoreInstal
 		NewRelic\CoreInstaller\installAgentUsage.txt = NewRelic\CoreInstaller\installAgentUsage.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "..\Tests\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "..\tests\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
