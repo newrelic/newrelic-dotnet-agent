@@ -97,8 +97,8 @@ Agent/Shared/SharedAssemblyInfoVersion.cs
 Agent/NewRelic/Profiler/Profiler/VersionInfo.h
 
 # Ignore source files generated during build
-Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
-Agent/Installer/Core.wxs
+src/Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
+src/Agent/Installer/Core.wxs
 
 
 
