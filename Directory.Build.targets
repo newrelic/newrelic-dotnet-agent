@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)\build\Versioning.targets" Condition="Exists('$(MSBuildThisFileDirectory)\build\Versioning.targets')" />
+</Project>
