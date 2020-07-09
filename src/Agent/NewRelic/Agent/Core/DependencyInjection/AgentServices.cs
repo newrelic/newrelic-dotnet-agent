@@ -76,6 +76,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
             // Other
             container.Register<ICpuSampleTransformer, CpuSampleTransformer>();
+            container.Register<AgentInstallConfiguration.IsWindowsDelegate>(AgentInstallConfiguration.GetIsWindows);
             container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
             container.Register<IThreadStatsSampleTransformer, ThreadStatsSampleTransformer>();
             container.Register<IEnvironment, SystemInterfaces.Environment>();
