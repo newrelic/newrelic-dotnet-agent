@@ -20,12 +20,6 @@ using NewRelic.Agent.Core.Wrapper;
 
 namespace NewRelic.Agent.Core
 {
-	public static class AgentVersion
-	{
-		// put in a separate class to avoid the static initializer on Agent being hit in testing
-		[NotNull] public static readonly String Version = typeof(AgentVersion).Assembly.GetName().Version.ToString();
-	}
-
 	sealed public class Agent : IAgent, IDisposable
 	{
 		[NotNull]
@@ -167,15 +161,15 @@ namespace NewRelic.Agent.Core
 		private void LogInitialized()
 		{
 #if NETSTANDARD2_0
-			Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentVersion.Version, Process.GetCurrentProcess().Id, AppDomain.CurrentDomain.FriendlyName);
+			Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, Process.GetCurrentProcess().Id, AppDomain.CurrentDomain.FriendlyName);
 #else
 			if (HttpRuntime.AppDomainAppVirtualPath == null)
 			{
-				Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentVersion.Version, Process.GetCurrentProcess().Id, AppDomain.CurrentDomain.FriendlyName);
+				Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, Process.GetCurrentProcess().Id, AppDomain.CurrentDomain.FriendlyName);
 			}
 			else
 			{
-				Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) for virtual path '{2}'", AgentVersion.Version, Process.GetCurrentProcess().Id, HttpRuntime.AppDomainAppVirtualPath);
+				Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) for virtual path '{2}'", AgentInstallConfiguration.AgentVersion, Process.GetCurrentProcess().Id, HttpRuntime.AppDomainAppVirtualPath);
 			}
 
 			if (AgentInstallConfiguration.IsClr4)

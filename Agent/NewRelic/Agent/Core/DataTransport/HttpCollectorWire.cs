@@ -145,7 +145,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 			request.Timeout = (Int32)_configuration.CollectorTimeout;
 			request.ContentType = "application/octet-stream";
-			request.UserAgent = $"NewRelic-DotNetAgent/{AgentVersion.Version}";
+			request.UserAgent = $"NewRelic-DotNetAgent/{AgentInstallConfiguration.AgentVersion}";
 
 			request.Method = _configuration.PutForDataSend ? "PUT" : "POST";
 			request.ContentLength = requestCollectorRequestPayload.Data.Length;
