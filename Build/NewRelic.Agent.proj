@@ -21,15 +21,4 @@
     <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
     <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
   </PropertyGroup>
-
-  <!-- We override some of the work done in VersionByGitTag for the agent because the agent's build process expects AssemblyVersion to be the full version -->
-  <Target Name="AfterVersionByGitTag" AfterTargets="VersionByGitTag">
-    <PropertyGroup>
-      <AssemblyVersion>$(Version)</AssemblyVersion>
-
-      <!-- Microsoft best pracitces say to not set InformationalVersion, though the agent is not consumed as a library so we don't care. -->
-      <GitBranchNameSanitized Condition="'$(GitBranchName)' != 'net35/main' And '$(GitBranchName)' != 'HEAD'">.branch.$(GitBranchName.Replace('/','-'))</GitBranchNameSanitized>
-      <InformationalVersion>$(PackageVersion)+sha.$(GitHash)$(GitBranchNameSanitized)</InformationalVersion>
-    </PropertyGroup>
-  </Target>
 </Project>
