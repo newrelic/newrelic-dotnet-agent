@@ -2195,16 +2195,16 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase("100", "232", ExpectedResult = 100)]
         [TestCase("-342", "198", ExpectedResult = -342)]
-        [TestCase(null, null, ExpectedResult = 500)]
-        [TestCase("", null, ExpectedResult = 500)]
-        [TestCase(null, "", ExpectedResult = 500)]
-        [TestCase("", "", ExpectedResult = 500)]
+        [TestCase(null, null, ExpectedResult = 700)]
+        [TestCase("", null, ExpectedResult = 700)]
+        [TestCase(null, "", ExpectedResult = 700)]
+        [TestCase("", "", ExpectedResult = 700)]
         [TestCase("", "203", ExpectedResult = 203)]
         [TestCase("XYZ", "876", ExpectedResult = 876)]
-        [TestCase("XYZ", "ABC", ExpectedResult = 500)]
-        [TestCase("103.98", null, ExpectedResult = 500)]
+        [TestCase("XYZ", "ABC", ExpectedResult = 700)]
+        [TestCase("103.98", null, ExpectedResult = 700)]
         [TestCase("103.98", "200", ExpectedResult = 200)]
-        [TestCase(null, "98.6", ExpectedResult = 500)]
+        [TestCase(null, "98.6", ExpectedResult = 700)]
         public int InfiniteTracing_SpanBatchSize(string envConfigVal, string appSettingVal)
         {
             _localConfig.appSettings.Add(new configurationAdd { key = "InfiniteTracingSpanEventsBatchSize", value = appSettingVal });
