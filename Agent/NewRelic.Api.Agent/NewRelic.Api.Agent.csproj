@@ -35,12 +35,11 @@
         <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.xml" OutputPaths="$(TargetDir)\AgentApi.html" />
     </Target>
 
-    <!--  We used to increment the minor version of the AssemblyVersion with each release. Last released version following this pattern was 8.27.
-            Fixing AssemblyVersion to 8.50.0.0 for all future 8.x releases - 8.50 is arbitrary, it just needs to be higher than 8.27.
-            If we do a 9.x release this target can be deleted. -->
-    <Target Name="CustomVersion" AfterTargets="VersionByGitTag" Condition="$(AssemblyVersion.StartsWith('8.'))">
+    <!--  We used to increment the minor version of the AssemblyVersion with each release. Last released version following this pattern was 6.25.
+            Fixing AssemblyVersion to 6.50.0.0 for all future 6.x releases - 6.50 is arbitrary, it just needs to be higher than 6.25. -->
+    <Target Name="CustomVersion" AfterTargets="VersionByGitTag" Condition="$(AssemblyVersion.StartsWith('6.'))">
         <PropertyGroup>
-        <AssemblyVersion>8.50.0.0</AssemblyVersion>
+        <AssemblyVersion>6.50.0.0</AssemblyVersion>
         </PropertyGroup>
     </Target>
 </Project>
