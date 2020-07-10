@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Aggregators
         bool IsServiceAvailable { get; }
         bool HasCapacity(int proposedItems);
         void RecordDroppedSpans(int countDroppedSpans);
+        void RecordSeenSpans(int countSeenSpans);
         void ReportSupportabilityMetrics();
         int Capacity { get; }
     }
@@ -150,9 +151,14 @@ namespace NewRelic.Agent.Core.Aggregators
             _agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(countDroppedSpans);
         }
 
+        public void RecordSeenSpans(int countSeenSpans)
+        {
+            _agentHealthReporter.ReportInfiniteTracingSpanEventsSeen(countSeenSpans);
+        }
+
         public void Collect(ISpanEventWireModel wireModel)
         {
-            _agentHealthReporter.ReportInfiniteTracingSpanEventsSeen(1);
+            RecordSeenSpans(1);
 
             if (_spanEvents == null || !_spanEvents.TryAdd(wireModel.Span))
             {

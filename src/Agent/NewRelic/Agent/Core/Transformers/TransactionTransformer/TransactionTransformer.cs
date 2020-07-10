@@ -323,6 +323,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             if (useInfiniteTracing && !_spanEventAggregatorInfiniteTracing.HasCapacity(countProposedSpans))
             {
+                _spanEventAggregatorInfiniteTracing.RecordSeenSpans(countProposedSpans);
                 _spanEventAggregatorInfiniteTracing.RecordDroppedSpans(countProposedSpans);
                 return;
             }
