@@ -35,6 +35,7 @@ Fixes issue where updating custom instrumentation while application is running c
 * Fixes issue with Infinite Tracing where a communication error did not clean up its corresponding communication threads.
 * Fixes issue in .NET Framework ASP.NET MVC applications where transactions started on one thread would flow to background threads (e.g., started with `Task.Run`) in some scenarios but not others. Transaction state used to only flow to a background thread if the transaction originated from an async controller action. Transaction state now flows to background threads regardless of whether the controller action is async or not.
 * Fixes issue in .NET Framework ASP.NET MVC applications where agent instrumentation of an MVC controller action could cause an `InvalidProgramException`.
+* Fixes a problem with the reporting of Errors where Error Events may not appear even though Error Traces are being sent.
 
 ## [8.27] - 2020-04-30
 ### New Features
