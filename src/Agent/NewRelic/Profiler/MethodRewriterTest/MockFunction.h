@@ -128,6 +128,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return _methodToken;
         }
 
+        virtual FunctionHeaderInfoPtr GetFunctionHeaderInfo() override {
+            return std::make_shared<MockFunctionHeaderInfo>((uint16_t)1);
+        }
+
         virtual unsigned long GetClassAttributes() override
         {
             return 0;
@@ -138,9 +142,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return 0;
         }
 
-        virtual ByteVectorPtr Preprocess(const ByteVectorPtr& method) override
+        virtual bool Preprocess() override
         {
-            return method;
+            return true;
         }
 
         virtual bool ShouldTrace() override
@@ -156,6 +160,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         virtual uint32_t GetTracerFlags() override
         {
             return 0;
+        }
+
+        virtual bool IsValid() override
+        {
+            return true;
         }
 
         virtual bool IsCoreClr() override
@@ -178,7 +187,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
         
         // returns the bytes that make up this method, this includes the header and the code
         ByteVectorPtr _methodBytes;
-        virtual ByteVectorPtr GetMethodBytes(bool /*replaceMethod*/) override
+        virtual ByteVectorPtr GetMethodBytes() override
         {
             return _methodBytes;
         }

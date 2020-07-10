@@ -68,13 +68,16 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
             LogInfo(L"Instrumenting method: ", function->ToString());
 
-            InstrumentFunctionManipulator manipulator(function, instrumentationSettings, instrumentationPoint);
-            auto valid = manipulator.WriteFunction();
-            if (!valid) {
+            InstrumentFunctionManipulator manipulator(function, instrumentationSettings);
+            if (!function->IsValid()) {
                 // we might have mucked the method up trying to re-write multiple RETs
                 LogInfo(L"Skipping invalid method: ", function->ToString());
+                return false;
             }
-            return valid;
+            else {
+                manipulator.InstrumentDefault(instrumentationPoint);
+                return true;
+            }
         }
     };
 
@@ -95,9 +98,13 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
                 LogInfo(L"Instrumenting API method: ", function->ToString());
                 ApiFunctionManipulator manipulator(function, instrumentationSettings);
-                return manipulator.WriteFunction();
+                manipulator.InstrumentApi();
+                return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
     };
 
@@ -127,7 +134,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 
             LogInfo(L"Instrumenting helper method: ", function->ToString());
             HelperFunctionManipulator manipulator(function);
-            return manipulator.WriteFunction();
+            manipulator.InstrumentHelper();
+            return false;
         }
     };
 }}}

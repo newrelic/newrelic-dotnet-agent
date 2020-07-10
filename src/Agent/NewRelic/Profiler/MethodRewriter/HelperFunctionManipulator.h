@@ -10,16 +10,17 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
     // This thing writes the helper methods that we add to
     // System.Type System.CannotUnloadAppDomainException
-    class HelperFunctionManipulator : public FunctionManipulator
+    class HelperFunctionManipulator : FunctionManipulator
     {
     public:
         HelperFunctionManipulator(IFunctionPtr function) : 
             FunctionManipulator(function)
-        { }
+        {
+            Initialize();
+        }
 
-    protected:
         // instrument this method with the mscorlib helper stuff
-        virtual bool DoWriteFunction() override
+        void InstrumentHelper()
         {
             if (_function->GetFunctionName() == _X("LoadAssemblyOrThrow"))
             {
@@ -48,10 +49,9 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             else
             {
                 LogError(L"Attempted to instrument an unknown helper method in mscorlib.");
-                return false;
+                return;
             }
             InstrumentTiny();
-            return true;
         }
     private:
 

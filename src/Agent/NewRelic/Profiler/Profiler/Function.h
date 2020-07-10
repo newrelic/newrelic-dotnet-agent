@@ -15,7 +15,6 @@
 #include "FunctionHeaderInfo.h"
 #include "FunctionPreprocessor.h"
 #include "Win32Helpers.h"
-#include "ILTracker.h"
 
 namespace NewRelic { namespace Profiler
 {
@@ -53,14 +52,17 @@ namespace NewRelic { namespace Profiler
         mdTypeDef _typeDefinitionToken;
         DWORD _classAttributes;
         DWORD _methodAttributes;
+        FunctionHeaderInfoPtr _functionHeaderInfo;
         bool _shouldTrace;
+        bool _valid;
         bool _isCoreClr;
         bool _injectMethodInstrumentation;
         uint32_t _tracerFlags;
 
         ByteVectorPtr _signature;
+        ByteVectorPtr _method;
+        std::function<HRESULT(Function&, LPCBYTE, ULONG)> _setILFunctionBody;
         std::function<HRESULT(Function&)> _rejitFunction;
-        std::shared_ptr<ILTracker> _ilTracker;
 
     public:
 
@@ -74,7 +76,7 @@ namespace NewRelic { namespace Profiler
         }
 
         // Returns the Function representing the given functionId, or nullptr if this function should not be instrumented.
-        static std::shared_ptr<Function> Create(CComPtr<ICorProfilerInfo4> profilerInfo, const FunctionID functionId, std::shared_ptr<MethodRewriter::MethodRewriter> methodRewriter, bool injectMethodInstrumentation, std::function<HRESULT(Function&)> rejitFunction, std::shared_ptr<ILTracker> ilTracker)
+        static std::shared_ptr<Function> Create(CComPtr<ICorProfilerInfo4> profilerInfo, const FunctionID functionId, std::shared_ptr<MethodRewriter::MethodRewriter> methodRewriter, bool injectMethodInstrumentation, std::function<HRESULT(Function&, LPCBYTE, ULONG)> setILFunctionBodyOrRejit, std::function<HRESULT(Function&)> rejitFunction)
         {
             AssemblyID assemblyId = 0;
             AppDomainID appDomainId = 0;
@@ -112,13 +114,13 @@ namespace NewRelic { namespace Profiler
             }
 
             uint32_t tracerFlags = 0;
-            bool hasTransactionOrTraceAttribute = false;
+            bool hasTraceAttribute = false;
 
             // don't look for trace attributes in Microsoft code or our agent code
             if (!ShouldSkipAssemblyAttributes(assemblyName.get()))
             {
-                hasTransactionOrTraceAttribute = HasTransactionOrTraceAttribute(metaDataImport, metaDataToken, tracerFlags);
-                if (hasTransactionOrTraceAttribute)
+                hasTraceAttribute = HasTraceAttribute(metaDataImport, metaDataToken, tracerFlags);
+                if (hasTraceAttribute)
                 {
                     tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::AttributeInstrumentation;
                 }
@@ -132,7 +134,7 @@ namespace NewRelic { namespace Profiler
             // turned up all the way we always look up all function info so that it gets logged at TRACE level.
             // Support uses that logging to help customers create / debug custom instrumentation.
 
-            bool skipShouldInstrumentChecks = logAll || hasTransactionOrTraceAttribute || ToStdWString(assemblyName.get()) == _X("NewRelic.Api.Agent");
+            bool skipShouldInstrumentChecks = logAll || hasTraceAttribute || ToStdWString(assemblyName.get()) == _X("NewRelic.Api.Agent");
 #ifdef DEBUG_PREPROCESSOR
             skipShouldInstrumentChecks = true;
 #endif
@@ -190,7 +192,7 @@ namespace NewRelic { namespace Profiler
             return std::make_shared<Function>(profilerInfo, functionId, metaDataImport, metaDataAssemblyImport, methodRewriter,
                 appDomainId, signatureSize, signature, moduleId, classId, metaDataToken, typeDefinitionToken, ToStdWString(assemblyName.get()), 
                 typeName, ToStdWString(functionName.get()), classAttributes, methodAttributes, tracerFlags, 
-                hasTransactionOrTraceAttribute, injectMethodInstrumentation, rejitFunction, ilTracker);
+                hasTraceAttribute, injectMethodInstrumentation, setILFunctionBodyOrRejit, rejitFunction);
         }
 
         // We don't want to search Microsoft assemblies for our trace attributes
@@ -202,16 +204,13 @@ namespace NewRelic { namespace Profiler
         }
 
         // Check for the API Transaction and Trace attributes.
-        static bool HasTransactionOrTraceAttribute(CComPtr<IMetaDataImport2> metaDataImport, mdToken metaDataToken, uint32_t& tracerFlags)
+        static bool HasTraceAttribute(CComPtr<IMetaDataImport2> metaDataImport, mdToken metaDataToken, uint32_t& tracerFlags)
         {
             const BYTE *pVal = NULL;
             ULONG cbVal = 0;
 
             HRESULT result = metaDataImport->GetCustomAttributeByName(metaDataToken, _X("NewRelic.Api.Agent.TransactionAttribute"), (const void**)&pVal, &cbVal);
-            // It is not safe to use the SUCCEEDED() macro to check result in this case. Contrary to the documentation, GetCustomAttributeByName sometimes
-            // returns S_FALSE (1), and we don't want to consider that a successful result in this case.
-            if (result == S_OK)
-            {
+            if (result == S_OK) {
                 auto transactionFlag = NewRelic::Profiler::Configuration::TracerFlags::OtherTransaction;
                 //  11 huh?   Yeah, whatever dude.  I don't know how to properly deserialize the attribute
                 // properties, I just know that the last bit is a 1 or 0 reflecting the boolean "Web" value.
@@ -229,7 +228,6 @@ namespace NewRelic { namespace Profiler
                 return true;
             }
             result = metaDataImport->GetCustomAttributeByName(metaDataToken, _X("NewRelic.Api.Agent.TraceAttribute"), (const void**)&pVal, &cbVal);
-            // Same as above, we can't use SUCCEEDED to check result in this case.
             return result == S_OK;
         }
 
@@ -254,12 +252,13 @@ namespace NewRelic { namespace Profiler
             uint32_t tracerFlags,
             bool shouldTrace,
             bool injectMethodInstrumentation,
-            std::function<HRESULT(Function&)> rejitFunction,
-            std::shared_ptr<ILTracker> ilTracker) :
+            std::function<HRESULT(Function&, LPCBYTE, ULONG)> setILFunctionBody,
+            std::function<HRESULT(Function&)> rejitFunction) :
             _functionId(functionId),
             _functionName(functionName),
             _profilerInfo(profilerInfo),
             _signature(new ByteVector()),
+            _method(new ByteVector()),
             _metaDataImport(metaDataImport),
             _metaDataAssemblyImport(metaDataAssemblyImport),
             _moduleId(moduleId),
@@ -271,13 +270,16 @@ namespace NewRelic { namespace Profiler
             _classAttributes(classAttributes),
             _methodAttributes(methodAttributes),
             _shouldTrace(shouldTrace),
+            _valid(true),
             _isCoreClr(false),
             _tracerFlags(tracerFlags),
             _injectMethodInstrumentation(injectMethodInstrumentation),
-            _rejitFunction(rejitFunction),
-            _ilTracker(ilTracker)
+            _setILFunctionBody(setILFunctionBody),
+            _rejitFunction(rejitFunction)
         {
             ProcessID processId = 0;
+            ULONG methodSize = 0;
+            const uint8_t* method;
 
             // get the interfaces we need and the metadata token
             ThrowOnError(_profilerInfo->GetTokenAndMetaDataFromFunction, functionId, IID_IMetaDataEmit2, (IUnknown**)&_metaDataEmit, nullptr);
@@ -310,15 +312,20 @@ namespace NewRelic { namespace Profiler
             // create the token resolver that will be used to get strings from tokens
             _tokenResolver.reset(new CorTokenResolver(_metaDataImport));
 
-            _moduleName = ToStdWString(moduleName.get());
+            // REVIEW : Why do we get the function bytes upfront before we know that we want to instrument the function? SMD
+            // get the bytes that make up this method
+            ThrowOnError(_profilerInfo->GetILFunctionBody, _moduleId, _metaDataToken, &method, &methodSize);
 
+            _moduleName = ToStdWString(moduleName.get());
+            _method->assign(method, method + methodSize);
             _signature->assign(signature, signature + signatureSize);
+
+            _functionHeaderInfo = CreateFunctionHeaderInfo(_method);
 
             const BYTE *pVal = NULL;
             ULONG cbVal = 0;
 
             HRESULT attributeResult = _metaDataImport->GetCustomAttributeByName(_metaDataToken, _X("System.Runtime.CompilerServices.AsyncStateMachineAttribute"), (const void**)&pVal, &cbVal);
-            // It is not safe for us to use the SUCCEEDED macro on the result returned from GetCustomAttributeByName
             if (attributeResult == S_OK)
             {
                 LogDebug(L"Async method detected: ", this->ToString());
@@ -339,18 +346,13 @@ namespace NewRelic { namespace Profiler
 #endif
         }
 
-        virtual ByteVectorPtr Preprocess(const ByteVectorPtr& method) override
+        virtual bool Preprocess() override
         {
-            if (method == nullptr)
-            {
-                return nullptr;
-            }
-            auto functionHeaderInfo = CreateFunctionHeaderInfo(method);
-            if (functionHeaderInfo == nullptr) {
-                return nullptr;
+            if (_functionHeaderInfo == nullptr) {
+                return false;
             }
 
-            auto preprocessor = new NewRelic::Profiler::MethodRewriter::FunctionPreprocessor(functionHeaderInfo, method);
+            auto preprocessor = new NewRelic::Profiler::MethodRewriter::FunctionPreprocessor(_functionHeaderInfo, _method);
             auto newFunction = preprocessor->Process();
 
 #ifdef WRITE_BYTES_TO_DISK
@@ -362,12 +364,22 @@ namespace NewRelic { namespace Profiler
                 myfile.close();
             }
 #endif // WRITE_BYTES_TO_DISK
-            return newFunction;
+            _valid = newFunction != nullptr;
+            if (_valid)
+            {
+                _method = newFunction;
+            }
+            return _valid;
         }
 
         virtual uint32_t GetTracerFlags() override
         {
             return _tracerFlags;
+        }
+
+        virtual bool IsValid() override
+        {
+            return _valid;
         }
 
         virtual bool IsCoreClr() override
@@ -454,9 +466,14 @@ namespace NewRelic { namespace Profiler
         }
 
         // returns the bytes that make up this method, this includes the header and the code
-        virtual ByteVectorPtr GetMethodBytes(bool useCache) override
+        virtual ByteVectorPtr GetMethodBytes() override
         {
-            return _ilTracker->GetILFunctionBody(useCache, _moduleId, _metaDataToken);
+            return _method;
+        }
+
+        virtual FunctionHeaderInfoPtr GetFunctionHeaderInfo() override
+        {
+            return _functionHeaderInfo;
         }
 
         // get the tokenizer that should be used to modify the code bytes
@@ -482,7 +499,7 @@ namespace NewRelic { namespace Profiler
             memcpy(allocatedSpace, method.data(), method.size());
 
             // set the function to use the new bytes as its bytes to JIT compile
-            _profilerInfo->SetILFunctionBody(_moduleId, _metaDataToken, allocatedSpace);
+            ThrowOnError(_setILFunctionBody, *this, allocatedSpace, (ULONG)method.size());
         }
 
         virtual xstring_t ToString() override

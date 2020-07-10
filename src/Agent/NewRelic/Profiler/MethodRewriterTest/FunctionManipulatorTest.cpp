@@ -17,31 +17,22 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace Test
 {
-    class TestFunctionManipulator : public FunctionManipulator
-    {
-    public:
-        TestFunctionManipulator(IFunctionPtr function) : FunctionManipulator(function)
-        { }
-    protected:
-        virtual bool DoWriteFunction() override { return true;  }
-    };
-
     TEST_CLASS(FunctionManipulatorTest)
     {
     public:
         TEST_METHOD(construction)
         {
             auto function = std::make_shared<MockFunction>();
-            TestFunctionManipulator manipulator(function);
+            FunctionManipulator manipulator(function);
         }
 
         TEST_METHOD(instrument_minimal_method)
         {
             auto function = std::make_shared<MockFunction>();
-            auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
-            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""), instrumentationPoint);
+            InstrumentFunctionManipulator manipulator(function, std::make_shared<InstrumentationSettings>(nullptr, L""));
 
-            Assert::IsTrue(manipulator.WriteFunction());
+            auto instrumentationPoint = CreateInstrumentationPointThatMatchesFunction(function);
+            manipulator.InstrumentDefault(instrumentationPoint);
         }
 
         //TEST_METHOD(test_method_with_no_code)
