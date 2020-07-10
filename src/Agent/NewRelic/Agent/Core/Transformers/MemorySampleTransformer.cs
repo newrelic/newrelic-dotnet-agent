@@ -20,31 +20,51 @@ namespace NewRelic.Agent.Core.Transformers
 
         private readonly IMetricAggregator _metricAggregator;
 
-        private readonly IConfigurationService _configurationService;
+        private readonly bool _isWindows;
 
 
-        public MemorySampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, IConfigurationService configurationService)
+        public MemorySampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, AgentInstallConfiguration.IsWindowsDelegate getIsWindows)
         {
             _metricBuilder = metricBuilder;
             _metricAggregator = metricAggregator;
-            _configurationService = configurationService;
+            _isWindows = getIsWindows();
         }
 
         public void Transform(ImmutableMemorySample sample)
         {
+            //Physical memory on windows is measured by PrivateBytes but on Linux it is better measured using WorkingSet.
+            //This will allow us to report memory usage that more closely resembles the memory usage provided by tools
+            //on both operating systems.
+            //The physical memory metric is what supported out of the box by the APM UI.
+
             // Do not create metrics if memory values are 0
-            // Value may be 0 due to lack of support on called platform (i.e. Linux does not provide Process.PrivateMemorySize64)
-            if (sample.MemoryPrivate > 0)
+            // Value may be 0 due to lack of support on called platform (i.e. Linux does not provide Process.PrivateMemorySize64 for older versions of .net core)
+            if (sample.MemoryPrivate > 0 && _isWindows)
             {
-                var unscopedMemoryPhysicalMetric = _metricBuilder.TryBuildMemoryPhysicalMetric(sample.MemoryPrivate);
-                RecordMetric(unscopedMemoryPhysicalMetric);
+                RecordMemoryPhysicalMetric(sample.MemoryPrivate);
             }
 
             if (sample.MemoryWorkingSet > 0)
             {
-                var unscopedMemoryWorkingSetMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(sample.MemoryWorkingSet);
-                RecordMetric(unscopedMemoryWorkingSetMetric);
+                RecordMemoryWorkingSetMetric(sample.MemoryWorkingSet);
+
+                if (!_isWindows)
+                {
+                    RecordMemoryPhysicalMetric(sample.MemoryWorkingSet);
+                }
             }
+        }
+
+        private void RecordMemoryPhysicalMetric(long memoryValue)
+        {
+            var unscopedMemoryPhysicalMetric = _metricBuilder.TryBuildMemoryPhysicalMetric(memoryValue);
+            RecordMetric(unscopedMemoryPhysicalMetric);
+        }
+
+        private void RecordMemoryWorkingSetMetric(long memoryValue)
+        {
+            var unscopedMemoryPhysicalMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(memoryValue);
+            RecordMetric(unscopedMemoryPhysicalMetric);
         }
 
         private void RecordMetric(MetricWireModel metric)

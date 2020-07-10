@@ -91,6 +91,13 @@ namespace NewRelic.Agent.Core
             AgentInfo = GetAgentInfo();
         }
 
+        //This method and delegate is here to allow dependency injecting the IsWindows logic via a typed delegate
+        public delegate bool IsWindowsDelegate();
+        public static bool GetIsWindows()
+        {
+            return IsWindows;
+        }
+
         private static string GetAgentVersion()
         {
             try

@@ -18,24 +18,19 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class MemorySampleTransformerTests
     {
-        private MemorySampleTransformer _memorySampleTransformer;
-
         private IMetricBuilder _metricBuilder;
 
         private IMetricAggregator _metricAggregator;
 
-        private IConfigurationService _configurationService;
-
         private const float BytesPerMb = 1048576f;
+        private const long PrivateBytesTestValue = 2348987234L;
+        private const long WorkingSetTestValue = 42445745745L;
 
         [SetUp]
         public void SetUp()
         {
             _metricBuilder = new MetricWireModel.MetricBuilder(new MetricNameService());
             _metricAggregator = Mock.Create<IMetricAggregator>();
-            _configurationService = Mock.Create<IConfigurationService>();
-
-            _memorySampleTransformer = new MemorySampleTransformer(_metricBuilder, _metricAggregator, _configurationService);
         }
 
         [Test]
@@ -45,7 +40,7 @@ namespace NewRelic.Agent.Core.Transformers
             var expectedMemoryWorkingSetMetric = _metricBuilder.TryBuildMemoryWorkingSetMetric(4);
 
             var sample = new ImmutableMemorySample(2, 4);
-            _memorySampleTransformer.Transform(sample);
+            Transform(sample);
 
             Mock.Assert(() => _metricAggregator.Collect(expectedMemoryPhysicalMetric));
             Mock.Assert(() => _metricAggregator.Collect(expectedMemoryWorkingSetMetric));
@@ -64,7 +59,7 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>())).DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricName.Name, m.Data));
 
             var sample = new ImmutableMemorySample(expectedMemoryPhysicalValue, expectedMemoryWorkingSetValue);
-            _memorySampleTransformer.Transform(sample);
+            Transform(sample);
 
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, generatedMetrics.Count),
@@ -84,9 +79,38 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>())).DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricName.Name, m.Data));
 
             var sample = new ImmutableMemorySample(expectedMemoryPhysicalValue, expectedMemoryWorkingSetValue);
-            _memorySampleTransformer.Transform(sample);
+            Transform(sample);
 
             Assert.IsEmpty(generatedMetrics);
+        }
+
+        [TestCase(true, PrivateBytesTestValue / BytesPerMb, WorkingSetTestValue / BytesPerMb)]
+        [TestCase(false, WorkingSetTestValue / BytesPerMb, WorkingSetTestValue / BytesPerMb)]
+        public void TransformSample_UsesAppropriateMemorySampleForPlatform(bool isWindows, float expectedMemoryPhysicalValue, float expectedWorkingSetValue)
+        {
+            var generatedMetrics = new Dictionary<string, MetricDataWireModel>();
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>())).DoInstead<MetricWireModel>(m => generatedMetrics.Add(m.MetricName.Name, m.Data));
+
+            var sample = new ImmutableMemorySample(PrivateBytesTestValue, WorkingSetTestValue);
+            Transform(sample, isWindows);
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(2, generatedMetrics.Count),
+                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.MemoryPhysical, expectedMemoryPhysicalValue),
+                () => MetricTestHelpers.CompareMetric(generatedMetrics, MetricNames.MemoryWorkingSet, expectedWorkingSetValue)
+            );
+        }
+
+        private void Transform(ImmutableMemorySample sample)
+        {
+            Transform(sample, true);
+        }
+
+        private void Transform(ImmutableMemorySample sample, bool isWindows)
+        {
+            var transformer = new MemorySampleTransformer(_metricBuilder, _metricAggregator, () => isWindows);
+            transformer.Transform(sample);
         }
     }
 }
