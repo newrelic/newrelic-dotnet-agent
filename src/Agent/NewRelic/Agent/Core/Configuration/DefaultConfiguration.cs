@@ -1036,7 +1036,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         private int? _infiniteTracingBatchSizeSpans;
         public int InfiniteTracingBatchSizeSpans => _infiniteTracingBatchSizeSpans
-                ?? (_infiniteTracingBatchSizeSpans = EnvironmentOverrides(TryGetAppSettingAsInt("InfiniteTracingSpanEventsBatchSize"), "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE").GetValueOrDefault(500)).Value;
+                ?? (_infiniteTracingBatchSizeSpans = EnvironmentOverrides(TryGetAppSettingAsInt("InfiniteTracingSpanEventsBatchSize"), "NEW_RELIC_INFINITE_TRACING_SPAN_EVENTS_BATCH_SIZE").GetValueOrDefault(700)).Value;
 
         private bool _infiniteTracingObtainedSettingsForTest;
         private void GetInfiniteTracingFlakyAndDelayTestSettings()

@@ -25,6 +25,8 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments.Tests;
+using Telerik.JustMock.Helpers;
+using System.Threading;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -932,6 +934,74 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         #endregion Transaction Events
 
         #region Span Events
+
+        [Test]
+        public void RecordsSupportabilityInfiniteTracingSeenAndDroppedWhenNoCapacity()
+        {
+            const int testValHasCapacity = 17;
+            const int testValNoCapacity = 63;
+
+
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.IsServiceEnabled).Returns(true);
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.IsServiceAvailable).Returns(true);
+
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.HasCapacity(testValHasCapacity)).Returns(true);
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.HasCapacity(testValNoCapacity)).Returns(false);
+
+            var actualSpansSeen = 0;
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.RecordSeenSpans(Arg.IsAny<int>()))
+                .DoInstead<int>((countSpansSeen) =>
+                {
+                    Interlocked.Add(ref actualSpansSeen, countSpansSeen);
+                });
+
+            var actualSpansDropped = 0;
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.RecordDroppedSpans(Arg.IsAny<int>()))
+                .DoInstead<int>((countSpansDropped) =>
+                {
+                    Interlocked.Add(ref actualSpansDropped, countSpansDropped);
+                });
+
+            Mock.Arrange(() => _spanEventAggregatorInfiniteTracing.Collect(Arg.IsAny<IEnumerable<ISpanEventWireModel>>()))
+                .DoInstead<IEnumerable<ISpanEventWireModel>>((spans) =>
+                {
+                    Interlocked.Add(ref actualSpansSeen, spans.Count());
+                });
+
+            Mock.Arrange(() => _spanEventMaker.GetSpanEvents(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<string>(), Arg.IsAny<IAttributeValueCollection>()))
+                .Returns<ImmutableTransaction, string, IAttributeValueCollection>((trx, trxName, trxAttribValues) =>
+                {
+                    var result = new List<ISpanEventWireModel>();
+                    result.Add(new SpanAttributeValueCollection()); //accounting for root span
+                    result.AddRange(trx.Segments.Select(x => x.GetAttributeValues()));
+
+                    return result;
+                });
+
+            var transactionName = "transactionName";
+            var priority = 0.5f;
+            var trxHasCapacity = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            for (var i = 0; i < testValHasCapacity - 1; i++)
+            {
+                AddDummySegment(trxHasCapacity);
+            }
+
+            _transactionTransformer.Transform(trxHasCapacity);
+
+            var trxNoCapacity = new Transaction(_configuration, TransactionName.ForOtherTransaction("transactionCategory", transactionName), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            for (var i = 0; i < testValNoCapacity - 1; i++)
+            {
+                AddDummySegment(trxNoCapacity);
+            }
+
+            _transactionTransformer.Transform(trxNoCapacity);
+
+            NrAssert.Multiple
+            (
+                () => Assert.AreEqual(testValHasCapacity + testValNoCapacity, actualSpansSeen),
+                () => Assert.AreEqual(testValNoCapacity, actualSpansDropped)
+            );
+        }
 
         [Test]
         public void TransformSendsCorrectParametersToSpanEventMaker()
