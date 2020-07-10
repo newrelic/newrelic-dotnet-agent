@@ -137,5 +137,4 @@
         <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
       </None>
     </ItemGroup>
-    <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
 </Project>

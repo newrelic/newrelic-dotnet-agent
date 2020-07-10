@@ -3,7 +3,7 @@
         <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AssemblyName>NewRelic.Api.Agent</AssemblyName>
         <RootNamespace>NewRelic.Api.Agent</RootNamespace>
-        <Description>The New Relic .NET Agent Api</Description>
+        <Description>New Relic .NET Agent API</Description>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile> 
         <DocumentationFile>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\NewRelic.Api.Agent.XML</DocumentationFile>
@@ -30,11 +30,16 @@
     <ItemGroup>
         <Content Include="Documentation.xslt" />
     </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
-    </ItemGroup>
-    <Import Project="$(SolutionDir)..\Build\Common.Project.Import.proj" Condition="Exists('$(SolutionDir)..\Build\Common.Project.Import.proj')" />
+
     <Target Name="AfterBuild">
-        <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.Xml" OutputPaths="$(TargetDir)\AgentApi.html" />
+        <XslTransformation XslInputPath="Documentation.xslt" XmlInputPaths="$(TargetDir)\NewRelic.Api.Agent.xml" OutputPaths="$(TargetDir)\AgentApi.html" />
+    </Target>
+
+    <!--  We used to increment the minor version of the AssemblyVersion with each release. Last released version following this pattern was 6.25.
+            Fixing AssemblyVersion to 6.50.0.0 for all future 6.x releases - 6.50 is arbitrary, it just needs to be higher than 6.25. -->
+    <Target Name="CustomVersion" AfterTargets="VersionByGitTag" Condition="$(AssemblyVersion.StartsWith('6.'))">
+        <PropertyGroup>
+        <AssemblyVersion>6.50.0.0</AssemblyVersion>
+        </PropertyGroup>
     </Target>
 </Project>

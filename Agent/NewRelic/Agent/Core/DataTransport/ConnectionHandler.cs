@@ -182,7 +182,7 @@ namespace NewRelic.Agent.Core.DataTransport
 				"dotnet",
 				_dnsStatic.GetHostName(),
 				appNames,
-				AgentVersion.Version,
+				AgentInstallConfiguration.AgentVersion,
 				GetAgentVersionTimestamp(),
 				new SecuritySettingsModel
 					(

@@ -2,6 +2,8 @@
 using System.IO;
 using System.Linq;
 using NewRelic.SystemInterfaces;
+using System.Diagnostics;
+using NewRelic.Agent.Core.Logging;
 #if NET35
 using System.Web;
 using Microsoft.Win32;
@@ -30,6 +32,7 @@ namespace NewRelic.Agent.Core
 		public static int ProcessId { get; }
 		public static string AppDomainName { get; }
 		public static string AppDomainAppVirtualPath { get; }
+		public static string AgentVersion { get; }
 
 		static AgentInstallConfiguration()
 		{
@@ -42,6 +45,7 @@ namespace NewRelic.Agent.Core
 			NewRelicInstallPath = GetNewRelicInstallPath();
 			HomeExtensionsDirectory = NewRelicHome != null ? Path.Combine(NewRelicHome, "extensions") : null;
 			InstallPathExtensionsDirectory = NewRelicInstallPath != null ? Path.Combine(NewRelicInstallPath, "extensions") : null;
+			AgentVersion = GetAgentVersion();
 			IsNetstandardPresent = GetIsNetstandardPresent();
 			IsClr4 = GetIsClr4();
 			IsNet46OrAbovePresent = GetIsNet46OrAbovePresent();
@@ -99,6 +103,19 @@ namespace NewRelic.Agent.Core
 			if (newRelicInstallPath != null && Directory.Exists(newRelicInstallPath)) return newRelicInstallPath;
 			newRelicInstallPath = System.Environment.GetEnvironmentVariable(NewRelicHomeEnvironmentVariable);
 			return newRelicInstallPath;
+		}
+
+		private static string GetAgentVersion()
+		{
+			try
+			{
+				return FileVersionInfo.GetVersionInfo(typeof(AgentInstallConfiguration).Assembly.Location).FileVersion;
+			}
+			catch (Exception ex)
+			{
+				Log.Error($"Failed to determine agent version. {ex}");
+				return "?.?.?.?";
+			}
 		}
 	}
 }
