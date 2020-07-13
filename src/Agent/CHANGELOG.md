@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 ### Fixes
-* Fixes issue where applications running on Linux were either reporting no physical memory usage or using VmData to report the physical memory usage of the application. The agent now uses VmRSS through a call to [`Process.WorkingSet64`](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.workingset64) to report physical memory usage. See the [dotnet runtime discussion](https://github.com/dotnet/runtime/issues/28990) and the [proc man pages](https://man7.org/linux/man-pages/man5/proc.5.html) for more details about this change.
+* **Memory Usage Reporting for Linux** <br/>
+Fixes issue where applications running on Linux were either reporting no physical memory usage or using VmData to report the physical memory usage of the application. The agent now uses VmRSS through a call to [`Process.WorkingSet64`](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.workingset64) to report physical memory usage. See the [dotnet runtime discussion](https://github.com/dotnet/runtime/issues/28990) and the [proc man pages](https://man7.org/linux/man-pages/man5/proc.5.html) for more details about this change.
+
+* **Infinite Tracing Performance** <br/>
+Fixes issue where the Agent may consume too much memory when using Infinite Tracing.
+
+### Docs To Release
+* Agent Configuration for Infinite Tracing: https://docs.newrelic.com/node/1766/draft
+* 8.26 Release Notes: https://docs.newrelic.com/node/38206/draft
+* 8.28 Release Notes: https://docs.newrelic.com/node/38846/draft
+
+
 
 ## [8.29] - 2020-06-25
 ### New Features
@@ -31,8 +42,11 @@ Fixes issue where updating custom instrumentation while application is running c
 ## [8.28] - 2020-06-04
 ### New Features
 ### Fixes
-* Fixes issue with Infinite Tracing where a communication error can result in consuming too much CPU.
-* Fixes issue with Infinite Tracing where a communication error did not clean up its corresponding communication threads.
+* **Infinite Tracing** <br>
+    * Fixes issue with Infinite Tracing where a communication error can result in consuming too much CPU.
+    * Fixes issue with Infinite Tracing where a communication error did not clean up its corresponding communication threads.
+    * <p style="color:red;">Agent version 8.30 introduces significant performance enhancements to Infinite Tracing.  To use Infinite Tracing, please upgrade to version 8.30 or later.</p>
+
 * Fixes issue in .NET Framework ASP.NET MVC applications where transactions started on one thread would flow to background threads (e.g., started with `Task.Run`) in some scenarios but not others. Transaction state used to only flow to a background thread if the transaction originated from an async controller action. Transaction state now flows to background threads regardless of whether the controller action is async or not.
 * Fixes issue in .NET Framework ASP.NET MVC applications where agent instrumentation of an MVC controller action could cause an `InvalidProgramException`.
 * Fixes a problem with the reporting of Errors where Error Events may not appear even though Error Traces are being sent.
@@ -60,6 +74,8 @@ Fixes issue where updating custom instrumentation while application is running c
   You configure your agent to send traces to a trace observer in New Relic Edge. You view your distributed traces through the New Relic’s UI. There is no need to install a collector on your network.
 
   Infinite Tracing is currently available on a sign-up basis. If you would like to participate, please contact your sales representative.
+
+  <p style="color:red;">Agent version 8.30 introduces significant performance enhancements to Infinite Tracing.  To use Infinite Tracing, please upgrade to version 8.30 or later.</p>
   
 * **Error attributes now added to each span that exits with an error or exception**
 
