@@ -15,6 +15,9 @@ Fixes issue where the Agent may consume too much memory when using Infinite Trac
 
 ### Docs To Release
 * Agent Configuration for Infinite Tracing: https://docs.newrelic.com/node/1766/draft
+* 8.26 Release Notes: https://docs.newrelic.com/node/38206/draft
+* 8.28 Release Notes: https://docs.newrelic.com/node/38846/draft
+
 
 
 ## [8.29] - 2020-06-25
