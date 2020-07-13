@@ -48,7 +48,7 @@ foreach ($applicationFull in $applicationsFull.Keys) {
 # Create Build Artifacts #
 ##########################
 
-Push-Location "Build"
+Push-Location "build"
 Invoke-Expression "& .\package.ps1 -configuration Release -IncludeDownloadSite"
 if ($LastExitCode -ne 0) {
    exit $LastExitCode
