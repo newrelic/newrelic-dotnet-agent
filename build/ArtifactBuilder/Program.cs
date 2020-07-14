@@ -8,9 +8,6 @@ namespace ArtifactBuilder
 	{
 		static int Main(string[] args)
 		{
-			Console.WriteLine("Enter...");
-			Console.ReadLine();
-
 			try
 			{
 				var sourceDirectory = GetSourceDirectory();
