@@ -444,6 +444,7 @@ namespace NewRelic.Installer
 			var directoriesWithoutFramework = Directory.EnumerateDirectories(ExtensionsDirectoryPath, Configuration, SearchOption.AllDirectories);
 
 			List<string> allDirectoriesForConfiguration = new List<String>(directoriesWithoutFramework);
+
 			foreach (var directory in directoriesWithoutFramework)
 			{
 				var frameworkSubDirectories = Directory.EnumerateDirectories(directory, "*net*");
@@ -494,6 +495,7 @@ namespace NewRelic.Installer
 		private static void TryCopyExtensionInstrumentationFile([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
 		{
 			var directory = Path.GetDirectoryName(assemblyFilePath);
+
 			if (directory == null)
 				return;
 
@@ -502,7 +504,7 @@ namespace NewRelic.Installer
 				return;
 
 			var assemblyName = Path.GetFileNameWithoutExtension(assemblyFilePath);
-			if (assemblyName == null)
+			if (assemblyName == null || !assemblyName.StartsWith("NewRelic"))
 				return;
 
 			var destinationFilePath = Path.Combine(destinationExtensionsDirectoryPath, assemblyName + ".Instrumentation.xml");

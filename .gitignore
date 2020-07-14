@@ -25,7 +25,7 @@ _NCrunch_*/
 
 # NuGet package files
 Agent/NewRelic/Tray/packages/
-Agent/packages/
+src/Agent/packages/
 FunctionalTests/packages/
 PerformanceTests/packages/
 PhantomJSTests/packages/
