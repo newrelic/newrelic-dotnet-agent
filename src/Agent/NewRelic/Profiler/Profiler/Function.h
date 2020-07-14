@@ -114,13 +114,13 @@ namespace NewRelic { namespace Profiler
             }
 
             uint32_t tracerFlags = 0;
-            bool hasTraceAttribute = false;
+            bool hasTransactionOrTraceAttribute = false;
 
             // don't look for trace attributes in Microsoft code or our agent code
             if (!ShouldSkipAssemblyAttributes(assemblyName.get()))
             {
-                hasTraceAttribute = HasTraceAttribute(metaDataImport, metaDataToken, tracerFlags);
-                if (hasTraceAttribute)
+                hasTransactionOrTraceAttribute = HasTransactionOrTraceAttribute(metaDataImport, metaDataToken, tracerFlags);
+                if (hasTransactionOrTraceAttribute)
                 {
                     tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::AttributeInstrumentation;
                 }
@@ -134,7 +134,7 @@ namespace NewRelic { namespace Profiler
             // turned up all the way we always look up all function info so that it gets logged at TRACE level.
             // Support uses that logging to help customers create / debug custom instrumentation.
 
-            bool skipShouldInstrumentChecks = logAll || hasTraceAttribute || ToStdWString(assemblyName.get()) == _X("NewRelic.Api.Agent");
+            bool skipShouldInstrumentChecks = logAll || hasTransactionOrTraceAttribute || ToStdWString(assemblyName.get()) == _X("NewRelic.Api.Agent");
 #ifdef DEBUG_PREPROCESSOR
             skipShouldInstrumentChecks = true;
 #endif
@@ -192,7 +192,7 @@ namespace NewRelic { namespace Profiler
             return std::make_shared<Function>(profilerInfo, functionId, metaDataImport, metaDataAssemblyImport, methodRewriter,
                 appDomainId, signatureSize, signature, moduleId, classId, metaDataToken, typeDefinitionToken, ToStdWString(assemblyName.get()), 
                 typeName, ToStdWString(functionName.get()), classAttributes, methodAttributes, tracerFlags, 
-                hasTraceAttribute, injectMethodInstrumentation, setILFunctionBodyOrRejit, rejitFunction);
+                hasTransactionOrTraceAttribute, injectMethodInstrumentation, setILFunctionBodyOrRejit, rejitFunction);
         }
 
         // We don't want to search Microsoft assemblies for our trace attributes
@@ -204,12 +204,14 @@ namespace NewRelic { namespace Profiler
         }
 
         // Check for the API Transaction and Trace attributes.
-        static bool HasTraceAttribute(CComPtr<IMetaDataImport2> metaDataImport, mdToken metaDataToken, uint32_t& tracerFlags)
+        static bool HasTransactionOrTraceAttribute(CComPtr<IMetaDataImport2> metaDataImport, mdToken metaDataToken, uint32_t& tracerFlags)
         {
             const BYTE *pVal = NULL;
             ULONG cbVal = 0;
 
             HRESULT result = metaDataImport->GetCustomAttributeByName(metaDataToken, _X("NewRelic.Api.Agent.TransactionAttribute"), (const void**)&pVal, &cbVal);
+            // It is not safe to use the SUCCEEDED() macro to check result in this case. Contrary to the documentation, GetCustomAttributeByName sometimes
+            // returns S_FALSE (1), and we don't want to consider that a successful result in this case.
             if (result == S_OK) {
                 auto transactionFlag = NewRelic::Profiler::Configuration::TracerFlags::OtherTransaction;
                 //  11 huh?   Yeah, whatever dude.  I don't know how to properly deserialize the attribute
@@ -228,6 +230,7 @@ namespace NewRelic { namespace Profiler
                 return true;
             }
             result = metaDataImport->GetCustomAttributeByName(metaDataToken, _X("NewRelic.Api.Agent.TraceAttribute"), (const void**)&pVal, &cbVal);
+            // Same as above, we can't use SUCCEEDED to check result in this case.
             return result == S_OK;
         }
 
@@ -312,7 +315,7 @@ namespace NewRelic { namespace Profiler
             // create the token resolver that will be used to get strings from tokens
             _tokenResolver.reset(new CorTokenResolver(_metaDataImport));
 
-            // REVIEW : Why do we get the function bytes upfront before we know that we want to instrument the function? SMD
+            // REVIEW : Why do we get the function bytes upfront before we know that we want to instrument the function?
             // get the bytes that make up this method
             ThrowOnError(_profilerInfo->GetILFunctionBody, _moduleId, _metaDataToken, &method, &methodSize);
 
@@ -326,6 +329,7 @@ namespace NewRelic { namespace Profiler
             ULONG cbVal = 0;
 
             HRESULT attributeResult = _metaDataImport->GetCustomAttributeByName(_metaDataToken, _X("System.Runtime.CompilerServices.AsyncStateMachineAttribute"), (const void**)&pVal, &cbVal);
+            // It is not safe for us to use the SUCCEEDED macro on the result returned from GetCustomAttributeByName
             if (attributeResult == S_OK)
             {
                 LogDebug(L"Async method detected: ", this->ToString());
