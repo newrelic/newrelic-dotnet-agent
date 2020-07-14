@@ -1,0 +1,160 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <TargetFrameworks>net45</TargetFrameworks>
+    <RootNamespace>NewRelic.Agent.Core</RootNamespace>
+    <AssemblyName>NewRelic.Agent.Core.UnitTest</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\src\NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
+    <DebugType Condition="'$(TargetFramework)' != '' AND '$(TargetFramework)' != 'netcoreapp1.0'">Full</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
+    <PackageReference Include="JustMock" Version="2015.2.616.2" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="MoreLinq" Version="2.4.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="7.0.1" />
+    <PackageReference Include="NUnit" Version="3.6.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
+    <PackageReference Include="SharpZipLib" Version="0.86.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Messaging" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic.Api.Agent\NewRelic.Api.Agent.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\AttributeFilter\AttributeFilter.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Configuration\Configuration.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Core\Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Extensions\NewRelic.Agent.Extensions\NewRelic.Agent.Extensions.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Extensions\Providers\Wrapper\Asp35\Asp35.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\LabelsService\LabelsService.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\NewRelic.Core\NewRelic.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Agent\NewRelic\Agent\Parsing\Parsing.csproj" />
+    <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\src\Agent\Shared\SharedLog4NetRepository.cs">
+      <Link>Properties\SharedLog4NetRepository.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\NewRelicStrongNameKey.snk">
+      <Link>NewRelicStrongNameKey.snk</Link>
+    </None>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\basic.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\body_with_attributes.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\charset_tag.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\charset_tag_after_x_ua_tag.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\charset_tag_before_x_ua_tag.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\charset_tag_with_spaces.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\comments1.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\comments2.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\content_type_charset_tag.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\content_type_charset_tag_after_x_ua_tag.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\content_type_charset_tag_before_x_ua_tag.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\gt_in_quotes1.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\gt_in_quotes2.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\gt_in_quotes_mismatch.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\gt_in_single_quotes1.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\gt_in_single_quotes_mismatch.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\head_with_attributes.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\incomplete_non_meta_tags.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_no_meta.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_charset.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>	
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_x_ua_compatible.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+	<Content Include="BrowserMonitoring\rum_loader_insertion_location\no_closing_head_both_metas.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_end_header.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_header.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_html_and_no_header.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\no_start_header.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\script1.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\script2.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\x_ua_meta_tag.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\x_ua_meta_tag_multiline.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\x_ua_meta_tag_multiple_tags.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\x_ua_meta_tag_spaces_around_equals.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\x_ua_meta_tag_with_others.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\x_ua_meta_tag_with_spaces.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="BrowserMonitoring\rum_loader_insertion_location\empty_head">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+</Project>

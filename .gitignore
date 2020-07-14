@@ -25,7 +25,7 @@ _NCrunch_*/
 
 # NuGet package files
 Agent/NewRelic/Tray/packages/
-Agent/packages/
+src/Agent/packages/
 FunctionalTests/packages/
 PerformanceTests/packages/
 PhantomJSTests/packages/
@@ -65,8 +65,8 @@ NDependOut/
 test-results
 
 # Ignore FullAgent build output
-Agent/_build/
-Agent/NewRelic/Tray/_build/
+src/Agent/_build/
+src/Agent/NewRelic/Tray/_build/
 Build/_staging
 Build/BuildArtifacts
 
@@ -75,7 +75,7 @@ Build/BuildArtifacts
 !Agent/BuildTools/SignTool/*
 
 # External libraries should be saved in full, even if they match ignore patterns.
-!Agent/ExternalLibs/*
+!src/Agent/ExternalLibs/*
 
 # Don't save any of the logs in NewRelicHome
 Agent/NewRelicHome/Logs/*
@@ -85,20 +85,20 @@ Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.idl
 Agent/NewRelic.Agent.IL/_NewRelic.Agent.IL.tlb
 
 # Ignore build output files copied to New Relic Home x86/x64
-Agent/New Relic Home*
+src/Agent/New Relic Home*
 
 # Ignore New Relic Home generated registry files
-Agent/New Relic Home x86.reg
-Agent/New Relic Home x64.reg
+src/Agent/New Relic Home x86.reg
+src/Agent/New Relic Home x64.reg
 
 # Ignore generated version files
-Agent/NewRelic.Agent.IL/NewRelicCoreVersion.h
-Agent/Shared/SharedAssemblyInfoVersion.cs
-Agent/NewRelic/Profiler/Profiler/VersionInfo.h
+src/Agent/NewRelic.Agent.IL/NewRelicCoreVersion.h
+src/Agent/Shared/SharedAssemblyInfoVersion.cs
+src/Agent/NewRelic/Profiler/Profiler/VersionInfo.h
 
 # Ignore source files generated during build
-Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
-Agent/Installer/Core.wxs
+src/Agent/NewRelic/Agent/Core/AgentInstallConfiguration_Generated.cs
+src/Agent/Installer/Core.wxs
 
 
 
