@@ -100,7 +100,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
 			_harvestAction();
 
-			Mock.Assert(() => _agentHealthReporter.ReportAgentVersion(AgentVersion.Version, "foo"));
+			Mock.Assert(() => _agentHealthReporter.ReportAgentVersion(AgentInstallConfiguration.AgentVersion, "foo"));
 		}
 
 		[Test]

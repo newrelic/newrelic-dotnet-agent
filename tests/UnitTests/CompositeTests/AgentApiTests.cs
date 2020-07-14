@@ -972,7 +972,7 @@ namespace CompositeTests
 			// ACT
 			AgentApi.StartAgent();
 			_compositeTestAgent.Harvest();
-			var agentVersion = AgentVersion.Version;
+			var agentVersion = AgentInstallConfiguration.AgentVersion;
 
 			// ASSERT
 			var expectedMetrics = new List<ExpectedMetric>

@@ -9,10 +9,10 @@ function getVersionFromTag([string] $tagPrefix, [switch] $excludeCommitCount) {
     $GitLatestTagVersion = git describe --tags --match "$tagPrefix[0-9]*" --abbrev=0 HEAD
     $GitGitLatestTagVersionSanitized = $GitLatestTagVersion.Replace($tagPrefix,'')
     $GitCommitCount = git rev-list "$GitLatestTagVersion..$GitBranchName" --count HEAD
-    $GitVersion = "$GitGitLatestTagVersionSanitized.$GitCommitCount.0"
+    $GitVersion = "$GitGitLatestTagVersionSanitized.$GitCommitCount"
 
     if ($excludeCommitCount -eq $true) {
-      $GitVersion = "$GitGitLatestTagVersionSanitized.0"
+      $GitVersion = "$GitGitLatestTagVersionSanitized"
     }
 
     return $GitVersion

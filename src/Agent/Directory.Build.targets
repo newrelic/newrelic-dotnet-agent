@@ -1,0 +1,3 @@
+<Project InitialTargets="VersionByGitTag">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)..'))" />
+</Project>

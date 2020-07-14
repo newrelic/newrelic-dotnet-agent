@@ -69,7 +69,7 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			Log.Info("Metric harvest starting.");
 
-			_agentHealthReporter.ReportAgentVersion(AgentVersion.Version, _dnsStatic.GetHostName());
+			_agentHealthReporter.ReportAgentVersion(AgentInstallConfiguration.AgentVersion, _dnsStatic.GetHostName());
 			_agentHealthReporter.ReportDotnetVersion();
 
 			_agentHealthReporter.ReportIfHostIsLinuxOs();
