@@ -12,9 +12,9 @@ namespace ArtifactBuilder.Artifacts
 		{
 			Platform = platform;
 			Configuration = configuration;
-			StagingDirectory = $@"{SourceDirectory}\Build\_staging\{Name}";
-			PackageDirectory = $@"{SourceDirectory}\Build\Packaging\{Name}";
-			OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}";
+			StagingDirectory = $@"{SourceDirectory}\build\_staging\{Name}";
+			PackageDirectory = $@"{SourceDirectory}\build\Packaging\{Name}";
+			OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}";
 		}
 
 		public string Configuration { get; }

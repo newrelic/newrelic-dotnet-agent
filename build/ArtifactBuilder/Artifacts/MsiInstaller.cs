@@ -22,8 +22,8 @@ namespace ArtifactBuilder.Artifacts
 		{
 			Platform = platform;
 			Configuration = configuration;
-			MsiDirectory = $@"{sourceDirectory}\Agent\_build\{Platform}-{Configuration}\Installer";
-			OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}-{Platform}";
+			MsiDirectory = $@"{sourceDirectory}\src\Agent\_build\{Platform}-{Configuration}\Installer";
+			OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}-{Platform}";
 		}
 
 		protected override void InternalBuild()
@@ -73,7 +73,7 @@ namespace ArtifactBuilder.Artifacts
 
 		private Wix GetParsedProductWxsData()
 		{
-			using (var xmlReader = XmlReader.Create($@"{SourceDirectory}\Agent\Installer\Product.wxs"))
+			using (var xmlReader = XmlReader.Create($@"{SourceDirectory}\src\Agent\Installer\Product.wxs"))
 			{
 				var serializer = new XmlSerializer(typeof(Wix));
 				return (Wix)serializer.Deserialize(xmlReader);

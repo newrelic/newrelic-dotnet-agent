@@ -8,9 +8,13 @@ namespace ArtifactBuilder
 	{
 		static int Main(string[] args)
 		{
+			Console.WriteLine("Enter...");
+			Console.ReadLine();
+
 			try
 			{
 				var sourceDirectory = GetSourceDirectory();
+				sourceDirectory = Path.Combine(sourceDirectory, "..\\..\\..\\..");
 				var package = args[0].ToLower();
 
 				switch (package)
@@ -31,6 +35,7 @@ namespace ArtifactBuilder
 						BuildNugetAzureCloudServices(sourceDirectory, args);
 						break;
 					case "msiinstaller":
+						Console.WriteLine($"=================== sourceDirectory: {sourceDirectory} ; args[0]: {args[0]} ; args[1]: {args[1]}");
 						BuildMsiInstaller(sourceDirectory, args);
 						break;
 					case "downloadsite":
@@ -62,6 +67,7 @@ namespace ArtifactBuilder
 
 		private static void BuildMsiInstaller(string sourceDirectory, string[] args)
 		{
+			Console.WriteLine($"BuildMsiInstaller args[1]: {args[1]}");
 			var configuration = args[1];
 			new MsiInstaller(sourceDirectory, "x86", configuration).Build();
 			new MsiInstaller(sourceDirectory, "x64", configuration).Build();

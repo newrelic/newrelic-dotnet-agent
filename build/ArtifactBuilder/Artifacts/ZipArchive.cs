@@ -10,8 +10,8 @@ namespace ArtifactBuilder.Artifacts
 			AgentType = agentType;
 			Platform = platform;
 			Configuration = configuration;
-			StagingDirectory = $@"{SourceDirectory}\Build\_staging\{Name}-{Platform}";
-			OutputDirectory = $@"{SourceDirectory}\Build\BuildArtifacts\{Name}-{Platform}";
+			StagingDirectory = $@"{SourceDirectory}\build\_staging\{Name}-{Platform}";
+			OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}-{Platform}";
 		}
 
 		public AgentType AgentType { get; }
@@ -35,7 +35,7 @@ namespace ArtifactBuilder.Artifacts
 			// At some point we should change the job to pull from the new location under the Build\BuildArtifacts directory
 			if (AgentType == AgentType.Core)
 			{
-				FileHelpers.CopyFile(zipFilePath, $@"{SourceDirectory}\Agent\_build\CoreArtifacts");
+				FileHelpers.CopyFile(zipFilePath, $@"{SourceDirectory}\src\Agent\_build\CoreArtifacts");
 			}
 		}
 	}
