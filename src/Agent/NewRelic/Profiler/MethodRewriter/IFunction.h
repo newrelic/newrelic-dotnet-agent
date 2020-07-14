@@ -28,15 +28,17 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         virtual uint32_t GetTypeToken() = 0;
         virtual DWORD GetClassAttributes() = 0;
         virtual DWORD GetMethodAttributes() = 0;
-        virtual ByteVectorPtr Preprocess(const ByteVectorPtr& methodBody) = 0;
+        virtual FunctionHeaderInfoPtr GetFunctionHeaderInfo() = 0;
+        virtual bool Preprocess() = 0;
         virtual bool ShouldTrace() = 0;
+        virtual bool IsValid() = 0;
         virtual bool IsCoreClr() = 0;
         virtual uint32_t GetTracerFlags() = 0;
 
         // get the signature for this method
         virtual ByteVectorPtr GetSignature() = 0;
         // returns the bytes that make up this method, this includes the header and the code
-        virtual ByteVectorPtr GetMethodBytes(bool useCache) = 0;
+        virtual ByteVectorPtr GetMethodBytes() = 0;
         // get the tokenizer that should be used to modify the code bytes
         virtual sicily::codegen::ITokenizerPtr GetTokenizer() = 0;
         // get the token resolver that should be used to modify the code bytes

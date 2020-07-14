@@ -15,6 +15,7 @@
 #include "../SignatureParser/Exceptions.h"
 #include "../ThreadProfiler/ThreadProfiler.h"
 #include "Function.h"
+#include "FunctionResolver.h"
 #include "ICorProfilerCallbackBase.h"
 #include "Win32Helpers.h"
 #include "guids.h"
@@ -99,6 +100,7 @@ namespace Profiler {
         virtual HRESULT __stdcall ClassLoadFinished(ClassID classId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall ClassUnloadStarted(ClassID classId) override { return S_OK; }
         virtual HRESULT __stdcall ClassUnloadFinished(ClassID classId, HRESULT hrStatus) override { return S_OK; }
+        virtual HRESULT __stdcall FunctionUnloadStarted(FunctionID functionId) override { return S_OK; }
         virtual HRESULT __stdcall JITCompilationFinished(FunctionID functionId, HRESULT hrStatus, BOOL fIsSafeToBlock) override { return S_OK; }
         virtual HRESULT __stdcall JITCachedFunctionSearchStarted(FunctionID functionId, BOOL* pbUseCachedFunction) override { return S_OK; }
         virtual HRESULT __stdcall JITCachedFunctionSearchFinished(FunctionID functionId, COR_PRF_JIT_CACHE result) override { return S_OK; }
@@ -163,7 +165,6 @@ namespace Profiler {
         virtual HRESULT __stdcall ProfilerDetachSucceeded(void) override { return S_OK; }
 
         // Unimplemented ICorProfilerCallback4
-        virtual HRESULT __stdcall GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl* pFunctionControl) override { return S_OK; }
         virtual HRESULT __stdcall ReJITCompilationFinished(FunctionID functionId, ReJITID rejitId, HRESULT hrStatus, BOOL fIsSafeToBlock) override { return S_OK; }
         virtual HRESULT __stdcall ReJITError(ModuleID moduleId, mdMethodDef methodId, FunctionID functionId, HRESULT hrStatus) override { return S_OK; }
         virtual HRESULT __stdcall MovedReferences2(ULONG cMovedObjectIDRanges, ObjectID oldObjectIDRangeStart[], ObjectID newObjectIDRangeStart[], SIZE_T cObjectIDRangeLength[]) override { return S_OK; }
@@ -221,7 +222,7 @@ namespace Profiler {
                     return CORPROF_E_PROFILER_CANCEL_ACTIVATION;
                 }
 
-                _ilTracker = std::make_shared<ILTracker>(_corProfilerInfo4);
+        _functionResolver = std::make_shared<FunctionResolver>(_corProfilerInfo4);
 
                 ConfigureEventMask(pICorProfilerInfoUnk);
 
@@ -283,8 +284,13 @@ namespace Profiler {
         {
             LogTrace(__func__, L". ", functionId);
 
+      auto setILFunctionBody = [&](Function& function, LPCBYTE pHeader, ULONG) {
+                return _corProfilerInfo4->SetILFunctionBody(function.GetModuleID(), function.GetMethodToken(), pHeader);
+            };
+
             // on JIT just ask for a rejit for instrumented methods
-            HRESULT hr = ProcessMethodJit(functionId, false);
+        HRESULT hr = ProcessMethodJit(functionId, false, setILFunctionBody);
+            //HRESULT hr = ProcessMethodJit(functionId, false);
 
             LogTrace(__func__, L"Finished. ", functionId);
             return hr;
@@ -294,35 +300,51 @@ namespace Profiler {
         HRESULT RejitFunction(Function& function)
         {
             LogDebug(L"Request reJIT: [", function.GetFunctionId(), "] ", function.ToString());
+            _functionResolver->AddFunctionIfGeneric(function);
 
             ModuleID moduleIds = { function.GetModuleID() };
             mdMethodDef methodIds = { function.GetMethodToken() };
             return _corProfilerInfo4->RequestReJIT(1, &moduleIds, &methodIds);
         }
 
-        // When we add bytecode during the GetReJITParameters callback it works fine in normal use but the debugger is
-        // unable to attach to the managed side and will actually crash the processs.  Adding bytecode during
-        // ReJITCompilationStarted seems to work fine.  This is NOT how Broman says to do it:
-        // https://blogs.msdn.microsoft.com/davbr/2011/10/12/rejit-a-how-to-guide/
         virtual HRESULT __stdcall ReJITCompilationStarted(FunctionID functionId, ReJITID /*rejitId*/, BOOL /*fIsSafeToBlock*/) override
         {
             LogTrace(__func__, L". ", functionId);
-
-            // Do the bytecode injection now
-            HRESULT hr = ProcessMethodJit(functionId, true);
-
+            _functionResolver->RequestGenericMethodReJIT(functionId);
             LogTrace(__func__, L"Finished. ", functionId);
+            return S_OK;
+        }
+
+    virtual HRESULT __stdcall GetReJITParameters(ModuleID moduleId, mdMethodDef methodId, ICorProfilerFunctionControl* pFunctionControl) override
+        {
+            LogTrace(__func__, L" called");
+
+            HRESULT hr = S_FALSE;
+            auto functionId = _functionResolver->GetFunctionId(moduleId, methodId);
+            if (_functionResolver->IsValid(functionId)) {
+                LogTrace(L"ReJIT ", functionId);
+
+                auto setILFunctionBody = [&](Function&, LPCBYTE pHeader, ULONG size)
+                {
+                    return pFunctionControl->SetILFunctionBody(size, pHeader);
+                };
+                hr = ProcessMethodJit(functionId, true, setILFunctionBody);
+            }
+
+            LogTrace(__func__, L" finished");
             return hr;
         }
 
-        HRESULT __stdcall ProcessMethodJit(FunctionID functionId, bool injectMethodInstrumentation)
+        HRESULT __stdcall ProcessMethodJit(FunctionID functionId, bool injectMethodInstrumentation,
+            std::function<HRESULT(Function&, LPCBYTE, ULONG)> setILFunctionBody)
         {
             auto methodRewriter = GetMethodRewriter();
             MethodRewriter::IFunctionPtr function;
             try {
                 // create the Function object for this method
                 function = Function::Create(_corProfilerInfo4, functionId, methodRewriter, injectMethodInstrumentation,
-                    [&](Function& function) { return RejitFunction(function); }, _ilTracker);
+          setILFunctionBody,
+                    [&](Function& function) { return RejitFunction(function); });
                 if (function == nullptr) {
                     LogTrace("JITCompilationStarted Finished. Function Skipped. ", functionId);
                     return S_OK;
@@ -350,17 +372,6 @@ namespace Profiler {
                 // Logging to keep the exception from bleeding out.
                 LogError(L"An unexpected exception was thrown while possibly instrumenting a function.");
                 return E_FAIL;
-            }
-            return S_OK;
-        }
-
-        virtual HRESULT __stdcall FunctionUnloadStarted(FunctionID functionId) override
-        {
-            ModuleID moduleId;
-            mdToken metaDataToken;
-
-            if (SUCCEEDED(_corProfilerInfo4->GetFunctionInfo(functionId, nullptr, &moduleId, &metaDataToken))) {
-                _ilTracker->Remove(moduleId, metaDataToken);
             }
             return S_OK;
         }
@@ -645,9 +656,9 @@ namespace Profiler {
     protected:
         MethodRewriter::MethodRewriterPtr _methodRewriter;
         CComPtr<ICorProfilerInfo4> _corProfilerInfo4;
-        std::shared_ptr<ILTracker> _ilTracker;
         ThreadProfiler::ThreadProfiler _threadProfiler;
         std::shared_ptr<SystemCalls> _systemCalls;
+        std::shared_ptr<FunctionResolver> _functionResolver;
         MethodRewriter::CustomInstrumentationBuilder _customInstrumentationBuilder;
         MethodRewriter::CustomInstrumentation _customInstrumentation;
 

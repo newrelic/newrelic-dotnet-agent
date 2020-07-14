@@ -237,10 +237,10 @@
     <ClInclude Include="Function.h" />
     <ClInclude Include="FunctionHeaderInfo.h" />
     <ClInclude Include="FunctionPreprocessor.h" />
+    <ClInclude Include="FunctionResolver.h" />
     <ClInclude Include="guids.h" />
     <ClInclude Include="ICorProfilerCallbackBase.h" />
     <ClInclude Include="CommonDefinitions.h" />
-    <ClInclude Include="ILTracker.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="OpCodes.h" />
     <ClInclude Include="stdafx.h" />

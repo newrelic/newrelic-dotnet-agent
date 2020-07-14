@@ -11,21 +11,21 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
     // Writes the methods on our agent api shim to call the actual 
     // implementation in NewRelic.Agent.Core.AgentApi.
-    class ApiFunctionManipulator : public FunctionManipulator
+    class ApiFunctionManipulator : FunctionManipulator
     {
     public:
         ApiFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) :
             FunctionManipulator(function),
             _instrumentationSettings(instrumentationSettings)
-        { }
+        {
+            Initialize();
+        }
 
-    protected:
         // instrument this method with the API stuff
-        virtual bool DoWriteFunction() override
+        void InstrumentApi()
         {
             BuildApiInstructions();
-            InstrumentFat();
-            return true;
+            Instrument();
         }
 
     private:

@@ -11,23 +11,23 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
 {
     // Re-writes methods so that the original method body is wrapped 
     // and calls are made to create and finish tracers.
-    class InstrumentFunctionManipulator : public FunctionManipulator
+    class InstrumentFunctionManipulator : FunctionManipulator
     {
     public:
-        InstrumentFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings, Configuration::InstrumentationPointPtr instrumentationPoint) :
-            _instrumentationSettings(instrumentationSettings),
-            _instrumentationPoint(instrumentationPoint),
-            FunctionManipulator(function, function->Preprocess(function->GetMethodBytes(true)))
-        { }
-
-    protected:
+        InstrumentFunctionManipulator(IFunctionPtr function, InstrumentationSettingsPtr instrumentationSettings) : 
+            FunctionManipulator(function), 
+            _instrumentationSettings(instrumentationSettings)
+        {
+            if (_function->Preprocess()) {
+                Initialize();
+            }
+        }
 
         // instrument this method with the usual stuff
-        virtual bool DoWriteFunction() override
+        void InstrumentDefault(NewRelic::Profiler::Configuration::InstrumentationPointPtr instrumentationPoint)
         {
-            BuildDefaultInstructions();
-            InstrumentFat();
-            return true;
+            BuildDefaultInstructions(instrumentationPoint);
+            Instrument();
         }
 
     private:
@@ -35,9 +35,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         uint16_t _tracerLocalIndex;
         uint16_t _resultLocalIndex;
         uint16_t _userExceptionLocalIndex;
-        Configuration::InstrumentationPointPtr _instrumentationPoint;
 
-        void BuildDefaultInstructions()
+        void BuildDefaultInstructions(Configuration::InstrumentationPointPtr instrumentationPoint)
         {
             // set the stack size required to handle these instructions (remember that we push all of this functions arguments onto the stack to recursively call)
             auto originalStackSize = GetHeader()->GetMaxStack();
@@ -47,7 +46,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
             AppendDefaultLocals();
             InitializeLocalsToNull();
 
-            SafeCallGetTracer(_instrumentationPoint);
+            SafeCallGetTracer(instrumentationPoint);
 
             // try {
             _instructions->AppendTryStart();
