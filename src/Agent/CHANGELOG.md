@@ -25,6 +25,16 @@ Fixes issue where applications running on Linux were either reporting no physica
 * **Infinite Tracing Performance** <br/>
 Fixes issue where the Agent may consume too much memory when using Infinite Tracing.
 
+* **.NET 5 support** <br/>
+Fixes issue with applications running on .NET 5 that prevented instrumentation changes at runtime (either though editing instrumentation XML files or through the Live Instrumentation editor Beta).
+
+### Docs To Release
+* Agent Configuration for Infinite Tracing: https://docs.newrelic.com/node/1766/draft
+* 8.26 Release Notes: https://docs.newrelic.com/node/38206/draft
+* 8.28 Release Notes: https://docs.newrelic.com/node/38846/draft
+
+
+
 ## [8.29] - 2020-06-25
 ### New Features
 
