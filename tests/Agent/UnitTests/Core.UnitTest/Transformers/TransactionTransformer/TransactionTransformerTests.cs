@@ -289,6 +289,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var actualMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
+            Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
             Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(distributedTraceEnabled);
             Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(spanEventsEnabled);
             Mock.Arrange(() => _configuration.CrossApplicationTracingEnabled).Returns(catEnabled);
@@ -606,6 +607,35 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         }
 
         [Test]
+        public void FrustratedApdexRollupMetricForErrors_NotAffectedByErrorCollectorEnabled([Values(true, false)]bool errorCollectorEnabled)
+        {
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+            Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(errorCollectorEnabled);
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+            Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(1));
+            Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IAttributeValueCollection>(), Arg.IsAny<TransactionMetricName>())).Returns(GetError());
+
+            var transaction = TestTransactions.CreateDefaultTransaction(statusCode: 404);
+            _transactionTransformer.Transform(transaction);
+
+            string[] unscoped = new string[] {
+                "ApdexAll", "Apdex", "Apdex/TransactionName"};
+            foreach (string current in unscoped)
+            {
+                Assert.IsTrue(generatedMetrics.ContainsKey(current));
+                var data = generatedMetrics[current];
+                //satisfying
+                Assert.AreEqual(0, data.Value0);
+                //tolerating
+                Assert.AreEqual(0, data.Value1);
+                // frustration
+                Assert.AreEqual(1, data.Value2);
+            }
+        }
+
+        [Test]
         public void FrustratedApdexRollupMetricIsNotGenerated_IfApdexTIsNullAndIsErrorTransaction()
         {
             var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
@@ -623,6 +653,66 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             {
                 Assert.IsFalse(generatedMetrics.ContainsKey(current));
             }
+        }
+
+        [Test]
+        public void ErrorMetricsAreGenerated_IfErrorCollectionIsEnabled()
+        {
+            var actualMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+            Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>()))
+                .DoInstead<TransactionMetricStatsCollection>(txStats => actualMetrics = txStats.GetUnscopedForTesting());
+
+            var transaction = TestTransactions.CreateDefaultTransaction(true, statusCode: 503);
+
+            _transactionTransformer.Transform(transaction);
+
+            var expectedMetrics = new List<string>
+            {
+                "Errors/all",
+                "Errors/allWeb",
+                "Errors/WebTransaction/TransactionName",
+                "ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/all",
+                "ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/allWeb"
+            };
+
+            CollectionAssert.IsSubsetOf(expectedMetrics, actualMetrics.Keys);
+            foreach (var expected in expectedMetrics)
+            {
+                Assert.AreEqual(1, actualMetrics[expected].Value0, $"Expected {expected} metric to have a count value of 1");
+            }
+        }
+
+        [Test]
+        public void ErrorMetricsAreNotGenerated_IfErrorCollectionIsNotEnabled()
+        {
+            var actualMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+            Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(false);
+            Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.SpanEventsEnabled).Returns(true);
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>()))
+                .DoInstead<TransactionMetricStatsCollection>(txStats => actualMetrics = txStats.GetUnscopedForTesting());
+
+            var transaction = TestTransactions.CreateDefaultTransaction(true, statusCode: 503);
+
+            _transactionTransformer.Transform(transaction);
+
+            var unexpectedMetrics = new List<string>
+            {
+                "Errors/all",
+                "Errors/allWeb",
+                "Errors/WebTransaction/TransactionName",
+                "ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/all",
+                "ErrorsByCaller/Unknown/Unknown/Unknown/Unknown/allWeb"
+            };
+
+            CollectionAssert.IsNotSubsetOf(unexpectedMetrics, actualMetrics.Keys);
         }
 
         [Test]
