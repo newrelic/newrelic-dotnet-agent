@@ -1138,6 +1138,39 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
         public virtual IEnumerable<string> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
 
+        public virtual IEnumerable<string> ExpectedClasses { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass); } }
+
+        public virtual IEnumerable<KeyValuePair<string, IEnumerable<string>>> ExpectedMessages
+        {
+            get
+            {
+                var expectedMessages = new List<KeyValuePair<string, IEnumerable<string>>>();
+
+                foreach(var errorClass in _localConfiguration.errorCollector.expectedMessages)
+                {
+                    var messages = errorClass.message;
+                    if (messages != null)
+                    {
+                        expectedMessages.Add(new KeyValuePair<string, IEnumerable<string>>(errorClass.name, messages));
+                    }
+                }
+                return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, expectedMessages);
+            }
+        }
+
+        public virtual IEnumerable<string> ExpectedStatusCodes
+        {
+            get
+            {
+                var localStatusCodesToIgnore = new List<string>();
+                foreach (var localCode in _localConfiguration.errorCollector.expectedStatusCodes.code)
+                {
+                    localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
+                }
+                return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, localStatusCodesToIgnore);
+            }
+        }
+
         #endregion
 
         public Dictionary<string, string> RequestHeadersMap => _serverConfiguration.RequestHeadersMap;

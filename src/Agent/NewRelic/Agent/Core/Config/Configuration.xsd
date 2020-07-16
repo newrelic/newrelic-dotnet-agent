@@ -1243,6 +1243,76 @@
                 </xs:complexType>
               </xs:element>
 
+              <xs:element name="expectedClasses">
+                <xs:complexType>
+                  <xs:annotation>
+                    <xs:documentation>
+                      To prevent specific exceptions reporting to New Relic, list them here.
+                      Use the full name of the exception, such as "System.IO.FileNotFoundException".
+                    </xs:documentation>
+                  </xs:annotation>
+
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="errorClass" type="xs:string">
+                      <xs:annotation>
+                        <xs:documentation>
+                            Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
+                        </xs:documentation>
+                      </xs:annotation>
+                    </xs:element>
+                  </xs:sequence>
+
+                </xs:complexType>
+              </xs:element>
+
+              <xs:element name="expectedMessages" minOccurs="0" maxOccurs="1" >
+                  <xs:complexType>
+                      <xs:annotation>
+                          <xs:documentation>
+                              An optional map of fully qualified class name to list of strings matching a substring of the message of an error to be expected.
+                          </xs:documentation>
+                      </xs:annotation>
+
+                      <xs:sequence>
+                          <xs:element name="errorClass" minOccurs="0" maxOccurs="unbounded" >
+                              <xs:complexType>
+                                  <xs:sequence>
+                                      <xs:element name="message" minOccurs="0" maxOccurs="unbounded" type="xs:string" />
+                                  </xs:sequence>
+                                  <xs:attribute name="name" type="xs:string">
+                                      <xs:annotation>
+                                          <xs:documentation>
+                                              Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
+                                          </xs:documentation>
+                                      </xs:annotation>
+                                  </xs:attribute>
+                              </xs:complexType>
+                          </xs:element>
+                      </xs:sequence>
+                  </xs:complexType>
+              </xs:element>
+
+              <xs:element name="expectedStatusCodes">
+                  <xs:complexType>
+                      <xs:annotation>
+                          <xs:documentation>
+                              To prevent specific error codes from affecting error rate, list them here.
+                          </xs:documentation>
+                      </xs:annotation>
+  
+                      <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                          <xs:element name="code" type="xs:float">
+                              <xs:annotation>
+                                  <xs:documentation>
+                                      You may use standard integral HTTP errorcodes, such as just 401, or may use Microsoft FullStatusCodes, with decimal points, such as 401.4 or 403.18
+                                  </xs:documentation>
+                              </xs:annotation>
+                          </xs:element>
+                      </xs:sequence>
+  
+                  </xs:complexType>
+              </xs:element>
+
               <xs:element name="attributes" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                   <xs:sequence minOccurs="0" maxOccurs="unbounded">
