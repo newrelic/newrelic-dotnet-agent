@@ -62,11 +62,12 @@ namespace NewRelic.Agent.IntegrationTests
             };
             var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
-                {"type", "Transaction"},
-                {"nr.apdexPerfZone", "F"}
+                {"type", "Transaction"}
+                
             };
             var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
+                "nr.apdexPerfZone",
                 "timestamp",
                 "duration",
                 "webDuration",
@@ -124,9 +125,14 @@ namespace NewRelic.Agent.IntegrationTests
             NrAssert.Multiple
             (
                 () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAgentAttributes, TransactionTraceAttributeType.Agent, transactionSample),
+
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, getDataTransactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, getDataTransactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, getDataTransactionEvent),
+
+
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent)
             );
         }
