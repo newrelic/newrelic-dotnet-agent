@@ -73,7 +73,7 @@ namespace ArtifactBuilder.Artifacts
 
 		private Wix GetParsedProductWxsData()
 		{
-			using (var xmlReader = XmlReader.Create($@"{SourceDirectory}\src\Agent\Installer\Product.wxs"))
+			using (var xmlReader = XmlReader.Create($@"{SourceDirectory}\src\Agent\MsiInstaller\Installer\Product.wxs"))
 			{
 				var serializer = new XmlSerializer(typeof(Wix));
 				return (Wix)serializer.Deserialize(xmlReader);
@@ -90,7 +90,7 @@ namespace ArtifactBuilder.Artifacts
 					throw new PackagingException($"Product.wxs file {file.Id} did not have KeyPath set to yes, but was {file.KeyPath}.");
 				}
 
-				var expectedSourcePath = $@"$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\{file.Name}";
+				var expectedSourcePath = $@"$(var.HomeFolderPath)\Extensions\{file.Name}";
 				if (file.Source != expectedSourcePath)
 				{
 					throw new PackagingException($"Product.wxs file {file.Id} did not have the expected source path of {expectedSourcePath}, but was {file.Source}");
