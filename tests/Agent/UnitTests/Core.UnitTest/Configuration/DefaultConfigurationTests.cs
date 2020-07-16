@@ -899,12 +899,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         <code>404</code>
     </expectedStatusCodes>
     <expectedMessages>
+        <errorClass name=""ErrorClass2"">
+            <message>error message 1 in ErrorClass2</message>
+        </errorClass>
         <errorClass name=""ErrorClass3"">
             <message>error message 1 in ErrorClass3</message>
-        </errorClass>
-        <errorClass name=""ErrorClass4"">
-            <message>error message 1 in ErrorClass4</message>
-            <message>error message 2 in ErrorClass4</message>
+            <message>error message 2 in ErrorClass3</message>
         </errorClass>
     </expectedMessages>
   </errorCollector >
@@ -920,23 +920,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            var expectedClasses = _defaultConfig.ExpectedClasses;
-            Assert.That(expectedClasses.Contains("ErrorClass1"));
-            Assert.That(expectedClasses.Contains("ErrorClass2"));
-
             var expectedStatusCodes = _defaultConfig.ExpectedStatusCodes;
             Assert.That(expectedStatusCodes.Contains("404"));
 
             var expectedMessages = _defaultConfig.ExpectedMessages;
 
-            var errorClass1 = expectedMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
-            Assert.NotNull(errorClass1);
-            Assert.That(errorClass1.Value.Contains("error message 1 in ErrorClass3"));
+            Assert.That(expectedMessages.ContainsKey("ErrorClass1"));
 
-            var errorClass2 = expectedMessages.Where(x => x.Key == "ErrorClass4").FirstOrDefault();
+            var errorClass2 = expectedMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
             Assert.NotNull(errorClass2);
-            Assert.That(errorClass2.Value.Contains("error message 1 in ErrorClass4"));
-            Assert.That(errorClass2.Value.Contains("error message 2 in ErrorClass4"));
+            Assert.Null(errorClass2.Value);
+
+            var errorClass3 = expectedMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
+            Assert.NotNull(errorClass3);
+            Assert.That(errorClass3.Value.Contains("error message 1 in ErrorClass3"));
+            Assert.That(errorClass3.Value.Contains("error message 2 in ErrorClass3"));
 
         }
 
@@ -947,7 +945,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.ErrorCollectorExpectedClasses = server;
             _localConfig.errorCollector.expectedClasses.errorClass = new List<string>(local);
 
-            return _defaultConfig.ExpectedClasses.FirstOrDefault();
+            return _defaultConfig.ExpectedMessages.FirstOrDefault().Key;
         }
 
         [TestCase(new[] { 401f }, new[] { "405" }, ExpectedResult = "405")]

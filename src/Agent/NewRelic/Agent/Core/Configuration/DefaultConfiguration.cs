@@ -1138,23 +1138,45 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
         public virtual IEnumerable<string> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
 
-        public virtual IEnumerable<string> ExpectedClasses { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass); } }
+        private ReadOnlyDictionary<string, IEnumerable<string>> ParseExpectedErrorConfigurations()
+        {
+            var localExpectedMessages = new Dictionary<string, IEnumerable<string>>();
 
-        public virtual IEnumerable<KeyValuePair<string, IEnumerable<string>>> ExpectedMessages
+            foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
+            {
+                var messages = errorClass.message;
+                if (messages != null)
+                {
+                    localExpectedMessages.Add(errorClass.name, messages);
+                }
+            }
+
+            var expectedMessages =  ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedMessages).ToDictionary();
+
+            var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
+
+            foreach (var className in expectedClasses)
+            {
+                if (expectedClasses.Contains(className))
+                {
+                    expectedMessages[className] = null;
+                }
+            }
+
+            return new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
+        }
+
+        private ReadOnlyDictionary<string, IEnumerable<string>> _expectedMessages;
+        public virtual ReadOnlyDictionary<string, IEnumerable<string>> ExpectedMessages
         {
             get
             {
-                var expectedMessages = new List<KeyValuePair<string, IEnumerable<string>>>();
-
-                foreach(var errorClass in _localConfiguration.errorCollector.expectedMessages)
+                if (_expectedMessages == null)
                 {
-                    var messages = errorClass.message;
-                    if (messages != null)
-                    {
-                        expectedMessages.Add(new KeyValuePair<string, IEnumerable<string>>(errorClass.name, messages));
-                    }
+                    _expectedMessages = ParseExpectedErrorConfigurations();
                 }
-                return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, expectedMessages);
+
+                return _expectedMessages;
             }
         }
 

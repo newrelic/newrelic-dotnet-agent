@@ -1247,8 +1247,7 @@
                 <xs:complexType>
                   <xs:annotation>
                     <xs:documentation>
-                      To prevent specific exceptions reporting to New Relic, list them here.
-                      Use the full name of the exception, such as "System.IO.FileNotFoundException".
+                      A list of fully qualified error class names to be marked as expected.
                     </xs:documentation>
                   </xs:annotation>
 
@@ -1269,7 +1268,7 @@
                   <xs:complexType>
                       <xs:annotation>
                           <xs:documentation>
-                              An optional map of fully qualified class name to list of strings matching a substring of the message of an error to be expected.
+                              An optional map of fully qualified error class name to list of strings matching a substring of the message of an error to be expected.
                           </xs:documentation>
                       </xs:annotation>
 
@@ -1296,7 +1295,7 @@
                   <xs:complexType>
                       <xs:annotation>
                           <xs:documentation>
-                              To prevent specific error codes from affecting error rate, list them here.
+                              A comma separated list of status codes to be marked as expected.
                           </xs:documentation>
                       </xs:annotation>
   
@@ -1304,7 +1303,7 @@
                           <xs:element name="code" type="xs:float">
                               <xs:annotation>
                                   <xs:documentation>
-                                      You may use standard integral HTTP errorcodes, such as just 401, or may use Microsoft FullStatusCodes, with decimal points, such as 401.4 or 403.18
+                                      You may use standard integral HTTP errorcodes, such as just 401, or may use Microsoft FullStatusCodes, with decimal points, such as 401.4 or 403.18.
                                   </xs:documentation>
                               </xs:annotation>
                           </xs:element>
