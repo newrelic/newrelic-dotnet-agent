@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2020 New Relic Corporation. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
 <Wix
 		xmlns="http://schemas.microsoft.com/wix/2006/wi"
 		xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
@@ -17,8 +21,21 @@
 	<?define ProgramsFolder = ".NET Agent (32-bit)"?>
 	<?endif?>
 
+  <?define RootSourcePath = "$(var.SolutionDir)..\..\.."?>
+  <?define AgentSourcePath = "$(var.RootSourcePath)\src\Agent"?>
+
+  <?ifdef "$(env.NR_DEV_HOMEROOT)"?>
+		<?define HomeRootPath = "$(env.NR_DEV_HOMEROOT)"?>
+  <?else?>
+		<?define HomeRootPath = "$(var.AgentSourcePath)"?>
+  <?endif?>
+
+  <?define HomeFolderPath = "$(var.HomeRootPath)\New Relic Home $(var.Platform)"?>
+  <?define HomeFolderPathx86 = "$(var.HomeRootPath)\New Relic Home x86"?>
+  <?define HomeFolderPathx64 = "$(var.HomeRootPath)\New Relic Home x64"?>
+
 	<Product Id="*" Name="$(var.ProductName)" Language="1033" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" Manufacturer="New Relic" UpgradeCode="{5AECDCE4-3892-4C79-BA1B-88EEF252BB25}">
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Comments="Version: !(bind.FileVersion.NewRelic.Agent.Core.dll)" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
 		<MediaTemplate EmbedCab="yes"/>
@@ -80,13 +97,13 @@
 			<Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="RestartIis">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
 		</UI>
 
-		<Icon Id="NewRelicIcon.ico" SourceFile="..\Miscellaneous\NewRelic-icon-16x16.ico"/>
+    <Icon Id="NewRelicIcon.ico" SourceFile="$(var.AgentSourcePath)\Miscellaneous\NewRelic-icon-16x16.ico"/>
 		
 		<!-- New Relic banners. -->
 		<WixVariable Id="WixUIBannerBmp" Value="ui-banner.bmp"/>
 		<WixVariable Id="WixUIDialogBmp" Value="ui-dialog.bmp"/>
 
-		<WixVariable Id="WixUILicenseRtf" Value="..\Miscellaneous\License.rtf"/>
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.RootSourcePath)\licenses\License.rtf"/>
 	</Product>
 
 	<Fragment>
@@ -199,34 +216,34 @@
 		<ComponentGroup Id="ProductComponents" Directory="NETAGENTFOLDER">
 			<!-- Text -->
 			<Component Id="LicenseComponent" Guid="{47114807-F20A-478D-9F4F-4B3D6CF195BE}">
-				<File Id="LicenseFile" Name="License.txt" KeyPath="yes" Source="..\Miscellaneous\License.txt" />
+				<File Id="LicenseFile" Name="License.txt" KeyPath="yes" Source="$(var.AgentSourcePath)\Miscellaneous\License.txt" />
 			</Component>
 
 			<!-- Libraries -->
 			<?ifdef IsWin64?>
 			<Component Id="Profiler64Component" Guid="{EA2D3EC9-2109-4004-AD12-E8ACB49B1242}" Win64="yes">
-				<File Id="Profiler64File" Name="NewRelic.Profiler.dll" KeyPath="yes" Source="$(var.SolutionDir)\New Relic Home x64\NewRelic.Profiler.dll">
+				<File Id="Profiler64File" Name="NewRelic.Profiler.dll" KeyPath="yes" Source="$(var.HomeFolderPathx64)\NewRelic.Profiler.dll">
 					<Class Id="{71DA0A04-7777-4EC6-9643-7D28B46A8A41}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)"/>
 				</File>
 			</Component>
 			<?else?>
 			<Component Id="Profiler32Component" Guid="{548B1319-EB04-42A9-82C4-E6CF975ADC8A}" Win64="no">
-				<File Id="Profiler32File" Name="NewRelic.Profiler.dll" KeyPath="yes" Source="$(var.SolutionDir)\New Relic Home x86\NewRelic.Profiler.dll">
+				<File Id="Profiler32File" Name="NewRelic.Profiler.dll" KeyPath="yes" Source="$(var.HomeFolderPathx86)\NewRelic.Profiler.dll">
 					<Class Id="{71DA0A04-7777-4EC6-9643-7D28B46A8A41}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)"/>
 				</File>
 			</Component>
 			<?endif?>
 
 			<Component Id="NewRelic.Agent.Core" Guid="{C9F6F481-4FDE-4DAB-8008-AF394F3CA3D4}">
-				<File Id="NewRelic.Agent.Core.dll" Name="NewRelic.Agent.Core.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\NewRelic.Agent.Core.dll"/>
+				<File Id="NewRelic.Agent.Core.dll" Name="NewRelic.Agent.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\NewRelic.Agent.Core.dll"/>
 			</Component>
 
 			<Component Id="NewRelic.Agent.Extensions" Guid="{C2A377FD-A722-4767-81BE-42CE1C6E74CE}">
-				<File Id="NewRelic.Agent.Extensions.dll" Name="NewRelic.Agent.Extensions.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\NewRelic.Agent.Extensions.dll"/>
+				<File Id="NewRelic.Agent.Extensions.dll" Name="NewRelic.Agent.Extensions.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\NewRelic.Agent.Extensions.dll"/>
 			</Component>
 			<!-- Configuration -->
 			<Component Id="ConfigComponent" Guid="{EDFD7233-A7FE-4593-B748-8DB6CFDDD404}">
-				<File Id="ConfigFile" Name="default_newrelic.config" KeyPath="yes" Source="..\Configuration\newrelic.config"/>
+				<File Id="ConfigFile" Name="default_newrelic.config" KeyPath="yes" Source="$(var.AgentSourcePath)\Configuration\newrelic.config"/>
 			</Component>
 			<Component Id="ConfigurationShortcuts" Guid="{B7110FA3-C723-4B46-829C-582637E56F5C}">
 				<Shortcut Id="NewRelicXmlShortcut" Name="newrelic.config" Target="[NETAGENTCOMMONFOLDER]newrelic.config" WorkingDirectory="NETAGENTCOMMONFOLDER" Advertise="no"/>
@@ -238,7 +255,7 @@
 		<?ifdef IsWin64?>
 		<ComponentGroup Id="Product32Components" Directory="NETAGENT32FOLDER">
 			<Component Id="Profiler32Component" Guid="{548B1319-EB04-42A9-82C4-E6CF975ADC8A}" Win64="no">
-				<File Id="Profiler32File" Name="NewRelic.Profiler.dll" KeyPath="yes" Source="$(var.SolutionDir)\New Relic Home x86\NewRelic.Profiler.dll">
+				<File Id="Profiler32File" Name="NewRelic.Profiler.dll" KeyPath="yes" Source="$(var.HomeFolderPathx86)\NewRelic.Profiler.dll">
 					<Class Id="{71DA0A04-7777-4EC6-9643-7D28B46A8A41}" Advertise="no" Context="InprocServer32" Description="New Relic .NET Profiler" ThreadingModel="both" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)"/>
 				</File>
 			</Component>
@@ -248,206 +265,206 @@
 		<ComponentGroup Id="NewRelic.Agent.Extensions" Directory="ProgramFilesExtensionsFolder">
 			<!-- JetBrains. Note: We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.-->
 			<Component Id="JetBrainsAnnotationsComponent" Guid="{12C77711-1BF1-42B8-A884-B25D57B467B3}">
-				<File Id="JetBrainsAnnotationsFile" Name="JetBrains.Annotations.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\JetBrains.Annotations.dll"/>
+				<File Id="JetBrainsAnnotationsFile" Name="JetBrains.Annotations.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\JetBrains.Annotations.dll"/>
 			</Component>
 			
 			<!-- Call stack trackers -->
 			<Component Id="AsyncLocalCallStackTrackerComponent" Guid="{2C25F20D-113E-4314-940F-9B54469F184D}">
-				<File Id="AsyncLocalCallStackTrackerFile" Name="NewRelic.Providers.CallStack.AsyncLocal.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.CallStack.AsyncLocal.dll"/>
+				<File Id="AsyncLocalCallStackTrackerFile" Name="NewRelic.Providers.CallStack.AsyncLocal.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.CallStack.AsyncLocal.dll"/>
 			</Component>
 			
 			<!-- Context providers -->
 			<Component Id="AspTransactionContextProviderComponent" Guid="{D02A537E-3221-4DEB-BC77-E15DEFF15E81}">
-				<File Id="AspTransactionContextProviderFile" Name="NewRelic.Providers.TransactionContext.Asp.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.TransactionContext.Asp.dll"/>
+				<File Id="AspTransactionContextProviderFile" Name="NewRelic.Providers.TransactionContext.Asp.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.TransactionContext.Asp.dll"/>
 			</Component>
 			<Component Id="Wcf3TransactionContextProviderComponent" Guid="{6BE8050A-0A01-4F5B-B3B6-274652DF24E6}">
-				<File Id="Wcf3TransactionContextProviderFile" Name="NewRelic.Providers.TransactionContext.Wcf3.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.TransactionContext.Wcf3.dll"/>
+				<File Id="Wcf3TransactionContextProviderFile" Name="NewRelic.Providers.TransactionContext.Wcf3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.TransactionContext.Wcf3.dll"/>
 			</Component>
 
 			<!-- Wrappers -->
 			<Component Id="Asp35WrapperComponent" Guid="{E80B97F6-1FC0-4432-B9BF-8833F0C6D62D}">
-				<File Id="Asp35WrapperFile" Name="NewRelic.Providers.Wrapper.Asp35.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Asp35.dll"/>
+				<File Id="Asp35WrapperFile" Name="NewRelic.Providers.Wrapper.Asp35.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Asp35.dll"/>
 			</Component>
 			<Component Id="Mvc3WrapperComponent" Guid="{71F61B42-0543-442F-A925-79D95A16591C}">
-				<File Id="Mvc3WrapperFile" Name="NewRelic.Providers.Wrapper.Mvc3.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Mvc3.dll"/>
+				<File Id="Mvc3WrapperFile" Name="NewRelic.Providers.Wrapper.Mvc3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Mvc3.dll"/>
 			</Component>
 			<Component Id="WebApi1WrapperComponent" Guid="{CB26B899-ED90-4A0E-A763-1B6916806409}">
-				<File Id="WebApi1WrapperFile" Name="NewRelic.Providers.Wrapper.WebApi1.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebApi1.dll"/>
+				<File Id="WebApi1WrapperFile" Name="NewRelic.Providers.Wrapper.WebApi1.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebApi1.dll"/>
 			</Component>
 			<Component Id="WebApi2WrapperComponent" Guid="{188D2869-C731-4379-88F0-D856A41F2773}">
-				<File Id="WebApi2WrapperFile" Name="NewRelic.Providers.Wrapper.WebApi2.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebApi2.dll"/>
+				<File Id="WebApi2WrapperFile" Name="NewRelic.Providers.Wrapper.WebApi2.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebApi2.dll"/>
 			</Component>
 			<Component Id="NServiceBusWrapperComponent" Guid="{62EE45C0-85A3-4330-B34A-5D3A644768AA}">
-				<File Id="NServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.NServiceBus.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.NServiceBus.dll"/>
+				<File Id="NServiceBusWrapperFile" Name="NewRelic.Providers.Wrapper.NServiceBus.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.NServiceBus.dll"/>
 			</Component>
 			<Component Id="Wcf3WrapperComponent" Guid="{60A9F0EA-1B03-4288-A0BB-30CA56AB4EBD}">
-				<File Id="Wcf3WrapperFile" Name="NewRelic.Providers.Wrapper.Wcf3.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Wcf3.dll"/>
+				<File Id="Wcf3WrapperFile" Name="NewRelic.Providers.Wrapper.Wcf3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Wcf3.dll"/>
 			</Component>
 			<Component Id="MongoDBWrapperComponent" Guid="{58055D09-D82F-4918-AE3D-51BBC4607543}">
-				<File Id="MongoDBWrapperFile" Name="NewRelic.Providers.Wrapper.MongoDB.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.MongoDB.dll"/>
+				<File Id="MongoDBWrapperFile" Name="NewRelic.Providers.Wrapper.MongoDB.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.MongoDB.dll"/>
 			</Component>
 			<Component Id="ServiceStackRedisWrapperComponent" Guid="{C64F8B6A-FB4C-476D-A484-2D2CB8D2BBD0}">
-				<File Id="ServiceStackRedisWrapperFile" Name="NewRelic.Providers.Wrapper.ServiceStackRedis.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.dll"/>
+				<File Id="ServiceStackRedisWrapperFile" Name="NewRelic.Providers.Wrapper.ServiceStackRedis.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.dll"/>
 			</Component>
 			<Component Id="StackExchangeRedisWrapperComponent" Guid="{2DF28617-AB59-4D76-BFAB-B2A75640B265}">
-				<File Id="StackExchangeRedisWrapperFile" Name="NewRelic.Providers.Wrapper.StackExchangeRedis.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll"/>
+				<File Id="StackExchangeRedisWrapperFile" Name="NewRelic.Providers.Wrapper.StackExchangeRedis.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.dll"/>
 			</Component>
 			<Component Id="WebServicesWrapperComponent" Guid="{3778316D-4C6C-4623-9E6F-F9976581D077}">
-				<File Id="WebServicesWrapperFile" Name="NewRelic.Providers.Wrapper.WebServices.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebServices.dll"/>
+				<File Id="WebServicesWrapperFile" Name="NewRelic.Providers.Wrapper.WebServices.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebServices.dll"/>
 			</Component>
 			<Component Id="WebOptimizationWrapperComponent" Guid="{E4B8AA32-9536-4AAB-A521-5C227DFEF1F6}">
-				<File Id="WebOptimizationWrapperFile" Name="NewRelic.Providers.Wrapper.WebOptimization.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebOptimization.dll"/>
+				<File Id="WebOptimizationWrapperFile" Name="NewRelic.Providers.Wrapper.WebOptimization.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebOptimization.dll"/>
 			</Component>
 			<Component Id="HttpClientWrapperComponent" Guid="{3AD831AA-59A8-49A2-96F1-DF84BE4CB128}">
-				<File Id="HttpClientWrapperFile" Name="NewRelic.Providers.Wrapper.HttpClient.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpClient.dll"/>
+				<File Id="HttpClientWrapperFile" Name="NewRelic.Providers.Wrapper.HttpClient.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.HttpClient.dll"/>
 			</Component>
 			<Component Id="OwinWrapperComponent" Guid="{FC044DC6-52D8-42C6-A9FE-CB9425EF5811}">
-				<File Id="OwinWrapperFile" Name="NewRelic.Providers.Wrapper.Owin.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin.dll"/>
+				<File Id="OwinWrapperFile" Name="NewRelic.Providers.Wrapper.Owin.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Owin.dll"/>
 			</Component>
 			<Component Id="Owin3WrapperComponent" Guid="{09C98DB0-29F7-4DAB-A6BC-FBE6FF380276}">
-				<File Id="Owin3WrapperFile" Name="NewRelic.Providers.Wrapper.Owin3.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin3.dll"/>
+				<File Id="Owin3WrapperFile" Name="NewRelic.Providers.Wrapper.Owin3.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Owin3.dll"/>
 			</Component>
 			<Component Id="HttpWebRequestWrapperComponent" Guid="{9B8A8B55-1A7C-4428-A820-8CC4156A6F6D}">
-				<File Id="HttpWebRequestWrapperFile" Name="NewRelic.Providers.Wrapper.HttpWebRequest.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpWebRequest.dll"/>
+				<File Id="HttpWebRequestWrapperFile" Name="NewRelic.Providers.Wrapper.HttpWebRequest.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.HttpWebRequest.dll"/>
 			</Component>
 			<Component Id="SqlWrapperComponent" Guid="{9AD5D094-926F-4EB6-A00E-D82F5AD36C9F}">
-				<File Id="SqlWrapperFile" Name="NewRelic.Providers.Wrapper.Sql.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Sql.dll"/>
+				<File Id="SqlWrapperFile" Name="NewRelic.Providers.Wrapper.Sql.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Sql.dll"/>
 			</Component>
 			<Component Id="SqlAsyncWrapperComponent" Guid="{4AF25E49-06F1-4128-88DD-0F964F2C4559}">
-				<File Id="SqlAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.SqlAsync.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.SqlAsync.dll"/>
+				<File Id="SqlAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.SqlAsync.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.SqlAsync.dll"/>
 			</Component>
 			<Component Id="CustomInstrumentationWrapperComponent" Guid="{568E5793-692C-4265-8912-C2484455523F}">
-				<File Id="CustomInstrumentationWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentation.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll"/>
+				<File Id="CustomInstrumentationWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentation.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentation.dll"/>
 			</Component>
 			<Component Id="CustomInstrumentationAsyncWrapperComponent" Guid="{A08DD1E7-A16D-431E-BF8E-0B299781A8BA}">
-			<File Id="CustomInstrumentationAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll"/>
+			<File Id="CustomInstrumentationAsyncWrapperFile" Name="NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.CustomInstrumentationAsync.dll"/>
 			</Component>
 			<Component Id="MsmqWrapperComponent" Guid="{8DBF938B-4DE7-421E-821B-E9A6761C6CCF}">
-				<File Id="MsmqWrapperFile" Name="NewRelic.Providers.Wrapper.Msmq.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Msmq.dll"/>
+				<File Id="MsmqWrapperFile" Name="NewRelic.Providers.Wrapper.Msmq.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Msmq.dll"/>
 			</Component>
 			<Component Id="RabbitMqWrapperComponent" Guid="{C64DAE0A-D19E-4372-B6CC-86ABC25D8923}">
-				<File Id="RabbitMqWrapperFile" Name="NewRelic.Providers.Wrapper.RabbitMq.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.RabbitMq.dll"/>
+				<File Id="RabbitMqWrapperFile" Name="NewRelic.Providers.Wrapper.RabbitMq.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.RabbitMq.dll"/>
 			</Component>
 			<Component Id="RestSharpWrapperComponent" Guid="{6460D805-EBA5-4AF2-9085-194FCA45528B}">
-				<File Id="RestSharpWrapperFile" Name="NewRelic.Providers.Wrapper.RestSharp.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.RestSharp.dll"/>
+				<File Id="RestSharpWrapperFile" Name="NewRelic.Providers.Wrapper.RestSharp.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.RestSharp.dll"/>
 			</Component>
 			<Component Id="ScriptHandlerFactoryWrapperComponent" Guid="{D2C6737B-4F71-40BE-8F86-EB6ED31E6A93}">
-				<File Id="ScriptHandlerFactoryWrapperFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll"/>
+				<File Id="ScriptHandlerFactoryWrapperFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.dll"/>
 			</Component>
 			<Component Id="CastleMonoRail2WrapperComponent" Guid="{56BC32DA-62A6-4E81-BBBB-AC28E69ACB8D}">
-				<File Id="CastleMonoRail2WrapperFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.dll"/>
+				<File Id="CastleMonoRail2WrapperFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.dll"/>
 			</Component>
 			<Component Id="OpenRastaWrapperComponent" Guid="{59A6C862-3D09-44AF-B69E-38B464D041FA}">
-				<File Id="OpenRastaWrapperFile" Name="NewRelic.Providers.Wrapper.OpenRasta.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.OpenRasta.dll"/>
+				<File Id="OpenRastaWrapperFile" Name="NewRelic.Providers.Wrapper.OpenRasta.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.OpenRasta.dll"/>
 			</Component>
 			<Component Id="WrapperUtilitiesComponent" Guid="{27424907-CB78-4328-90FE-49C84B0250A8}">
-				<File Id="WrapperUtilitiesFile" Name="NewRelic.Providers.Wrapper.WrapperUtilities.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WrapperUtilities.dll"/>
+				<File Id="WrapperUtilitiesFile" Name="NewRelic.Providers.Wrapper.WrapperUtilities.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WrapperUtilities.dll"/>
 			</Component>
 			<Component Id="CouchbaseWrapperComponent" Guid="{21A0A03D-4799-4D8B-B6DB-553DD66C7020}">
-				<File Id="CouchbaseWrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Couchbase.dll"/>
+				<File Id="CouchbaseWrapperFile" Name="NewRelic.Providers.Wrapper.Couchbase.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Couchbase.dll"/>
 			</Component>
 
 			<!-- Reference libraries -->
 			<Component Id="NewRelicCoreReferenceComponent" Guid="{C196ED1E-0FBA-4D36-9C34-E969B0C9E8C9}">
-				<File Id="NewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Core.dll"/>
+				<File Id="NewRelicCoreReferenceFile" Name="NewRelic.Core.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Core.dll"/>
 			</Component>
 			<Component Id="NewRelicParsingReferenceComponent" Guid="{2B5FA2A3-E532-48CC-8390-D023DE693F8A}">
-				<File Id="NewRelicParsingReferenceFile" Name="NewRelic.Parsing.dll" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Parsing.dll"/>
+				<File Id="NewRelicParsingReferenceFile" Name="NewRelic.Parsing.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Parsing.dll"/>
 			</Component>
 		</ComponentGroup>
 		
 		<!-- Wrapper Instrumentation Files-->
 		<ComponentGroup Id="NewRelic.Agent.Extensions.Instrumentation" Directory="AppDataExtensionsFolder">
 			<Component Id="Asp35InstrumentationComponent" Guid="{7DF74F2A-701D-4E6B-BF6B-E63D6AEBF35B}">
-				<File Id="Asp35InstrumentationFile" Name="NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml"/>
+				<File Id="Asp35InstrumentationFile" Name="NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Asp35.Instrumentation.xml"/>
 			</Component>
 			<Component Id="Mvc3InstrumentationComponent" Guid="{06AA7C6C-781D-4B26-BA43-45598C1D7F93}">
-				<File Id="Mvc3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml"/>
+				<File Id="Mvc3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Mvc3.Instrumentation.xml"/>
 			</Component>
 			<Component Id="WebApi1InstrumentationComponent" Guid="{9DCD7B7F-DA63-456E-A927-BC0FDE10B80D}">
-				<File Id="WebApi1InstrumentationFile" Name="NewRelic.Providers.Wrapper.WebApi1.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebApi1.Instrumentation.xml"/>
+				<File Id="WebApi1InstrumentationFile" Name="NewRelic.Providers.Wrapper.WebApi1.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebApi1.Instrumentation.xml"/>
 			</Component>
 			<Component Id="WebApi2InstrumentationComponent" Guid="{2B59344A-786F-4B6C-AD97-5C218826BE0A}">
-				<File Id="WebApi2InstrumentationFile" Name="NewRelic.Providers.Wrapper.WebApi2.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebApi2.Instrumentation.xml"/>
+				<File Id="WebApi2InstrumentationFile" Name="NewRelic.Providers.Wrapper.WebApi2.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebApi2.Instrumentation.xml"/>
 			</Component>
 			<Component Id="NServiceBusInstrumentationComponent" Guid="{9121BB1A-438E-40EC-AE9F-B9C2BCAE89F4}">
-				<File Id="NServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml"/>
+				<File Id="NServiceBusInstrumentationFile" Name="NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.NServiceBus.Instrumentation.xml"/>
 			</Component>
 			<Component Id="Wcf3InstrumentationComponent" Guid="{D3D91DB4-E59B-48AB-87E8-7F340B42912A}">
-				<File Id="Wcf3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml"/>
+				<File Id="Wcf3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Wcf3.Instrumentation.xml"/>
 			</Component>
 			<Component Id="MongoDBInstrumentationComponent" Guid="{182B3631-3565-43A2-A4D2-FE6374105562}">
-				<File Id="MongoDBInstrumentationFile" Name="NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml"/>
+				<File Id="MongoDBInstrumentationFile" Name="NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.MongoDB.Instrumentation.xml"/>
 			</Component>
 			<Component Id="ServiceStackRedisInstrumentationComponent" Guid="{41DE67E5-2D10-4461-86A6-9071D0D6BA98}">
-				<File Id="ServiceStackRedisInstrumentationFile" Name="NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml"/>
+				<File Id="ServiceStackRedisInstrumentationFile" Name="NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.ServiceStackRedis.Instrumentation.xml"/>
 			</Component>
 			<Component Id="StackExchangeRedisInstrumentationComponent" Guid="{3702D3F8-7056-4987-BFC5-418BC13E9CDE}">
-				<File Id="StackExchangeRedisInstrumentationFile" Name="NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml"/>
+				<File Id="StackExchangeRedisInstrumentationFile" Name="NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.StackExchangeRedis.Instrumentation.xml"/>
 			</Component>
 			<Component Id="WebOptimizationInstrumentationComponent" Guid="{3DFA9833-C841-4752-ACDA-5BF5A251C6C7}">
-				<File Id="WebOptimizationInstrumentationFile" Name="NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml"/>
+				<File Id="WebOptimizationInstrumentationFile" Name="NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebOptimization.Instrumentation.xml"/>
 			</Component>
 			<Component Id="WebServicesInstrumentationComponent" Guid="{53790CAC-0003-4BCC-8CDA-7F1027D6FF05}">
-				<File Id="WebServicesInstrumentationFile" Name="NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml"/>
+				<File Id="WebServicesInstrumentationFile" Name="NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.WebServices.Instrumentation.xml"/>
 			</Component>
 			<Component Id="HttpClientInstrumentationComponent" Guid="{ED8B0900-7D41-47B1-99D4-F409E3FA6C19}">
-				<File Id="HttpClientInstrumentationFile" Name="NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml"/>
+				<File Id="HttpClientInstrumentationFile" Name="NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.HttpClient.Instrumentation.xml"/>
 			</Component>
 			<Component Id="OwinInstrumentationComponent" Guid="{83B9445D-0D43-4E13-9B66-0A01DA1C6CFA}">
-				<File Id="OwinInstrumentationFile" Name="NewRelic.Providers.Wrapper.Owin.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin.Instrumentation.xml"/>
+				<File Id="OwinInstrumentationFile" Name="NewRelic.Providers.Wrapper.Owin.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Owin.Instrumentation.xml"/>
 			</Component>
 			<Component Id="Owin3InstrumentationComponent" Guid="{7A6890C5-4E29-4A2F-93C3-3C93F060430E}">
-				<File Id="Owin3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Owin3.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Owin3.Instrumentation.xml"/>
+				<File Id="Owin3InstrumentationFile" Name="NewRelic.Providers.Wrapper.Owin3.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Owin3.Instrumentation.xml"/>
 			</Component>
 			<Component Id="HttpWebRequestInstrumentationComponent" Guid="{4D41C030-AC4E-4580-9BAA-02DF8991B7C8}">
-				<File Id="HttpWebRequestInstrumentationFile" Name="NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml"/>
+				<File Id="HttpWebRequestInstrumentationFile" Name="NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.HttpWebRequest.Instrumentation.xml"/>
 			</Component>
 			<Component Id="SqlInstrumentationComponent" Guid="{A0A11FC0-E592-4F35-BB19-ECC934C98B98}">
-				<File Id="SqlInstrumentationFile" Name="NewRelic.Providers.Wrapper.Sql.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml"/>
+				<File Id="SqlInstrumentationFile" Name="NewRelic.Providers.Wrapper.Sql.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml"/>
 			</Component>
 			<Component Id="SqlAsyncInstrumentationComponent" Guid="{30272B80-2830-4453-A9BF-8EA98842B50A}">
-				<File Id="SqlAsyncInstrumentationFile" Name="NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml"/>
+				<File Id="SqlAsyncInstrumentationFile" Name="NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.SqlAsync.Instrumentation.xml"/>
 			</Component>
 			<Component Id="MsmqInstrumentationComponent" Guid="{047670EA-8D02-47AE-A1E7-63B8ECF8D3B0}">
-				<File Id="MsmqInstrumentationFile" Name="NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml"/>
+				<File Id="MsmqInstrumentationFile" Name="NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Msmq.Instrumentation.xml"/>
 			</Component>
 			<Component Id="RabbitMqInstrumentationComponent" Guid="{705BB342-CC08-4093-8597-230E7A3D7360}">
-				<File Id="RabbitMqInstrumentationFile" Name="NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml"/>
+				<File Id="RabbitMqInstrumentationFile" Name="NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.RabbitMq.Instrumentation.xml"/>
 			</Component>
 			<Component Id="RestSharpInstrumentationComponent" Guid="{71A42DF5-CB73-45E7-ACB1-32B37133C0B6}">
-				<File Id="RestSharpInstrumentationFile" Name="NewRelic.Providers.Wrapper.RestSharp.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.RestSharp.Instrumentation.xml"/>
+				<File Id="RestSharpInstrumentationFile" Name="NewRelic.Providers.Wrapper.RestSharp.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.RestSharp.Instrumentation.xml"/>
 			</Component>
 			<Component Id="ScriptHandlerFactoryInstrumentationComponent" Guid="{FF3E7F54-BDEB-4882-BD1F-94F7BA46A724}">
-				<File Id="ScriptHandlerFactoryInstrumentationFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml"/>
+				<File Id="ScriptHandlerFactoryInstrumentationFile" Name="NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.ScriptHandlerFactory.Instrumentation.xml"/>
 			</Component>
 			<Component Id="CastleMonoRail2InstrumentationComponent" Guid="{18239B34-29FC-4C65-BF72-41C42F087F4F}">
-				<File Id="CastleMonoRail2InstrumentationFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml"/>
+				<File Id="CastleMonoRail2InstrumentationFile" Name="NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.CastleMonoRail2.Instrumentation.xml"/>
 			</Component>
 			<Component Id="OpenRastaInstrumentationComponent" Guid="{532A2C8E-17AA-4D1D-910F-23E2CFFAEF86}">
-				<File Id="OpenRastaInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml"/>
+				<File Id="OpenRastaInstrumentationFile" Name="NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.OpenRasta.Instrumentation.xml"/>
 			</Component>
 			<Component Id="CouchbaseInstrumentationComponent" Guid="{03FA7D3A-3368-45B1-92B8-19DA97A659B8}">
-				<File Id="CouchbaseInstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml"/>
+				<File Id="CouchbaseInstrumentationFile" Name="NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.Wrapper.Couchbase.Instrumentation.xml"/>
 			</Component>
 		</ComponentGroup>
 
 		<!-- Core Instrumentation Files-->
 		<ComponentGroup Id="ExtensionsComponents" Directory="AppDataExtensionsFolder">
 			<Component Id="ExtensionsSchemaComponent" Guid="{36FC3734-E671-4AD1-AA8E-40A0ED90891A}">
-				<File Id="ExtensionsSchemaFile" Name="extension.xsd" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\Extensions\extension.xsd"/>
+				<File Id="ExtensionsSchemaFile" Name="extension.xsd" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\extension.xsd"/>
 			</Component>
 		</ComponentGroup>
 		
 		<!-- API -->
 		<Component Id="ApiComponent" Guid="{26BF7AE0-A921-438C-A16C-FF6F8E0F9366}" Directory="NETAGENTFOLDER">
-			<File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.SolutionDir)_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll" />
+			<File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\Agent\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll" />
 		</Component>
 
 		<!-- Configuration -->
 		<ComponentGroup Id="ConfigurationComponents" Directory="NETAGENTCOMMONFOLDER">
 			<Component Id="ConfigSchemaComponent" Guid="{62C95105-4972-44CA-99D8-A03E349926AE}">
-				<File Id="ConfigSchemaFile" Name="newrelic.xsd" KeyPath="yes" Source="$(var.SolutionDir)New Relic Home $(var.Platform)\newrelic.xsd" />
+				<File Id="ConfigSchemaFile" Name="newrelic.xsd" KeyPath="yes" Source="$(var.HomeFolderPath)\newrelic.xsd" />
 			</Component>
 		</ComponentGroup>
 
@@ -523,7 +540,7 @@
 
 		<!-- Flush -->
 		<Component Id="FlushToolComponent" Directory="ToolsFolder" Guid="{A82B1955-0DC9-49CF-87B7-17425E5E2BB0}">
-			<File Id="FlushToolFile" Name="flush_dotnet_temp.cmd" KeyPath="yes" Source="..\Scripts\flush_dotnet_temp.cmd" />
+			<File Id="FlushToolFile" Name="flush_dotnet_temp.cmd" KeyPath="yes" Source="$(var.AgentSourcePath)\Scripts\flush_dotnet_temp.cmd" />
 		</Component>
 
 		<!-- Tools Start Menu -->

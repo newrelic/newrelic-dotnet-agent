@@ -29,6 +29,7 @@ src/Agent/packages/
 FunctionalTests/packages/
 PerformanceTests/packages/
 PhantomJSTests/packages/
+src/Agent/MsiInstaller/packages/
 
 # Version Files
 VersionAssemblyInfo.cs

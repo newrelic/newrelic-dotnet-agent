@@ -14,8 +14,8 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <WixCATargetsPath Condition=" '$(WixCATargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.CA.targets</WixCATargetsPath>
-    <IntermediateOutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)</IntermediateOutputPath>
-    <OutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)</OutputPath>
+    <IntermediateOutputPath>$(SolutionDir)..\..\Agent\_build\$(Platform)-$(Configuration)\$(AssemblyName)</IntermediateOutputPath>
+    <OutputPath>$(SolutionDir)..\..\Agent\_build\$(Platform)-$(Configuration)\$(AssemblyName)</OutputPath>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>267d8a59</NuGetPackageImportStamp>
   </PropertyGroup>
