@@ -32,6 +32,7 @@ namespace NewRelic.Agent.IntegrationTests
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.EnableSpanEvents(true);
+                    configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("finest");
                 },
                 exerciseApplication: () =>

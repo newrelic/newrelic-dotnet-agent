@@ -64,9 +64,9 @@ namespace NewRelic.Agent.IntegrationTests
             };
             var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
-                {"type", "Transaction"},
-                {"nr.apdexPerfZone", "F"}
+                {"type", "Transaction"}
             };
+
             var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
                 "timestamp",
@@ -74,7 +74,8 @@ namespace NewRelic.Agent.IntegrationTests
                 "webDuration",
                 "queueDuration",
                 "totalTime",
-                "name"
+                "name",
+                "nr.apdexPerfZone"
             };
             var expectedTransactionEventAgentAttributes = new Dictionary<string, object>
             {
@@ -140,6 +141,8 @@ namespace NewRelic.Agent.IntegrationTests
                 () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAgentAttributes, TransactionTraceAttributeType.Agent, transactionSample),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, getDataTransactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, getDataTransactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, getDataTransactionEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, getExceptionTransactionEvent),
                 () => Assertions.ErrorTraceHasAttributes(expectedAgentErrorTraceAttributes, ErrorTraceAttributeType.Agent, firstErrorTrace),
