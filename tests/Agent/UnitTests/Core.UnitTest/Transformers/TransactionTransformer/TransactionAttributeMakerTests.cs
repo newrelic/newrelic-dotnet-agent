@@ -752,6 +752,43 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.False(DoAttributesContain(attributes,"webDuration"));
         }
 
+        [Test]
+        public void GetAttributes_ErrorAttributesNotIncluded_IfErrorCollectorDisabled()
+        {
+            // ARRANGE
+            var timer = Mock.Create<ITimer>();
+            var expectedStartTime = DateTime.Now;
+            var expectedDuration = TimeSpan.FromMilliseconds(500);
+            Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+            var apdexT = TimeSpan.FromSeconds(2);
+            _localConfig.errorCollector.enabled = false;
+            UpdateConfiguration();
+
+            var priority = 0.5f;
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            transaction.SetHttpResponseStatusCode(400, null);
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+            var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+            txStats.MergeUnscopedStats(MetricNames.ExternalAll, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2)));
+
+            var totalTime = TimeSpan.FromSeconds(1);
+
+            // ACT
+            var transactionAttributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
+
+            // ASSERT
+            NrAssert.Multiple(
+                () => Assert.True(DoAttributesContain(transactionAttributes, "nr.apdexPerfZone")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "error.class")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "errorType")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "errorMessage")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "error.message")),
+                () => Assert.False(DoAttributesContain(transactionAttributes, "error"))
+            );
+        }
+
         #region Distributed Trace
 
         private const DistributedTracingParentType IncomingType = DistributedTracingParentType.App;
@@ -1240,6 +1277,36 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.AreEqual("userAttributeValue", transactionAttributes["userAttributeKey"]),
                 () => Assert.AreEqual("userErrorAttributeValue", transactionAttributes["userErrorAttributeKey"]),
                 () => Assert.Contains("host.displayName", transactionAttributes.Keys)
+            );
+        }
+
+        [Test]
+        public void GetUserAndAgentAttributes_ExcludesErrorCustomAttributes_IfErrorCollectorDisabled()
+        {
+            // ARRANGE
+            var timer = Mock.Create<ITimer>();
+            var expectedStartTime = DateTime.Now;
+            var expectedDuration = TimeSpan.FromMilliseconds(500);
+            Mock.Arrange(() => timer.Duration).Returns(expectedDuration);
+            _localConfig.errorCollector.enabled = false;
+            UpdateConfiguration();
+
+            var priority = 0.5f;
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
+            transaction.SetHttpResponseStatusCode(400, null);
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+
+            // ACT
+            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
+
+            // ASSERT
+            NrAssert.Multiple(
+                () => Assert.True(DoAttributesContain(attributes, "userAttributeKey")),
+                () => Assert.False(DoAttributesContain(attributes, "userErrorAttributeKey"))
             );
         }
 
