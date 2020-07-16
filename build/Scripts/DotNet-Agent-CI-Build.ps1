@@ -5,12 +5,12 @@ $ErrorActionPreference = "Stop"
 ###############
 
 $nugetPath = (Resolve-Path ".\build\Tools\nuget.exe").Path
-#$applicationsFull = @("Agent\FullAgent.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln")
-$applicationsFull = @("src\Agent\FullAgent.sln", "src\Agent\MsiInstaller\MsiInstaller.sln")
+#$solutions = @("Agent\FullAgent.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln")
+$solutions = @("src\Agent\FullAgent.sln", "src\Agent\MsiInstaller\MsiInstaller.sln")
 
 Write-Host "Restoring NuGet packages"
-foreach ($application in $applicationsFull) {
-    & $nugetPath restore $application -NoCache -Source "https://www.nuget.org/api/v2"
+foreach ($sln in $solutions) {
+    & $nugetPath restore $sln -NoCache -Source "https://www.nuget.org/api/v2"
 }
 
 #######
@@ -19,28 +19,21 @@ foreach ($application in $applicationsFull) {
 
 $msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
 
-$applicationsFull = [Ordered]@{
-    "src\Agent\FullAgent.sln"                                    = "Configuration=Release;Platform=x86;AllowUnsafeBlocks=true";
+$solutions = [Ordered]@{
+    "src\Agent\FullAgent.sln"                                    = @("Configuration=Release;AllowUnsafeBlocks=true");
     "src\Agent\MsiInstaller\MsiInstaller.sln"                    = @("Configuration=Release;Platform=x86;AllowUnsafeBlocks=true","Configuration=Release;Platform=x64;AllowUnsafeBlocks=true");
-    # "IntegrationTests\IntegrationTests.sln"                      = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy";
-    # "IntegrationTests\UnboundedIntegrationTests.sln"             = "Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy"
+    # "IntegrationTests\IntegrationTests.sln"                      = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
+    # "IntegrationTests\UnboundedIntegrationTests.sln"             = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
 }
 
-Write-Host "Building for full build"
-foreach ($applicationFull in $applicationsFull.Keys) {
-    Write-Host "-- Building $applicationFull"
-    Write-Host "-- Executing '. $msBuildPath /m /p:$($applicationsFull.Item($applicationFull)) $applicationFull'"
-    . $msBuildPath /m /p:$($applicationsFull.Item($applicationFull)) $applicationFull
-
-    if ($LastExitCode -ne 0) {
-        exit $LastExitCode
-    }
-
-    if ($applicationFull -eq "src\Agent\FullAgent.sln") {
-        Write-Host "-- Executing '. $msBuildPath /m /p:$($applicationsFull.Item($applicationFull).Replace("x86", "x64")) $applicationFull'"
-        . $msBuildPath /m /p:$($applicationsFull.Item($applicationFull).Replace("x86", "x64")) $applicationFull
-        
+Write-Host "Building solutions"
+foreach ($sln in $solutions.Keys) {
+    foreach ($config in $solutions.Item($sln)) {
+        Write-Host "-- Building $sln : '. $msBuildPath -m -p:$($config) $sln'"
+        . $msBuildPath -nologo -m -p:$($config) $sln
+        Write-Host "MSBuild Exit code: $LastExitCode"
         if ($LastExitCode -ne 0) {
+            Write-Host "Error building solution $sln. Exiting with code: $LastExitCode.."
             exit $LastExitCode
         }
     }
