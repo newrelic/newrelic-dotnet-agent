@@ -29,6 +29,7 @@ src/Agent/packages/
 FunctionalTests/packages/
 PerformanceTests/packages/
 PhantomJSTests/packages/
+src/Agent/MsiInstaller/packages/
 
 # Version Files
 VersionAssemblyInfo.cs
@@ -67,8 +68,8 @@ test-results
 # Ignore FullAgent build output
 src/Agent/_build/
 src/Agent/NewRelic/Tray/_build/
-Build/_staging
-Build/BuildArtifacts
+build/_staging
+build/BuildArtifacts
 
 # Build tools should be saved in full, even if they match ignore patterns.
 !Agent/BuildTools/*
