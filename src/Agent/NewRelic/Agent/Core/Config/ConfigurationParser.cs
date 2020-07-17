@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Config
 					}
 					else
 					{
-						// FIXME log
+						// logger hasn't been created yet.
 					}
 				}
 			}

@@ -66,10 +66,6 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 			Assert.AreEqual(0, service.PruningList.Count);
 		}
 
-		#region Update Buckets Tests
-		//TODO
-		#endregion
-
 		#region Pruning Tests
 		[Test]
 		public void verify_PruneTrees_sorts_two_nodes_with_different_call_counts()

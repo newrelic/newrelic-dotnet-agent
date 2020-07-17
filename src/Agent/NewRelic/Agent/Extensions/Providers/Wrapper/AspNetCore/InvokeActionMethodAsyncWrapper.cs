@@ -47,9 +47,6 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
 
 			void HandleSuccess(Task task)
 			{
-				//TODO: This is littered throughout all async code... 
-				//is it necessary to prevent stacking w/ synchronous calls that follow?
-				//how are further calls appropriately stacked?
 				segment.RemoveSegmentFromCallStack();
 
 				if (task == null)

@@ -435,7 +435,7 @@ namespace ParsingTests
 
 		/// <summary>
 		/// Test that we can handle field names quoted with [...]
-		/// TODO(rrh): We can't span across the ' ', and [...] or spaces aren't legal transaction names.  (PORTED from pre-async)
+		/// We can't span across the ' ', and [...] or spaces aren't legal transaction names.
 		/// </summary>
 		[Test]
 		public void SqlParserTest_TestSpaceInFieldNames()
@@ -450,7 +450,7 @@ namespace ParsingTests
 
 			var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
 			Assert.IsNotNull(parsedDatabaseStatement);
-			// TODO: we choke on the space inside of token separators ...[Order Details] (PORTED from pre-async)
+			// Does not handle space inside of token separators ...[Order Details]
 			Assert.AreEqual("order", parsedDatabaseStatement.Model);
 			Assert.AreEqual("select", parsedDatabaseStatement.Operation);
 		}

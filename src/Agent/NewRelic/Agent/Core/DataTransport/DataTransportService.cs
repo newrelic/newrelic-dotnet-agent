@@ -7,7 +7,6 @@ using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -15,7 +14,7 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-	public class DataTransportService : ConfigurationBasedService, IDataTransportService
+    public class DataTransportService : ConfigurationBasedService, IDataTransportService
 	{
 		[NotNull]
 		private readonly IConnectionManager _connectionManager;
@@ -94,7 +93,6 @@ namespace NewRelic.Agent.Core.DataTransport
 			if (!metrics.Any())
 				return DataTransportResponseStatus.RequestSuccessful;
 
-			// TODO: clean this up (requires enveloping to be moved to a different layer)
 			var beginTime = _lastMetricSendTime;
 			var endTime = _dateTimeStatic.UtcNow;
 			if (beginTime >= endTime)

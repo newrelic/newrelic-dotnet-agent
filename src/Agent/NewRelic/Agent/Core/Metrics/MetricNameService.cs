@@ -63,7 +63,6 @@ namespace NewRelic.Agent.Core.Metrics
 			}
 			catch (IgnoreTransactionException ex)
 			{
-				// TODO: Refactor this code. It's a bad idea to use exceptions (IgnoreTransactionException, in this case) as a flow control mechanism.
 				Log.Debug(ex.Message);
 				shouldIgnore = true;
 				newPrefixedTransactionName = ex.IgnoredTransactionName;

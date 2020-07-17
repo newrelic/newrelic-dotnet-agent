@@ -514,7 +514,6 @@ namespace NewRelic.Installer
 
 		private void CreateRegistryFile()
 		{
-			// TODO: create .reg files for switching development between the two outside of the two folders
 			var strings = new[]
 			{
 				@"COR_ENABLE_PROFILING=1",

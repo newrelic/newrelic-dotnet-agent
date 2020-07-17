@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 
 			var obfuscatedHeader = syntheticsHeader.TryGetObfuscated();
 
-			// TODO: this test is brittle -- its assertion relies on internal knowledge of how SyntheticsHeader (de)obfuscates headers
+			// Assertion relies on internal knowledge of how SyntheticsHeader (de)obfuscates headers
 			var deobfuscatedHeader = Strings.Base64Decode(obfuscatedHeader, EncodingKey);
 			Assert.AreEqual("[1,2,\"3\",\"4\",\"5\"]", deobfuscatedHeader);
 		}

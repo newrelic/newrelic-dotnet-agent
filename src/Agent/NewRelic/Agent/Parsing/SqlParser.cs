@@ -2,31 +2,30 @@ using NewRelic.Agent.Extensions.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace NewRelic.Parsing
 {
 
-	/// <summary>
-	/// Extracts features from SQL statement that are used to make a metric name.
-	///
-	/// This uses ad-hoc scanning techniques.
-	/// The scanner uses simple regular expressions.
-	/// The scanner must be fast, as it is called for every SQL statement executed in the profiled code.
-	/// The scanner is not a full parser; there are many constructs it can not handle, such as sequential statements (;),
-	/// and the scanner has been extended in an ad-hoc manner as the need arises.
-	/// 
-	/// Database tracing is one of our largest sources of agent overhead.
-	/// The issue is that many applications issue hundreds or thousands of database queries per transaction,
-	/// so our db tracers are invoked much more often then other tracers.
-	/// Our database tracers are also usually doing a lot more than other tracers,
-	/// like parsing out SQL statements.  Just tread carefully with that in mind when making changes here.
-	/// 
-	/// When it comes to it, most users aren't going to want us to do really sophisticated sql parsing
-	/// if it comes at the expense of increased overhead.
-	/// </summary>
-	public static class SqlParser
+    /// <summary>
+    /// Extracts features from SQL statement that are used to make a metric name.
+    ///
+    /// This uses ad-hoc scanning techniques.
+    /// The scanner uses simple regular expressions.
+    /// The scanner must be fast, as it is called for every SQL statement executed in the profiled code.
+    /// The scanner is not a full parser; there are many constructs it can not handle, such as sequential statements (;),
+    /// and the scanner has been extended in an ad-hoc manner as the need arises.
+    /// 
+    /// Database tracing is one of our largest sources of agent overhead.
+    /// The issue is that many applications issue hundreds or thousands of database queries per transaction,
+    /// so our db tracers are invoked much more often then other tracers.
+    /// Our database tracers are also usually doing a lot more than other tracers,
+    /// like parsing out SQL statements.  Just tread carefully with that in mind when making changes here.
+    /// 
+    /// When it comes to it, most users aren't going to want us to do really sophisticated sql parsing
+    /// if it comes at the expense of increased overhead.
+    /// </summary>
+    public static class SqlParser
 	{
 		private const RegexOptions PatternSwitches = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline;
 		private static readonly ParseStatement _statementParser;
@@ -51,7 +50,7 @@ namespace NewRelic.Parsing
 		private const String CommentPhrase = @"/\*.*?\*/";
 		private const String StartObjectNameSeparator = @"[\s\(\[`\""]*";
 		private const String EndObjectNameSeparator = @"[\s\)\]`\""]*";
-		// TODO: cp - This doesn't catch spaces inside of object names, even if the names are surrounded by separators. [Table Name] would resolve to simply "Table".
+		// This doesn't catch spaces inside of object names, even if the names are surrounded by separators. [Table Name] would resolve to simply "Table".
 		private const String ValidObjectName = @"([^,;\[\s\]\(\)`\""\.]*)";
 		private const String FromPhrase = @"from\s+";
 		private const String VariableNamePhrase = @"([^\s(=,]*).*";
@@ -105,14 +104,6 @@ namespace NewRelic.Parsing
 			} 
 			catch
 			{
-				// TODO: Add Wrapper logging
-				// Obfuscating SQL is expensive so only do it if we are actually going to write the log line
-				//if (!Log.IsFinestEnabled)
-				//{
-				//	var obfuscatedSQL = SqlObfuscator.GetObfuscatingSqlObfuscator().GetObfuscatedSql(commandText).Trim();
-				//	Log.FinestFormat("Unable to parse SQL, possibly due to a syntax error in the SQL. " + "Command text: \"{0}\". Error: {1}", obfuscatedSQL, e);
-				//	Log.Finest("SQL parsing error", e);
-				//}
 				return new ParsedSqlStatement(null, null);
 			}
 		}

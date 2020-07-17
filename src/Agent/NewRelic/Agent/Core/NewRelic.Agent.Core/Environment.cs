@@ -61,8 +61,6 @@ namespace NewRelic.Agent.Core
 					var iisVersion = TryGetIisVersion();
 					if(iisVersion != null)
 						AddVariable("IIS Version", () => iisVersion.ToString());
-
-					// TODO(rrh): IIS application pool name
 				}
 #endif
 

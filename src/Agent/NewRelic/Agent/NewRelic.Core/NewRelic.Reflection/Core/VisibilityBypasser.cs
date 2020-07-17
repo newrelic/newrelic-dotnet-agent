@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using JetBrains.Annotations;
 
-
 namespace NewRelic.Reflection
 {
 
@@ -14,11 +13,8 @@ namespace NewRelic.Reflection
 	{
 		public ConstructorInfo GetConstructor(Type type, Type[] parameterTypes)
 		{
-			//TODO: Validate implementation works (Went from System.Type.GetConstructor to System.Reflection.TypeExtensions.GetConstructor)
-			//var constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, parameterTypes, null);
 			return type.GetConstructor(parameterTypes);
 		}
-
 	}
 
 	public class VisibilityBypasser : VisibilityBypasserBase
