@@ -193,6 +193,13 @@ namespace NewRelic.Agent.Core.Transactions
             return this;
         }
 
+        public ImmutableTransactionBuilder WithExceptionFromSegment(Segment segmentWithError)
+        {
+            _transactionErrorState.AddExceptionData(segmentWithError.ErrorData);
+            _transactionErrorState.TrySetSpanIdForErrorData(segmentWithError.ErrorData, segmentWithError.SpanId);
+            return this;
+        }
+
         private TimeSpan _duration = TimeSpan.FromSeconds(1);
 
         public ImmutableTransactionBuilder WithDuration(TimeSpan duration)

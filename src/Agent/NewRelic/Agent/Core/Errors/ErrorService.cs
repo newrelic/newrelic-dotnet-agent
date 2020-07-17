@@ -13,6 +13,8 @@ namespace NewRelic.Agent.Core.Errors
 {
     public interface IErrorService
     {
+        bool ShouldCollectErrors { get; }
+
         bool ShouldIgnoreException(Exception exception);
         bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode);
 
@@ -34,6 +36,8 @@ namespace NewRelic.Agent.Core.Errors
         {
             _configurationService = configurationService;
         }
+
+        public bool ShouldCollectErrors => _configurationService.Configuration.ErrorCollectorEnabled;
 
         public bool ShouldIgnoreException(Exception exception)
         {

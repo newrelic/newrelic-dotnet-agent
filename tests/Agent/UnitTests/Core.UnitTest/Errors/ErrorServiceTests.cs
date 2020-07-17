@@ -49,9 +49,17 @@ namespace NewRelic.Agent.Core.Errors
         }
 
         [Test]
+        public void ShouldCollectErrors_MatchesErrorCollectorEnabledConfig([Values(true, false)]bool errorCollectorEnabledSetting)
+        {
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages: false, errorCollectorEnabled: errorCollectorEnabledSetting);
+
+            Assert.AreEqual(errorCollectorEnabledSetting, _errorService.ShouldCollectErrors);
+        }
+
+        [Test]
         public void ShouldIgnoreException_ReturnsFalse_IfExceptionIsNotIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages: false, errorCollectorEnabled: true);
 
             var exception = new Exception();
             Assert.IsFalse(_errorService.ShouldIgnoreException(exception));
@@ -60,7 +68,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfExceptionIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages: false, errorCollectorEnabled: true);
 
             var exception = new ArithmeticException();
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -69,7 +77,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfInnerExceptionIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages: false, errorCollectorEnabled: true);
 
             var exception = new Exception("OuterException", new ArithmeticException("InnerException"));
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -78,7 +86,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfOuterExceptionIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages: false, errorCollectorEnabled: true);
 
             var exception = new ArithmeticException("OuterException", new Exception("InnerException"));
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -87,7 +95,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfExceptionWithTypeParameterIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages: false, errorCollectorEnabled: true);
 
             var exception = new ExceptionWithTypeParameter<string>();
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -100,7 +108,7 @@ namespace NewRelic.Agent.Core.Errors
         [TestCase(500, null, ExpectedResult = false)]
         public bool ShouldIgnoreHttpStatusCode_ReturnsExpectedResult(int statusCode, int? subStatusCode)
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages: false, errorCollectorEnabled: true);
 
             return _errorService.ShouldIgnoreHttpStatusCode(statusCode, subStatusCode);
         }
@@ -109,7 +117,7 @@ namespace NewRelic.Agent.Core.Errors
         [TestCase(false)]
         public void FromException_ReturnsExpectedErrorData(bool stripExceptionMessages)
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages, errorCollectorEnabled: true);
 
             var exception = new Exception();
             var errorData = _errorService.FromException(exception);
@@ -131,9 +139,10 @@ namespace NewRelic.Agent.Core.Errors
             Assert.IsEmpty(errorData.CustomAttributes);
         }
 
-        private void SetupConfiguration(List<string> exceptionsToIgnore, List<float> statusCodesToIgnore, bool stripExceptionMessages)
+        private void SetupConfiguration(List<string> exceptionsToIgnore, List<float> statusCodesToIgnore, bool stripExceptionMessages, bool errorCollectorEnabled)
         {
             var config = new configuration();
+            config.errorCollector.enabled = errorCollectorEnabled;
             config.errorCollector.ignoreErrors.exception = exceptionsToIgnore;
             config.errorCollector.ignoreStatusCodes.code = statusCodesToIgnore;
             config.stripExceptionMessages.enabled = stripExceptionMessages;

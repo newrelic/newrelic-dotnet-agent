@@ -14,6 +14,7 @@ using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Configuration.UnitTest;
 using NewRelic.Agent.Core.Database;
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Metrics;
@@ -83,6 +84,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private IConfiguration _config;
         private int _configVersion = 1;
+        private IConfigurationService _configurationService;
         private IEnvironment _environment;
         private IProcessStatic _processStatic;
         private IHttpRuntimeStatic _httpRuntimeStatic;
@@ -99,6 +101,8 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             _localConfig = new configuration();
 
             _localConfig.attributes.enabled = true;
+
+            _localConfig.errorCollector.enabled = true;
 
             _localConfig.distributedTracing.enabled = true;
             _localConfig.spanEvents.enabled = true;
@@ -135,17 +139,17 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
             _configAutoResponder = new ConfigurationAutoResponder(_config);
 
-            var configSvc = Mock.Create<IConfigurationService>();
-            Mock.Arrange(() => configSvc.Configuration).Returns(() => _config);
+            _configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => _configurationService.Configuration).Returns(() => _config);
 
             _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
             _metricNameSvc = new MetricNameService();
             _transactionMetricNameMaker =  new TransactionMetricNameMaker(_metricNameSvc);
 
-            _transactionAttribMaker = new TransactionAttributeMaker(configSvc, _attribDefSvc);
+            _transactionAttribMaker = new TransactionAttributeMaker(_configurationService, _attribDefSvc);
 
-            _spanEventMaker = new SpanEventMaker(_attribDefSvc);
+            _spanEventMaker = new SpanEventMaker(_attribDefSvc, _configurationService);
             _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
 
             _transactionEventMaker =  new TransactionEventMaker(_attribDefSvc);
@@ -311,6 +315,66 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             // ASSERT
             Assert.True((bool)spanEvent.IntrinsicAttributes()["nr.entryPoint"]);
             Assert.AreEqual(TransactionName, (string)spanEvent.IntrinsicAttributes()["name"]);
+        }
+
+        [Test]
+        public void GetSpanEvent_IncludesErrorAttributes_WhenThereIsAnError()
+        {
+            // ARRANGE
+            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null);
+            var segments = new List<Segment>()
+            {
+                _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
+            };
+            segments[0].ErrorData = testError;
+            var immutableTransaction = BuildTestTransaction(segments, sampled: true, hasIncomingPayload: true);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttributes = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttributes).ToList();
+            var spanEvent = spanEvents[1];
+            var rootSpanEvent = spanEvents[0];
+            var errorEventAttributes = new AttributeValueCollection(transactionAttributes, AttributeDestinations.ErrorEvent);
+
+            // ASSERT
+            NrAssert.Multiple(
+                () => Assert.AreEqual(segments[0].SpanId, errorEventAttributes.GetAttributeValuesDic(AttributeClassification.Intrinsics)["spanId"]),
+                () => Assert.AreEqual(testError.ErrorTypeName, (string)spanEvent.AgentAttributes()["error.class"]),
+                () => Assert.AreEqual(testError.ErrorTypeName, (string)rootSpanEvent.AgentAttributes()["error.class"])
+            );
+        }
+
+        [Test]
+        public void GetSpanEvent_DoesNotIncludesErrorAttributes_WhenThereIsAnError_IfErrorCollectionIsDisabled()
+        {
+            // ARRANGE
+            _localConfig.errorCollector.enabled = false;
+            PublishConfig();
+            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null);
+            var segments = new List<Segment>()
+            {
+                _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
+            };
+            segments[0].ErrorData = testError;
+            var immutableTransaction = BuildTestTransaction(segments, sampled: true, hasIncomingPayload: true);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttributes = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttributes).ToList();
+            var spanEvent = spanEvents[1];
+            var rootSpanEvent = spanEvents[0];
+            var errorEventAttributes = new AttributeValueCollection(transactionAttributes, AttributeDestinations.ErrorEvent);
+
+            // ASSERT
+            NrAssert.Multiple(
+                () => CollectionAssert.DoesNotContain(errorEventAttributes.GetAttributeValuesDic(AttributeClassification.Intrinsics).Keys, "spanId"),
+                () => CollectionAssert.DoesNotContain(spanEvent.AgentAttributes().Keys, "error.class"),
+                () => CollectionAssert.DoesNotContain(rootSpanEvent.AgentAttributes().Keys, "error.class")
+            );
         }
 
         #endregion
@@ -633,23 +697,31 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
 
         private ImmutableTransaction BuildTestTransaction(List<Segment> segments, bool sampled, bool hasIncomingPayload)
         {
-            return new ImmutableTransactionBuilder()
+            var builder = new ImmutableTransactionBuilder()
                 .IsWebTransaction("foo", "bar")
                 .WithPriority(Priority)
                 .WithDistributedTracing(DistributedTraceGuid, DistributedTraceTraceId, sampled, hasIncomingPayload)
                 .WithSegments(segments)
                 .WithStartTime(_startTime)
-                .WithTransactionGuid(_transactionGuid)
-                .Build();
+                .WithTransactionGuid(_transactionGuid);
+
+            var segmentWithError = segments.FirstOrDefault(s => s.ErrorData != null);
+            if (segmentWithError != null)
+            {
+                builder.WithExceptionFromSegment(segmentWithError);
+            }
+
+            return builder.Build();
         }
 
-        public static ITransactionSegmentState CreateTransactionSegmentState(int uniqueId, int? parentId, int managedThreadId = 1)
+        private ITransactionSegmentState CreateTransactionSegmentState(int uniqueId, int? parentId, int managedThreadId = 1)
         {
             var segmentState = Mock.Create<ITransactionSegmentState>();
             Mock.Arrange(() => segmentState.AttribDefs).Returns(() => new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings())));
             Mock.Arrange(() => segmentState.ParentSegmentId()).Returns(parentId);
             Mock.Arrange(() => segmentState.CallStackPush(Arg.IsAny<Segment>())).Returns(uniqueId);
             Mock.Arrange(() => segmentState.CurrentManagedThreadId).Returns(managedThreadId);
+            Mock.Arrange(() => segmentState.ErrorService).Returns(new ErrorService(_configurationService));
             return segmentState;
         }
     }
