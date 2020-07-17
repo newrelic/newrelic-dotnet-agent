@@ -426,7 +426,7 @@ namespace NewRelic.Agent.Core.Config
 				{
 					if (node.Attributes.RemoveNamedItem("apdexT") != null)
 					{
-						// FIXME it'd be nice to log, but the logger isn't created until later
+						// logger isn't created until later
 					}
 				}
 			}
