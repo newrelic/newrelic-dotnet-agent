@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+* **New Feature Title** <br/>
+Change Description
+
+### Fixes
+* **Fix Title** <br/>
+Fix Description
+ 
+### Docs Changes
+* [Doc Title](https://urlToDraft)
+
+
+## [8.30] - 2020-07-15
 ### Fixes
 * **Memory Usage Reporting for Linux** <br/>
 Fixes issue where applications running on Linux were either reporting no physical memory usage or using VmData to report the physical memory usage of the application. The agent now uses VmRSS through a call to [`Process.WorkingSet64`](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.workingset64) to report physical memory usage. See the [dotnet runtime discussion](https://github.com/dotnet/runtime/issues/28990) and the [proc man pages](https://man7.org/linux/man-pages/man5/proc.5.html) for more details about this change.
@@ -15,13 +27,6 @@ Fixes issue where the Agent may consume too much memory when using Infinite Trac
 
 * **.NET 5 support** <br/>
 Fixes issue with applications running on .NET 5 that prevented instrumentation changes at runtime (either though editing instrumentation XML files or through the Live Instrumentation editor Beta).
-
-### Docs To Release
-* Agent Configuration for Infinite Tracing: https://docs.newrelic.com/node/1766/draft
-* 8.26 Release Notes: https://docs.newrelic.com/node/38206/draft
-* 8.28 Release Notes: https://docs.newrelic.com/node/38846/draft
-
-
 
 ## [8.29] - 2020-06-25
 ### New Features
@@ -152,8 +157,10 @@ Fixes issue where updating custom instrumentation while application is running c
 ### Fixes
 * New Relic distributed tracing relies on propagating trace and span identifiers in the headers of external calls (e.g., an HTTP call). These identifiers now only contain lowercase alphanumeric characters. Previous versions of the .NET agent used uppercase alphanumeric characters. The usage of uppercase alphanumeric characters can break traces when calling downstream services also monitored by a New Relic agent that supports W3C trace context (New Relic's .NET agent does not currently support W3C trace context. Support for W3C trace context for .NET will be in an upcoming release). This is only a problem if a .NET application is the originator of the trace.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.29.0...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.30.0...HEAD
 
+
+[8.30]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.29.0...v8.30.0
 [8.29]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.28.0...v8.29.0
 [8.28]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.27.139...v8.28.0
 [8.27]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v8.26.630...v8.27.139
