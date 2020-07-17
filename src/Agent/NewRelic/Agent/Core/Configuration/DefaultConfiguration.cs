@@ -1157,26 +1157,31 @@ namespace NewRelic.Agent.Core.Configuration
 
             foreach (var className in expectedClasses)
             {
-                if (expectedClasses.Contains(className))
+                if (expectedMessages.ContainsKey(className))
                 {
-                    expectedMessages[className] = null;
+                    expectedMessages[className] = Enumerable.Empty<string>();
+                    Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
+                }
+                else
+                {
+                    expectedMessages.Add(className, Enumerable.Empty<string>());
                 }
             }
 
             return new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
         }
 
-        private ReadOnlyDictionary<string, IEnumerable<string>> _expectedMessages;
-        public virtual ReadOnlyDictionary<string, IEnumerable<string>> ExpectedMessages
+        private ReadOnlyDictionary<string, IEnumerable<string>> _expectedErrorsInfo;
+        public virtual ReadOnlyDictionary<string, IEnumerable<string>> ExpectedErrorsInfo
         {
             get
             {
-                if (_expectedMessages == null)
+                if (_expectedErrorsInfo == null)
                 {
-                    _expectedMessages = ParseExpectedErrorConfigurations();
+                    _expectedErrorsInfo = ParseExpectedErrorConfigurations();
                 }
 
-                return _expectedMessages;
+                return _expectedErrorsInfo;
             }
         }
 

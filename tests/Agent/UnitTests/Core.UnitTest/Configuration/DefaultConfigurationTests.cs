@@ -923,13 +923,13 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             var expectedStatusCodes = _defaultConfig.ExpectedStatusCodes;
             Assert.That(expectedStatusCodes.Contains("404"));
 
-            var expectedMessages = _defaultConfig.ExpectedMessages;
+            var expectedMessages = _defaultConfig.ExpectedErrorsInfo;
 
             Assert.That(expectedMessages.ContainsKey("ErrorClass1"));
 
             var errorClass2 = expectedMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
             Assert.NotNull(errorClass2);
-            Assert.Null(errorClass2.Value);
+            Assert.IsFalse(errorClass2.Value.Any());
 
             var errorClass3 = expectedMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
             Assert.NotNull(errorClass3);
@@ -945,7 +945,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.ErrorCollectorExpectedClasses = server;
             _localConfig.errorCollector.expectedClasses.errorClass = new List<string>(local);
 
-            return _defaultConfig.ExpectedMessages.FirstOrDefault().Key;
+            return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
         }
 
         [TestCase(new[] { 401f }, new[] { "405" }, ExpectedResult = "405")]
@@ -975,7 +975,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 new configurationErrorCollectorErrorClass() {name = "local"}
             };
 
-            return _defaultConfig.ExpectedMessages.FirstOrDefault().Key;
+            return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
         }
 
         [TestCase("local", "server", ExpectedResult = "server")]
