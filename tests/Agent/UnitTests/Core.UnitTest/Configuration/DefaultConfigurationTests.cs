@@ -884,6 +884,100 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExceptionsToIgnore.FirstOrDefault();
         }
 
+        [Test]
+        public void Decodes_ExpectedClasses_ExpectedMessages_ExpectedStatusCodes_Configurations_Successfully()
+        {
+            const string xmlString = @"<?xml version=""1.0""?>
+<configuration xmlns=""urn:newrelic-config"" agentEnabled=""true"">
+  <service licenseKey=""REPLACE_WITH_LICENSE_KEY"" ssl=""true"" />
+  <errorCollector enabled=""true"" captureEvents=""true"" maxEventSamplesStored=""100"">
+    <expectedClasses>
+        <errorClass>ErrorClass1</errorClass>
+        <errorClass>ErrorClass2</errorClass>
+    </expectedClasses>
+    <expectedStatusCodes>
+        <code>404</code>
+    </expectedStatusCodes>
+    <expectedMessages>
+        <errorClass name=""ErrorClass2"">
+            <message>error message 1 in ErrorClass2</message>
+        </errorClass>
+        <errorClass name=""ErrorClass3"">
+            <message>error message 1 in ErrorClass3</message>
+            <message>error message 2 in ErrorClass3</message>
+        </errorClass>
+    </expectedMessages>
+  </errorCollector >
+ </configuration>";
+            var root = new XmlRootAttribute { ElementName = "configuration", Namespace = "urn:newrelic-config" };
+            var serializer = new XmlSerializer(typeof(configuration), root);
+
+            configuration localConfiguration;
+            using (var reader = new StringReader(xmlString))
+            {
+                localConfiguration = serializer.Deserialize(reader) as configuration;
+            }
+
+            _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
+
+            var expectedStatusCodes = _defaultConfig.ExpectedStatusCodes;
+            Assert.That(expectedStatusCodes.Contains("404"));
+
+            var expectedMessages = _defaultConfig.ExpectedErrorsInfo;
+
+            Assert.That(expectedMessages.ContainsKey("ErrorClass1"));
+
+            var errorClass2 = expectedMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
+            Assert.NotNull(errorClass2);
+            Assert.IsFalse(errorClass2.Value.Any());
+
+            var errorClass3 = expectedMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
+            Assert.NotNull(errorClass3);
+            Assert.That(errorClass3.Value.Contains("error message 1 in ErrorClass3"));
+            Assert.That(errorClass3.Value.Contains("error message 2 in ErrorClass3"));
+
+        }
+
+        [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server")]
+        [TestCase(new[] { "local" }, null, ExpectedResult = "local")]
+        public string ExpectedClassesSetFromLocalAndServerOverrides(string[] local, string[] server)
+        {
+            _serverConfig.RpmConfig.ErrorCollectorExpectedClasses = server;
+            _localConfig.errorCollector.expectedClasses.errorClass = new List<string>(local);
+
+            return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
+        }
+
+        [TestCase(new[] { 401f }, new[] { "405" }, ExpectedResult = "405")]
+        [TestCase(new[] { 401f }, null, ExpectedResult = "401")]
+        public string ExpectedStatusCodesSetFromLocalAndServerOverrides(float[] local, string[] server)
+        {
+            _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
+            _localConfig.errorCollector.expectedStatusCodes.code = new List<float>(local);
+
+            return _defaultConfig.ExpectedStatusCodes.FirstOrDefault();
+        }
+
+        [TestCase(true, ExpectedResult = "server")]
+        [TestCase(false, ExpectedResult = "local")]
+        public string ExpectedMessagesSetFromLocalAndServerOverrides(bool server)
+        {
+            if (server)
+            {
+                _serverConfig.RpmConfig.ErrorCollectorExpectedMessages = new List<KeyValuePair<string, IEnumerable<string>>>
+                {
+                    new KeyValuePair<string, IEnumerable<string>> ("server", new List<string>())
+                };
+            }
+
+            _localConfig.errorCollector.expectedMessages = new List<configurationErrorCollectorErrorClass>()
+            {
+                new configurationErrorCollectorErrorClass() {name = "local"}
+            };
+
+            return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
+        }
+
         [TestCase("local", "server", ExpectedResult = "server")]
         [TestCase("local", null, ExpectedResult = "local")]
         [TestCase("local", "", ExpectedResult = "")] //If server sends back string.empty then override with that

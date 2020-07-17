@@ -1138,6 +1138,66 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
         public virtual IEnumerable<string> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
 
+        private ReadOnlyDictionary<string, IEnumerable<string>> ParseExpectedErrorConfigurations()
+        {
+            var localExpectedMessages = new Dictionary<string, IEnumerable<string>>();
+
+            foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
+            {
+                var messages = errorClass.message;
+                if (messages != null)
+                {
+                    localExpectedMessages.Add(errorClass.name, messages);
+                }
+            }
+
+            var expectedMessages =  ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedMessages).ToDictionary();
+
+            var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
+
+            foreach (var className in expectedClasses)
+            {
+                if (expectedMessages.ContainsKey(className))
+                {
+                    expectedMessages[className] = Enumerable.Empty<string>();
+                    Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
+                }
+                else
+                {
+                    expectedMessages.Add(className, Enumerable.Empty<string>());
+                }
+            }
+
+            return new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
+        }
+
+        private ReadOnlyDictionary<string, IEnumerable<string>> _expectedErrorsInfo;
+        public virtual ReadOnlyDictionary<string, IEnumerable<string>> ExpectedErrorsInfo
+        {
+            get
+            {
+                if (_expectedErrorsInfo == null)
+                {
+                    _expectedErrorsInfo = ParseExpectedErrorConfigurations();
+                }
+
+                return _expectedErrorsInfo;
+            }
+        }
+
+        public virtual IEnumerable<string> ExpectedStatusCodes
+        {
+            get
+            {
+                var localStatusCodesToIgnore = new List<string>();
+                foreach (var localCode in _localConfiguration.errorCollector.expectedStatusCodes.code)
+                {
+                    localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
+                }
+                return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, localStatusCodesToIgnore);
+            }
+        }
+
         #endregion
 
         public Dictionary<string, string> RequestHeadersMap => _serverConfiguration.RequestHeadersMap;
