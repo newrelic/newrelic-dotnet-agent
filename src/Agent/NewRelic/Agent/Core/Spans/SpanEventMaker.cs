@@ -3,6 +3,7 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 using System.Collections.Generic;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Transactions;
@@ -19,10 +20,12 @@ namespace NewRelic.Agent.Core.Spans
     {
         private readonly IAttributeDefinitionService _attribDefSvc;
         private IAttributeDefinitions _attribDefs => _attribDefSvc?.AttributeDefs;
+        private readonly IConfigurationService _configurationService;
 
-        public SpanEventMaker(IAttributeDefinitionService attribDefSvc)
+        public SpanEventMaker(IAttributeDefinitionService attribDefSvc, IConfigurationService configurationService)
         {
             _attribDefSvc = attribDefSvc;
+            _configurationService = configurationService;
         }
 
         public IEnumerable<ISpanEventWireModel> GetSpanEvents(ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues)
@@ -64,7 +67,7 @@ namespace NewRelic.Agent.Core.Spans
                 _attribDefs.TracingVendors.TrySetValue(spanAttributes, immutableTransaction.TracingState.VendorStateEntries ?? null);
             }
 
-            if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+            if (_configurationService.Configuration.ErrorCollectorEnabled && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
             {
                 _attribDefs.SpanErrorClass.TrySetValue(spanAttributes, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.ErrorTypeName);
                 _attribDefs.SpanErrorMessage.TrySetValue(spanAttributes, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.ErrorMessage);

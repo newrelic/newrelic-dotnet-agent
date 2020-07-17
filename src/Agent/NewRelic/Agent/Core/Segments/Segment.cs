@@ -227,7 +227,7 @@ namespace NewRelic.Agent.Core.Segments
             AttribDefs.Duration.TrySetValue(attribValues, DurationOrZero);
             AttribDefs.NameForSpan.TrySetValue(attribValues, GetTransactionTraceName());
 
-            if (ErrorData != null)
+            if (ErrorData != null && _transactionSegmentState.ErrorService.ShouldCollectErrors)
             {
                 AttribDefs.SpanErrorClass.TrySetValue(attribValues, ErrorData.ErrorTypeName);
                 AttribDefs.SpanErrorMessage.TrySetValue(attribValues, ErrorData.ErrorMessage);

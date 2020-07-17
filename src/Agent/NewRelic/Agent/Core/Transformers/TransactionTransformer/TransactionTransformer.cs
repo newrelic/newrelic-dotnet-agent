@@ -180,7 +180,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private ErrorTraceWireModel GenerateErrorTrace(ImmutableTransaction immutableTransaction, IAttributeValueCollection attributes, TransactionMetricName transactionMetricName)
         {
-            if (!_configurationService.Configuration.ErrorCollectorEnabled)
+            if (!ErrorCollectionEnabled())
                 return null;
 
             return _errorTraceMaker.GetErrorTrace(immutableTransaction, attributes, transactionMetricName);
@@ -250,7 +250,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                     MetricBuilder.TryBuildDistributedTraceTransportDuration(type, account, app, transport, isWebTransaction, duration, txStats);
                 }
 
-                if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+                if (ErrorCollectionEnabled() && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
                 {
                     MetricBuilder.TryBuildDistributedTraceErrorsByCaller(type, account, app, transport, isWebTransaction, txStats);
                 }
@@ -276,7 +276,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 GetApdexMetrics(immutableTransaction, apdexT.Value, transactionApdexMetricName, txStats);
             }
 
-            if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+            if (ErrorCollectionEnabled() && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
             {
                 MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats);
             }
@@ -458,6 +458,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             {
                 transaction.SetSampled(_adaptiveSampler);
             }
+        }
+
+        private bool ErrorCollectionEnabled()
+        {
+            return _configurationService.Configuration.ErrorCollectorEnabled;
         }
     }
 }

@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 _attribDefs.DatabaseCallCount.TrySetValue(attribValues, databaseData.Value0);
             }
 
-            if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+            if (_configurationService.Configuration.ErrorCollectorEnabled && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
             {
                 var errorData = immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData;
 
@@ -198,7 +198,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 _attribDefs.GetCustomAttributeForTransaction(userAttrib.Key).TrySetValue(attribValues, userAttrib.Value);
             }
 
-            if (metadata.ReadOnlyTransactionErrorState.HasError && metadata.ReadOnlyTransactionErrorState.ErrorData != null && metadata.ReadOnlyTransactionErrorState.ErrorData.CustomAttributes != null)
+            if (_configurationService.Configuration.ErrorCollectorEnabled && metadata.ReadOnlyTransactionErrorState.HasError && metadata.ReadOnlyTransactionErrorState.ErrorData != null && metadata.ReadOnlyTransactionErrorState.ErrorData.CustomAttributes != null)
             {
                 foreach(var errAttrib in metadata.ReadOnlyTransactionErrorState.ErrorData.CustomAttributes)
                 {
