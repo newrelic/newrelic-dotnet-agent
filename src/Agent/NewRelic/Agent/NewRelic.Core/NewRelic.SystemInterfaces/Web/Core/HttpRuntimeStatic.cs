@@ -6,7 +6,6 @@ namespace NewRelic.SystemInterfaces.Web
 
 	public class HttpRuntimeStatic : IHttpRuntimeStatic
 	{
-		//TODO: What is the Microsoft.AspNetCore.Http equiv
 		public string AppDomainAppVirtualPath => string.Empty; //Microsoft.AspNetCore.Http.AppDomainAppVirtualPath;
 	}
 }

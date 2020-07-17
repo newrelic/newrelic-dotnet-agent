@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 {
-	public class CustomSegmentWrapperAsync : IWrapper
+    public class CustomSegmentWrapperAsync : IWrapper
 	{
 		[NotNull]
 		private static readonly String[] PossibleWrapperNames = {
@@ -41,7 +37,6 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 				transaction.AttachToAsync();
 			}
 
-			//TODO: Consider breaking this out into a separate shared method used by sync and async.
 			// find the first string argument
 			String segmentName = null;
 			foreach (var argument in instrumentedMethodCall.MethodCall.MethodArguments)

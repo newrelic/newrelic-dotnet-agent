@@ -28,7 +28,6 @@ namespace NewRelic.Agent.Core
 			}
 			catch (Exception ex)
 			{
-				// TODO(rrh): Throw something more specific than an Exception
 				Assert.AreEqual("Invalid agent state transition from Uninitialized to  Started", ex.Message);
 			}
 		}
@@ -45,7 +44,6 @@ namespace NewRelic.Agent.Core
 			}
 			catch (Exception ex)
 			{
-				// TODO(rrh): Throw something more specific than an Exception
 				Assert.AreEqual("Invalid agent state transition from Starting to  Uninitialized", ex.Message);
 			}
 		}

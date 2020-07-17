@@ -11,14 +11,12 @@ using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.BrowserMonitoring;
-using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utils;
@@ -34,7 +32,7 @@ using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
-	public class AgentWrapperApi : IAgentWrapperApi // any changes to api, update the interface in extensions and re-import, then implement in legacy api as NotImplementedException
+    public class AgentWrapperApi : IAgentWrapperApi // any changes to api, update the interface in extensions and re-import, then implement in legacy api as NotImplementedException
 	{
 		internal static readonly Int32 MaxSegmentLength = 255;
 
@@ -548,8 +546,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				
 				var methodCallData = GetMethodCallData(methodCall);
 
-				//TODO: Since the CustomSegmentBuilder is the only thing that separates this from the
-				//other segments, there is an opportunity to refactor here.
 				return new TypedSegment<CustomSegmentData>(transaction.TransactionSegmentState, methodCallData, new CustomSegmentData(segmentName));
 			}
 
@@ -602,8 +598,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				var methodCallData = GetMethodCallData(methodCall);
 				return new TypedSegment<ExternalSegmentData>(transaction.TransactionSegmentState, methodCallData,
 					new ExternalSegmentData(destinationUri, method));
-
-				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}
 
 			public ISegment StartMethodSegment(MethodCall methodCall, String typeName, String methodName)
@@ -617,8 +611,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 				
 				var methodCallData = GetMethodCallData(methodCall);
 				return new TypedSegment<MethodSegmentData>(transaction.TransactionSegmentState, methodCallData, new MethodSegmentData(typeName, methodName));
-
-				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}
 
 			public ISegment StartTransactionSegment(MethodCall methodCall, String segmentDisplayName)
@@ -630,8 +622,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
 				var methodCallData = GetMethodCallData(methodCall);
 				return new TypedSegment<SimpleSegmentData>(transaction.TransactionSegmentState, methodCallData, new SimpleSegmentData(segmentDisplayName));
-
-				// TODO: add support for allowAutoStackTraces (or find a way to eliminate it)
 			}
 
 			public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()

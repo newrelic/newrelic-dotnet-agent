@@ -5,7 +5,7 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 	public static class SqlParsingCrossAgentTestJson
 	{
 
-		// TODO (cp): We can't parse these cases with no whitespace after the "from":
+		// Doesn't parse these cases with no whitespace after the "from":
 		//   {""input"":""SELECT * FROM(foobar)"",                                  ""operation"":""select"", ""table"":""foobar""}
 		//   {""input"":""SELECT * FROM(SELECT * FROM foobar) WHERE x > y"",        ""operation"":""select"", ""table"":""(subquery)""}
 

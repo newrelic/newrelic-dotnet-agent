@@ -66,7 +66,6 @@ namespace NewRelic.Agent.Core.Utils
 				Test.Test.TestThrow();
 				Assert.Fail();
 			} catch (Exception ex) {
-				// TODO(rrh): Catch a more specific exception
 				ICollection<string> frames = StackTraces.ScrubAndTruncate(ex, 300);
 				Console.WriteLine("Here's the pretty stack :\n " + ex.StackTrace);
 				foreach (string frame in frames) {

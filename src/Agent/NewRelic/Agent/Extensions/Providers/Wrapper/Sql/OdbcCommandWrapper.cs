@@ -33,7 +33,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 				var sql = odbcCommand.CommandText ?? String.Empty;
 				var vendor = SqlWrapperHelper.GetVendorName(odbcCommand);
 
-				// TODO - Tracer had a supportability metric here to report timing duration of the parser.
 				var parsedStatement = transaction.GetParsedDatabaseStatement(odbcCommand.CommandType, sql);
 				var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement?.Operation, vendor, parsedStatement?.Model, sql);
 

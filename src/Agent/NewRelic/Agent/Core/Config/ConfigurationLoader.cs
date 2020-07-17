@@ -4,7 +4,6 @@ using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Utils;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Web;
@@ -19,10 +18,10 @@ using NewRelic.SystemInterfaces;
 namespace NewRelic.Agent.Core.Config
 {
 
-	/// <summary>
-	/// Reads configuration data from TODO.
-	/// </summary>
-	public static class ConfigurationLoader
+    /// <summary>
+    /// Reads configuration data.
+    /// </summary>
+    public static class ConfigurationLoader
 	{
 		private const String NewRelicConfigFileName = "newrelic.config";
 
@@ -414,7 +413,6 @@ namespace NewRelic.Agent.Core.Config
 
 		/// <summary>
 		/// Remove old apdexT nodes from the given document so they don't throw a validation exception.
-		/// TODO: Why is this important?
 		/// </summary>
 		/// <param name="document">The handle on the document.</param>
 		private static void RemoveApdexAttribute(XmlDocument document)

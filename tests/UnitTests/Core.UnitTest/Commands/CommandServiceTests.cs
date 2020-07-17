@@ -72,8 +72,6 @@ namespace NewRelic.Agent.Core.Commands
 			var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
 
 			commandService.ProcessCommands(commands);
-
-			//TODO: Verify that the profile_id argument exists in the arguments.
 		}
 
 		[Test]

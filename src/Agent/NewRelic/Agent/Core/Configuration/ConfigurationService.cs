@@ -84,7 +84,6 @@ namespace NewRelic.Agent.Core.Configuration
 			catch (Exception exception)
 			{
 				Log.Error($"Unable to parse the Configuration data from the server so no server side configuration was applied: {exception}");
-				// TODO: propagate this error somewhere so we can do something about it (reconnect, shutdown, etc.)
 			}
 		}
 

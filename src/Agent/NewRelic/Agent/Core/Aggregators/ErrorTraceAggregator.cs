@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using NewRelic.Agent.Core.Logging;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -14,7 +12,7 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-	public interface IErrorTraceAggregator
+    public interface IErrorTraceAggregator
 	{
 		void Collect([NotNull] ErrorTraceWireModel errorTraceWireModel);
 	}
@@ -68,7 +66,6 @@ namespace NewRelic.Agent.Core.Aggregators
 		{
 			_errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
 			_errorTraceCollectionMaximum = _configuration.ErrorsMaximumPerPeriod;
-			// TODO: Add collection for synthetics once synthetics is implemented
 		}
 
 		private void AddToCollection(ErrorTraceWireModel errorTraceWireModel)

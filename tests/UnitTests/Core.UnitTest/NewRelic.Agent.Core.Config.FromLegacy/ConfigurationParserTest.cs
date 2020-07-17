@@ -107,7 +107,6 @@ namespace NewRelic.Agent.Core.Config
 
 		}
 
-		// TODO(rrh): Throw something more specific than Exception
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes"), Test]
 		public void TestParseNull()
 		{
@@ -119,12 +118,10 @@ namespace NewRelic.Agent.Core.Config
 			}
 			catch (Exception ex)
 			{
-				// TODO(rrh): Throw something more specific than Exception
 				Assert.AreEqual("An error occurred parsing the configuration value \"test_null\".  The value was null", ex.Message);
 			}
 		}
 
-		// TODO(rrh): Throw something more specific than Exception
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes"), Test]
 		public void TestParseError()
 		{
@@ -136,7 +133,6 @@ namespace NewRelic.Agent.Core.Config
 			}
 			catch (Exception ex)
 			{
-				// TODO(rrh): Throw something more specific than Exception
 				Assert.AreEqual("An error occurred parsing the configuration value \"test_error\".  "
 				+ "The value was 33 (System.Int32).  Error : Object reference not set to an instance of an object.",
 				ex.Message);

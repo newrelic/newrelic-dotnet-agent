@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
 using JetBrains.Annotations;
@@ -11,7 +10,7 @@ using NewRelic.SystemExtensions.Collections;
 
 namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
-	public static class HttpContextActions
+    public static class HttpContextActions
 	{
 		public const String HttpContextSegmentKey = "NewRelic.Asp.HttpContextSegmentKey";
 		public const String HttpContextSegmentTypeKey = "NewRelic.Asp.HttpContextSegmentTypeKey";
@@ -70,10 +69,6 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 		{
 			var now = DateTime.UtcNow;
 
-			// TODO: This will restore the code back to sending queue time using the difference between when the item was pulled 
-			// off of the queue to when it was actually being processed. This is because the HttpWorkerRequest.GetStartTime value gets recet when the item is pulled off.
-			// We need to possibly create a tracer for the System.Web.HttpRuntime.CalculateWaitTimeAndUpdatePerfCounter(HttpWorkerRequest wr)
-			// Store the queue time value provided there in the current local thread then use it here instead
 			var service = (httpContext as IServiceProvider).GetService(typeof(HttpWorkerRequest));
 			var workerRequest = service as HttpWorkerRequest;
 			if (workerRequest == null)

@@ -247,7 +247,6 @@ namespace NewRelic.Agent.Core.WireModels
 			[CanBeNull]
 			public static void TryBuildSimpleSegmentMetric(String segmentName, TimeSpan totalTime, TimeSpan totalExclusiveTime, TransactionMetricStatsCollection txStats)
 			{
-				// TODO: review this metric name (we're trying to get away from "DotNet/*" if possible)
 				var proposedName = MetricNames.GetDotNetInvocation(segmentName);
 				var data = MetricDataWireModel.BuildTimingData(totalTime, totalExclusiveTime);
 				txStats.MergeUnscopedStats(proposedName, data);
@@ -257,7 +256,6 @@ namespace NewRelic.Agent.Core.WireModels
 			[CanBeNull]
 			public static void TryBuildMethodSegmentMetric(String typeName, String methodName, TimeSpan totalTime, TimeSpan totalExclusiveTime, TransactionMetricStatsCollection txStats)
 			{
-				// TODO: review this metric name (we're trying to get away from "DotNet/*" if possible)
 				var proposedName = MetricNames.GetDotNetInvocation(typeName, methodName);
 				var data = MetricDataWireModel.BuildTimingData(totalTime, totalExclusiveTime);
 				txStats.MergeUnscopedStats(proposedName, data);
