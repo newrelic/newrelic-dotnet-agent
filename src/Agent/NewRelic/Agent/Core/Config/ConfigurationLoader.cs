@@ -74,7 +74,7 @@ namespace NewRelic.Agent.Core.Config
 			}
 			catch (Exception)
 			{
-				// FIXME can't log here because the logger hasn't been created yet.
+				// logger hasn't been created yet.
 			}
 			return new ValueWithProvenance<String>(System.Web.Configuration.WebConfigurationManager.AppSettings[key],
 				"WebConfigurationManager default app settings");
