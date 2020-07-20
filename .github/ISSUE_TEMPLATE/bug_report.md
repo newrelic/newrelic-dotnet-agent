@@ -17,7 +17,7 @@ assignees: ''
 [NOTE]: # ( Tell us what you expected to happen. )
 
 **[Troubleshooting](https://discuss.newrelic.com/t/troubleshooting-frameworks/108787) or [NR Diag](https://docs.newrelic.com/docs/using-new-relic/cross-product-functions/troubleshooting/new-relic-diagnostics) results**
-[NOTE]: # ( Provide any other relevant log data. )
+[NOTE]: # ( Provide any other relevant log data such as the agent and/or profiler logs, preferably at DEBUG level or higher. )
 [TIP]:  # ( Scrub logs and diagnostic information for sensitive information )
 
 **Steps to Reproduce**
@@ -25,7 +25,7 @@ assignees: ''
 [TIP]:  # ( Link a sample application that demonstrates the issue. )
 
 **Your Environment**
-[TIP]:  # ( Include as many relevant details about your environment as possible including the running version of New Relic software and any relevant configurations. )
+[TIP]:  # ( Include as many relevant details about your environment as possible including the running version of the agent and any relevant configurations, such as which .NET framework or core version your apllication is running on. )
 
 **Additional context**
 [TIP]:  # ( Add any other context about the problem here. For example, relevant community posts or support tickets. )
