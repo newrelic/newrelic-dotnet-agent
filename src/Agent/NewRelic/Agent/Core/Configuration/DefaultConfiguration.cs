@@ -1168,6 +1168,27 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
+            var localStatusCodesToIgnore = new List<string>();
+
+            foreach (var localCode in _localConfiguration.errorCollector.expectedStatusCodes.code)
+            {
+                localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
+            }
+
+            var expectedStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, localStatusCodesToIgnore);
+
+            foreach (var statusCode in expectedStatusCodes)
+            {
+                if (expectedMessages.ContainsKey(statusCode))
+                {
+                    Log.Warn($"{statusCode} status code is already specified once in the errorCollector.expectedStatusCodes configuration.");
+                }
+                else
+                {
+                    expectedMessages.Add(statusCode, Enumerable.Empty<string>());
+                }
+            }
+
             return new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
         }
 
@@ -1182,19 +1203,6 @@ namespace NewRelic.Agent.Core.Configuration
                 }
 
                 return _expectedErrorsInfo;
-            }
-        }
-
-        public virtual IEnumerable<string> ExpectedStatusCodes
-        {
-            get
-            {
-                var localStatusCodesToIgnore = new List<string>();
-                foreach (var localCode in _localConfiguration.errorCollector.expectedStatusCodes.code)
-                {
-                    localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
-                }
-                return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, localStatusCodesToIgnore);
             }
         }
 
