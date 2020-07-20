@@ -105,6 +105,8 @@ namespace NewRelic.Agent.Core.Configuration
             UseResourceBasedNamingForWCFEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.UseResourceBasedNamingForWCF", false);
 
             EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
+
+            ParseExpectedErrorConfigurations();
         }
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
@@ -1138,33 +1140,36 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
         public virtual IEnumerable<string> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
 
-        private ReadOnlyDictionary<string, IEnumerable<string>> ParseExpectedErrorConfigurations()
+        private void ParseExpectedErrorConfigurations()
         {
-            var localExpectedMessages = new Dictionary<string, IEnumerable<string>>();
+            var localExpectedErrorMessages = new Dictionary<string, IEnumerable<string>>();
 
             foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
             {
                 var messages = errorClass.message;
                 if (messages != null)
                 {
-                    localExpectedMessages.Add(errorClass.name, messages);
+                    localExpectedErrorMessages.Add(errorClass.name, messages);
                 }
             }
 
-            var expectedMessages =  ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedMessages).ToDictionary();
+            var expectedErrorInfo =  ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedErrorMessages).ToDictionary();
+
+            var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
 
             var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
 
             foreach (var className in expectedClasses)
             {
-                if (expectedMessages.ContainsKey(className))
+                if (expectedErrorInfo.ContainsKey(className))
                 {
-                    expectedMessages[className] = Enumerable.Empty<string>();
+                    expectedErrorInfo[className] = Enumerable.Empty<string>();
                     Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
+                    expectedMessages.Remove(className);
                 }
                 else
                 {
-                    expectedMessages.Add(className, Enumerable.Empty<string>());
+                    expectedErrorInfo.Add(className, Enumerable.Empty<string>());
                 }
             }
 
@@ -1179,32 +1184,27 @@ namespace NewRelic.Agent.Core.Configuration
 
             foreach (var statusCode in expectedStatusCodes)
             {
-                if (expectedMessages.ContainsKey(statusCode))
+                if (expectedErrorInfo.ContainsKey(statusCode))
                 {
                     Log.Warn($"{statusCode} status code is already specified once in the errorCollector.expectedStatusCodes configuration.");
                 }
                 else
                 {
-                    expectedMessages.Add(statusCode, Enumerable.Empty<string>());
+                    expectedErrorInfo.Add(statusCode, Enumerable.Empty<string>());
                 }
             }
 
-            return new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
+            ExpectedErrorsInfo = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
+            ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
+            ExpectedErrorClassesForAgentSettings = expectedClasses;
+            ExpectedErrorStatusCodesForAgentSettings = string.Join(",", expectedStatusCodes);
         }
 
-        private ReadOnlyDictionary<string, IEnumerable<string>> _expectedErrorsInfo;
-        public virtual ReadOnlyDictionary<string, IEnumerable<string>> ExpectedErrorsInfo
-        {
-            get
-            {
-                if (_expectedErrorsInfo == null)
-                {
-                    _expectedErrorsInfo = ParseExpectedErrorConfigurations();
-                }
+        public virtual ReadOnlyDictionary<string, IEnumerable<string>> ExpectedErrorsInfo { get; private set; }
 
-                return _expectedErrorsInfo;
-            }
-        }
+        public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
+        public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
+        public string ExpectedErrorStatusCodesForAgentSettings { get; private set; }
 
         #endregion
 
