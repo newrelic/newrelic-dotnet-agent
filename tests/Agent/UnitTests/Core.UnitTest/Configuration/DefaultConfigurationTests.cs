@@ -920,8 +920,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            var expectedStatusCodes = _defaultConfig.ExpectedStatusCodes;
-            Assert.That(expectedStatusCodes.Contains("404"));
+            Assert.That(_defaultConfig.ExpectedErrorsInfo.ContainsKey("404"));
 
             var expectedMessages = _defaultConfig.ExpectedErrorsInfo;
 
@@ -955,7 +954,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
             _localConfig.errorCollector.expectedStatusCodes.code = new List<float>(local);
 
-            return _defaultConfig.ExpectedStatusCodes.FirstOrDefault();
+            return _defaultConfig.ExpectedErrorsInfo.Keys.FirstOrDefault();
         }
 
         [TestCase(true, ExpectedResult = "server")]
