@@ -75,7 +75,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwinRemotingClient", "Appli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwinRemotingServer", "Applications\OwinRemotingServer\OwinRemotingServer.csproj", "{D203693A-F862-4598-92F2-B91C3959EDE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "..\Tests\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

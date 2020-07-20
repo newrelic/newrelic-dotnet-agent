@@ -20,25 +20,22 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 		#region Constant/Static
 		
 		[NotNull]
-		private const String Collector = "staging-collector.newrelic.com";
-
-		[NotNull]
 		private static readonly String AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
 		[NotNull]
-		private static readonly String RepositoryRootPath = Path.Combine(AssemblyBinPath, "..", "..", "..", "..","..");
+		private static readonly String RepositoryRootPath = Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..", "..", "..");
 
 		[NotNull]
-		protected static readonly String SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "IntegrationTests");
+		protected static readonly String SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
 
 		[NotNull]
 		protected readonly String SourceApplicationsDirectoryPath;
 
 		[NotNull]
-		private static readonly String SourceNewRelicHomeDirectoryPath = Path.Combine(RepositoryRootPath, "Agent", "New Relic Home x64");
+		private static readonly String SourceNewRelicHomeDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64");
 
 		[NotNull]
-		private static readonly String SourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "Agent", "New Relic Home x64 CoreClr");
+		private static readonly String SourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64 CoreClr");
 
 		[NotNull]
 		private static readonly String SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");

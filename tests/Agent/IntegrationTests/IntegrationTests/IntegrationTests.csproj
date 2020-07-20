@@ -50,7 +50,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\Tests\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
+    <ProjectReference Include="..\..\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj" />
     <ProjectReference Include="..\Applications\AsyncWcfService\AsyncWcfService.csproj" />
     <ProjectReference Include="..\Applications\WcfAppIisHosted\WcfAppIisHosted.csproj" />
     <ProjectReference Include="..\Applications\WcfAppSelfHosted\WcfAppSelfHosted.csproj" />
