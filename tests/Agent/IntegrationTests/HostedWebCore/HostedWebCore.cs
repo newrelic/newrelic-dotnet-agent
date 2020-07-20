@@ -1,0 +1,85 @@
+﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+
+namespace HostedWebCore
+{
+	public class HostedWebCore
+	{
+		private const int ServerTimeoutShutdownMinutes = 5;
+
+		private readonly String _port;
+
+		private static String AssemblyDirectory
+		{
+			get
+			{
+				Contract.Ensures(Contract.Result<String>() != null);
+
+				var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+				var uri = new UriBuilder(codeBase);
+				var path = Uri.UnescapeDataString(uri.Uri.LocalPath);
+				return Path.GetDirectoryName(path);
+			}
+		}
+
+		private static String ApplicationHostConfigFilePath
+		{
+			get
+			{
+				Contract.Ensures(Contract.Result<String>() != null);
+				return AssemblyDirectory + @"\applicationHost.config";
+			}
+		}
+
+		[ContractInvariantMethod]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+		private void ObjectInvariant()
+		{
+			Contract.Invariant(_port != null);
+		}
+
+		public HostedWebCore(String port)
+		{
+			Contract.Requires(port != null);
+
+			_port = port;
+		}
+
+		public void Run()
+		{
+			StartWebServer();
+			//The HWC creates this shutdown event and waits for the test runner to set so that it can shutdown.  
+			var eventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset, "app_server_wait_for_all_request_done_" + _port.ToString());
+			CreatePidFile();
+			eventWaitHandle.WaitOne(TimeSpan.FromMinutes(ServerTimeoutShutdownMinutes));
+			FinishWebServer();
+		}
+
+		private void StartWebServer()
+		{
+			var hresult = NativeMethods.WebCoreActivate(ApplicationHostConfigFilePath, null, @".NET Agent Integration Test Web Host");
+			Marshal.ThrowExceptionForHR(hresult);
+		}
+
+		private static void FinishWebServer()
+		{
+			var hresult = NativeMethods.WebCoreShutdown(true);
+			if (hresult != 0)
+				throw new Exception("Error occurred when calling WebCoreShutdown.  HResult: " + hresult);
+		}
+
+		private static void CreatePidFile()
+		{
+			var pid = Process.GetCurrentProcess().Id;
+			var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+			var pidFilePath = thisAssemblyPath + ".pid";
+			File.WriteAllText(pidFilePath, pid.ToString(CultureInfo.InvariantCulture));
+		}
+	}
+}

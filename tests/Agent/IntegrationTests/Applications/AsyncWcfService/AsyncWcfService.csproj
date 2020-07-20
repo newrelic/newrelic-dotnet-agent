@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+ <PropertyGroup>
+    <TargetFramework>net451</TargetFramework>
+    <AssemblyName>NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService</AssemblyName>
+    <RootNamespace>NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService</RootNamespace>
+    <OutputType>exe</OutputType>
+    <ApplicationIcon />
+    <OutputTypeEx>exe</OutputTypeEx>
+    <StartupObject />
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+ </PropertyGroup>
+ <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="1.9.71" />
+    <PackageReference Include="JetBrains.Annotations" Version="9.1.1" />
+    <PackageReference Include="NewRelic.Agent.Api" Version="4.7.78" />
+ </ItemGroup>
+ <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ToBeInstrumented\ToBeInstrumented.csproj" />
+  </ItemGroup>
+ </Project>
