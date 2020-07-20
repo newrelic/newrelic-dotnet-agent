@@ -25,7 +25,7 @@ assignees: ''
 [TIP]:  # ( Link a sample application that demonstrates the issue. )
 
 **Your Environment**
-[TIP]:  # ( Include as many relevant details about your environment as possible including the running version of the agent and any relevant configurations, such as which .NET framework or core version your apllication is running on. )
+[TIP]:  # ( Include as many relevant details about your environment as possible including the running version of the agent and any relevant configurations, such as the .NET framework or core version of your application. )
 
 **Additional context**
 [TIP]:  # ( Add any other context about the problem here. For example, relevant community posts or support tickets. )
