@@ -45,7 +45,7 @@ You must have a New Relic license key to run the tests. Some tests require speci
 
 1. Create a `secrets.json` file using the template below.  **Do *not* place the `secrets.json` file within your local repo folder.**
 2. Replace the license key placeholders in the `secrets.json` template with actual license keys. The `REPLACE_WITH_HIGH_SECURITY_LICENSE_KEY` and `REPLACE_WITH_SECURITY_POLICIES_CONFIGURABLE_LICENSE_KEY` are placeholders for license keys from a [High Security Mode](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/high-security-mode) enabled account and a [Configurable Security Policies](https://docs.newrelic.com/docs/agents/manage-apm-agents/configuration/enable-configurable-security-policies) enabled account respectively. To find your license keys, visit [this page](https://docs.newrelic.com/docs/accounts/install-new-relic/account-setup/license-key).
-3. Open a Windows command prompt and run this command: `type {SECRET_FILE_PATH}\secrets.json | dotnet user-secrets set --project {DOTNET_AGENT_REPO_PATH}\IntegrationTests\Shared`. Replace `{SECRET_FILE_PATH}` and `{DOTNET_AGENT_REPO_PATH}` with the location of the `secrets.json` file and the location of the repo repectively. You'll get a "successful" message if all the secrets are successfully installed. 
+3. Open a Windows command prompt and run this command: `type {SECRET_FILE_PATH}\secrets.json | dotnet user-secrets set --project {DOTNET_AGENT_REPO_PATH}\tests\Agent\IntegrationTests\Shared`. Replace `{SECRET_FILE_PATH}` and `{DOTNET_AGENT_REPO_PATH}` with the location of the `secrets.json` file and the location of the repo respectively. You'll get a "successful" message if all the secrets are successfully installed. 
 
 ### `secrets.json` file template:
 ```
