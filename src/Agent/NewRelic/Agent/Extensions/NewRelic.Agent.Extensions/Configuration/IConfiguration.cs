@@ -88,6 +88,9 @@ namespace NewRelic.Agent.Configuration
         int ErrorCollectorMaxEventSamplesStored { get; }
         TimeSpan ErrorEventsHarvestCycle { get; }
         uint ErrorsMaximumPerPeriod { get; }
+        IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; }
+        IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; }
+        string ExpectedErrorStatusCodesForAgentSettings { get; }
         IEnumerable<string> ExceptionsToIgnore { get; }
         Dictionary<string, string> RequestHeadersMap { get; }
         string EncodingKey { get; }

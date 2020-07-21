@@ -944,6 +944,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.ErrorCollectorExpectedClasses = server;
             _localConfig.errorCollector.expectedClasses.errorClass = new List<string>(local);
 
+            CreateDefaultConfiguration();
+
             return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
         }
 
@@ -953,6 +955,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
             _localConfig.errorCollector.expectedStatusCodes.code = new List<float>(local);
+
+            CreateDefaultConfiguration();
 
             return _defaultConfig.ExpectedErrorsInfo.Keys.FirstOrDefault();
         }
@@ -974,7 +978,44 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 new configurationErrorCollectorErrorClass() {name = "local"}
             };
 
+            CreateDefaultConfiguration();
+
             return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
+        }
+
+        [Test]
+        public void ExpectedErrorSettingsForAgentSettingsReportedCorrectly()
+        {
+            _localConfig.errorCollector.expectedStatusCodes.code = new List<float> { 404, 500 };
+            _localConfig.errorCollector.expectedClasses.errorClass = new List<string> { "ErrorClass1", "ErrorClass2" };
+            _localConfig.errorCollector.expectedMessages = new List<configurationErrorCollectorErrorClass>
+            {
+                new configurationErrorCollectorErrorClass
+                {
+                    name = "ErrorClass2",
+                    message = new List<string> { "error message 1 in ErrorClass2" }
+                },
+                new configurationErrorCollectorErrorClass
+                {
+                    name = "ErrorClass3",
+                    message = new List<string> { "error message 1 in ErrorClass3", "error message 2 in ErrorClass3" }
+                },
+            };
+
+            CreateDefaultConfiguration();
+
+            var expectedStatusCodes = "404,500";
+            var expectedErrorClasses = new[] { "ErrorClass1", "ErrorClass2" };
+            var expectedErrorMessages = new Dictionary<string, IEnumerable<string>>
+            {
+                { "ErrorClass3", new[] { "error message 1 in ErrorClass3", "error message 2 in ErrorClass3" } }
+            };
+
+            NrAssert.Multiple(
+                () => Assert.AreEqual(expectedStatusCodes, _defaultConfig.ExpectedErrorStatusCodesForAgentSettings),
+                () => CollectionAssert.AreEquivalent(expectedErrorClasses, _defaultConfig.ExpectedErrorClassesForAgentSettings),
+                () => CollectionAssert.AreEquivalent(expectedErrorMessages, _defaultConfig.ExpectedErrorMessagesForAgentSettings)
+            );
         }
 
         [TestCase("local", "server", ExpectedResult = "server")]
@@ -2764,6 +2805,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             var defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
             return defaultConfig.ForceSynchronousTimingCalculationHttpClient;
+        }
+
+        private void CreateDefaultConfiguration()
+        {
+            _defaultConfig = new TestableDefaultConfiguration(_environment, _localConfig, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
         }
     }
 }

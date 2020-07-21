@@ -45,6 +45,15 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_collector.ignore_errors")]
         public IEnumerable<string> ErrorCollectorIgnoreErrors { get; set; }
 
+        [JsonProperty("error_collector.expected_classes")]
+        public IEnumerable<string> ErrorCollectorExpectedClasses { get; set; }
+
+        [JsonProperty("error_collector.expected_messages")]
+        public IDictionary<string, IEnumerable<string>> ErrorCollectorExpectedMessages { get; set; }
+
+        [JsonProperty("error_collector.expected_status_codes")]
+        public string ErrorCollectoryExpectedStatusCodes { get; set; }
+
         [JsonProperty("transaction_tracer.stack_trace_threshold")]
         public double TransactionTracerStackThreshold { get; set; }
 
