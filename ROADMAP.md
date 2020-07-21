@@ -3,7 +3,7 @@
 ## Product Vision
 The goal of the .NET agent is to provide complete visibility into the health of your service. The agent provides metrics about the runtime health of your service and the process it runs in, and traces that show how specific requests are performing. It also provides information about the environment in which it is running, so you can identify issues with specific hosts, regions, deployments, and other facets.
 
-New Relic is moving toward OpenTelemetry. OpenTelemetry is a unified standard for service instrumentation. You will soon see an updated version of the agent that uses the OpenTelemetry SDK and [auto-]instrumentation as its foundation. OpenTelemetry will include a broad set of high-quality community-contributed instrumentation and a powerful vendor-neutral API for adding your own instrumentation.
+New Relic is moving toward OpenTelemetry. OpenTelemetry is a unified standard for service instrumentation. You will soon see an updated version of the agent that uses the OpenTelemetry SDK and auto-instrumentation as its foundation. OpenTelemetry will include a broad set of high-quality community-contributed instrumentation and a powerful vendor-neutral API for adding your own instrumentation.
 
 
 ## Roadmap
