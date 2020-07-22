@@ -183,11 +183,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 				{
 					return;
 				}
-				catch (Exception ex)
-                {
-					// troubleshooting on server; remove
-					return;
-                }
 			}
 		}
 
