@@ -25,8 +25,8 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments.Tests;
-using Telerik.JustMock.Helpers;
 using System.Threading;
+using System.IO;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -774,6 +774,49 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             foreach (string current in unscoped)
             {
                 Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric is contained: " + current);
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ErrorMetrics_ExpectedErrorClasses(bool expectForError)
+        {
+
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+            Mock.Arrange(() => _errorTraceMaker.GetErrorTrace(Arg.IsAny<ImmutableTransaction>(), Arg.IsAny<IAttributeValueCollection>(), Arg.IsAny<TransactionMetricName>()))
+               .Returns(null as ErrorTraceWireModel);
+
+
+            if (expectForError)
+            {
+                Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
+                Mock.Arrange(() => _configuration.ExpectedErrorsInfo).Returns(new Dictionary<string, IEnumerable<string>>()
+                {
+                    { "System.IO.IOException", Enumerable.Empty<string>()}
+                });
+            }
+
+            var transaction = TestTransactions.CreateDefaultTransaction(false, configurationService: _configurationService, exception: new IOException());
+
+
+            _transactionTransformer.Transform(transaction);
+
+
+
+            string[] unscoped = new string[] {
+                "Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
+            foreach (string current in unscoped)
+            {
+                if (expectForError)
+                {
+                    Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric should not contain: " + current);
+                }
+                else
+                {
+                    Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric should contain: " + current);
+                }
             }
         }
 

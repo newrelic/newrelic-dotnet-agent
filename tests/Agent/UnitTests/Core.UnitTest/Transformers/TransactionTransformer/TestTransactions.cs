@@ -28,7 +28,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     public static class TestTransactions
     {
         private static IDatabaseService _databaseService = new DatabaseService(Mock.Create<ICacheStatsReporter>());
-        private static IErrorService _errorService = new ErrorService(Mock.Create<IConfigurationService>());
         private static IAttributeDefinitionService _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
         public static IConfiguration GetDefaultConfiguration()
@@ -47,7 +46,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return configuration;
         }
 
-        public static IInternalTransaction CreateDefaultTransaction(bool isWebTransaction = true, string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null, bool sampled = false)
+        public static IInternalTransaction CreateDefaultTransaction(bool isWebTransaction = true, string uri = null,
+            string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null,
+            string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", bool addSegment = true,
+            IEnumerable<Segment> segments = null, bool sampled = false, IConfigurationService configurationService = null, Exception exception = null)
         {
             var name = isWebTransaction
                 ? TransactionName.ForWebTransaction(transactionCategory, transactionName)
@@ -60,7 +62,19 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             var immutableTransaction = new ImmutableTransaction(name, segments, placeholderMetadata, DateTime.Now, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), guid, false, false, false, 0.5f, false, string.Empty, null, _attribDefSvc.AttributeDefs);
             var priority = 0.5f;
-            var internalTransaction = new Transaction(GetDefaultConfiguration(), immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), _errorService, _attribDefSvc.AttributeDefs);
+
+            var configuration = configurationService?.Configuration ?? GetDefaultConfiguration();
+            var errorService = configurationService != null ? new ErrorService(configurationService) : Mock.Create<ErrorService>();
+
+            var internalTransaction = new Transaction(configuration, immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(),
+                _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(),
+                errorService, _attribDefSvc.AttributeDefs);
+
+            if (exception != null)
+            {
+                internalTransaction.NoticeError(exception);
+            }
+
             if (segments.Any())
             {
                 foreach (var segment in segments)
@@ -77,7 +91,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             Mock.Arrange(() => adaptiveSampler.ComputeSampled(ref priority)).Returns(sampled);
             internalTransaction.SetSampled(adaptiveSampler);
             var transactionMetadata = internalTransaction.TransactionMetadata;
-            PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId);
+            PopulateTransactionMetadataBuilder(transactionMetadata, errorService, uri, statusCode, subStatusCode, referrerCrossProcessId);
 
             return internalTransaction;
         }
@@ -110,16 +124,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return new Segment(startTime, duration, segment, parameters);
         }
 
-        private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null)
+        private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, IErrorService errorService, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null)
         {
             if (uri != null)
                 metadata.SetUri(uri);
             if (statusCode != null)
-                metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
+                metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, errorService);
             if (referrerCrossProcessId != null)
                 metadata.SetCrossApplicationReferrerProcessId(referrerCrossProcessId);
             if (statusCode != null)
-                metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, _errorService);
+                metadata.SetHttpResponseStatusCode(statusCode.Value, subStatusCode, errorService);
 
             metadata.SetOriginalUri("originalUri");
             metadata.SetReferrerUri("referrerUri");
