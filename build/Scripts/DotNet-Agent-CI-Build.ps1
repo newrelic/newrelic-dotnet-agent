@@ -21,8 +21,8 @@ $msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\M
 $solutions = [Ordered]@{
     "src\Agent\FullAgent.sln"                                    = @("Configuration=Release;AllowUnsafeBlocks=true");
     "src\Agent\MsiInstaller\MsiInstaller.sln"                    = @("Configuration=Release;Platform=x86;AllowUnsafeBlocks=true","Configuration=Release;Platform=x64;AllowUnsafeBlocks=true");
-    # "IntegrationTests\IntegrationTests.sln"                      = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
-    # "IntegrationTests\UnboundedIntegrationTests.sln"             = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
+    "tests\Agent\IntegrationTests\IntegrationTests.sln"                      = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
+    "tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln"             = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
 }
 
 Write-Host "Building solutions"
