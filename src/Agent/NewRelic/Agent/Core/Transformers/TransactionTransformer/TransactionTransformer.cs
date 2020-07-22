@@ -276,7 +276,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 GetApdexMetrics(immutableTransaction, apdexT.Value, transactionApdexMetricName, txStats);
             }
 
-            if (ErrorCollectionEnabled() && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+            if (ErrorCollectionEnabled()
+                && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError
+                && !immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.IsExpected)
             {
                 MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats);
             }

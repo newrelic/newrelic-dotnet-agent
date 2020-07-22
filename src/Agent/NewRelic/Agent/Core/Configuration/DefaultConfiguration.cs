@@ -1200,8 +1200,7 @@ namespace NewRelic.Agent.Core.Configuration
             ExpectedErrorStatusCodesForAgentSettings = string.Join(",", expectedStatusCodes);
         }
 
-        public virtual ReadOnlyDictionary<string, IEnumerable<string>> ExpectedErrorsInfo { get; private set; }
-
+        public IDictionary<string, IEnumerable<string>> ExpectedErrorsInfo { get; private set; }
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public string ExpectedErrorStatusCodesForAgentSettings { get; private set; }

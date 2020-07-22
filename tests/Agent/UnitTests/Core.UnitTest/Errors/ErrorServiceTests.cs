@@ -4,6 +4,8 @@
 */
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -148,5 +150,61 @@ namespace NewRelic.Agent.Core.Errors
             config.stripExceptionMessages.enabled = stripExceptionMessages;
             EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
         }
+
+        private void SetupConfiguration(List<string> errorClassesToBeExpected, IEnumerable<KeyValuePair<string, IEnumerable<string>>> errorMessagesToBeExpected, bool errorCollectorEnabled)
+        {
+            var config = new configuration();
+            config.errorCollector.enabled = errorCollectorEnabled;
+            config.errorCollector.expectedClasses.errorClass = errorClassesToBeExpected;
+
+            if (errorMessagesToBeExpected != null)
+            {
+                foreach (var errorMessage in errorMessagesToBeExpected)
+                {
+                    var x = new configurationErrorCollectorErrorClass()
+                    {
+                        name = errorMessage.Key,
+                        message = errorMessage.Value.ToList()
+                    };
+
+                    config.errorCollector.expectedMessages.Add(x);
+                }
+            }
+
+            EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FromException_MarkErrorDataAsExpected_ExpectedErrorClasses(bool hasExpectedError)
+        {
+            var _expectedClasses = new List<string>()
+            {
+                "System.IO.DirectoryNotFoundException",
+            };
+
+            if (hasExpectedError)
+            {
+                SetupConfiguration(_expectedClasses, null, errorCollectorEnabled: true);
+            }
+
+            var expectedExceptionRoot = new IOException("Root Exception", new DirectoryNotFoundException());
+            var expectedInnterExceptionChild = expectedExceptionRoot.InnerException;
+
+            var errorData1 = _errorService.FromException(expectedExceptionRoot);
+            var errorData2 = _errorService.FromException(expectedInnterExceptionChild);
+
+            if (hasExpectedError)
+            {
+                Assert.IsTrue(errorData1.IsExpected);
+                Assert.IsTrue(errorData2.IsExpected);
+            }
+            else
+            {
+                Assert.IsFalse(errorData1.IsExpected);
+                Assert.IsFalse(errorData2.IsExpected);
+            }
+        }
+
     }
 }

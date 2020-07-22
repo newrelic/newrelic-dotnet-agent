@@ -14,6 +14,7 @@ namespace NewRelic.Agent.Core.Errors
         public DateTime NoticedAt { get; }
         public string Path { get; set; }
         public ReadOnlyDictionary<string, object> CustomAttributes { get; }
+        public bool IsExpected { get;}
 
         public const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
 
@@ -26,5 +27,12 @@ namespace NewRelic.Agent.Core.Errors
             Path = null;
             CustomAttributes = customAttributes;
         }
+
+        public ErrorData(string errorMessage, string errorTypeName, string stackTrace, DateTime noticedAt, ReadOnlyDictionary<string, object> customAttributes, bool isExpected)
+        : this(errorMessage, errorTypeName, stackTrace, noticedAt, customAttributes)
+        {
+            IsExpected = isExpected;
+        }
+
     }
 }
