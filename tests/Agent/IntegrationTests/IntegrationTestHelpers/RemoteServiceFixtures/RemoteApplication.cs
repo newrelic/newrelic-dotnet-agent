@@ -187,7 +187,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 						catch (IOException)
 						{
 							Thread.Sleep(1000);
-							Directory.Delete(DestinationRootDirectoryPath, true);
+							//Directory.Delete(DestinationRootDirectoryPath, true);
+							break;
 						}
 					}
 					disposed = true;
