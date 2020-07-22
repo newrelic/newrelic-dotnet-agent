@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RunSettings>
-  <NUnit>
-    <UseParentFQNForParametrizedTests>true</UseParentFQNForParametrizedTests>
-    <UseNUnitIdforTestCaseId>true</UseNUnitIdforTestCaseId>
-  </NUnit>
-</RunSettings>
