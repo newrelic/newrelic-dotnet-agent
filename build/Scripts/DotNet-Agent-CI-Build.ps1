@@ -5,8 +5,7 @@ $ErrorActionPreference = "Stop"
 ###############
 
 $nugetPath = (Resolve-Path ".\build\Tools\nuget.exe").Path
-#$solutions = @("Agent\FullAgent.sln", "IntegrationTests\IntegrationTests.sln", "IntegrationTests\UnboundedIntegrationTests.sln")
-$solutions = @("src\Agent\FullAgent.sln", "src\Agent\MsiInstaller\MsiInstaller.sln")
+$solutions = @("src\Agent\FullAgent.sln", "src\Agent\MsiInstaller\MsiInstaller.sln", "tests\Agent\IntegrationTests\IntegrationTests.sln", "tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln")
 
 Write-Host "Restoring NuGet packages"
 foreach ($sln in $solutions) {
