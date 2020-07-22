@@ -99,6 +99,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 		protected const String HostedWebCoreTargetFramework = "net451";
 
+		public bool KeepWorkingDirectory { get; set; } = false;
+
 		[NotNull]
 		protected String DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, _uniqueFolderName); } }
 
@@ -143,6 +145,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 				: "UnboundedApplications";
 			SourceApplicationsDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, applicationsFolder);
 			_isCoreApp = isCoreApp;
+
+			var keepWorkingDirEnvVarValue = 0;
+			if (int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY"), out keepWorkingDirEnvVarValue))
+			{
+				KeepWorkingDirectory = (keepWorkingDirEnvVarValue == 1);
+			}
 		}
 
 		public void Shutdown()
@@ -164,15 +172,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 		public virtual void Dispose()
 		{
-			var deleted = false;
+			var disposed = false;
 			var stopwatch = Stopwatch.StartNew();
-			while (!deleted && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
+			while (!disposed && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
 			{
 				try
 				{
-					if (Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY") == null)
-						Directory.Delete(DestinationRootDirectoryPath, true);
-					deleted = true;
+					if (!KeepWorkingDirectory)
+					{
+						try
+						{
+							Directory.Delete(DestinationRootDirectoryPath, true);
+						}
+						catch (IOException)
+						{
+							Thread.Sleep(1000);
+							Directory.Delete(DestinationRootDirectoryPath, true);
+						}
+					}
+					disposed = true;
 				}
 				catch (UnauthorizedAccessException)
 				{
