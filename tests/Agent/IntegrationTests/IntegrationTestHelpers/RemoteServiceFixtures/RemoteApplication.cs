@@ -172,8 +172,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 		public virtual void Dispose()
 		{
-			//var disposed = false;
-			var disposed = true;    // test to see if leaving dirs resolves DotNet-6.x-Agent-CI-IntegrationTests issue
+			var disposed = false;
 			var stopwatch = Stopwatch.StartNew();
 			while (!disposed && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
 			{
@@ -188,8 +187,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 						catch (IOException)
 						{
 							Thread.Sleep(1000);
-							//Directory.Delete(DestinationRootDirectoryPath, true);
-							break;
+							Directory.Delete(DestinationRootDirectoryPath, true);
 						}
 					}
 					disposed = true;
