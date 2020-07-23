@@ -5,169 +5,169 @@ using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions.Collections.Generic
 {
-	public static class IEnumerableExtensions
-	{
-		/// <summary>
-		/// Returns a new collection based on source, skipping elements that DO satisfy the given predicate. Basically the opposite of .Where()
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source"></param>
-		/// <param name="predicate">A function to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
-		/// <returns></returns>
-		[NotNull]
-		public static IEnumerable<T> Unless<T>([NotNull] this IEnumerable<T> source, [NotNull] Func<T, Boolean> predicate)
-		{
-			return source.Where(current => !predicate(current));
-		}
+    public static class IEnumerableExtensions
+    {
+        /// <summary>
+        /// Returns a new collection based on source, skipping elements that DO satisfy the given predicate. Basically the opposite of .Where()
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="predicate">A function to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
+        /// <returns></returns>
+        [NotNull]
+        public static IEnumerable<T> Unless<T>([NotNull] this IEnumerable<T> source, [NotNull] Func<T, Boolean> predicate)
+        {
+            return source.Where(current => !predicate(current));
+        }
 
-		/// <summary>
-		/// Returns a new collection based on source, skipping elements that DO satisfy the given predicate. Basically the opposite of .Where(), except that you can compare the current element to the last one.
-		/// 
-		/// Will always return the first element (if any) because there is nothing to compare the first element to.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source"></param>
-		/// <param name="predicate">A function that takes the last element and the current element (in that order) to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
-		/// <returns></returns>
-		[NotNull]
-		public static IEnumerable<T> Unless<T>([NotNull] this IEnumerable<T> source, [NotNull] Func<T, T, Boolean> predicate)
-		{
-			var last = default(T);
-			return source.Where((current, index) =>
-			{
-				// Always return the first item
-				if (index == 0)
-				{
-					last = current;
-					return true;
-				}
+        /// <summary>
+        /// Returns a new collection based on source, skipping elements that DO satisfy the given predicate. Basically the opposite of .Where(), except that you can compare the current element to the last one.
+        /// 
+        /// Will always return the first element (if any) because there is nothing to compare the first element to.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="predicate">A function that takes the last element and the current element (in that order) to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
+        /// <returns></returns>
+        [NotNull]
+        public static IEnumerable<T> Unless<T>([NotNull] this IEnumerable<T> source, [NotNull] Func<T, T, Boolean> predicate)
+        {
+            var last = default(T);
+            return source.Where((current, index) =>
+            {
+                // Always return the first item
+                if (index == 0)
+                {
+                    last = current;
+                    return true;
+                }
 
-				// Check if the current item matches the predicate before moving the "last" pointer
-				var isMatch = predicate(last, current);
-				last = current;
+                // Check if the current item matches the predicate before moving the "last" pointer
+                var isMatch = predicate(last, current);
+                last = current;
 
-				// Items that match the predicate should be skipped
-				return !isMatch;
-			});
-		}
+                // Items that match the predicate should be skipped
+                return !isMatch;
+            });
+        }
 
-		public enum DuplicateKeyBehavior
-		{
-			/// <summary>
-			/// Keep the first value found with the given key
-			/// </summary>
-			KeepFirst,
-			/// <summary>
-			/// Keep the last value found with the given key
-			/// </summary>
-			KeepLast,
-			/// <summary>
-			/// Throw if duplicate keys are found
-			/// </summary>
-			Throw
-		}
+        public enum DuplicateKeyBehavior
+        {
+            /// <summary>
+            /// Keep the first value found with the given key
+            /// </summary>
+            KeepFirst,
+            /// <summary>
+            /// Keep the last value found with the given key
+            /// </summary>
+            KeepLast,
+            /// <summary>
+            /// Throw if duplicate keys are found
+            /// </summary>
+            Throw
+        }
 
-		/// <summary>
-		/// Creates a dictionary from a list of KeyValuePairs, using the specified behavior in case of duplicate keys.
-		/// </summary>
-		/// <typeparam name="TKey"></typeparam>
-		/// <typeparam name="TValue"></typeparam>
-		/// <param name="source"></param>
-		/// <param name="duplicateKeyBehavior"></param>
-		/// <param name="equalityComparer"></param>
-		/// <returns></returns>
-		[NotNull]
-		public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>([NotNull] this IEnumerable<KeyValuePair<TKey, TValue>> source, DuplicateKeyBehavior duplicateKeyBehavior = DuplicateKeyBehavior.Throw, IEqualityComparer<TKey> equalityComparer = null)
-		{
-			var dictionary = new Dictionary<TKey, TValue>(equalityComparer);
+        /// <summary>
+        /// Creates a dictionary from a list of KeyValuePairs, using the specified behavior in case of duplicate keys.
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="duplicateKeyBehavior"></param>
+        /// <param name="equalityComparer"></param>
+        /// <returns></returns>
+        [NotNull]
+        public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>([NotNull] this IEnumerable<KeyValuePair<TKey, TValue>> source, DuplicateKeyBehavior duplicateKeyBehavior = DuplicateKeyBehavior.Throw, IEqualityComparer<TKey> equalityComparer = null)
+        {
+            var dictionary = new Dictionary<TKey, TValue>(equalityComparer);
 
-			foreach (var kvp in source)
-			{
-				if (kvp.Key == null)
-					continue;
+            foreach (var kvp in source)
+            {
+                if (kvp.Key == null)
+                    continue;
 
-				if (dictionary.ContainsKey(kvp.Key))
-				{
-					if (duplicateKeyBehavior == DuplicateKeyBehavior.Throw)
-						throw new ArgumentException("An item with the same key has already been added");
-					if (duplicateKeyBehavior == DuplicateKeyBehavior.KeepFirst)
-						continue;
-				}
-				
-				dictionary[kvp.Key] = kvp.Value;
-			}
+                if (dictionary.ContainsKey(kvp.Key))
+                {
+                    if (duplicateKeyBehavior == DuplicateKeyBehavior.Throw)
+                        throw new ArgumentException("An item with the same key has already been added");
+                    if (duplicateKeyBehavior == DuplicateKeyBehavior.KeepFirst)
+                        continue;
+                }
 
-			return dictionary;
-		}
+                dictionary[kvp.Key] = kvp.Value;
+            }
 
-		[NotNull, Pure]
-		public static IEnumerable<T> NotNull<T>([NotNull] this IEnumerable<T> source)
-		{
-			return source.Where(x => x != null);
-		}
+            return dictionary;
+        }
 
-		[NotNull, Pure]
-		public static IEnumerable<T> Swallow<T, TException>([NotNull] this IEnumerable<T> source) where TException : Exception
-		{
-			using (var enumerator = source.GetEnumerator())
-			{
-				var next = true;
-				while (next)
-				{
-					try
-					{
-						next = enumerator.MoveNext();
-					}
-					catch (TException)
-					{
-						continue;
-					}
+        [NotNull, Pure]
+        public static IEnumerable<T> NotNull<T>([NotNull] this IEnumerable<T> source)
+        {
+            return source.Where(x => x != null);
+        }
 
-					if (next)
-						yield return enumerator.Current;
-				}
-			}
-		}
+        [NotNull, Pure]
+        public static IEnumerable<T> Swallow<T, TException>([NotNull] this IEnumerable<T> source) where TException : Exception
+        {
+            using (var enumerator = source.GetEnumerator())
+            {
+                var next = true;
+                while (next)
+                {
+                    try
+                    {
+                        next = enumerator.MoveNext();
+                    }
+                    catch (TException)
+                    {
+                        continue;
+                    }
 
-		[NotNull, Pure]
-		public static IEnumerable<T> Swallow<T>([NotNull] this IEnumerable<T> source)
-		{
-			return Swallow<T, Exception>(source);
-		}
+                    if (next)
+                        yield return enumerator.Current;
+                }
+            }
+        }
 
-		[NotNull, Pure]
-		public static IEnumerable<T> ForEachLazy<T>([NotNull] this IEnumerable<T> source, Action<T> action)
-		{
-			return new ForEachEnumerable<T>(source, action);
-		}
+        [NotNull, Pure]
+        public static IEnumerable<T> Swallow<T>([NotNull] this IEnumerable<T> source)
+        {
+            return Swallow<T, Exception>(source);
+        }
 
-		public static void ForEachNow<T>([NotNull] this IEnumerable<T> source, Action<T> action)
-		{
-			var enumerable = source.ForEachLazy(action);
-			// ReSharper disable once UnusedVariable
-			foreach (var item in enumerable)
-			{
-				// do nothing, we just want to force enumeration
-			}
-		}
+        [NotNull, Pure]
+        public static IEnumerable<T> ForEachLazy<T>([NotNull] this IEnumerable<T> source, Action<T> action)
+        {
+            return new ForEachEnumerable<T>(source, action);
+        }
 
-		/// <summary>
-		/// Flattens a tree of items into an enumerable.
-		/// </summary>
-		/// <param name="root">The root node of the tree.</param>
-		/// <param name="getChildren">A method that will return the children of a given node.</param>
-		/// <returns>An enumerable that includes all nodes in the tree.  Does not guarantee any particular order.</returns>
-		public static IEnumerable<T> Flatten<T>(this T root, Func<T, IEnumerable<T>> getChildren)
-		{
-			var stack = new Stack<T>();
-			stack.Push(root);
-			while (stack.Count > 0)
-			{
-				var current = stack.Pop();
-				yield return current;
-				foreach (var child in getChildren(current))
-					stack.Push(child);
-			}
-		}
-	}
+        public static void ForEachNow<T>([NotNull] this IEnumerable<T> source, Action<T> action)
+        {
+            var enumerable = source.ForEachLazy(action);
+            // ReSharper disable once UnusedVariable
+            foreach (var item in enumerable)
+            {
+                // do nothing, we just want to force enumeration
+            }
+        }
+
+        /// <summary>
+        /// Flattens a tree of items into an enumerable.
+        /// </summary>
+        /// <param name="root">The root node of the tree.</param>
+        /// <param name="getChildren">A method that will return the children of a given node.</param>
+        /// <returns>An enumerable that includes all nodes in the tree.  Does not guarantee any particular order.</returns>
+        public static IEnumerable<T> Flatten<T>(this T root, Func<T, IEnumerable<T>> getChildren)
+        {
+            var stack = new Stack<T>();
+            stack.Push(root);
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                yield return current;
+                foreach (var child in getChildren(current))
+                    stack.Push(child);
+            }
+        }
+    }
 }

@@ -5,31 +5,31 @@ using Newtonsoft.Json;
 
 namespace AttributeFilterTests.Models
 {
-	public class TestCase
-	{
-		[JsonProperty(PropertyName = "testname")]
-		[NotNull]
-		public String TestName;
+    public class TestCase
+    {
+        [JsonProperty(PropertyName = "testname")]
+        [NotNull]
+        public String TestName;
 
-		[JsonProperty(PropertyName = "config")]
-		[NotNull]
-		public Configuration Configuration;
+        [JsonProperty(PropertyName = "config")]
+        [NotNull]
+        public Configuration Configuration;
 
-		[JsonProperty(PropertyName = "input_key")]
-		[NotNull]
-		public String AttributeKey;
+        [JsonProperty(PropertyName = "input_key")]
+        [NotNull]
+        public String AttributeKey;
 
-		[JsonProperty(PropertyName = "input_default_destinations")]
-		[NotNull]
-		public IEnumerable<Destinations> AttributeDestinations;
+        [JsonProperty(PropertyName = "input_default_destinations")]
+        [NotNull]
+        public IEnumerable<Destinations> AttributeDestinations;
 
-		[JsonProperty(PropertyName = "expected_destinations")]
-		[NotNull]
-		public IEnumerable<Destinations> ExpectedDestinations;
+        [JsonProperty(PropertyName = "expected_destinations")]
+        [NotNull]
+        public IEnumerable<Destinations> ExpectedDestinations;
 
-		public override string ToString()
-		{
-			return TestName;
-		}
-	}
+        public override string ToString()
+        {
+            return TestName;
+        }
+    }
 }

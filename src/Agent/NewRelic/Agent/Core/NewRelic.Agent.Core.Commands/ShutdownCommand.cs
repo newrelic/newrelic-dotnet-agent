@@ -5,20 +5,20 @@ using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Commands
 {
-	/// <summary>
-	/// A command that shuts down the agent. 
-	/// </summary>
-	public class ShutdownCommand : AbstractCommand
-	{
-		public ShutdownCommand()
-		{
-			Name = "shutdown";
-		}
+    /// <summary>
+    /// A command that shuts down the agent. 
+    /// </summary>
+    public class ShutdownCommand : AbstractCommand
+    {
+        public ShutdownCommand()
+        {
+            Name = "shutdown";
+        }
 
-		public override object Process(IDictionary<String, Object> arguments)
-		{
-			EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
-			return null;
-		}
-	}
+        public override object Process(IDictionary<String, Object> arguments)
+        {
+            EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
+            return null;
+        }
+    }
 }

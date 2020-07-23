@@ -7,119 +7,119 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing
 {
-	public class MySqlExplainPlanActions
-	{
-		
-		public static VendorExplainValidationResult ShouldGenerateExplainPlan(string sql, ParsedSqlStatement parsedSqlStatement)
-		{
-			var validationMessage = "";
-			var isValid = true;
+    public class MySqlExplainPlanActions
+    {
 
-			var isSelectStatement = parsedSqlStatement.Operation.Equals("select", StringComparison.CurrentCultureIgnoreCase);
-			if (!isSelectStatement)
-			{
-				validationMessage += "Will not run EXPLAIN on non-select statements. ";
-				isValid = false;
-			}
+        public static VendorExplainValidationResult ShouldGenerateExplainPlan(string sql, ParsedSqlStatement parsedSqlStatement)
+        {
+            var validationMessage = "";
+            var isValid = true;
 
-			var isSingleStatement = SqlParser.IsSingleSqlStatement(sql);
-			if (!isSingleStatement)
-			{
-				validationMessage += "Will not run EXPLAIN on multi-statement SQL query. ";
-				isValid = false;
-			}
+            var isSelectStatement = parsedSqlStatement.Operation.Equals("select", StringComparison.CurrentCultureIgnoreCase);
+            if (!isSelectStatement)
+            {
+                validationMessage += "Will not run EXPLAIN on non-select statements. ";
+                isValid = false;
+            }
 
-			return new VendorExplainValidationResult(isValid, validationMessage);
-		}
+            var isSingleStatement = SqlParser.IsSingleSqlStatement(sql);
+            if (!isSingleStatement)
+            {
+                validationMessage += "Will not run EXPLAIN on multi-statement SQL query. ";
+                isValid = false;
+            }
 
-
-		public static ExplainPlan GenerateExplainPlan(Object resources)
-		{
-			if (!(resources is IDbCommand))
-				return null;
-
-			var dbCommand = (IDbCommand)resources;
-			if (dbCommand.Connection.State != ConnectionState.Open)
-				dbCommand.Connection.Open();
-
-			ExplainPlan explainPlan = null;
-
-			//KILL THE CONNECTION NO MATTER WHAT HAPPENS DURING EXECUTION TO AVOID CONNECTION LEAKING
-			using (dbCommand)
-			using (dbCommand.Connection)
-			{
-
-				dbCommand.Transaction = null;
-				SqlParser.FixParameterizedSql(dbCommand);
-				dbCommand.CommandText = "EXPLAIN " + dbCommand.CommandText;
+            return new VendorExplainValidationResult(isValid, validationMessage);
+        }
 
 
-				using (IDataReader reader = dbCommand.ExecuteReader())
-				{
-					var headers = GetReaderHeaders(reader);
-					// Decide which headers should be obfuscated based on the Vendor (this is only SQL)
-					var obfuscatedHeaders = GetObfuscatedIndexes(headers);
-					explainPlan = new ExplainPlan(headers, new List<List<Object>>(), obfuscatedHeaders);
+        public static ExplainPlan GenerateExplainPlan(Object resources)
+        {
+            if (!(resources is IDbCommand))
+                return null;
 
-					var explainPlanDatas = new List<List<Object>>();
-					while (reader.Read())
-					{
-						Object[] values = new Object[reader.FieldCount];
-						reader.GetValues(values);
-						explainPlanDatas.Add(values.ToList());
-					}
+            var dbCommand = (IDbCommand)resources;
+            if (dbCommand.Connection.State != ConnectionState.Open)
+                dbCommand.Connection.Open();
 
-					explainPlan.ExplainPlanDatas = explainPlanDatas;
+            ExplainPlan explainPlan = null;
 
-				}
+            //KILL THE CONNECTION NO MATTER WHAT HAPPENS DURING EXECUTION TO AVOID CONNECTION LEAKING
+            using (dbCommand)
+            using (dbCommand.Connection)
+            {
 
-			}
-			
-			return explainPlan;
-		}
+                dbCommand.Transaction = null;
+                SqlParser.FixParameterizedSql(dbCommand);
+                dbCommand.CommandText = "EXPLAIN " + dbCommand.CommandText;
 
-		public static Object AllocateResources(IDbCommand command)
-		{
-			if (!(command is ICloneable))
-				return null;
 
-			var clonedCommand = (IDbCommand)((ICloneable)command).Clone();
-			var connection = (IDbConnection)((ICloneable)command.Connection).Clone();
+                using (IDataReader reader = dbCommand.ExecuteReader())
+                {
+                    var headers = GetReaderHeaders(reader);
+                    // Decide which headers should be obfuscated based on the Vendor (this is only SQL)
+                    var obfuscatedHeaders = GetObfuscatedIndexes(headers);
+                    explainPlan = new ExplainPlan(headers, new List<List<Object>>(), obfuscatedHeaders);
 
-			clonedCommand.Connection = connection;
-			clonedCommand.Transaction = null;
+                    var explainPlanDatas = new List<List<Object>>();
+                    while (reader.Read())
+                    {
+                        Object[] values = new Object[reader.FieldCount];
+                        reader.GetValues(values);
+                        explainPlanDatas.Add(values.ToList());
+                    }
 
-			return clonedCommand;
-		}
+                    explainPlan.ExplainPlanDatas = explainPlanDatas;
 
-		public static List<Int32> GetObfuscatedIndexes(List<String> headers)
-		{
-			var indexes = new List<Int32>(ObfuscateFieldNames().Length);
-			foreach (var field in ObfuscateFieldNames())
-			{
-				var index = headers.FindIndex(field.Equals);
-				if (index >= 0)
-				{
-					indexes.Add(index);
-				}
-			}
+                }
 
-			return indexes;
-		}
+            }
 
-		private static List<String> GetReaderHeaders(IDataReader reader)
-		{
-			List<String> headers = new List<String>(reader.FieldCount);
-			for (Int32 i = 0; i < reader.FieldCount; i++)
-			{
-				headers.Add(reader.GetName(i));
-			}
-			return headers;
-		}
+            return explainPlan;
+        }
 
-		private static String[] ObfuscateFieldNames()
-		{
-			return new String[0];
-		}
-	}
+        public static Object AllocateResources(IDbCommand command)
+        {
+            if (!(command is ICloneable))
+                return null;
+
+            var clonedCommand = (IDbCommand)((ICloneable)command).Clone();
+            var connection = (IDbConnection)((ICloneable)command.Connection).Clone();
+
+            clonedCommand.Connection = connection;
+            clonedCommand.Transaction = null;
+
+            return clonedCommand;
+        }
+
+        public static List<Int32> GetObfuscatedIndexes(List<String> headers)
+        {
+            var indexes = new List<Int32>(ObfuscateFieldNames().Length);
+            foreach (var field in ObfuscateFieldNames())
+            {
+                var index = headers.FindIndex(field.Equals);
+                if (index >= 0)
+                {
+                    indexes.Add(index);
+                }
+            }
+
+            return indexes;
+        }
+
+        private static List<String> GetReaderHeaders(IDataReader reader)
+        {
+            List<String> headers = new List<String>(reader.FieldCount);
+            for (Int32 i = 0; i < reader.FieldCount; i++)
+            {
+                headers.Add(reader.GetName(i));
+            }
+            return headers;
+        }
+
+        private static String[] ObfuscateFieldNames()
+        {
+            return new String[0];
+        }
+    }
 }

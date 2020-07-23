@@ -2,12 +2,12 @@
 
 namespace To
 {
-	public static class Be
-	{
-		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.PreserveSig)]
-		public static void Instrumented()
-		{
-			
-		}
-	}
+    public static class Be
+    {
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.PreserveSig)]
+        public static void Instrumented()
+        {
+
+        }
+    }
 }

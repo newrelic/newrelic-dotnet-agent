@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
@@ -9,109 +10,108 @@ using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
-using System.Reflection;
 
 namespace NewRelic.Agent.Core.Configuration
 {
-	public class ConfigurationService : IConfigurationService, IDisposable
-	{
-		[NotNull]
-		private readonly IEnvironment _environment;
+    public class ConfigurationService : IConfigurationService, IDisposable
+    {
+        [NotNull]
+        private readonly IEnvironment _environment;
 
-		[NotNull]
-		private configuration _localConfiguration = new configuration();
+        [NotNull]
+        private configuration _localConfiguration = new configuration();
 
-		[NotNull]
-		private ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
+        [NotNull]
+        private ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
 
-		[NotNull]
-		private RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
+        [NotNull]
+        private RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
 
-		[NotNull]
-		private readonly Subscriptions _subscriptions = new Subscriptions();
-		
-		[NotNull]
-		private readonly IProcessStatic _processStatic;
-		[NotNull]
-		private readonly IHttpRuntimeStatic _httpRuntimeStatic;
-		[NotNull]
-		private readonly IConfigurationManagerStatic _configurationManagerStatic;
+        [NotNull]
+        private readonly Subscriptions _subscriptions = new Subscriptions();
 
-		public IConfiguration Configuration { get; private set; }
+        [NotNull]
+        private readonly IProcessStatic _processStatic;
+        [NotNull]
+        private readonly IHttpRuntimeStatic _httpRuntimeStatic;
+        [NotNull]
+        private readonly IConfigurationManagerStatic _configurationManagerStatic;
 
-		public ConfigurationService([NotNull] IEnvironment environment, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
-		{
-			_environment = environment;
-			_processStatic = processStatic;
-			_httpRuntimeStatic = httpRuntimeStatic;
-			_configurationManagerStatic = configurationManagerStatic;
+        public IConfiguration Configuration { get; private set; }
 
-			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+        public ConfigurationService([NotNull] IEnvironment environment, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
+        {
+            _environment = environment;
+            _processStatic = processStatic;
+            _httpRuntimeStatic = httpRuntimeStatic;
+            _configurationManagerStatic = configurationManagerStatic;
 
-			_subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
-			_subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
-			_subscriptions.Add<AppNameUpdateEvent>(OnAppNameUpdate);
-			_subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
-		}
+            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
 
-		private void OnConfigurationDeserialized([NotNull] ConfigurationDeserializedEvent configurationDeserializedEvent)
-		{
-			_localConfiguration = configurationDeserializedEvent.Configuration;
-			UpdateLogLevel(_localConfiguration);
-			UpdateAndPublishConfiguration(ConfigurationUpdateSource.Local);
-		}
+            _subscriptions.Add<ConfigurationDeserializedEvent>(OnConfigurationDeserialized);
+            _subscriptions.Add<ServerConfigurationUpdatedEvent>(OnServerConfigurationUpdated);
+            _subscriptions.Add<AppNameUpdateEvent>(OnAppNameUpdate);
+            _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
+        }
 
-		private static void UpdateLogLevel([NotNull] configuration localConfiguration)
-		{
-			var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
-			var logger = hierarchy.Root;
+        private void OnConfigurationDeserialized([NotNull] ConfigurationDeserializedEvent configurationDeserializedEvent)
+        {
+            _localConfiguration = configurationDeserializedEvent.Configuration;
+            UpdateLogLevel(_localConfiguration);
+            UpdateAndPublishConfiguration(ConfigurationUpdateSource.Local);
+        }
 
-			var logLevel = logger.Hierarchy.LevelMap[localConfiguration.LogConfig.LogLevel];
-			if (logLevel != null && logLevel != logger.Level)
-			{
-				Log.InfoFormat("The log level was updated to {0}", logLevel);
-				logger.Level = logLevel;
-			}
-		}
+        private static void UpdateLogLevel([NotNull] configuration localConfiguration)
+        {
+            var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
+            var logger = hierarchy.Root;
 
-		private void OnServerConfigurationUpdated([NotNull] ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
-		{
-			try
-			{
-				_serverConfiguration = serverConfigurationUpdatedEvent.Configuration;
-				UpdateAndPublishConfiguration(ConfigurationUpdateSource.Server);
-			}
-			catch (Exception exception)
-			{
-				Log.Error($"Unable to parse the Configuration data from the server so no server side configuration was applied: {exception}");
-			}
-		}
+            var logLevel = logger.Hierarchy.LevelMap[localConfiguration.LogConfig.LogLevel];
+            if (logLevel != null && logLevel != logger.Level)
+            {
+                Log.InfoFormat("The log level was updated to {0}", logLevel);
+                logger.Level = logLevel;
+            }
+        }
 
-		private void OnAppNameUpdate([NotNull] AppNameUpdateEvent appNameUpdateEvent)
-		{
-			if (_runTimeConfiguration.ApplicationNames.SequenceEqual(appNameUpdateEvent.AppNames))
-				return;
+        private void OnServerConfigurationUpdated([NotNull] ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
+        {
+            try
+            {
+                _serverConfiguration = serverConfigurationUpdatedEvent.Configuration;
+                UpdateAndPublishConfiguration(ConfigurationUpdateSource.Server);
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"Unable to parse the Configuration data from the server so no server side configuration was applied: {exception}");
+            }
+        }
 
-			_runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames);
-			UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
-		}
+        private void OnAppNameUpdate([NotNull] AppNameUpdateEvent appNameUpdateEvent)
+        {
+            if (_runTimeConfiguration.ApplicationNames.SequenceEqual(appNameUpdateEvent.AppNames))
+                return;
 
-		private void UpdateAndPublishConfiguration(ConfigurationUpdateSource configurationUpdateSource)
-		{
-			Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
+            _runTimeConfiguration = new RunTimeConfiguration(appNameUpdateEvent.AppNames);
+            UpdateAndPublishConfiguration(ConfigurationUpdateSource.RunTime);
+        }
 
-			var configurationUpdatedEvent = new ConfigurationUpdatedEvent(Configuration, configurationUpdateSource);
-			EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);
-		}
+        private void UpdateAndPublishConfiguration(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            Configuration = new InternalConfiguration(_environment, _localConfiguration, _serverConfiguration, _runTimeConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic);
 
-		private void OnGetCurrentConfiguration([NotNull] GetCurrentConfigurationRequest eventData, [NotNull] RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
-		{
-			callback(Configuration);
-		}
+            var configurationUpdatedEvent = new ConfigurationUpdatedEvent(Configuration, configurationUpdateSource);
+            EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);
+        }
 
-		public void Dispose()
-		{
-			_subscriptions.Dispose();
-		}
-	}
+        private void OnGetCurrentConfiguration([NotNull] GetCurrentConfigurationRequest eventData, [NotNull] RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
+        {
+            callback(Configuration);
+        }
+
+        public void Dispose()
+        {
+            _subscriptions.Dispose();
+        }
+    }
 }

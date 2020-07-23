@@ -16,37 +16,37 @@ using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core
 {
-	[JsonConverter(typeof (EnvironmentConverter))]
-	public class Environment
-	{
-		[NotNull]
-		private readonly List<Object[]> _environmentMap = new List<Object[]>();
+    [JsonConverter(typeof(EnvironmentConverter))]
+    public class Environment
+    {
+        [NotNull]
+        private readonly List<Object[]> _environmentMap = new List<Object[]>();
 
-		public UInt64 TotalPhysicalMemory { get; }
-		public String AppDomainAppPath { get; }
+        public UInt64 TotalPhysicalMemory { get; }
+        public String AppDomainAppPath { get; }
 
-		public Environment([NotNull] ISystemInfo systemInfo)
-		{
-			try
-			{
-				TotalPhysicalMemory = systemInfo.GetTotalPhysicalMemoryBytes();
+        public Environment([NotNull] ISystemInfo systemInfo)
+        {
+            try
+            {
+                TotalPhysicalMemory = systemInfo.GetTotalPhysicalMemoryBytes();
 
-				AddVariable("Framework", () => "dotnet");
+                AddVariable("Framework", () => "dotnet");
 
-				var fileVersionInfo = TryGetFileVersionInfo();
-				AddVariable("Product Name", () => fileVersionInfo?.ProductName);
+                var fileVersionInfo = TryGetFileVersionInfo();
+                AddVariable("Product Name", () => fileVersionInfo?.ProductName);
 
-				AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
-				AddVariable(".NET Version", () => System.Environment.Version.ToString());
-				AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
-				AddVariable("x64", () => (IntPtr.Size == 8) ? "yes" : "no");
+                AddVariable("OS", () => System.Environment.OSVersion?.VersionString);
+                AddVariable(".NET Version", () => System.Environment.Version.ToString());
+                AddVariable("Total Physical System Memory", () => TotalPhysicalMemory);
+                AddVariable("x64", () => (IntPtr.Size == 8) ? "yes" : "no");
 
-				var process = TryGetCurrentProcess();
-				AddVariable("StartTime", () => process?.StartTime.ToString("o"));
-				AddVariable("MainModule.FileVersionInfo", () => process?.MainModule.FileVersionInfo.ToString());
+                var process = TryGetCurrentProcess();
+                AddVariable("StartTime", () => process?.StartTime.ToString("o"));
+                AddVariable("MainModule.FileVersionInfo", () => process?.MainModule.FileVersionInfo.ToString());
 
-				AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
-				AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
+                AddVariable("GCSettings.IsServerGC", () => System.Runtime.GCSettings.IsServerGC);
+                AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
 
 #if NET35
 				// This stuff is only available to web apps.
@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core
 				}
 #endif
 
-				AddVariable("Plugin List", GetLoadedAssemblyNames);
+                AddVariable("Plugin List", GetLoadedAssemblyNames);
 
 #if DEBUG
 				AddVariable("Debug Build", () => true.ToString());
@@ -85,55 +85,55 @@ namespace NewRelic.Agent.Core
 					AddVariable("Logical Processors", () => managementObject["NumberOfLogicalProcessors"]);
 				}
 #endif
-			}
-			catch (Exception ex)
-			{
-				Log.Debug($"The .NET agent is unable to collect environment information for the machine: {ex}");
-			}
-		}
+            }
+            catch (Exception ex)
+            {
+                Log.Debug($"The .NET agent is unable to collect environment information for the machine: {ex}");
+            }
+        }
 
-		public void AddVariable([NotNull] String name, [NotNull] Func<Object> valueGetter)
-		{
-			var value = null as Object;
-			try
-			{
-				value = valueGetter();
-			}
-			catch (Exception ex)
-			{
-				Log.Warn($"Error getting value for environment variable {name}: {ex}");
-			}
+        public void AddVariable([NotNull] String name, [NotNull] Func<Object> valueGetter)
+        {
+            var value = null as Object;
+            try
+            {
+                value = valueGetter();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Error getting value for environment variable {name}: {ex}");
+            }
 
-			_environmentMap.Add(new[] {name, value});
-		}
+            _environmentMap.Add(new[] { name, value });
+        }
 
-		[CanBeNull]
-		private static Process TryGetCurrentProcess()
-		{
-			try
-			{
-				return Process.GetCurrentProcess();
-			}
-			catch (Exception ex)
-			{
-				Log.Warn(ex);
-				return null;
-			}
-		}
+        [CanBeNull]
+        private static Process TryGetCurrentProcess()
+        {
+            try
+            {
+                return Process.GetCurrentProcess();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex);
+                return null;
+            }
+        }
 
-		private static FileVersionInfo TryGetFileVersionInfo()
-		{
-			try
-			{
-				var assembly = Assembly.GetExecutingAssembly();
-				return FileVersionInfo.GetVersionInfo(assembly.Location);
-			}
-			catch (Exception ex)
-			{
-				Log.Warn(ex);
-				return null;
-			}
-		}
+        private static FileVersionInfo TryGetFileVersionInfo()
+        {
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                return FileVersionInfo.GetVersionInfo(assembly.Location);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex);
+                return null;
+            }
+        }
 
 #if NET35
 		[CanBeNull]
@@ -151,35 +151,35 @@ namespace NewRelic.Agent.Core
 		}
 #endif
 
-		[CanBeNull]
-		public static String TryGetAppPath([NotNull] Func<String> pathGetter)
-		{
-			try
-			{
-				var path = pathGetter();
+        [CanBeNull]
+        public static String TryGetAppPath([NotNull] Func<String> pathGetter)
+        {
+            try
+            {
+                var path = pathGetter();
 
-				if (path == null)
-					return null;
+                if (path == null)
+                    return null;
 
-				if (path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
-					path = path.Substring(0, path.Length - 1);
+                if (path.EndsWith(System.IO.Path.DirectorySeparatorChar.ToString()))
+                    path = path.Substring(0, path.Length - 1);
 
-				var index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar + "wwwroot", StringComparison.InvariantCultureIgnoreCase);
-				if (index > 0)
-					path = path.Substring(0, index);
+                var index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar + "wwwroot", StringComparison.InvariantCultureIgnoreCase);
+                if (index > 0)
+                    path = path.Substring(0, index);
 
-				index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
-				if (index > 0 && index < path.Length - 1)
-					path = path.Substring(index + 1);
+                index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
+                if (index > 0 && index < path.Length - 1)
+                    path = path.Substring(index + 1);
 
-				return path;
-			}
-			catch (Exception ex)
-			{
-				Log.Warn(ex);
-				return null;
-			}
-		}
+                return path;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex);
+                return null;
+            }
+        }
 
 #if NET35
 		[CanBeNull]
@@ -214,19 +214,19 @@ namespace NewRelic.Agent.Core
 		}
 #endif
 
-		[NotNull]
-		private static IEnumerable<String> GetLoadedAssemblyNames()
-		{
-			var versionZero = new Version(0, 0, 0, 0);
-			return AppDomain.CurrentDomain.GetAssemblies()
-				.Where(assembly => assembly != null)
-				.Where(assembly => assembly.GetName().Version != versionZero)
+        [NotNull]
+        private static IEnumerable<String> GetLoadedAssemblyNames()
+        {
+            var versionZero = new Version(0, 0, 0, 0);
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => assembly != null)
+                .Where(assembly => assembly.GetName().Version != versionZero)
 #if NET35
 				.Where(assembly => !(assembly is System.Reflection.Emit.AssemblyBuilder))
 #endif
-				.Select(assembly => assembly.FullName)
-				.ToList();
-		}
+                .Select(assembly => assembly.FullName)
+                .ToList();
+        }
 
 #if NET35
 		[NotNull]
@@ -247,27 +247,27 @@ namespace NewRelic.Agent.Core
 		}
 #endif
 
-		public class EnvironmentConverter : JsonConverter
-		{
-			public override void WriteJson([NotNull] JsonWriter writer, Object value, JsonSerializer serializer)
-			{
-				var environment = value as Environment;
-				if (environment == null)
-					throw new NullReferenceException("environment");
+        public class EnvironmentConverter : JsonConverter
+        {
+            public override void WriteJson([NotNull] JsonWriter writer, Object value, JsonSerializer serializer)
+            {
+                var environment = value as Environment;
+                if (environment == null)
+                    throw new NullReferenceException("environment");
 
-				var serialized = JsonConvert.SerializeObject(environment._environmentMap);
-				writer.WriteRawValue(serialized);
-			}
+                var serialized = JsonConvert.SerializeObject(environment._environmentMap);
+                writer.WriteRawValue(serialized);
+            }
 
-			public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
-			{
-				throw new NotImplementedException();
-			}
+            public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+            {
+                throw new NotImplementedException();
+            }
 
-			public override Boolean CanConvert(Type objectType)
-			{
-				return true;
-			}
-		}
-	}
+            public override Boolean CanConvert(Type objectType)
+            {
+                return true;
+            }
+        }
+    }
 }

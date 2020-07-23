@@ -2,14 +2,14 @@
 
 namespace NewRelic.Agent.Core.Events
 {
-	public class ConfigurationDeserializedEvent
-	{
-		[NotNull]
-		public Config.configuration Configuration;
+    public class ConfigurationDeserializedEvent
+    {
+        [NotNull]
+        public Config.configuration Configuration;
 
-		public ConfigurationDeserializedEvent([NotNull] Config.configuration configuration)
-		{
-			Configuration = configuration;
-		}
-	}
+        public ConfigurationDeserializedEvent([NotNull] Config.configuration configuration)
+        {
+            Configuration = configuration;
+        }
+    }
 }

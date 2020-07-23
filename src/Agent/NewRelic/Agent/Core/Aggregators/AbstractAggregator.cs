@@ -8,50 +8,50 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-	public abstract class AbstractAggregator<T> : ConfigurationBasedService
-	{
-		[NotNull]
-		protected readonly IDataTransportService DataTransportService;
+    public abstract class AbstractAggregator<T> : ConfigurationBasedService
+    {
+        [NotNull]
+        protected readonly IDataTransportService DataTransportService;
 
-		[NotNull]
-		private readonly IScheduler _scheduler;
+        [NotNull]
+        private readonly IScheduler _scheduler;
 
-		[NotNull]
-		private readonly IProcessStatic _processStatic;
+        [NotNull]
+        private readonly IProcessStatic _processStatic;
 
-		protected AbstractAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic)
-		{
-			DataTransportService = dataTransportService;
-			_scheduler = scheduler;
-			_processStatic = processStatic;
+        protected AbstractAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic)
+        {
+            DataTransportService = dataTransportService;
+            _scheduler = scheduler;
+            _processStatic = processStatic;
 
-			_scheduler.ExecuteEvery(Harvest, TimeSpan.FromMinutes(1));
+            _scheduler.ExecuteEvery(Harvest, TimeSpan.FromMinutes(1));
 
-			_subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
-		}
+            _subscriptions.Add<PreCleanShutdownEvent>(OnPreCleanShutdown);
+        }
 
-		public abstract void Collect(T wireModel);
+        public abstract void Collect(T wireModel);
 
-		protected abstract void Harvest();
+        protected abstract void Harvest();
 
-		private void OnPreCleanShutdown(PreCleanShutdownEvent obj)
-		{
-			_scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
+        private void OnPreCleanShutdown(PreCleanShutdownEvent obj)
+        {
+            _scheduler.StopExecuting(Harvest, TimeSpan.FromSeconds(2));
 
-			if (!_configuration.CollectorSendDataOnExit)
-				return;
+            if (!_configuration.CollectorSendDataOnExit)
+                return;
 
-			var uptime = DateTime.Now - _processStatic.GetCurrentProcess().StartTime;
-			if (!(uptime.TotalMilliseconds > _configuration.CollectorSendDataOnExitThreshold))
-				return;
+            var uptime = DateTime.Now - _processStatic.GetCurrentProcess().StartTime;
+            if (!(uptime.TotalMilliseconds > _configuration.CollectorSendDataOnExitThreshold))
+                return;
 
-			Harvest();
-		}
+            Harvest();
+        }
 
-		public override void Dispose()
-		{
-			base.Dispose();
-			_scheduler.StopExecuting(Harvest);
-		}
-	}
+        public override void Dispose()
+        {
+            base.Dispose();
+            _scheduler.StopExecuting(Harvest);
+        }
+    }
 }

@@ -9,46 +9,46 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-	public class SystemInfo : ISystemInfo
-	{
-		private IDnsStatic _dnsStatic;
+    public class SystemInfo : ISystemInfo
+    {
+        private IDnsStatic _dnsStatic;
 
-		private const int ExpectedBootIdLength = 36;
+        private const int ExpectedBootIdLength = 36;
 
-		private const int AsciiMaxValue = 127;
+        private const int AsciiMaxValue = 127;
 
 
-		public SystemInfo([NotNull] IDnsStatic dnsStatic)
-		{
-			_dnsStatic = dnsStatic;
-		}
+        public SystemInfo([NotNull] IDnsStatic dnsStatic)
+        {
+            _dnsStatic = dnsStatic;
+        }
 
-		public UInt64 GetTotalPhysicalMemoryBytes()
-		{
-			try
-			{
-				MemoryStatus status = new MemoryStatus();
-				status.length = Marshal.SizeOf(status);
-				if (!GlobalMemoryStatusEx(ref status))
-				{
-					int err = Marshal.GetLastWin32Error();
-					throw new Win32Exception(err);
-				}
-				return status.totalPhys;
-			}
-			catch (Exception)
-			{
-				return 0;
-			}
-		}
+        public UInt64 GetTotalPhysicalMemoryBytes()
+        {
+            try
+            {
+                MemoryStatus status = new MemoryStatus();
+                status.length = Marshal.SizeOf(status);
+                if (!GlobalMemoryStatusEx(ref status))
+                {
+                    int err = Marshal.GetLastWin32Error();
+                    throw new Win32Exception(err);
+                }
+                return status.totalPhys;
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
 
-		public Int32 GetTotalLogicalProcessors()
-		{
-			return System.Environment.ProcessorCount;
-		}
+        public Int32 GetTotalLogicalProcessors()
+        {
+            return System.Environment.ProcessorCount;
+        }
 
-		public BootIdResult GetBootId()
-		{
+        public BootIdResult GetBootId()
+        {
 
 #if NETSTANDARD2_0
 
@@ -73,44 +73,44 @@ namespace NewRelic.Agent.Core.Utilities
 			}
 #endif
 
-			return new BootIdResult(null, true);
-		}
+            return new BootIdResult(null, true);
+        }
 
-		private bool ValidateBootId(string bootId)
-		{
-			return (bootId != null) && IsAsciiString(bootId) && (bootId.Length == ExpectedBootIdLength);
-		}
+        private bool ValidateBootId(string bootId)
+        {
+            return (bootId != null) && IsAsciiString(bootId) && (bootId.Length == ExpectedBootIdLength);
+        }
 
-		private static bool IsAsciiString(string inputString)
-		{
-			if (inputString.Length == 0)
-				return false;
+        private static bool IsAsciiString(string inputString)
+        {
+            if (inputString.Length == 0)
+                return false;
 
-			for (int i = 0; i < inputString.Length; i++)
-			{
-				if (inputString[i] > AsciiMaxValue)
-				{
-					return false;
-				}
-			}
-			return true;
-		}
+            for (int i = 0; i < inputString.Length; i++)
+            {
+                if (inputString[i] > AsciiMaxValue)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-		[StructLayout(LayoutKind.Sequential)]
-		private struct MemoryStatus
-		{
-			public Int32 length;
-			private readonly Int32 memoryLoad;
-			public readonly UInt64 totalPhys;
-			private readonly UInt64 availPhys;
-			private readonly UInt64 totalPageFile;
-			private readonly UInt64 availPageFile;
-			private readonly UInt64 totalVirtual;
-			private readonly UInt64 availVirtual;
-			private readonly UInt64 availExtendedVirtual;
-		}
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MemoryStatus
+        {
+            public Int32 length;
+            private readonly Int32 memoryLoad;
+            public readonly UInt64 totalPhys;
+            private readonly UInt64 availPhys;
+            private readonly UInt64 totalPageFile;
+            private readonly UInt64 availPageFile;
+            private readonly UInt64 totalVirtual;
+            private readonly UInt64 availVirtual;
+            private readonly UInt64 availExtendedVirtual;
+        }
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		private static extern bool GlobalMemoryStatusEx(ref MemoryStatus buffer);
-	}
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GlobalMemoryStatusEx(ref MemoryStatus buffer);
+    }
 }

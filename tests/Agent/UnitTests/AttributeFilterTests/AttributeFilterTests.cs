@@ -10,13 +10,13 @@ using Attribute = AttributeFilterTests.Models.Attribute;
 
 namespace AttributeFilterTests
 {
-	public class AttributeFilterTests
-	{
-		private static String TestCaseData
-		{
-			get
-			{
-				return
+    public class AttributeFilterTests
+    {
+        private static String TestCaseData
+        {
+            get
+            {
+                return
 @"[
   {
 	""testname"":""everything enabled, no include/exclude"",
@@ -366,52 +366,52 @@ namespace AttributeFilterTests
 	  [""transaction_events"", ""transaction_tracer"", ""error_collector"",""browser_monitoring""]
   }
 ]";
-			}
-		}
+            }
+        }
 
-		public static IEnumerable<TestCase[]> TestCases
-		{
-			get
-			{
-				return JsonConvert.DeserializeObject<IEnumerable<TestCase>>(TestCaseData)
-					.Select(testCase => new[] { testCase });
-			}
-		}
+        public static IEnumerable<TestCase[]> TestCases
+        {
+            get
+            {
+                return JsonConvert.DeserializeObject<IEnumerable<TestCase>>(TestCaseData)
+                    .Select(testCase => new[] { testCase });
+            }
+        }
 
-		[TestCaseSource(typeof(AttributeFilterTests), "TestCases")]
-		public void when([NotNull] TestCase testCase)
-		{
-			// Arrange
-			var attributeFilterSettings = testCase.Configuration.ToAttributeFilterSettings();
-			var attributeFilter = new AttributeFilter<Attribute>(attributeFilterSettings);
-			var attribute = new Attribute(testCase.AttributeDestinations.ToAttributeDestination(), testCase.AttributeKey, "foo");
+        [TestCaseSource(typeof(AttributeFilterTests), "TestCases")]
+        public void when([NotNull] TestCase testCase)
+        {
+            // Arrange
+            var attributeFilterSettings = testCase.Configuration.ToAttributeFilterSettings();
+            var attributeFilter = new AttributeFilter<Attribute>(attributeFilterSettings);
+            var attribute = new Attribute(testCase.AttributeDestinations.ToAttributeDestination(), testCase.AttributeKey, "foo");
 
-			// Act
-			var errorDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.ErrorTrace);
-			var javaScriptDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.JavaScriptAgent);
-			var transactionEventDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.TransactionEvent);
-			var transactionTraceDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.TransactionTrace);
+            // Act
+            var errorDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.ErrorTrace);
+            var javaScriptDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.JavaScriptAgent);
+            var transactionEventDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.TransactionEvent);
+            var transactionTraceDestination = attributeFilter.FilterAttributes(new[] { attribute }, AttributeDestinations.TransactionTrace);
 
-			// Assert
-			if (testCase.ExpectedDestinations.Contains(Destinations.BrowserMonitoring))
-				Assert.True(javaScriptDestination.Any(), testCase.TestName);
-			else
-				Assert.False(javaScriptDestination.Any(), testCase.TestName);
+            // Assert
+            if (testCase.ExpectedDestinations.Contains(Destinations.BrowserMonitoring))
+                Assert.True(javaScriptDestination.Any(), testCase.TestName);
+            else
+                Assert.False(javaScriptDestination.Any(), testCase.TestName);
 
-			if (testCase.ExpectedDestinations.Contains(Destinations.ErrorCollector))
-				Assert.True(errorDestination.Any(), testCase.TestName);
-			else
-				Assert.False(errorDestination.Any(), testCase.TestName);
+            if (testCase.ExpectedDestinations.Contains(Destinations.ErrorCollector))
+                Assert.True(errorDestination.Any(), testCase.TestName);
+            else
+                Assert.False(errorDestination.Any(), testCase.TestName);
 
-			if (testCase.ExpectedDestinations.Contains(Destinations.TransactionEvents))
-				Assert.True(transactionEventDestination.Any(), testCase.TestName);
-			else
-				Assert.False(transactionEventDestination.Any(), testCase.TestName);
+            if (testCase.ExpectedDestinations.Contains(Destinations.TransactionEvents))
+                Assert.True(transactionEventDestination.Any(), testCase.TestName);
+            else
+                Assert.False(transactionEventDestination.Any(), testCase.TestName);
 
-			if (testCase.ExpectedDestinations.Contains(Destinations.TransactionTracer))
-				Assert.True(transactionTraceDestination.Any(), testCase.TestName);
-			else
-				Assert.False(transactionTraceDestination.Any(), testCase.TestName);
-		}
-	}
+            if (testCase.ExpectedDestinations.Contains(Destinations.TransactionTracer))
+                Assert.True(transactionTraceDestination.Any(), testCase.TestName);
+            else
+                Assert.False(transactionTraceDestination.Any(), testCase.TestName);
+        }
+    }
 }

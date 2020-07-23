@@ -7,90 +7,90 @@ using NUnit.Framework;
 // ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Transactions.UnitTest
 {
-	[TestFixture]
-	public class Class_SyntheticsData
-	{
-		const string EncodingKey = "TestEncodingKey";
-		
-		#region TryCreate
+    [TestFixture]
+    public class Class_SyntheticsData
+    {
+        const string EncodingKey = "TestEncodingKey";
 
-		[Test]
-		[TestCase(null, "[1, 2, \"3\", \"4\", \"5\"]", EncodingKey)]
-		[TestCase(2, null, EncodingKey)]
-		[TestCase(2, "[1, 2, \"3\", \"4\", \"5\"]", null)]
-		public void TryCreate_ReturnsNull_IfParameterIsNull(int? accountId, string header, string encodingKey)
-		{
-			var accountIds = accountId == null ? null : new List<long> {accountId.Value};
-			var obfuscatedHeader = header == null ? null : Strings.Base64Encode(header, EncodingKey);
+        #region TryCreate
 
-			SyntheticsHeader.TryCreate(accountIds, obfuscatedHeader, encodingKey);
-		}
+        [Test]
+        [TestCase(null, "[1, 2, \"3\", \"4\", \"5\"]", EncodingKey)]
+        [TestCase(2, null, EncodingKey)]
+        [TestCase(2, "[1, 2, \"3\", \"4\", \"5\"]", null)]
+        public void TryCreate_ReturnsNull_IfParameterIsNull(int? accountId, string header, string encodingKey)
+        {
+            var accountIds = accountId == null ? null : new List<long> { accountId.Value };
+            var obfuscatedHeader = header == null ? null : Strings.Base64Encode(header, EncodingKey);
 
-		[Test]
-		[TestCase("banana", Description = "Invalid (non-JSON) header")]
-		[TestCase("[999, 2, \"3\", \"4\", \"5\"]", Description = "Unsupported version number")]
-		[TestCase("[999]", Description = "Unsupported version number and missing all other properties")]
-		[TestCase("[\"banana\", 2, \"3\", \"4\", \"5\"]", Description = "Invalid version number")]
-		[TestCase("[1, \"banana\", \"3\", \"4\", \"5\"]", Description = "Invalid account ID")]
-		[TestCase("[1, 2, \"3\", \"4\", \"5\", 6, \"7\"]", Description = "Header with extra data")]
-		[TestCase("[1, 2, \"3\", \"4\"]", Description = "Header with missing extra data")]
-		public void TryCreate_ReturnsNull_IfHeaderIsInvalid(string header)
-		{
-			var obfuscatedHeader = Strings.Base64Encode(header, EncodingKey);
-			var trustedAccountIds = new List<long> {1, 2, 3};
+            SyntheticsHeader.TryCreate(accountIds, obfuscatedHeader, encodingKey);
+        }
 
-			var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
+        [Test]
+        [TestCase("banana", Description = "Invalid (non-JSON) header")]
+        [TestCase("[999, 2, \"3\", \"4\", \"5\"]", Description = "Unsupported version number")]
+        [TestCase("[999]", Description = "Unsupported version number and missing all other properties")]
+        [TestCase("[\"banana\", 2, \"3\", \"4\", \"5\"]", Description = "Invalid version number")]
+        [TestCase("[1, \"banana\", \"3\", \"4\", \"5\"]", Description = "Invalid account ID")]
+        [TestCase("[1, 2, \"3\", \"4\", \"5\", 6, \"7\"]", Description = "Header with extra data")]
+        [TestCase("[1, 2, \"3\", \"4\"]", Description = "Header with missing extra data")]
+        public void TryCreate_ReturnsNull_IfHeaderIsInvalid(string header)
+        {
+            var obfuscatedHeader = Strings.Base64Encode(header, EncodingKey);
+            var trustedAccountIds = new List<long> { 1, 2, 3 };
 
-			Assert.IsNull(syntheticsData);
-		}
+            var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
-		[Test]
-		public void TryCreate_ReturnsNull_IfAccountIdIsNotTrusted()
-		{
-			var obfuscatedHeader = Strings.Base64Encode("[1, 2, \"3\", \"4\", \"5\"]", EncodingKey);
-			var trustedAccountIds = new List<long> { 1, 3 };
+            Assert.IsNull(syntheticsData);
+        }
 
-			var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
+        [Test]
+        public void TryCreate_ReturnsNull_IfAccountIdIsNotTrusted()
+        {
+            var obfuscatedHeader = Strings.Base64Encode("[1, 2, \"3\", \"4\", \"5\"]", EncodingKey);
+            var trustedAccountIds = new List<long> { 1, 3 };
 
-			Assert.IsNull(syntheticsData);
-		}
+            var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
-		[Test]
-		[TestCase("[1, 2, \"3\", \"4\", \"5\"]", Description = "Normal, valid header")]
-		public void TryCreate_ReturnsData_IfHeaderContainsValidData(string header)
-		{
-			var obfuscatedHeader = Strings.Base64Encode(header, EncodingKey);
-			var trustedAccountIds = new List<long> { 1, 2, 3 };
+            Assert.IsNull(syntheticsData);
+        }
 
-			var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
+        [Test]
+        [TestCase("[1, 2, \"3\", \"4\", \"5\"]", Description = "Normal, valid header")]
+        public void TryCreate_ReturnsData_IfHeaderContainsValidData(string header)
+        {
+            var obfuscatedHeader = Strings.Base64Encode(header, EncodingKey);
+            var trustedAccountIds = new List<long> { 1, 2, 3 };
 
-			NrAssert.Multiple(
-				() => Assert.IsNotNull(syntheticsData),
-				() => Assert.AreEqual(1, syntheticsData.Version),
-				() => Assert.AreEqual(2, syntheticsData.AccountId),
-				() => Assert.AreEqual("3", syntheticsData.ResourceId),
-				() => Assert.AreEqual("4", syntheticsData.JobId),
-				() => Assert.AreEqual("5", syntheticsData.MonitorId)
-				);
-		}
+            var syntheticsData = SyntheticsHeader.TryCreate(trustedAccountIds, obfuscatedHeader, EncodingKey);
 
-		#endregion TryCreate
+            NrAssert.Multiple(
+                () => Assert.IsNotNull(syntheticsData),
+                () => Assert.AreEqual(1, syntheticsData.Version),
+                () => Assert.AreEqual(2, syntheticsData.AccountId),
+                () => Assert.AreEqual("3", syntheticsData.ResourceId),
+                () => Assert.AreEqual("4", syntheticsData.JobId),
+                () => Assert.AreEqual("5", syntheticsData.MonitorId)
+                );
+        }
 
-		#region TryGetObfuscated
+        #endregion TryCreate
 
-		[Test]
-		public void TryGetObfuscated_ReturnsObfuscatedString()
-		{
-			var syntheticsHeader = new SyntheticsHeader(1, 2, "3", "4", "5") {EncodingKey = EncodingKey};
+        #region TryGetObfuscated
 
-			var obfuscatedHeader = syntheticsHeader.TryGetObfuscated();
+        [Test]
+        public void TryGetObfuscated_ReturnsObfuscatedString()
+        {
+            var syntheticsHeader = new SyntheticsHeader(1, 2, "3", "4", "5") { EncodingKey = EncodingKey };
 
-			// Assertion relies on internal knowledge of how SyntheticsHeader (de)obfuscates headers
-			var deobfuscatedHeader = Strings.Base64Decode(obfuscatedHeader, EncodingKey);
-			Assert.AreEqual("[1,2,\"3\",\"4\",\"5\"]", deobfuscatedHeader);
-		}
+            var obfuscatedHeader = syntheticsHeader.TryGetObfuscated();
 
-		#endregion
+            // Assertion relies on internal knowledge of how SyntheticsHeader (de)obfuscates headers
+            var deobfuscatedHeader = Strings.Base64Decode(obfuscatedHeader, EncodingKey);
+            Assert.AreEqual("[1,2,\"3\",\"4\",\"5\"]", deobfuscatedHeader);
+        }
 
-	}
+        #endregion
+
+    }
 }

@@ -11,169 +11,169 @@ using NUnit.Framework;
 
 namespace NewRelic.Collections.UnitTests
 {
-	// ReSharper disable once InconsistentNaming
-	public class Class_ConcurrentList
-	{
-		[NotNull]
-		private readonly ConcurrentList<Int32> _concurrentList;
+    // ReSharper disable once InconsistentNaming
+    public class Class_ConcurrentList
+    {
+        [NotNull]
+        private readonly ConcurrentList<Int32> _concurrentList;
 
-		public Class_ConcurrentList()
-		{
-			_concurrentList = new ConcurrentList<Int32>();
-		}
+        public Class_ConcurrentList()
+        {
+            _concurrentList = new ConcurrentList<Int32>();
+        }
 
-		
-		[TestCase(new[] { 1 })]
-		[TestCase(new[] { 1, 1 })]
-		[TestCase(new[] { 1, 1, 2 })]
-		public void ConcurrentList_FunctionsAsNormalList_ForSingleThreadedAccess([NotNull] params Int32[] numbersToAdd)
-		{
-			// Because we're not doing anything interesting with the list itself, it seems reasonable to just wrap all of the basic list API tests into one test
 
-			// Add
-			foreach (var number in numbersToAdd)
-				_concurrentList.Add(number);
+        [TestCase(new[] { 1 })]
+        [TestCase(new[] { 1, 1 })]
+        [TestCase(new[] { 1, 1, 2 })]
+        public void ConcurrentList_FunctionsAsNormalList_ForSingleThreadedAccess([NotNull] params Int32[] numbersToAdd)
+        {
+            // Because we're not doing anything interesting with the list itself, it seems reasonable to just wrap all of the basic list API tests into one test
 
-			// GetEnumerator<T>
-			var index = 0;
-			var genericEnumerator = _concurrentList.GetEnumerator();
-			while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
-				Assert.AreEqual(numbersToAdd[index++], genericEnumerator.Current);
-			Assert.AreEqual(numbersToAdd.Length, index);
+            // Add
+            foreach (var number in numbersToAdd)
+                _concurrentList.Add(number);
 
-			// GetEnumerator
-			index = 0;
-			var nongenericEnumerator = ((IEnumerable)_concurrentList).GetEnumerator();
-			while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
-				Assert.AreEqual(numbersToAdd[index++], nongenericEnumerator.Current);
-			Assert.AreEqual(numbersToAdd.Length, index);
+            // GetEnumerator<T>
+            var index = 0;
+            var genericEnumerator = _concurrentList.GetEnumerator();
+            while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
+                Assert.AreEqual(numbersToAdd[index++], genericEnumerator.Current);
+            Assert.AreEqual(numbersToAdd.Length, index);
 
-			// Count
-			Assert.AreEqual(_concurrentList.Count, numbersToAdd.Length);
+            // GetEnumerator
+            index = 0;
+            var nongenericEnumerator = ((IEnumerable)_concurrentList).GetEnumerator();
+            while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
+                Assert.AreEqual(numbersToAdd[index++], nongenericEnumerator.Current);
+            Assert.AreEqual(numbersToAdd.Length, index);
 
-			// CopyTo
-			var destinationArray = new Int32[numbersToAdd.Length];
-			_concurrentList.CopyTo(destinationArray, 0);
-			Assert.True(numbersToAdd.SequenceEqual(destinationArray));
+            // Count
+            Assert.AreEqual(_concurrentList.Count, numbersToAdd.Length);
 
-			// Contains
-			Assert.True(numbersToAdd.All(_concurrentList.Contains));
+            // CopyTo
+            var destinationArray = new Int32[numbersToAdd.Length];
+            _concurrentList.CopyTo(destinationArray, 0);
+            Assert.True(numbersToAdd.SequenceEqual(destinationArray));
 
-			// Remove
-			_concurrentList.Remove(numbersToAdd.First());
-			Assert.True(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
+            // Contains
+            Assert.True(numbersToAdd.All(_concurrentList.Contains));
 
-			// Insert
-			_concurrentList.Insert(0, numbersToAdd.First());
-			Assert.True(_concurrentList.SequenceEqual(numbersToAdd));
+            // Remove
+            _concurrentList.Remove(numbersToAdd.First());
+            Assert.True(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
 
-			// IndexOf
-			index = _concurrentList.IndexOf(numbersToAdd.First());
-			Assert.AreEqual(0, index);
+            // Insert
+            _concurrentList.Insert(0, numbersToAdd.First());
+            Assert.True(_concurrentList.SequenceEqual(numbersToAdd));
 
-			// RemoveAt
-			_concurrentList.RemoveAt(0);
-			Assert.True(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
+            // IndexOf
+            index = _concurrentList.IndexOf(numbersToAdd.First());
+            Assert.AreEqual(0, index);
 
-			// Indexer -- Set
-			_concurrentList.Insert(0, numbersToAdd.First());
-			_concurrentList[0] = _concurrentList[0] + 1;
-			Assert.AreEqual(numbersToAdd.First() + 1, _concurrentList.First());
+            // RemoveAt
+            _concurrentList.RemoveAt(0);
+            Assert.True(_concurrentList.SequenceEqual(numbersToAdd.Skip(1)));
 
-			// Indexer -- Get
-			Assert.AreEqual(numbersToAdd.First() + 1, _concurrentList[0]);
+            // Indexer -- Set
+            _concurrentList.Insert(0, numbersToAdd.First());
+            _concurrentList[0] = _concurrentList[0] + 1;
+            Assert.AreEqual(numbersToAdd.First() + 1, _concurrentList.First());
 
-			// Clear
-			_concurrentList.Clear();
-			Assert.AreEqual(0, _concurrentList.Count);
-			Assert.False(numbersToAdd.Any(_concurrentList.Contains));
-		}
+            // Indexer -- Get
+            Assert.AreEqual(numbersToAdd.First() + 1, _concurrentList[0]);
 
-		[Test]
-		public void ConcurrentList_IsThreadSafe()
-		{
-			// Note: this test does not definitively prove that the collection is thread-safe,
-			// but any thread-safety test is better than no thread safety test.
-			var random = new Random();
+            // Clear
+            _concurrentList.Clear();
+            Assert.AreEqual(0, _concurrentList.Count);
+            Assert.False(numbersToAdd.Any(_concurrentList.Contains));
+        }
 
-			var tasks = Enumerable.Range(1, 100)
-				.Select(_ =>
-				{
-					var numbersToAdd = new[] { random.Next(), random.Next(), random.Next() };
-					Action testAction = () => ExerciseFullApi(_concurrentList, numbersToAdd);
-					return new Task(testAction);
-				})
-				.ToList();
+        [Test]
+        public void ConcurrentList_IsThreadSafe()
+        {
+            // Note: this test does not definitively prove that the collection is thread-safe,
+            // but any thread-safety test is better than no thread safety test.
+            var random = new Random();
 
-			// ReSharper disable PossibleNullReferenceException
-			tasks.ForEach(task => task.Start());
-			tasks.ForEach(task => task.Wait());
-			// ReSharper restore PossibleNullReferenceException
-		}
+            var tasks = Enumerable.Range(1, 100)
+                .Select(_ =>
+                {
+                    var numbersToAdd = new[] { random.Next(), random.Next(), random.Next() };
+                    Action testAction = () => ExerciseFullApi(_concurrentList, numbersToAdd);
+                    return new Task(testAction);
+                })
+                .ToList();
 
-		// ReSharper disable RedundantAssignment
-		private static void ExerciseFullApi([NotNull] IList<Int32> concurrentList, [NotNull] Int32[] numbersToAdd)
-		{
-			// ReSharper disable once NotAccessedVariable
-			dynamic _;
+            // ReSharper disable PossibleNullReferenceException
+            tasks.ForEach(task => task.Start());
+            tasks.ForEach(task => task.Wait());
+            // ReSharper restore PossibleNullReferenceException
+        }
 
-			// Add
-			foreach (var number in numbersToAdd)
-				concurrentList.Add(number);
+        // ReSharper disable RedundantAssignment
+        private static void ExerciseFullApi([NotNull] IList<Int32> concurrentList, [NotNull] Int32[] numbersToAdd)
+        {
+            // ReSharper disable once NotAccessedVariable
+            dynamic _;
 
-			var index = 0;
-			var genericEnumerator = concurrentList.GetEnumerator();
-			while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
-			{
-				_ = genericEnumerator.Current;
-			}
+            // Add
+            foreach (var number in numbersToAdd)
+                concurrentList.Add(number);
 
-			index = 0;
-			var nongenericEnumerator = ((IEnumerable)concurrentList).GetEnumerator();
-			while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
-			{
-				_ = nongenericEnumerator.Current;
-			}
+            var index = 0;
+            var genericEnumerator = concurrentList.GetEnumerator();
+            while (index < numbersToAdd.Length && genericEnumerator.MoveNext())
+            {
+                _ = genericEnumerator.Current;
+            }
 
-			_ = concurrentList.Count;
+            index = 0;
+            var nongenericEnumerator = ((IEnumerable)concurrentList).GetEnumerator();
+            while (index < numbersToAdd.Length && nongenericEnumerator.MoveNext())
+            {
+                _ = nongenericEnumerator.Current;
+            }
 
-			var destinationArray = new Int32[500];
-			concurrentList.CopyTo(destinationArray, 0);
-			_ = concurrentList.Contains(numbersToAdd.First());
-			concurrentList.Remove(numbersToAdd.First());
-			concurrentList.Insert(0, numbersToAdd.First());
-			_ = concurrentList.IndexOf(numbersToAdd.First());
+            _ = concurrentList.Count;
 
-			try
-			{
-				// This operation can throw if another thread clears the collection
-				concurrentList.RemoveAt(0);
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-			}
+            var destinationArray = new Int32[500];
+            concurrentList.CopyTo(destinationArray, 0);
+            _ = concurrentList.Contains(numbersToAdd.First());
+            concurrentList.Remove(numbersToAdd.First());
+            concurrentList.Insert(0, numbersToAdd.First());
+            _ = concurrentList.IndexOf(numbersToAdd.First());
 
-			concurrentList.Insert(0, numbersToAdd.First());
-			try
-			{
-				// This operation can throw if another thread clears the collection
-				concurrentList[0] = concurrentList[0] + 1;
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-			}
+            try
+            {
+                // This operation can throw if another thread clears the collection
+                concurrentList.RemoveAt(0);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+            }
 
-			try
-			{
-				// This operation can throw if another thread clears the collection
-				_ = concurrentList[0];
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-			}
+            concurrentList.Insert(0, numbersToAdd.First());
+            try
+            {
+                // This operation can throw if another thread clears the collection
+                concurrentList[0] = concurrentList[0] + 1;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+            }
 
-			concurrentList.Clear();
-		}
-		// ReSharper restore RedundantAssignment
-	}
+            try
+            {
+                // This operation can throw if another thread clears the collection
+                _ = concurrentList[0];
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+            }
+
+            concurrentList.Clear();
+        }
+        // ReSharper restore RedundantAssignment
+    }
 }

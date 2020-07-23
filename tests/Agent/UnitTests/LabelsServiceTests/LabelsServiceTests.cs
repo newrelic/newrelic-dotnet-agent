@@ -11,55 +11,55 @@ using Telerik.JustMock;
 
 namespace Tests.NewRelic.Agent
 {
-	[TestFixture]
-	public class LabelsServiceTests
-	{
-		[TestCase(null)]
-		public void empty_collection(String labelsConfigurationString)
-		{
-			// arrange
-			var configurationService = Mock.Create<IConfigurationService>();
-			Mock.Arrange(() => configurationService.Configuration.Labels).Returns(labelsConfigurationString);
+    [TestFixture]
+    public class LabelsServiceTests
+    {
+        [TestCase(null)]
+        public void empty_collection(String labelsConfigurationString)
+        {
+            // arrange
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(labelsConfigurationString);
 
-			// act
-			var labelsService = new LabelsService(configurationService);
+            // act
+            var labelsService = new LabelsService(configurationService);
 
-			// assert
-			CollectionAssert.IsEmpty(labelsService.Labels);
-		}
+            // assert
+            CollectionAssert.IsEmpty(labelsService.Labels);
+        }
 
-		public class TestCase
-		{
-			[JsonProperty(PropertyName = "name")]
-			public readonly String Name;
-			[JsonProperty(PropertyName = "labelString")]
-			public readonly String LabelConfigurationString;
-			[JsonProperty(PropertyName = "warning")]
-			public readonly Boolean Warning;
-			[JsonProperty(PropertyName = "expected")]
-			public readonly IEnumerable<Label> Expected;
+        public class TestCase
+        {
+            [JsonProperty(PropertyName = "name")]
+            public readonly String Name;
+            [JsonProperty(PropertyName = "labelString")]
+            public readonly String LabelConfigurationString;
+            [JsonProperty(PropertyName = "warning")]
+            public readonly Boolean Warning;
+            [JsonProperty(PropertyName = "expected")]
+            public readonly IEnumerable<Label> Expected;
 
-			public class Label
-			{
-				[JsonProperty(PropertyName = "label_type")]
-				public readonly String LabelType;
-				[JsonProperty(PropertyName = "label_value")]
-				public readonly String LabelValue;
-			}
+            public class Label
+            {
+                [JsonProperty(PropertyName = "label_type")]
+                public readonly String LabelType;
+                [JsonProperty(PropertyName = "label_value")]
+                public readonly String LabelValue;
+            }
 
-			public override string ToString()
-			{
-				return Name;
-			}
-		}
+            public override string ToString()
+            {
+                return Name;
+            }
+        }
 
-		public static IEnumerable<TestCase[]> CrossAgentTestCases
-		{
-			get
-			{
-				#region testCasesJson
+        public static IEnumerable<TestCase[]> CrossAgentTestCases
+        {
+            get
+            {
+                #region testCasesJson
 
-				const string testCasesJson = @"[
+                const string testCasesJson = @"[
   {
     ""name"":        ""empty"",
     ""labelString"": """",
@@ -255,43 +255,43 @@ namespace Tests.NewRelic.Agent
   }
 ]";
 
-				#endregion
+                #endregion
 
-				var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(testCasesJson);
-				Assert.NotNull(testCases);
-				return testCases
-					.Where(testCase => testCase != null)
-					.Select(testCase => new[] {testCase});
-			}
-		}
+                var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(testCasesJson);
+                Assert.NotNull(testCases);
+                return testCases
+                    .Where(testCase => testCase != null)
+                    .Select(testCase => new[] { testCase });
+            }
+        }
 
-		[TestCaseSource(typeof(LabelsServiceTests), "CrossAgentTestCases")]
-		public void cross_agent_tests(TestCase testCase)
-		{
-			var logAppender = new log4net.Appender.MemoryAppender();
-			var logFilter = new log4net.Filter.LevelMatchFilter();
-			logFilter.LevelToMatch = log4net.Core.Level.Warn;
-			logAppender.AddFilter(logFilter);
-			var logger = (log4net.LogManager.GetRepository() as log4net.Repository.Hierarchy.Hierarchy).Root;
-			logger.AddAppender(logAppender);
-			logger.Level = log4net.Core.Level.Warn;
-			logger.Repository.Configured = true;
+        [TestCaseSource(typeof(LabelsServiceTests), "CrossAgentTestCases")]
+        public void cross_agent_tests(TestCase testCase)
+        {
+            var logAppender = new log4net.Appender.MemoryAppender();
+            var logFilter = new log4net.Filter.LevelMatchFilter();
+            logFilter.LevelToMatch = log4net.Core.Level.Warn;
+            logAppender.AddFilter(logFilter);
+            var logger = (log4net.LogManager.GetRepository() as log4net.Repository.Hierarchy.Hierarchy).Root;
+            logger.AddAppender(logAppender);
+            logger.Level = log4net.Core.Level.Warn;
+            logger.Repository.Configured = true;
 
-			// arrange
-			var configurationService = Mock.Create<IConfigurationService>();
-			Mock.Arrange(() => configurationService.Configuration.Labels).Returns(testCase.LabelConfigurationString);
+            // arrange
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration.Labels).Returns(testCase.LabelConfigurationString);
 
-			// act
-			var labelsService = new LabelsService(configurationService);
-			var actualResults = JsonConvert.SerializeObject(labelsService.Labels);
-			var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
+            // act
+            var labelsService = new LabelsService(configurationService);
+            var actualResults = JsonConvert.SerializeObject(labelsService.Labels);
+            var expectedResults = JsonConvert.SerializeObject(testCase.Expected);
 
-			// assert
-			Assert.AreEqual(expectedResults, actualResults);
-			if (testCase.Warning)
-				Assert.AreNotEqual(0, logAppender.GetEvents().Length);
-			else
-				Assert.AreEqual(0, logAppender.GetEvents().Length);
-		}
-	}
+            // assert
+            Assert.AreEqual(expectedResults, actualResults);
+            if (testCase.Warning)
+                Assert.AreNotEqual(0, logAppender.GetEvents().Length);
+            else
+                Assert.AreEqual(0, logAppender.GetEvents().Length);
+        }
+    }
 }

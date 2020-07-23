@@ -6,105 +6,105 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing
 {
-	public static class SqlServerExplainPlanActions
-	{
-		public static ExplainPlan GenerateExplainPlan(Object resources)
-		{
-			if (!(resources is IDbCommand))
-				return null;
+    public static class SqlServerExplainPlanActions
+    {
+        public static ExplainPlan GenerateExplainPlan(Object resources)
+        {
+            if (!(resources is IDbCommand))
+                return null;
 
-			var dbCommand = (IDbCommand) resources;
-			if (dbCommand.Connection.State != ConnectionState.Open)
-				dbCommand.Connection.Open();
+            var dbCommand = (IDbCommand)resources;
+            if (dbCommand.Connection.State != ConnectionState.Open)
+                dbCommand.Connection.Open();
 
-			ExplainPlan explainPlan = null;
+            ExplainPlan explainPlan = null;
 
-			//KILL THE CONNECTION NO MATTER WHAT HAPPENS DURING EXECUTION TO AVOID CONNECTION LEAKING
-			using (dbCommand)
-			using (dbCommand.Connection)
-			{
-				SetShowPlan(dbCommand.Connection, true);
+            //KILL THE CONNECTION NO MATTER WHAT HAPPENS DURING EXECUTION TO AVOID CONNECTION LEAKING
+            using (dbCommand)
+            using (dbCommand.Connection)
+            {
+                SetShowPlan(dbCommand.Connection, true);
 
-				SqlParser.FixParameterizedSql(dbCommand);
+                SqlParser.FixParameterizedSql(dbCommand);
 
-				using (IDataReader reader = dbCommand.ExecuteReader())
-				{
-					var headers = GetReaderHeaders(reader);
-					// Decide which headers should be obfuscated based on the Vendor (this is only SQL)
-					var obfuscatedHeaders = GetObfuscatedIndexes(headers);
-					explainPlan = new ExplainPlan(headers, new List<List<Object>>(), obfuscatedHeaders);
+                using (IDataReader reader = dbCommand.ExecuteReader())
+                {
+                    var headers = GetReaderHeaders(reader);
+                    // Decide which headers should be obfuscated based on the Vendor (this is only SQL)
+                    var obfuscatedHeaders = GetObfuscatedIndexes(headers);
+                    explainPlan = new ExplainPlan(headers, new List<List<Object>>(), obfuscatedHeaders);
 
-					var explainPlanDatas = new List<List<Object>>();
-					while (reader.Read())
-					{
-						Object[] values = new Object[reader.FieldCount];
-						reader.GetValues(values);
-						explainPlanDatas.Add(values.ToList());
-					}
+                    var explainPlanDatas = new List<List<Object>>();
+                    while (reader.Read())
+                    {
+                        Object[] values = new Object[reader.FieldCount];
+                        reader.GetValues(values);
+                        explainPlanDatas.Add(values.ToList());
+                    }
 
-					explainPlan.ExplainPlanDatas = explainPlanDatas;
+                    explainPlan.ExplainPlanDatas = explainPlanDatas;
 
-				}
-				SetShowPlan(dbCommand.Connection, false);
-			}
+                }
+                SetShowPlan(dbCommand.Connection, false);
+            }
 
-			return explainPlan;
-		}
+            return explainPlan;
+        }
 
-		public static Object AllocateResources(IDbCommand command)
-		{
-			if (!(command is ICloneable))
-				return null;
+        public static Object AllocateResources(IDbCommand command)
+        {
+            if (!(command is ICloneable))
+                return null;
 
-			var clonedCommand = (IDbCommand)((ICloneable)command).Clone();
-			var connection = (IDbConnection)((ICloneable)command.Connection).Clone();
+            var clonedCommand = (IDbCommand)((ICloneable)command).Clone();
+            var connection = (IDbConnection)((ICloneable)command.Connection).Clone();
 
-			clonedCommand.Connection = connection;
-			clonedCommand.Transaction = null;
+            clonedCommand.Connection = connection;
+            clonedCommand.Transaction = null;
 
-			return clonedCommand;
-		}
+            return clonedCommand;
+        }
 
-		public static List<Int32> GetObfuscatedIndexes(List<String> headers)
-		{
-			var indexes = new List<Int32>(ObfuscateFieldNames().Length);
-			foreach (var field in ObfuscateFieldNames())
-			{
-				var index = headers.FindIndex(field.Equals);
-				if (index >= 0)
-				{
-					indexes.Add(index);
-				}
-			}
+        public static List<Int32> GetObfuscatedIndexes(List<String> headers)
+        {
+            var indexes = new List<Int32>(ObfuscateFieldNames().Length);
+            foreach (var field in ObfuscateFieldNames())
+            {
+                var index = headers.FindIndex(field.Equals);
+                if (index >= 0)
+                {
+                    indexes.Add(index);
+                }
+            }
 
-			return indexes;
-		}
+            return indexes;
+        }
 
-		private static List<String> GetReaderHeaders(IDataReader reader)
-		{
-			List<String> headers = new List<String>(reader.FieldCount);
-			for (Int32 i = 0; i < reader.FieldCount; i++)
-			{
-				headers.Add(reader.GetName(i));
-			}
-			return headers;
-		}
+        private static List<String> GetReaderHeaders(IDataReader reader)
+        {
+            List<String> headers = new List<String>(reader.FieldCount);
+            for (Int32 i = 0; i < reader.FieldCount; i++)
+            {
+                headers.Add(reader.GetName(i));
+            }
+            return headers;
+        }
 
-		private static String[] ObfuscateFieldNames()
-		{
-			return new[] {
-					"StmtText",
-					"Argument"
-				};
-		}
+        private static String[] ObfuscateFieldNames()
+        {
+            return new[] {
+                    "StmtText",
+                    "Argument"
+                };
+        }
 
-		private static void SetShowPlan(IDbConnection connection, Boolean on)
-		{
-			using (IDbCommand command = connection.CreateCommand())
-			{
-				command.CommandText = "SET SHOWPLAN_ALL " + (on ? "ON" : "OFF");
-				command.ExecuteNonQuery();
-			}
-		}
-	}
+        private static void SetShowPlan(IDbConnection connection, Boolean on)
+        {
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                command.CommandText = "SET SHOWPLAN_ALL " + (on ? "ON" : "OFF");
+                command.ExecuteNonQuery();
+            }
+        }
+    }
 }

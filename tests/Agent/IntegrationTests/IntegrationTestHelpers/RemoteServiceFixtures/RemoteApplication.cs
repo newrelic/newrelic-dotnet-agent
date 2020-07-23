@@ -9,236 +9,236 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
-	public enum ApplicationType
-	{
-		Bounded,
-		Unbounded
-	}
+    public enum ApplicationType
+    {
+        Bounded,
+        Unbounded
+    }
 
-	public abstract class RemoteApplication : IDisposable
-	{
-		#region Constant/Static
-		
-		[NotNull]
-		private static readonly String AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+    public abstract class RemoteApplication : IDisposable
+    {
+        #region Constant/Static
 
-		[NotNull]
-		private static readonly String RepositoryRootPath = Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..", "..", "..");
+        [NotNull]
+        private static readonly String AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
-		[NotNull]
-		protected static readonly String SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
+        [NotNull]
+        private static readonly String RepositoryRootPath = Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..", "..", "..");
 
-		[NotNull]
-		protected readonly String SourceApplicationsDirectoryPath;
+        [NotNull]
+        protected static readonly String SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
 
-		[NotNull]
-		private static readonly String SourceNewRelicHomeDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64");
+        [NotNull]
+        protected readonly String SourceApplicationsDirectoryPath;
 
-		[NotNull]
-		private static readonly String SourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64 CoreClr");
+        [NotNull]
+        private static readonly String SourceNewRelicHomeDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64");
 
-		[NotNull]
-		private static readonly String SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
+        [NotNull]
+        private static readonly String SourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64 CoreClr");
 
-		[NotNull]
-		private static readonly String SourceApplicationLauncherDirectoryPath = Path.Combine(SourceApplicationLauncherProjectDirectoryPath, "bin", Utilities.Configuration);
+        [NotNull]
+        private static readonly String SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
 
-		[NotNull]
-		private static String DestinationWorkingDirectoryRemotePath { get { return EnvironmentVariables.DestinationWorkingDirectoryRemotePath ?? DestinationWorkingDirectoryRemoteDefault; } }
+        [NotNull]
+        private static readonly String SourceApplicationLauncherDirectoryPath = Path.Combine(SourceApplicationLauncherProjectDirectoryPath, "bin", Utilities.Configuration);
 
-		[NotNull]
-		private static readonly String DestinationWorkingDirectoryRemoteDefault = Path.Combine(@"\\", Dns.GetHostName(), "C$", "IntegrationTestWorkingDirectory");
+        [NotNull]
+        private static String DestinationWorkingDirectoryRemotePath { get { return EnvironmentVariables.DestinationWorkingDirectoryRemotePath ?? DestinationWorkingDirectoryRemoteDefault; } }
 
-		#endregion
+        [NotNull]
+        private static readonly String DestinationWorkingDirectoryRemoteDefault = Path.Combine(@"\\", Dns.GetHostName(), "C$", "IntegrationTestWorkingDirectory");
 
-		#region Private
+        #endregion
 
-		[CanBeNull]
-		private String _port;
+        #region Private
 
-		[NotNull]
-		private String DestinationNewRelicLogFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Logs"); } }
+        [CanBeNull]
+        private String _port;
 
-		#endregion
+        [NotNull]
+        private String DestinationNewRelicLogFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Logs"); } }
 
-		#region Abstract/Virtual
+        #endregion
 
-		[NotNull]
-		protected abstract String ApplicationDirectoryName { get; }
+        #region Abstract/Virtual
 
-		[NotNull]
-		protected abstract String SourceApplicationDirectoryPath { get; }
+        [NotNull]
+        protected abstract String ApplicationDirectoryName { get; }
 
-		public abstract void CopyToRemote();
+        [NotNull]
+        protected abstract String SourceApplicationDirectoryPath { get; }
 
-		public abstract Process Start(String commandLineArguments, bool captureStandardOutput = false, bool doProfile = true);
+        public abstract void CopyToRemote();
 
-		public bool CaptureStandardOutputRequired { get; set; }
+        public abstract Process Start(String commandLineArguments, bool captureStandardOutput = false, bool doProfile = true);
 
-		#endregion
+        public bool CaptureStandardOutputRequired { get; set; }
 
-		[NotNull]
-		public const String AppName = "IntegrationTestAppName";
+        #endregion
 
-		[NotNull]
-		private readonly String _uniqueFolderName = Guid.NewGuid().ToString();
+        [NotNull]
+        public const String AppName = "IntegrationTestAppName";
 
-		[CanBeNull]
-		protected UInt32? RemoteProcessId
-		{
-			get
-			{
-				return _remoteProcessId;
-			}
-			set
-			{
-				_remoteProcessId = value;
-			}
-		}
-		private UInt32? _remoteProcessId;
+        [NotNull]
+        private readonly String _uniqueFolderName = Guid.NewGuid().ToString();
 
-		protected const String HostedWebCoreTargetFramework = "net451";
+        [CanBeNull]
+        protected UInt32? RemoteProcessId
+        {
+            get
+            {
+                return _remoteProcessId;
+            }
+            set
+            {
+                _remoteProcessId = value;
+            }
+        }
+        private UInt32? _remoteProcessId;
 
-		public bool KeepWorkingDirectory { get; set; } = false;
+        protected const String HostedWebCoreTargetFramework = "net451";
 
-		[NotNull]
-		protected String DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, _uniqueFolderName); } }
+        public bool KeepWorkingDirectory { get; set; } = false;
 
-		[NotNull]
-		protected String DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "New Relic Home"); } }
+        [NotNull]
+        protected String DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, _uniqueFolderName); } }
 
-		[NotNull]
-		public String DestinationApplicationDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName); } }
+        [NotNull]
+        protected String DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "New Relic Home"); } }
 
-		[NotNull]
-		protected String DestinationLauncherDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "ApplicationLauncher"); } }
+        [NotNull]
+        public String DestinationApplicationDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName); } }
 
-		[NotNull]
-		protected String DestinationApplicationLauncherExecutablePath { get { return Path.Combine(DestinationLauncherDirectoryPath, HostedWebCoreTargetFramework, "ApplicationLauncher.exe"); } }
+        [NotNull]
+        protected String DestinationLauncherDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "ApplicationLauncher"); } }
 
-		[NotNull]
-		public String Port { get { return _port ?? (_port = _port = RandomPortGenerator.NextPortString()); } }
+        [NotNull]
+        protected String DestinationApplicationLauncherExecutablePath { get { return Path.Combine(DestinationLauncherDirectoryPath, HostedWebCoreTargetFramework, "ApplicationLauncher.exe"); } }
 
-		[NotNull]
-		public readonly String DestinationServerName = new Uri(DestinationWorkingDirectoryRemotePath).Host;
+        [NotNull]
+        public String Port { get { return _port ?? (_port = _port = RandomPortGenerator.NextPortString()); } }
 
-		[NotNull]
-		public String DestinationNewRelicConfigFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "newrelic.config"); } }
+        [NotNull]
+        public readonly String DestinationServerName = new Uri(DestinationWorkingDirectoryRemotePath).Host;
 
-		[NotNull]
-		public String DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Extensions"); } }
+        [NotNull]
+        public String DestinationNewRelicConfigFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "newrelic.config"); } }
 
-		[NotNull]
-		public AgentLogFile AgentLog { get { return new AgentLogFile(DestinationNewRelicLogFilePath, Timing.TimeToConnect); } }
+        [NotNull]
+        public String DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Extensions"); } }
 
-		protected bool _isCoreApp; 
+        [NotNull]
+        public AgentLogFile AgentLog { get { return new AgentLogFile(DestinationNewRelicLogFilePath, Timing.TimeToConnect); } }
 
-		static RemoteApplication()
-		{
-			AssemblySetUp.TouchMe();
-		}
+        protected bool _isCoreApp;
 
-		protected RemoteApplication(ApplicationType applicationType, bool isCoreApp = false)
-		{
-			var applicationsFolder = applicationType == ApplicationType.Bounded
-				? "Applications"
-				: "UnboundedApplications";
-			SourceApplicationsDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, applicationsFolder);
-			_isCoreApp = isCoreApp;
+        static RemoteApplication()
+        {
+            AssemblySetUp.TouchMe();
+        }
 
-			var keepWorkingDirEnvVarValue = 0;
-			if (int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY"), out keepWorkingDirEnvVarValue))
-			{
-				KeepWorkingDirectory = (keepWorkingDirEnvVarValue == 1);
-			}
-		}
+        protected RemoteApplication(ApplicationType applicationType, bool isCoreApp = false)
+        {
+            var applicationsFolder = applicationType == ApplicationType.Bounded
+                ? "Applications"
+                : "UnboundedApplications";
+            SourceApplicationsDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, applicationsFolder);
+            _isCoreApp = isCoreApp;
 
-		public void Shutdown()
-		{
-			if (!RemoteProcessId.HasValue)
-				return;
+            var keepWorkingDirEnvVarValue = 0;
+            if (int.TryParse(Environment.GetEnvironmentVariable("NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY"), out keepWorkingDirEnvVarValue))
+            {
+                KeepWorkingDirectory = (keepWorkingDirEnvVarValue == 1);
+            }
+        }
 
-			try
-			{
-				//The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
-				var remoteAppEvent = EventWaitHandle.OpenExisting("app_server_wait_for_all_request_done_" + Port.ToString());
-				remoteAppEvent.Set();
-			}
-			catch
-			{
-				ProcessExtensions.KillTreeRemote(DestinationServerName, RemoteProcessId.Value);
-			}
-		}
+        public void Shutdown()
+        {
+            if (!RemoteProcessId.HasValue)
+                return;
 
-		public virtual void Dispose()
-		{
-			var disposed = false;
-			var stopwatch = Stopwatch.StartNew();
-			while (!disposed && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
-			{
-				try
-				{
-					if (!KeepWorkingDirectory)
-					{
-						try
-						{
-							Directory.Delete(DestinationRootDirectoryPath, true);
-						}
-						catch (IOException)
-						{
-							Thread.Sleep(1000);
-							Directory.Delete(DestinationRootDirectoryPath, true);
-						}
-					}
-					disposed = true;
-				}
-				catch (UnauthorizedAccessException)
-				{
-					Shutdown();
-					Thread.Sleep(TimeSpan.FromSeconds(1));
-				}
-				catch (DirectoryNotFoundException)
-				{
-					return;
-				}
-			}
-		}
+            try
+            {
+                //The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
+                var remoteAppEvent = EventWaitHandle.OpenExisting("app_server_wait_for_all_request_done_" + Port.ToString());
+                remoteAppEvent.Set();
+            }
+            catch
+            {
+                ProcessExtensions.KillTreeRemote(DestinationServerName, RemoteProcessId.Value);
+            }
+        }
 
-		protected void CopyNewRelicHomeDirectoryToRemote()
-		{
-			Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
-			CommonUtils.CopyDirectory(SourceNewRelicHomeDirectoryPath, DestinationNewRelicHomeDirectoryPath);
-		}
+        public virtual void Dispose()
+        {
+            var disposed = false;
+            var stopwatch = Stopwatch.StartNew();
+            while (!disposed && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
+            {
+                try
+                {
+                    if (!KeepWorkingDirectory)
+                    {
+                        try
+                        {
+                            Directory.Delete(DestinationRootDirectoryPath, true);
+                        }
+                        catch (IOException)
+                        {
+                            Thread.Sleep(1000);
+                            Directory.Delete(DestinationRootDirectoryPath, true);
+                        }
+                    }
+                    disposed = true;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    Shutdown();
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    return;
+                }
+            }
+        }
 
-		protected void CopyNewRelicHomeCoreClrDirectoryToRemote()
-		{
-			Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
-			CommonUtils.CopyDirectory(SourceNewRelicHomeCoreClrDirectoryPath, DestinationNewRelicHomeDirectoryPath);
-		}
+        protected void CopyNewRelicHomeDirectoryToRemote()
+        {
+            Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
+            CommonUtils.CopyDirectory(SourceNewRelicHomeDirectoryPath, DestinationNewRelicHomeDirectoryPath);
+        }
 
-		protected void CopyApplicationDirectoryToRemote()
-		{
-			Directory.CreateDirectory(DestinationApplicationDirectoryPath);
-			CommonUtils.CopyDirectory(SourceApplicationDirectoryPath, DestinationApplicationDirectoryPath);
-		}
+        protected void CopyNewRelicHomeCoreClrDirectoryToRemote()
+        {
+            Directory.CreateDirectory(DestinationNewRelicHomeDirectoryPath);
+            CommonUtils.CopyDirectory(SourceNewRelicHomeCoreClrDirectoryPath, DestinationNewRelicHomeDirectoryPath);
+        }
 
-		protected void CopyLauncherDirectoryToRemote()
-		{
-			Directory.CreateDirectory(DestinationLauncherDirectoryPath);
-			CommonUtils.CopyDirectory(SourceApplicationLauncherDirectoryPath, DestinationLauncherDirectoryPath);
-		}
+        protected void CopyApplicationDirectoryToRemote()
+        {
+            Directory.CreateDirectory(DestinationApplicationDirectoryPath);
+            CommonUtils.CopyDirectory(SourceApplicationDirectoryPath, DestinationApplicationDirectoryPath);
+        }
 
-		protected void ModifyNewRelicConfig()
-		{
-			CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "log" }, "level", "debug");
-			CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "sendDataOnExit", "true");
-			CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "sendDataOnExitThreshold", "0");
-			CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "completeTransactionsOnThread", "true");
-		}
+        protected void CopyLauncherDirectoryToRemote()
+        {
+            Directory.CreateDirectory(DestinationLauncherDirectoryPath);
+            CommonUtils.CopyDirectory(SourceApplicationLauncherDirectoryPath, DestinationLauncherDirectoryPath);
+        }
 
-		public void AddInstrumentationPoint(String extensionFileName, String assemblyName, String className, String methodName, String tracerFactoryName = null)
-		{
-			const String extensionFileContentsTemplate =
+        protected void ModifyNewRelicConfig()
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "log" }, "level", "debug");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "sendDataOnExit", "true");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "sendDataOnExitThreshold", "0");
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "completeTransactionsOnThread", "true");
+        }
+
+        public void AddInstrumentationPoint(String extensionFileName, String assemblyName, String className, String methodName, String tracerFactoryName = null)
+        {
+            const String extensionFileContentsTemplate =
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <extension xmlns=""urn:newrelic-extension"">
 	<instrumentation>
@@ -249,24 +249,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 		</tracerFactory>
 	</instrumentation>
 </extension>";
-			var extensionFileContents = String.Format(extensionFileContentsTemplate, tracerFactoryName, assemblyName, className, methodName);
-			var extensionFilePath = Path.Combine(DestinationNewRelicExtensionsDirectoryPath, extensionFileName);
-			File.WriteAllText(extensionFilePath, extensionFileContents);
-		}
+            var extensionFileContents = String.Format(extensionFileContentsTemplate, tracerFactoryName, assemblyName, className, methodName);
+            var extensionFilePath = Path.Combine(DestinationNewRelicExtensionsDirectoryPath, extensionFileName);
+            File.WriteAllText(extensionFilePath, extensionFileContents);
+        }
 
-		public void AddAppSetting([CanBeNull] String key, [CanBeNull] String value)
-		{
-			if (key == null || value == null)
-				return;
+        public void AddAppSetting([CanBeNull] String key, [CanBeNull] String value)
+        {
+            if (key == null || value == null)
+                return;
 
-			var attributes = new Dictionary<String, String> {{"key", key}, {"value", value}};
-			CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "appSettings", "add" }, attributes);
-		}
+            var attributes = new Dictionary<String, String> { { "key", key }, { "value", value } };
+            CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "appSettings", "add" }, attributes);
+        }
 
-		public void DeleteWorkingSpace()
-		{
-			if (Directory.Exists(DestinationRootDirectoryPath))
-				Directory.Delete(DestinationRootDirectoryPath, true);
-		}
-	}
+        public void DeleteWorkingSpace()
+        {
+            if (Directory.Exists(DestinationRootDirectoryPath))
+                Directory.Delete(DestinationRootDirectoryPath, true);
+        }
+    }
 }

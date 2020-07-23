@@ -13,184 +13,184 @@ using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-	[TestFixture]
-	public class ConnectionManagerTests
-	{
-		[NotNull]
-		private DisposableCollection _disposableCollection;
+    [TestFixture]
+    public class ConnectionManagerTests
+    {
+        [NotNull]
+        private DisposableCollection _disposableCollection;
 
-		[NotNull]
-		private IConfiguration _configuration;
+        [NotNull]
+        private IConfiguration _configuration;
 
-		[NotNull]
-		private IConnectionHandler _connectionHandler;
-		
-		[NotNull]
-		private IScheduler _scheduler;
+        [NotNull]
+        private IConnectionHandler _connectionHandler;
 
-		[SetUp]
-		public void SetUp()
-		{
-			_disposableCollection = new DisposableCollection();
+        [NotNull]
+        private IScheduler _scheduler;
 
-			_configuration = Mock.Create<IConfiguration>();
-			_disposableCollection.Add(new ConfigurationAutoResponder(_configuration));
+        [SetUp]
+        public void SetUp()
+        {
+            _disposableCollection = new DisposableCollection();
 
-			_connectionHandler = Mock.Create<IConnectionHandler>();
-			_scheduler = Mock.Create<IScheduler>();
-		}
+            _configuration = Mock.Create<IConfiguration>();
+            _disposableCollection.Add(new ConfigurationAutoResponder(_configuration));
 
-		[TearDown]
-		public void TearDown()
-		{
-			_disposableCollection.Dispose();
-		}
+            _connectionHandler = Mock.Create<IConnectionHandler>();
+            _scheduler = Mock.Create<IScheduler>();
+        }
 
-		[Test]
-		public void Constructor_CallsConnectSynchronously_IfAutoStartAndSyncStartupIsOn()
-		{
-			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
-			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
+        [TearDown]
+        public void TearDown()
+        {
+            _disposableCollection.Dispose();
+        }
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
-			{
-				Mock.Assert(() => _connectionHandler.Connect());
-			}
-		}
+        [Test]
+        public void Constructor_CallsConnectSynchronously_IfAutoStartAndSyncStartupIsOn()
+        {
+            Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
+            Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-		[Test]
-		public void Constructor_SchedulesConnectAsynchronously_IfAutoStartIsOnAndSyncStartupIsOff()
-		{
-			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(false);
-			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
+            // Act (construct ConnectionManager)
+            using (new ConnectionManager(_connectionHandler, _scheduler))
+            {
+                Mock.Assert(() => _connectionHandler.Connect());
+            }
+        }
 
-			Action scheduledAction = null;
-			Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
-				.DoInstead<Action, TimeSpan>((action, timespan) => scheduledAction = action);
+        [Test]
+        public void Constructor_SchedulesConnectAsynchronously_IfAutoStartIsOnAndSyncStartupIsOff()
+        {
+            Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(false);
+            Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
-			{
-				// Connect shouldn't occur until scheduled action is invoked
-				Mock.Assert(() => _connectionHandler.Connect(), Occurs.Never());
+            Action scheduledAction = null;
+            Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+                .DoInstead<Action, TimeSpan>((action, timespan) => scheduledAction = action);
 
-				scheduledAction();
-				Mock.Assert(() => _connectionHandler.Connect());
-			}
-		}
+            // Act (construct ConnectionManager)
+            using (new ConnectionManager(_connectionHandler, _scheduler))
+            {
+                // Connect shouldn't occur until scheduled action is invoked
+                Mock.Assert(() => _connectionHandler.Connect(), Occurs.Never());
 
-
-		[Test]
-		[TestCase ("ForceRestartException")]
-		[TestCase ("ConnectionException")]
-		[TestCase ("ServiceUnavailableException")]
-		[TestCase ("SocketException")]
-		[TestCase ("IOException")]
-		public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs([NotNull] string execeptionType)
-		{
-			Exception ex = null;
-			switch (execeptionType)
-			{
-				case "ForceRestartException":
-					ex = new ForceRestartException(null);
-					break;
-				case "ConnectionException":
-					ex = new ConnectionException(null);
-					break;
-				case "ServiceUnavailableException":
-					ex = new ServiceUnavailableException(null);
-					break;
-				case "SocketException":
-					ex = new SocketException();
-					break;
-				case "IOException":
-					ex = new IOException();
-					break;
-			}	
+                scheduledAction();
+                Mock.Assert(() => _connectionHandler.Connect());
+            }
+        }
 
 
-			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
-			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
+        [Test]
+        [TestCase("ForceRestartException")]
+        [TestCase("ConnectionException")]
+        [TestCase("ServiceUnavailableException")]
+        [TestCase("SocketException")]
+        [TestCase("IOException")]
+        public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs([NotNull] string execeptionType)
+        {
+            Exception ex = null;
+            switch (execeptionType)
+            {
+                case "ForceRestartException":
+                    ex = new ForceRestartException(null);
+                    break;
+                case "ConnectionException":
+                    ex = new ConnectionException(null);
+                    break;
+                case "ServiceUnavailableException":
+                    ex = new ServiceUnavailableException(null);
+                    break;
+                case "SocketException":
+                    ex = new SocketException();
+                    break;
+                case "IOException":
+                    ex = new IOException();
+                    break;
+            }
 
-			Mock.Arrange(() => _connectionHandler.Connect())
-				.Throws(ex);
 
-			Action scheduledAction = null;
-			Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
-				.DoInstead<Action, TimeSpan>((action, timespan) => scheduledAction = action);
+            Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
+            Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
-			{
-				Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
+            Mock.Arrange(() => _connectionHandler.Connect())
+                .Throws(ex);
 
-				scheduledAction();
-				Mock.Assert(() => _connectionHandler.Connect(), Occurs.Exactly(2));
-			}
-		}
-		
-		[Test]
-		public void Constructor_PublishesShutdownAgentEvent_IfAnyOtherExceptionOccurs()
-		{
-			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
-			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
+            Action scheduledAction = null;
+            Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+                .DoInstead<Action, TimeSpan>((action, timespan) => scheduledAction = action);
 
-			Mock.Arrange(() => _connectionHandler.Connect())
-				.Throws(new Exception());
+            // Act (construct ConnectionManager)
+            using (new ConnectionManager(_connectionHandler, _scheduler))
+            {
+                Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
 
-			// Act (construct ConnectionManager)
-			using (new EventExpectation<KillAgentEvent>())
-			using (new ConnectionManager(_connectionHandler, _scheduler))
-			{
-			}
-		}
+                scheduledAction();
+                Mock.Assert(() => _connectionHandler.Connect(), Occurs.Exactly(2));
+            }
+        }
 
-		[Test]
-		public void Constructor_DoublesReconnectTimeForEachReconnect_UntilHittingFiveMinutes()
-		{
-			Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
-			Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
+        [Test]
+        public void Constructor_PublishesShutdownAgentEvent_IfAnyOtherExceptionOccurs()
+        {
+            Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
+            Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-			Mock.Arrange(() => _connectionHandler.Connect())
-				.Throws(new ServiceUnavailableException(null));
+            Mock.Arrange(() => _connectionHandler.Connect())
+                .Throws(new Exception());
 
-			Action scheduledAction = null;
-			var scheduledTime = new TimeSpan();
-			Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
-				.DoInstead<Action, TimeSpan>((action, time) =>
-				{
-					scheduledAction = action;
-					scheduledTime = time;
-				});
+            // Act (construct ConnectionManager)
+            using (new EventExpectation<KillAgentEvent>())
+            using (new ConnectionManager(_connectionHandler, _scheduler))
+            {
+            }
+        }
 
-			// Act (construct ConnectionManager)
-			using (new ConnectionManager(_connectionHandler, _scheduler))
-			{
-				Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
-				Assert.AreEqual(5, scheduledTime.TotalSeconds);
+        [Test]
+        public void Constructor_DoublesReconnectTimeForEachReconnect_UntilHittingFiveMinutes()
+        {
+            Mock.Arrange(() => _configuration.CollectorSyncStartup).Returns(true);
+            Mock.Arrange(() => _configuration.AutoStartAgent).Returns(true);
 
-				scheduledAction();
-				Assert.AreEqual(10, scheduledTime.TotalSeconds);
+            Mock.Arrange(() => _connectionHandler.Connect())
+                .Throws(new ServiceUnavailableException(null));
 
-				scheduledAction();
-				Assert.AreEqual(20, scheduledTime.TotalSeconds);
+            Action scheduledAction = null;
+            var scheduledTime = new TimeSpan();
+            Mock.Arrange(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()))
+                .DoInstead<Action, TimeSpan>((action, time) =>
+                {
+                    scheduledAction = action;
+                    scheduledTime = time;
+                });
 
-				scheduledAction();
-				Assert.AreEqual(40, scheduledTime.TotalSeconds);
+            // Act (construct ConnectionManager)
+            using (new ConnectionManager(_connectionHandler, _scheduler))
+            {
+                Mock.Assert(() => _scheduler.ExecuteOnce(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>()));
+                Assert.AreEqual(5, scheduledTime.TotalSeconds);
 
-				scheduledAction();
-				Assert.AreEqual(80, scheduledTime.TotalSeconds);
+                scheduledAction();
+                Assert.AreEqual(10, scheduledTime.TotalSeconds);
 
-				scheduledAction();
-				Assert.AreEqual(160, scheduledTime.TotalSeconds);
+                scheduledAction();
+                Assert.AreEqual(20, scheduledTime.TotalSeconds);
 
-				scheduledAction();
-				Assert.AreEqual(300, scheduledTime.TotalSeconds);
+                scheduledAction();
+                Assert.AreEqual(40, scheduledTime.TotalSeconds);
 
-				scheduledAction();
-				Assert.AreEqual(300, scheduledTime.TotalSeconds);
-			}
-		}
-	}
+                scheduledAction();
+                Assert.AreEqual(80, scheduledTime.TotalSeconds);
+
+                scheduledAction();
+                Assert.AreEqual(160, scheduledTime.TotalSeconds);
+
+                scheduledAction();
+                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+
+                scheduledAction();
+                Assert.AreEqual(300, scheduledTime.TotalSeconds);
+            }
+        }
+    }
 }

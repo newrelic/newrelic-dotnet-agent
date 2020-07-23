@@ -1,12 +1,12 @@
 ﻿namespace NewRelic.Agent.Core.ThreadProfiling
 {
-	public interface IThreadProfilingSampler
-	{
-		int NumberSamplesInSession { get; set; }
+    public interface IThreadProfilingSampler
+    {
+        int NumberSamplesInSession { get; set; }
 
-		bool Start(uint frequencyInMsec, uint durationInMsec);
+        bool Start(uint frequencyInMsec, uint durationInMsec);
 
-		void Stop(bool reportData);
-	}
+        void Stop(bool reportData);
+    }
 }
 

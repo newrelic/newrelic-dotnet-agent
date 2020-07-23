@@ -5,21 +5,21 @@ using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Fixtures
 {
-	public class EventExpectation<T> : IDisposable
-	{
-		[NotNull]
-		private readonly EventSubscription<T> _subscription;
-		private Boolean _eventWasFired;
+    public class EventExpectation<T> : IDisposable
+    {
+        [NotNull]
+        private readonly EventSubscription<T> _subscription;
+        private Boolean _eventWasFired;
 
-		public EventExpectation()
-		{
-			_subscription = new EventSubscription<T>(_ => _eventWasFired = true);
-		}
+        public EventExpectation()
+        {
+            _subscription = new EventSubscription<T>(_ => _eventWasFired = true);
+        }
 
-		public void Dispose()
-		{
-			_subscription.Dispose();
-			Assert.True(_eventWasFired, "Expected event {0} was not fired", typeof(T).Name);
-		}
-	}
+        public void Dispose()
+        {
+            _subscription.Dispose();
+            Assert.True(_eventWasFired, "Expected event {0} was not fired", typeof(T).Name);
+        }
+    }
 }
