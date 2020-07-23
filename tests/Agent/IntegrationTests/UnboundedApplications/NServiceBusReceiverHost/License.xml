@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<license id="af525d5a-c773-4b7f-89aa-d174aea13dac" expiration="2015-06-04T00:00:00.0000000" type="Standard" LicenseVersion="5.0" WorkerThreads="Max" AllowedNumberOfWorkerNodes="Max" MaxMessageThroughputPerSecond="Max" Quantity="1" Edition="Enterprise" Applications="All">
+	<name>New Relic</name>
+	<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+		<SignedInfo>
+			<CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+			<SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+			<Reference URI="">
+				<Transforms>
+					<Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+				</Transforms>
+				<DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+				<DigestValue>XMmNedQ7B7iPEP8pwGICiWJu28o=</DigestValue>
+			</Reference>
+		</SignedInfo>
+		<SignatureValue>INGCvOsubhHkvkPuit7/5kPlF4sfhktPLMGAhNlmTmjxsRWaGU5ov/t+G0kq3cGHh8BWp7tAk0A63rMd5Ocxd1jhJkvyWEOl3mC6MRyDmFcx9G1OpnyIANYFgU00tVaQWkF8sLPxf802NHgnHu74Ol44/a7mVjFr6rysImDqBE0=</SignatureValue>
+	</Signature>
+</license>
