@@ -64,7 +64,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var priority = 0.5f;
 
             var configuration = configurationService?.Configuration ?? GetDefaultConfiguration();
-            var errorService = configurationService != null ? new ErrorService(configurationService) : Mock.Create<ErrorService>();
+            var errorService = configurationService != null ? new ErrorService(configurationService) : new ErrorService(Mock.Create<IConfigurationService>());
 
             var internalTransaction = new Transaction(configuration, immutableTransaction.TransactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(),
                 _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(),
