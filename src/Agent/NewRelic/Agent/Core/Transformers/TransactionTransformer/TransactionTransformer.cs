@@ -439,7 +439,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             var isWebTransaction = immutableTransaction.IsWebTransaction();
 
-            if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
+            if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError
+                && !immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.IsExpected)
             {
                 MetricBuilder.TryBuildFrustratedApdexMetrics(isWebTransaction, transactionApdexMetricName, txStats);
             }
