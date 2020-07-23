@@ -85,11 +85,11 @@ namespace NewRelic.Agent.Core.Errors
             return false;
         }
 
-        private bool ContainsSubstring(IEnumerable<string> list, string subString)
+        private bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
         {
-            foreach (var item in list)
+            foreach (var item in subStringList)
             {
-                if (item.Contains(subString))
+                if (sourceString.Contains(item))
                 {
                     return true;
                 }

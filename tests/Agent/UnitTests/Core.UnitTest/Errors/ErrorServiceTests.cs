@@ -155,7 +155,10 @@ namespace NewRelic.Agent.Core.Errors
         {
             var config = new configuration();
             config.errorCollector.enabled = errorCollectorEnabled;
-            config.errorCollector.expectedClasses.errorClass = errorClassesToBeExpected;
+            if (errorClassesToBeExpected != null)
+            {
+                config.errorCollector.expectedClasses.errorClass = errorClassesToBeExpected;
+            }
 
             if (errorMessagesToBeExpected != null)
             {
@@ -178,14 +181,14 @@ namespace NewRelic.Agent.Core.Errors
         [TestCase(false)]
         public void FromException_MarkErrorDataAsExpected_ExpectedErrorClasses(bool hasExpectedError)
         {
-            var _expectedClasses = new List<string>()
+            var expectedClasses = new List<string>()
             {
                 "System.IO.DirectoryNotFoundException",
             };
 
             if (hasExpectedError)
             {
-                SetupConfiguration(_expectedClasses, null, errorCollectorEnabled: true);
+                SetupConfiguration(expectedClasses, null, errorCollectorEnabled: true);
             }
 
             var expectedExceptionRoot = new IOException("Root Exception", new DirectoryNotFoundException());
@@ -206,5 +209,58 @@ namespace NewRelic.Agent.Core.Errors
             }
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FromException_MarkErrorDataAsExpected_ExpectedErrorMessages(bool hasExpectedError)
+        {
+            var expectedMessages = new Dictionary<string, IEnumerable<string>>
+            {
+                { "System.IO.DirectoryNotFoundException", new List<string>() {"error message 1", "error message 2"} }
+            };
+
+            if (hasExpectedError)
+            {
+                SetupConfiguration(null, expectedMessages, errorCollectorEnabled: true);
+            }
+
+            var expectedException1 = new DirectoryNotFoundException("this is error message 1 ");
+            var expectedException2 = new DirectoryNotFoundException("this is error message 2 ");
+
+            var errorData1 = _errorService.FromException(expectedException1);
+            var errorData2 = _errorService.FromException(expectedException2);
+
+            if (hasExpectedError)
+            {
+                Assert.IsTrue(errorData1.IsExpected);
+                Assert.IsTrue(errorData2.IsExpected);
+            }
+            else
+            {
+                Assert.IsFalse(errorData1.IsExpected);
+                Assert.IsFalse(errorData2.IsExpected);
+            }
+        }
+
+        [Test]
+        public void FromException_MarkErrorDataAsExpected_SameErrorClass_In_ExpectedClasses_ExpectedErrorMessages()
+        {
+            var expectedMessages = new Dictionary<string, IEnumerable<string>>
+            {
+                { "System.IO.DirectoryNotFoundException", new List<string>() {"error message 1", "error message 2"} }
+            };
+
+            var expectedClasses = new List<string>()
+            {
+                "System.IO.DirectoryNotFoundException",
+            };
+
+            SetupConfiguration(expectedClasses, expectedMessages, errorCollectorEnabled: true);
+            var expectedException = new DirectoryNotFoundException("any error messages");
+
+            var errorData = _errorService.FromException(expectedException);
+
+            Assert.IsTrue(errorData.IsExpected);
+
+        }
     }
 }
