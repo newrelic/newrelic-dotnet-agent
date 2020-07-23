@@ -90,7 +90,6 @@
   <PropertyGroup>
     <PostBuildEvent>
         "New Relic Home Builder.exe" --solution="$(SolutionDir)\" --configuration=$(Configuration) --nugetPackageDir="$(NuGetPackageRoot)\"
-        "New Relic Home Builder.exe" buildCoreArtifactsForS3Deploy --solution="$(SolutionDir)\"
     </PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -7,6 +7,8 @@
         <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
         <Description>New Relic Common Library</Description>
         <GitTagPrefix>v</GitTagPrefix>
+        <IntermediateOutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
+        <OutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DebugType>full</DebugType>

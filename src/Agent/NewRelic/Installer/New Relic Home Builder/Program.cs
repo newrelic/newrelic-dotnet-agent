@@ -8,112 +8,79 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using ILRepacking;
-using JetBrains.Annotations;
 using MoreLinq;
 
 namespace NewRelic.Installer
 {
-	public class Program
-	{
-		enum VersionResolution { Latest, Earliest, FirstFound, LastFound };
+    public class Program
+    {
+        private const string HomeDirectoryNamePrefix = "New Relic Home ";
+        private const string ProfilerSoFileName = "libNewRelicProfiler.so";
 
-		private const string HomeDirectoryNamePrefix = "New Relic Home ";
-		private const string ProfilerSoFileName = "libNewRelicProfiler.so";
+        // ReSharper disable MemberCanBePrivate.Global
+        // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-		// ReSharper disable MemberCanBePrivate.Global
-		// ReSharper disable UnusedAutoPropertyAccessor.Global
-		[CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
-		[NotNull]
-		public String SolutionPath { get; set; }
+        [CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
+        public string SolutionPath { get; set; }
 
-		[CommandLine.Option("configuration", Required = false, HelpText = "$(Configuration)")]
-		[NotNull]
-		public String Configuration { get; set; }
+        [CommandLine.Option("configuration", Required = false, HelpText = "$(Configuration)")]
+        public string Configuration { get; set; }
 
-		[CommandLine.Option("nugetPackageDir", Required = false, HelpText = "$(NuGetPackageRoot)")]
-		[NotNull]
-		public String NuGetPackageDir { get; set; }
+        [CommandLine.Option("nugetPackageDir", Required = false, HelpText = "$(NuGetPackageRoot)")]
+        public string NuGetPackageDir { get; set; }
 
-		private bool _isCoreClr = false;
-		private bool _isLinux = false;
+        private bool _isCoreClr = false;
+        private bool _isLinux = false;
 
-		[NotNull]
-		public String Bitness { get; set; }
+        public string Bitness { get; set; }
 
+        // ReSharper restore UnusedAutoPropertyAccessor.Global
+        // ReSharper restore MemberCanBePrivate.Global
 
-		// ReSharper restore UnusedAutoPropertyAccessor.Global
-		// ReSharper restore MemberCanBePrivate.Global
+        // output paths
+        private string DestinationHomeDirectoryName
+        {
+            get
+            {
+                var name = HomeDirectoryNamePrefix + Bitness;
+                if (_isCoreClr)
+                {
+                    name += " CoreClr";
+                }
+                if (_isLinux)
+                {
+                    name += "_Linux";
+                }
 
-		// output paths
-		[NotNull]
-		private String DestinationHomeDirectoryName {
-			get
-			{
-				var name = HomeDirectoryNamePrefix + Bitness;
-				if (_isCoreClr)
-				{
-					name += " CoreClr";
-				}
-				if (_isLinux)
-				{
-					name += "_Linux";
-				}
+                return name;
+            }
+        }
 
-				return name;
-			}
-		}
-		[NotNull]
-		private String DestinationHomeDirectoryPath { get { return Path.Combine(SolutionPath, DestinationHomeDirectoryName); } }
-		[NotNull]
-		private String DestinationAgentFilePath { get { return Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Agent.Core.dll"); } }
-		[NotNull]
-		private string DestinationProfilerDllPath => Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Profiler.dll");
+        private string DestinationHomeDirectoryPath { get { return Path.Combine(SolutionPath, DestinationHomeDirectoryName); } }
+        private string DestinationAgentFilePath { get { return Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Agent.Core.dll"); } }
+        private string DestinationProfilerDllPath => Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Profiler.dll");
+        private string DestinationProfilerSoPath => Path.Combine(DestinationHomeDirectoryPath, ProfilerSoFileName);
+        private string DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
+        private string DestinationRegistryFileName { get { return string.Format("New Relic Home {0}.reg", Bitness); } }
+        private string DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
+        private string DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
+        private string BuildOutputPath { get { return Path.Combine(SolutionPath, "_build"); } }
+        private string AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
 
-		[NotNull]
-		private string DestinationProfilerSoPath => Path.Combine(DestinationHomeDirectoryPath, ProfilerSoFileName);
+        // input paths
+        private string AnyCpuBuildDirectoryName { get { return string.Format("AnyCPU-{0}", Configuration); } }
+        private string NewRelicConfigPath { get { return Path.Combine(SolutionPath, "Configuration", "newrelic.config") ?? string.Empty; } }
+        private string NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
+        private string ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
+        private string NewRelicAgentCoreCsprojPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj"); } }
+        private string LicenseSourceDirectoryPath { get { return Path.GetFullPath(Path.Combine(SolutionPath, "Miscellaneous")); } }
+        private string LicenseFilePath => Path.Combine(LicenseSourceDirectoryPath, "LICENSE.txt");
+        private readonly string Core20ReadmeFileName = "netcore20-agent-readme.md";
+        private string ReadmeFilePath => Path.Combine(SolutionPath, "Miscellaneous", Core20ReadmeFileName);
+        private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net35", "NewRelic.Api.Agent.dll");
+        private string AgentVersion => FileVersionInfo.GetVersionInfo(DestinationAgentFilePath).FileVersion;
 
-		[NotNull]
-		private String DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
-		[NotNull]
-		private String DestinationRegistryFileName { get { return String.Format("New Relic Home {0}.reg", Bitness); } }
-		[NotNull]
-		private String DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
-		[NotNull]
-		private String DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
-		[NotNull]
-		private String BuildOutputPath { get { return Path.Combine(SolutionPath, "_build"); } }
-		[NotNull]
-		private String AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
-		[NotNull]
-		private String CoreInstallerOutputPath { get { return Path.Combine(BuildOutputPath, "core_installer"); } }
-
-		// input paths
-		[NotNull]
-		private String AnyCpuBuildDirectoryName { get { return String.Format("AnyCPU-{0}", Configuration); } }
-		[NotNull]
-		private String NewRelicConfigPath { get { return Path.Combine(SolutionPath, "Configuration", "newrelic.config") ?? String.Empty; } }
-		[NotNull]
-		private String NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
-		[NotNull]
-		private String ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
-		[NotNull]
-		private String CoreInstallerSourcePath { get { return Path.Combine(SolutionPath, "NewRelic", "CoreInstaller"); } }
-
-		private string LicenseFilePath => Path.Combine(SolutionPath, "Miscellaneous", "License.txt");
-
-		private string Core20ReadmeFileName = "netcore20-agent-readme.md";
-		private string ReadmeFilePath => Path.Combine(SolutionPath, "Miscellaneous", Core20ReadmeFileName);
-
-		private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net35", "NewRelic.Api.Agent.dll");
-
-		private string _homeBuilderProjectPath => Path.Combine(SolutionPath, "NewRelic", "Installer", "New Relic Home Builder", "New Relic Home Builder.csproj");
-		private string _coreProjectPath => Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj");
-
-		private string AgentVersion => FileVersionInfo.GetVersionInfo(DestinationAgentFilePath).FileVersion;
-
-		[NotNull]
-		private string ProfilerDllPath
+        private string ProfilerDllPath
 		{
 			get
 			{
@@ -122,419 +89,252 @@ namespace NewRelic.Installer
 			}
 		}
 
-		[NotNull]
 		private string ProfilerSoPath
 		{
 			get
 			{
-				var folderPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux", Bitness, "libNewRelicProfiler.so");
+				var folderPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux");
 				var profilerSoPath = Path.Combine(folderPath, ProfilerSoFileName);
 
 				return profilerSoPath;
 			}
 		}
 
-		[NotNull]
-		private String CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
-		[NotNull]
-		private String NewRelicAgentExtensionsPath { get { return Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
-		[NotNull]
-		private String KeyFilePath { get { return Path.Combine(SolutionPath, "NewRelicStrongNameKey.snk"); } }
-		[NotNull]
-		private String ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Extensions"); } }
-
-		void RealMain()
-		{
-			DoWork(bitness: "x86", isCoreClr: false);
-			DoWork(bitness: "x64", isCoreClr: false);
-			DoWork(bitness: "x86", isCoreClr: true);
-			DoWork(bitness: "x64", isCoreClr: true);
-			DoWork(bitness: "x64", isCoreClr: true, isLinux: true);
-		}
-
-		private void DoWork(string bitness, bool isCoreClr, bool isLinux = false)
-		{
-			Bitness = bitness;
-			_isCoreClr = isCoreClr;
-			_isLinux = isLinux;
-
-			var frameworkMsg = _isCoreClr ? "CoreCLR" : ".NETFramework";
-			frameworkMsg += _isLinux ? " Linux" : "";
-			Console.WriteLine($"[HomeBuilder]: Building home for {frameworkMsg} {bitness}");
-
-			Console.WriteLine("[HomeBuilder]: attempting to read and restore CustomInstrumentation.xml");
-
-			var customInstrumentationFilePath = Path.Combine(DestinationExtensionsDirectoryPath, "CustomInstrumentation.xml");
-			byte[] customInstrumentationBytes = ReadCustomInstrumentationBytes(customInstrumentationFilePath);
-
-			ReCreateDirectoryWithEveryoneAccess(DestinationHomeDirectoryPath);
-
-			Directory.CreateDirectory(DestinationExtensionsDirectoryPath);
-
-			CopyProfiler(isLinux);
-
-			File.Copy(NewRelicConfigXsdPath, DestinationNewRelicConfigXsdPath, true);
-			RepackAndCopyCoreAsembliesToDirectory(CoreBuildDirectoryPath, DestinationAgentFilePath, KeyFilePath);
-			CopyToDirectory(NewRelicConfigPath, DestinationHomeDirectoryPath);
-			CopyToDirectory(ExtensionsXsdPath, DestinationExtensionsDirectoryPath);
-			CopyToDirectory(NewRelicAgentExtensionsPath, DestinationHomeDirectoryPath);
-			CopyAgentExtensions();
-			CopyOtherDependencies();
-
-			var shouldCreateRegistryFile = (isCoreClr == false);
-			if (shouldCreateRegistryFile)
-			{
-				CreateRegistryFile();
-			}
-
-			if (customInstrumentationBytes != null)
-			{
-				File.WriteAllBytes(customInstrumentationFilePath, customInstrumentationBytes);
-			}
-		}
-
-		private void CopyProfiler(bool isLinux = false)
-		{
-			if (isLinux)
-			{
-				var soExists = File.Exists(ProfilerSoPath);
-				if (soExists)
-				{
-					Console.WriteLine($"[HomeBuilder]: Copying Linux profiler Shared Object (so) from: {ProfilerSoPath} to: {DestinationProfilerSoPath}");
-					File.Copy(ProfilerSoPath, DestinationProfilerSoPath, true);
-				}
-				else
-				{
-					Console.WriteLine($"[HomeBuilder]: *** Did not find Linux profiler Shared Object (so) at path: {ProfilerSoPath} ***");
-				}
-			}
-			else
-			{
-				Console.WriteLine($"[HomeBuilder]: Copying Windows profiler DLL from: {ProfilerDllPath} to: {DestinationProfilerDllPath}");
-
-				File.Copy(ProfilerDllPath, DestinationProfilerDllPath, true);
-			}
-
-			if (!_isCoreClr)
-			{
-				return;
-			}
-		}
-
-		private byte[] ReadCustomInstrumentationBytes(string customInstrumentationFilePath)
-		{
-			byte[] customInstrumentationBytes = null;
-
-			if (File.Exists(customInstrumentationFilePath))
-			{
-				customInstrumentationBytes = File.ReadAllBytes(customInstrumentationFilePath);
-			}
-
-			return customInstrumentationBytes;
-		}
-
-		private void CopyOtherDependencies()
-		{
-			if (_isCoreClr)
-			{
-				CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
-				CopyToDirectory(AgentApiPath, DestinationHomeDirectoryPath);
-				CopyToDirectory(ReadmeFilePath, DestinationHomeDirectoryPath);
-				File.Move(Path.Combine(DestinationHomeDirectoryPath, Core20ReadmeFileName), Path.Combine(DestinationHomeDirectoryPath, "README.md"));
-				return;
-			}
-
-			// We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.
-			var jetBrainsAnnotationsAssemblyPath = Path.Combine(CoreBuildDirectoryPath, "JetBrains.Annotations.dll");
-			CopyToDirectory(jetBrainsAnnotationsAssemblyPath, DestinationExtensionsDirectoryPath);
-		}
-
-		private static void ReCreateDirectoryWithEveryoneAccess(String directoryPath)
-		{
-			try { Directory.Delete(directoryPath, true); }
-			catch (DirectoryNotFoundException) { }
-
-			Thread.Sleep(TimeSpan.FromMilliseconds(1));
-
-			var directoryInfo = Directory.CreateDirectory(directoryPath);
-			var directorySecurity = directoryInfo.GetAccessControl();
-			var everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
-			directorySecurity.AddAccessRule(new FileSystemAccessRule(everyone, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
-			directoryInfo.SetAccessControl(directorySecurity);
-		}
-
-		private void RepackAndCopyCoreAsembliesToDirectory([NotNull] String sourceDirectoryPath, [NotNull] String destinationFilePath, [NotNull] String keyFilePath)
-		{
-			if (sourceDirectoryPath == null)
-				throw new ArgumentNullException("sourceDirectoryPath");
-			if (destinationFilePath == null)
-				throw new ArgumentNullException("destinationFilePath");
-
-			var assemblyPathsToRepack = new List<String> { Path.Combine(sourceDirectoryPath, @"NewRelic.Agent.Core.dll") };
-
-			var coreAssemblies = Directory.GetFiles(sourceDirectoryPath)
-					.Where(filePath => filePath != null)
-					.Where(filePath => !filePath.EndsWith(@"NewRelic.Agent.Core.dll"))
-					.Where(filePath => !filePath.EndsWith(@"NewRelic.Agent.Extensions.dll"))
-					.Where(filePath => Path.GetExtension(filePath) == ".dll");
-
-			assemblyPathsToRepack.AddRange(coreAssemblies);
-
-			if(_isCoreClr)
-			{
-				var netstandardAssemblyPaths = GetNetstandardAssemblyPaths();
-				assemblyPathsToRepack.AddRange(netstandardAssemblyPaths);
-
-				if (Environment.GetEnvironmentVariable("NEWRELIC_INSTALL_PATH") != null)
-				{
-					var homeDirectory = Directory.GetParent(destinationFilePath);
-					foreach (var dllPath in netstandardAssemblyPaths)
-					{
-						var destFileName = Path.Combine(homeDirectory.FullName, new FileInfo(dllPath).Name);
-						File.Copy(dllPath, destFileName);
-					}
-				}
-			}
-
-			foreach (var assemblyPath in assemblyPathsToRepack)
-			{
-				Console.WriteLine($"[HomeBuilder]: attempting to repack assembly at: {assemblyPath}");
-			}
-
-			Console.WriteLine();
-
-			var netStandardPath = Path.Combine(NuGetPackageDir, "NETStandard.Library", "2.0.0", "build", "netstandard2.0", "ref");
-			var newtonsoftResolvePath = GetNugetPackageDllFolderPath(_coreProjectPath, "Newtonsoft.Json", VersionResolution.Latest, "lib", "netstandard1.3");
-
-			Console.WriteLine($"[HomeBuilder]: Adding netstandard path for .NET Standard IL Repack resolution to: {netStandardPath}");
-			Console.WriteLine($"[HomeBuilder]: Adding newtonsoft path for .NET Standard IL Repack resolution to: {newtonsoftResolvePath}");
-
-			var ilRepackOptions = new RepackOptions(Enumerable.Empty<string>())
-			{
-				AllowDuplicateResources = false,
-				AllowMultipleAssemblyLevelAttributes = false,
-				AllowWildCards = false,
-				AllowZeroPeKind = false,
-				AttributeFile = null,
-				CopyAttributes = false,
-				DebugInfo = true,
-				DelaySign = false,
-				ExcludeFile = null,
-				InputAssemblies = assemblyPathsToRepack.ToArray(),
-				Internalize = true,
-				KeepOtherVersionReferences = true,
-				KeyFile = keyFilePath,
-				LineIndexation = false,
-				NoRepackRes = true,
-				OutputFile = destinationFilePath,
-				Parallel = true,
-				PauseBeforeExit = false,
-				SearchDirectories = new[] { sourceDirectoryPath, netStandardPath, newtonsoftResolvePath },
-				TargetKind = ILRepack.Kind.SameAsPrimaryAssembly,
-				UnionMerge = false,
-				Version = null,
-				XmlDocumentation = false,
-			};
-
-			var ilRepack = new ILRepack(ilRepackOptions);
-			ilRepack.Repack();
-		}
-
-		private string GetNugetPackageDllPath(string csprojPath, string packageName, VersionResolution versionResolution, params string[] packageSubFolders)
-		{
-			var folderPath = GetNugetPackageDllFolderPath(csprojPath, packageName, versionResolution, packageSubFolders);
-			var dllPath = Path.Combine(folderPath, $"{packageName}.dll") ?? String.Empty;
-
-			return dllPath;
-		}
-
-		private string GetNugetPackageDllFolderPath(string csprojPath, string packageName, VersionResolution versionResolution, params string[] packageSubFolders)
-		{
-			var subFolderPath = Path.Combine(packageSubFolders);
-
-			var regex = new Regex($@".*<PackageReference Include=""{packageName}"" Version=""(.*?)"" />");
-
-			var versions = File.ReadAllLines(csprojPath)
-				.Select(line => regex.Match(line))
-				.Where(match => match.Success)
-				.Select(match => match.Groups[1]);
-
-			Console.WriteLine($"[HomeBuilder]: {packageName} Versions...");
-			foreach (var v in versions)
-			{
-				Console.WriteLine($"[HomeBuilder]: {v}");
-			}
-
-			var version = GetVersion(versions, versionResolution);
-			var packageFolder = $"{packageName}\\{version}";
-
-			var folderPath = Path.Combine(NuGetPackageDir, packageFolder, subFolderPath) ?? String.Empty;
-
-			return folderPath;
-		}
-
-		private string GetVersion(IEnumerable<Group> versions, VersionResolution versionResolution)
-		{
-			switch (versionResolution)
-			{
-				case VersionResolution.FirstFound:
-					return versions.First().Value;
-
-				case VersionResolution.LastFound:
-					return versions.Last().Value;
-
-				case VersionResolution.Earliest:
-					return versions.Min(v => new Version(v.Value)).ToString();
-
-				case VersionResolution.Latest:
-					return versions.Max(v => new Version(v.Value)).ToString();
-
-				default:
-					throw new ArgumentException($"Version resolution specified is not defined: {versionResolution}");
-			}
-		}
-
-		private List<string> GetNetstandardAssemblyPaths()
-		{
-			var netstandardAssemblyPaths = new List<string>();
-
-			var autofacDllPath = GetNugetPackageDllPath(_coreProjectPath, "Autofac", VersionResolution.FirstFound, "lib", "netstandard1.1");
-			netstandardAssemblyPaths.Add(autofacDllPath);
-
-			var log4netDllPath = GetNugetPackageDllPath(_coreProjectPath, "log4net", VersionResolution.Latest, "lib", "netstandard1.3");
-			netstandardAssemblyPaths.Add(log4netDllPath);
-
-			var moreLinqDllPath = GetNugetPackageDllPath(_coreProjectPath, "MoreLinq", VersionResolution.Latest, "lib", "netstandard1.0");
-			netstandardAssemblyPaths.Add(moreLinqDllPath);
-
-			var newtonSoftJsonDllPath = GetNugetPackageDllPath(_coreProjectPath, "Newtonsoft.Json", VersionResolution.Latest, "lib", "netstandard1.3");
-			netstandardAssemblyPaths.Add(newtonSoftJsonDllPath);
-
-			return netstandardAssemblyPaths;
-		}
-
-		private static void CopyToDirectory([NotNull] String sourceFilePath, [NotNull] String destinationDirectoryPath)
-		{
-			if (sourceFilePath == null)
-				throw new ArgumentNullException("sourceFilePath");
-			if (destinationDirectoryPath == null)
-				throw new ArgumentNullException("destinationDirectoryPath");
-
-			CopyToDirectories(sourceFilePath, new[] { destinationDirectoryPath });
-		}
-
-		private static void CopyToDirectories([NotNull] String sourceFilePath, [NotNull] IEnumerable<String> destinationDirectoryPaths)
-		{
-			if (sourceFilePath == null)
-				throw new ArgumentNullException("sourceFilePath");
-			if (destinationDirectoryPaths == null)
-				throw new ArgumentNullException("destinationDirectoryPaths");
-
-			var fileName = Path.GetFileName(sourceFilePath);
-			destinationDirectoryPaths
-				.Where(destinationDirectoryPath => destinationDirectoryPath != null)
-				.Select(destinationDirectoryPath => Path.Combine(destinationDirectoryPath, fileName))
-				.Where(destinationFilePath => destinationFilePath != null)
-				.ToList()
-				.ForEach(destinationFilePath => File.Copy(sourceFilePath, destinationFilePath, true));
-		}
-
-		private void CopyAgentExtensions()
-		{
-			var directoriesWithoutFramework = Directory.EnumerateDirectories(ExtensionsDirectoryPath, Configuration, SearchOption.AllDirectories);
-
-			List<string> allDirectoriesForConfiguration = new List<String>(directoriesWithoutFramework);
-
-			foreach (var directory in directoriesWithoutFramework)
-			{
-				var frameworkSubDirectories = Directory.EnumerateDirectories(directory, "*net*");
-				allDirectoriesForConfiguration.AddRange(frameworkSubDirectories);
-			}
-
-			var directories = allDirectoriesForConfiguration.ToList()
-				.Where(directoryPath => directoryPath != null)
-				.Where(directoryPath => directoryPath.Contains("netstandard") == _isCoreClr)
-				.Select(directoryPath => new DirectoryInfo(directoryPath))
-				.Where(directoryInfo => directoryInfo.Parent != null)
-				.Where(directoryInfo => directoryInfo.Parent.Name == "bin" || directoryInfo.Parent.Name == Configuration);
-
-			var dlls = directories
-				.SelectMany(directoryInfo => directoryInfo.EnumerateFiles("*.dll"))
-				.Where(fileInfo => fileInfo != null)
-				.DistinctBy(fileInfo => fileInfo.Name)
-				.Where(fileInfo => fileInfo != null)
-				.Select(fileInfo => fileInfo.FullName)
-				.Where(filePath => filePath != null)
-				.Where(filePath => FileVersionInfo.GetVersionInfo(filePath).FileVersion == AgentVersion);
-
-			dlls.ForEach(filePath =>
-			{
-				CopyNewRelicAssemblies(filePath, DestinationExtensionsDirectoryPath);
-				TryCopyExtensionInstrumentationFile(filePath, DestinationExtensionsDirectoryPath);
-			});
-		}
-
-		private static void CopyNewRelicAssemblies([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
-		{
-			var directoryPath = Path.GetDirectoryName(assemblyFilePath);
-			if (directoryPath == null)
-				return;
-
-			var directoryInfo = new DirectoryInfo(directoryPath);
-
-			directoryInfo
-				.EnumerateFiles("NewRelic.*.dll")
-				.Where(fileInfo => fileInfo != null)
-				.Where(fileInfo => fileInfo.Name != "NewRelic.Agent.Extensions.dll")
-				.Where(fileInfo => !fileInfo.Name.EndsWith("Tests.dll"))
-				.Select(fileInfo => fileInfo.FullName)
-				.Where(filePath => filePath != null)
-				.ForEach(filePath => CopyToDirectory(filePath, destinationExtensionsDirectoryPath));
-		}
-
-		private static void TryCopyExtensionInstrumentationFile([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
-		{
-			var directory = Path.GetDirectoryName(assemblyFilePath);
-
-			if (directory == null)
-				return;
-
-			var instrumentationFilePath = Path.Combine(directory, "Instrumentation.xml");
-			if (!File.Exists(instrumentationFilePath))
-				return;
-
-			var assemblyName = Path.GetFileNameWithoutExtension(assemblyFilePath);
-			if (assemblyName == null || !assemblyName.StartsWith("NewRelic"))
-				return;
-
-			var destinationFilePath = Path.Combine(destinationExtensionsDirectoryPath, assemblyName + ".Instrumentation.xml");
-
-			File.Copy(instrumentationFilePath, destinationFilePath, true);
-		}
-
-		private void CreateRegistryFile()
-		{
-			// TODO: create .reg files for switching development between the two outside of the two folders
-			var strings = new[]
-			{
-				@"COR_ENABLE_PROFILING=1",
-				@"COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}",
-				String.Format(@"COR_PROFILER_PATH={0}", DestinationProfilerDllPath),
-				String.Format(@"NEWRELIC_HOME={0}\", DestinationHomeDirectoryPath)
-			};
-
-			var bytes = new List<Byte>();
-			foreach (var @string in strings)
-			{
-				if (@string == null)
-					continue;
-				bytes.AddRange(Encoding.Unicode.GetBytes(@string));
-				bytes.AddRange(new Byte[] { 0, 0 });
-			}
-			bytes.AddRange(new Byte[] { 0, 0 });
-
-			var hexString = BitConverter.ToString(bytes.ToArray()).Replace('-', ',');
-			const string fileContentsFormatter =
+        private string AgentCoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
+        private string ILRepackedNewRelicAgentCorePath { get { return Path.Combine(AgentCoreBuildDirectoryPath + "-ILRepacked", "NewRelic.Agent.Core.dll"); } }
+        private string NewRelicCoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
+        private string NewRelicCorePath { get { return Path.Combine(NewRelicCoreBuildDirectoryPath, "NewRelic.Core.dll"); } }
+        private string NewRelicAgentExtensionsPath { get { return Path.Combine(AgentCoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
+        private string ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Extensions"); } }
+
+        void RealMain()
+        {
+            DoWork(bitness: "x86", isCoreClr: false);
+            DoWork(bitness: "x64", isCoreClr: false);
+            DoWork(bitness: "x86", isCoreClr: true);
+            DoWork(bitness: "x64", isCoreClr: true);
+            DoWork(bitness: "x64", isCoreClr: true, isLinux: true);
+
+        }
+
+        private void DoWork(string bitness, bool isCoreClr, bool isLinux = false)
+        {
+            Console.WriteLine($"AnyCpuBuildDirectoryName {AnyCpuBuildDirectoryName}");
+
+            Bitness = bitness;
+            _isCoreClr = isCoreClr;
+            _isLinux = isLinux;
+
+            var frameworkMsg = _isCoreClr ? "CoreCLR" : ".NETFramework";
+            frameworkMsg += _isLinux ? " Linux" : "";
+            Console.WriteLine($"[HomeBuilder]: Building home for {frameworkMsg} {bitness}");
+            Console.WriteLine("[HomeBuilder]: attempting to read and restore CustomInstrumentation.xml");
+
+            var customInstrumentationFilePath = Path.Combine(DestinationExtensionsDirectoryPath, "CustomInstrumentation.xml");
+            byte[] customInstrumentationBytes = ReadCustomInstrumentationBytes(customInstrumentationFilePath);
+
+            ReCreateDirectoryWithEveryoneAccess(DestinationHomeDirectoryPath);
+
+            Directory.CreateDirectory(DestinationExtensionsDirectoryPath);
+
+            CopyProfiler(isLinux);
+
+            File.Copy(NewRelicConfigXsdPath, DestinationNewRelicConfigXsdPath, true);
+            CopyToDirectory(ILRepackedNewRelicAgentCorePath, DestinationHomeDirectoryPath);
+            CopyToDirectory(NewRelicConfigPath, DestinationHomeDirectoryPath);
+            CopyToDirectory(ExtensionsXsdPath, DestinationExtensionsDirectoryPath);
+            CopyToDirectory(NewRelicAgentExtensionsPath, DestinationHomeDirectoryPath);
+            CopyAgentExtensions();
+            CopyOtherDependencies();
+
+            CopyToDirectory(NewRelicCorePath, DestinationExtensionsDirectoryPath);
+
+            var shouldCreateRegistryFile = (isCoreClr == false);
+            if (shouldCreateRegistryFile)
+            {
+                CreateRegistryFile();
+            }
+
+            if (customInstrumentationBytes != null)
+            {
+                File.WriteAllBytes(customInstrumentationFilePath, customInstrumentationBytes);
+            }
+        }
+
+        private void CopyProfiler(bool isLinux = false)
+        {
+            if (isLinux)
+            {
+                var soExists = File.Exists(ProfilerSoPath);
+                if (soExists)
+                {
+                    Console.WriteLine($"[HomeBuilder]: Copying Linux profiler Shared Object (so) from: {ProfilerSoPath} to: {DestinationProfilerSoPath}");
+                    File.Copy(ProfilerSoPath, DestinationProfilerSoPath, true);
+                }
+                else
+                {
+                    Console.WriteLine($"[HomeBuilder]: *** Did not find Linux profiler Shared Object (so) at path: {ProfilerSoPath} ***");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[HomeBuilder]: Copying Windows profiler DLL from: {ProfilerDllPath} to: {DestinationProfilerDllPath}");
+                File.Copy(ProfilerDllPath, DestinationProfilerDllPath, true);
+            }
+        }
+
+        private byte[] ReadCustomInstrumentationBytes(string customInstrumentationFilePath)
+        {
+            byte[] customInstrumentationBytes = null;
+            if (File.Exists(customInstrumentationFilePath))
+            {
+                customInstrumentationBytes = File.ReadAllBytes(customInstrumentationFilePath);
+            }
+
+            return customInstrumentationBytes;
+        }
+
+        private void CopyOtherDependencies()
+        {
+            CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
+
+            if (_isCoreClr)
+            {
+                CopyToDirectory(AgentApiPath, DestinationHomeDirectoryPath);
+                CopyToDirectory(ReadmeFilePath, DestinationHomeDirectoryPath);
+                File.Move(Path.Combine(DestinationHomeDirectoryPath, Core20ReadmeFileName), Path.Combine(DestinationHomeDirectoryPath, "README.md"));
+                return;
+            }
+        }
+
+        private static void ReCreateDirectoryWithEveryoneAccess(string directoryPath)
+        {
+            try
+            { Directory.Delete(directoryPath, true); }
+            catch (DirectoryNotFoundException) { }
+
+            Thread.Sleep(TimeSpan.FromMilliseconds(1));
+
+            var directoryInfo = Directory.CreateDirectory(directoryPath);
+            var directorySecurity = directoryInfo.GetAccessControl();
+            var everyone = new SecurityIdentifier(WellKnownSidType.WorldSid, null);
+            directorySecurity.AddAccessRule(new FileSystemAccessRule(everyone, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+            directoryInfo.SetAccessControl(directorySecurity);
+        }
+
+        private static void CopyToDirectory(string sourceFilePath, string destinationDirectoryPath)
+        {
+            if (sourceFilePath == null)
+                throw new ArgumentNullException("sourceFilePath");
+
+            if (destinationDirectoryPath == null)
+                throw new ArgumentNullException("destinationDirectoryPath");
+
+            var fileName = Path.GetFileName(sourceFilePath);
+            var destinationFilePath = Path.Combine(destinationDirectoryPath, fileName);
+            File.Copy(sourceFilePath, destinationFilePath, true);
+        }
+
+        private void CopyAgentExtensions()
+        {
+            var directoriesWithoutFramework = Directory.EnumerateDirectories(ExtensionsDirectoryPath, Configuration, SearchOption.AllDirectories);
+            List<string> allDirectoriesForConfiguration = new List<string>(directoriesWithoutFramework);
+            foreach (var directory in directoriesWithoutFramework)
+            {
+                var frameworkSubDirectories = Directory.EnumerateDirectories(directory, "*net*");
+                allDirectoriesForConfiguration.AddRange(frameworkSubDirectories);
+            }
+
+            var netstandardProjectsToIncludeInBothAgents = new[] { "AspNetCore" };
+            var directories = allDirectoriesForConfiguration.ToList()
+                .Where(directoryPath => directoryPath != null)
+                .Where(directoryPath => directoryPath.Contains("netstandard") == _isCoreClr || netstandardProjectsToIncludeInBothAgents.Any(directoryPath.Contains))
+                .Select(directoryPath => new DirectoryInfo(directoryPath))
+                .Where(directoryInfo => directoryInfo.Parent != null)
+                .Where(directoryInfo => directoryInfo.Parent.Name == "bin" || directoryInfo.Parent.Name == Configuration)
+                .ToList();
+
+            var dlls = directories
+                .SelectMany(directoryInfo => directoryInfo.EnumerateFiles("*.dll"))
+                .Where(fileInfo => fileInfo != null)
+                .DistinctBy(fileInfo => fileInfo.Name)
+                .Where(fileInfo => fileInfo != null)
+                .Select(fileInfo => fileInfo.FullName)
+                .Where(filePath => filePath != null)
+                .Where(filePath => FileVersionInfo.GetVersionInfo(filePath).FileVersion == AgentVersion)
+                .Distinct()
+                .ToList();
+
+            foreach (var filePath in dlls)
+            {
+                var destination = DestinationExtensionsDirectoryPath;
+                CopyNewRelicAssemblies(filePath, destination);
+                TryCopyExtensionInstrumentationFile(filePath, DestinationExtensionsDirectoryPath);
+            };
+        }
+
+        private static void CopyNewRelicAssemblies(string assemblyFilePath, string destinationExtensionsDirectoryPath)
+        {
+            var directoryPath = Path.GetDirectoryName(assemblyFilePath);
+            if (directoryPath == null)
+                return;
+
+            var directoryInfo = new DirectoryInfo(directoryPath);
+            var filePaths = directoryInfo
+                .EnumerateFiles("NewRelic.*.dll")
+                .Where(fileInfo => fileInfo != null)
+                .Where(fileInfo => fileInfo.Name != "NewRelic.Agent.Extensions.dll")
+                .Where(fileInfo => !fileInfo.Name.EndsWith("Tests.dll"))
+                .Select(fileInfo => fileInfo.FullName)
+                .Where(filePath => filePath != null)
+                .ToList();
+
+            foreach (var filePath in filePaths)
+            {
+                CopyToDirectory(filePath, destinationExtensionsDirectoryPath);
+            }
+        }
+
+        private static void TryCopyExtensionInstrumentationFile(string assemblyFilePath, string destinationExtensionsDirectoryPath)
+        {
+            var directory = Path.GetDirectoryName(assemblyFilePath);
+            if (directory == null)
+                return;
+
+            var instrumentationFilePath = Path.Combine(directory, "Instrumentation.xml");
+            if (!File.Exists(instrumentationFilePath))
+                return;
+
+            var assemblyName = Path.GetFileNameWithoutExtension(assemblyFilePath);
+            if (assemblyName == null)
+                return;
+
+            var destinationFilePath = Path.Combine(destinationExtensionsDirectoryPath, assemblyName + ".Instrumentation.xml");
+            File.Copy(instrumentationFilePath, destinationFilePath, true);
+        }
+
+        private void CreateRegistryFile()
+        {
+            var strings = new[]
+            {
+                @"COR_ENABLE_PROFILING=1",
+                @"COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}",
+                string.Format(@"COR_PROFILER_PATH={0}", DestinationProfilerDllPath),
+                string.Format(@"NEWRELIC_HOME={0}\", DestinationHomeDirectoryPath)
+            };
+
+            var bytes = new List<byte>();
+            foreach (var @string in strings)
+            {
+                if (@string == null)
+                    continue;
+                bytes.AddRange(Encoding.Unicode.GetBytes(@string));
+                bytes.AddRange(new byte[] { 0, 0 });
+            }
+            bytes.AddRange(new byte[] { 0, 0 });
+
+            var hexString = BitConverter.ToString(bytes.ToArray()).Replace('-', ',');
+            const string fileContentsFormatter =
 @"Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC]
@@ -543,134 +343,60 @@ namespace NewRelic.Installer
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WAS]
 ""Environment""=hex(7):{0}
 ";
-			var fileContents = String.Format(fileContentsFormatter, hexString);
-			File.WriteAllText(DestinationRegistryFilePath, fileContents);
-		}
+            var fileContents = string.Format(fileContentsFormatter, hexString);
+            File.WriteAllText(DestinationRegistryFilePath, fileContents);
+        }
 
-		static void Main(string[] args)
-		{
-			var program = new Program();
-			program.ParseCommandLineArguments(args);
+        static void Main(string[] args)
+        {
+            var program = new Program();
+            program.ParseCommandLineArguments(args);
+            program.RealMain();
+        }
 
-			var op = args[0];
-			switch (op)
-			{
-				case "buildCoreArtifactsForS3Deploy":
-					program.BuildCoreArtifactsForS3Deploy();
-					break;
-				default:
-					program.RealMain();
-					break;
-			}
-		}
+        private void ParseCommandLineArguments(string[] commandLineArguments)
+        {
+            var defaultParser = CommandLine.Parser.Default;
+            if (defaultParser == null)
+                throw new NullReferenceException("defaultParser");
 
-		private void ParseCommandLineArguments(String[] commandLineArguments)
-		{
-			var defaultParser = CommandLine.Parser.Default;
-			if (defaultParser == null)
-				throw new NullReferenceException("defaultParser");
+            defaultParser.ParseArgumentsStrict(commandLineArguments, this);
+        }
 
-			defaultParser.ParseArgumentsStrict(commandLineArguments, this);
-		}
+        private string GetNuGetPackageFolder(string csprojPath, string packageName)
+        {
 
-		private string CoreArtifactRootDirectory => Path.Combine(BuildOutputPath, "CoreArtifacts");
+            Console.WriteLine($"Searching local Package Cache for '{packageName}' in {NuGetPackageDir}");
+            var version = GetNuGetPackageVersion(csprojPath, packageName);
+            var pkgFolder = Path.Combine(NuGetPackageDir.TrimEnd('"'), packageName, version);
+            Console.WriteLine($"Nuget Package Folder - {pkgFolder}");
+            return pkgFolder;
+        }
 
-		private void BuildCoreArtifactsForS3Deploy()
-		{
-			// _isCoreClr needs to be set accordingly in order to utilizize existing code paths as part of the
-			// creation of the core installer.
-			_isCoreClr = true;
+        private string GetNuGetPackageFolderNativeLibPath(string csprojPath, string packageName)
+        {
+            var pkgFolder = GetNuGetPackageFolder(csprojPath, packageName);
+            pkgFolder = Path.Combine(pkgFolder, "runtimes");
+            pkgFolder = _isLinux
+                ? Path.Combine(pkgFolder, "linux")
+                : Path.Combine(pkgFolder, "win");
 
-			PrepareWorkspace();
-			CreateCoreClrArchives();
-			BuildCoreInstaller();
-			CopyCoreReadme();
-		}
+            pkgFolder = Path.Combine(pkgFolder, "native");
+            Console.WriteLine($"Nuget Package LibPath - {pkgFolder}");
+            return pkgFolder;
+        }
 
-		private void PrepareWorkspace()
-		{
-			if (Directory.Exists(CoreArtifactRootDirectory))
-			{
-				Directory.Delete(CoreArtifactRootDirectory, true);
-			}
+        private string GetNuGetPackageVersion(string csprojPath, string packageName)
+        {
+            var regex = new Regex($@".*<PackageReference Include=""{packageName}"" Version=""(.*?)"" />");
+            var packageVersion = File.ReadAllLines(csprojPath)
+                .Select(line => regex.Match(line))
+                .Where(match => match.Success)
+                .Select(match => match.Groups[1].Value)
+                .FirstOrDefault();
 
-			if (Directory.Exists(CoreInstallerOutputPath))
-			{
-				Directory.Delete(CoreInstallerOutputPath, true);
-			}
-
-			Directory.CreateDirectory(CoreArtifactRootDirectory);
-			Directory.CreateDirectory(CoreInstallerOutputPath);
-		}
-
-		private void CopyCoreReadme()
-		{
-			var dstReadme = Path.Combine(CoreArtifactRootDirectory, Core20ReadmeFileName);
-			File.Copy(ReadmeFilePath, dstReadme, true);
-			File.Move(dstReadme, Path.Combine(CoreArtifactRootDirectory, "README.md"));
-		}
-
-		private void CreateCoreClrArchives()
-		{
-			CreateCoreClrArchive("x86");
-			CreateCoreClrArchive("x64");
-		}
-
-		private void CreateCoreClrArchive(string bitness)
-		{
-			Bitness = bitness;
-
-			if (!Directory.Exists(DestinationHomeDirectoryPath))
-			{
-				throw new Exception($"Home directory does not exist [{DestinationHomeDirectoryPath}]. Build it first.");
-			}
-
-			var zipFileName = $"newrelic-netcore20-agent-win_{AgentVersion}_{Bitness}.zip";
-			var zipFilePath = Path.Combine(CoreArtifactRootDirectory, zipFileName);
-
-			Console.WriteLine($"[HomeBuilder]: Zipping contents of {DestinationHomeDirectoryPath}");
-			Console.WriteLine($"[HomeBuilder]: Saving zipped contents to {zipFilePath}");
-
-			System.IO.Compression.ZipFile.CreateFromDirectory(DestinationHomeDirectoryPath, zipFilePath);
-		}
-
-		public void BuildCoreInstaller()
-		{
-			var bitnesses = new List<string>() { "x64", "x86" };
-
-			var scriptPath = Path.Combine(CoreInstallerSourcePath, "installAgent.ps1");
-			var usageTextPath = Path.Combine(CoreInstallerSourcePath, "installAgentUsage.txt");
-
-			var installerZipFile = $"newrelic-netcore20-agent-win-installer_{AgentVersion}.zip";
-			var installerZipPath = Path.Combine(CoreArtifactRootDirectory, installerZipFile);
-
-			Console.WriteLine($"[HomeBuilder]: Copying core installer files to  {CoreInstallerOutputPath}");
-			CopyToDirectory(scriptPath, CoreInstallerOutputPath);
-			CopyToDirectory(usageTextPath, CoreInstallerOutputPath);
-
-			foreach (var bitness in bitnesses)
-			{
-				var zipFileName = $"newrelic-netcore20-agent-win_{AgentVersion}_{bitness}.zip";
-				var zipFilePath = Path.Combine(CoreArtifactRootDirectory, zipFileName);
-				var unzipPath = Path.Combine(CoreInstallerOutputPath, bitness);
-				Console.WriteLine($"[HomeBuilder]: Copying {bitness} core zip files to  {CoreInstallerOutputPath}");
-
-				System.IO.Compression.ZipFile.ExtractToDirectory(zipFilePath, unzipPath);
-
-				var linuxProfilerPath = Path.Combine(unzipPath, ProfilerSoFileName);
-				if (File.Exists(linuxProfilerPath))
-				{
-					File.Delete(linuxProfilerPath);
-				}
-			}
-
-			Console.WriteLine($"[HomeBuilder]: Compressing core installer files to  {installerZipPath}");
-
-			System.IO.Compression.ZipFile.CreateFromDirectory(CoreInstallerOutputPath, installerZipPath);
-
-			Console.WriteLine($"[HomeBuilder]: Removing core installer files from working directory  {CoreInstallerOutputPath}");
-
-			Directory.Delete(CoreInstallerOutputPath, true);
-		}
-	}
+            Console.WriteLine($"Identified Package Reference to '{packageName}' for version {packageVersion} in {csprojPath}");
+            return packageVersion;
+        }
+    }
 }
