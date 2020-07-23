@@ -276,11 +276,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 GetApdexMetrics(immutableTransaction, apdexT.Value, transactionApdexMetricName, txStats);
             }
 
-            if (ErrorCollectionEnabled()
-                && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError
-                && !immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.IsExpected)
+            if (ErrorCollectionEnabled() && immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.HasError)
             {
-                MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats);
+                var isErrorExpected = immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.IsExpected;
+                MetricBuilder.TryBuildErrorsMetrics(isWebTransaction, txStats, isErrorExpected);
             }
 
             var referrerCrossProcessId = immutableTransaction.TransactionMetadata.CrossApplicationReferrerProcessId;

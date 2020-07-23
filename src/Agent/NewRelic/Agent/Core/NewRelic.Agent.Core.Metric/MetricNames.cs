@@ -261,10 +261,13 @@ namespace NewRelic.Agent.Core.Metric
         #region Errors
 
         public const string Errors = "Errors";
+        public const string ErrorsExpected = "ErrorsExpected";
+
 
         public static readonly MetricName ErrorsAll = MetricName.Create(Errors + PathSeparator + All);
         public static readonly MetricName ErrorsAllWeb = MetricName.Create(Errors + PathSeparator + AllWeb);
         public static readonly MetricName ErrorsAllOther = MetricName.Create(Errors + PathSeparator + AllOther);
+        public static readonly MetricName ErrorsExpectedAll = MetricName.Create(ErrorsExpected + PathSeparator + All);
 
         public static MetricName GetErrorTransaction(string transactionMetricName)
         {

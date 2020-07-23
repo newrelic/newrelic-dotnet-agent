@@ -110,16 +110,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration).Returns(_configuration);
 
-            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
             _transactionTraceAggregator = Mock.Create<ITransactionTraceAggregator>();
             _transactionTraceMaker = Mock.Create<ITransactionTraceMaker>();
             _transactionEventAggregator = Mock.Create<ITransactionEventAggregator>();
             _transactionEventMaker = Mock.Create<ITransactionEventMaker>();
             _transactionAttributeMaker = Mock.Create<ITransactionAttributeMaker>();
             _errorTraceAggregator = Mock.Create<IErrorTraceAggregator>();
-            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
+            _errorTraceMaker = Mock.Create<IErrorTraceMaker>();
             _errorEventAggregator = Mock.Create<IErrorEventAggregator>();
-            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+            _errorEventMaker = Mock.Create<IErrorEventMaker>();
             _sqlTraceAggregator = Mock.Create<ISqlTraceAggregator>();
             _sqlTraceMaker = Mock.Create<ISqlTraceMaker>();
             _databaseService = Mock.Create<IDatabaseService>();
@@ -129,6 +128,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _agentTimerService = Mock.Create<IAgentTimerService>();
             _errorService = new ErrorService(_configurationService);
             _distributedTracePayloadHandler = Mock.Create<IDistributedTracePayloadHandler>();
+            _attribDefSvc = new AttributeDefinitionService((f) => new AttributeDefinitions(f));
 
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker, _spanEventAggregator, _spanEventMaker, _agentTimerService, Mock.Create<IAdaptiveSampler>(), _errorService, _spanEventAggregatorInfiniteTracing);
         }
@@ -786,6 +786,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var errorEvents = new List<ErrorEventWireModel>();
             var errorTraces = new List<ErrorTraceWireModel>();
 
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
             Mock.Arrange(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>())).DoInstead<ErrorEventWireModel>(errorEvent => errorEvents.Add(errorEvent));
             Mock.Arrange(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>())).DoInstead<ErrorTraceWireModel>(errorTrace => errorTraces.Add(errorTrace));
@@ -806,6 +809,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             string[] unscoped = new string[] {
                 "Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
+
+            // When an error is expected, unscoped error metrics should not be generated.
             foreach (string current in unscoped)
             {
                 if (expectForError)
@@ -819,17 +824,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 }
             }
 
+            // When an error is expected, ErrorsExpected/all metric is generated, frustrating score apdex metric should not be generated. 
             if (expectForError)
             {
-                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0); //sastisfying
-                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value0); //sastisfying
+                Assert.IsTrue(generatedMetrics.ContainsKey("ErrorsExpected/all"));
+                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0); //sastisfying apdex
+                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value0); //sastisfying apdex
                 Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value0); //sastisfying
             }
             else
             {
-                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2); //frustrating
-                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value2); //frustrating
-                Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value2); //frustrating
+                Assert.IsFalse(generatedMetrics.ContainsKey("ErrorsExpected/all"));
+                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2); //frustrating apdex
+                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value2); //frustrating apdex
+                Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value2); //frustrating apdex
             }
 
             Assert.That(errorEvents.Count > 0, "Expect error events.");
