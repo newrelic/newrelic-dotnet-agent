@@ -1,0 +1,71 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
+using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Testing.Assertions;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace NewRelic.Agent.IntegrationTests
+{
+	public class BasicWebService : IClassFixture<RemoteServiceFixtures.BasicWebService>
+	{
+		[NotNull]
+		private readonly RemoteServiceFixtures.BasicWebService _fixture;
+
+		public BasicWebService([NotNull] RemoteServiceFixtures.BasicWebService fixture, [NotNull] ITestOutputHelper output)
+		{
+			_fixture = fixture;
+			_fixture.TestLogger = output;
+			_fixture.Actions
+			(
+				setupConfiguration: () =>
+				{
+					var configPath = fixture.DestinationNewRelicConfigFilePath;
+					var configModifier = new NewRelicConfigModifier(configPath);
+					configModifier.ForceTransactionTraces();
+				},
+				exerciseApplication: () =>
+				{
+					_fixture.InvokeServiceHttp();
+					_fixture.InvokeServiceSoap();
+				}
+			);
+			_fixture.Initialize();
+		}
+
+		[Fact]
+		public void Test()
+		{
+			var expectedMetrics = new List<Assertions.ExpectedMetric>
+			{
+				new Assertions.ExpectedMetric {metricName = @"DotNet/System.Web.Services.Protocols.SyncSessionlessHandler/ProcessRequest", callCount = 2 },
+				new Assertions.ExpectedMetric {metricName = @"DotNet/System.Web.Services.Protocols.SyncSessionlessHandler/ProcessRequest", metricScope = "WebTransaction/WebService/BasicWebService.TestWebService.HelloWorld", callCount = 2},
+				new Assertions.ExpectedMetric {metricName = @"WebTransaction/WebService/BasicWebService.TestWebService.HelloWorld", callCount = 2},
+				new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.HelloWorld", callCount = 2},
+				new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.HelloWorld", metricScope = "WebTransaction/WebService/BasicWebService.TestWebService.HelloWorld", callCount = 2}
+			};
+			
+			var expectedTransactionTraceSegments = new List<String>
+			{
+				@"DotNet/System.Web.Services.Protocols.SyncSessionlessHandler/ProcessRequest",
+				@"BasicWebService.TestWebService.HelloWorld"
+			};
+
+			var metrics = _fixture.AgentLog.GetMetrics().ToList();
+
+			var transactionSample = _fixture.AgentLog.GetTransactionSamples()
+				.Where(sample => sample.Path == @"WebTransaction/WebService/BasicWebService.TestWebService.HelloWorld")
+				.FirstOrDefault();
+			Assert.NotNull(transactionSample);
+
+			NrAssert.Multiple(
+				() => Assertions.MetricsExist(expectedMetrics, metrics),
+				() => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+				() => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
+				() => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
+			);
+		}
+	}
+}

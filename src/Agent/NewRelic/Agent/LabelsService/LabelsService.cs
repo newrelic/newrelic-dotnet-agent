@@ -18,7 +18,6 @@ namespace NewRelic.Agent
 		[NotNull]
 		private readonly IConfigurationService _configurationService;
 
-		// TODO: we should memoize this and reset it to null every time the configuration is updated
 		public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration(); } }
 
 		public LabelsService([NotNull] IConfigurationService configurationService)

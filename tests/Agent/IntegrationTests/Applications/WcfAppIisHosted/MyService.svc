@@ -1,0 +1,5 @@
+﻿<%@ ServiceHost
+	Language="C#"
+	Debug="true"
+	Service="NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.MyService"
+	CodeBehind="MyService.svc.cs" %>

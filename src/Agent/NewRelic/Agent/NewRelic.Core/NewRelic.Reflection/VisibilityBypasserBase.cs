@@ -157,8 +157,6 @@ namespace NewRelic.Reflection
 		[NotNull]
 		public Func<object, object, TResult> GenerateOneParameterMethodCaller<TResult>(string assemblyName, string typeName, string methodName, string parameterTypeName)
 		{
-			//TODO: cleanup and add testing
-			//TODO: more specific naming for typeName? for all of these types of calls?
 			if (assemblyName == null) throw new ArgumentNullException("assemblyName");
 			if (typeName == null) throw new ArgumentNullException("typeName");
 			if (methodName == null) throw new ArgumentNullException("methodName");

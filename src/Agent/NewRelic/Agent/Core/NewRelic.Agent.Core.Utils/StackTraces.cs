@@ -17,7 +17,6 @@ namespace NewRelic.Agent.Core.Utils
 			}
 			var frames = new List<String>(maxDepth);
 
-			// TODO: This code could be made much simpler by just calling ToString() on the original exception (which will handle digging into the InnerExceptions recursively)
 			var exceptions = new List<Exception>(5);
 			while (exception != null)
 			{

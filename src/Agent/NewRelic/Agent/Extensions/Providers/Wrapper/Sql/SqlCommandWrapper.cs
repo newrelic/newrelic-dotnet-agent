@@ -3,11 +3,10 @@ using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
-using NewRelic.Agent.Extensions.Parsing;
 
 namespace NewRelic.Providers.Wrapper.Sql
 {
-	public class SqlCommandWrapper : IWrapper
+    public class SqlCommandWrapper : IWrapper
 	{
 		public bool IsTransactionRequired => true;
 
@@ -59,7 +58,6 @@ namespace NewRelic.Providers.Wrapper.Sql
 			object GetConnectionInfo() => ConnectionInfo.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
 			var connectionInfo = (ConnectionInfo) transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);
 
-			// TODO - Tracer had a supportability metric here to report timing duration of the parser.
 			var parsedStatement = transaction.GetParsedDatabaseStatement(sqlCommand.CommandType, sql);
 			var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, parsedStatement?.Operation, vendor, parsedStatement?.Model, sql,
 				host: connectionInfo.Host, portPathOrId: connectionInfo.PortPathOrId, databaseName: connectionInfo.DatabaseName);

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Web;
 using JetBrains.Annotations;
@@ -20,7 +19,7 @@ using NewRelic.Agent.Core.Wrapper;
 
 namespace NewRelic.Agent.Core
 {
-	sealed public class Agent : IAgent, IDisposable
+    sealed public class Agent : IAgent, IDisposable
 	{
 		[NotNull]
 		private readonly IContainer _container;
@@ -106,7 +105,6 @@ namespace NewRelic.Agent.Core
 			_container.Resolve<IConfigurationService>();
 			var config = ConfigurationLoader.Initialize();
 
-			// TODO: DI the logging system, right now this needs to happen before any services start
 			LoggerBootstrapper.ConfigureLogger(config.LogConfig);
 
 			AssertAgentEnabled(config);
@@ -123,7 +121,6 @@ namespace NewRelic.Agent.Core
 
 		private void AssertAgentEnabled([NotNull] configuration config)
 		{
-			// TODO: migrate all of these settings to the new new config system so that we can just use IConfiguration
 			if (!Configuration.AgentEnabled)
 				throw new Exception(String.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
 
@@ -140,10 +137,8 @@ namespace NewRelic.Agent.Core
 #else
 			INativeMethods nativeMethods = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) ? (INativeMethods)new WindowsNativeMethods() : new NativeMethods();
 #endif
-			// TODO: remove IAgent dependency from these services so they can be DI'd
 			ThreadProfilingService = new ThreadProfilingService(this, _container.Resolve<IDataTransportService>(), _container.Resolve<IScheduler>(), nativeMethods);
 
-			// TODO: DI these commands (need to make them all DI'able first)
 			var commandService = _container.Resolve<CommandService>();
 			commandService.AddCommands(
 				new RestartCommand(),

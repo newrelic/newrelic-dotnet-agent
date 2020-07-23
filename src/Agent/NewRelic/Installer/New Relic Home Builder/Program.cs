@@ -114,7 +114,6 @@ namespace NewRelic.Installer
             DoWork(bitness: "x86", isCoreClr: true);
             DoWork(bitness: "x64", isCoreClr: true);
             DoWork(bitness: "x64", isCoreClr: true, isLinux: true);
-
         }
 
         private void DoWork(string bitness, bool isCoreClr, bool isLinux = false)

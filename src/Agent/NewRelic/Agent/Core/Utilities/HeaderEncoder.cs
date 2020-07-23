@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-	// TODO: It would make unit testing a bit easier if this class were DI'd
 	public static class HeaderEncoder
 	{
 		/// <summary>

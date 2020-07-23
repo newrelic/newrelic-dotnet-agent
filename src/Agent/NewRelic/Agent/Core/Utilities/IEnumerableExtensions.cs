@@ -44,8 +44,6 @@ namespace NewRelic.Agent.Core.Utilities
 			return new ReadOnlyDictionary<TKey,TValue>(dictionary);
 		}
 
-		// TODO: Find a good way to make this method work for [int16, int32, int64, uint16, uint32, uint64] without writing it six times
-		// Some relevant discussion found here: http://stackoverflow.com/questions/32664/is-there-a-constraint-that-restricts-my-generic-method-to-numeric-types
 		[Pure]
 		public static Boolean IsSequential(this IEnumerable<UInt32> sequence)
 		{
