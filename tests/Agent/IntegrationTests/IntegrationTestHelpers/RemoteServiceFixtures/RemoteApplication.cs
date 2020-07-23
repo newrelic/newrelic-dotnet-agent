@@ -172,7 +172,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
 		public virtual void Dispose()
 		{
-			var disposed = false;
+			//var disposed = false;
+			var disposed = true;    // test to see if leaving dirs resolves DotNet-6.x-Agent-CI-IntegrationTests issue
 			var stopwatch = Stopwatch.StartNew();
 			while (!disposed && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
 			{
