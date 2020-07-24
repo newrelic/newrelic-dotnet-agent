@@ -52,25 +52,25 @@ namespace NewRelic.Agent.Core.Utilities
 
 #if NETSTANDARD2_0
 
-			bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            bool isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
-			if (isLinux)
-			{
-				string bootId;
+            if (isLinux)
+            {
+                string bootId;
 
-				try
-				{
-					var lines = File.ReadAllLines("/proc/sys/kernel/random/boot_id");
-					bootId = lines.Length > 0 ? lines[0] : null;
-				}
-				catch (Exception ex)
-				{
-					Log.Warn("boot_id not found. " + ex.Message);
-					return new BootIdResult(null, false);
-				}
+                try
+                {
+                    var lines = File.ReadAllLines("/proc/sys/kernel/random/boot_id");
+                    bootId = lines.Length > 0 ? lines[0] : null;
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn("boot_id not found. " + ex.Message);
+                    return new BootIdResult(null, false);
+                }
 
-				return new BootIdResult(bootId, ValidateBootId(bootId));
-			}
+                return new BootIdResult(bootId, ValidateBootId(bootId));
+            }
 #endif
 
             return new BootIdResult(null, true);

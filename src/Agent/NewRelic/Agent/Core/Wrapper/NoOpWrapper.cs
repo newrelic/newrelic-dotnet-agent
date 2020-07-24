@@ -14,8 +14,8 @@ namespace NewRelic.Agent.Core.Wrapper
         [NotNull]
         private static readonly String[] PossibleWrapperNames = {
             "NewRelic.Agent.Core.Wrapper.NoOpWrapper",
-			// To support older custom instrumentation we need to also accept the old tracer factory name
-			"NewRelic.AgentCore.Tracer.Factories.NoOpTracerFactory"
+            // To support older custom instrumentation we need to also accept the old tracer factory name
+            "NewRelic.AgentCore.Tracer.Factories.NoOpTracerFactory"
         };
 
         public bool IsTransactionRequired => false;

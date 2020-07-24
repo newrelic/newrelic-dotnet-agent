@@ -20,10 +20,10 @@ namespace NewRelic.Parsing.ConnectionString
             // Not since they all contain and "=" I am filtering by that.
             //var options = new[]
             //{
-            //	"abortConnect=","allowAdmin=","channelPrefix=","connectRetry=","connectTimeout=",
-            //	"configChannel=","defaultDatabase=","keepAlive=","name=","password=",
-            //	"proxy=","resolveDns=","serviceName=","ssl=","sslHost=",
-            //	"syncTimeout=","tiebreaker=","version=","writeBuffer="
+            //  "abortConnect=","allowAdmin=","channelPrefix=","connectRetry=","connectTimeout=",
+            //  "configChannel=","defaultDatabase=","keepAlive=","name=","password=",
+            //  "proxy=","resolveDns=","serviceName=","ssl=","sslHost=",
+            //  "syncTimeout=","tiebreaker=","version=","writeBuffer="
             //};
 
             // Example connection string: localhost,resolvedns=1

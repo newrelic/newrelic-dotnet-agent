@@ -11,8 +11,8 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
         private static readonly String[] PossibleWrapperNames = {
             "NewRelic.Providers.Wrapper.CustomInstrumentation.CustomSegmentWrapper",
 
-			// To support older custom instrumentation we need to also accept the old tracer factory name
-			"NewRelic.Agent.Core.Tracer.Factories.CustomSegmentTracerFactory"
+            // To support older custom instrumentation we need to also accept the old tracer factory name
+            "NewRelic.Agent.Core.Tracer.Factories.CustomSegmentTracerFactory"
         };
 
         public bool IsTransactionRequired => true;

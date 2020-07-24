@@ -13,19 +13,19 @@ using Newtonsoft.Json;
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     /*
-	NREUM.info={
-	  "beacon":"staging-beacon-1.newrelic.com",
-	  "errorBeacon":"staging-jserror.newrelic.com",
-	  "licenseKey":"3ed9cebafb",
-	  "applicationID":"45526",
-	  "transactionName":"J1lZFRQMVF9VFk4AWwtRRE4PDVxWSA==",
-	  "queueTime":0,
-	  "applicationTime":116,
-	  "agent":"js-agent.newrelic.com/nr-213.min.js",
-	  "userAttributes":"SxNHQFFHFA0aSl9cV1JeVkoWGRRUTUpEXl9vWFYRDgEESg=="
-	   "sslForHttp":"true"
-	}
-	*/
+    NREUM.info={
+      "beacon":"staging-beacon-1.newrelic.com",
+      "errorBeacon":"staging-jserror.newrelic.com",
+      "licenseKey":"3ed9cebafb",
+      "applicationID":"45526",
+      "transactionName":"J1lZFRQMVF9VFk4AWwtRRE4PDVxWSA==",
+      "queueTime":0,
+      "applicationTime":116,
+      "agent":"js-agent.newrelic.com/nr-213.min.js",
+      "userAttributes":"SxNHQFFHFA0aSl9cV1JeVkoWGRRUTUpEXl9vWFYRDgEESg=="
+       "sslForHttp":"true"
+    }
+    */
 
     public class BrowserMonitoringConfigurationData
     {

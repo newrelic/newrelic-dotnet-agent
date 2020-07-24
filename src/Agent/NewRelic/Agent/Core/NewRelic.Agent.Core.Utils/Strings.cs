@@ -364,19 +364,6 @@ namespace NewRelic.Agent.Core.Utils
             }
         }
 
-        /// <summary>
-        /// Returns the application virtual path without the leading / character.
-        /// </summary>
-        /// <returns></returns>
-        /*
-		public static String GetAppVirtualPath()
-		{
-			return System.Web.HttpRuntime.AppDomainAppVirtualPath == null
-				? ""
-				: System.Web.HttpRuntime.AppDomainAppVirtualPath.Substring(1);
-		}
-		*/
-
         public static string ToString(System.Collections.IEnumerable enumerable, char separator = ',')
         {
             StringBuilder builder = new StringBuilder();

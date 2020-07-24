@@ -465,9 +465,9 @@ namespace NewRelic.Api.Agent
         /// <code>
         ///   var requestMetadata = NewRelic.Api.Agent.NewRelic.GetRequestMetadata();
         ///   foreach (var item in requestMetadata)
-        ///	  {
-        ///		  request.Headers.Add(item.Key, item.Value);
-        ///	  }
+        ///   {
+        ///     request.Headers.Add(item.Key, item.Value);
+        ///   }
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
@@ -493,9 +493,9 @@ namespace NewRelic.Api.Agent
         /// <code>
         ///   var responseMetadata = NewRelic.Api.Agent.NewRelic.GetResponseMetadata();
         ///   foreach (var item in responseMetadata)
-        ///	  {
-        ///		  response.Headers.Add(item.Key, item.Value);
-        ///	  }
+        ///   {
+        ///      response.Headers.Add(item.Key, item.Value);
+        ///   }
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]

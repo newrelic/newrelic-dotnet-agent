@@ -140,7 +140,7 @@ namespace NewRelic.Agent.Core.Errors
 
             var statusDescription =
 #if NETSTANDARD2_0
-				statusCode.ToString();
+                statusCode.ToString();
 #else
                 HttpWorkerRequest.GetStatusDescription(statusCode);
 #endif

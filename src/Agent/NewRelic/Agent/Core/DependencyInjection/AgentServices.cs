@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         public static IContainer GetContainer()
         {
 #if NET35
-			return new WindsorContainer();
+            return new WindsorContainer();
 #else
             return new CoreContainer();
 #endif
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
             container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
 #if NET35
-			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
+            container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
 #endif
             container.Register<IThreadPoolStatic, ThreadPoolStatic>();
             container.Register<ITransactionTransformer, TransactionTransformer>();

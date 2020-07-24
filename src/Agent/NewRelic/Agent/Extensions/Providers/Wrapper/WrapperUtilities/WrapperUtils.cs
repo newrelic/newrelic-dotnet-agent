@@ -24,7 +24,7 @@ namespace NewRelic.Providers.Wrapper.WrapperUtilities
         {
 
 #if NETSTANDARD2_0
-			return false;
+            return false;
 #else
             // first check that the application is even running under ASP.NET
             if (!HostingEnvironment.IsHosted)

@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.Config
                 }
 
 #if NETSTANDARD2_0
-				return null;
+                return null;
 #else
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\New Relic\.NET Agent");
                 if (key == null) return null;
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Core.Config
         public static ValueWithProvenance<String> GetWebConfigAppSetting(String key)
         {
 #if NETSTANDARD2_0
-			return null;
+            return null;
 #else
             try
             {
@@ -86,11 +86,11 @@ namespace NewRelic.Agent.Core.Config
         {
             ValueWithProvenance<String> value = GetWebConfigAppSetting(key);
 #if NET35
-			if (value.Value == null)
-			{
-				value = new ValueWithProvenance<String>(ConfigurationManager.AppSettings[key],
-					"ConfigurationManager app setting");
-			}
+            if (value.Value == null)
+            {
+                value = new ValueWithProvenance<String>(ConfigurationManager.AppSettings[key],
+                    "ConfigurationManager app setting");
+            }
 #endif
             return value;
         }
@@ -118,21 +118,21 @@ namespace NewRelic.Agent.Core.Config
 
 #if NETSTANDARD2_0
 
-			try
-			{
-				var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting("NewRelic.ConfigFile");
-				if (!File.Exists(fileName))
-				{
-					return null;
-				}
+            try
+            {
+                var fileName = AppSettingsConfigResolveWhenUsed.GetAppSetting("NewRelic.ConfigFile");
+                if (!File.Exists(fileName))
+                {
+                    return null;
+                }
 
-				Log.InfoFormat("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting: {0}", fileName);
-				return fileName;
-			}
-			catch (Exception)
-			{
-				return null;
-			}
+                Log.InfoFormat("Configuration file found in path pointed to by NewRelic.ConfigFile appSetting: {0}", fileName);
+                return fileName;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
 
 #else
             try
@@ -156,36 +156,36 @@ namespace NewRelic.Agent.Core.Config
         private static String TryGetAgentConfigFileFromAppRoot()
         {
 #if NETSTANDARD2_0
-			try
-			{
-				var filename = String.Empty;
+            try
+            {
+                var filename = String.Empty;
 
-				var entryAssembly = Assembly.GetEntryAssembly();
-				if (entryAssembly != null)
-				{
-					var directory = Path.GetDirectoryName(entryAssembly.Location);
-					filename = Path.Combine(directory, NewRelicConfigFileName);
-					if (File.Exists(filename))
-					{
-						Log.InfoFormat("Configuration file found in app/web root directory: {0}", filename);
-						return filename;
-					}
-				}
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly != null)
+                {
+                    var directory = Path.GetDirectoryName(entryAssembly.Location);
+                    filename = Path.Combine(directory, NewRelicConfigFileName);
+                    if (File.Exists(filename))
+                    {
+                        Log.InfoFormat("Configuration file found in app/web root directory: {0}", filename);
+                        return filename;
+                    }
+                }
 
-				var currentDirectory = Directory.GetCurrentDirectory();
-				filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
-				if (File.Exists(filename))
-				{
-					Log.InfoFormat("Configuration file found in app/web root directory: {0}", filename);
-					return filename;
-				}
+                var currentDirectory = Directory.GetCurrentDirectory();
+                filename = Path.Combine(currentDirectory, NewRelicConfigFileName);
+                if (File.Exists(filename))
+                {
+                    Log.InfoFormat("Configuration file found in app/web root directory: {0}", filename);
+                    return filename;
+                }
 
-				return null;
-			}
-			catch (Exception)
-			{
-				return null;
-			}
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
 #else
             try
             {
@@ -404,7 +404,7 @@ namespace NewRelic.Agent.Core.Config
         private static string GetConfigSchemaContents()
         {
 #if NET35
-			return Properties.Resources.Configuration;
+            return Properties.Resources.Configuration;
 #else
             var home = System.Environment.GetEnvironmentVariable(DefaultConfiguration.NewRelicHomeEnvironmentVariable);
             var xsdFile = Path.Combine(home, "newrelic.xsd");
@@ -482,14 +482,14 @@ namespace NewRelic.Agent.Core.Config
             }
 
 #if NETSTANDARD2_0
-			try
-			{
-				name = AppDomain.CurrentDomain.FriendlyName;
-			}
-			catch (Exception)
-			{
-				name = System.Diagnostics.Process.GetCurrentProcess().ProcessName;				
-			}
+            try
+            {
+                name = AppDomain.CurrentDomain.FriendlyName;
+            }
+            catch (Exception)
+            {
+                name = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+            }
 #else
             if (HttpRuntime.AppDomainAppId != null)
             {
@@ -577,7 +577,7 @@ namespace NewRelic.Agent.Core.Config
     }
 
     /// <summary>
-    /// Thrown when there is soime problem loading the configuration.
+    /// Thrown when there is some problem loading the configuration.
     /// </summary>
     public class ConfigurationLoaderException : Exception
     {

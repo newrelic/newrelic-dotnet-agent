@@ -135,8 +135,8 @@ namespace NewRelic.Agent.Core.AgentHealth
             {
                 _metricBuilder.TryBuildTransactionEventsCollectedMetric(),
 
-				// Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
-				_metricBuilder.TryBuildTransactionEventsSeenMetric()
+                // Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
+                _metricBuilder.TryBuildTransactionEventsSeenMetric()
             };
 
             metrics.ForEach(TrySend);
@@ -156,8 +156,8 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             var metrics = new[]
             {
-				// Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
-				_metricBuilder.TryBuildTransactionEventsSentMetric(count),
+                // Note: this metric is REQUIRED by APM (see https://source.datanerd.us/agents/agent-specs/pull/84)
+                _metricBuilder.TryBuildTransactionEventsSentMetric(count),
             };
 
             metrics.ForEach(TrySend);
@@ -184,9 +184,9 @@ namespace NewRelic.Agent.Core.AgentHealth
             var metrics = new[]
             {
                 _metricBuilder.TryBuildCustomEventsCollectedMetric(),
-				
-				// Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
-				_metricBuilder.TryBuildCustomEventsSeenMetric()
+                
+                // Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
+                _metricBuilder.TryBuildCustomEventsSeenMetric()
             };
 
             metrics.ForEach(TrySend);
@@ -206,8 +206,8 @@ namespace NewRelic.Agent.Core.AgentHealth
         {
             var metrics = new[]
             {
-				// Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
-				_metricBuilder.TryBuildCustomEventsSentMetric(count),
+                // Note: Though not required by APM like the transaction event supportability metrics, this metric should still be created to maintain consistency
+                _metricBuilder.TryBuildCustomEventsSentMetric(count),
             };
 
             metrics.ForEach(TrySend);
@@ -338,9 +338,9 @@ namespace NewRelic.Agent.Core.AgentHealth
 
 #if NETSTANDARD2_0
 
-			bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
-			var metric =_metricBuilder.TryBuildLinuxOsMetric(isLinux);
-			TrySend(metric);
+            bool isLinux = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
+            var metric =_metricBuilder.TryBuildLinuxOsMetric(isLinux);
+            TrySend(metric);
 #endif
         }
 

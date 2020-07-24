@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.DataTransport
             // calling Disconnect on Shutdown is crashing on Linux.  This is probably a CLR bug, but we have to work around it.
             // The Shutdown call is actually not very important (agent runs time out after 5 minutes anyway) so just don't call it.
 #if NET35
-			_subscriptions.Add<CleanShutdownEvent>(OnCleanShutdown);
+            _subscriptions.Add<CleanShutdownEvent>(OnCleanShutdown);
 #endif
 
             if (_configuration.AutoStartAgent)

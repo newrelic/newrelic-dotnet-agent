@@ -11,8 +11,8 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
         private static readonly String[] PossibleWrapperNames = {
             "NewRelic.Providers.Wrapper.CustomInstrumentation.IgnoreTransactionWrapper",
 
-			// To support older custom instrumentation we need to also accept the old tracer factory name
-			"NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory"
+            // To support older custom instrumentation we need to also accept the old tracer factory name
+            "NewRelic.Agent.Core.Tracer.Factories.IgnoreTransactionTracerFactory"
         };
 
         public bool IsTransactionRequired => false;

@@ -49,41 +49,41 @@ namespace NewRelic.Agent.Core
                 AddVariable("AppDomain.FriendlyName", () => AppDomain.CurrentDomain.FriendlyName);
 
 #if NET35
-				// This stuff is only available to web apps.
-				if (TryGetAppDomainAppId() != null)
-				{
-					AddVariable("AppDomainAppPath", () => AppDomainAppPath);
-					AddVariable("AppDomainAppId", () => HttpRuntime.AppDomainAppId);
-					AddVariable("AppDomainAppVirtualPath", () => HttpRuntime.AppDomainAppVirtualPath);
-					AppDomainAppPath = TryGetAppPath(() => HttpRuntime.AppDomainAppPath);
-					AddVariable("UsingIntegratedPipeline", () => HttpRuntime.UsingIntegratedPipeline.ToString());
+                // This stuff is only available to web apps.
+                if (TryGetAppDomainAppId() != null)
+                {
+                    AddVariable("AppDomainAppPath", () => AppDomainAppPath);
+                    AddVariable("AppDomainAppId", () => HttpRuntime.AppDomainAppId);
+                    AddVariable("AppDomainAppVirtualPath", () => HttpRuntime.AppDomainAppVirtualPath);
+                    AppDomainAppPath = TryGetAppPath(() => HttpRuntime.AppDomainAppPath);
+                    AddVariable("UsingIntegratedPipeline", () => HttpRuntime.UsingIntegratedPipeline.ToString());
 
-					var iisVersion = TryGetIisVersion();
-					if(iisVersion != null)
-						AddVariable("IIS Version", () => iisVersion.ToString());
-				}
+                    var iisVersion = TryGetIisVersion();
+                    if(iisVersion != null)
+                        AddVariable("IIS Version", () => iisVersion.ToString());
+                }
 #endif
 
                 AddVariable("Plugin List", GetLoadedAssemblyNames);
 
 #if DEBUG
-				AddVariable("Debug Build", () => true.ToString());
+                AddVariable("Debug Build", () => true.ToString());
 #endif
 
 #if NET35
-				var compilationSection = WebConfigurationManager.GetSection("system.web/compilation") as CompilationSection;
-				if (compilationSection?.DefaultLanguage != null)
-					AddVariable("system.web.compilation.defaultLanguage", () => compilationSection.DefaultLanguage);
+                var compilationSection = WebConfigurationManager.GetSection("system.web/compilation") as CompilationSection;
+                if (compilationSection?.DefaultLanguage != null)
+                    AddVariable("system.web.compilation.defaultLanguage", () => compilationSection.DefaultLanguage);
 
-				var managementObjects = TryGetManagementObjects("Select * from Win32_ComputerSystem");
-				foreach (var managementObject in managementObjects)
-				{
-					if (managementObject == null)
-						continue;
+                var managementObjects = TryGetManagementObjects("Select * from Win32_ComputerSystem");
+                foreach (var managementObject in managementObjects)
+                {
+                    if (managementObject == null)
+                        continue;
 
-					AddVariable("Physical Processors", () => managementObject["NumberOfProcessors"]);
-					AddVariable("Logical Processors", () => managementObject["NumberOfLogicalProcessors"]);
-				}
+                    AddVariable("Physical Processors", () => managementObject["NumberOfProcessors"]);
+                    AddVariable("Logical Processors", () => managementObject["NumberOfLogicalProcessors"]);
+                }
 #endif
             }
             catch (Exception ex)
@@ -136,19 +136,19 @@ namespace NewRelic.Agent.Core
         }
 
 #if NET35
-		[CanBeNull]
-		private static String TryGetAppDomainAppId()
-		{
-			try
-			{
-				return HttpRuntime.AppDomainAppId;
-			}
-			catch (Exception ex)
-			{
-				Log.Warn(ex);
-				return null;
-			}
-		}
+        [CanBeNull]
+        private static String TryGetAppDomainAppId()
+        {
+            try
+            {
+                return HttpRuntime.AppDomainAppId;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex);
+                return null;
+            }
+        }
 #endif
 
         [CanBeNull]
@@ -182,36 +182,36 @@ namespace NewRelic.Agent.Core
         }
 
 #if NET35
-		[CanBeNull]
-		public Version TryGetIisVersion()
-		{
-			try
-			{
-				using (var componentsKey = Registry.LocalMachine?.OpenSubKey(@"Software\Microsoft\InetStp", false))
-				{
-					if (componentsKey == null)
-						return null;
+        [CanBeNull]
+        public Version TryGetIisVersion()
+        {
+            try
+            {
+                using (var componentsKey = Registry.LocalMachine?.OpenSubKey(@"Software\Microsoft\InetStp", false))
+                {
+                    if (componentsKey == null)
+                        return null;
 
-					var majorVersionObject = componentsKey.GetValue("MajorVersion", -1);
-					var minorVersionObject = componentsKey.GetValue("MinorVersion", -1);
+                    var majorVersionObject = componentsKey.GetValue("MajorVersion", -1);
+                    var minorVersionObject = componentsKey.GetValue("MinorVersion", -1);
 
-					if (majorVersionObject == null || minorVersionObject == null)
-						return null;
+                    if (majorVersionObject == null || minorVersionObject == null)
+                        return null;
 
-					var majorVersion = (Int32)majorVersionObject;
-					var minorVersion = (Int32)minorVersionObject;
-					if (majorVersion == -1 || minorVersion == -1)
-						return null;
+                    var majorVersion = (Int32)majorVersionObject;
+                    var minorVersion = (Int32)minorVersionObject;
+                    if (majorVersion == -1 || minorVersion == -1)
+                        return null;
 
-					return new Version(majorVersion, minorVersion);
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.Warn(ex);
-				return null;
-			}
-		}
+                    return new Version(majorVersion, minorVersion);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(ex);
+                return null;
+            }
+        }
 #endif
 
         [NotNull]
@@ -222,29 +222,29 @@ namespace NewRelic.Agent.Core
                 .Where(assembly => assembly != null)
                 .Where(assembly => assembly.GetName().Version != versionZero)
 #if NET35
-				.Where(assembly => !(assembly is System.Reflection.Emit.AssemblyBuilder))
+                .Where(assembly => !(assembly is System.Reflection.Emit.AssemblyBuilder))
 #endif
                 .Select(assembly => assembly.FullName)
                 .ToList();
         }
 
 #if NET35
-		[NotNull]
-		private static IEnumerable<ManagementBaseObject> TryGetManagementObjects([NotNull] String query)
-		{
-			try
-			{
-				using (var managementObjectSearcher = new ManagementObjectSearcher(query))
-				{
-					return managementObjectSearcher.Get().Cast<ManagementBaseObject>();
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.Warn($"Could not retrieve processor count information: {ex}");
-				return Enumerable.Empty<ManagementBaseObject>();
-			}
-		}
+        [NotNull]
+        private static IEnumerable<ManagementBaseObject> TryGetManagementObjects([NotNull] String query)
+        {
+            try
+            {
+                using (var managementObjectSearcher = new ManagementObjectSearcher(query))
+                {
+                    return managementObjectSearcher.Get().Cast<ManagementBaseObject>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Could not retrieve processor count information: {ex}");
+                return Enumerable.Empty<ManagementBaseObject>();
+            }
+        }
 #endif
 
         public class EnvironmentConverter : JsonConverter

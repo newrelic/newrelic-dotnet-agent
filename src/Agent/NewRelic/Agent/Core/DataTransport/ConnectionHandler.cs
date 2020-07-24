@@ -209,7 +209,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var appNames = String.Join(":", _configuration.ApplicationNames.ToArray());
 
 #if NETSTANDARD2_0
-			return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
+            return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
 #else
 
             return HttpRuntime.AppDomainAppId != null

@@ -167,33 +167,33 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public Boolean StartThreadProfilingSession(Int32 profileSessionId, UInt32 frequencyInMsec, UInt32 durationInMsec)
         {
 #if NET35
-			Log.Info("Starting a thread profiling session");
-			var startedNewSession = false;
+            Log.Info("Starting a thread profiling session");
+            var startedNewSession = false;
 
-			try
-			{
-				if (_sampler == null)
-				{
-					_sampler = new ThreadProfilingSampler(_agent, _scheduler, _nativeMethods);
-				}
+            try
+            {
+                if (_sampler == null)
+                {
+                    _sampler = new ThreadProfilingSampler(_agent, _scheduler, _nativeMethods);
+                }
 
-				// Remove existing data in tree and cache buffers
-				ResetCache();
+                // Remove existing data in tree and cache buffers
+                ResetCache();
 
-				startedNewSession = _sampler.Start(frequencyInMsec, durationInMsec);
+                startedNewSession = _sampler.Start(frequencyInMsec, durationInMsec);
 
-				if (startedNewSession)
-				{
-					_startSessionTime = DateTime.UtcNow;
-					_profileSessionId = profileSessionId;
-				}
-			}
-			catch (Exception e)
-			{
-				Log.ErrorFormat("Failed to start thread profiler: {0}", e);
-			}
+                if (startedNewSession)
+                {
+                    _startSessionTime = DateTime.UtcNow;
+                    _profileSessionId = profileSessionId;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.ErrorFormat("Failed to start thread profiler: {0}", e);
+            }
 
-			return startedNewSession;
+            return startedNewSession;
 #else
             Log.Warn("The thread profiler is not currently available for .NET Core");
             return false;

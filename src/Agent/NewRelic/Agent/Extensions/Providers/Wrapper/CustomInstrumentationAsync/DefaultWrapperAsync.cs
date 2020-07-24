@@ -16,8 +16,8 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
             "NewRelic.Agent.Core.Wrapper.DefaultWrapper",
             "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync",
 
-			// To support older custom instrumentation we need to also accept the old tracer factory name
-			"NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory"
+            // To support older custom instrumentation we need to also accept the old tracer factory name
+            "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory"
         };
 
         public bool IsTransactionRequired => true;

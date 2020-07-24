@@ -140,8 +140,8 @@ namespace NewRelic.Agent.Core.Configuration
         {
             RpmConfig =
             {
-				// CAT should be disabled for empty/default configurations because CAT cannot function without a CrossProcessId.
-				CrossApplicationTracerEnabled = false
+                // CAT should be disabled for empty/default configurations because CAT cannot function without a CrossProcessId.
+                CrossApplicationTracerEnabled = false
             }
         };
 

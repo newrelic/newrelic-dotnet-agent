@@ -30,9 +30,9 @@ namespace NewRelic.Agent.Core
             static CallOnce()
             {
 #if NETSTANDARD2_0
-				// for some reason our assemblies aren't resolving.  This forces them to be resolved.
-				AppDomain currentDomain = AppDomain.CurrentDomain;
-				currentDomain.AssemblyResolve += new ResolveEventHandler(LoadFromSameFolder);
+                // for some reason our assemblies aren't resolving.  This forces them to be resolved.
+                AppDomain currentDomain = AppDomain.CurrentDomain;
+                currentDomain.AssemblyResolve += new ResolveEventHandler(LoadFromSameFolder);
 #endif
                 // we must ensure that we hook up to ProcessExit and DomainUnload *before* log4net.  Otherwise we can't log anything during OnExit.
                 AppDomain.CurrentDomain.ProcessExit += (sender, args) => OnExit(sender, args);

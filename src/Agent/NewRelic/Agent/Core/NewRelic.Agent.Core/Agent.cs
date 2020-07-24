@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core
             AgentInitializer.OnExit += ProcessExit;
 
 #if NET35
-			INativeMethods nativeMethods = new WindowsNativeMethods();
+            INativeMethods nativeMethods = new WindowsNativeMethods();
 #else
             INativeMethods nativeMethods = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) ? (INativeMethods)new WindowsNativeMethods() : new NativeMethods();
 #endif
@@ -156,7 +156,7 @@ namespace NewRelic.Agent.Core
         private void LogInitialized()
         {
 #if NETSTANDARD2_0
-			Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, Process.GetCurrentProcess().Id, AppDomain.CurrentDomain.FriendlyName);
+            Log.InfoFormat("The New Relic .NET Agent v{0} started (pid {1}) on app domain '{2}'", AgentInstallConfiguration.AgentVersion, Process.GetCurrentProcess().Id, AppDomain.CurrentDomain.FriendlyName);
 #else
             if (HttpRuntime.AppDomainAppVirtualPath == null)
             {
