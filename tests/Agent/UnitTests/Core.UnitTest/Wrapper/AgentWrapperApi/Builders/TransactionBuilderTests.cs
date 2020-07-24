@@ -2,6 +2,8 @@
 using System.Linq;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Timing;
@@ -11,118 +13,116 @@ using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
-	[TestFixture]
-	public class TransactionBuilderTests
-	{
-		[NotNull]
-		private IConfiguration _configuration;
+    [TestFixture]
+    public class TransactionBuilderTests
+    {
+        [NotNull]
+        private IConfiguration _configuration;
 
-		[CanBeNull]
-		private Transaction _builder;
+        [CanBeNull]
+        private Transaction _builder;
 
-		[CanBeNull]
-		private TransactionFinalizedEvent _publishedEvent;
+        [CanBeNull]
+        private TransactionFinalizedEvent _publishedEvent;
 
-		private EventSubscription<TransactionFinalizedEvent> _eventSubscription;
-		
-		[SetUp]
-		public void SetUp()
-		{
-			_configuration = Mock.Create<IConfiguration>();
-			var configurationService = Mock.Create<IConfigurationService>();
-			Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
+        private EventSubscription<TransactionFinalizedEvent> _eventSubscription;
 
-			_builder = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
-			_publishedEvent = null;
-			_eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
-		}
+        [SetUp]
+        public void SetUp()
+        {
+            _configuration = Mock.Create<IConfiguration>();
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration).Returns(_configuration);
 
-		[TearDown]
-		public void TearDown()
-		{
-			_eventSubscription?.Dispose();
-			_eventSubscription = null;
+            _builder = new Transaction(_configuration, Mock.Create<ITransactionName>(), Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+            _publishedEvent = null;
+            _eventSubscription = new EventSubscription<TransactionFinalizedEvent>(e => _publishedEvent = e);
+        }
 
-			GC.Collect();
-			GC.WaitForFullGCComplete();
-			GC.WaitForPendingFinalizers();
-		}
+        [TearDown]
+        public void TearDown()
+        {
+            _eventSubscription?.Dispose();
+            _eventSubscription = null;
 
-		[Test]
-		public void TransactionBuilderFinalizedEvent_IsPublished_IfNotEndedCleanly()
-		{
-			Assert.NotNull(_builder);
+            GC.Collect();
+            GC.WaitForFullGCComplete();
+            GC.WaitForPendingFinalizers();
+        }
 
-			_builder = null;
+        [Test]
+        public void TransactionBuilderFinalizedEvent_IsPublished_IfNotEndedCleanly()
+        {
+            Assert.NotNull(_builder);
 
-			GC.Collect();
-			GC.WaitForFullGCComplete();
-			GC.WaitForPendingFinalizers();
+            _builder = null;
 
-			Assert.NotNull(_publishedEvent);
-		}
+            GC.Collect();
+            GC.WaitForFullGCComplete();
+            GC.WaitForPendingFinalizers();
 
-		[Test]
-		public void TransactionBuilderFinalizedEvent_IsNotPublished_IfEndedCleanly()
-		{
-			Assert.NotNull(_builder);
+            Assert.NotNull(_publishedEvent);
+        }
 
-			_builder.Finish();
-			_builder = null;
+        [Test]
+        public void TransactionBuilderFinalizedEvent_IsNotPublished_IfEndedCleanly()
+        {
+            Assert.NotNull(_builder);
 
-			Assert.Null(_publishedEvent);
-		}
+            _builder.Finish();
+            _builder = null;
 
-		[Test]
-		public void TransactionBuilderFinalizedEvent_IsNotPublishedASecondTime_IfBuilderGoesOutOfScopeAgain()
-		{
-			Assert.NotNull(_builder);
+            Assert.Null(_publishedEvent);
+        }
 
-			_builder = null;
+        [Test]
+        public void TransactionBuilderFinalizedEvent_IsNotPublishedASecondTime_IfBuilderGoesOutOfScopeAgain()
+        {
+            Assert.NotNull(_builder);
 
-			GC.Collect();
-			GC.WaitForFullGCComplete();
-			GC.WaitForPendingFinalizers();
+            _builder = null;
 
-			Assert.NotNull(_publishedEvent);
+            GC.Collect();
+            GC.WaitForFullGCComplete();
+            GC.WaitForPendingFinalizers();
 
-			// The builder is now pinned to the event, but we can unpin it by unpinning the event
-			_publishedEvent = null;
+            Assert.NotNull(_publishedEvent);
 
-			GC.Collect();
-			GC.WaitForFullGCComplete();
-			GC.WaitForPendingFinalizers();
+            // The builder is now pinned to the event, but we can unpin it by unpinning the event
+            _publishedEvent = null;
 
-			Assert.Null(_publishedEvent);
-		}
+            GC.Collect();
+            GC.WaitForFullGCComplete();
+            GC.WaitForPendingFinalizers();
 
-		[Test]
-		[TestCase(1, 2, ExpectedResult = 1)]
-		[TestCase(2, 2, ExpectedResult = 2)]
-		[TestCase(3, 2, ExpectedResult = 2)]
-		public int Add_Segment_When_Segment_Count_Considers_Configuration_TransactionTracerMaxSegments(int transactionTracerMaxSegmentThreashold, int segmentCount)
-		{
+            Assert.Null(_publishedEvent);
+        }
 
-			Mock.Arrange(() => _configuration.TransactionTracerMaxSegments).Returns(transactionTracerMaxSegmentThreashold);
+        [Test]
+        [TestCase(1, 2, ExpectedResult = 1)]
+        [TestCase(2, 2, ExpectedResult = 2)]
+        [TestCase(3, 2, ExpectedResult = 2)]
+        public int Add_Segment_When_Segment_Count_Considers_Configuration_TransactionTracerMaxSegments(int transactionTracerMaxSegmentThreashold, int segmentCount)
+        {
 
-			var transactionName = new WebTransactionName("WebTransaction", "Test");
+            Mock.Arrange(() => _configuration.TransactionTracerMaxSegments).Returns(transactionTracerMaxSegmentThreashold);
 
-			var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
+            var transactionName = new WebTransactionName("WebTransaction", "Test");
 
-			for (int i = 0; i < segmentCount; i++)
-			{
-				new TypedSegment<ExternalSegmentData>(transaction, new MethodCallData("foo" + i, "bar" + i, 1), new ExternalSegmentData(new Uri("http://www.test.com"), "method")).End();
-			}
-			
-			var immutableTransaction = transaction.ConvertToImmutableTransaction();
-			return immutableTransaction.Segments.Count();
+            var transaction = new Transaction(_configuration, transactionName, Mock.Create<ITimer>(), DateTime.UtcNow, Mock.Create<ICallStackManager>(), SqlObfuscator.GetObfuscatingSqlObfuscator());
 
-		}
+            for (int i = 0; i < segmentCount; i++)
+            {
+                new TypedSegment<ExternalSegmentData>(transaction, new MethodCallData("foo" + i, "bar" + i, 1), new ExternalSegmentData(new Uri("http://www.test.com"), "method")).End();
+            }
 
-	}
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+            return immutableTransaction.Segments.Count();
+
+        }
+
+    }
 }

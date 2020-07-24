@@ -3,102 +3,113 @@ using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core
 {
-	public class ReadOnlyDictionary<TKey, TValue> : IDictionary<TKey, TValue>
-	{
-		private readonly IDictionary<TKey, TValue> dict;
-		
-		public ReadOnlyDictionary (IDictionary<TKey, TValue> dict)
-		{
-			this.dict = dict;
-		}
-		
-		public void Add (TKey key, TValue value)
-		{
-			throw new InvalidOperationException("Read only dictionary");
-		}
+    public class ReadOnlyDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+    {
+        private readonly IDictionary<TKey, TValue> dict;
 
-		public bool ContainsKey (TKey key)
-		{
-			return dict.ContainsKey(key);
-		}
+        public ReadOnlyDictionary(IDictionary<TKey, TValue> dict)
+        {
+            this.dict = dict;
+        }
 
-		public bool Remove (TKey key)
-		{
-			throw new InvalidOperationException("Read only dictionary");
-		}
+        public void Add(TKey key, TValue value)
+        {
+            throw new InvalidOperationException("Read only dictionary");
+        }
 
-		public bool TryGetValue (TKey key, out TValue value)
-		{
-			return dict.TryGetValue(key, out value);
-		}
+        public bool ContainsKey(TKey key)
+        {
+            return dict.ContainsKey(key);
+        }
 
-		public TValue this[TKey key] {
-			get {
-				return dict[key];
-			}
-			set {
-				throw new InvalidOperationException("Read only dictionary");
-			}
-		}
+        public bool Remove(TKey key)
+        {
+            throw new InvalidOperationException("Read only dictionary");
+        }
 
-		public ICollection<TKey> Keys {
-			get {
-				return dict.Keys;
-			}
-		}
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            return dict.TryGetValue(key, out value);
+        }
 
-		public ICollection<TValue> Values {
-			get {
-				return dict.Values;
-			}
-		}
+        public TValue this[TKey key]
+        {
+            get
+            {
+                return dict[key];
+            }
+            set
+            {
+                throw new InvalidOperationException("Read only dictionary");
+            }
+        }
 
-		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator ()
-		{
-			return dict.GetEnumerator();
-		}
+        public ICollection<TKey> Keys
+        {
+            get
+            {
+                return dict.Keys;
+            }
+        }
 
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return dict.GetEnumerator();
-		}
+        public ICollection<TValue> Values
+        {
+            get
+            {
+                return dict.Values;
+            }
+        }
 
-		public void Add (KeyValuePair<TKey, TValue> item)
-		{
-			throw new InvalidOperationException("Read only dictionary");
-		}
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        {
+            return dict.GetEnumerator();
+        }
 
-		public void Clear ()
-		{
-			throw new InvalidOperationException("Read only dictionary");
-		}
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return dict.GetEnumerator();
+        }
 
-		public bool Contains (KeyValuePair<TKey, TValue> item)
-		{
-			return dict.Contains(item);
-		}
+        public void Add(KeyValuePair<TKey, TValue> item)
+        {
+            throw new InvalidOperationException("Read only dictionary");
+        }
 
-		public void CopyTo (KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-		{
-			dict.CopyTo(array, arrayIndex);
-		}
+        public void Clear()
+        {
+            throw new InvalidOperationException("Read only dictionary");
+        }
 
-		public bool Remove (KeyValuePair<TKey, TValue> item)
-		{
-			throw new InvalidOperationException("Read only dictionary");
-		}
+        public bool Contains(KeyValuePair<TKey, TValue> item)
+        {
+            return dict.Contains(item);
+        }
 
-		public int Count {
-			get {
-				return dict.Count;
-			}
-		}
+        public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
+        {
+            dict.CopyTo(array, arrayIndex);
+        }
 
-		public bool IsReadOnly {
-			get {
-				return true;
-			}
-		}
-	}
+        public bool Remove(KeyValuePair<TKey, TValue> item)
+        {
+            throw new InvalidOperationException("Read only dictionary");
+        }
+
+        public int Count
+        {
+            get
+            {
+                return dict.Count;
+            }
+        }
+
+        public bool IsReadOnly
+        {
+            get
+            {
+                return true;
+            }
+        }
+    }
 }
 

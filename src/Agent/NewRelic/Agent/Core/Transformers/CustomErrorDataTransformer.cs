@@ -12,68 +12,68 @@ using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.Transformers
 {
-	public interface ICustomErrorDataTransformer
-	{
-		void Transform(ErrorData errorData, [CanBeNull] IEnumerable<KeyValuePair<String, String>> customAttributes = null);
-	}
+    public interface ICustomErrorDataTransformer
+    {
+        void Transform(ErrorData errorData, [CanBeNull] IEnumerable<KeyValuePair<String, String>> customAttributes = null);
+    }
 
-	public class CustomErrorDataTransformer : ICustomErrorDataTransformer
-	{
-		[NotNull]
-		private readonly IConfigurationService _configurationService;
+    public class CustomErrorDataTransformer : ICustomErrorDataTransformer
+    {
+        [NotNull]
+        private readonly IConfigurationService _configurationService;
 
-		[NotNull]
-		private readonly IAttributeService _attributeService;
+        [NotNull]
+        private readonly IAttributeService _attributeService;
 
-		[NotNull]
-		private readonly IErrorTraceMaker _errorTraceMaker;
+        [NotNull]
+        private readonly IErrorTraceMaker _errorTraceMaker;
 
-		[NotNull]
-		private readonly IErrorEventMaker _errorEventMaker;
+        [NotNull]
+        private readonly IErrorEventMaker _errorEventMaker;
 
-		[NotNull]
-		private readonly IErrorTraceAggregator _errorTraceAggregator;
+        [NotNull]
+        private readonly IErrorTraceAggregator _errorTraceAggregator;
 
-		[NotNull]
-		private readonly IErrorEventAggregator _errorEventAggregator;
+        [NotNull]
+        private readonly IErrorEventAggregator _errorEventAggregator;
 
-		public CustomErrorDataTransformer([NotNull] IConfigurationService configurationService, [NotNull] IAttributeService attributeService, 
-			[NotNull] IErrorTraceMaker errorTraceMaker, [NotNull] IErrorTraceAggregator errorTraceAggregator,
-			[NotNull] IErrorEventMaker errorEventMaker, [NotNull] IErrorEventAggregator errorEventAggregator)
-		{
-			_configurationService = configurationService;
-			_attributeService = attributeService;
-			_errorTraceMaker = errorTraceMaker;
-			_errorTraceAggregator = errorTraceAggregator;
-			_errorEventMaker = errorEventMaker;
-			_errorEventAggregator = errorEventAggregator;
-		}
+        public CustomErrorDataTransformer([NotNull] IConfigurationService configurationService, [NotNull] IAttributeService attributeService,
+            [NotNull] IErrorTraceMaker errorTraceMaker, [NotNull] IErrorTraceAggregator errorTraceAggregator,
+            [NotNull] IErrorEventMaker errorEventMaker, [NotNull] IErrorEventAggregator errorEventAggregator)
+        {
+            _configurationService = configurationService;
+            _attributeService = attributeService;
+            _errorTraceMaker = errorTraceMaker;
+            _errorTraceAggregator = errorTraceAggregator;
+            _errorEventMaker = errorEventMaker;
+            _errorEventAggregator = errorEventAggregator;
+        }
 
-		public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<String, String>> customAttributes = null)
-		{
-			if (!_configurationService.Configuration.ErrorCollectorEnabled)
-				return;
+        public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<String, String>> customAttributes = null)
+        {
+            if (!_configurationService.Configuration.ErrorCollectorEnabled)
+                return;
 
-			var errorEventAttributes = new Attributes();
-			var errorTraceAttributes = new Attributes();
+            var errorEventAttributes = new Attributes();
+            var errorTraceAttributes = new Attributes();
 
-			customAttributes?
-				.Where(attr => attr.Key != null && attr.Value != null)
-				.Select(attr => Attribute.BuildCustomAttribute(attr.Key, attr.Value))
-				.ForEach(attr =>
-				{
-					errorEventAttributes.Add(attr);
-					errorTraceAttributes.Add(attr);
-				});
+            customAttributes?
+                .Where(attr => attr.Key != null && attr.Value != null)
+                .Select(attr => Attribute.BuildCustomAttribute(attr.Key, attr.Value))
+                .ForEach(attr =>
+                {
+                    errorEventAttributes.Add(attr);
+                    errorTraceAttributes.Add(attr);
+                });
 
-			errorEventAttributes = _attributeService.FilterAttributes(errorEventAttributes, AttributeDestinations.ErrorEvent);
-			errorTraceAttributes = _attributeService.FilterAttributes(errorTraceAttributes, AttributeDestinations.ErrorTrace);
+            errorEventAttributes = _attributeService.FilterAttributes(errorEventAttributes, AttributeDestinations.ErrorEvent);
+            errorTraceAttributes = _attributeService.FilterAttributes(errorTraceAttributes, AttributeDestinations.ErrorTrace);
 
-			var errorTrace = _errorTraceMaker.GetErrorTrace(errorTraceAttributes, errorData);
-			var errorEvent = _errorEventMaker.GetErrorEvent(errorData, errorEventAttributes);
+            var errorTrace = _errorTraceMaker.GetErrorTrace(errorTraceAttributes, errorData);
+            var errorEvent = _errorEventMaker.GetErrorEvent(errorData, errorEventAttributes);
 
-			_errorTraceAggregator.Collect(errorTrace);
-			_errorEventAggregator.Collect(errorEvent);
-		}
-	}
+            _errorTraceAggregator.Collect(errorTrace);
+            _errorEventAggregator.Collect(errorEvent);
+        }
+    }
 }

@@ -7,34 +7,34 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
-	public class Decompressor
-	{
-		[NotNull]
-		public static String DeflateDecompress([NotNull] byte[] bytes)
-		{
-			using (var memoryStream = new MemoryStream())
-			using (var inflaterStream = new InflaterInputStream(memoryStream, new Inflater()))
-			using (var streamReader = new StreamReader(inflaterStream))
-			{
-				memoryStream.Write(bytes, 0, bytes.Length);
-				memoryStream.Flush();
-				memoryStream.Position = 0;
-				return streamReader.ReadToEnd();
-			}
-		}
+    public class Decompressor
+    {
+        [NotNull]
+        public static String DeflateDecompress([NotNull] byte[] bytes)
+        {
+            using (var memoryStream = new MemoryStream())
+            using (var inflaterStream = new InflaterInputStream(memoryStream, new Inflater()))
+            using (var streamReader = new StreamReader(inflaterStream))
+            {
+                memoryStream.Write(bytes, 0, bytes.Length);
+                memoryStream.Flush();
+                memoryStream.Position = 0;
+                return streamReader.ReadToEnd();
+            }
+        }
 
-		[NotNull]
-		public static String GzipDecompress(Byte[] bytes)
-		{
-			using (var memoryStream = new MemoryStream())
-			using (var inflaterStream = new GZipInputStream(memoryStream))
-			using (var streamReader = new StreamReader(inflaterStream))
-			{
-				memoryStream.Write(bytes, 0, bytes.Length);
-				memoryStream.Flush();
-				memoryStream.Position = 0;
-				return streamReader.ReadToEnd();
-			}
-		}
-	}
+        [NotNull]
+        public static String GzipDecompress(Byte[] bytes)
+        {
+            using (var memoryStream = new MemoryStream())
+            using (var inflaterStream = new GZipInputStream(memoryStream))
+            using (var streamReader = new StreamReader(inflaterStream))
+            {
+                memoryStream.Write(bytes, 0, bytes.Length);
+                memoryStream.Flush();
+                memoryStream.Position = 0;
+                return streamReader.ReadToEnd();
+            }
+        }
+    }
 }

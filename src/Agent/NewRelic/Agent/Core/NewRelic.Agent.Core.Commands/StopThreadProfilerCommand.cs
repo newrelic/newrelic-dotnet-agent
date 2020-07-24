@@ -6,54 +6,54 @@ using NewRelic.Agent.Core.ThreadProfiling;
 
 namespace NewRelic.Agent.Core.Commands
 {
-	public class StopThreadProfilerCommand : AbstractCommand
-	{
-		[NotNull]
-		public IThreadProfilingSessionControl ThreadProfilingService { get; set; }
-		
-		public StopThreadProfilerCommand([NotNull] IThreadProfilingSessionControl threadProfilingService)
-		{
-			Name = "stop_profiler";
-			ThreadProfilingService = threadProfilingService;
-		}
+    public class StopThreadProfilerCommand : AbstractCommand
+    {
+        [NotNull]
+        public IThreadProfilingSessionControl ThreadProfilingService { get; set; }
 
-		public override Object Process(IDictionary<String, Object> arguments)
-		{
-			var errorMessage = StopThreadProfilingSessions(arguments);
-			if (errorMessage == null)
-				return new Dictionary<String, Object>();
+        public StopThreadProfilerCommand([NotNull] IThreadProfilingSessionControl threadProfilingService)
+        {
+            Name = "stop_profiler";
+            ThreadProfilingService = threadProfilingService;
+        }
 
-			return new Dictionary<String, Object>
-			{
-				{"error", errorMessage}
-			};
-		}
+        public override Object Process(IDictionary<String, Object> arguments)
+        {
+            var errorMessage = StopThreadProfilingSessions(arguments);
+            if (errorMessage == null)
+                return new Dictionary<String, Object>();
 
-		[CanBeNull]
-		private String StopThreadProfilingSessions(IDictionary<String, Object> arguments)
-		{
-			if (arguments == null)
-				return "No arguments sent with stop_profiler command.";
+            return new Dictionary<String, Object>
+            {
+                {"error", errorMessage}
+            };
+        }
 
-			var stopArgs = new ThreadProfilerCommandArgs(arguments);
-			if (stopArgs.ProfileId == 0)
-				return "A valid profile_id must be supplied to stop a thread profiling session.";
+        [CanBeNull]
+        private String StopThreadProfilingSessions(IDictionary<String, Object> arguments)
+        {
+            if (arguments == null)
+                return "No arguments sent with stop_profiler command.";
 
-			try
-			{
-				var stoppedSession = ThreadProfilingService.StopThreadProfilingSession(stopArgs.ProfileId, stopArgs.ReportData);
-				if (!stoppedSession)
-				{
-					return "A thread profiling session is not running.";
-				}
-			}
-			catch (InvalidProfileIdException e)
-			{
-				Log.Error(e.Message);
-				return e.Message;
-			}
+            var stopArgs = new ThreadProfilerCommandArgs(arguments);
+            if (stopArgs.ProfileId == 0)
+                return "A valid profile_id must be supplied to stop a thread profiling session.";
 
-			return null;
-		}
-	}
+            try
+            {
+                var stoppedSession = ThreadProfilingService.StopThreadProfilingSession(stopArgs.ProfileId, stopArgs.ReportData);
+                if (!stoppedSession)
+                {
+                    return "A thread profiling session is not running.";
+                }
+            }
+            catch (InvalidProfileIdException e)
+            {
+                Log.Error(e.Message);
+                return e.Message;
+            }
+
+            return null;
+        }
+    }
 }

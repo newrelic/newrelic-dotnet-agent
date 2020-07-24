@@ -2,11 +2,11 @@
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-	public class HttpCollectorWireFactory : ICollectorWireFactory
-	{
-		public ICollectorWire GetCollectorWire(IConfiguration configuration)
-		{
-			return new HttpCollectorWire(configuration);
-		}
-	}
+    public class HttpCollectorWireFactory : ICollectorWireFactory
+    {
+        public ICollectorWire GetCollectorWire(IConfiguration configuration)
+        {
+            return new HttpCollectorWire(configuration);
+        }
+    }
 }

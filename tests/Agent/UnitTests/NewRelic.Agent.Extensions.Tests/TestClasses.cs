@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace Agent.Extensions.Test
 {
-	public class SimpleClass
-	{
-		public void SimpleMethod()
-		{
-		}
+    public class SimpleClass
+    {
+        public void SimpleMethod()
+        {
+        }
 
-		public void SimpleMethod(String str)
-		{
-			
-		}
-	}
+        public void SimpleMethod(String str)
+        {
+
+        }
+    }
 }

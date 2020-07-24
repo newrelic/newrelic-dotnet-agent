@@ -7,18 +7,18 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
-	public class WebConfigModifier
-	{
-		private readonly String _configFilePath;
+    public class WebConfigModifier
+    {
+        private readonly String _configFilePath;
 
-		public WebConfigModifier([NotNull] String configFilePath)
-		{
-			_configFilePath = configFilePath;
-		}
+        public WebConfigModifier([NotNull] String configFilePath)
+        {
+            _configFilePath = configFilePath;
+        }
 
-		public void ForceLegacyAspPipeline()
-		{
-			CommonUtils.DeleteXmlNode(_configFilePath, "", new[] { "configuration", "system.web" }, "httpRuntime");
-		}
-	}
+        public void ForceLegacyAspPipeline()
+        {
+            CommonUtils.DeleteXmlNode(_configFilePath, "", new[] { "configuration", "system.web" }, "httpRuntime");
+        }
+    }
 }

@@ -3,13 +3,13 @@ using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilization
 {
-	public interface IVendorModel
-	{
-		[JsonIgnore]
-		String VendorName { get; }
+    public interface IVendorModel
+    {
+        [JsonIgnore]
+        String VendorName { get; }
 
-		[JsonProperty("id")]
-		String Id { get; }
+        [JsonProperty("id")]
+        String Id { get; }
 
-	}
+    }
 }

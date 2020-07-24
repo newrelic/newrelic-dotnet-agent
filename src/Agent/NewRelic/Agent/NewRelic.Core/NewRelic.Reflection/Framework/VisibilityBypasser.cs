@@ -10,21 +10,21 @@ using JetBrains.Annotations;
 namespace NewRelic.Reflection
 {
 
-	public class ReflectionImpl : IReflection
-	{
-		public ConstructorInfo GetConstructor(Type type, Type[] parameterTypes)
-		{
-			return type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, parameterTypes, null);
-		}
-	}
+    public class ReflectionImpl : IReflection
+    {
+        public ConstructorInfo GetConstructor(Type type, Type[] parameterTypes)
+        {
+            return type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, parameterTypes, null);
+        }
+    }
 
-	public class VisibilityBypasser : VisibilityBypasserBase
-	{
-		public static readonly VisibilityBypasser Instance = new VisibilityBypasser();
+    public class VisibilityBypasser : VisibilityBypasserBase
+    {
+        public static readonly VisibilityBypasser Instance = new VisibilityBypasser();
 
-		private VisibilityBypasser() : base(new ReflectionImpl())
-		{
-		}
-	}
+        private VisibilityBypasser() : base(new ReflectionImpl())
+        {
+        }
+    }
 }
 #endif

@@ -10,68 +10,68 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class HighSecurityModeNoTransactionAgentApiTests : IClassFixture<RemoteServiceFixtures.HSMAgentApiExecutor>
-	{
-		private readonly RemoteServiceFixtures.HSMAgentApiExecutor _fixture;
+    public class HighSecurityModeNoTransactionAgentApiTests : IClassFixture<RemoteServiceFixtures.HSMAgentApiExecutor>
+    {
+        private readonly RemoteServiceFixtures.HSMAgentApiExecutor _fixture;
 
-		public HighSecurityModeNoTransactionAgentApiTests(RemoteServiceFixtures.HSMAgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions(
-				setupConfiguration: () =>
-				{
-					var configPath = _fixture.DestinationNewRelicConfigFilePath;
+        public HighSecurityModeNoTransactionAgentApiTests(RemoteServiceFixtures.HSMAgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions(
+                setupConfiguration: () =>
+                {
+                    var configPath = _fixture.DestinationNewRelicConfigFilePath;
 
-					CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(configPath, new[] { "configuration", "service" }, new[] { new KeyValuePair<string, string>("autoStart", "false") });
+                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(configPath, new[] { "configuration", "service" }, new[] { new KeyValuePair<string, string>("autoStart", "false") });
 
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level",
-						"debug");
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "highSecurity" },
-						"enabled", "true");
-				});
-			_fixture.Initialize();
-		}
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level",
+                        "debug");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "highSecurity" },
+                        "enabled", "true");
+                });
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			var expectedMetrics = new[]
-			{
-				new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedMetrics = new[]
+            {
+                new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
+            };
 
-			var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
-			{
-				{ "error.class", "System.Exception" },
-				{ "type", "TransactionError" }
-			};
+            var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
+            {
+                { "error.class", "System.Exception" },
+                { "type", "TransactionError" }
+            };
 
 
-			var unexpectedErrorEventIntrinsicAttributes = new List<string> {"error.message"};
+            var unexpectedErrorEventIntrinsicAttributes = new List<string> { "error.message" };
 
-			var unexpectedErrorEventCustomAttributes = new List<string>
-			{
-				"hey",
-				"faz"
-			};
+            var unexpectedErrorEventCustomAttributes = new List<string>
+            {
+                "hey",
+                "faz"
+            };
 
-			var actualMetrics = _fixture.AgentLog.GetMetrics();
-			var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-			var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
+            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
 
-			NrAssert.Multiple
-				(
-					() => Assertions.MetricsExist(expectedMetrics, actualMetrics),
-					() => Assert.NotNull(errorTrace),
-					() => Assert.Equal("100", errorEventPayload.Additions.ReservoirSize.ToString()),
-					() => Assert.Equal("2", errorEventPayload.Additions.EventsSeen.ToString()),
-					() => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[0]),
-					() => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[0]),
-					() => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[1]),
-					() => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[1]),
-					() => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventCustomAttributes, EventAttributeType.User, errorEventPayload.Events[1])
-				);
-		}
-	}
+            NrAssert.Multiple
+                (
+                    () => Assertions.MetricsExist(expectedMetrics, actualMetrics),
+                    () => Assert.NotNull(errorTrace),
+                    () => Assert.Equal("100", errorEventPayload.Additions.ReservoirSize.ToString()),
+                    () => Assert.Equal("2", errorEventPayload.Additions.EventsSeen.ToString()),
+                    () => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[0]),
+                    () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[0]),
+                    () => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[1]),
+                    () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[1]),
+                    () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventCustomAttributes, EventAttributeType.User, errorEventPayload.Events[1])
+                );
+        }
+    }
 }

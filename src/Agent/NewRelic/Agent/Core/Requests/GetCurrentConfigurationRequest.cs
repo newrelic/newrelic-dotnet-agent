@@ -1,7 +1,7 @@
 ﻿
 namespace NewRelic.Agent.Core.Requests
 {
-	public class GetCurrentConfigurationRequest
-	{
-	}
+    public class GetCurrentConfigurationRequest
+    {
+    }
 }

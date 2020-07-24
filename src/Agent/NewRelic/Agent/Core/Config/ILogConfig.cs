@@ -1,16 +1,16 @@
 namespace NewRelic.Agent.Core.Config
 {
-	public interface ILogConfig
-	{
-		string LogLevel { get; }
+    public interface ILogConfig
+    {
+        string LogLevel { get; }
 
-		string GetFullLogFileName();
+        string GetFullLogFileName();
 
-		bool FileLockingModelSpecified { get; }
-		configurationLogFileLockingModel FileLockingModel { get; } 
+        bool FileLockingModelSpecified { get; }
+        configurationLogFileLockingModel FileLockingModel { get; }
 
-		bool Console { get; }
+        bool Console { get; }
 
-		bool IsAuditLogEnabled { get; }
-	}
+        bool IsAuditLogEnabled { get; }
+    }
 }

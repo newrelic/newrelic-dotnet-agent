@@ -8,18 +8,18 @@ using NServiceBus;
 
 namespace NServiceBusReceiver
 {
-	public class SampleNServiceBusMessage2 : ICommand
-	{
-		public Int32 Id { get; private set; }
-		public String FooBar { get; private set; }
-		public Boolean IsValid { get; private set; }
+    public class SampleNServiceBusMessage2 : ICommand
+    {
+        public Int32 Id { get; private set; }
+        public String FooBar { get; private set; }
+        public Boolean IsValid { get; private set; }
 
-		public SampleNServiceBusMessage2(Int32 id, String fooBar, Boolean isValid=true)
-		{
-			Thread.Sleep(250);
-			Id = id;
-			FooBar = fooBar;
-			IsValid = isValid;
-		}
-	}
+        public SampleNServiceBusMessage2(Int32 id, String fooBar, Boolean isValid = true)
+        {
+            Thread.Sleep(250);
+            Id = id;
+            FooBar = fooBar;
+            IsValid = isValid;
+        }
+    }
 }

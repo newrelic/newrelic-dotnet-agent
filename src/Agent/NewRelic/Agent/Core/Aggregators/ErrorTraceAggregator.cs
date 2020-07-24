@@ -13,101 +13,101 @@ using NewRelic.SystemInterfaces;
 namespace NewRelic.Agent.Core.Aggregators
 {
     public interface IErrorTraceAggregator
-	{
-		void Collect([NotNull] ErrorTraceWireModel errorTraceWireModel);
-	}
+    {
+        void Collect([NotNull] ErrorTraceWireModel errorTraceWireModel);
+    }
 
-	public class ErrorTraceAggregator : AbstractAggregator<ErrorTraceWireModel>, IErrorTraceAggregator
-	{
-		[NotNull]
-		private ICollection<ErrorTraceWireModel> _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
+    public class ErrorTraceAggregator : AbstractAggregator<ErrorTraceWireModel>, IErrorTraceAggregator
+    {
+        [NotNull]
+        private ICollection<ErrorTraceWireModel> _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
 
-		[NotNull]
-		private uint _errorTraceCollectionMaximum = 0;
-		[NotNull]
-		private readonly IAgentHealthReporter _agentHealthReporter;
+        [NotNull]
+        private uint _errorTraceCollectionMaximum = 0;
+        [NotNull]
+        private readonly IAgentHealthReporter _agentHealthReporter;
 
-		public ErrorTraceAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
-			: base(dataTransportService, scheduler, processStatic)
-		{
-			_agentHealthReporter = agentHealthReporter;
-			ResetCollections();
-		}
+        public ErrorTraceAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+            : base(dataTransportService, scheduler, processStatic)
+        {
+            _agentHealthReporter = agentHealthReporter;
+            ResetCollections();
+        }
 
-		public override void Collect(ErrorTraceWireModel errorTraceWireModel)
-		{
-			_agentHealthReporter.ReportErrorTraceCollected();
-			AddToCollection(errorTraceWireModel);
-		}
+        public override void Collect(ErrorTraceWireModel errorTraceWireModel)
+        {
+            _agentHealthReporter.ReportErrorTraceCollected();
+            AddToCollection(errorTraceWireModel);
+        }
 
-		protected override void Harvest()
-		{
-			var errorTraceWireModels = _errorTraceWireModels;
-			ResetCollections();
+        protected override void Harvest()
+        {
+            var errorTraceWireModels = _errorTraceWireModels;
+            ResetCollections();
 
-			if (errorTraceWireModels.Count <= 0)
-				return;
+            if (errorTraceWireModels.Count <= 0)
+                return;
 
-			_agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
-			var responseStatus = DataTransportService.Send(errorTraceWireModels);
+            _agentHealthReporter.ReportErrorTracesSent(errorTraceWireModels.Count);
+            var responseStatus = DataTransportService.Send(errorTraceWireModels);
 
-			HandleResponse(responseStatus, errorTraceWireModels);
-		}
+            HandleResponse(responseStatus, errorTraceWireModels);
+        }
 
-		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-		{
-			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
-			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
+            // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-			ResetCollections();
-		}
+            ResetCollections();
+        }
 
-		private void ResetCollections()
-		{
-			_errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
-			_errorTraceCollectionMaximum = _configuration.ErrorsMaximumPerPeriod;
-		}
+        private void ResetCollections()
+        {
+            _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
+            _errorTraceCollectionMaximum = _configuration.ErrorsMaximumPerPeriod;
+        }
 
-		private void AddToCollection(ErrorTraceWireModel errorTraceWireModel)
-		{
-			if (_errorTraceWireModels.Count >= _errorTraceCollectionMaximum)
-				return;
+        private void AddToCollection(ErrorTraceWireModel errorTraceWireModel)
+        {
+            if (_errorTraceWireModels.Count >= _errorTraceCollectionMaximum)
+                return;
 
-			_errorTraceWireModels.Add(errorTraceWireModel);
-		}
+            _errorTraceWireModels.Add(errorTraceWireModel);
+        }
 
-		private void Retain([NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
-		{
-			errorTraceWireModels = errorTraceWireModels.ToList();
-			_agentHealthReporter.ReportErrorTracesRecollected(errorTraceWireModels.Count());
+        private void Retain([NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
+        {
+            errorTraceWireModels = errorTraceWireModels.ToList();
+            _agentHealthReporter.ReportErrorTracesRecollected(errorTraceWireModels.Count());
 
-			// It is possible, but unlikely, to lose incoming error traces here due to a race condition
-			var savedErrorTraceWireModels = _errorTraceWireModels;
-			ResetCollections();
+            // It is possible, but unlikely, to lose incoming error traces here due to a race condition
+            var savedErrorTraceWireModels = _errorTraceWireModels;
+            ResetCollections();
 
-			// It is possible that newer, incoming error traces will be added to our collection before we add the retained and saved ones.
-			errorTraceWireModels
-				.Where(@error => @error != null)
-				.ForEach(AddToCollection);
-			savedErrorTraceWireModels
-				.Where(@error => @error != null)
-				.ForEach(AddToCollection);
-		}
+            // It is possible that newer, incoming error traces will be added to our collection before we add the retained and saved ones.
+            errorTraceWireModels
+                .Where(@error => @error != null)
+                .ForEach(AddToCollection);
+            savedErrorTraceWireModels
+                .Where(@error => @error != null)
+                .ForEach(AddToCollection);
+        }
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
-		{
-			switch (responseStatus)
-			{
-				case DataTransportResponseStatus.ServiceUnavailableError:
-				case DataTransportResponseStatus.ConnectionError:
-					Retain(errorTraceWireModels);
-					break;
-				case DataTransportResponseStatus.PostTooBigError:
-				case DataTransportResponseStatus.OtherError:
-				case DataTransportResponseStatus.RequestSuccessful:
-				default:
-					break;
-			}
-		}
-	}
+        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
+        {
+            switch (responseStatus)
+            {
+                case DataTransportResponseStatus.ServiceUnavailableError:
+                case DataTransportResponseStatus.ConnectionError:
+                    Retain(errorTraceWireModels);
+                    break;
+                case DataTransportResponseStatus.PostTooBigError:
+                case DataTransportResponseStatus.OtherError:
+                case DataTransportResponseStatus.RequestSuccessful:
+                default:
+                    break;
+            }
+        }
+    }
 }

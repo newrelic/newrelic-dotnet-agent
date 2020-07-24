@@ -2,11 +2,11 @@
 
 namespace OwinRemotingShared
 {
-	public class MyMarshalByRefClass : MarshalByRefObject
-	{
-		public int MyMethod()
-		{
-			return 666;
-		}
-	}
+    public class MyMarshalByRefClass : MarshalByRefObject
+    {
+        public int MyMethod()
+        {
+            return 666;
+        }
+    }
 }

@@ -6,10 +6,10 @@ using NewRelic.Agent.Core.Utilization;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-	public interface ISystemInfo
-	{
-		UInt64 GetTotalPhysicalMemoryBytes();
-		Int32 GetTotalLogicalProcessors();
-		BootIdResult GetBootId();
-	}
+    public interface ISystemInfo
+    {
+        UInt64 GetTotalPhysicalMemoryBytes();
+        Int32 GetTotalLogicalProcessors();
+        BootIdResult GetBootId();
+    }
 }

@@ -3,38 +3,38 @@ using System.Collections.ObjectModel;
 
 namespace NewRelic.Collections
 {
-	public class DisposableCollection : DisposableCollection<IDisposable> {}
+    public class DisposableCollection : DisposableCollection<IDisposable> { }
 
-	/// <summary>
-	/// A collection of disposable objects.  Items will be disposed on removal from this collection.
-	/// </summary>
-	public class DisposableCollection<T> : Collection<T>, IDisposable where T : IDisposable
-	{
-		public void Dispose()
-		{
-			Clear();
-		}
+    /// <summary>
+    /// A collection of disposable objects.  Items will be disposed on removal from this collection.
+    /// </summary>
+    public class DisposableCollection<T> : Collection<T>, IDisposable where T : IDisposable
+    {
+        public void Dispose()
+        {
+            Clear();
+        }
 
-		protected override void InsertItem(int index, T disposable)
-		{
-			if (disposable == null) return;
-			base.InsertItem(index, disposable);
-		}
+        protected override void InsertItem(int index, T disposable)
+        {
+            if (disposable == null) return;
+            base.InsertItem(index, disposable);
+        }
 
-		protected override void RemoveItem(int index)
-		{
-			Items[index].Dispose();
-			base.RemoveItem(index);
-		}
+        protected override void RemoveItem(int index)
+        {
+            Items[index].Dispose();
+            base.RemoveItem(index);
+        }
 
-		protected override void ClearItems()
-		{
-			foreach (var disposable in this)
-			{
-				disposable.Dispose();
-			}
-			base.ClearItems();
-		}
+        protected override void ClearItems()
+        {
+            foreach (var disposable in this)
+            {
+                disposable.Dispose();
+            }
+            base.ClearItems();
+        }
 
-	}
+    }
 }

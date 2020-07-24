@@ -1,189 +1,189 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
+using NewRelic.Collections;
 using NUnit.Framework;
 using Telerik.JustMock;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Configuration;
-using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.Transformers
 {
-	[TestFixture]
-	public class MethodSegmentTransformersTests
-	{
-		[NotNull]
-		private IConfigurationService _configurationService;
+    [TestFixture]
+    public class MethodSegmentTransformersTests
+    {
+        [NotNull]
+        private IConfigurationService _configurationService;
 
-		[SetUp]
-		public void SetUp()
-		{
-			_configurationService = Mock.Create<IConfigurationService>();
-		}
+        [SetUp]
+        public void SetUp()
+        {
+            _configurationService = Mock.Create<IConfigurationService>();
+        }
 
-		#region Transform
+        #region Transform
 
-		[Test]
-	 public void TransformSegment_NullStats()
-	{
-		const String type = "type";
-		const String method = "method";
-		var segment = GetSegment(type, method);
+        [Test]
+        public void TransformSegment_NullStats()
+        {
+            const String type = "type";
+            const String method = "method";
+            var segment = GetSegment(type, method);
 
-			//make sure it does not throw
-			segment.AddMetricStats(null, _configurationService);
-
-
-		}
-
-		[Test]
-	public void TransformSegment_CreatesCustomSegmentMetrics()
-	{
-		const String type = "type";
-		const String method = "method";
-		var segment = GetSegment(type, method, 5);
-		segment.ChildFinished(GetSegment("kid", "method", 2));
-
-		var txName = new TransactionMetricName("WebTransaction", "Test", false);
-		var txStats = new TransactionMetricStatsCollection(txName);
-			segment.AddMetricStats(txStats, _configurationService);
+            //make sure it does not throw
+            segment.AddMetricStats(null, _configurationService);
 
 
-		var scoped = txStats.GetScopedForTesting();
-		var unscoped = txStats.GetUnscopedForTesting();
+        }
 
-		Assert.AreEqual(1, scoped.Count);
-		Assert.AreEqual(1, unscoped.Count);
+        [Test]
+        public void TransformSegment_CreatesCustomSegmentMetrics()
+        {
+            const String type = "type";
+            const String method = "method";
+            var segment = GetSegment(type, method, 5);
+            segment.ChildFinished(GetSegment("kid", "method", 2));
 
-		const String metricName = "DotNet/type/method";
-		Assert.IsTrue(scoped.ContainsKey(metricName));
-		Assert.IsTrue(unscoped.ContainsKey(metricName));
+            var txName = new TransactionMetricName("WebTransaction", "Test", false);
+            var txStats = new TransactionMetricStatsCollection(txName);
+            segment.AddMetricStats(txStats, _configurationService);
 
-		var data = scoped[metricName];
-		Assert.AreEqual(1, data.Value0);
-		Assert.AreEqual(5, data.Value1);
-		Assert.AreEqual(3, data.Value2);
-		Assert.AreEqual(5, data.Value3);
-		Assert.AreEqual(5, data.Value4);
 
-		data = unscoped[metricName];
-		Assert.AreEqual(1, data.Value0);
-		Assert.AreEqual(5, data.Value1);
-		Assert.AreEqual(3, data.Value2);
-		Assert.AreEqual(5, data.Value3);
-		Assert.AreEqual(5, data.Value4);
-		}
+            var scoped = txStats.GetScopedForTesting();
+            var unscoped = txStats.GetUnscopedForTesting();
 
-	[Test]
-	public void TransformSegment_TwoTransformCallsSame()
-	{
-		const String type = "type";
-		const String method = "method";
-		var segment = GetSegment(type, method); ;
+            Assert.AreEqual(1, scoped.Count);
+            Assert.AreEqual(1, unscoped.Count);
 
-		var txName = new TransactionMetricName("WebTransaction", "Test", false);
-		var txStats = new TransactionMetricStatsCollection(txName);
-			segment.AddMetricStats(txStats, _configurationService);
-			segment.AddMetricStats(txStats, _configurationService);
+            const String metricName = "DotNet/type/method";
+            Assert.IsTrue(scoped.ContainsKey(metricName));
+            Assert.IsTrue(unscoped.ContainsKey(metricName));
 
-		var scoped = txStats.GetScopedForTesting();
-		var unscoped = txStats.GetUnscopedForTesting();
+            var data = scoped[metricName];
+            Assert.AreEqual(1, data.Value0);
+            Assert.AreEqual(5, data.Value1);
+            Assert.AreEqual(3, data.Value2);
+            Assert.AreEqual(5, data.Value3);
+            Assert.AreEqual(5, data.Value4);
 
-		Assert.AreEqual(1, scoped.Count);
-		Assert.AreEqual(1, unscoped.Count);
+            data = unscoped[metricName];
+            Assert.AreEqual(1, data.Value0);
+            Assert.AreEqual(5, data.Value1);
+            Assert.AreEqual(3, data.Value2);
+            Assert.AreEqual(5, data.Value3);
+            Assert.AreEqual(5, data.Value4);
+        }
 
-		const String metricName = "DotNet/type/method";
-		Assert.IsTrue(scoped.ContainsKey(metricName));
-		Assert.IsTrue(unscoped.ContainsKey(metricName));
+        [Test]
+        public void TransformSegment_TwoTransformCallsSame()
+        {
+            const String type = "type";
+            const String method = "method";
+            var segment = GetSegment(type, method); ;
 
-		var nameScoped = scoped[metricName];
-		var nameUnscoped = unscoped[metricName];
+            var txName = new TransactionMetricName("WebTransaction", "Test", false);
+            var txStats = new TransactionMetricStatsCollection(txName);
+            segment.AddMetricStats(txStats, _configurationService);
+            segment.AddMetricStats(txStats, _configurationService);
 
-		Assert.AreEqual(2, nameScoped.Value0);
-		Assert.AreEqual(2, nameUnscoped.Value0);
-	}
+            var scoped = txStats.GetScopedForTesting();
+            var unscoped = txStats.GetUnscopedForTesting();
 
-	[Test]
-	public void TransformSegment_TwoTransformCallsDifferent()
-	{
-		const String type = "type";
-		const String method = "method";
-		var segment = GetSegment(type, method);
+            Assert.AreEqual(1, scoped.Count);
+            Assert.AreEqual(1, unscoped.Count);
 
-		const String type1 = "type1";
-		const String method1 = "method1";
-		var segment1 = GetSegment(type1, method1);
+            const String metricName = "DotNet/type/method";
+            Assert.IsTrue(scoped.ContainsKey(metricName));
+            Assert.IsTrue(unscoped.ContainsKey(metricName));
 
-		var txName = new TransactionMetricName("WebTransaction", "Test", false);
-		var txStats = new TransactionMetricStatsCollection(txName);
-		segment.AddMetricStats(txStats, _configurationService);
+            var nameScoped = scoped[metricName];
+            var nameUnscoped = unscoped[metricName];
 
-		segment1.AddMetricStats(txStats, _configurationService);
+            Assert.AreEqual(2, nameScoped.Value0);
+            Assert.AreEqual(2, nameUnscoped.Value0);
+        }
 
-		var scoped = txStats.GetScopedForTesting();
-		var unscoped = txStats.GetUnscopedForTesting();
+        [Test]
+        public void TransformSegment_TwoTransformCallsDifferent()
+        {
+            const String type = "type";
+            const String method = "method";
+            var segment = GetSegment(type, method);
 
-		Assert.AreEqual(2, scoped.Count);
-		Assert.AreEqual(2, unscoped.Count);
+            const String type1 = "type1";
+            const String method1 = "method1";
+            var segment1 = GetSegment(type1, method1);
 
-		const String metricName = "DotNet/type/method";
-		Assert.IsTrue(scoped.ContainsKey(metricName));
-		Assert.IsTrue(unscoped.ContainsKey(metricName));
+            var txName = new TransactionMetricName("WebTransaction", "Test", false);
+            var txStats = new TransactionMetricStatsCollection(txName);
+            segment.AddMetricStats(txStats, _configurationService);
 
-		var nameScoped = scoped[metricName];
-		var nameUnscoped = unscoped[metricName];
+            segment1.AddMetricStats(txStats, _configurationService);
 
-		Assert.AreEqual(1, nameScoped.Value0);
-		Assert.AreEqual(1, nameUnscoped.Value0);
+            var scoped = txStats.GetScopedForTesting();
+            var unscoped = txStats.GetUnscopedForTesting();
 
-		const String metricName1 = "DotNet/type1/method1";
-		Assert.IsTrue(scoped.ContainsKey(metricName1));
-		Assert.IsTrue(unscoped.ContainsKey(metricName1));
+            Assert.AreEqual(2, scoped.Count);
+            Assert.AreEqual(2, unscoped.Count);
 
-		nameScoped = scoped[metricName1];
-		nameUnscoped = unscoped[metricName1];
+            const String metricName = "DotNet/type/method";
+            Assert.IsTrue(scoped.ContainsKey(metricName));
+            Assert.IsTrue(unscoped.ContainsKey(metricName));
 
-		Assert.AreEqual(1, nameScoped.Value0);
-		Assert.AreEqual(1, nameUnscoped.Value0);
-	}
+            var nameScoped = scoped[metricName];
+            var nameUnscoped = unscoped[metricName];
 
-	#endregion Transform
+            Assert.AreEqual(1, nameScoped.Value0);
+            Assert.AreEqual(1, nameUnscoped.Value0);
 
-		#region GetTransactionTraceName
+            const String metricName1 = "DotNet/type1/method1";
+            Assert.IsTrue(scoped.ContainsKey(metricName1));
+            Assert.IsTrue(unscoped.ContainsKey(metricName1));
 
-		[Test]
-		public void GetTransactionTraceName_ReturnsCorrectName()
-		{
-			const String type = "type";
-			const String method = "method";
-			var segment = GetSegment(type, method);
+            nameScoped = scoped[metricName1];
+            nameUnscoped = unscoped[metricName1];
 
-			var transactionTraceName = segment.GetTransactionTraceName();
+            Assert.AreEqual(1, nameScoped.Value0);
+            Assert.AreEqual(1, nameUnscoped.Value0);
+        }
 
-			Assert.AreEqual("DotNet/type/method", transactionTraceName);
-		}
+        #endregion Transform
 
-		#endregion GetTransactionTraceName
+        #region GetTransactionTraceName
 
-		[NotNull]
-		private static Segment GetSegment([NotNull] String type, [NotNull] String method)
-		{
-			var timerFactory = Mock.Create<ITimerFactory>();
-			var builder = new TypedSegment<MethodSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new MethodSegmentData(type, method));
-			builder.End();
-			return builder;
-		}
+        [Test]
+        public void GetTransactionTraceName_ReturnsCorrectName()
+        {
+            const String type = "type";
+            const String method = "method";
+            var segment = GetSegment(type, method);
 
-		private static TypedSegment<MethodSegmentData> GetSegment([NotNull] String type, [NotNull] String method, double duration)
-		{
-			var methodCallData = new MethodCallData("foo", "bar", 1);
-			var parameters = (new ConcurrentDictionary<String, Object>());
-			return MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, type, method, false);
-		}
-	}
+            var transactionTraceName = segment.GetTransactionTraceName();
+
+            Assert.AreEqual("DotNet/type/method", transactionTraceName);
+        }
+
+        #endregion GetTransactionTraceName
+
+        [NotNull]
+        private static Segment GetSegment([NotNull] String type, [NotNull] String method)
+        {
+            var timerFactory = Mock.Create<ITimerFactory>();
+            var builder = new TypedSegment<MethodSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new MethodSegmentData(type, method));
+            builder.End();
+            return builder;
+        }
+
+        private static TypedSegment<MethodSegmentData> GetSegment([NotNull] String type, [NotNull] String method, double duration)
+        {
+            var methodCallData = new MethodCallData("foo", "bar", 1);
+            var parameters = (new ConcurrentDictionary<String, Object>());
+            return MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, type, method, false);
+        }
+    }
 }

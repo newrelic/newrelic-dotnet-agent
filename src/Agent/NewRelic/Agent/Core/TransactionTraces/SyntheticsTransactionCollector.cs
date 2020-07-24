@@ -9,35 +9,35 @@ using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.TransactionTraces
 {
-	public class SyntheticsTransactionCollector : ITransactionCollector, IDisposable
-	{
-		[NotNull]
-		private volatile ICollection<TransactionTraceWireModelComponents> _collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
+    public class SyntheticsTransactionCollector : ITransactionCollector, IDisposable
+    {
+        [NotNull]
+        private volatile ICollection<TransactionTraceWireModelComponents> _collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
 
-		[NotNull]
-		private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
+        [NotNull]
+        private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
 
-		public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)
-		{
-			if (!transactionTraceWireModelComponents.IsSynthetics)
-				return;
-			if (_collectedSamples.Count >= SyntheticsHeader.MaxTraceCount)
-				return;
+        public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)
+        {
+            if (!transactionTraceWireModelComponents.IsSynthetics)
+                return;
+            if (_collectedSamples.Count >= SyntheticsHeader.MaxTraceCount)
+                return;
 
-			_collectedSamples.Add(transactionTraceWireModelComponents);
-		}
+            _collectedSamples.Add(transactionTraceWireModelComponents);
+        }
 
-		public IEnumerable<TransactionTraceWireModelComponents> GetAndClearCollectedSamples()
-		{
-			var oldCollectedSamples = _collectedSamples;
-			_collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
+        public IEnumerable<TransactionTraceWireModelComponents> GetAndClearCollectedSamples()
+        {
+            var oldCollectedSamples = _collectedSamples;
+            _collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
 
-			return oldCollectedSamples;
-		}
+            return oldCollectedSamples;
+        }
 
-		public void Dispose()
-		{
-			_configurationSubscription.Dispose();
-		}
-	}
+        public void Dispose()
+        {
+            _configurationSubscription.Dispose();
+        }
+    }
 }

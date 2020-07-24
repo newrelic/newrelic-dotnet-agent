@@ -9,119 +9,119 @@ using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Commands
 {
-	[TestFixture]
-	public class CommandServiceTests
-	{
-		[NotNull]
-		private IDataTransportService _dataTransportService;
+    [TestFixture]
+    public class CommandServiceTests
+    {
+        [NotNull]
+        private IDataTransportService _dataTransportService;
 
-		[SetUp]
-		public void SetUp()
-		{
-			_dataTransportService = Mock.Create<IDataTransportService>();
-		}
+        [SetUp]
+        public void SetUp()
+        {
+            _dataTransportService = Mock.Create<IDataTransportService>();
+        }
 
-		[Test]
-		public void TestProcessCommand()
-		{
-			var command = new PingCommand();
-			var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
-			commandService.AddCommands(command);
-			var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[1,{name:\"ping\",arguments:{}}],[2,{name:\"ping\",arguments:{}}]]");
+        [Test]
+        public void TestProcessCommand()
+        {
+            var command = new PingCommand();
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            commandService.AddCommands(command);
+            var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[1,{name:\"ping\",arguments:{}}],[2,{name:\"ping\",arguments:{}}]]");
 
-			var results = commandService.ProcessCommands(commands);
+            var results = commandService.ProcessCommands(commands);
 
-			Assert.AreEqual(2, results.Count);
-		}
+            Assert.AreEqual(2, results.Count);
+        }
 
-		[Test]
-		public void TestRestartCommand()
-		{
-			var command = new RestartCommand();
-			var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
-			commandService.AddCommands(command);
-			var serverCommand = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"restart\",arguments:{}}]]");
+        [Test]
+        public void TestRestartCommand()
+        {
+            var command = new RestartCommand();
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            commandService.AddCommands(command);
+            var serverCommand = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"restart\",arguments:{}}]]");
 
-			var processingResults = commandService.ProcessCommands(serverCommand);
+            var processingResults = commandService.ProcessCommands(serverCommand);
 
-			Assert.IsTrue(processingResults.ContainsKey("666"));
-			Assert.IsNull(processingResults["666"]);
-		}
+            Assert.IsTrue(processingResults.ContainsKey("666"));
+            Assert.IsNull(processingResults["666"]);
+        }
 
-		[Test]
-		public void verify_start_profiler_command_gets_processed()
-		{
-			var command = new MockCommand("start_profiler");
-			var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
-			commandService.AddCommands(command);
-			var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
-			
-			Assert.AreEqual(0, command.Attempts);
-			commandService.ProcessCommands(commands);
-			Assert.AreEqual(1, command.Attempts);
-		}
+        [Test]
+        public void verify_start_profiler_command_gets_processed()
+        {
+            var command = new MockCommand("start_profiler");
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            commandService.AddCommands(command);
+            var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
 
-		[Test]
-		public void verify_start_profiler_command_requires_profile_id_argument()
-		{
-			var command = new MockCommand("start_profiler");
-			command.RequiredArguments.Add("profile_id");
+            Assert.AreEqual(0, command.Attempts);
+            commandService.ProcessCommands(commands);
+            Assert.AreEqual(1, command.Attempts);
+        }
 
-			var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
-			commandService.AddCommands(command);
-			var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
+        [Test]
+        public void verify_start_profiler_command_requires_profile_id_argument()
+        {
+            var command = new MockCommand("start_profiler");
+            command.RequiredArguments.Add("profile_id");
 
-			commandService.ProcessCommands(commands);
-		}
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            commandService.AddCommands(command);
+            var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"start_profiler\",arguments:{}}]]");
 
-		[Test]
-		public void verify_stop_profiler_command_gets_processed()
-		{
-			var command = new MockCommand("stop_profiler");
-			var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
-			commandService.AddCommands(command);
-			var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"stop_profiler\",arguments:{}}]]");
-			
-			Assert.AreEqual(0, command.Attempts);
-			commandService.ProcessCommands(commands);
-			Assert.AreEqual(1, command.Attempts);
-		}
-	}
+            commandService.ProcessCommands(commands);
+        }
 
-	public class MockCommand : AbstractCommand
-	{
-		public int Attempts = 0;
+        [Test]
+        public void verify_stop_profiler_command_gets_processed()
+        {
+            var command = new MockCommand("stop_profiler");
+            var commandService = new CommandService(_dataTransportService, Mock.Create<IScheduler>());
+            commandService.AddCommands(command);
+            var commands = JsonConvert.DeserializeObject<IEnumerable<CommandModel>>("[[666,{name:\"stop_profiler\",arguments:{}}]]");
 
-		[NotNull]
-		public List<String> RequiredArguments = new List<String>();
+            Assert.AreEqual(0, command.Attempts);
+            commandService.ProcessCommands(commands);
+            Assert.AreEqual(1, command.Attempts);
+        }
+    }
 
-		public MockCommand(String commandName)
-		{
-			Name = commandName;
-		}
+    public class MockCommand : AbstractCommand
+    {
+        public int Attempts = 0;
 
-		public override object Process(IDictionary<String, Object> arguments)
-		{
-			Attempts++;
-			return null;
-		}
-	}
+        [NotNull]
+        public List<String> RequiredArguments = new List<String>();
 
-	public class PingCommand : AbstractCommand
-	{
-		public Int32 Count { get; private set; }
+        public MockCommand(String commandName)
+        {
+            Name = commandName;
+        }
 
-		public PingCommand()
-		{
-			Count = 0;
-			Name = "ping";
-		}
+        public override object Process(IDictionary<String, Object> arguments)
+        {
+            Attempts++;
+            return null;
+        }
+    }
 
-		public override object Process(IDictionary<String, Object> arguments)
-		{
-			Count++;
-			return null;
-		}
-	}
+    public class PingCommand : AbstractCommand
+    {
+        public Int32 Count { get; private set; }
+
+        public PingCommand()
+        {
+            Count = 0;
+            Name = "ping";
+        }
+
+        public override object Process(IDictionary<String, Object> arguments)
+        {
+            Count++;
+            return null;
+        }
+    }
 }
 

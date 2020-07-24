@@ -3,28 +3,28 @@ using OpenRastaSite.Resources;
 
 namespace OpenRastaSite.Handlers
 {
-	//https://support.newrelic.com/tickets/46801
-	public class BasketHandler
-	{
-		public object Get()
-		{
-			return new Basket { Title = "GET." };
-		}
+    //https://support.newrelic.com/tickets/46801
+    public class BasketHandler
+    {
+        public object Get()
+        {
+            return new Basket { Title = "GET." };
+        }
 
-		public object Post()
-		{
-			return new Basket { Title = "POST." };
-		}
+        public object Post()
+        {
+            return new Basket { Title = "POST." };
+        }
 
-		public object Put()
-		{
-			return new Basket { Title = "PUT." };
-		}
+        public object Put()
+        {
+            return new Basket { Title = "PUT." };
+        }
 
-		public object Delete()
-		{
-			return new Basket { Title = "DELETE." };
-		}
+        public object Delete()
+        {
+            return new Basket { Title = "DELETE." };
+        }
 
-	}
+    }
 }

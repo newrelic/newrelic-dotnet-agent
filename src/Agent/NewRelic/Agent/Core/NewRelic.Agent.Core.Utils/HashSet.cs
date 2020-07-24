@@ -4,89 +4,89 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utils
 {
-	/// <summary>
-	/// A HashSet class for .NET 2.0.
-	/// </summary>
-	[System.SerializableAttribute()]
-	public class HashSet<T> : ICollection<T>
-	{
-		private readonly Object exists = new Object();
-		private readonly IDictionary<T, Object> map;
+    /// <summary>
+    /// A HashSet class for .NET 2.0.
+    /// </summary>
+    [System.SerializableAttribute()]
+    public class HashSet<T> : ICollection<T>
+    {
+        private readonly Object exists = new Object();
+        private readonly IDictionary<T, Object> map;
 
-		public HashSet()
-		{
-			map = new Dictionary<T, Object>();
-		}
+        public HashSet()
+        {
+            map = new Dictionary<T, Object>();
+        }
 
-		public HashSet(ICollection<T> set)
-		{
-			map = new Dictionary<T, Object>(set.Count);
-			foreach (T obj in set)
-			{
-				Add(obj);
-			}
-		}
+        public HashSet(ICollection<T> set)
+        {
+            map = new Dictionary<T, Object>(set.Count);
+            foreach (T obj in set)
+            {
+                Add(obj);
+            }
+        }
 
-		public HashSet([NotNull] IEnumerable<T> source)
-		{
-			map = new Dictionary<T, Object>();
-			foreach (var item in source)
-			{
-				Add(item);
-			}
-		}
+        public HashSet([NotNull] IEnumerable<T> source)
+        {
+            map = new Dictionary<T, Object>();
+            foreach (var item in source)
+            {
+                Add(item);
+            }
+        }
 
-		public HashSet(int initialCapacity)
-		{
-			map = new Dictionary<T, Object>(initialCapacity);
-		}
+        public HashSet(int initialCapacity)
+        {
+            map = new Dictionary<T, Object>(initialCapacity);
+        }
 
-		public void Add(T item)
-		{
-			if (!map.ContainsKey(item))
-			{
-				map.Add(item, exists);
-			}
-		}
+        public void Add(T item)
+        {
+            if (!map.ContainsKey(item))
+            {
+                map.Add(item, exists);
+            }
+        }
 
-		public void Clear()
-		{
-			map.Clear();
-		}
+        public void Clear()
+        {
+            map.Clear();
+        }
 
-		public bool Contains(T item)
-		{
-			return map.ContainsKey(item);
-		}
+        public bool Contains(T item)
+        {
+            return map.ContainsKey(item);
+        }
 
-		public void CopyTo(T[] array, int arrayIndex)
-		{
-			this.map.Keys.CopyTo(array, arrayIndex);
-		}
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            this.map.Keys.CopyTo(array, arrayIndex);
+        }
 
-		public int Count
-		{
-			get { return map.Count; }
-		}
+        public int Count
+        {
+            get { return map.Count; }
+        }
 
-		public bool IsReadOnly
-		{
-			get { return map.IsReadOnly; }
-		}
+        public bool IsReadOnly
+        {
+            get { return map.IsReadOnly; }
+        }
 
-		public bool Remove(T item)
-		{
-			return map.Remove(item);
-		}
+        public bool Remove(T item)
+        {
+            return map.Remove(item);
+        }
 
-		public IEnumerator<T> GetEnumerator()
-		{
-			return map.Keys.GetEnumerator();
-		}
+        public IEnumerator<T> GetEnumerator()
+        {
+            return map.Keys.GetEnumerator();
+        }
 
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return map.Keys.GetEnumerator();
-		}
-	}
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return map.Keys.GetEnumerator();
+        }
+    }
 }

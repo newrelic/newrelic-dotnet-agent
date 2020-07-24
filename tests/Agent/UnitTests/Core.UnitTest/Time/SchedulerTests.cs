@@ -6,116 +6,116 @@ using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Time
 {
-	[TestFixture]
-	public class SchedulerTests
-	{
-		[NotNull]
-		private Scheduler _scheduler;
+    [TestFixture]
+    public class SchedulerTests
+    {
+        [NotNull]
+        private Scheduler _scheduler;
 
-		[SetUp]
-		public void SetUp()
-		{
-			_scheduler = new Scheduler();
-		}
+        [SetUp]
+        public void SetUp()
+        {
+            _scheduler = new Scheduler();
+        }
 
-		[TearDown]
-		public void TearDown()
-		{
-			_scheduler.Dispose();
-		}
+        [TearDown]
+        public void TearDown()
+        {
+            _scheduler.Dispose();
+        }
 
-		[Test]
-		public void ExecuteOnce_ExecutesTheGivenAction()
-		{
-			var wasExecuted = false;
+        [Test]
+        public void ExecuteOnce_ExecutesTheGivenAction()
+        {
+            var wasExecuted = false;
 
-			_scheduler.ExecuteOnce(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
+            _scheduler.ExecuteOnce(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
 
-			AssertEventuallyTrue(() => wasExecuted);
-		}
+            AssertEventuallyTrue(() => wasExecuted);
+        }
 
-		[Test]
-		public void ExecuteOnce_LogsExceptions()
-		{
-			using (var logging = new UnitTest.Fixtures.Logging())
-			{
-				_scheduler.ExecuteOnce(() =>
-				{
-					throw new Exception();
-				}, TimeSpan.FromMilliseconds(1));
-				AssertEventuallyTrue(() => logging.ErrorCount == 1);
-			}
-		}
+        [Test]
+        public void ExecuteOnce_LogsExceptions()
+        {
+            using (var logging = new UnitTest.Fixtures.Logging())
+            {
+                _scheduler.ExecuteOnce(() =>
+                {
+                    throw new Exception();
+                }, TimeSpan.FromMilliseconds(1));
+                AssertEventuallyTrue(() => logging.ErrorCount == 1);
+            }
+        }
 
-		[Test]
-		public void ExecuteEvery_ExecutesTheGivenAction()
-		{
-			var wasExecuted = false;
+        [Test]
+        public void ExecuteEvery_ExecutesTheGivenAction()
+        {
+            var wasExecuted = false;
 
-			_scheduler.ExecuteEvery(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
+            _scheduler.ExecuteEvery(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
 
-			AssertEventuallyTrue(() => wasExecuted);
-		}
+            AssertEventuallyTrue(() => wasExecuted);
+        }
 
-		[Test]
-		public void ExecuteEvery_ExecutesTheGivenActionMultipleTimes()
-		{
-			var wasExecuted = false;
+        [Test]
+        public void ExecuteEvery_ExecutesTheGivenActionMultipleTimes()
+        {
+            var wasExecuted = false;
 
-			_scheduler.ExecuteEvery(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
-			AssertEventuallyTrue(() => wasExecuted);
-			wasExecuted = false;
+            _scheduler.ExecuteEvery(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
+            AssertEventuallyTrue(() => wasExecuted);
+            wasExecuted = false;
 
-			AssertEventuallyTrue(() => wasExecuted);
-		}
+            AssertEventuallyTrue(() => wasExecuted);
+        }
 
-		[Test]
-		public void ExecuteEvery_LogsExceptions()
-		{
-			using (var logging = new UnitTest.Fixtures.Logging())
-			{
-				_scheduler.ExecuteEvery(() =>
-				{
-					throw new Exception();
-				}, TimeSpan.FromMilliseconds(1));
+        [Test]
+        public void ExecuteEvery_LogsExceptions()
+        {
+            using (var logging = new UnitTest.Fixtures.Logging())
+            {
+                _scheduler.ExecuteEvery(() =>
+                {
+                    throw new Exception();
+                }, TimeSpan.FromMilliseconds(1));
 
-				AssertEventuallyTrue(() => logging.ErrorCount >= 1);
+                AssertEventuallyTrue(() => logging.ErrorCount >= 1);
 
-			}
-		}
+            }
+        }
 
-		[Test]
-		public void StopExecuting_StopsTheGivenActionFromExecutingAgain()
-		{
-			var wasExecuted = false;
-			Action setWasExecuted = () => wasExecuted = true;
+        [Test]
+        public void StopExecuting_StopsTheGivenActionFromExecutingAgain()
+        {
+            var wasExecuted = false;
+            Action setWasExecuted = () => wasExecuted = true;
 
-			_scheduler.ExecuteEvery(setWasExecuted, TimeSpan.FromMilliseconds(1));
-			AssertEventuallyTrue(() => wasExecuted);
+            _scheduler.ExecuteEvery(setWasExecuted, TimeSpan.FromMilliseconds(1));
+            AssertEventuallyTrue(() => wasExecuted);
 
-			_scheduler.StopExecuting(setWasExecuted);
-			Thread.Sleep(TimeSpan.FromMilliseconds(5));
-			wasExecuted = false;
-			Thread.Sleep(TimeSpan.FromMilliseconds(5));
+            _scheduler.StopExecuting(setWasExecuted);
+            Thread.Sleep(TimeSpan.FromMilliseconds(5));
+            wasExecuted = false;
+            Thread.Sleep(TimeSpan.FromMilliseconds(5));
 
-			Assert.False(wasExecuted);
-		}
+            Assert.False(wasExecuted);
+        }
 
-		[Test]
-		public void StopExecuting_DoesNotStopOtherActions()
-		{
-			var wasExecuted = false;
+        [Test]
+        public void StopExecuting_DoesNotStopOtherActions()
+        {
+            var wasExecuted = false;
 
-			_scheduler.ExecuteEvery(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
-			_scheduler.StopExecuting(() => { });
-			wasExecuted = false;
+            _scheduler.ExecuteEvery(() => wasExecuted = true, TimeSpan.FromMilliseconds(1));
+            _scheduler.StopExecuting(() => { });
+            wasExecuted = false;
 
-			AssertEventuallyTrue(() => wasExecuted);
-		}
+            AssertEventuallyTrue(() => wasExecuted);
+        }
 
-		private static void AssertEventuallyTrue([NotNull] Func<Boolean> wasExecutedFunc)
-		{
-			Assertions.Eventually(wasExecutedFunc, TimeSpan.FromSeconds(5));
-		}
-	}
+        private static void AssertEventuallyTrue([NotNull] Func<Boolean> wasExecutedFunc)
+        {
+            Assertions.Eventually(wasExecutedFunc, TimeSpan.FromSeconds(5));
+        }
+    }
 }
