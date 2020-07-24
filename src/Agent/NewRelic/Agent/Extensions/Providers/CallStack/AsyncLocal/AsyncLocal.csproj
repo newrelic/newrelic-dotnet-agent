@@ -5,7 +5,7 @@
     <RootNamespace>NewRelic.Providers.CallStack.AsyncLocal</RootNamespace>
     <Description>AsyncLocal Call Stack Tracking Provider for New Relic .NET Agent</Description>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -42,8 +42,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\..\..\build\RepackAssemblies\RepackAssemblies.csproj" />
-    <ProjectReference Include="..\..\..\..\Core\Core.csproj" />
+    <ProjectReference Include="$(SolutionDir)build\RepackAssemblies\RepackAssemblies.csproj" />
+    <ProjectReference Include="$(SolutionDir)src\Agent\NewRelic\Agent\Core\Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,6 +51,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <PostBuildEvent>"NewRelic.Build.RepackAssemblies.exe" --solution="$(SolutionDir)\" --configuration="$(Configuration)" --repackTarget="AsyncLocal"</PostBuildEvent>
+    <PostBuildEvent>"NewRelic.Build.RepackAssemblies.exe" --solution=$(SolutionDir) --configuration="$(Configuration)" --repackTarget="AsyncLocal"</PostBuildEvent>
   </PropertyGroup>
 </Project>

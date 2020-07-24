@@ -4,7 +4,7 @@
     <AssemblyName>NewRelic.Providers.Wrapper.AspNetCore</AssemblyName>
     <RootNamespace>NewRelic.Providers.Wrapper.AspNetCore</RootNamespace>
     <SignAssembly>True</SignAssembly>
-	<AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+	<AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

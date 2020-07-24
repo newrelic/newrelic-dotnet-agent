@@ -10,7 +10,7 @@ namespace NewRelic.Build.RepackAssemblies
 	{
 		public static string SolutionPath { get; set; }
 		public static string Configuration { get; set; }
-		private static string ExtensionsDirectoryPath => Path.Combine(SolutionPath, "NewRelic", "Agent", "Extensions");
+		private static string ExtensionsDirectoryPath => Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Extensions");
 
 		public static void Main(string[] args)
 		{
@@ -39,7 +39,7 @@ namespace NewRelic.Build.RepackAssemblies
 			foreach (var directory in frameworkBuildDirectories)
 			{
 				var asyncLocalDllFilePath = Path.Combine(directory, "NewRelic.Providers.CallStack.AsyncLocal.dll");
-				var keyFilePath = Path.Combine(SolutionPath, "KeyFile.snk");
+				var keyFilePath = Path.Combine(SolutionPath, "build", "keys", "KeyFile.snk");
 
 				var assemblyPathsToRepack = new List<string>
 				{

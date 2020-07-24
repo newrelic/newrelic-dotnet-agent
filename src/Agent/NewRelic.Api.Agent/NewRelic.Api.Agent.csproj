@@ -5,7 +5,7 @@
         <RootNamespace>NewRelic.Api.Agent</RootNamespace>
         <Description>New Relic .NET Agent API</Description>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile> 
+        <AssemblyOriginatorKeyFile>$(SolutionDir)build\keys\NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile> 
         <DocumentationFile>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\NewRelic.Api.Agent.XML</DocumentationFile>
         <IntermediateOutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
         <OutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
