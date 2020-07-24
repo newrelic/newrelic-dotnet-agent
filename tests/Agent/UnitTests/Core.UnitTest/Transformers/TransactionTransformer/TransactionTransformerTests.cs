@@ -581,26 +581,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         }
 
         #endregion Metrics
-        /*
 
-
-		[Test]
-		public void ClientApplicationMetricIsNotGenerated_IfReferringCrossProcessIdIsNull()
-		{
-			var unexpectedMetric = Mock.Create<MetricWireModel>();
-			var generatedMetrics = new List<MetricWireModel>();
-			Mock.Arrange(() => _metricBuilder.TryBuildClientApplicationMetric(Arg.IsAny<String>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan>())).Returns(unexpectedMetric);
-			Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<MetricWireModel>())).DoInstead<MetricWireModel>(metric => generatedMetrics.Add(metric));
-
-			var transaction = TestTransactions.CreateDefaultTransaction(referrerCrossProcessId: null);
-			_transactionTransformer.Transform(transaction);
-
-			Assert.IsFalse(generatedMetrics.Contains(unexpectedMetric));
-		}
-
-		#endregion Metrics
-
-	*/
         #region Transaction Traces
 
         [Test]

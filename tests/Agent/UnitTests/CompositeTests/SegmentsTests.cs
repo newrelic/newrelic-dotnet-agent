@@ -299,8 +299,8 @@ namespace CompositeTests
 
             var expectedMetrics = new[]
             {
-				// The agent should de-duplicate the "Custom/" prefix that was passed in
-				new ExpectedMetric {Name = "Custom/customName"},
+                // The agent should de-duplicate the "Custom/" prefix that was passed in
+                new ExpectedMetric {Name = "Custom/customName"},
                 new ExpectedMetric {Name = "Custom/customName", Scope = "WebTransaction/Action/name"}
             };
 

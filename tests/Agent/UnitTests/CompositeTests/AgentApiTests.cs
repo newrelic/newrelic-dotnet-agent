@@ -203,8 +203,8 @@ namespace CompositeTests
             var customMetrics = _compositeTestAgent.Metrics;
             var expectedMetrics = new List<ExpectedTimeMetric>
             {
-				// Note: the legacy agent used to drop any IncrementCounter calls that occurred after a RecordMetric call with the same metric name
-				new ExpectedTimeMetric {Name = "Custom/MyCustomMetric", CallCount = 3}
+                // Note: the legacy agent used to drop any IncrementCounter calls that occurred after a RecordMetric call with the same metric name
+                new ExpectedTimeMetric {Name = "Custom/MyCustomMetric", CallCount = 3}
             };
             MetricAssertions.MetricsExist(expectedMetrics, customMetrics);
         }
@@ -223,8 +223,8 @@ namespace CompositeTests
             var customMetrics = _compositeTestAgent.Metrics;
             var expectedMetrics = new List<ExpectedMetric>
             {
-				// Note: the legacy agent used to drop any RecordMetric calls that occurred after an IncrementCounter call with the same metric name
-				new ExpectedTimeMetric {Name = "Custom/MyCustomMetric", CallCount = 3}
+                // Note: the legacy agent used to drop any RecordMetric calls that occurred after an IncrementCounter call with the same metric name
+                new ExpectedTimeMetric {Name = "Custom/MyCustomMetric", CallCount = 3}
             };
             MetricAssertions.MetricsExist(expectedMetrics, customMetrics);
         }
@@ -407,16 +407,16 @@ namespace CompositeTests
             var expectedMetrics = new List<ExpectedMetric>
             {
                 new ExpectedCountMetric {Name = "Errors/all", CallCount = 1}, // Count Stats
-				new ExpectedCountMetric {Name = "Errors/allWeb", CallCount = 1}, // Count Stats
-				new ExpectedCountMetric {Name = "Errors/WebTransaction/ASP/TransactionName", CallCount = 1}, // Count Stats
-				new ExpectedTimeMetric {Name = "WebTransaction", CallCount = 1}, // Tick Stats
-				new ExpectedTimeMetric {Name = "WebTransaction/ASP/TransactionName", CallCount = 1}, // Tick Stats
-				new ExpectedApdexMetric {Name = "Apdex", FrustratingCount = 1}, // Apdex Stats
-				new ExpectedApdexMetric {Name = "ApdexAll", FrustratingCount = 1}, // Apdex Stats, frustrating count = 1
-				new ExpectedApdexMetric {Name = "Apdex/ASP/TransactionName", FrustratingCount = 1}, // Apdex Stats
-				new ExpectedCountMetric {Name = "Supportability/ApiInvocation/NoticeError", CallCount = 2}, // Count Stats
-				new ExpectedTimeMetric {Name = "HttpDispatcher", CallCount = 1}, // Tick Stats, Max Min SoS...
-			};
+                new ExpectedCountMetric {Name = "Errors/allWeb", CallCount = 1}, // Count Stats
+                new ExpectedCountMetric {Name = "Errors/WebTransaction/ASP/TransactionName", CallCount = 1}, // Count Stats
+                new ExpectedTimeMetric {Name = "WebTransaction", CallCount = 1}, // Tick Stats
+                new ExpectedTimeMetric {Name = "WebTransaction/ASP/TransactionName", CallCount = 1}, // Tick Stats
+                new ExpectedApdexMetric {Name = "Apdex", FrustratingCount = 1}, // Apdex Stats
+                new ExpectedApdexMetric {Name = "ApdexAll", FrustratingCount = 1}, // Apdex Stats, frustrating count = 1
+                new ExpectedApdexMetric {Name = "Apdex/ASP/TransactionName", FrustratingCount = 1}, // Apdex Stats
+                new ExpectedCountMetric {Name = "Supportability/ApiInvocation/NoticeError", CallCount = 2}, // Count Stats
+                new ExpectedTimeMetric {Name = "HttpDispatcher", CallCount = 1}, // Tick Stats, Max Min SoS...
+            };
 
             MetricAssertions.MetricsExist(expectedMetrics, _compositeTestAgent.Metrics);
         }
@@ -477,12 +477,12 @@ namespace CompositeTests
             {
                 new ExpectedAttribute {Key = "key1", Value = "val1"},
 
-				// Doubles should be turned into strings
-				new ExpectedAttribute {Key = "key2", Value = "2"},
+                // Doubles should be turned into strings
+                new ExpectedAttribute {Key = "key2", Value = "2"},
                 new ExpectedAttribute {Key = "key3", Value = "3.1"},
 
-				// Singles should be left as singles
-				new ExpectedAttribute {Key = "key4", Value = 4.0f}
+                // Singles should be left as singles
+                new ExpectedAttribute {Key = "key4", Value = 4.0f}
             };
 
             TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);

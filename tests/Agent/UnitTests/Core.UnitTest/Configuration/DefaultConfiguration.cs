@@ -820,9 +820,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 <configuration xmlns=""urn:newrelic-config"" agentEnabled=""true"">
   <service licenseKey=""REPLACE_WITH_LICENSE_KEY"" ssl=""true"" />
   <threadProfiling>
-	<ignoreMethod>System.Threading.WaitHandle:WaitOne</ignoreMethod>
-	<ignoreMethod>System.Threading.WaitHandle:WaitAny</ignoreMethod>
-	<ignoreMethod>Microsoft.Samples.Runtime.Remoting.Channels.Pipe.PipeConnection:WaitForConnect</ignoreMethod>
+    <ignoreMethod>System.Threading.WaitHandle:WaitOne</ignoreMethod>
+    <ignoreMethod>System.Threading.WaitHandle:WaitAny</ignoreMethod>
+    <ignoreMethod>Microsoft.Samples.Runtime.Remoting.Channels.Pipe.PipeConnection:WaitForConnect</ignoreMethod>
   </threadProfiling>
 </configuration>";
             var root = new XmlRootAttribute { ElementName = "configuration", Namespace = "urn:newrelic-config" };

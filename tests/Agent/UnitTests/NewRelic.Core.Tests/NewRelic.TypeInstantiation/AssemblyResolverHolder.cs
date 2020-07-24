@@ -11,8 +11,8 @@ namespace NewRelic.TypeInstantiation.UnitTests
         public static Assembly AssemblyResolver(Object sender, ResolveEventArgs args)
         {
 #if NCRUNCH
-			var shortAssemblyName = GetShortAssemblyName(args.Name);
-			return TryGetAssemblyFromNcrunch(shortAssemblyName);
+            var shortAssemblyName = GetShortAssemblyName(args.Name);
+            return TryGetAssemblyFromNcrunch(shortAssemblyName);
 #else
             return null;
 #endif

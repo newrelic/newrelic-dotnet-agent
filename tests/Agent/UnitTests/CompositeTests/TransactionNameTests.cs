@@ -186,8 +186,8 @@ namespace CompositeTests
 
             var expectedMetrics = new[]
             {
-				// The agent should de-duplicate the "Custom/" prefix that was passed in
-				new ExpectedMetric {Name = "OtherTransaction/Custom/foo"}
+                // The agent should de-duplicate the "Custom/" prefix that was passed in
+                new ExpectedMetric {Name = "OtherTransaction/Custom/foo"}
             };
             var actualMetrics = _compositeTestAgent.Metrics.ToList();
             var transactionTrace = _compositeTestAgent.TransactionTraces.First();

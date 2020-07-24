@@ -28,7 +28,7 @@ namespace NewRelic.Reflection.UnitTests
             var stopwatch = Stopwatch.StartNew();
             for (var i = 0; i < iterations; ++i)
                 DoSomething(foo._int32Field);
-            Debug.WriteLine("Direct access:	" + stopwatch.Elapsed.TotalSeconds);
+            Debug.WriteLine("Direct access: " + stopwatch.Elapsed.TotalSeconds);
 
 
             // setup
@@ -52,7 +52,7 @@ namespace NewRelic.Reflection.UnitTests
             stopwatch = Stopwatch.StartNew();
             for (var i = 0; i < iterations; ++i)
                 DoSomething(fieldReflection.GetValue(foo));
-            Debug.WriteLine("Reflection:	   " + stopwatch.Elapsed.TotalSeconds);
+            Debug.WriteLine("Reflection:   " + stopwatch.Elapsed.TotalSeconds);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

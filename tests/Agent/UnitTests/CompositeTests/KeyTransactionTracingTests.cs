@@ -123,7 +123,7 @@ namespace CompositeTests
             {
                 { "WebTransaction/Action/name", 0.001 },
                 { "WebTransaction/Action/name2", 0.0000001 } // will generate a higher "score"
-		};
+        };
             _compositeTestAgent.ServerConfiguration.WebTransactionsApdex = keyTransactions;
             _compositeTestAgent.ServerConfiguration.ApdexT = 10.0;
             _compositeTestAgent.ServerConfiguration.RpmConfig.TransactionTracerThreshold = 10.0;

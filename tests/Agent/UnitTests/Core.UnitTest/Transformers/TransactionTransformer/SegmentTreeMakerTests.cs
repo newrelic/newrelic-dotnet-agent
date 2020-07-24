@@ -105,13 +105,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         public void BuildsComplicatedTrees_IfSeveralSegments()
         {
             /*
-			 *
-			 *   1    6
-			 *   2    7
-			 *  5 3
-			 *    4
-			 *
-			 */
+             *
+             *   1    6
+             *   2    7
+             *  5 3
+             *    4
+             *
+             */
             var id1 = 1;
             var id2 = 2;
             var id3 = 3;
@@ -177,13 +177,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             // This test is a catch-all that should (hopefully) cover every non-error edge case. If this test fails but every other test succeeds then, once the problem is fixed, a new test should be written that explicitly covers that edge case.
 
             /*
-			 *
-			 *   1    6
-			 *   2    7
-			 *  5 3
-			 *    4
-			 *
-			 */
+             *
+             *   1    6
+             *   2    7
+             *  5 3
+             *    4
+             *
+             */
             var id1 = 1;
             var id2 = 2;
             var id3 = 3;

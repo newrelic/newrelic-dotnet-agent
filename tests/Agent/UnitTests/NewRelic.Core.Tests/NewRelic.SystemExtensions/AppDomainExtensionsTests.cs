@@ -245,10 +245,10 @@ namespace NewRelic.SystemExtensions.UnitTests
         private static string GetShortAssemblyName(String assemblyName)
         {
 #if NCRUNCH
-			if (assemblyName.Contains(","))
-				return assemblyName.Substring(0, assemblyName.IndexOf(','));
+            if (assemblyName.Contains(","))
+                return assemblyName.Substring(0, assemblyName.IndexOf(','));
 
-			return assemblyName;
+            return assemblyName;
 #else
             return null;
 #endif

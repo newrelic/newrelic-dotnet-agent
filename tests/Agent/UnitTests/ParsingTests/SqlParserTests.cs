@@ -143,7 +143,7 @@ namespace ParsingTests
         public void SqlParserTest_TestCommentInFront()
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, @"/* ignore the comment */
-				select * from dude");
+                select * from dude");
             Assert.IsNotNull(parsedDatabaseStatement);
             Assert.AreEqual("select", parsedDatabaseStatement.Operation);
             Assert.AreEqual("dude", parsedDatabaseStatement.Model);
@@ -153,8 +153,8 @@ namespace ParsingTests
         public void SqlParserTest_TestCommentInMiddle()
         {
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, @"select *
-				/* ignore the comment */
-				from dude");
+                /* ignore the comment */
+                from dude");
             Assert.IsNotNull(parsedDatabaseStatement);
             Assert.AreEqual("dude/select", parsedDatabaseStatement.ToString());
         }
@@ -416,17 +416,17 @@ namespace ParsingTests
         public void SqlParserTest_BogusTest()
         {
             const string test = @"
-				<h1>Bulkmail Report</h1>
-				Operation started at: 6/15/2010 9:44:10 AM<br>
-				EmailRecipients: 2<br>
-				EmailMessages: 2<br>
-				Operation completed: 6/15/2010 9:44:10 AM<br>
+                <h1>Bulkmail Report</h1>
+                Operation started at: 6/15/2010 9:44:10 AM<br>
+                EmailRecipients: 2<br>
+                EmailMessages: 2<br>
+                Operation completed: 6/15/2010 9:44:10 AM<br>
 
-				<br>
-				Status Report: <br>
-				<pre>No errors occured during sending.</pre>
-				<hr><b>Recipients:</B><br>**REDACTED**<br />**REDACTED**<br />
-			";
+                <br>
+                Status Report: <br>
+                <pre>No errors occured during sending.</pre>
+                <hr><b>Recipients:</B><br>**REDACTED**<br />**REDACTED**<br />
+            ";
 
             var parsedDatabaseStatement = SqlParser.GetParsedDatabaseStatement(CommandType.Text, test);
             Assert.IsNull(parsedDatabaseStatement.Model);

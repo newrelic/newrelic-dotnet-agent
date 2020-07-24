@@ -33,34 +33,6 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
             _tracker.Clear();
         }
 
-        /*
-		[Test]
-		public void Push_AddsObjectsAcrossAppDomains()
-		{
-			var remoteAppDomain = AppDomain.CreateDomain("RemoteAppDomain");
-			var stackInRemoteAppDomain = CreateImmutableStackInRemoteAppDomain(remoteAppDomain);
-			var tracker = Mock.NonPublic.MakeStaticPrivateAccessor(typeof(CallContextStorage));
-			tracker.SetProperty("CurrentCallStack", stackInRemoteAppDomain);
-
-			Assert.DoesNotThrow(() => _tracker.Push(new Object()));
-		}
-
-		[Test]
-		public void Pop_RemovesTopElementAcrossAppDomains()
-		{
-			var remoteAppDomain = AppDomain.CreateDomain("RemoteAppDomain");
-			var stackInRemoteAppDomain = CreateImmutableStackInRemoteAppDomain(remoteAppDomain);
-			var tracker = Mock.NonPublic.MakeStaticPrivateAccessor(typeof(CallContextStorage));
-			tracker.SetProperty("CurrentCallStack", stackInRemoteAppDomain);
-
-			Assert.DoesNotThrow(() =>
-			{
-				_tracker.Push(new Object());
-				_tracker.Pop();
-			});
-		}
-		*/
-
         [Test]
         public void Pop_RemovesTopElement()
         {
@@ -88,33 +60,6 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
         {
             Assert.IsNull(_tracker.TryPeek());
         }
-
-        /*
-
-		[Test]
-		public void TryPeek_ReturnsEmpty_IfStackIsEmpty_AnotherAppDomain()
-		{
-			var remoteAppDomain = AppDomain.CreateDomain("RemoteAppDomain");
-			var stackInRemoteAppDomain = CreateImmutableStackInRemoteAppDomain(remoteAppDomain);
-			Assert.NotNull(stackInRemoteAppDomain);
-
-			Assert.IsNotNull(Environment.CurrentDirectory);
-
-			var tracker = Mock.NonPublic.MakeStaticPrivateAccessor(typeof(CallContextStorage));
-			tracker.SetProperty("CurrentCallStack", stackInRemoteAppDomain);
-
-			var stackInCallStackTracker = tracker.GetProperty("CurrentCallStack") as MarshalByRefImmutableStack<Object>;
-			var appDomainIdOfStack = GetAppDomainIdOfStack(stackInCallStackTracker);
-
-			Assert.IsNull(_tracker.TryPeek());
-
-			NrAssert.Multiple(
-				// verifies the MarshalByRefImmutableStack was created in the remote app domain
-				() => Assert.AreEqual(appDomainIdOfStack, remoteAppDomain.Id),
-				// verifies the MarshalByRefImmutableStack's app domain is not the current app domain (that the two app domains are distinct)
-				() => Assert.AreNotEqual(appDomainIdOfStack, AppDomain.CurrentDomain.Id)
-			);
-		}*/
 
         [Test]
         public void Peek_ReturnsPushedItem_IfOneItemIsPushed()
@@ -179,22 +124,5 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
                 () => Assert.AreNotEqual(thread1Top, thread2Top)
                 );
         }
-
-        /*
-		private MarshalByRefImmutableStack<Object> CreateImmutableStackInRemoteAppDomain(AppDomain remoteAppDomain)
-		{
-			var type = typeof(MarshalByRefImmutableStack<Object>);
-			var assemblyLoc = typeof(MarshalByRefImmutableStack<Object>).Assembly.Location;
-
-			return (MarshalByRefImmutableStack<Object>)remoteAppDomain.CreateInstanceFromAndUnwrap(assemblyLoc, type.FullName);
-		}
-
-		private int GetAppDomainIdOfStack(MarshalByRefImmutableStack<Object> stack)
-		{
-			var rp = RemotingServices.GetRealProxy(stack);
-			return (int)rp.GetType().GetField("_domainID", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(rp);
-		}
-		*/
     }
-
 }

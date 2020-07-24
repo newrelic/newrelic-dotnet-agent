@@ -139,18 +139,6 @@ namespace NewRelic.Dispatchers.UnitTests
             Assert.True(secondCalled);
         }
 
-        //[Test]
-        //public void exception_thrown_from_subscriber_writes_error_log_message()
-        //{
-        //	using (var logger = new Core.UnitTest.Fixtures.Logging())
-        //	using (new EventSubscription<Object>(_ => { throw new Exception(); }))
-        //	{
-        //		EventBus<Object>.Publish(new object());
-
-        //		Assert.AreEqual(1, logger.ErrorCount);
-        //	}
-        //}
-
         [Test]
         public void when_publishing_asynchronously_then_processing_occurs_on_a_different_thread()
         {
