@@ -51,9 +51,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The Npgsql driver executes an unrelated SELECT query while connecting, otherwise these
-				// would all be zero since the application-level metrics (which come from async calls) are suppressed by the existence of the legacy asp pipeline
-				new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
+                // The Npgsql driver executes an unrelated SELECT query while connecting, otherwise these
+                // would all be zero since the application-level metrics (which come from async calls) are suppressed by the existence of the legacy asp pipeline
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb", callCount = 1 },
@@ -63,8 +63,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// These should be suppressed by the existence of the legacy asp pipeline
-				new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
+                // These should be suppressed by the existence of the legacy asp pipeline
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/PostgresAsync"},
             };
 

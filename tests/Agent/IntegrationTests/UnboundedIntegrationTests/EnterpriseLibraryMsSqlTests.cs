@@ -70,12 +70,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 4 },
+                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = 4 },
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2, metricScope = "WebTransaction/MVC/DefaultController/EnterpriseLibraryMsSql" },
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2, metricScope = "WebTransaction/MVC/DefaultController/EnterpriseLibraryMsSql" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/EnterpriseLibraryMsSql" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/EnterpriseLibraryMsSql" }
             };

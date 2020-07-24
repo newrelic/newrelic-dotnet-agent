@@ -69,8 +69,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/GetMultiple", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_GetMultipleParallelOptions" },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/GetMultiple", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_GetMultipleParallelOptionsWithRangeSize" },
 
-				// We do not currently support datastore instance reporting for Couchbase
-				new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 7 },
+                // We do not currently support datastore instance reporting for Couchbase
+                new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 7 },
 
             };
 
@@ -79,8 +79,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 new Assertions.ExpectedMetric { metricName = "Datastore/allOther"},
                 new Assertions.ExpectedMetric { metricName = "Datastore/Couchbase/allOther"},
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Get", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_GetAndTouch" },
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Get", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_GetAndTouch" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Get", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_GetDocument" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Get", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_GetFromReplica" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Get", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_GetWithLock" },

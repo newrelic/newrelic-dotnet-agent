@@ -58,19 +58,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertReplicatePersistAsync" },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertWithExpirationAsync" },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertReplicatePersistWithExpirationAsync" },
-				
+                
 
-				// We do not currently support datastore instance reporting for Couchbase
-				new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 4 },
+                // We do not currently support datastore instance reporting for Couchbase
+                new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 4 },
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = "Datastore/allOther"},
                 new Assertions.ExpectedMetric { metricName = "Datastore/Couchbase/allOther"},
-				
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertAsync" },
+                
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertAsync" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertReplicatePersistAsync" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertWithExpirationAsync" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/InsertAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InsertReplicatePersistWithExpirationAsync" },

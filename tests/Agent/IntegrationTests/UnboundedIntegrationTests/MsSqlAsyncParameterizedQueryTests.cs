@@ -58,8 +58,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery"},
-				//ExecuteScalarAsync is double-instrumented: DOTNET-1800
-				new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/select", callCount = 2 },
+                //ExecuteScalarAsync is double-instrumented: DOTNET-1800
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/select", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/select", callCount = 2, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery"},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/insert", callCount = 1 },
@@ -69,18 +69,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/delete", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery"},
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery"}
-				//ExecuteScalarAsync loses shared thread context while calling datareader.read()... so have one less scoped.
-				//reader.ReadAsync(cancellationToken).ContinueWith(delegate(Task<bool> readTask)
-			};
+                //ExecuteScalarAsync loses shared thread context while calling datareader.read()... so have one less scoped.
+                //reader.ReadAsync(cancellationToken).ContinueWith(delegate(Task<bool> readTask)
+            };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 5 },
+                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 5 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = 5 },
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 3, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery" },
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 3, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MsSqlAsync_WithParameterizedQuery" }
             };

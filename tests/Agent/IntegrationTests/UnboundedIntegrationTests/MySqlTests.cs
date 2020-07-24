@@ -47,8 +47,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The MySql driver executes a ton of unrelated queries while connecting, such as "SHOW VARIABLES"
-				new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 8 },
+                // The MySql driver executes a ton of unrelated queries while connecting, such as "SHOW VARIABLES"
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 8 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 8 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 8 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 8 },
@@ -59,19 +59,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MySql"},
 
-				// We are not checking callCount on Iterate metrics because they can be confusing in that calls like Open can result in calls to Read.
-				// This is particularly true for MySQL, but doing this for all vendors for consistency.
-				new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate" },
+                // We are not checking callCount on Iterate metrics because they can be confusing in that calls like Open can result in calls to Read.
+                // This is particularly true for MySQL, but doing this for all vendors for consistency.
+                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate" },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", metricScope = "WebTransaction/MVC/DefaultController/MySql"}
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
+                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allOther", callCount = 1 },
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MySql" }
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MySql" }
             };
             var expectedTransactionTraceSegments = new List<String>
             {
@@ -81,7 +81,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             // On hold until explain plans are supported for MySql
             //var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
             //{
-            //	new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "explain_plan"}
+            //  new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "explain_plan"}
             //};
 
             var expectedTransactionEventIntrinsicAttributes = new List<String>
@@ -95,10 +95,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                     TransactionName = "WebTransaction/MVC/DefaultController/MySql",
                     Sql = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?",
                     DatastoreMetricName = "Datastore/statement/MySQL/dates/select",
-					
-					// On hold until explain plans are supported for MySql
-					//HasExplainPlan = true
-				}
+                    
+                    // On hold until explain plans are supported for MySql
+                    //HasExplainPlan = true
+                }
             };
 
             var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>

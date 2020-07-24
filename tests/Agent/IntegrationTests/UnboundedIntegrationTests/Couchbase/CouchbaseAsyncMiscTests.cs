@@ -57,8 +57,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/InvokeAsync", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/InvokeAsync", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_InvokeAsync" },
 
-				// We do not currently support datastore instance reporting for Couchbase
-				new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 2 },
+                // We do not currently support datastore instance reporting for Couchbase
+                new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 2 },
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>

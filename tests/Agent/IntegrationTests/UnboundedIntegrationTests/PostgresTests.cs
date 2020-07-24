@@ -49,8 +49,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The Npgsql driver executes an unrelated SELECT query while connecting
-				new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 2 },
+                // The Npgsql driver executes an unrelated SELECT query while connecting
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb", callCount = 2 },
@@ -59,18 +59,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/Postgres"},
 
-				// We don't currently support NpgsqlDataReader
-				//new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3 },
-				//new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3, metricScope = "WebTransaction/MVC/DefaultController/Postgres"}
-			};
+                // We don't currently support NpgsqlDataReader
+                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3 },
+                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3, metricScope = "WebTransaction/MVC/DefaultController/Postgres"}
+            };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
+                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = 1 },
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/Postgres" }
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/Postgres" }
             };
             var expectedTransactionTraceSegments = new List<String>
             {

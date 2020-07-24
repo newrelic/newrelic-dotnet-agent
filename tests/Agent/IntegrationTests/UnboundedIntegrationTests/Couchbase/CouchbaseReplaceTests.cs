@@ -67,8 +67,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/Replace", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_ReplaceCASReplicatePersistWithExpiration" },
                 new Assertions.ExpectedMetric { metricName = $"Datastore/statement/Couchbase/{CouchbaseTestObject.CouchbaseTestBucket}/Replace", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_ReplaceDocument" },
 
-				// We do not currently support datastore instance reporting for Couchbase
-				new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 8 },
+                // We do not currently support datastore instance reporting for Couchbase
+                new Assertions.ExpectedMetric { metricName = "Datastore/instance/Couchbase/unknown/unknown", callCount = 8 },
             };
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
@@ -76,8 +76,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allOther"},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Couchbase/allOther"},
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Replace", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_Replace" },
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Replace", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_Replace" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Replace", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_ReplaceCAS" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Replace", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_ReplaceWithExpiration" },
                 new Assertions.ExpectedMetric { metricName = "Datastore/operation/Couchbase/Replace", callCount = 1, metricScope = "WebTransaction/MVC/CouchbaseController/Couchbase_ReplaceCASWithExpiration" },

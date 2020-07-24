@@ -59,8 +59,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric {metricName = @"Datastore/allOther", callCount = 1},
+                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                new Assertions.ExpectedMetric {metricName = @"Datastore/allOther", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Datastore/Redis/allOther", callCount = 1}
             };
 

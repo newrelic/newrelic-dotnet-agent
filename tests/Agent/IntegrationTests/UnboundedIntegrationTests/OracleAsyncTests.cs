@@ -49,8 +49,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The Oracle driver executes an unrelated DECLARE query while connecting
-				new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 6 },
+                // The Oracle driver executes an unrelated DECLARE query while connecting
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 6 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 6 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/all", callCount = 6 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/allWeb", callCount = 6 },
@@ -59,8 +59,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/select", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Oracle/user_tables/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/OracleAsync"},
-				//ExecuteScalar() double instrumented: DOTNET-1800
-				new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", callCount = 2 },
+                //ExecuteScalar() double instrumented: DOTNET-1800
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/select", callCount = 2, metricScope = "WebTransaction/MVC/DefaultController/OracleAsync"},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/insert", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/insert", callCount = 1 },
@@ -68,18 +68,18 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/delete", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Oracle/{_fixture.TableName}/delete", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/OracleAsync"}
-				// We don't currently have instrumentation for OracleDataReader.ReadAsync
-				//new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3 },
-				//new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3, metricScope = "WebTransaction/MVC/DefaultController/OracleAsync"}
-			};
+                // We don't currently have instrumentation for OracleDataReader.ReadAsync
+                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3 },
+                //new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = 3, metricScope = "WebTransaction/MVC/DefaultController/OracleAsync"}
+            };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther" },
+                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Oracle/allOther" },
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/select", metricScope = "WebTransaction/MVC/DefaultController/OracleAsync" },
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/select", metricScope = "WebTransaction/MVC/DefaultController/OracleAsync" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/insert", metricScope = "WebTransaction/MVC/DefaultController/OracleAsync" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/delete", metricScope = "WebTransaction/MVC/DefaultController/OracleAsync" }
             };

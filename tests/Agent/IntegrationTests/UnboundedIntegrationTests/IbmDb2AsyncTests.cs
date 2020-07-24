@@ -47,8 +47,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The IBMDB2 driver executes an unrelated DECLARE query while connecting
-				new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 4 },
+                // The IBMDB2 driver executes an unrelated DECLARE query while connecting
+                new Assertions.ExpectedMetric { metricName = @"Datastore/all", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/IBMDB2/all", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/IBMDB2/allWeb", callCount = 4 },
@@ -56,8 +56,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/select", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/IBMDB2/employee/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/IBMDB2/employee/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync"},
-				//ExecuteScalar() double instrumented: DOTNET-1800
-				new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/IBMDB2/{_fixture.TableName}/select", callCount = 1 },
+                //ExecuteScalar() double instrumented: DOTNET-1800
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/IBMDB2/{_fixture.TableName}/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/IBMDB2/{_fixture.TableName}/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync"},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/insert", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/IBMDB2/{_fixture.TableName}/insert", callCount = 1 },
@@ -66,19 +66,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/IBMDB2/{_fixture.TableName}/delete", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/IBMDB2/{_fixture.TableName}/delete", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync"},
 
-				// We are not checking callCount on Iterate metrics because they can be confusing in that calls like Open can result in calls to Read.
-				// This is particularly true for MySQL, but doing this for all vendors for consistency.
-				new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate" },
+                // We are not checking callCount on Iterate metrics because they can be confusing in that calls like Open can result in calls to Read.
+                // This is particularly true for MySQL, but doing this for all vendors for consistency.
+                new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate" },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync"}
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// The datastore operation happened inside a web transaction so there should be no allOther metrics
-				new Assertions.ExpectedMetric { metricName = @"Datastore/allOther" },
+                // The datastore operation happened inside a web transaction so there should be no allOther metrics
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/IBMDB2/allOther"},
 
-				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/select", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync" },
+                // The operation metric should not be scoped because the statement metric is scoped instead
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/select", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/insert", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/delete", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2QueryAsync" }
             };

@@ -45,9 +45,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				//TODO: DOTNET-2171: OtherTransaction/all should be generated but there is a bug in the agent w/ message broker transactions always being "web". 
-				//new Assertions.ExpectedMetric { metricName = "OtherTransaction/all", callCount = 1}, 
-				new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_fixture.QueueName}", callCount = 1},
+                //OtherTransaction/all should be generated but there is a bug in the agent w/ message broker transactions always being "web". 
+                //new Assertions.ExpectedMetric { metricName = "OtherTransaction/all", callCount = 1}, 
+                new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_fixture.QueueName}", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_fixture.QueueName}", callCount = 1, metricScope = $"OtherTransaction/Message/RabbitMQ/Queue/Named/{_fixture.QueueName}"},
             };
 
