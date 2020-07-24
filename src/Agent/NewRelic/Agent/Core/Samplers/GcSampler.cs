@@ -33,21 +33,24 @@ namespace NewRelic.Agent.Core.Samplers
 
 #if NETFRAMEWORK
 
-	public class GcSampler : AbstractSampler
-	{
-		private const string GCPerfCounterCategoryName = ".NET CLR Memory";
+    public class GcSampler : AbstractSampler
+    {
+        private const string GCPerfCounterCategoryName = ".NET CLR Memory";
+        private const int MaxConsecutiveFailuresBeforeDisable = 5;
 
-		private readonly IGcSampleTransformer _transformer;
-		private const int GcSampleIntervalSeconds = 60;
-		private IPerformanceCounterProxyFactory _pcProxyFactory;
-		private readonly object _lockObj = new object();
+        private readonly IGcSampleTransformer _transformer;
+        private const int GcSampleIntervalSeconds = 60;
+        private readonly IPerformanceCounterProxyFactory _pcProxyFactory;
 
-		/// <summary>
-		/// Translates the sample type enum to the name of the windows performance counter
-		/// </summary>
-		private readonly Dictionary<GCSampleType, string> _perfCounterNames = new Dictionary<GCSampleType, string>
-		{
-			{ GCSampleType.Gen0Size , "Gen 0 heap size"},					// BuildByteData (MB)
+        private int _countConsecutiveSamplingFailures = 0;
+        private string _perfCounterInstanceName;
+
+        /// <summary>
+        /// Translates the sample type enum to the name of the windows performance counter
+        /// </summary>
+        private readonly Dictionary<GCSampleType, string> _perfCounterNames = new Dictionary<GCSampleType, string>
+        {
+            { GCSampleType.Gen0Size , "Gen 0 heap size"},					// BuildByteData (MB)
 			{ GCSampleType.Gen0Promoted , "Promoted Memory from Gen 0"},	// BuildByteData
 			{ GCSampleType.Gen1Size , "Gen 1 heap size"},					// BuildByteData
 			{ GCSampleType.Gen1Promoted , "Promoted Memory from Gen 1"},	// BuildByteData
@@ -61,186 +64,304 @@ namespace NewRelic.Agent.Core.Samplers
 			{ GCSampleType.Gen2CollectionCount , "# Gen 2 Collections"}		// reset on sample}, BuildCountData
 		};
 
-		private readonly Dictionary<GCSampleType, Func<IPerformanceCounterProxy, float>> _perfCounterValueHandlers;
+        private readonly Dictionary<GCSampleType, Func<IPerformanceCounterProxy, float>> _perfCounterValueHandlers;
 
-		private float GetPerfCounterValue_Raw(IPerformanceCounterProxy proxy)
-		{
-			return proxy.NextValue();
-		}
+        private float GetPerfCounterValue_Raw(IPerformanceCounterProxy proxy)
+        {
+            return proxy.NextValue();
+        }
 
-		private float GetPerfCounterValue_DeltaValue(IPerformanceCounterProxy proxy, ref float prevValue)
-		{
-			var currentPerfCounterVal = proxy.NextValue();
-			var prevPerfCounterVal = Interlocked.Exchange(ref prevValue, currentPerfCounterVal);
-			return currentPerfCounterVal - prevPerfCounterVal;
-		}
+        private float GetPerfCounterValue_DeltaValue(IPerformanceCounterProxy proxy, ref float prevValue)
+        {
+            var currentPerfCounterVal = proxy.NextValue();
+            var prevPerfCounterVal = Interlocked.Exchange(ref prevValue, currentPerfCounterVal);
+            return currentPerfCounterVal - prevPerfCounterVal;
+        }
 
-		private float GetPerfCounterValue_Gen0CollectionCount(IPerformanceCounterProxy proxy)
-		{
-			return GetPerfCounterValue_DeltaValue(proxy, ref _PrevGen0CollectionCount);
-		}
+        private float GetPerfCounterValue_Gen0CollectionCount(IPerformanceCounterProxy proxy)
+        {
+            return GetPerfCounterValue_DeltaValue(proxy, ref _PrevGen0CollectionCount);
+        }
 
-		private float GetPerfCounterValue_Gen1CollectionCount(IPerformanceCounterProxy proxy)
-		{
-			return GetPerfCounterValue_DeltaValue(proxy, ref _PrevGen1CollectionCount);
-		}
+        private float GetPerfCounterValue_Gen1CollectionCount(IPerformanceCounterProxy proxy)
+        {
+            return GetPerfCounterValue_DeltaValue(proxy, ref _PrevGen1CollectionCount);
+        }
 
-		private float GetPerfCounterValue_Gen2CollectionCount(IPerformanceCounterProxy proxy)
-		{
-			return GetPerfCounterValue_DeltaValue(proxy, ref _PrevGen2CollectionCount);
-		}
+        private float GetPerfCounterValue_Gen2CollectionCount(IPerformanceCounterProxy proxy)
+        {
+            return GetPerfCounterValue_DeltaValue(proxy, ref _PrevGen2CollectionCount);
+        }
 
-		private float GetPerfCounterValue_InducedCount(IPerformanceCounterProxy proxy)
-		{
-			return GetPerfCounterValue_DeltaValue(proxy, ref _PrevInducedCount);
-		}
+        private float GetPerfCounterValue_InducedCount(IPerformanceCounterProxy proxy)
+        {
+            return GetPerfCounterValue_DeltaValue(proxy, ref _PrevInducedCount);
+        }
 
-		/// <summary>
-		/// Holds the performance counter proxies used to capture the data from the windows performance counters.
-		/// </summary>
-		private Dictionary<GCSampleType, IPerformanceCounterProxy> _perfCounterProxies;
+        /// <summary>
+        /// Holds the performance counter proxies used to capture the data from the windows performance counters.
+        /// </summary>
+        private Dictionary<GCSampleType, IPerformanceCounterProxy> _perfCounterProxies;
 
-		// These hold previous values to compute delta between samplings.
-		private float _PrevGen0CollectionCount = 0;
-		private float _PrevGen1CollectionCount = 0;
-		private float _PrevGen2CollectionCount = 0;
-		private float _PrevInducedCount = 0;
+        // These hold previous values to compute delta between samplings.
+        private float _PrevGen0CollectionCount = 0;
+        private float _PrevGen1CollectionCount = 0;
+        private float _PrevGen2CollectionCount = 0;
+        private float _PrevInducedCount = 0;
 
-		public GcSampler(IScheduler scheduler, IGcSampleTransformer gcSampleTransformer, IPerformanceCounterProxyFactory pcProxyFactory)
-		 : base(scheduler, TimeSpan.FromSeconds(GcSampleIntervalSeconds))
-		{
-			_pcProxyFactory = pcProxyFactory;
-			_transformer = gcSampleTransformer;
+        public GcSampler(IScheduler scheduler, IGcSampleTransformer gcSampleTransformer, IPerformanceCounterProxyFactory pcProxyFactory)
+         : base(scheduler, TimeSpan.FromSeconds(GcSampleIntervalSeconds))
+        {
+            _pcProxyFactory = pcProxyFactory;
+            _transformer = gcSampleTransformer;
 
-			//Assign functions to handle the values for the different performance counters collected.
-			_perfCounterValueHandlers = new Dictionary<GCSampleType, Func<IPerformanceCounterProxy, float>>()
-			{
-				{ GCSampleType.Gen0Size, GetPerfCounterValue_Raw },
-				{ GCSampleType.Gen0Promoted , GetPerfCounterValue_Raw },
-				{ GCSampleType.Gen1Size, GetPerfCounterValue_Raw },
-				{ GCSampleType.Gen1Promoted, GetPerfCounterValue_Raw },
-				{ GCSampleType.Gen2Size, GetPerfCounterValue_Raw },
-				{ GCSampleType.LOHSize, GetPerfCounterValue_Raw },
-				{ GCSampleType.HandlesCount, GetPerfCounterValue_Raw },
-				{ GCSampleType.InducedCount, GetPerfCounterValue_InducedCount },
-				{ GCSampleType.PercentTimeInGc, GetPerfCounterValue_Raw },
-				{ GCSampleType.Gen0CollectionCount, GetPerfCounterValue_Gen0CollectionCount },
-				{ GCSampleType.Gen1CollectionCount, GetPerfCounterValue_Gen1CollectionCount },
-				{ GCSampleType.Gen2CollectionCount, GetPerfCounterValue_Gen2CollectionCount }
-			};
-		}
+            //Assign functions to handle the values for the different performance counters collected.
+            _perfCounterValueHandlers = new Dictionary<GCSampleType, Func<IPerformanceCounterProxy, float>>()
+            {
+                { GCSampleType.Gen0Size, GetPerfCounterValue_Raw },
+                { GCSampleType.Gen0Promoted , GetPerfCounterValue_Raw },
+                { GCSampleType.Gen1Size, GetPerfCounterValue_Raw },
+                { GCSampleType.Gen1Promoted, GetPerfCounterValue_Raw },
+                { GCSampleType.Gen2Size, GetPerfCounterValue_Raw },
+                { GCSampleType.LOHSize, GetPerfCounterValue_Raw },
+                { GCSampleType.HandlesCount, GetPerfCounterValue_Raw },
+                { GCSampleType.InducedCount, GetPerfCounterValue_InducedCount },
+                { GCSampleType.PercentTimeInGc, GetPerfCounterValue_Raw },
+                { GCSampleType.Gen0CollectionCount, GetPerfCounterValue_Gen0CollectionCount },
+                { GCSampleType.Gen1CollectionCount, GetPerfCounterValue_Gen1CollectionCount },
+                { GCSampleType.Gen2CollectionCount, GetPerfCounterValue_Gen2CollectionCount }
+            };
+        }
 
-		public override void Start()
-		{
-			if (!Enabled)
-			{
-				Log.Debug($"The GC Sampler is NOT enabled");
-				//We always want to do this because we don't want to code with the internals 
-				//of the base class in mind.
-				base.Start();
-				return;
-			}
+        public override void Start()
+        {
+            if (!Enabled)
+            {
+                Log.Debug($"The GC Sampler is NOT enabled");
+                //We always want to do this because we don't want to code with the internals 
+                //of the base class in mind.
+                base.Start();
+                return;
+            }
 
-			var failedSampleTypes = new List<GCSampleType>();
+            _perfCounterInstanceName = null;
+            _countConsecutiveSamplingFailures = 0;
 
-			var countInstantiated = 0;
-			lock (_lockObj)
-			{
-				//Build a set of proxies for each performance counter being sampled.
-				_perfCounterProxies = new Dictionary<GCSampleType, IPerformanceCounterProxy>();
-				
-				foreach (var sampleTypeEnum in _perfCounterNames.Keys)
-				{
+            //Defer the creation of Performance Counter Proxies until the first sampling occurs.
+            //Performance Counter Instance Names can change based on the number of running processes
+            //for the same executable.
 
-					try
-					{
-						_perfCounterProxies[sampleTypeEnum] = _pcProxyFactory.CreatePerformanceCounterProxy(GCPerfCounterCategoryName, _perfCounterNames[sampleTypeEnum]);
-						countInstantiated++;
-					}
-					catch (UnauthorizedAccessException)
-					{
-						var userName = "<unknown>";
-						try
-						{
-							userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-						}
-						catch
-						{ }
+            base.Start();
+        }
 
-						Log.Warn($"The executing user, {userName}, has insufficient permissions to collect Windows Performance Counters.");
-						break;
-					}
-					catch (Exception ex)
-					{
-						failedSampleTypes.Add(sampleTypeEnum);
-						Log.Debug($"Error encountered during the creation of performance counter proxy for GC sample type '{sampleTypeEnum}'.  Metrics of this type will not be captured.  Error : {ex}");
-					}
-				}
-			}
+        protected override void Stop()
+        {
+            base.Stop();
 
-			//Print message indicating which perf counter proxies failed to start.
-			if (failedSampleTypes.Count > 0)
-			{
-				var msgToken = string.Join(", ", failedSampleTypes.Select(x => x.ToString()).ToArray());
-				Log.Warn($"The following Garbage Collection Performance Counters could not be started: {msgToken}.  Debug Level logs will contain more information.");
-			}
+            if (_perfCounterProxies == null)
+            {
+                return;
+            }
 
-			//We always want to do this because we don't want to code with the internals 
-			//of the base class in mind.
-			base.Start();
+            var proxies = Interlocked.Exchange(ref _perfCounterProxies, null);
 
-			//If unable to create any proxies, there is no need to run the timer
-			if (countInstantiated == 0)
-			{
-				Log.Warn("No GC performance counters were instantiated.  GC Metrics will not be captured.");
-				Stop();
-			}
-			else
-			{
-				Log.Debug($"The GC Sampler was started, collecting {_perfCounterProxies.Count} performance counter(s).");
-			}
-		}
+            DisposeProxies(proxies.Values);
+        }
 
-		protected override void Stop()
-		{
-			base.Stop();
+        private void DisposeProxies(IEnumerable<IPerformanceCounterProxy> proxies)
+        {
+            foreach (var perfCounterProxy in proxies)
+            {
+                perfCounterProxy.Dispose();
+            }
+        }
 
-			lock (_lockObj)
-			{
-				if (_perfCounterProxies != null)
-				{
-					foreach (var perfCounterProxy in _perfCounterProxies.Values)
-					{
-						perfCounterProxy.Dispose();
-					}
-					_perfCounterProxies = null;
-				}
-			}
-		}
+        private int CreatePerfCounterProxies(string processInstanceName)
+        {
+            var perfCounterProxies = new Dictionary<GCSampleType, IPerformanceCounterProxy>();
 
-		public override void Sample()
-		{
-			try
-			{
-				var sampleValues = new Dictionary<GCSampleType, float>();
+            var failedSampleTypes = new List<GCSampleType>();
 
-				lock (_lockObj)
-				{
-					foreach (var proxy in _perfCounterProxies)
-					{
-						var val = _perfCounterValueHandlers[proxy.Key](proxy.Value);
-						sampleValues[proxy.Key] = val;
-					}
-				}
+            foreach (var sampleTypeEnum in _perfCounterNames.Keys)
+            {
+                try
+                {
+                    perfCounterProxies[sampleTypeEnum] = _pcProxyFactory.CreatePerformanceCounterProxy(GCPerfCounterCategoryName, _perfCounterNames[sampleTypeEnum], processInstanceName);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    throw;  //Let the caller receive this so that they may shutdown the sampler.
+                }
+                catch (Exception ex)
+                {
+                    failedSampleTypes.Add(sampleTypeEnum);
+                    LogMessage(LogLevel.Debug, $"Error encountered during the creation of performance counter for '{sampleTypeEnum}' for Performance Counter Instance '{processInstanceName}'.  Metrics of this type will not be captured.  Error : {ex}");
+                }
+            }
 
-				_transformer.Transform(sampleValues);
-			}
-			catch (Exception ex)
-			{
-				Log.Error($"Unable to get Garbage Collection performance counter sample.  Further .Net GC metrics will not be collected.  Error : {ex}");
-				Stop();
-			}
-		}
-	}
+            //Print message indicating which perf counter proxies failed to start.
+            if (failedSampleTypes.Count > 0)
+            {
+                var msgToken = string.Join(", ", failedSampleTypes.Select(x => x.ToString()).ToArray());
+                LogMessage(LogLevel.Warn, $"The following Performance Counters for Performance Counter Instance '{processInstanceName}' could not be started: {msgToken}.  Debug Level logs will contain more information.");
+            }
+
+            var oldProxies = Interlocked.Exchange(ref _perfCounterProxies, perfCounterProxies);
+
+            if (_perfCounterProxies.Count > 0)
+            {
+                LogMessage(LogLevel.Debug, $"Sampler is collecting {_perfCounterProxies.Count} performance counter(s) for Performance Counter Instance '{processInstanceName}'.");
+            }
+
+            if (oldProxies != null && oldProxies.Count > 0)
+            {
+                DisposeProxies(oldProxies.Values);
+            }
+
+            return _perfCounterProxies.Count;
+        }
+
+        private void LogMessage(LogLevel level, string message, Exception ex = null)
+        {
+            if (!Log.IsEnabledFor(level))
+            {
+                return;
+            }
+
+            if (ex == null)
+            {
+                Log.LogMessage(level, $"GC Performance Counters: {message}");
+            }
+            else
+            {
+                Log.LogMessage(level, $"GC Performance Counters: {message}, {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Method ensures that the performance counters are available and up-to-date.
+        /// If the Performance Counter Instance name has changed since last sampling, create new performance
+        /// counters.
+        /// </summary>
+        /// <returns>bool indicating success of doing so</returns>
+        private bool EnsurePerformanceCounters(string currentProcessInstanceName)
+        {
+            if (currentProcessInstanceName == _perfCounterInstanceName && _perfCounterProxies != null && _perfCounterProxies.Count > 0)
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_perfCounterInstanceName))
+            {
+                LogMessage(LogLevel.Debug, $"Performance Counter Instance name change detected, rebuilding performance counters:  changed from '{_perfCounterInstanceName}' to '{currentProcessInstanceName}'");
+            }
+
+            _perfCounterInstanceName = currentProcessInstanceName;
+
+            var countPerfCountersCreated = CreatePerfCounterProxies(_perfCounterInstanceName);
+
+            return countPerfCountersCreated > 0;
+        }
+
+        private void HandleUnauthorizedException()
+        {
+            var userName = "<unknown>";
+            try
+            {
+                userName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+            }
+            catch
+            { }
+
+            LogMessage(LogLevel.Warn, $"The executing user, {userName}, has insufficient permissions to collect Windows Performance Counters.");
+
+            Stop();
+        }
+
+        private void HandleException(Exception ex)
+        {
+            if (ex is UnauthorizedAccessException)
+            {
+                HandleUnauthorizedException();
+                return;
+            }
+
+            HandleProblem();
+
+        }
+
+        private void HandleProblem()
+        {
+            _countConsecutiveSamplingFailures++;
+
+            if (_countConsecutiveSamplingFailures >= MaxConsecutiveFailuresBeforeDisable)
+            {
+                LogMessage(LogLevel.Warn, $"After {MaxConsecutiveFailuresBeforeDisable} failed attempts, GC Metrics sampling will be disabled.");
+                Stop();
+            }
+        }
+
+        public override void Sample()
+        {
+            var currentPerfCounterInstName = default(string);
+            try
+            {
+                currentPerfCounterInstName = _pcProxyFactory.GetCurrentProcessInstanceNameForCategory(GCPerfCounterCategoryName);
+
+                if (string.IsNullOrWhiteSpace(currentPerfCounterInstName))
+                {
+                    // If there was a prior value from last sampling and now there isn't a value, something is wrong so safely stop the sampler.
+                    if (!string.IsNullOrWhiteSpace(_perfCounterInstanceName))
+                    {
+                        LogMessage(LogLevel.Warn, $"Unable to obtain the current Performance Counter Instance Name. The prior name was '{_perfCounterInstanceName}'.  GC Samples will no longer be collected.");
+                        Stop();
+                        return;
+                    }
+
+                    LogMessage(LogLevel.Finest, $"Unable to obtain the current Perforance Counter Instance Name. GC Samples will not be collected at this time.  Will try again during next sampling cycle.");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return;
+            }
+
+            try
+            {
+                if (!EnsurePerformanceCounters(currentPerfCounterInstName))
+                {
+                    var logLevel = _countConsecutiveSamplingFailures + 1 >= MaxConsecutiveFailuresBeforeDisable
+                        ? LogLevel.Warn
+                        : LogLevel.Debug;
+
+                    LogMessage(logLevel, $"Unable to instantiate any perf counters.  (Performance Counter Instance '{_perfCounterInstanceName}', attempt #{_countConsecutiveSamplingFailures})");
+
+                    HandleProblem();
+
+                    return;
+                }
+
+                var sampleValues = new Dictionary<GCSampleType, float>();
+
+                foreach (var proxy in _perfCounterProxies)
+                {
+                    var val = _perfCounterValueHandlers[proxy.Key](proxy.Value);
+                    sampleValues[proxy.Key] = val;
+                }
+
+                _transformer.Transform(sampleValues);
+
+                _countConsecutiveSamplingFailures = 0;
+            }
+            catch (Exception ex)
+            {
+                LogMessage(LogLevel.Error, $"Unable to get GC performance counter sample for Performance Counter Instance '{_perfCounterInstanceName}'.", ex);
+
+                HandleException(ex);
+            }
+        }
+    }
 #endif
 }
