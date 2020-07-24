@@ -69,8 +69,8 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
             };
             var expectedTransactionTraceIntrinsicAttributes2 = new Dictionary<String, String>
             {
-				// These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
-				{"referring_transaction_guid", "guid"},
+                // These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
+                {"referring_transaction_guid", "guid"},
                 {"trip_id", "tripId"}
             };
             var expectedTransactionEventIntrinsicAttributes1 = new List<String>
@@ -80,8 +80,8 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
             };
             var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<String, String>
             {
-				// These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
-				{"nr.referringPathHash", "pathHash"},
+                // These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
+                {"nr.referringPathHash", "pathHash"},
                 {"nr.referringTransactionGuid", "guid"},
                 {"nr.tripId", "tripId"}
             };
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
                 () => Assert.True(catResponseData.ResponseTimeInSeconds >= 0),
                 () => Assert.Equal(-1, catResponseData.ContentLength),
                 () => Assert.NotNull(catResponseData.TransactionGuid),
-                () => Assert.Equal(false, catResponseData.Unused),
+                () => Assert.False(catResponseData.Unused),
 
                 // Trace attributes
                 () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceIntrinsicAttributes1, TransactionTraceAttributeType.Intrinsic, transactionSample),

@@ -6,7 +6,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     public static class Utilities
     {
 #if DEBUG
-		[NotNull] public static String Configuration = "Debug";
+        [NotNull] public static String Configuration = "Debug";
 #else
         [NotNull] public static String Configuration = "Release";
 #endif

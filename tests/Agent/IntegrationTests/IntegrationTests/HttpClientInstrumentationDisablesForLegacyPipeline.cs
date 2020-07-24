@@ -52,9 +52,9 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/Stream/GET" },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/HttpClient" },
                 new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/HttpClient" }
-				
-				// There should NOT be a "bing" external metric scoped to the transaction because the embedded task.run is not a supported use case
-			};
+                
+                // There should NOT be a "bing" external metric scoped to the transaction because the embedded task.run is not a supported use case
+            };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 

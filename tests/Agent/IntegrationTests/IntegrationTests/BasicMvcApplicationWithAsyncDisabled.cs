@@ -65,8 +65,8 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Normalized/*" },
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
 
-				// The .NET agent does not have the information needed to generate this metric
-				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
+                // The .NET agent does not have the information needed to generate this metric
+                new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
             };
 

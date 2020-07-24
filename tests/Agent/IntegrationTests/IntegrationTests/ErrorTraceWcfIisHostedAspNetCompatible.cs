@@ -53,13 +53,13 @@ namespace NewRelic.Agent.IntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// error metrics
-				new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
+                // error metrics
+                new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.ThrowException", callCount = 1},
 
-				// other
-				new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
+                // other
+                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Apdex" },
                 new Assertions.ExpectedMetric { metricName = @"ApdexAll" },
                 new Assertions.ExpectedMetric { metricName = @"Apdex/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.ThrowException" },

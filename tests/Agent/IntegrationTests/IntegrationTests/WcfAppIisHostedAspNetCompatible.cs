@@ -55,8 +55,8 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"DotNet/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
 
-				// Verify that the entire IIS pipeline was captured
-				new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
+                // Verify that the entire IIS pipeline was captured
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.IntegrationTests
             NrAssert.Multiple
             (
                 () => Assert.NotNull(transactionSample),
-                () => Assert.Equal(1, transactionEvents.Count()),
+                () => Assert.Single(transactionEvents),
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
                 () => Assertions.TransactionTraceHasAttributes(expectedTraceAttributes, TransactionTraceAttributeType.Agent, transactionSample)

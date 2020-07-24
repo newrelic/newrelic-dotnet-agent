@@ -46,13 +46,13 @@ namespace NewRelic.Agent.IntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// error metrics
-				new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
+                // error metrics
+                new Assertions.ExpectedMetric {metricName = @"Errors/all", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Errors/allWeb", callCount = 1},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted.IWcfService.ThrowException", callCount = 1},
 
-				// other
-				new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
+                // other
+                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted.IWcfService.ThrowException", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"ApdexAll" },
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.IntegrationTests
                 () => Assert.True(transactionEvents.Any(), "No transaction events found."),
                 () => Assert.True(transactionEvents.Count == 1, $"Expected 1 transaction event but found {transactionEvents.Count}"),
                 () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
-                () => Assert.Equal(1, errorEvents.Count),
+                () => Assert.Single(errorEvents),
                 () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0].Events[0])
             );
         }

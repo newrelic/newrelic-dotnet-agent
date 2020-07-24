@@ -43,8 +43,8 @@ namespace NewRelic.Agent.IntegrationTests
             {
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyMetric", callCount = 1 },
 
-				// Transaction metric
-				new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MyCustomMetricName", callCount = 1 },
+                // Transaction metric
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MyCustomMetricName", callCount = 1 },
 
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", metricScope = "OtherTransaction/Custom/MyCustomMetricName",  callCount = 1 },

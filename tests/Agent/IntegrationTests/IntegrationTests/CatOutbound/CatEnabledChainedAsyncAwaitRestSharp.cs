@@ -73,8 +73,8 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// This scoped metric should be superceded by the ExternalTransaction metric above
-				new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/AsyncAwaitClient" }
+                // This scoped metric should be superceded by the ExternalTransaction metric above
+                new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/AsyncAwaitClient" }
             };
 
             // Note: we are checking the attributes attached to the *Callee's* transaction, not the caller's transaction. The attributes attached to the caller's transaction are already fully vetted in the CatInbound tests.
@@ -87,8 +87,8 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
             };
             var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<String, String>
             {
-				// This value comes from what we send to the application (see parameter passed to GetWithCatHeader above)
-				{"nr.tripId", "tripId"}
+                // This value comes from what we send to the application (see parameter passed to GetWithCatHeader above)
+                {"nr.tripId", "tripId"}
             };
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()

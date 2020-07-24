@@ -241,13 +241,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             const String extensionFileContentsTemplate =
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <extension xmlns=""urn:newrelic-extension"">
-	<instrumentation>
-		<tracerFactory name=""{0}"">
-			<match assemblyName=""{1}"" className=""{2}"">
-				<exactMethodMatcher methodName=""{3}""/>
-			</match>
-		</tracerFactory>
-	</instrumentation>
+    <instrumentation>
+        <tracerFactory name=""{0}"">
+            <match assemblyName=""{1}"" className=""{2}"">
+                <exactMethodMatcher methodName=""{3}""/>
+            </match>
+        </tracerFactory>
+    </instrumentation>
 </extension>";
             var extensionFileContents = String.Format(extensionFileContentsTemplate, tracerFactoryName, assemblyName, className, methodName);
             var extensionFilePath = Path.Combine(DestinationNewRelicExtensionsDirectoryPath, extensionFileName);

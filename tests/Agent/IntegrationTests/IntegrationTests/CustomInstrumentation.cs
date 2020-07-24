@@ -65,13 +65,13 @@ namespace NewRelic.Agent.IntegrationTests
             {
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
 
-				// Unscoped
-				new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
+                // Unscoped
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodNoWrapperName", callCount = 1 },
-				
-				// Scoped
-				new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+                
+                // Scoped
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodNoWrapperName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
 
@@ -82,15 +82,15 @@ namespace NewRelic.Agent.IntegrationTests
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// An unrecognized wrapperName will result in no tracer being selected.
-				// Unscoped
-				new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", callCount = 1 },
+                // An unrecognized wrapperName will result in no tracer being selected.
+                // Unscoped
+                new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", callCount = 1 },
 
-				// Scoped
-				new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+                // Scoped
+                new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
 
-				// Ignored transactions
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapper", callCount = 1 },
+                // Ignored transactions
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapper", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionTracerFactory", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapperAsync", callCount = 1 }
             };
@@ -105,8 +105,8 @@ namespace NewRelic.Agent.IntegrationTests
             };
             var unexpectedTransactionTraceSegments = new List<String>
             {
-				// An unrecognized wrapperName will result in no tracer being selected.
-				@"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName"
+                // An unrecognized wrapperName will result in no tracer being selected.
+                @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName"
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

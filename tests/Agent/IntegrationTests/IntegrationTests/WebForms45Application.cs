@@ -56,10 +56,10 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
 
-				// On hold until we port the Page.PerformPreInit instrumentation to a wrapper
-				//new Assertions.ExpectedMetric { metricName = @"DotNet/System.Web.UI.Page/PerformPreInit", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
+                // On hold until we port the Page.PerformPreInit instrumentation to a wrapper
+                //new Assertions.ExpectedMetric { metricName = @"DotNet/System.Web.UI.Page/PerformPreInit", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
 
-				new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -77,11 +77,11 @@ namespace NewRelic.Agent.IntegrationTests
                 @"MapRequestHandler",
                 @"AcquireRequestState",
                 @"ExecuteRequestHandler",
-				
-				// On hold until we port the Page.PerformPreInit instrumentation to a wrapper
-				//@"DotNet/System.Web.UI.Page/PerformPreInit",
+                
+                // On hold until we port the Page.PerformPreInit instrumentation to a wrapper
+                //@"DotNet/System.Web.UI.Page/PerformPreInit",
 
-				@"EndRequest",
+                @"EndRequest",
             };
             var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
             {

@@ -493,10 +493,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         private static void CreateEmptyInstrumentationFile([NotNull] String instrumentationFilePath)
         {
             const String emptyInstrumentationFileText = @"<?xml version=""1.0"" encoding=""utf-8""?>
-			<extension xmlns=""urn:newrelic-extension"">
-				<instrumentation>
-				</instrumentation>
-			</extension>";
+            <extension xmlns=""urn:newrelic-extension"">
+                <instrumentation>
+                </instrumentation>
+            </extension>";
 
             File.WriteAllText(instrumentationFilePath, emptyInstrumentationFileText);
         }

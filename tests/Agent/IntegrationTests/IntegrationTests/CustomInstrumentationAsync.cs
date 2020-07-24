@@ -50,8 +50,8 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", callCount = 1 },
 
-				// Scoped
-				new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+                // Scoped
+                new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 }
             };
 

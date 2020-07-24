@@ -12,27 +12,27 @@ namespace BasicAspWebService
         protected void Page_Load(object sender, EventArgs e)
         {
             string script = @"
-							var helloWorldProxy;
-							function pageLoad() {
-								helloWorldProxy = new BasicAspWebService.HelloWorld();
-								helloWorldProxy.set_defaultSucceededCallback(SucceededCallback);
-								helloWorldProxy.set_defaultFailedCallback(FailedCallback);
-								var greetings = helloWorldProxy.Greetings();
-							}
+                            var helloWorldProxy;
+                            function pageLoad() {
+                                helloWorldProxy = new BasicAspWebService.HelloWorld();
+                                helloWorldProxy.set_defaultSucceededCallback(SucceededCallback);
+                                helloWorldProxy.set_defaultFailedCallback(FailedCallback);
+                                var greetings = helloWorldProxy.Greetings();
+                            }
 
-							function SucceededCallback(result) {
-								var RsltElem = document.getElementById(""Results""); 
-								RsltElem.innerHTML = result;
-							}
+                            function SucceededCallback(result) {
+                                var RsltElem = document.getElementById(""Results""); 
+                                RsltElem.innerHTML = result;
+                            }
 
-							function FailedCallback(error, userContext, methodName){
-							if (error !== null)
-								{
-									var RsltElem = document.getElementById(""Results"");
-									RsltElem.innerHTML = ""An error occurred: "" +
-									error.get_message();
-								}
-							}";
+                            function FailedCallback(error, userContext, methodName){
+                            if (error !== null)
+                                {
+                                    var RsltElem = document.getElementById(""Results"");
+                                    RsltElem.innerHTML = ""An error occurred: "" +
+                                    error.get_message();
+                                }
+                            }";
             Page.ClientScript.RegisterStartupScript(this.GetType(), "JsFunc", script, true);
         }
     }
