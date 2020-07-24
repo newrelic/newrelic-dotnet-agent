@@ -49,10 +49,13 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
             Assert.NotNull(catResponseHeader);
 
             var catResponseData = HeaderEncoder.DecodeAndDeserialize<CrossApplicationResponseData>(catResponseHeader, HeaderEncoder.IntegrationTestEncodingKey);
-
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Index");
+            
             var transactionEventIndex = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Index");
             var transactionEventRedirect = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/DoRedirect");
+            var transactionSampleTxEvent = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Index");
+            var transactionSampleTxEventRedirect = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/DoRedirect");
+            // cannot predict which tx will be the longest
+            var transactionSample = transactionSampleTxEvent != null ? transactionSampleTxEvent : transactionSampleTxEventRedirect;
             var metrics = _fixture.AgentLog.GetMetrics();
 
             NrAssert.Multiple
