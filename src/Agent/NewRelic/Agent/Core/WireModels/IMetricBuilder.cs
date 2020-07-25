@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 
@@ -14,8 +13,8 @@ namespace NewRelic.Agent.Core.WireModels
         MetricWireModel TryBuildCpuTimeMetric(TransactionMetricName transactionMetricName, TimeSpan cpuTime);
 
         MetricWireModel TryBuildDotnetVersionMetric(string version);
-        MetricWireModel TryBuildAgentVersionMetric([NotNull] String agentVersion);
-        MetricWireModel TryBuildAgentVersionByHostMetric([NotNull] String hostName, [NotNull] String agentVersion);
+        MetricWireModel TryBuildAgentVersionMetric(String agentVersion);
+        MetricWireModel TryBuildAgentVersionByHostMetric(String hostName, String agentVersion);
         MetricWireModel TryBuildMetricHarvestAttemptMetric();
 
         MetricWireModel TryBuildTransactionEventReservoirResizedMetric();
@@ -42,14 +41,14 @@ namespace NewRelic.Agent.Core.WireModels
 
         MetricWireModel TryBuildAgentHealthEventMetric(AgentHealthEvent agentHealthEvent, String additionalData = null);
 
-        MetricWireModel TryBuildAgentHealthEventMetric(AgentHealthEvent agentHealthEvent, [NotNull] String wrapperName, [NotNull] String typeName, [NotNull] String methodName);
+        MetricWireModel TryBuildAgentHealthEventMetric(AgentHealthEvent agentHealthEvent, String wrapperName, String typeName, String methodName);
 
-        MetricWireModel TryBuildFeatureEnabledMetric([NotNull] String featureName);
+        MetricWireModel TryBuildFeatureEnabledMetric(String featureName);
 
-        MetricWireModel TryBuildAgentApiMetric([NotNull] String methodName);
+        MetricWireModel TryBuildAgentApiMetric(String methodName);
 
-        MetricWireModel TryBuildCustomTimingMetric([NotNull] String suffix, TimeSpan time);
-        MetricWireModel TryBuildCustomCountMetric([NotNull] String suffix, Int32 count = 1);
+        MetricWireModel TryBuildCustomTimingMetric(String suffix, TimeSpan time);
+        MetricWireModel TryBuildCustomCountMetric(String suffix, Int32 count = 1);
 
         MetricWireModel TryBuildLinuxOsMetric(bool isLinux);
         MetricWireModel TryBuildBootIdError();

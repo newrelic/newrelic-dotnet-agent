@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Samplers;
@@ -9,18 +8,15 @@ namespace NewRelic.Agent.Core.Transformers
 {
     public interface ICpuSampleTransformer
     {
-        void Transform([NotNull] ImmutableCpuSample sample);
+        void Transform(ImmutableCpuSample sample);
     }
 
     public class CpuSampleTransformer : ICpuSampleTransformer
     {
-        [NotNull]
         protected readonly IMetricBuilder MetricBuilder;
-
-        [NotNull]
         private readonly IMetricAggregator _metricAggregator;
 
-        public CpuSampleTransformer([NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator)
+        public CpuSampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator)
         {
             MetricBuilder = metricBuilder;
             _metricAggregator = metricAggregator;
@@ -45,7 +41,7 @@ namespace NewRelic.Agent.Core.Transformers
             }
         }
 
-        private void RecordMetric([CanBeNull] MetricWireModel metric)
+        private void RecordMetric(MetricWireModel metric)
         {
             if (metric == null)
                 return;

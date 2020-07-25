@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utils
 {
@@ -106,8 +105,7 @@ namespace NewRelic.Agent.Core.Utils
         /// <returns>
         /// A <see cref="String"/>
         /// </returns>
-        [NotNull]
-        public static String Unquote([NotNull] String value)
+        public static String Unquote(String value)
         {
             if (value.Length < 3)
                 return value;
@@ -119,9 +117,7 @@ namespace NewRelic.Agent.Core.Utils
 
             return value.Substring(1, value.Length - 2);
         }
-
-        [NotNull]
-        public static String Unbracket([NotNull] String value)
+        public static String Unbracket(String value)
         {
             if (value.Length < 3)
                 return value;
@@ -137,9 +133,7 @@ namespace NewRelic.Agent.Core.Utils
 
             return value;
         }
-
-        [NotNull]
-        public static String Unparenthesize([NotNull] String value)
+        public static String Unparenthesize(String value)
         {
             if (value.Length < 3)
                 return value;
@@ -155,8 +149,6 @@ namespace NewRelic.Agent.Core.Utils
 
             return value;
         }
-
-        [NotNull]
         public static String CleanUri(String uri)
         {
             if (uri == null)
@@ -183,9 +175,7 @@ namespace NewRelic.Agent.Core.Utils
                     UriComponents.Path,
                     UriFormat.UriEscaped);
         }
-
-        [CanBeNull]
-        public static String TryBase64Decode([CanBeNull] String val, String encodingKey = null)
+        public static String TryBase64Decode(String val, String encodingKey = null)
         {
             if (val == null)
                 return null;
@@ -199,9 +189,7 @@ namespace NewRelic.Agent.Core.Utils
                 return null;
             }
         }
-
-        [NotNull]
-        public static String Base64Decode([NotNull] String val, String encodingKey = null)
+        public static String Base64Decode(String val, String encodingKey = null)
         {
             var bytes = Convert.FromBase64String(val);
 
@@ -210,9 +198,7 @@ namespace NewRelic.Agent.Core.Utils
 
             return Encoding.UTF8.GetString(bytes);
         }
-
-        [CanBeNull]
-        public static String TryBase64Encode([CanBeNull] String val, String encodingKey = null)
+        public static String TryBase64Encode(String val, String encodingKey = null)
         {
             if (val == null)
                 return null;
@@ -226,9 +212,7 @@ namespace NewRelic.Agent.Core.Utils
                 return null;
             }
         }
-
-        [NotNull]
-        public static String Base64Encode([NotNull] String val, String encodingKey = null)
+        public static String Base64Encode(String val, String encodingKey = null)
         {
             var encodedBytes = Encoding.UTF8.GetBytes(val);
 
@@ -237,9 +221,7 @@ namespace NewRelic.Agent.Core.Utils
 
             return Convert.ToBase64String(encodedBytes);
         }
-
-        [NotNull]
-        private static Byte[] EncodeWithKey([NotNull] Byte[] bytes, [NotNull] String key)
+        private static Byte[] EncodeWithKey(Byte[] bytes, String key)
         {
             var keyBytes = Encoding.UTF8.GetBytes(key);
 
@@ -256,9 +238,7 @@ namespace NewRelic.Agent.Core.Utils
             return bytes;
 
         }
-
-        [NotNull]
-        public static String ObfuscateStringWithKey([NotNull] String val, [NotNull] String key, String defaultValue = null)
+        public static String ObfuscateStringWithKey(String val, String key, String defaultValue = null)
         {
             var returnVal = defaultValue;
             if (val == null)
@@ -404,7 +384,7 @@ namespace NewRelic.Agent.Core.Utils
         }
 
         // Must use Encoder/Decoder and not Encoding.GetString.  See: http://msdn.microsoft.com/en-us/library/ms404377(v=vs.110).aspx
-        public static string GetStringBufferFromBytes([NotNull] Decoder decoder, [NotNull] byte[] buffer, int offset, int count)
+        public static string GetStringBufferFromBytes(Decoder decoder, byte[] buffer, int offset, int count)
         {
             var length = decoder.GetCharCount(buffer, offset, count);
             var chars = new char[length];

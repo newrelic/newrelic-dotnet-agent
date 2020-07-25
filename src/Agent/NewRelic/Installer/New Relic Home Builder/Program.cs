@@ -9,7 +9,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using ILRepacking;
-using JetBrains.Annotations;
 using MoreLinq;
 
 namespace NewRelic.Installer
@@ -24,21 +23,16 @@ namespace NewRelic.Installer
         // ReSharper disable MemberCanBePrivate.Global
         // ReSharper disable UnusedAutoPropertyAccessor.Global
         [CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
-        [NotNull]
         public String SolutionPath { get; set; }
 
         [CommandLine.Option("configuration", Required = false, HelpText = "$(Configuration)")]
-        [NotNull]
         public String Configuration { get; set; }
 
         [CommandLine.Option("nugetPackageDir", Required = false, HelpText = "$(NuGetPackageRoot)")]
-        [NotNull]
         public String NuGetPackageDir { get; set; }
 
         private bool _isCoreClr = false;
         private bool _isLinux = false;
-
-        [NotNull]
         public String Bitness { get; set; }
 
 
@@ -46,7 +40,6 @@ namespace NewRelic.Installer
         // ReSharper restore MemberCanBePrivate.Global
 
         // output paths
-        [NotNull]
         private String DestinationHomeDirectoryName
         {
             get
@@ -64,41 +57,23 @@ namespace NewRelic.Installer
                 return name;
             }
         }
-        [NotNull]
         private String DestinationHomeDirectoryPath { get { return Path.Combine(SolutionPath, DestinationHomeDirectoryName); } }
-        [NotNull]
         private String DestinationAgentFilePath { get { return Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Agent.Core.dll"); } }
-        [NotNull]
         private string DestinationProfilerDllPath => Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Profiler.dll");
-
-        [NotNull]
         private string DestinationProfilerSoPath => Path.Combine(DestinationHomeDirectoryPath, ProfilerSoFileName);
-
-        [NotNull]
         private String DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
-        [NotNull]
         private String DestinationRegistryFileName { get { return String.Format("New Relic Home {0}.reg", Bitness); } }
-        [NotNull]
         private String DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
-        [NotNull]
         private String DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
-        [NotNull]
         private String BuildOutputPath { get { return Path.Combine(SolutionPath, "_build"); } }
-        [NotNull]
         private String AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
-        [NotNull]
         private String CoreInstallerOutputPath { get { return Path.Combine(BuildOutputPath, "core_installer"); } }
 
         // input paths
-        [NotNull]
         private String AnyCpuBuildDirectoryName { get { return String.Format("AnyCPU-{0}", Configuration); } }
-        [NotNull]
         private String NewRelicConfigPath { get { return Path.Combine(SolutionPath, "Configuration", "newrelic.config") ?? String.Empty; } }
-        [NotNull]
         private String NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
-        [NotNull]
         private String ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
-        [NotNull]
         private String CoreInstallerSourcePath { get { return Path.Combine(SolutionPath, "NewRelic", "CoreInstaller"); } }
 
         private string LicenseFilePath => Path.Combine(SolutionPath, "Miscellaneous", "License.txt");
@@ -112,8 +87,6 @@ namespace NewRelic.Installer
         private string _coreProjectPath => Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj");
 
         private string AgentVersion => FileVersionInfo.GetVersionInfo(DestinationAgentFilePath).FileVersion;
-
-        [NotNull]
         private string ProfilerDllPath
         {
             get
@@ -122,8 +95,6 @@ namespace NewRelic.Installer
                 return profilerPath;
             }
         }
-
-        [NotNull]
         private string ProfilerSoPath
         {
             get
@@ -134,14 +105,9 @@ namespace NewRelic.Installer
                 return profilerSoPath;
             }
         }
-
-        [NotNull]
         private String CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
-        [NotNull]
         private String NewRelicAgentExtensionsPath { get { return Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
-        [NotNull]
         private String KeyFilePath { get { return Path.Combine(SolutionPath, "NewRelicStrongNameKey.snk"); } }
-        [NotNull]
         private String ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Extensions"); } }
 
         void RealMain()
@@ -264,7 +230,7 @@ namespace NewRelic.Installer
             directoryInfo.SetAccessControl(directorySecurity);
         }
 
-        private void RepackAndCopyCoreAsembliesToDirectory([NotNull] String sourceDirectoryPath, [NotNull] String destinationFilePath, [NotNull] String keyFilePath)
+        private void RepackAndCopyCoreAsembliesToDirectory(String sourceDirectoryPath, String destinationFilePath, String keyFilePath)
         {
             if (sourceDirectoryPath == null)
                 throw new ArgumentNullException("sourceDirectoryPath");
@@ -414,7 +380,7 @@ namespace NewRelic.Installer
             return netstandardAssemblyPaths;
         }
 
-        private static void CopyToDirectory([NotNull] String sourceFilePath, [NotNull] String destinationDirectoryPath)
+        private static void CopyToDirectory(String sourceFilePath, String destinationDirectoryPath)
         {
             if (sourceFilePath == null)
                 throw new ArgumentNullException("sourceFilePath");
@@ -424,7 +390,7 @@ namespace NewRelic.Installer
             CopyToDirectories(sourceFilePath, new[] { destinationDirectoryPath });
         }
 
-        private static void CopyToDirectories([NotNull] String sourceFilePath, [NotNull] IEnumerable<String> destinationDirectoryPaths)
+        private static void CopyToDirectories(String sourceFilePath, IEnumerable<String> destinationDirectoryPaths)
         {
             if (sourceFilePath == null)
                 throw new ArgumentNullException("sourceFilePath");
@@ -475,7 +441,7 @@ namespace NewRelic.Installer
             });
         }
 
-        private static void CopyNewRelicAssemblies([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
+        private static void CopyNewRelicAssemblies(String assemblyFilePath, String destinationExtensionsDirectoryPath)
         {
             var directoryPath = Path.GetDirectoryName(assemblyFilePath);
             if (directoryPath == null)
@@ -493,7 +459,7 @@ namespace NewRelic.Installer
                 .ForEach(filePath => CopyToDirectory(filePath, destinationExtensionsDirectoryPath));
         }
 
-        private static void TryCopyExtensionInstrumentationFile([NotNull] String assemblyFilePath, [NotNull] String destinationExtensionsDirectoryPath)
+        private static void TryCopyExtensionInstrumentationFile(String assemblyFilePath, String destinationExtensionsDirectoryPath)
         {
             var directory = Path.GetDirectoryName(assemblyFilePath);
 

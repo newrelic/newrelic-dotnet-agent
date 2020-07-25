@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilization;
 using NewRelic.SystemInterfaces;
@@ -18,7 +17,7 @@ namespace NewRelic.Agent.Core.Utilities
         private const int AsciiMaxValue = 127;
 
 
-        public SystemInfo([NotNull] IDnsStatic dnsStatic)
+        public SystemInfo(IDnsStatic dnsStatic)
         {
             _dnsStatic = dnsStatic;
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.WireModels;
@@ -14,16 +13,9 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class CustomEventTransformerTests
     {
-        [NotNull]
         private CustomEventTransformer _customEventTransformer;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private ICustomEventAggregator _customEventAggregator;
-
-        [CanBeNull]
         private CustomEventWireModel _lastPublishedCustomEvent;
 
         [SetUp]

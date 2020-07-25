@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         public readonly Boolean Unused;
 
         // For backwards compatibility we need to support deserializing AppData that is missing fields 5 and 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         }
 
         // For backwards compatibility we need to support deserializing AppData that is missing field 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -45,7 +44,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             TransactionGuid = transactionGuid;
         }
 
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid, Boolean unused)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid, Boolean unused)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;

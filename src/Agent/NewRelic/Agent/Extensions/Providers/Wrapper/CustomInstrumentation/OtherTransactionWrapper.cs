@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 {
     public class OtherTransactionWrapper : IWrapper
     {
-        [NotNull]
         private static readonly string[] PossibleWrapperNames = {
             "NewRelic.Agent.Core.Tracer.Factories.BackgroundThreadTracerFactory",
             "NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper",

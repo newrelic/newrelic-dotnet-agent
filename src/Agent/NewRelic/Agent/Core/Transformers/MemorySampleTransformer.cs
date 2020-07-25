@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Aggregators;
+﻿using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
 
@@ -7,18 +6,15 @@ namespace NewRelic.Agent.Core.Transformers
 {
     public interface IMemorySampleTransformer
     {
-        void Transform([NotNull] ImmutableMemorySample sample);
+        void Transform(ImmutableMemorySample sample);
     }
 
     public class MemorySampleTransformer : IMemorySampleTransformer
     {
-        [NotNull]
         protected readonly IMetricBuilder MetricBuilder;
-
-        [NotNull]
         private readonly IMetricAggregator _metricAggregator;
 
-        public MemorySampleTransformer([NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator)
+        public MemorySampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator)
         {
             MetricBuilder = metricBuilder;
             _metricAggregator = metricAggregator;
@@ -30,7 +26,7 @@ namespace NewRelic.Agent.Core.Transformers
             RecordMetric(unscopedCpuUserTimeMetric);
         }
 
-        private void RecordMetric([CanBeNull] MetricWireModel metric)
+        private void RecordMetric(MetricWireModel metric)
         {
             if (metric == null)
                 return;

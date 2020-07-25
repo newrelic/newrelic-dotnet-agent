@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
 
@@ -13,7 +12,6 @@ namespace NewRelic.Collections.UnitTests
     // ReSharper disable once InconsistentNaming
     public class ConcurrentQueueTests
     {
-        [NotNull]
         private readonly ConcurrentQueue<Int32> _concurrentQueue;
 
         public ConcurrentQueueTests()
@@ -25,7 +23,7 @@ namespace NewRelic.Collections.UnitTests
         [TestCase(new[] { 1 })]
         [TestCase(new[] { 1, 1 })]
         [TestCase(new[] { 1, 1, 2 })]
-        public void ConcurrentQueue_FunctionsAsNormalQueue_ForSingleThreadedAccess([NotNull] params Int32[] numbersToAdd)
+        public void ConcurrentQueue_FunctionsAsNormalQueue_ForSingleThreadedAccess(params Int32[] numbersToAdd)
         {
             // Because we're not doing anything interesting with the queue itself, it seems reasonable to just wrap all of the basic queue API tests into one test
 
@@ -96,7 +94,7 @@ namespace NewRelic.Collections.UnitTests
         }
 
         // ReSharper disable RedundantAssignment
-        private static void ExerciseFullApi([NotNull] ConcurrentQueue<Int32> concurrentQueue, [NotNull] Int32[] numbersToAdd)
+        private static void ExerciseFullApi(ConcurrentQueue<Int32> concurrentQueue, Int32[] numbersToAdd)
         {
             // ReSharper disable once NotAccessedVariable
             dynamic _;

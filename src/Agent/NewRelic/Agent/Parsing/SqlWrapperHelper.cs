@@ -7,7 +7,6 @@ using System.Data.Odbc;
 using System.Data.OleDb;
 #endif
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing
@@ -20,8 +19,7 @@ namespace NewRelic.Parsing
         /// <param name="command">The command to get the datastore name from</param>
         /// <param name="typeName">Optional. If included, this method will not spend any CPU cycles using reflection to determine the type name of command.</param>
         /// <returns></returns>
-        [NotNull, Pure]
-        public static DatastoreVendor GetVendorName([NotNull] IDbCommand command)
+        public static DatastoreVendor GetVendorName(IDbCommand command)
         {
 
 #if NET35
@@ -39,7 +37,7 @@ namespace NewRelic.Parsing
             return GetVendorName(command.GetType().Name);
         }
 
-        public static DatastoreVendor GetVendorName([NotNull] String typeName)
+        public static DatastoreVendor GetVendorName(String typeName)
         {
 
             if (Vendors.TryGetValue(typeName, out DatastoreVendor vendor))
@@ -65,7 +63,6 @@ namespace NewRelic.Parsing
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        [NotNull, Pure]
         private static DatastoreVendor ExtractVendorNameFromString(String text)
         {
             text = text.ToLowerInvariant();

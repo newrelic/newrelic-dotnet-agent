@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -39,7 +38,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        public void Insert([NotNull] SqlTraceWireModel newSqlTrace)
+        public void Insert(SqlTraceWireModel newSqlTrace)
         {
             _tracesCollected++;
 

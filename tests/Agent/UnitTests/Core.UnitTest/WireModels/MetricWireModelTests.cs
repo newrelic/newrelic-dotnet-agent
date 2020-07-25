@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -14,10 +13,7 @@ namespace NewRelic.Agent.Core.WireModels
     [TestFixture]
     public class MetricWireModelTests
     {
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
 
         [SetUp]

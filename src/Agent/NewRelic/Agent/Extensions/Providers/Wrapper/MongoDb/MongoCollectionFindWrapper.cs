@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using MongoDB.Driver;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -25,8 +24,6 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 
             return Delegates.GetDelegateFor(segment);
         }
-
-        [NotNull]
         private String GetOperationName(MethodCall methodCall)
         {
             // Haven't seen any instance of MethodArguments being empty, but in case it could happen.

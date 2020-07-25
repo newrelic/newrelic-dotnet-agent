@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -16,11 +15,7 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     class MetricStatsCollectionTests
     {
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
 
         [SetUp]

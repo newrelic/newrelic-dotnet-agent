@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
@@ -11,16 +10,9 @@ namespace NewRelic.Agent.Core.Samplers
     [TestFixture]
     public class MemorySamplerTests
     {
-        [NotNull]
         private MemorySampler _memorySampler;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private IMemorySampleTransformer _memorySampleTransformer;
-
-        [NotNull]
         private Action _sampleAction;
 
         [SetUp]

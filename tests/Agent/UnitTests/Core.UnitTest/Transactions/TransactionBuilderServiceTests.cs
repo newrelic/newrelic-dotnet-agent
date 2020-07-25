@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -19,13 +18,9 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
     [TestFixture]
     public class TransactionBuilderServiceTests
     {
-        [NotNull]
         private TransactionService _transactionService;
-        [NotNull]
         private IContextStorage<ITransaction> _lowPriorityTransactionContext;
-        [NotNull]
         private IContextStorage<ITransaction> _highPriorityTransactionContext;
-        [NotNull]
         private readonly WebTransactionName _initialTransactionName = new WebTransactionName("initialCategory", "initialName");
 
         [SetUp]
@@ -245,8 +240,6 @@ namespace NewRelic.Agent.Core.Transactions.UnitTest
 
             });
         }
-
-        [NotNull]
         private static IContextStorageFactory CreateFactoryForTransactionContext(IContextStorage<ITransaction> transactionContext)
         {
             var transactionContextFactory = Mock.Create<IContextStorageFactory>();

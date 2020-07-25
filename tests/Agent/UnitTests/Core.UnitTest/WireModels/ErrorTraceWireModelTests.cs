@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -24,22 +23,20 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
         [TestFixture, Category("ErrorTraces")]
         public class Method_ToJsonObjectArray
         {
-            [NotNull] private static readonly IDictionary<String, Object> EmptyDictionary = new Dictionary<String, Object>();
+            private static readonly IDictionary<String, Object> EmptyDictionary = new Dictionary<String, Object>();
 
-            [NotNull] private DisposableCollection _disposables;
-            [NotNull] private Core.UnitTest.Fixtures.Logging _logging;
-            [NotNull] private Attributes _attributes;
+            private DisposableCollection _disposables;
+            private Core.UnitTest.Fixtures.Logging _logging;
+            private Attributes _attributes;
 
-            [NotNull] String _requestUri = "http://localhost/post.aspx";
-            [NotNull] private IList<String> _stackTrace;
+            String _requestUri = "http://localhost/post.aspx";
+            private IList<String> _stackTrace;
             private DateTime _timestamp;
-            [NotNull] private String _path;
-            [NotNull] private String _message;
-            [NotNull] private String _exceptionClassName;
-            [NotNull] private String _guid;
-            [NotNull] private IDataTransportService _dataTransportService;
-
-            [NotNull]
+            private String _path;
+            private String _message;
+            private String _exceptionClassName;
+            private String _guid;
+            private IDataTransportService _dataTransportService;
             private static IList<String> CreateStackTrace()
             {
                 var stackTrace = new List<String>
@@ -69,8 +66,6 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 return stackTrace;
 
             }
-
-            [NotNull]
             private static IConfiguration CreateMockConfiguration()
             {
                 var configuration = Mock.Create<IConfiguration>();

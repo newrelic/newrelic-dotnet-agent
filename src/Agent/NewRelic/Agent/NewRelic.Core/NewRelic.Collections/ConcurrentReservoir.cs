@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Collections;
 using NewRelic.SystemExtensions;
 
@@ -9,9 +8,7 @@ namespace NewRelic.Collections
 {
     public class ConcurrentReservoir<T> : IResizableCappedCollection<T>
     {
-        [NotNull]
         private IList<T> _list = new ConcurrentList<T>();
-        [NotNull]
         private readonly Random _random = new Random();
         public UInt32 Size { get; private set; }
         // technically we could run into race conditions with addCount but it is used for probabalistic calculations so if it is off by a bit it doesn't matter

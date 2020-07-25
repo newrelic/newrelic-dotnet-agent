@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Logging;
@@ -19,30 +18,20 @@ namespace NewRelic.Agent.Core.Utilization
         private const string AwsIdUri = @"http://169.254.169.254/2008-02-01/meta-data/instance-id";
         private const string AwsTypeUri = @"http://169.254.169.254/2008-02-01/meta-data/instance-type";
         private const string AwsZoneUri = @"http://169.254.169.254/2008-02-01/meta-data/placement/availability-zone";
-
-        [NotNull]
         private readonly ISystemInfo _systemInfo;
-
-        [NotNull]
         private readonly IDnsStatic _dnsStatic;
-
-        [CanBeNull]
         private readonly IConfiguration _configuration;
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
 
         private const int MaxBootIdLength = 128;
 
-        public UtilizationStore([NotNull] ISystemInfo systemInfo, [NotNull] IDnsStatic dnsStatic, [CanBeNull] IConfiguration configuration, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public UtilizationStore(ISystemInfo systemInfo, IDnsStatic dnsStatic, IConfiguration configuration, IAgentHealthReporter agentHealthReporter)
         {
             _systemInfo = systemInfo;
             _dnsStatic = dnsStatic;
             _configuration = configuration;
             _agentHealthReporter = agentHealthReporter;
         }
-
-        [NotNull]
         public UtilizationSettingsModel GetUtilizationSettings()
         {
             var totalMemory = _systemInfo.GetTotalPhysicalMemoryBytes();
@@ -67,15 +56,11 @@ namespace NewRelic.Agent.Core.Utilization
         {
             return bootId?.Length > maxLength ? bootId.Substring(0, maxLength) : bootId;
         }
-
-        [NotNull]
         public IEnumerable<IVendorModel> GetVendorSettings()
         {
             return new[] { GetAwsVendorInfo() }
                 .Where(vendor => vendor != null);
         }
-
-        [CanBeNull]
         public IVendorModel GetAwsVendorInfo()
         {
             var awsId = GetHttpResponseString(AwsIdUri, AwsVendorName);
@@ -84,9 +69,7 @@ namespace NewRelic.Agent.Core.Utilization
 
             return new AwsVendorModel(awsId, GetHttpResponseString(AwsTypeUri, AwsVendorName), GetHttpResponseString(AwsZoneUri, AwsVendorName));
         }
-
-        [CanBeNull]
-        private string GetHttpResponseString([NotNull] string uri, [NotNull] string vendorName)
+        private string GetHttpResponseString(string uri, string vendorName)
         {
             try
             {
@@ -111,14 +94,10 @@ namespace NewRelic.Agent.Core.Utilization
                 return null;
             }
         }
-
-        [NotNull]
-        private string NormalizeString([NotNull] string data)
+        private string NormalizeString(string data)
         {
             return Clamper.ClampLength(data.Trim(), 255);
         }
-
-        [CanBeNull]
         private UtilitizationConfig GetUtilitizationConfig()
         {
             if (_configuration == null)

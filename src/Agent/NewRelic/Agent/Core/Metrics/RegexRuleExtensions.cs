@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
 
@@ -9,8 +8,7 @@ namespace NewRelic.Agent.Core.Metrics
 {
     public static class RegexRuleExtensions
     {
-        [Pure]
-        public static RuleResult ApplyTo(this RegexRule regexRule, [CanBeNull] String url)
+        public static RuleResult ApplyTo(this RegexRule regexRule, String url)
         {
             // Break the URL in chunks based on the rule configuration
             var chunks = GetChunks(url, regexRule);
@@ -31,9 +29,7 @@ namespace NewRelic.Agent.Core.Metrics
             var path = String.Join(MetricNames.PathSeparator, updatedChunks.ToArray());
             return new RuleResult(true, path);
         }
-
-        [NotNull]
-        private static IEnumerable<String> GetChunks([CanBeNull] String url, RegexRule regexRule)
+        private static IEnumerable<String> GetChunks(String url, RegexRule regexRule)
         {
             if (url == null)
                 return new List<String>();
@@ -45,9 +41,7 @@ namespace NewRelic.Agent.Core.Metrics
             // Otherwise return each segment as a chunk
             return url.Split(MetricNames.PathSeparatorChar);
         }
-
-        [NotNull, Pure]
-        private static IEnumerable<String> ApplyRuleToChunks(RegexRule regexRule, [CanBeNull] IEnumerable<String> chunks, out Boolean anyChunkUpdated)
+        private static IEnumerable<String> ApplyRuleToChunks(RegexRule regexRule, IEnumerable<String> chunks, out Boolean anyChunkUpdated)
         {
             if (chunks == null)
             {
@@ -74,7 +68,7 @@ namespace NewRelic.Agent.Core.Metrics
             return updatedChunks;
         }
 
-        private static RuleResult ApplyRuleToChunk([CanBeNull] String chunk, RegexRule regexRule)
+        private static RuleResult ApplyRuleToChunk(String chunk, RegexRule regexRule)
         {
             if (String.IsNullOrEmpty(chunk) || !regexRule.MatchRegex.IsMatch(chunk))
                 return RuleResult.NoMatch;
@@ -98,11 +92,9 @@ namespace NewRelic.Agent.Core.Metrics
             public readonly static RuleResult Ignore = new RuleResult(true, null);
 
             public readonly Boolean IsMatch;
-
-            [CanBeNull]
             public readonly String Replacement;
 
-            public RuleResult(Boolean isMatch, [CanBeNull] String replacement)
+            public RuleResult(Boolean isMatch, String replacement)
             {
                 IsMatch = isMatch;
                 Replacement = replacement;

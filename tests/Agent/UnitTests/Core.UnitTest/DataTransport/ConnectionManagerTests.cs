@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Net.Sockets;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
@@ -16,16 +15,9 @@ namespace NewRelic.Agent.Core.DataTransport
     [TestFixture]
     public class ConnectionManagerTests
     {
-        [NotNull]
         private DisposableCollection _disposableCollection;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private IConnectionHandler _connectionHandler;
-
-        [NotNull]
         private IScheduler _scheduler;
 
         [SetUp]
@@ -87,7 +79,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [TestCase("ServiceUnavailableException")]
         [TestCase("SocketException")]
         [TestCase("IOException")]
-        public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs([NotNull] string execeptionType)
+        public void Constructor_SchedulesReconnect_IfCertainExceptionOccurs(string execeptionType)
         {
             Exception ex = null;
             switch (execeptionType)

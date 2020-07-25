@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Asp35.Shared
@@ -10,8 +9,6 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
         // In System.Web v4.0 (.NET 4 and up), accessing the Request.Path property directly clears a validation flag.  To prevent users from missing 
         // the validation warning, this function instead accesses the backing method.  If it's unavailable, it's safe to assume the System.Web version 
         // is 2.0, and can get Request.Path directly.
-
-        [CanBeNull]
         private static readonly Func<HttpRequest, String> GetUnvalidatedRequestPath;
 
         static RequestPathRetriever()
@@ -25,9 +22,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
                 GetUnvalidatedRequestPath = null;
             }
         }
-
-        [CanBeNull]
-        public static String TryGetRequestPath([NotNull] HttpRequest request)
+        public static String TryGetRequestPath(HttpRequest request)
         {
             try
             {

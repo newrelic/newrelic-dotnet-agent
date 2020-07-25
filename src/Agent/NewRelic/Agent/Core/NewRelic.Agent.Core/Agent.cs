@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.Commands;
@@ -21,16 +20,9 @@ namespace NewRelic.Agent.Core
 {
     sealed public class Agent : IAgent, IDisposable
     {
-        [NotNull]
         private readonly IContainer _container;
-
-        [NotNull]
         private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
-
-        [NotNull]
         private readonly static IAgent DisabledAgent = new DisabledAgent();
-
-        [NotNull]
         private readonly static AgentSingleton Singleton = new AgentSingleton();
 
         private sealed class AgentSingleton : Singleton<IAgent>
@@ -38,7 +30,6 @@ namespace NewRelic.Agent.Core
             public AgentSingleton() : base(DisabledAgent) { }
 
             // Called by Singleton::Singleton
-            [NotNull]
             protected override IAgent CreateInstance()
             {
                 try
@@ -75,13 +66,9 @@ namespace NewRelic.Agent.Core
                 }
             }
         }
-
-        [NotNull]
         private IConfiguration Configuration { get { return _configurationSubscription.Configuration; } }
 
         public ThreadProfilingService ThreadProfilingService { get; private set; }
-
-        [NotNull]
         private readonly IWrapperService _wrapperService;
 
         private volatile AgentState _agentState = AgentState.Uninitialized;
@@ -119,7 +106,7 @@ namespace NewRelic.Agent.Core
             Initialize();
         }
 
-        private void AssertAgentEnabled([NotNull] configuration config)
+        private void AssertAgentEnabled(configuration config)
         {
             if (!Configuration.AgentEnabled)
                 throw new Exception(String.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
@@ -266,7 +253,7 @@ namespace NewRelic.Agent.Core
 
         #region Event handlers
 
-        private void OnShutdownAgent([NotNull] KillAgentEvent eventData)
+        private void OnShutdownAgent(KillAgentEvent eventData)
         {
             Shutdown(false);
         }

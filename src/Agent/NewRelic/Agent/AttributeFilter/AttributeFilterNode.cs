@@ -1,11 +1,9 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent
 {
     internal class AttributeFilterNode
     {
-        [NotNull]
         public readonly String Key;
 
         public readonly Boolean Wildcard;
@@ -13,7 +11,7 @@ namespace NewRelic.Agent
         public readonly AttributeDestinations DestinationIncludes;
         public readonly AttributeDestinations DestinationExcludes;
 
-        public AttributeFilterNode([NotNull] String key, AttributeDestinations includes, AttributeDestinations excludes)
+        public AttributeFilterNode(String key, AttributeDestinations includes, AttributeDestinations excludes)
         {
             if (key.EndsWith("*"))
             {

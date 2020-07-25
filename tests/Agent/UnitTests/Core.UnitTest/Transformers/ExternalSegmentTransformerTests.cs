@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
@@ -17,8 +16,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class ExternalSegmentTransformerTests
     {
-
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -316,9 +313,7 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-
-        [NotNull]
-        private static Segment GetSegment([NotNull] String uri, [NotNull] String method, [CanBeNull] CrossApplicationResponseData catResponseData = null)
+        private static Segment GetSegment(String uri, String method, CrossApplicationResponseData catResponseData = null)
         {
             var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
             var builder = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), data);
@@ -326,7 +321,7 @@ namespace NewRelic.Agent.Core.Transformers
             return builder;
         }
 
-        private static TypedSegment<ExternalSegmentData> GetSegment([NotNull] String uri, [NotNull] String method, double duration, [CanBeNull] CrossApplicationResponseData catResponseData = null)
+        private static TypedSegment<ExternalSegmentData> GetSegment(String uri, String method, double duration, CrossApplicationResponseData catResponseData = null)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             var parameters = (new ConcurrentDictionary<String, Object>());

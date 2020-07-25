@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -33,7 +32,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         public abstract void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService);
 
-        public abstract Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<String, Object>> newParameters);
+        public abstract Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<String, Object>> newParameters);
 
         internal virtual void AddTransactionTraceParameters(IConfigurationService configurationService, Segment segment, IDictionary<string, object> segmentParameters, ImmutableTransaction immutableTransaction)
         {
@@ -49,12 +48,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         public int UniqueId { get; }
         public int? ParentUniqueId { get; }
-
-        [NotNull]
         protected readonly MethodCallData _methodCallData;
         public MethodCallData MethodCallData => _methodCallData;
-
-        [NotNull]
         private readonly ITransactionSegmentState _transactionSegmentState;
         protected readonly TimeSpan _relativeStartTime;
 
@@ -113,8 +108,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         }
 
         public Boolean Combinable { get; set; }
-
-        [NotNull]
         public IEnumerable<KeyValuePair<String, Object>> Parameters => _parameters ?? EmptyImmutableParameters;
 
         protected IEnumerable<KeyValuePair<String, Object>> _parameters = EmptyImmutableParameters;
@@ -131,7 +124,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         public AbstractSegmentData Data { get; }
 
-        protected Segment([NotNull] ITransactionSegmentState transactionSegmentState, [NotNull] MethodCallData methodCallData, AbstractSegmentData segmentData, bool combinable)
+        protected Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData, AbstractSegmentData segmentData, bool combinable)
         {
             _threadId = transactionSegmentState.CurrentManagedThreadId;
             _relativeStartTime = transactionSegmentState.GetRelativeTime();
@@ -210,7 +203,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         public bool IsValid => true;
 
-        public bool IsCombinableWith([NotNull] Segment otherSegment)
+        public bool IsCombinableWith(Segment otherSegment)
         {
             if (!Combinable || !otherSegment.Combinable)
                 return false;
@@ -236,7 +229,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             return Data.GetTransactionTraceName();
         }
 
-        public Segment CreateSimilar(TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<String, Object>> newParameters)
+        public Segment CreateSimilar(TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<String, Object>> newParameters)
         {
             return Data.CreateSimilar(this, newRelativeStartTime, newDuration, newParameters);
         }
@@ -244,7 +237,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
     public sealed class TypedSegment<T> : Segment where T : AbstractSegmentData
     {
-        public TypedSegment([NotNull] ITransactionSegmentState transactionSegmentState, [NotNull] MethodCallData methodCallData, T segmentData, bool combinable = false) :
+        public TypedSegment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData, T segmentData, bool combinable = false) :
             base(transactionSegmentState, methodCallData, segmentData, combinable)
         {
             TypedData = segmentData;

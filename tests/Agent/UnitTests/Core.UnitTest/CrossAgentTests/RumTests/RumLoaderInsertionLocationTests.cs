@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.BrowserMonitoring;
 using NUnit.Framework;
 

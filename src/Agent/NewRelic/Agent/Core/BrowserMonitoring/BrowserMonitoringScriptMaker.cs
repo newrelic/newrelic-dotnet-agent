@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions;
@@ -17,24 +15,17 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public interface IBrowserMonitoringScriptMaker
     {
-        String GetScript([NotNull] ITransaction transaction);
+        String GetScript(ITransaction transaction);
     }
 
     public class BrowserMonitoringScriptMaker : IBrowserMonitoringScriptMaker
     {
-        [NotNull]
         private readonly IConfigurationService _configurationService;
-
-        [NotNull]
         private readonly ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private readonly ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private readonly IAttributeService _attributeService;
 
-        public BrowserMonitoringScriptMaker([NotNull] IConfigurationService configurationService, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] ITransactionAttributeMaker transactionAttributeMaker, [NotNull] IAttributeService attributeService)
+        public BrowserMonitoringScriptMaker(IConfigurationService configurationService, ITransactionMetricNameMaker transactionMetricNameMaker, ITransactionAttributeMaker transactionAttributeMaker, IAttributeService attributeService)
         {
             _configurationService = configurationService;
             _transactionMetricNameMaker = transactionMetricNameMaker;
@@ -81,9 +72,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var javascriptAgent = _configurationService.Configuration.BrowserMonitoringJavaScriptAgent;
             return $"<script type=\"text/javascript\">{javascriptAgentConfiguration}</script><script type=\"text/javascript\">{javascriptAgent}</script>";
         }
-
-        [NotNull]
-        private BrowserMonitoringConfigurationData GetBrowserConfigurationData([NotNull] ITransaction transaction, TransactionMetricName transactionMetricName, [NotNull] String licenseKey)
+        private BrowserMonitoringConfigurationData GetBrowserConfigurationData(ITransaction transaction, TransactionMetricName transactionMetricName, String licenseKey)
         {
             var configuration = _configurationService.Configuration;
 
@@ -122,9 +111,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             return new BrowserMonitoringConfigurationData(licenseKey, beacon, errorBeacon, browserMonitoringKey, applicationId, obfuscatedTransactionName, queueTime, applicationTime, jsAgentPayloadFile, obfuscatedFormattedAttributes, sslForHttp);
         }
-
-        [CanBeNull]
-        private String GetObfuscatedFormattedAttributes([NotNull] Attributes attributes, [NotNull] String licenseKey)
+        private String GetObfuscatedFormattedAttributes(Attributes attributes, String licenseKey)
         {
             if (attributes.Count() == 0)
                 return null;

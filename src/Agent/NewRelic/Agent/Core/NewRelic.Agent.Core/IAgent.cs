@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.ThreadProfiling;
 using NewRelic.Agent.Core.Tracer;
 
@@ -10,7 +9,6 @@ namespace NewRelic.Agent.Core
     /// </summary>
     public interface IAgent
     {
-        [NotNull]
         ThreadProfilingService ThreadProfilingService { get; }
 
         /// <summary>
@@ -29,7 +27,7 @@ namespace NewRelic.Agent.Core
         /// <param name="invocationTarget"></param>
         /// <param name="arguments"></param>
         /// <returns>Returns an ITracer as an Object, since that built-in type is much easier to use in call-point type signatures</returns>
-        ITracer GetTracerImpl(String tracerFactoryName, UInt32 tracerArguments, String metricName, [NotNull] String assemblyName, [NotNull] Type type, [NotNull] String typeName, [NotNull] String methodName, [NotNull] String argumentSignature, Object invocationTarget, [NotNull] Object[] arguments, UInt64 functionId);
+        ITracer GetTracerImpl(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] arguments, UInt64 functionId);
 
         /// <summary>
         /// The agent's current state.  It manages an orderly startup sequence.

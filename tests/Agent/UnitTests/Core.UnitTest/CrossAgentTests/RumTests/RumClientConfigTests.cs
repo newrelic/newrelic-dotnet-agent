@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.BrowserMonitoring;
@@ -25,19 +24,10 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
     [TestFixture]
     public class RumClientConfigTests
     {
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private IAttributeService _attributeService;
 
         [SetUp]
@@ -63,7 +53,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
         [Test]
         [TestCaseSource(typeof(RumClientConfigTests), nameof(TestCases))]
-        public void Test([NotNull] TestCase testCase)
+        public void Test(TestCase testCase)
         {
             // ARRANGE
             Mock.Arrange(() => _configuration.AgentLicenseKey).Returns(testCase.LicenseKey);
@@ -117,7 +107,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
                 );
         }
 
-        private static TransactionMetricName GetTransactionMetricName([NotNull] String transactionName)
+        private static TransactionMetricName GetTransactionMetricName(String transactionName)
         {
             var segments = transactionName.Split('/');
             var prefix = segments[0];
@@ -170,23 +160,18 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public class ExpectedBrowserMonitoringConfigurationData
         {
             [JsonProperty("beacon")]
-            [NotNull]
             public String Beacon { get; set; }
 
             [JsonProperty("errorBeacon")]
-            [NotNull]
             public String ErrorBeacon { get; set; }
 
             [JsonProperty("licenseKey")]
-            [NotNull]
             public String BrowserLicenseKey { get; set; }
 
             [JsonProperty("applicationID")]
-            [NotNull]
             public String ApplicationId { get; set; }
 
             [JsonProperty("transactionName")]
-            [NotNull]
             public String ObfuscatedTransactionName { get; set; }
 
             [JsonProperty("queueTime")]
@@ -196,11 +181,9 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             public Int32 ApplicationTimeMilliseconds { get; set; }
 
             [JsonProperty("agent")]
-            [NotNull]
             public String Agent { get; set; }
 
             [JsonProperty("atts", NullValueHandling = NullValueHandling.Ignore)]
-            [CanBeNull]
             public String ObfuscatedUserAttributes { get; set; }
         }
 

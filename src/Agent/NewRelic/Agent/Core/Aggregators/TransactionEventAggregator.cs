@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -17,7 +16,7 @@ namespace NewRelic.Agent.Core.Aggregators
 {
     public interface ITransactionEventAggregator
     {
-        void Collect([NotNull] TransactionEventWireModel transactionEventWireModel);
+        void Collect(TransactionEventWireModel transactionEventWireModel);
     }
 
     /// <summary>
@@ -25,20 +24,14 @@ namespace NewRelic.Agent.Core.Aggregators
     /// </summary>
     public class TransactionEventAggregator : AbstractAggregator<TransactionEventWireModel>, ITransactionEventAggregator
     {
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
 
         // Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
-        [NotNull]
         private IResizableCappedCollection<TransactionEventWireModel> _transactionEvents = new ConcurrentReservoir<TransactionEventWireModel>(0);
-
-        [NotNull]
         private ConcurrentList<TransactionEventWireModel> _syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
-
-        [NotNull]
         private const Double _reservoirReductionSizeMultiplier = 0.5;
 
-        public TransactionEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public TransactionEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
         {
             _agentHealthReporter = agentHealthReporter;
@@ -84,7 +77,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
         }
 
-        private void AddEventToCollection([NotNull] TransactionEventWireModel transactionEvents)
+        private void AddEventToCollection(TransactionEventWireModel transactionEvents)
         {
             if (transactionEvents.IsSynthetics() && _syntheticsTransactionEvents.Count < SyntheticsHeader.MaxEventCount)
                 _syntheticsTransactionEvents.Add(transactionEvents);
@@ -92,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 _transactionEvents.Add(transactionEvents);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<TransactionEventWireModel> transactionEvents)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, IEnumerable<TransactionEventWireModel> transactionEvents)
         {
             switch (responseStatus)
             {
@@ -111,7 +104,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        private void RetainEvents([NotNull] IEnumerable<TransactionEventWireModel> transactionEvents)
+        private void RetainEvents(IEnumerable<TransactionEventWireModel> transactionEvents)
         {
             transactionEvents = transactionEvents.ToList();
             _agentHealthReporter.ReportTransactionEventsRecollected(transactionEvents.Count());

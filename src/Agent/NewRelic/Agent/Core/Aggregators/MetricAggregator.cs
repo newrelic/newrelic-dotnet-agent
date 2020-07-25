@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -19,27 +18,18 @@ namespace NewRelic.Agent.Core.Aggregators
 {
     public interface IMetricAggregator
     {
-        void Collect([NotNull] IAllMetricStatsCollection metric);
+        void Collect(IAllMetricStatsCollection metric);
     }
     public class MetricAggregator : AbstractAggregator<IAllMetricStatsCollection>, IMetricAggregator
     {
-        [NotNull]
         private MetricStatsEngineQueue _metricStatsEngineQueue;
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private readonly IDnsStatic _dnsStatic;
-
-        [NotNull]
         private readonly IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private readonly IMetricNameService _metricNameService;
 
 
-        public MetricAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricNameService metricNameService, [NotNull] IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] IDnsStatic dnsStatic, [NotNull] IProcessStatic processStatic, [NotNull] IScheduler scheduler) : base(dataTransportService, scheduler, processStatic)
+        public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler) : base(dataTransportService, scheduler, processStatic)
         {
             _metricBuilder = metricBuilder;
             _metricNameService = metricNameService;

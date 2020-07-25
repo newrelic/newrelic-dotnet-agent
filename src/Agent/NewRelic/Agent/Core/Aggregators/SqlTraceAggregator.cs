@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -14,21 +13,16 @@ namespace NewRelic.Agent.Core.Aggregators
 {
     public interface ISqlTraceAggregator
     {
-        void Collect([NotNull] SqlTraceStatsCollection sqlTrStats);
+        void Collect(SqlTraceStatsCollection sqlTrStats);
     }
 
     public class SqlTraceAggregator : AbstractAggregator<SqlTraceStatsCollection>, ISqlTraceAggregator
     {
-        [NotNull]
         private SqlTraceStatsCollection _sqlTraceStats = new SqlTraceStatsCollection();
-
-        [NotNull]
         private readonly Object _sqlTraceLock = new Object();
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
 
-        public SqlTraceAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public SqlTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
         {
             _agentHealthReporter = agentHealthReporter;
@@ -66,7 +60,7 @@ namespace NewRelic.Agent.Core.Aggregators
             HandleResponse(responseStatus, slowestTraces);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] ICollection<SqlTraceWireModel> traces)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<SqlTraceWireModel> traces)
         {
             switch (responseStatus)
             {
@@ -82,7 +76,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        private void Retain([NotNull] ICollection<SqlTraceWireModel> traces)
+        private void Retain(ICollection<SqlTraceWireModel> traces)
         {
             _agentHealthReporter.ReportSqlTracesRecollected(traces.Count);
 

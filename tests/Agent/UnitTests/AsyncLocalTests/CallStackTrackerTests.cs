@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Providers.CallStack.AsyncLocal;
@@ -17,7 +16,6 @@ namespace NewRelic.Providers.CallStack.AsyncLocalTests
     [TestFixture]
     public class CallStackTrackerTests
     {
-        [NotNull]
         private ICallStackManager _tracker;
 
         [SetUp]

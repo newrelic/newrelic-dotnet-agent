@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -15,7 +14,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     [TestFixture]
     public class SegmentTreeMakerTests
     {
-        [NotNull]
         private SegmentTreeMaker _segmentTreeMaker;
 
         [SetUp]
@@ -394,15 +392,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             Assert.AreEqual(TimeSpan.FromSeconds(2), node3.Segment.Duration);
             Assert.False(node3.Segment.Parameters.ToDictionary().ContainsKey("call_count"));
         }
-
-        [NotNull]
-        private static IEnumerable<Segment> CreateSegmentListFromUniqueIds([NotNull] IEnumerable<KeyValuePair<int, int?>> uniqueIds)
+        private static IEnumerable<Segment> CreateSegmentListFromUniqueIds(IEnumerable<KeyValuePair<int, int?>> uniqueIds)
         {
             return uniqueIds
                 .Select(kvp => CreateSimpleSegment(kvp.Key, kvp.Value, kvp.Key.ToString()));
         }
 
-        private static Segment CreateSimpleSegment(int uniqueId, [CanBeNull] int? parentUniqueId, [NotNull] String name, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, Boolean combinable = false)
+        private static Segment CreateSimpleSegment(int uniqueId, int? parentUniqueId, String name, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, Boolean combinable = false)
         {
             duration = duration ?? TimeSpan.Zero;
             var methodCallData = new MethodCallData("foo", "bar", 1);

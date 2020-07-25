@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
@@ -15,14 +14,8 @@ namespace NewRelic.Agent.Core.Time
     {
         // The System.Threading.Timer class uses -1 milliseconds as a magic "off" value
         private static readonly TimeSpan DisablePeriodicExecution = TimeSpan.FromMilliseconds(-1);
-
-        [NotNull]
         private readonly Object _lock = new Object();
-
-        [NotNull]
         private readonly DisposableCollection<TimerStatus> _oneTimeTimers = new DisposableCollection<TimerStatus>();
-
-        [NotNull]
         private readonly IDictionary<Action, Timer> _recurringTimers = new Dictionary<Action, Timer>();
 
         #region Public API

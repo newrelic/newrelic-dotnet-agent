@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 using NServiceBus.Pipeline.Contexts;
@@ -49,9 +48,7 @@ namespace NewRelic.Providers.Wrapper.NServiceBus
                     transaction.End();
                 });
         }
-
-        [CanBeNull]
-        private static string TryGetQueueName([NotNull] LogicalMessage logicalMessage)
+        private static string TryGetQueueName(LogicalMessage logicalMessage)
         {
             if (logicalMessage.MessageType == null)
                 return null;

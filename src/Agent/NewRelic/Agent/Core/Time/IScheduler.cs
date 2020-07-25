@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Time
 {
@@ -10,7 +9,7 @@ namespace NewRelic.Agent.Core.Time
         /// </summary>
         /// <param name="action">The action to execute</param>
         /// <param name="timeUntilExecution">The delay until execution. Must be non-negative.</param>
-        void ExecuteOnce([NotNull] Action action, TimeSpan timeUntilExecution);
+        void ExecuteOnce(Action action, TimeSpan timeUntilExecution);
 
         /// <summary>
         /// Schedules <paramref name="action"/> to execute asynchronously once per <paramref name="timeBetweenExecutions"/>. First execution is delayed until <paramref name="optionalInitialDelay"/>.
@@ -20,13 +19,13 @@ namespace NewRelic.Agent.Core.Time
         /// <param name="action">The action to execute</param>
         /// <param name="timeBetweenExecutions">The delay until execution and between executions. Must be non-negative.</param>
         /// <param name="optionalInitialDelay">A specific time delay before the first execution. Must be non-negative. Defaults to <paramref name="timeBetweenExecutions"/> if unspecified.</param>
-        void ExecuteEvery([NotNull] Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null);
+        void ExecuteEvery(Action action, TimeSpan timeBetweenExecutions, TimeSpan? optionalInitialDelay = null);
 
         /// <summary>
         /// Removes any scheduled recurrences of <paramref name="action"/>. Will not stop an action that has been scheduled via <see cref="ExecuteOnce"/>. If the action is currently executing and <paramref name="timeToWaitForInProgressAction"/> is not null, will block until the action is finished or throw if the timeout is reached.
         /// </summary>
         /// <param name="action">The action to stop executing repeatedly.</param>
         /// <param name="timeToWaitForInProgressAction"></param>
-        void StopExecuting([NotNull] Action action, TimeSpan? timeToWaitForInProgressAction = null);
+        void StopExecuting(Action action, TimeSpan? timeToWaitForInProgressAction = null);
     }
 }

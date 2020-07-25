@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core;
@@ -22,17 +21,17 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     public class ErrorTraceAggregatorTests
     {
-        [NotNull] private ErrorTraceAggregator _errorTraceAggregator;
+        private ErrorTraceAggregator _errorTraceAggregator;
 
-        [NotNull] private IDataTransportService _dataTransportService;
+        private IDataTransportService _dataTransportService;
 
-        [NotNull] private IAgentHealthReporter _agentHealthReporter;
+        private IAgentHealthReporter _agentHealthReporter;
 
-        [NotNull] private IProcessStatic _processStatic;
+        private IProcessStatic _processStatic;
 
-        [NotNull] private ConfigurationAutoResponder _configurationAutoResponder;
+        private ConfigurationAutoResponder _configurationAutoResponder;
 
-        [NotNull] private Action _harvestAction;
+        private Action _harvestAction;
 
         [SetUp]
         public void SetUp()
@@ -307,8 +306,6 @@ namespace NewRelic.Agent.Core.Aggregators
         #endregion
 
         #region Helpers
-
-        [NotNull]
         private static IConfiguration GetDefaultConfiguration(int? versionNumber = null)
         {
             var configuration = Mock.Create<IConfiguration>();

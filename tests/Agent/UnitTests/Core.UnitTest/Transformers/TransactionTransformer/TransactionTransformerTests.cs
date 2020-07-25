@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -25,62 +24,24 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     [TestFixture]
     public class TransactionTransformerTests
     {
-
-        [NotNull]
         private TransactionTransformer _transactionTransformer;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private ISegmentTreeMaker _segmentTreeMaker;
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
-
-        [NotNull]
         private IMetricAggregator _metricAggregator;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private ITransactionTraceAggregator _transactionTraceAggregator;
-
-        [NotNull]
         private ITransactionTraceMaker _transactionTraceMaker;
-
-        [NotNull]
         private ITransactionEventAggregator _transactionEventAggregator;
-
-        [NotNull]
         private ITransactionEventMaker _transactionEventMaker;
-
-        [NotNull]
         private ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private IErrorTraceAggregator _errorTraceAggregator;
-
-        [NotNull]
         private IErrorTraceMaker _errorTraceMaker;
-
-        [NotNull]
         private IErrorEventAggregator _errorEventAggregator;
-
-        [NotNull]
         private IErrorEventMaker _errorEventMaker;
-
-        [NotNull]
         private ISqlTraceAggregator _sqlTraceAggregator;
-
-        [NotNull]
         private ISqlTraceMaker _sqlTraceMaker;
         private ITransactionSegmentState _transactionSegmentState;
 
@@ -121,8 +82,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker);
         }
-
-        [NotNull]
         public IMetricBuilder GetSimpleMetricBuilder()
         {
             _metricNameService = Mock.Create<IMetricNameService>();
@@ -828,50 +787,38 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 () => Mock.Assert(() => _sqlTraceAggregator.Collect(Arg.IsAny<SqlTraceStatsCollection>()), Occurs.Never())
             );
         }
-
-        [NotNull]
         private ImmutableSegmentTreeNode BuildNode(TimeSpan startTime = new TimeSpan(), TimeSpan duration = new TimeSpan())
         {
             return new SegmentTreeNodeBuilder(
                 GetSegment("MyMockedRootNode", duration.TotalSeconds, startTime)).
                 Build();
         }
-
-        [NotNull]
         private SegmentTreeNodeBuilder GetNodeBuilder(TimeSpan startTime = new TimeSpan(), TimeSpan duration = new TimeSpan())
         {
             return new SegmentTreeNodeBuilder(
                 GetSegment("MyOtherMockedRootNode", duration.TotalSeconds, startTime));
         }
-
-        [NotNull]
         private SegmentTreeNodeBuilder GetNodeBuilder(String name, TimeSpan startTime = new TimeSpan(), TimeSpan duration = new TimeSpan())
         {
             return new SegmentTreeNodeBuilder(
                 GetSegment(name, duration.TotalSeconds, startTime));
         }
-
-        [NotNull]
-        private Segment GetSegment([NotNull] String name)
+        private Segment GetSegment(String name)
         {
             var builder = new TypedSegment<SimpleSegmentData>(_transactionSegmentState, new MethodCallData("foo", "bar", 1), new SimpleSegmentData(name));
             builder.End();
             return builder;
         }
 
-        public TypedSegment<SimpleSegmentData> GetSegment([NotNull] String name, double duration, TimeSpan start = new TimeSpan())
+        public TypedSegment<SimpleSegmentData> GetSegment(String name, double duration, TimeSpan start = new TimeSpan())
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             return new TypedSegment<SimpleSegmentData>(start, TimeSpan.FromSeconds(duration), GetSegment(name));
         }
-
-        [NotNull]
         public static IConfiguration GetDefaultConfiguration()
         {
             return TestTransactions.GetDefaultConfiguration();
         }
-
-        [NotNull]
         private static ErrorTraceWireModel GetError()
         {
             var attributes = new List<KeyValuePair<String, Object>>();

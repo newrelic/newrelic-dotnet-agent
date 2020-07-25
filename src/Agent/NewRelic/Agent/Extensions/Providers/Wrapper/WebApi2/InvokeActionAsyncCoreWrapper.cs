@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.WebApi2
@@ -14,7 +13,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
             return new CanWrapResponse(canWrap);
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransaction transaction)
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
             if (instrumentedMethodCall.IsAsync)
             {

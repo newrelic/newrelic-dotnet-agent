@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -16,7 +15,7 @@ namespace NewRelic.Agent.Core.Aggregators
 {
     public interface ICustomEventAggregator
     {
-        void Collect([NotNull] CustomEventWireModel customEventWireModel);
+        void Collect(CustomEventWireModel customEventWireModel);
     }
 
     /// <summary>
@@ -24,17 +23,13 @@ namespace NewRelic.Agent.Core.Aggregators
     /// </summary>
     public class CustomEventAggregator : AbstractAggregator<CustomEventWireModel>, ICustomEventAggregator
     {
-        [NotNull]
         private const Double ReservoirReductionSizeMultiplier = 0.5;
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
 
         // Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
-        [NotNull]
         private IResizableCappedCollection<CustomEventWireModel> _customEvents = new ConcurrentReservoir<CustomEventWireModel>(0);
 
-        public CustomEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public CustomEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
         {
             _agentHealthReporter = agentHealthReporter;
@@ -77,7 +72,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _customEvents = new ConcurrentReservoir<CustomEventWireModel>(customEventCollectionCapacity);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<CustomEventWireModel> customEvents)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, IEnumerable<CustomEventWireModel> customEvents)
         {
             switch (responseStatus)
             {
@@ -96,7 +91,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        private void RetainEvents([NotNull] IEnumerable<CustomEventWireModel> customEvents)
+        private void RetainEvents(IEnumerable<CustomEventWireModel> customEvents)
         {
             customEvents = customEvents.ToList();
             _agentHealthReporter.ReportCustomEventsRecollected(customEvents.Count());

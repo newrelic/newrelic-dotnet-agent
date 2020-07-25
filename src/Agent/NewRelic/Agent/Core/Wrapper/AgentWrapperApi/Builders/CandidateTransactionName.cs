@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Collections;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public interface ICandidateTransactionName
     {
-        bool TrySet([NotNull] ITransactionName transactionName, Int32 priority);
+        bool TrySet(ITransactionName transactionName, Int32 priority);
 
         /// <summary>
         /// Freeze the transaction name so it can't be changed again.
@@ -20,7 +15,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         void Freeze();
 
         // REVIEW this was marked non-null but the code seems to indicate that null transaction names are accepted through constructors
-        [NotNull]
         ITransactionName CurrentTransactionName { get; }
     }
 
@@ -31,16 +25,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         /// This variable is volatile because it is accessed without a lock in the
         /// CurrentTransaction accessor.
         /// </summary>
-        [NotNull]
         private volatile ITransactionName _currentTransactionName;
-
-        [NotNull]
         private Int32 _highestPriority;
-
-        [NotNull]
         private bool _isFrozen = false;
 
-        public CandidateTransactionName([NotNull] ITransactionName initialTransactionName)
+        public CandidateTransactionName(ITransactionName initialTransactionName)
         {
             _currentTransactionName = initialTransactionName;
             _highestPriority = 0;
@@ -98,9 +87,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         }
 
         public ITransactionName CurrentTransactionName => _currentTransactionName;
-
-        [CanBeNull]
-        private static String FormatTransactionName([NotNull] ITransactionName transactionName, Int32 priority)
+        private static String FormatTransactionName(ITransactionName transactionName, Int32 priority)
         {
             return $"{transactionName.GetType().Name}{JsonConvert.SerializeObject(transactionName)} (priority {priority})";
         }

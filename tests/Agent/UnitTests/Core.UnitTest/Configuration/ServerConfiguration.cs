@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -114,7 +113,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(@"{""foo"": 1, ""bar"": []}", ExpectedResult = true)]
         [TestCase(@"{""foo"": 1, ""bar"": null}", ExpectedResult = false)]
         [TestCase(@"{""foo"": 1}", ExpectedResult = false)]
-        public Boolean returns_true_if_json_contains_non_null_matching_property([NotNull] String json)
+        public Boolean returns_true_if_json_contains_non_null_matching_property(String json)
         {
             return ServerConfiguration.JsonContainsNonNullProperty(json, "bar");
         }

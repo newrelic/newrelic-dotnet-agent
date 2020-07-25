@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -13,7 +12,7 @@ namespace CompositeTests
 {
     internal static class MetricAssertions
     {
-        public static void MetricsExist([NotNull] IEnumerable<ExpectedMetric> expectedMetrics, [NotNull] IEnumerable<MetricWireModel> actualMetrics)
+        public static void MetricsExist(IEnumerable<ExpectedMetric> expectedMetrics, IEnumerable<MetricWireModel> actualMetrics)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -48,7 +47,7 @@ namespace CompositeTests
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void MetricsDoNotExist([NotNull] IEnumerable<ExpectedMetric> unexpectedMetrics, [NotNull] IEnumerable<MetricWireModel> actualMetrics)
+        public static void MetricsDoNotExist(IEnumerable<ExpectedMetric> unexpectedMetrics, IEnumerable<MetricWireModel> actualMetrics)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -67,7 +66,7 @@ namespace CompositeTests
             Assert.True(succeeded, builder.ToString());
         }
 
-        private static MetricWireModel TryFindMetric([NotNull] ExpectedMetric expectedMetric, [NotNull] IEnumerable<MetricWireModel> actualMetrics)
+        private static MetricWireModel TryFindMetric(ExpectedMetric expectedMetric, IEnumerable<MetricWireModel> actualMetrics)
         {
             foreach (var actualMetric in actualMetrics)
             {
@@ -87,7 +86,7 @@ namespace CompositeTests
 
     internal static class TransactionEventAssertions
     {
-        public static void HasAttributes([NotNull] IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, [NotNull] TransactionEventWireModel transactionEvent)
+        public static void HasAttributes(IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, TransactionEventWireModel transactionEvent)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = transactionEvent.GetAttributes(attributeClassification);
@@ -96,7 +95,7 @@ namespace CompositeTests
             Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
         }
 
-        public static void DoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, [NotNull] TransactionEventWireModel transactionEvent)
+        public static void DoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, TransactionEventWireModel transactionEvent)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = transactionEvent.GetAttributes(attributeClassification);
@@ -108,7 +107,7 @@ namespace CompositeTests
 
     internal static class CustomEventAssertions
     {
-        public static void HasAttributes([NotNull] IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, [NotNull] CustomEventWireModel customEvent)
+        public static void HasAttributes(IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, CustomEventWireModel customEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -137,7 +136,7 @@ namespace CompositeTests
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void DoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, [NotNull] CustomEventWireModel customEvent)
+        public static void DoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, CustomEventWireModel customEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -158,7 +157,7 @@ namespace CompositeTests
 
     internal static class TransactionTraceAssertions
     {
-        public static void HasAttributes([NotNull] IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, [NotNull] TransactionTraceWireModel trace)
+        public static void HasAttributes(IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, TransactionTraceWireModel trace)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = trace.GetAttributes(attributeClassification);
@@ -167,7 +166,7 @@ namespace CompositeTests
             Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
         }
 
-        public static void DoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, [NotNull] TransactionTraceWireModel trace)
+        public static void DoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, TransactionTraceWireModel trace)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = trace.GetAttributes(attributeClassification);
@@ -176,7 +175,7 @@ namespace CompositeTests
             Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
         }
 
-        public static void SegmentsExist([NotNull] IEnumerable<String> expectedTraceSegmentNames, [NotNull] TransactionTraceWireModel trace, Boolean areRegexNames = false)
+        public static void SegmentsExist(IEnumerable<String> expectedTraceSegmentNames, TransactionTraceWireModel trace, Boolean areRegexNames = false)
         {
             var allSegments = trace.TransactionTraceData.RootSegment.Flatten(node => node.Children);
 
@@ -198,7 +197,7 @@ namespace CompositeTests
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void SegmentsDoNotExist([NotNull] IEnumerable<String> unexpectedTraceSegmentNames, [NotNull] TransactionTraceWireModel trace, Boolean areRegexNames = false)
+        public static void SegmentsDoNotExist(IEnumerable<String> unexpectedTraceSegmentNames, TransactionTraceWireModel trace, Boolean areRegexNames = false)
         {
             var allSegments = trace.TransactionTraceData.RootSegment.Flatten(node => node.Children);
 
@@ -223,7 +222,7 @@ namespace CompositeTests
 
     internal static class ErrorTraceAssertions
     {
-        public static void ErrorTraceHasAttributes([NotNull] IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, [NotNull] ErrorTraceWireModel errorTrace)
+        public static void ErrorTraceHasAttributes(IEnumerable<ExpectedAttribute> expectedAttributes, AttributeClassification attributeClassification, ErrorTraceWireModel errorTrace)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = errorTrace.GetAttributes(attributeClassification);
@@ -232,7 +231,7 @@ namespace CompositeTests
             Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
         }
 
-        public static void ErrorTraceDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, [NotNull] ErrorTraceWireModel errorTrace)
+        public static void ErrorTraceDoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, ErrorTraceWireModel errorTrace)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = errorTrace.GetAttributes(attributeClassification);
@@ -290,7 +289,7 @@ namespace CompositeTests
         public String Key;
         public Object Value;
 
-        public static Boolean CheckIfAllAttributesMatch([NotNull] IDictionary<String, Object> actualAttributes, [NotNull] IEnumerable<ExpectedAttribute> expectedAttributes, [NotNull] StringBuilder errorMessageBuilder)
+        public static Boolean CheckIfAllAttributesMatch(IDictionary<String, Object> actualAttributes, IEnumerable<ExpectedAttribute> expectedAttributes, StringBuilder errorMessageBuilder)
         {
             var succeeded = true;
 
@@ -329,7 +328,7 @@ namespace CompositeTests
             return actualValue.Equals(expectedValue);
         }
 
-        public static Boolean CheckIfAllAttributesNotFound([NotNull] IDictionary<String, Object> actualAttributes, [NotNull] IEnumerable<String> unexpectedAttributes, [NotNull] StringBuilder errorMessageBuilder)
+        public static Boolean CheckIfAllAttributesNotFound(IDictionary<String, Object> actualAttributes, IEnumerable<String> unexpectedAttributes, StringBuilder errorMessageBuilder)
         {
             var succeeded = true;
 
@@ -349,8 +348,7 @@ namespace CompositeTests
 
     internal static class WireModelExtensions
     {
-        [NotNull]
-        public static IDictionary<String, Object> GetAttributes([NotNull] this TransactionEventWireModel transactionEvent, AttributeClassification attributeClassification)
+        public static IDictionary<String, Object> GetAttributes(this TransactionEventWireModel transactionEvent, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {
@@ -364,9 +362,7 @@ namespace CompositeTests
                     throw new NotImplementedException();
             }
         }
-
-        [NotNull]
-        public static IDictionary<String, Object> GetAttributes([NotNull] this CustomEventWireModel customEvent, AttributeClassification attributeClassification)
+        public static IDictionary<String, Object> GetAttributes(this CustomEventWireModel customEvent, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {
@@ -378,9 +374,7 @@ namespace CompositeTests
                     throw new NotImplementedException();
             }
         }
-
-        [NotNull]
-        public static IDictionary<String, Object> GetAttributes([NotNull] this TransactionTraceWireModel transactionTrace, AttributeClassification attributeClassification)
+        public static IDictionary<String, Object> GetAttributes(this TransactionTraceWireModel transactionTrace, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {
@@ -394,9 +388,7 @@ namespace CompositeTests
                     throw new NotImplementedException();
             }
         }
-
-        [NotNull]
-        public static IDictionary<String, Object> GetAttributes([NotNull] this ErrorTraceWireModel errorTrace, AttributeClassification attributeClassification)
+        public static IDictionary<String, Object> GetAttributes(this ErrorTraceWireModel errorTrace, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {

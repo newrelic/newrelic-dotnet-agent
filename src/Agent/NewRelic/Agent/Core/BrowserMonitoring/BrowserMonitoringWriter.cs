@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utils;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public class BrowserMonitoringWriter
     {
-        [NotNull]
         private readonly Func<String> _getJsScript;
 
         private static readonly Regex XUaCompatibleFilter = new Regex(@"(<\s*meta[^>]+http-equiv[\s]*=[\s]*['""]x-ua-compatible['""][^>]*>)", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
         private static readonly Regex CharsetFilter = new Regex(@"(<\s*meta[^>]+charset\s*=[^>]*>)", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
-        public BrowserMonitoringWriter([NotNull] Func<String> getJsScript)
+        public BrowserMonitoringWriter(Func<String> getJsScript)
         {
             _getJsScript = getJsScript;
         }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
@@ -9,19 +8,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
     public interface IErrorEventMaker
     {
-        [NotNull]
-        ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] ImmutableTransaction immutableTransaction,
-            [NotNull] Attributes transactionAttributes);
-
-        [NotNull]
-        ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes);
+        ErrorEventWireModel GetErrorEvent(ErrorData errorData, ImmutableTransaction immutableTransaction,
+            Attributes transactionAttributes);
+        ErrorEventWireModel GetErrorEvent(ErrorData errorData, Attributes customAttributes);
     }
 
     public class ErrorEventMaker : IErrorEventMaker
     {
-        [NotNull] private readonly IAttributeService _attributeService;
+        private readonly IAttributeService _attributeService;
 
-        public ErrorEventMaker([NotNull] IAttributeService attributeService)
+        public ErrorEventMaker(IAttributeService attributeService)
         {
             _attributeService = attributeService;
         }
@@ -47,7 +43,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return CreateErrorEvent(immutableTransaction, filteredAttributes);
         }
 
-        public ErrorEventWireModel GetErrorEvent([NotNull] ErrorData errorData, [NotNull] Attributes customAttributes)
+        public ErrorEventWireModel GetErrorEvent(ErrorData errorData, Attributes customAttributes)
         {
             // These attributes are for an ErrorEvent outside of a transaction
 
@@ -71,9 +67,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         }
 
         #region Private Helpers
-
-        [NotNull]
-        private ErrorEventWireModel CreateErrorEvent([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes filteredAttributes)
+        private ErrorEventWireModel CreateErrorEvent(ImmutableTransaction immutableTransaction, Attributes filteredAttributes)
         {
             var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();
             var intrinsicAttributes = filteredAttributes.GetIntrinsicsDictionary();
@@ -84,7 +78,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return new ErrorEventWireModel(agentAttributes, intrinsicAttributes, userAttributes, isSynthetics);
         }
 
-        private ErrorEventWireModel CreateErrorEvent([NotNull] Attributes customAttributes)
+        private ErrorEventWireModel CreateErrorEvent(Attributes customAttributes)
         {
             var filteredAttributes = _attributeService.FilterAttributes(customAttributes, AttributeDestinations.ErrorEvent);
             var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();

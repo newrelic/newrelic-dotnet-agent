@@ -17,9 +17,6 @@
   <ItemGroup>
     <None Remove="Sql.v2.ncrunchproject" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
-  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
     <Reference Include="System" />
     <Reference Include="System.Core" />

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -28,36 +27,19 @@ namespace NewRelic.Agent.Core.Api
     public class AgentApiImplementation : IAgentApi
     {
         private const String CustomMetricNamePrefixAndSeparator = MetricNames.Custom + MetricNames.PathSeparator;
-        [NotNull]
         private readonly ITransactionService _transactionService;
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private readonly ICustomEventTransformer _customEventTransformer;
-
-        [NotNull]
         private readonly IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private readonly IMetricAggregator _metricAggregator;
-
-        [NotNull]
         private readonly ICustomErrorDataTransformer _customErrorDataTransformer;
-
-        [NotNull]
         private readonly IBrowserMonitoringPrereqChecker _browserMonitoringPrereqChecker;
-
-        [NotNull]
         private readonly IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
 
-        [NotNull] private readonly IAgentWrapperApi _agentWrapperApi;
+        private readonly IAgentWrapperApi _agentWrapperApi;
 
-        public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi)
+        public AgentApiImplementation(ITransactionService transactionService, IAgentHealthReporter agentHealthReporter, ICustomEventTransformer customEventTransformer, IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, ICustomErrorDataTransformer customErrorDataTransformer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentWrapperApi agentWrapperApi)
         {
             _transactionService = transactionService;
             _agentHealthReporter = agentHealthReporter;
@@ -552,7 +534,6 @@ namespace NewRelic.Agent.Core.Api
         /// </summary>
         /// <returns>A transaction.</returns>
         /// <exception cref="InvalidOperationException"/>
-        [NotNull]
         private ITransaction GetCurrentInternalTransaction()
         {
             var transaction = TryGetCurrentInternalTransaction();
@@ -576,8 +557,6 @@ namespace NewRelic.Agent.Core.Api
                 // swallow errors
             }
         }
-
-        [NotNull]
         private static String GetCustomMetricSuffix(String name)
         {
             if (String.IsNullOrEmpty(name))

@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utils
 {
     public static class StackTraces
     {
-        [NotNull]
         public static ICollection<string> ScrubAndTruncate(Exception exception, int maxDepth)
         {
             if (null == exception)
@@ -65,8 +63,6 @@ namespace NewRelic.Agent.Core.Utils
             }
             return builder.ToString();
         }
-
-        [NotNull]
         public static ICollection<string> ScrubAndTruncate(string stackTrace, int maxDepth)
         {
             String[] stackTraces = ParseStackTrace(stackTrace);

@@ -1,13 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using JetBrains.Annotations;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.JsonConverters;
-using NewRelic.Agent.Core.Requests;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
@@ -30,23 +21,18 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     public class BrowserMonitoringConfigurationData
     {
         [JsonProperty("beacon")]
-        [NotNull]
         public String Beacon { get; }
 
         [JsonProperty("errorBeacon")]
-        [NotNull]
         public String ErrorBeacon { get; }
 
         [JsonProperty("licenseKey")]
-        [NotNull]
         public String BrowserLicenseKey { get; }
 
         [JsonProperty("applicationID")]
-        [NotNull]
         public String ApplicationId { get; }
 
         [JsonProperty("transactionName")]
-        [NotNull]
         public String ObfuscatedTransactionName { get; }
 
         [JsonProperty("queueTime")]
@@ -58,18 +44,16 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         private readonly TimeSpan _applicationTime;
 
         [JsonProperty("agent")]
-        [NotNull]
         public String Agent { get; }
 
         [JsonProperty("atts")]
-        [CanBeNull]
         public String ObfuscatedUserAttributes { get; }
 
         [JsonProperty("sslForHttp", NullValueHandling = NullValueHandling.Ignore)]
         public String SslForHttp => _sslForHttp ? "true" : null;
         private readonly Boolean _sslForHttp;
 
-        public BrowserMonitoringConfigurationData([NotNull] String licenseKey, [NotNull] String beacon, [NotNull] String errorBeacon, [NotNull] String browserMonitoringKey, [NotNull] String applicationId, [NotNull] String obfuscatedTransactionName, TimeSpan queueTime, TimeSpan applicationTime, [NotNull] String jsAgentPayloadFile, [CanBeNull] String obfuscatedFormattedAttributes, Boolean sslForHttp)
+        public BrowserMonitoringConfigurationData(String licenseKey, String beacon, String errorBeacon, String browserMonitoringKey, String applicationId, String obfuscatedTransactionName, TimeSpan queueTime, TimeSpan applicationTime, String jsAgentPayloadFile, String obfuscatedFormattedAttributes, Boolean sslForHttp)
         {
             Beacon = beacon;
             ErrorBeacon = errorBeacon;

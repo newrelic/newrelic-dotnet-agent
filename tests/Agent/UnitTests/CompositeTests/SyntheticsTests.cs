@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utils;
@@ -16,9 +15,9 @@ namespace CompositeTests
 {
     internal class SyntheticsTests
     {
-        [NotNull] private static CompositeTestAgent _compositeTestAgent;
+        private static CompositeTestAgent _compositeTestAgent;
 
-        [NotNull] private IAgentWrapperApi _agentWrapperApi;
+        private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]
         public void SetUp()

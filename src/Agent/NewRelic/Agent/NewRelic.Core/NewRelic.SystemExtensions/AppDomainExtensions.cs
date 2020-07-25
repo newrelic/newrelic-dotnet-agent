@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions
 {
     public static class AppDomainExtensions
     {
-        [NotNull]
-        public static IEnumerable<AssemblyName> GetLoadedAssemblyNamesBySimpleName([CanBeNull] this AppDomain appDomain, [CanBeNull] String simpleName)
+        public static IEnumerable<AssemblyName> GetLoadedAssemblyNamesBySimpleName(this AppDomain appDomain, String simpleName)
         {
             if (appDomain == null)
                 return Enumerable.Empty<AssemblyName>();
@@ -23,8 +21,7 @@ namespace NewRelic.SystemExtensions
                 .Where(assemblyName => assemblyName.Name == simpleName);
         }
 #if NET35
-        [NotNull]
-        public static IEnumerable<String> GetLoadedAssemblyFullNamesBySimpleName([CanBeNull] this AppDomain appDomain, [CanBeNull] String simpleName)
+        public static IEnumerable<String> GetLoadedAssemblyFullNamesBySimpleName(this AppDomain appDomain, String simpleName)
         {
             return appDomain.GetLoadedAssemblyNamesBySimpleName(simpleName)
                 .Where(assemblyName => assemblyName != null)

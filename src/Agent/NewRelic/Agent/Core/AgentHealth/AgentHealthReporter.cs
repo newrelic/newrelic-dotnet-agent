@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
@@ -19,7 +18,7 @@ namespace NewRelic.Agent.Core.AgentHealth
     public interface IAgentHealthReporter
     {
         void ReportDotnetVersion();
-        void ReportAgentVersion([NotNull] String agentVersion, [NotNull] String hostName);
+        void ReportAgentVersion(String agentVersion, String hostName);
         void ReportTransactionEventReservoirResized(UInt32 newSize);
         void ReportTransactionEventCollected();
         void ReportTransactionEventsRecollected(Int32 count);
@@ -36,10 +35,10 @@ namespace NewRelic.Agent.Core.AgentHealth
         void ReportSqlTracesRecollected(Int32 count);
         void ReportSqlTracesSent(Int32 count);
 
-        void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, [NotNull] String lastStartedSegmentName, [NotNull] String lastFinishedSegmentName);
+        void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, String lastStartedSegmentName, String lastFinishedSegmentName);
 
-        void ReportWrapperShutdown([NotNull] IWrapper wrapper, [NotNull] Method method);
-        void ReportAgentApiMethodCalled([NotNull] String methodName);
+        void ReportWrapperShutdown(IWrapper wrapper, Method method);
+        void ReportAgentApiMethodCalled(String methodName);
         void ReportIfHostIsLinuxOs();
         void ReportBootIdError();
     }
@@ -47,23 +46,13 @@ namespace NewRelic.Agent.Core.AgentHealth
     public class AgentHealthReporter : DisposableService, IAgentHealthReporter, IOutOfBandMetricSource
     {
         private static readonly TimeSpan TimeBetweenExecutions = TimeSpan.FromMinutes(1);
-
-        [NotNull]
         private readonly IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private readonly IScheduler _scheduler;
-
-        [CanBeNull]
         private PublishMetricDelegate _publishMetricDelegate;
-
-        [NotNull]
         private readonly IList<RecurringLogData> _recurringLogDatas = new ConcurrentList<RecurringLogData>();
-
-        [NotNull]
         private readonly IDictionary<AgentHealthEvent, InterlockedCounter> _agentHealthEventCounters = new Dictionary<AgentHealthEvent, InterlockedCounter>();
 
-        public AgentHealthReporter([NotNull] IMetricBuilder metricBuilder, [NotNull] IScheduler scheduler)
+        public AgentHealthReporter(IMetricBuilder metricBuilder, IScheduler scheduler)
         {
             _metricBuilder = metricBuilder;
             _scheduler = scheduler;
@@ -358,7 +347,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _publishMetricDelegate = publishMetricDelegate;
         }
 
-        private void TrySendToLegacyMetricService([CanBeNull] MetricWireModel metric)
+        private void TrySendToLegacyMetricService(MetricWireModel metric)
         {
             if (metric == null)
                 return;
@@ -366,7 +355,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             EventBus<CounterMetricEvent>.Publish(new CounterMetricEvent(metric.MetricName.Name));
         }
 
-        private void TrySend([CanBeNull] MetricWireModel metric)
+        private void TrySend(MetricWireModel metric)
         {
             if (metric == null)
                 return;
@@ -389,13 +378,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private class RecurringLogData
         {
-            [NotNull]
             public readonly Action<String> LogAction;
-
-            [NotNull]
             public readonly String Message;
 
-            public RecurringLogData([NotNull] Action<String> logAction, [NotNull] String message)
+            public RecurringLogData(Action<String> logAction, String message)
             {
                 LogAction = logAction;
                 Message = message;

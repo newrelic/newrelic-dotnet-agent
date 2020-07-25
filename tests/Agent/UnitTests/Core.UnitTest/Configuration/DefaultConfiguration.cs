@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Config;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
@@ -17,34 +16,19 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     internal class DefaultConfigurationTest : DefaultConfiguration
     {
-        public DefaultConfigurationTest([NotNull] IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic) { }
+        public DefaultConfigurationTest(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic) { }
     }
 
     [TestFixture, Category("Configuration")]
     public class Class_DefaultConfiguration
     {
-        [NotNull]
         private IEnvironment _environment;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private IHttpRuntimeStatic _httpRuntimeStatic;
-
-        [NotNull]
         private IConfigurationManagerStatic _configurationManagerStatic;
-
-        [NotNull]
         private configuration _localConfig;
-
-        [NotNull]
         private ServerConfiguration _serverConfig;
-
-        [NotNull]
         private RunTimeConfiguration _runTimeConfig;
-
-        [NotNull]
         private DefaultConfiguration _defaultConfig;
 
         [SetUp]
@@ -1117,7 +1101,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("\\1\\2", "$1$2")]
         [TestCase("\\2banana\\1", "$2banana$1")]
         [TestCase("\\s", "\\s")]
-        public void Property__UrlRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] String input, [NotNull] String expectedOutput)
+        public void Property__UrlRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle(String input, String expectedOutput)
         {
             _serverConfig.UrlRegexRules = new List<ServerConfiguration.RegexRule>
             {
@@ -1181,7 +1165,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("\\1\\2", "$1$2")]
         [TestCase("\\2banana\\1", "$2banana$1")]
         [TestCase("\\s", "\\s")]
-        public void Property__MetricNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] String input, [NotNull] String expectedOutput)
+        public void Property__MetricNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle(String input, String expectedOutput)
         {
             _serverConfig.MetricNameRegexRules = new List<ServerConfiguration.RegexRule>
             {
@@ -1245,7 +1229,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("\\1\\2", "$1$2")]
         [TestCase("\\2banana\\1", "$2banana$1")]
         [TestCase("\\s", "\\s")]
-        public void Property__TransactionNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] String input, [NotNull] String expectedOutput)
+        public void Property__TransactionNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle(String input, String expectedOutput)
         {
             _serverConfig.TransactionNameRegexRules = new List<ServerConfiguration.RegexRule>
             {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Tracer;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -15,10 +14,7 @@ namespace NewRelic.Agent.Core.UnitTest
         [TestFixture, Category("JustMock"), Category("MockingProfiler"), Ignore("This fixture spins up an agent which has side effects that cause other tests to fail.  A mocking profiler is the only way around this, and we would like to get away from using a mocking profiler.  The code under test needs a refactor at some point, but that point isn't today.")]
         public class Method_GetTracer
         {
-            [NotNull]
             private IAgent _agent;
-
-            [NotNull]
             private Fixtures.Logging _logger;
 
             [OneTimeSetUp]
@@ -127,7 +123,6 @@ namespace NewRelic.Agent.Core.UnitTest
         [TestFixture, Category("JustMock"), Category("MockingProfiler")]
         public class Method_FinishTracer
         {
-            [NotNull]
             private Fixtures.Logging _logger;
 
             [OneTimeSetUp]

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utils;
@@ -30,20 +29,14 @@ namespace NewRelic.Agent.Core.Transactions
 
         [JsonArrayIndex(Index = 1)]
         public readonly Int64 AccountId;
-
-        [NotNull]
         [JsonArrayIndex(Index = 2)]
         public readonly String ResourceId;
-
-        [NotNull]
         [JsonArrayIndex(Index = 3)]
         public readonly String JobId;
-
-        [NotNull]
         [JsonArrayIndex(Index = 4)]
         public readonly String MonitorId;
 
-        public SyntheticsHeader(Int64 version, Int64 accountId, [NotNull] String resourceId, [NotNull] String jobId, [NotNull] String monitorId)
+        public SyntheticsHeader(Int64 version, Int64 accountId, String resourceId, String jobId, String monitorId)
         {
             Version = version;
             AccountId = accountId;
@@ -56,8 +49,6 @@ namespace NewRelic.Agent.Core.Transactions
         {
             return (!string.IsNullOrEmpty(ResourceId) && !string.IsNullOrEmpty(JobId) && !string.IsNullOrEmpty(MonitorId));
         }
-
-        [CanBeNull]
         public static SyntheticsHeader TryCreate(IEnumerable<Int64> trustedAccountIds, String obfuscatedHeader, String encodingKey)
         {
             try
@@ -93,8 +84,6 @@ namespace NewRelic.Agent.Core.Transactions
                 return null;
             }
         }
-
-        [Pure]
         public String TryGetObfuscated()
         {
             try
@@ -111,20 +100,16 @@ namespace NewRelic.Agent.Core.Transactions
                 return null;
             }
         }
-
-        [NotNull]
-        private static String Obfuscate([NotNull] String serializedHeader, [NotNull] String encodingKey)
+        private static String Obfuscate(String serializedHeader, String encodingKey)
         {
             return Strings.Base64Encode(serializedHeader, encodingKey);
         }
-
-        [NotNull]
-        private static String Deobfuscate([NotNull] String obfuscatedHeader, [NotNull] String encodingKey)
+        private static String Deobfuscate(String obfuscatedHeader, String encodingKey)
         {
             return Strings.Base64Decode(obfuscatedHeader, encodingKey);
         }
 
-        private static Int64 DeserializeVersion([NotNull] String jsonSerializedHeader)
+        private static Int64 DeserializeVersion(String jsonSerializedHeader)
         {
             if (jsonSerializedHeader == null)
                 throw new ArgumentNullException("jsonSerializedHeader");
@@ -156,7 +141,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// <summary>
         /// IsUntrustedAccount: https://source.datanerd.us/agents/agent-specs/blob/master/Synthetics-PORTED.md#verify-account-id
         /// </summary>
-        private static Boolean IsUntrustedAccount([NotNull] SyntheticsHeader syntheticsHeader, [NotNull] IEnumerable<Int64> trustedAccountIds)
+        private static Boolean IsUntrustedAccount(SyntheticsHeader syntheticsHeader, IEnumerable<Int64> trustedAccountIds)
         {
             return !(trustedAccountIds.Contains(syntheticsHeader.AccountId));
         }

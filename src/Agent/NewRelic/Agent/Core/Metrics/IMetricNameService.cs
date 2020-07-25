@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 
@@ -14,8 +13,7 @@ namespace NewRelic.Agent.Core.Metrics
         /// <param name="metricName"></param>
         /// <returns>The original metric name if no rules matched the metric name, a new name if rules were applied, or null
         /// if the metric name matched an "ignore" rule.</returns>
-        [CanBeNull]
-        String RenameMetric([CanBeNull] String metricName);
+        String RenameMetric(String metricName);
 
         /// <summary>
         /// Normalizes a url using the url rules sent from the New Relic service.  All query parameters will be stripped
@@ -23,15 +21,13 @@ namespace NewRelic.Agent.Core.Metrics
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        [NotNull]
-        String NormalizeUrl([NotNull] String url);
+        String NormalizeUrl(String url);
 
         /// <summary>
         /// Attempts to rename a transaction by passing the transaction metric name through a set of renaming rules. The metric name will be marked as "ShouldIgnore" if the name matched an ignore rule.
         /// </summary>
         /// <param name="proposedTransactionName">The transaction name that is to be renamed.</param>
         /// <returns>A new transaction name.</returns>
-        [NotNull]
         TransactionMetricName RenameTransaction(TransactionMetricName proposedTransactionName);
 
         /// <summary>
@@ -40,7 +36,7 @@ namespace NewRelic.Agent.Core.Metrics
         /// <param name="transactionName">The transaction name for the Named Transaction.</param>
         /// <returns>A <type name="TimeSpan?"/> representing the apdex_t value. If no Named Transation exists which matches 
         /// <paramref name="transactionName"/> then null is returned."/></returns>
-        TimeSpan? TryGetApdex_t([NotNull] String transactionName);
+        TimeSpan? TryGetApdex_t(String transactionName);
 
     }
 }

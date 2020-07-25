@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Owin3
@@ -24,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.Owin3
             return new CanWrapResponse(canWrap);
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransaction transaction)
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
             transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, $"{TypeName}/{MethodName}");
             var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, TypeName, MethodName);

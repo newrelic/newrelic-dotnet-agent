@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -13,13 +12,8 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class CpuSampleTransformerTests
     {
-        [NotNull]
         private CpuSampleTransformer _cpuSampleTransformer;
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IMetricAggregator _metricAggregator;
 
         [SetUp]

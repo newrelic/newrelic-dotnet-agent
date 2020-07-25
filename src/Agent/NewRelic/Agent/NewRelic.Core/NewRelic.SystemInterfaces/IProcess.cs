@@ -1,20 +1,16 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemInterfaces
 {
     public interface IProcessStatic
     {
-        [NotNull]
         IProcess GetCurrentProcess();
     }
 
     public interface IProcess
     {
-        [CanBeNull]
         String ProcessName { get; }
         Int32 Id { get; }
-        [NotNull]
         String MainModuleFileName { get; }
         DateTime StartTime { get; }
     }
@@ -29,10 +25,9 @@ namespace NewRelic.SystemInterfaces
 
     public class Process : IProcess
     {
-        [NotNull]
         private readonly System.Diagnostics.Process _process;
 
-        public Process([NotNull] System.Diagnostics.Process process)
+        public Process(System.Diagnostics.Process process)
         {
             _process = process;
         }

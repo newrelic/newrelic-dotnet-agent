@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
 namespace NewRelic.WeakActions.UnitTests
@@ -9,8 +8,6 @@ namespace NewRelic.WeakActions.UnitTests
         private class Foo
         {
             public delegate void Action();
-
-            [NotNull]
             private readonly Action _action;
 
             public Foo(Action action)

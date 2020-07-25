@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -84,9 +83,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
                     }
                 });
         }
-
-        [CanBeNull]
-        private static Uri TryGetAbsoluteUri([NotNull] HttpRequestMessage httpRequestMessage, [NotNull] System.Net.Http.HttpClient httpClient)
+        private static Uri TryGetAbsoluteUri(HttpRequestMessage httpRequestMessage, System.Net.Http.HttpClient httpClient)
         {
             // If RequestUri is specified and it is an absolute URI then we should use it
             if (httpRequestMessage.RequestUri?.IsAbsoluteUri == true)
@@ -104,7 +101,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             return null;
         }
 
-        private static void TryAttachHeadersToRequest([NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] HttpRequestMessage httpRequestMessage)
+        private static void TryAttachHeadersToRequest(IAgentWrapperApi agentWrapperApi, HttpRequestMessage httpRequestMessage)
         {
             try
             {
@@ -124,7 +121,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             }
         }
 
-        private static void TryProcessResponse([NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] Task<HttpResponseMessage> response, [NotNull] ITransaction transaction, [CanBeNull] ISegment segment)
+        private static void TryProcessResponse(IAgentWrapperApi agentWrapperApi, Task<HttpResponseMessage> response, ITransaction transaction, ISegment segment)
         {
             try
             {
@@ -147,7 +144,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             }
         }
 
-        private static Boolean ValidTaskResponse([CanBeNull] Task<HttpResponseMessage> response)
+        private static Boolean ValidTaskResponse(Task<HttpResponseMessage> response)
         {
             return (response?.Status == TaskStatus.RanToCompletion);
         }

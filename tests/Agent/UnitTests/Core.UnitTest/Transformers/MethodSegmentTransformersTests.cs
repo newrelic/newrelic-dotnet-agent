@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
@@ -17,7 +16,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class MethodSegmentTransformersTests
     {
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -169,9 +167,7 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-
-        [NotNull]
-        private static Segment GetSegment([NotNull] String type, [NotNull] String method)
+        private static Segment GetSegment(String type, String method)
         {
             var timerFactory = Mock.Create<ITimerFactory>();
             var builder = new TypedSegment<MethodSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new MethodSegmentData(type, method));
@@ -179,7 +175,7 @@ namespace NewRelic.Agent.Core.Transformers
             return builder;
         }
 
-        private static TypedSegment<MethodSegmentData> GetSegment([NotNull] String type, [NotNull] String method, double duration)
+        private static TypedSegment<MethodSegmentData> GetSegment(String type, String method, double duration)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             var parameters = (new ConcurrentDictionary<String, Object>());

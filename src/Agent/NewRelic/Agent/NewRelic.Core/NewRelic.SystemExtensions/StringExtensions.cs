@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions
 {
     public static class StringExtensions
     {
-        [NotNull]
-        public static String TruncateUnicode([NotNull] this String value, Int32 maxLength)
+        public static String TruncateUnicode(this String value, Int32 maxLength)
         {
             if (value == null)
                 throw new ArgumentNullException("value");
@@ -32,9 +30,7 @@ namespace NewRelic.SystemExtensions
 
             return searchTargets.Any(target => target != null && source.IndexOf(target, comparison) > -1);
         }
-
-        [NotNull]
-        public static String TrimAfter([NotNull] this String source, [NotNull] String token)
+        public static String TrimAfter(this String source, String token)
         {
             if (source == null)
                 throw new ArgumentNullException("source");
@@ -44,9 +40,7 @@ namespace NewRelic.SystemExtensions
             var result = source.Split(new[] { token }, 2, StringSplitOptions.None)[0];
             return result ?? source;
         }
-
-        [NotNull]
-        public static String TrimEnd([NotNull] this String source, Char trimChar, Int32 maxCharactersToTrim)
+        public static String TrimEnd(this String source, Char trimChar, Int32 maxCharactersToTrim)
         {
             // Traverse backward through string skipping trimChars until maxCharactersToTrim is hit
             var index = source.Length - 1;
@@ -58,9 +52,7 @@ namespace NewRelic.SystemExtensions
 
             return source.Substring(0, index + 1);
         }
-
-        [NotNull]
-        public static String EnsureLeading([NotNull] this String source, String leading)
+        public static String EnsureLeading(this String source, String leading)
         {
             if (leading == null)
                 return source;
@@ -70,9 +62,7 @@ namespace NewRelic.SystemExtensions
 
             return leading + source;
         }
-
-        [NotNull]
-        public static String EnsureTrailing([NotNull] this String source, String trailing)
+        public static String EnsureTrailing(this String source, String trailing)
         {
             if (trailing == null)
                 return source;

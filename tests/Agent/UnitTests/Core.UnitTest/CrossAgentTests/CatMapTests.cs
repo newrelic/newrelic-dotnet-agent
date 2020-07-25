@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -39,31 +38,14 @@ namespace NewRelic.Agent.Core.CrossAgentTests
     [TestFixture]
     public class CatMapTests
     {
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private IPathHashMaker _pathHashMaker;
-
-        [NotNull]
         private ICatHeaderHandler _catHeaderHandler;
-
-        [NotNull]
         private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
-
-        [NotNull]
         private ITransaction _transaction;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
-
-        [NotNull]
         private ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
 
         [SetUp]
@@ -102,7 +84,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
         [Test]
         [TestCaseSource(typeof(CatMapTests), nameof(TestCases))]
-        public void Test([NotNull] TestCase testCase)
+        public void Test(TestCase testCase)
         {
             Mock.Arrange(() => _configuration.ApplicationNames).Returns(new[] { testCase.AppName });
 
@@ -165,7 +147,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             }
         }
 
-        private static ITransaction GetTransactionBuilderFor([NotNull] IConfiguration configuration, [NotNull] TestCase testCase)
+        private static ITransaction GetTransactionBuilderFor(IConfiguration configuration, TestCase testCase)
         {
             var transactionName = GetTransactionNameFromString(testCase.TransactionName);
 
@@ -200,9 +182,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 return null;
             }
         }
-
-        [NotNull]
-        private static ITransactionName GetTransactionNameFromString([NotNull] String transactionName)
+        private static ITransactionName GetTransactionNameFromString(String transactionName)
         {
             var transactionNamePieces = transactionName.Split(MetricNames.PathSeparatorChar);
             if (transactionNamePieces.Length < 2)

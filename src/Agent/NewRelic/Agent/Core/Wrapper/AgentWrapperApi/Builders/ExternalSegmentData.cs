@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -17,10 +16,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
     public class ExternalSegmentData : AbstractSegmentData
     {
         private const String TransactionGuidSegmentParameterKey = "transaction_guid";
-
-        [NotNull]
         public Uri Uri { get; }
-        [NotNull]
         public String Method { get; }
 
         public ExternalSegmentData(Uri uri, String method, CrossApplicationResponseData crossApplicationResponseData = null)
@@ -75,7 +71,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             }
         }
 
-        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
         {
             return new TypedSegment<ExternalSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
         }

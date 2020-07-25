@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
@@ -16,7 +15,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class CustomSegmentTransformersTests
     {
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -184,7 +182,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         #endregion GetTransactionTraceName
 
-        private static TypedSegment<CustomSegmentData> GetSegment([NotNull] String name, double duration)
+        private static TypedSegment<CustomSegmentData> GetSegment(String name, double duration)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             return new TypedSegment<CustomSegmentData>(new TimeSpan(), TimeSpan.FromSeconds(duration),

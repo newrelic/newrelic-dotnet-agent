@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
@@ -16,8 +14,6 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
         private static class Statics
         {
             private static Func<Object, String> _propertyConfiguration;
-
-            [NotNull]
             public static readonly Func<Object, String> GetPropertyConfiguration = AssignPropertyConfiguration();
 
             private static Func<Object, String> AssignPropertyConfiguration()
@@ -46,9 +42,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 
             return new CanWrapResponse(canWrap);
         }
-
-        [NotNull]
-        private static String GetRedisCommand([NotNull] MethodCall methodCall)
+        private static String GetRedisCommand(MethodCall methodCall)
         {
             // instrumentedMethodCall.MethodCall.MethodArguments[0] returns an Object representing a StackExchange.Redis.Message object
             var message = methodCall.MethodArguments[0];
@@ -74,9 +68,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
             var segment = transaction.StartDatastoreSegment(instrumentedMethodCall.MethodCall, operation, DatastoreVendor.Redis, host: connectionInfo.Host, portPathOrId: connectionInfo.PortPathOrId, databaseName: connectionInfo.DatabaseName);
             return Delegates.GetDelegateFor(segment);
         }
-
-        [CanBeNull]
-        private static String TryGetPropertyName([NotNull] String propertyName, [NotNull] Object contextObject)
+        private static String TryGetPropertyName(String propertyName, Object contextObject)
         {
             if (propertyName == PropertyConfiguration)
                 return Statics.GetPropertyConfiguration(contextObject);

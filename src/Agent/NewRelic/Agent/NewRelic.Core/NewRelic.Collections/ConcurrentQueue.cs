@@ -2,19 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.SystemExtensions.Threading;
 
 namespace NewRelic.Collections
 {
     public class ConcurrentQueue<T> : IEnumerable<T>, ICollection
     {
-        [NotNull]
         private readonly Queue<T> _queue = new Queue<T>();
-
-        [NotNull]
         private readonly Func<IDisposable> _readLock;
-        [NotNull]
         private readonly Func<IDisposable> _writeLock;
 
         public ConcurrentQueue()
@@ -51,7 +46,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public void CopyTo([NotNull] T[] array, Int32 arrayIndex)
+        public void CopyTo(T[] array, Int32 arrayIndex)
         {
             using (_readLock())
             {
@@ -78,7 +73,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public void Enqueue([NotNull] T item)
+        public void Enqueue(T item)
         {
             using (_writeLock())
             {

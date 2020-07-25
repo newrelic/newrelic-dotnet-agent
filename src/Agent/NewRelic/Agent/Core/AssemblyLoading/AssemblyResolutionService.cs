@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.AssemblyLoading
 {
@@ -64,9 +63,7 @@ namespace NewRelic.Agent.Core.AssemblyLoading
                 .Where(IsNewRelicType)
                 .Any();
         }
-
-        [CanBeNull]
-        private static Type GetFrameType([CanBeNull] StackFrame stackFrame)
+        private static Type GetFrameType(StackFrame stackFrame)
         {
             if (stackFrame == null)
                 return null;
@@ -78,7 +75,7 @@ namespace NewRelic.Agent.Core.AssemblyLoading
             return method.DeclaringType;
         }
 
-        private static Boolean IsNewRelicType([NotNull] Type type)
+        private static Boolean IsNewRelicType(Type type)
         {
             var typeName = type.FullName;
             if (typeName == null)

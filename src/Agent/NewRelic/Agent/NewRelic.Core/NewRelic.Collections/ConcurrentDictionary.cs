@@ -2,18 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.SystemExtensions.Threading;
 
 namespace NewRelic.Collections
 {
     public class ConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        [NotNull]
         private readonly IDictionary<TKey, TValue> _dictionary;
-        [NotNull]
         private readonly Func<IDisposable> _readLock;
-        [NotNull]
         private readonly Func<IDisposable> _writeLock;
 
         #region Constructors
@@ -22,7 +18,7 @@ namespace NewRelic.Collections
 
         public ConcurrentDictionary(int capacity) : this(new Dictionary<TKey, TValue>(capacity)) { }
 
-        protected ConcurrentDictionary([NotNull] IDictionary<TKey, TValue> dictionary)
+        protected ConcurrentDictionary(IDictionary<TKey, TValue> dictionary)
         {
             _dictionary = dictionary;
             var theLock = new ReaderWriterLockSlim();
@@ -43,8 +39,7 @@ namespace NewRelic.Collections
         /// <param name="getNewValue">A function that will return a <typeparamref name="TValue"/> if one is not found in the dictionary. Must not return null.</param>
         /// <returns>Returns the non-null value mapped to <paramref name="key"/> if exists, otherwise returns the result of <paramref name="getNewValue"/>.</returns>
         /// <exception cref="NullReferenceException">Thrown if <paramref name="getNewValue"/> returns null.</exception>
-        [NotNull]
-        public TValue GetOrSetValue([NotNull] TKey key, [NotNull] Func<TValue> getNewValue)
+        public TValue GetOrSetValue(TKey key, Func<TValue> getNewValue)
         {
             // In the common case, the given key will already be in the dictionary, and we can increase performance by only taking out a read lock.
             using (_readLock())
@@ -80,7 +75,7 @@ namespace NewRelic.Collections
         /// <param name="key">The key to merge with.</param>
         /// <param name="value">The value to merge.</param>
         /// <param name="mergeFunction">A function that will merge two values (existingValue, newValue) if an existing value is found.</param>
-        public void Merge([NotNull] TKey key, TValue value, [NotNull] Func<TValue, TValue, TValue> mergeFunction)
+        public void Merge(TKey key, TValue value, Func<TValue, TValue, TValue> mergeFunction)
         {
             using (_writeLock())
             {

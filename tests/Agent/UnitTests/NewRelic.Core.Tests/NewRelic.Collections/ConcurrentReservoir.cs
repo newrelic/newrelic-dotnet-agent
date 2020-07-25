@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
 namespace NewRelic.Collections.UnitTests
@@ -10,7 +9,6 @@ namespace NewRelic.Collections.UnitTests
     // ReSharper disable once InconsistentNaming
     public class ConcurrentReservoirTests
     {
-        [NotNull]
         private ConcurrentReservoir<Int32> _concurrentReservoir;
 
         public ConcurrentReservoirTests()
@@ -28,7 +26,7 @@ namespace NewRelic.Collections.UnitTests
         [TestCase(1u)]
         [TestCase(10000u)]
         [TestCase(20000u)]
-        public void concurrentReservoir_Constructor([NotNull] UInt32 sizeLimit)
+        public void concurrentReservoir_Constructor(UInt32 sizeLimit)
         {
 
             var concurrentReservoir = new ConcurrentReservoir<Int32>(sizeLimit);
@@ -38,7 +36,7 @@ namespace NewRelic.Collections.UnitTests
         [TestCase(new[] { 1 })]
         [TestCase(new[] { 1, 1 })]
         [TestCase(new[] { 1, 1, 2 })]
-        public void concurrentReservoir_FunctionsAsNormalList_ForSingleThreadedAccess([NotNull] params Int32[] numbersToAdd)
+        public void concurrentReservoir_FunctionsAsNormalList_ForSingleThreadedAccess(params Int32[] numbersToAdd)
         {
             // Because nothing interesting happens when the reservoir's item count is below the size limit, it seems reasonable to just wrap all of the basic list API tests into one test
 
@@ -134,7 +132,7 @@ namespace NewRelic.Collections.UnitTests
         }
 
         // ReSharper disable RedundantAssignment
-        private static void ExerciseFullApi([NotNull] IResizableCappedCollection<Int32> concurrentReservoir, [NotNull] Int32[] numbersToAdd)
+        private static void ExerciseFullApi(IResizableCappedCollection<Int32> concurrentReservoir, Int32[] numbersToAdd)
         {
             // ReSharper disable once NotAccessedVariable
             dynamic _;

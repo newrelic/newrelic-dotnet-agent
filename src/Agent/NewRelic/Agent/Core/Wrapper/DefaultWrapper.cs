@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
@@ -13,7 +12,6 @@ namespace NewRelic.Agent.Core.Wrapper
 
     public class DefaultWrapper : IDefaultWrapper
     {
-        [NotNull]
         private static readonly string[] PossibleWrapperNames = {
             "NewRelic.Agent.Core.Wrapper.DefaultWrapper",
             "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync",
