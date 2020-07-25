@@ -150,7 +150,6 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
         }
         private Object GetBeforeExecutionStep(MethodCall methodCall, IAgentWrapperApi agentWrapperApi, String eventName, HttpApplication httpApplication)
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
             EventHandler beforePipelineEventHandler = (sender, args) => BeforeEvent(methodCall, agentWrapperApi, eventName, sender as HttpApplication);
             beforePipelineEventHandler = GetExceptionSafeEventHandler(beforePipelineEventHandler, agentWrapperApi);
 
@@ -162,7 +161,6 @@ namespace NewRelic.Providers.Wrapper.Asp35.ClassicPipeline
         }
         private Object GetAfterExecutionStep(MethodCall methodCall, IAgentWrapperApi agentWrapperApi, String eventName, HttpApplication httpApplication)
         {
-            // ReSharper disable once AssignNullToNotNullAttribute
             EventHandler afterPipelineEventHandler = (sender, args) => AfterEvent(methodCall, agentWrapperApi, eventName, sender as HttpApplication);
             afterPipelineEventHandler = GetExceptionSafeEventHandler(afterPipelineEventHandler, agentWrapperApi);
 

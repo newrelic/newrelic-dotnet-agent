@@ -4,12 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-
-
-
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
     public class ConcurrentQueueTests
     {
         private readonly ConcurrentQueue<Int32> _concurrentQueue;
@@ -87,16 +83,12 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
-        // ReSharper disable RedundantAssignment
         private static void ExerciseFullApi(ConcurrentQueue<Int32> concurrentQueue, Int32[] numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             // Enqueue
@@ -134,6 +126,5 @@ namespace NewRelic.Collections.UnitTests
             _ = concurrentQueue.DequeueOrDefault();
             concurrentQueue.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }

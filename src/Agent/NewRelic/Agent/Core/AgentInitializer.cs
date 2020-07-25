@@ -12,7 +12,6 @@ namespace NewRelic.Agent.Core
 
         static AgentInitializer()
         {
-            // ReSharper disable once ConvertClosureToMethodGroup
             InitializeAgent = () => CallOnce.TouchMe();
         }
 
@@ -38,7 +37,6 @@ namespace NewRelic.Agent.Core
                 LoggerBootstrapper.Initialize();
 
                 // Force agent to be initialized
-                // ReSharper disable once UnusedVariable
                 var agent = Agent.Instance;
             }
 

@@ -316,8 +316,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         public void HandleWrapperException(Exception exception)
         {
             // This method should never throw
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            // ReSharper disable once HeuristicUnreachableCode
             if (exception == null)
                 return;
 

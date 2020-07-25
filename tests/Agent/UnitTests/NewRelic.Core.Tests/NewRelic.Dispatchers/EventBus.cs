@@ -3,8 +3,6 @@ using System.Threading;
 using NewRelic.WeakActions;
 using NUnit.Framework;
 
-
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Dispatchers.UnitTests
 {
     public class Class_EventBus

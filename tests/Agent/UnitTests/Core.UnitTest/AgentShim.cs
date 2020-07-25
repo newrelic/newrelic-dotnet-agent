@@ -5,8 +5,6 @@ using NewRelic.Agent.Core.Tracer;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.UnitTest
 {
     public class Class_AgentShim

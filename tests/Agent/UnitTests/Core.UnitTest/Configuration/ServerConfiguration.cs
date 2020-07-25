@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     [TestFixture, Category("Configuration")]

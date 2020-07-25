@@ -88,7 +88,6 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
                 new KeyValuePair<int, int>(1, 3)
             };
 
-            // ReSharper disable once RedundantArgumentDefaultValue
             Assert.Throws<ArgumentException>(() => kvps.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.Throw));
         }
 

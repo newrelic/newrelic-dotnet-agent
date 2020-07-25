@@ -9,7 +9,6 @@ using NUnit.Framework;
 
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
     public class Class_ConcurrentHashSet
     {
         private readonly ConcurrentHashSet<Int32> _concurrentHashSet;
@@ -83,16 +82,12 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
-        // ReSharper disable RedundantAssignment
         private static void ExerciseFullApi(ConcurrentHashSet<Int32> hashSet, Int32[] numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             foreach (var number in numbersToAdd)
@@ -119,6 +114,5 @@ namespace NewRelic.Collections.UnitTests
             hashSet.Remove(numbersToAdd.First());
             hashSet.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }

@@ -111,7 +111,6 @@ namespace NewRelic.Agent.Core.Configuration
             return parsedInt;
         }
 
-        // ReSharper disable PossibleNullReferenceException
 
         #region IConfiguration Properties
 
@@ -901,7 +900,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Helpers
 
-        // ReSharper restore PossibleNullReferenceException
         private TimeSpan ParseTransactionThreshold(String threshold, Func<Double, TimeSpan> numberToTimeSpanConverter)
         {
             if (String.IsNullOrEmpty(threshold))

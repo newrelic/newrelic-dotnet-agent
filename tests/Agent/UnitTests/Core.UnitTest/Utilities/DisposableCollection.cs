@@ -1,7 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Utilities
 {
     public class Class_DisposableCollection

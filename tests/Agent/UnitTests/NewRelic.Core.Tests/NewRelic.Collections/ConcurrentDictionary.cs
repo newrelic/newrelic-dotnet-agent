@@ -5,11 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-// ReSharper disable SpecifyACultureInStringConversionExplicitly
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
-
     [TestFixture]
     public class Class_ConcurrentDictionary
     {
@@ -162,16 +159,12 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
-        // ReSharper disable RedundantAssignment
         private static void ExerciseFullApi(IDictionary<Int32, String> concurrentDictionary, ICollection<Int32> numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             var distinctNumberPairs = numbersToAdd.Distinct().Select(number => new KeyValuePair<Int32, String>(number, number.ToString())).ToList();
@@ -228,7 +221,5 @@ namespace NewRelic.Collections.UnitTests
             concurrentDictionary.Remove(distinctNumberPairs.First());
             concurrentDictionary.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }
-// ReSharper restore SpecifyACultureInStringConversionExplicitly

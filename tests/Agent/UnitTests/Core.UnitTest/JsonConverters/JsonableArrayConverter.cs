@@ -6,7 +6,6 @@ using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Utilities
 {
     [TestFixture]

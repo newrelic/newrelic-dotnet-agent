@@ -10,8 +10,6 @@ using NewRelic.SystemInterfaces.Web;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     public class Class_ConfigurationService

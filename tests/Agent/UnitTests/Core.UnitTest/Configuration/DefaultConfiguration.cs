@@ -10,8 +10,6 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     internal class DefaultConfigurationTest : DefaultConfiguration
@@ -1278,7 +1276,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 }
             };
 
-            // ReSharper disable AssignNullToNotNullAttribute
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.TransactionNameWhitelistRules.Count()),
 
@@ -1294,7 +1291,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 () => Assert.NotNull(_defaultConfig.TransactionNameWhitelistRules["mango/peach"]),
                 () => Assert.AreEqual(0, _defaultConfig.TransactionNameWhitelistRules["mango/peach"].Count())
                 );
-            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         #region ApplicationNames

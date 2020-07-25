@@ -6,7 +6,6 @@ using NewRelic.WeakActions;
 
 namespace NewRelic.Dispatchers
 {
-    // ReSharper disable StaticFieldInGenericType
     /// <summary>
     /// A global request bus for publishing requests that need a response.
     /// </summary>
@@ -15,8 +14,6 @@ namespace NewRelic.Dispatchers
     /// Responders are not required to answer and there may not be a responder setup for any given request so you must be prepared to handle either no callback, an empty enumeration or default(TResponse), depending on which Post overload you use.</remarks>
     public static class RequestBus<TRequest, TResponse>
     {
-        //private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(RequestBus<TRequest, TResponse>));
-
         public delegate void ResponsesCallback(IEnumerable<TResponse> responses);
 
         public delegate void ResponseCallback(TResponse response);
@@ -123,7 +120,6 @@ namespace NewRelic.Dispatchers
             if (responses == null) return;
             foreach (var response in responses)
             {
-                // ReSharper disable once AssignNullToNotNullAttribute : The enumeration returned here cannot have null elements.
                 responseCallback(response);
                 return;
             }

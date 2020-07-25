@@ -32,7 +32,6 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 
-// ReSharper disable RedundantTypeArgumentsOfMethod
 namespace NewRelic.Agent.Core.DependencyInjection
 {
     public static class AgentServices

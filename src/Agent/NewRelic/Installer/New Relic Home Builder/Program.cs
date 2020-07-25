@@ -33,10 +33,6 @@ namespace NewRelic.Installer
         private bool _isLinux = false;
         public String Bitness { get; set; }
 
-
-        // ReSharper restore UnusedAutoPropertyAccessor.Global
-        // ReSharper restore MemberCanBePrivate.Global
-
         // output paths
         private String DestinationHomeDirectoryName
         {

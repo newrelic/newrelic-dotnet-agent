@@ -12,10 +12,6 @@ using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
-// ReSharper disable ClassNeverInstantiated.Global
-
 namespace NewRelic.Agent.Core.Errors.UnitTest
 {
     public class ErrorTraceWireModelTests

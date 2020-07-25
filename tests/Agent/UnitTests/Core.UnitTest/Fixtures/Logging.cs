@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.UnitTest.Fixtures
 {
     /// <summary>

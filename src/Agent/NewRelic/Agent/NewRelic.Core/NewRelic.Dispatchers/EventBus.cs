@@ -5,7 +5,6 @@ using NewRelic.WeakActions;
 
 namespace NewRelic.Dispatchers
 {
-    // ReSharper disable StaticFieldInGenericType
     public static class EventBus<T>
     {
         //private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(EventBus<T>));
@@ -96,7 +95,6 @@ namespace NewRelic.Dispatchers
                 events = Events;
             }
 
-            // ReSharper disable once PossibleNullReferenceException
             foreach (Action<T> handler in events.GetInvocationList())
             {
                 try

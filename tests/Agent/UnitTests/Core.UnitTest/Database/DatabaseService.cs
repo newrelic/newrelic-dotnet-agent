@@ -1,7 +1,5 @@
 ﻿using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Database.UnitTest
 {
     public class Class_DatabaseService

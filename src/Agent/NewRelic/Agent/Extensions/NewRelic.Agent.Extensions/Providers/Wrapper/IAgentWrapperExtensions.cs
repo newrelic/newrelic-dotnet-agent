@@ -2,7 +2,6 @@
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
-    // ReSharper disable once InconsistentNaming
     public static class IAgentWrapperExtensions
     {
         public static void HandleExceptions(this IAgentWrapperApi agentWrapperApi, Action action)

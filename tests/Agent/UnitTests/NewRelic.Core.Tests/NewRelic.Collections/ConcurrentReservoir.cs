@@ -6,7 +6,6 @@ using NUnit.Framework;
 
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
     public class ConcurrentReservoirTests
     {
         private ConcurrentReservoir<Int32> _concurrentReservoir;
@@ -115,10 +114,8 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
         [Test]
@@ -131,10 +128,8 @@ namespace NewRelic.Collections.UnitTests
             Assert.AreEqual((ulong)3, _concurrentReservoir.GetAddAttemptsCount());
         }
 
-        // ReSharper disable RedundantAssignment
         private static void ExerciseFullApi(IResizableCappedCollection<Int32> concurrentReservoir, Int32[] numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             // Add
@@ -171,6 +166,5 @@ namespace NewRelic.Collections.UnitTests
 
             concurrentReservoir.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }

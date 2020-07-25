@@ -11,8 +11,6 @@ using NewRelic.Agent.Extensions.Providers;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Transactions.UnitTest
 {
     [TestFixture]

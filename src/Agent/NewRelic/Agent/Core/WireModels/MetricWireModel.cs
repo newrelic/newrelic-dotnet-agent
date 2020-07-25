@@ -650,14 +650,12 @@ namespace NewRelic.Agent.Core.WireModels
         {
             metrics = metrics.Where(metric => metric != null).ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             var value0 = metrics.Sum(metric => metric.Value0);
             var value1 = metrics.Sum(metric => metric.Value1);
             var value2 = metrics.Sum(metric => metric.Value2);
             var value3 = metrics.Min(metric => metric.Value3);
             var value4 = metrics.Max(metric => metric.Value4);
             var value5 = metrics.Sum(metric => metric.Value5);
-            // ReSharper restore PossibleNullReferenceException
 
             return new MetricDataWireModel(value0, value1, value2, value3, value4, value5);
         }
