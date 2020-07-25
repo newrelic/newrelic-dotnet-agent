@@ -54,50 +54,6 @@ namespace NewRelic.Agent.Core.Errors
             return ShouldIgnoreError(GetFormattedHttpStatusCode(statusCode, subStatusCode));
         }
 
-        private bool IsErrorExpected(Exception exception)
-        {
-            var isExpected = IsExceptionExpected(exception);
-
-            if (!isExpected)
-            {
-                var baseException = exception.GetBaseException();
-                return IsExceptionExpected(baseException);
-            }
-            return isExpected;
-        }
-
-        private bool IsExceptionExpected(Exception exception)
-        {
-            var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
-            var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsInfo;
-            if (expectedErrorInfo.ContainsKey(exceptionTypeName))
-            {
-                if(expectedErrorInfo[exceptionTypeName] != Enumerable.Empty<string>())
-                {
-                    return ContainsSubstring(expectedErrorInfo[exceptionTypeName], exception.Message) ? true : false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
-        {
-            foreach (var item in subStringList)
-            {
-                if (sourceString.Contains(item))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public ErrorData FromException(Exception exception)
         {
             return FromExceptionInternal(exception, _emptyCustomAttributes);
@@ -182,6 +138,51 @@ namespace NewRelic.Agent.Core.Errors
 
             var isExpected = IsErrorExpected(exception);
             return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
+        }
+
+        private bool IsErrorExpected(Exception exception)
+        {
+            var isExpected = IsExceptionExpected(exception);
+
+            if (!isExpected)
+            {
+                var baseException = exception.GetBaseException();
+                return IsExceptionExpected(baseException);
+            }
+            return isExpected;
+        }
+
+        private bool IsExceptionExpected(Exception exception)
+        {
+            var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
+            var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsConfiguration;
+
+            if (expectedErrorInfo.TryGetValue(exceptionTypeName, out var expectedMessages))
+            {
+                if (expectedMessages != Enumerable.Empty<string>())
+                {
+                    return ContainsSubstring(expectedMessages, exception.Message);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
+        {
+            foreach (var item in subStringList)
+            {
+                if (sourceString.Contains(item))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private ReadOnlyDictionary<string, object> CaptureAttributes<T>(IDictionary<string, T> attributes)

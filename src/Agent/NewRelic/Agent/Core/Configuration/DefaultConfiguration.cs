@@ -1194,13 +1194,13 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            ExpectedErrorsInfo = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
+            ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
             ExpectedErrorClassesForAgentSettings = expectedClasses;
             ExpectedErrorStatusCodesForAgentSettings = string.Join(",", expectedStatusCodes);
         }
 
-        public IDictionary<string, IEnumerable<string>> ExpectedErrorsInfo { get; private set; }
+        public IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; private set; }
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public string ExpectedErrorStatusCodesForAgentSettings { get; private set; }

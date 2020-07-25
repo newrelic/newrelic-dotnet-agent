@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Configuration
         IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; }
         string ExpectedErrorStatusCodesForAgentSettings { get; }
-        IDictionary<string, IEnumerable<string>> ExpectedErrorsInfo { get; }
+        IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; }
         IEnumerable<string> ExceptionsToIgnore { get; }
         Dictionary<string, string> RequestHeadersMap { get; }
         string EncodingKey { get; }

@@ -920,9 +920,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.That(_defaultConfig.ExpectedErrorsInfo.ContainsKey("404"));
+            Assert.That(_defaultConfig.ExpectedErrorsConfiguration.ContainsKey("404"));
 
-            var expectedMessages = _defaultConfig.ExpectedErrorsInfo;
+            var expectedMessages = _defaultConfig.ExpectedErrorsConfiguration;
 
             Assert.That(expectedMessages.ContainsKey("ErrorClass1"));
 
@@ -946,7 +946,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
+            return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key;
         }
 
         [TestCase(new[] { 401f }, new[] { "405" }, ExpectedResult = "405")]
@@ -958,7 +958,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExpectedErrorsInfo.Keys.FirstOrDefault();
+            return _defaultConfig.ExpectedErrorsConfiguration.Keys.FirstOrDefault();
         }
 
         [TestCase(true, ExpectedResult = "server")]
@@ -980,7 +980,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExpectedErrorsInfo.FirstOrDefault().Key;
+            return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key;
         }
 
         [Test]

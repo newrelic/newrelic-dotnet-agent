@@ -797,7 +797,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             if (expectForError)
             {
                 Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
-                Mock.Arrange(() => _configuration.ExpectedErrorsInfo).Returns(new Dictionary<string, IEnumerable<string>>()
+                Mock.Arrange(() => _configuration.ExpectedErrorsConfiguration).Returns(new Dictionary<string, IEnumerable<string>>()
                 {
                     { "System.IO.IOException", Enumerable.Empty<string>()}
                 });
@@ -860,7 +860,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(2));
 
             Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
-            Mock.Arrange(() => _configuration.ExpectedErrorsInfo).Returns(new Dictionary<string, IEnumerable<string>>()
+            Mock.Arrange(() => _configuration.ExpectedErrorsConfiguration).Returns(new Dictionary<string, IEnumerable<string>>()
             {
                 { "System.IO.IOException", Enumerable.Empty<string>()}
             });
