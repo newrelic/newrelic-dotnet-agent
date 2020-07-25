@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using CommandLine;
-using JetBrains.Annotations;
 using Microsoft.Owin.Hosting;
 
 namespace OwinRemotingClient
@@ -9,7 +8,6 @@ namespace OwinRemotingClient
     public class Program
     {
         [Option("port", Required = true)]
-        [NotNull]
         public String Port { get; set; }
 
         static void Main(string[] args)

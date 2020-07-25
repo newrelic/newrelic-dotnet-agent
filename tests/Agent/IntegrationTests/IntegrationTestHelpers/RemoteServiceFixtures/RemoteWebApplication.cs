@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using JetBrains.Annotations;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
     public class RemoteWebApplication : RemoteApplication
     {
-        [NotNull]
         private readonly String _applicationDirectoryName;
 
         private const String HostedWebCoreProcessName = @"HostedWebCore.exe";
@@ -18,27 +16,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected override String SourceApplicationDirectoryPath { get { return Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName, "Deploy"); } }
 
-        [NotNull]
         private static readonly String SourceHostedWebCoreProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "HostedWebCore");
 
-        [NotNull]
         private static readonly String SourceHostedWebCoreDirectoryPath = Path.Combine(SourceHostedWebCoreProjectDirectoryPath, "bin", Utilities.Configuration, HostedWebCoreTargetFramework);
 
         protected override String ApplicationDirectoryName { get { return _applicationDirectoryName; } }
 
-        [NotNull]
         private String DestinationHostedWebCoreDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "HostedWebCore"); } }
 
-        [NotNull]
         private String DestinationHostedWebCoreExecutablePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, HostedWebCoreProcessName); } }
 
-        [NotNull]
         private String DestinationApplicationHostConfigFilePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, "applicationHost.config"); } }
 
-        [NotNull]
         private String DestinationApplicationWebConfigFilePath { get { return Path.Combine(DestinationApplicationDirectoryPath, "Web.config"); } }
 
-        public RemoteWebApplication([NotNull] String applicationDirectoryName, ApplicationType applicationType) : base(applicationType)
+        public RemoteWebApplication(String applicationDirectoryName, ApplicationType applicationType) : base(applicationType)
         {
             _applicationDirectoryName = applicationDirectoryName;
 

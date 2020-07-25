@@ -6,14 +6,12 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.Threading;
 using CommandLine;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService
 {
     public class Program
     {
         [Option("port", Required = true)]
-        [NotNull]
         public String Port { get; set; }
 
         public static void Main(string[] args)
@@ -40,8 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService
             }
         }
 
-        [NotNull]
-        private static ServiceHost ServiceHostFactory([NotNull] Uri baseAddress)
+        private static ServiceHost ServiceHostFactory(Uri baseAddress)
         {
             if (baseAddress == null)
                 throw new ArgumentNullException("baseAddress");
@@ -68,9 +65,9 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService
 
         private class ServiceHostDisposer : IDisposable
         {
-            [NotNull] private readonly ServiceHost _serviceHost;
+            private readonly ServiceHost _serviceHost;
 
-            public ServiceHostDisposer([NotNull] ServiceHost serviceHost)
+            public ServiceHostDisposer(ServiceHost serviceHost)
             {
                 if (serviceHost == null)
                     throw new ArgumentNullException("serviceHost");

@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -7,7 +6,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     {
         private readonly String _configFilePath;
 
-        public NewRelicConfigModifier([NotNull] String configFilePath)
+        public NewRelicConfigModifier(String configFilePath)
         {
             _configFilePath = configFilePath;
         }

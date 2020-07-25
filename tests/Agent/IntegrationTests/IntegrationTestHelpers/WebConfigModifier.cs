@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -11,7 +10,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     {
         private readonly String _configFilePath;
 
-        public WebConfigModifier([NotNull] String configFilePath)
+        public WebConfigModifier(String configFilePath)
         {
             _configFilePath = configFilePath;
         }

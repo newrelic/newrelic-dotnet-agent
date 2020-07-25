@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ServiceRequestAttributesLegacyDisabled : IClassFixture<RemoteServiceFixtures.WcfAppSelfHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppSelfHosted _fixture;
 
-        public ServiceRequestAttributesLegacyDisabled([NotNull] RemoteServiceFixtures.WcfAppSelfHosted fixture, [NotNull] ITestOutputHelper output)
+        public ServiceRequestAttributesLegacyDisabled(RemoteServiceFixtures.WcfAppSelfHosted fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

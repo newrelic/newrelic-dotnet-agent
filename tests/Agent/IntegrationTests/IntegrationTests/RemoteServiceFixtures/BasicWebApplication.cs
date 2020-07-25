@@ -7,7 +7,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -15,7 +14,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class BasicWebApplication : RemoteApplicationFixture
     {
-        [CanBeNull]
         public String ResponseBody { get; private set; }
 
         public BasicWebApplication() : base(new RemoteWebApplication("BasicWebApplication", ApplicationType.Bounded))

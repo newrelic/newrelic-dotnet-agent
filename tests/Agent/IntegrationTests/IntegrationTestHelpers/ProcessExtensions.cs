@@ -4,14 +4,13 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Management;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public static class ProcessExtensions
     {
-        public static UInt32 StartRemote([NotNull] String remoteMachineName, [NotNull] String launcherRemoteFilePath, [NotNull] String applicationRemoteFilePath, [NotNull] String newRelicHomeRemoteDirectoryPath, [NotNull] String arguments)
+        public static UInt32 StartRemote(String remoteMachineName, String launcherRemoteFilePath, String applicationRemoteFilePath, String newRelicHomeRemoteDirectoryPath, String arguments)
         {
             Contract.Assert(remoteMachineName != null);
             Contract.Assert(launcherRemoteFilePath != null);
@@ -33,7 +32,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return Convert.ToUInt32(processIdObject);
         }
 
-        public static void KillTreeRemote([NotNull] String remoteMachineName, UInt32 processId)
+        public static void KillTreeRemote(String remoteMachineName, UInt32 processId)
         {
             Contract.Assert(remoteMachineName != null);
 
@@ -41,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             KillProcessRemote(remoteMachineName, processId);
         }
 
-        private static void KillProcessRemote([NotNull] String remoteMachineName, UInt32 processId)
+        private static void KillProcessRemote(String remoteMachineName, UInt32 processId)
         {
             Contract.Assert(remoteMachineName != null);
 
@@ -58,7 +57,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
-        public static void KillProcessChildrenRemote([NotNull] String remoteMachineName, UInt32 parentProcessId)
+        public static void KillProcessChildrenRemote(String remoteMachineName, UInt32 parentProcessId)
         {
             Contract.Assert(remoteMachineName != null);
 
@@ -68,22 +67,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .ForEachNow(childProcessId => KillTreeRemote(remoteMachineName, childProcessId));
         }
 
-        [NotNull]
-        private static IEnumerable<ManagementObject> GetProcessesRemote([NotNull] String remoteMachineName, UInt32 processId)
+        private static IEnumerable<ManagementObject> GetProcessesRemote(String remoteMachineName, UInt32 processId)
         {
             var whereClause = String.Format("ProcessId={0}", processId);
             return GetProcessesRemote(remoteMachineName, whereClause);
         }
 
-        [NotNull]
-        private static IEnumerable<ManagementObject> GetChildProcessesRemote([NotNull] String remoteMachineName, UInt32 parentProcessId)
+        private static IEnumerable<ManagementObject> GetChildProcessesRemote(String remoteMachineName, UInt32 parentProcessId)
         {
             var whereClause = String.Format(@"ParentProcessId={0}", parentProcessId);
             return GetProcessesRemote(remoteMachineName, whereClause);
         }
 
-        [NotNull]
-        private static IEnumerable<ManagementObject> GetProcessesRemote([NotNull] String remoteMachineName, [NotNull] String whereClause)
+        private static IEnumerable<ManagementObject> GetProcessesRemote(String remoteMachineName, String whereClause)
         {
             var wmiScope = String.Format(@"\\{0}\root\cimv2", remoteMachineName);
             var childrenWmiQuery = String.Format(@"SELECT * FROM Win32_Process WHERE {0}", whereClause);
@@ -91,7 +87,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return children.Cast<ManagementObject>();
         }
 
-        private static void InvokeMethodRemote([NotNull] String @class, [NotNull] String method, [NotNull] Object[] arguments, [NotNull] String remoteMachineName)
+        private static void InvokeMethodRemote(String @class, String method, Object[] arguments, String remoteMachineName)
         {
             var connectionOptions = new ConnectionOptions
             {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class BasicWebApiAsync : IClassFixture<RemoteServiceFixtures.BasicWebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebApi _fixture;
 
-        public BasicWebApiAsync([NotNull] RemoteServiceFixtures.BasicWebApi fixture, [NotNull] ITestOutputHelper output)
+        public BasicWebApiAsync(RemoteServiceFixtures.BasicWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

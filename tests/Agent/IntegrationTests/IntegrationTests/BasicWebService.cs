@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class BasicWebService : IClassFixture<RemoteServiceFixtures.BasicWebService>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebService _fixture;
 
-        public BasicWebService([NotNull] RemoteServiceFixtures.BasicWebService fixture, [NotNull] ITestOutputHelper output)
+        public BasicWebService(RemoteServiceFixtures.BasicWebService fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

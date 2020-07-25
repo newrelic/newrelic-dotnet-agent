@@ -3,14 +3,13 @@ using System.Net;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService
 {
     [ServiceBehavior(IncludeExceptionDetailInFaults = true)]
     public class WcfService : IWcfService
     {
-        public IAsyncResult BeginServiceMethod(String value, String otherValue, [NotNull] AsyncCallback callback, Object asyncState)
+        public IAsyncResult BeginServiceMethod(String value, String otherValue, AsyncCallback callback, Object asyncState)
         {
             if (callback == null)
             {
