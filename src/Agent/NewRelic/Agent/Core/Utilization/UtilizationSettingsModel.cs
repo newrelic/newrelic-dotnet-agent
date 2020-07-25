@@ -39,7 +39,6 @@ namespace NewRelic.Agent.Core.Utilization
         public readonly String BootId;
         public readonly IDictionary<string, IVendorModel> Vendors;
         [JsonProperty("vendors", NullValueHandling = NullValueHandling.Ignore)]
-        [UsedImplicitly]
         private IDictionary<String, IVendorModel> VendorsForSerialization { get { return Vendors.Any() ? Vendors : null; } }
         [JsonProperty("config", NullValueHandling = NullValueHandling.Ignore)]
         public readonly UtilitizationConfig Config;

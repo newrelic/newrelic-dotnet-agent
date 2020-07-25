@@ -20,8 +20,6 @@ namespace NewRelic.Installer
         private const string HomeDirectoryNamePrefix = "New Relic Home ";
         private const string ProfilerSoFileName = "libNewRelicProfiler.so";
 
-        // ReSharper disable MemberCanBePrivate.Global
-        // ReSharper disable UnusedAutoPropertyAccessor.Global
         [CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
         public String SolutionPath { get; set; }
 
@@ -210,10 +208,6 @@ namespace NewRelic.Installer
                 File.Move(Path.Combine(DestinationHomeDirectoryPath, Core20ReadmeFileName), Path.Combine(DestinationHomeDirectoryPath, "README.md"));
                 return;
             }
-
-            // We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.
-            var jetBrainsAnnotationsAssemblyPath = Path.Combine(CoreBuildDirectoryPath, "JetBrains.Annotations.dll");
-            CopyToDirectory(jetBrainsAnnotationsAssemblyPath, DestinationExtensionsDirectoryPath);
         }
 
         private static void ReCreateDirectoryWithEveryoneAccess(String directoryPath)

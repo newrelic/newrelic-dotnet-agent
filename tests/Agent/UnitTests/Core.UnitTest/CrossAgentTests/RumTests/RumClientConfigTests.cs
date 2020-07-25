@@ -118,23 +118,23 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         #region JSON test case data
         public class TestCase
         {
-            [JsonProperty(PropertyName = "testname"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "testname")]
             public readonly String TestName;
-            [JsonProperty(PropertyName = "apptime_milliseconds"), UsedImplicitly]
+            [JsonProperty(PropertyName = "apptime_milliseconds")]
             public readonly Int32 ApplicationTimeMilliseconds;
-            [JsonProperty(PropertyName = "queuetime_milliseconds"), UsedImplicitly]
+            [JsonProperty(PropertyName = "queuetime_milliseconds")]
             public readonly Int32 QueueTimeMilliseconds;
-            [JsonProperty(PropertyName = "browser_monitoring.attributes.enabled"), UsedImplicitly]
+            [JsonProperty(PropertyName = "browser_monitoring.attributes.enabled")]
             public readonly Boolean BrowserMonitoringAttributesEnabled;
-            [JsonProperty(PropertyName = "transaction_name"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "transaction_name")]
             public readonly String TransactionName;
-            [JsonProperty(PropertyName = "license_key"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "license_key")]
             public readonly String LicenseKey;
-            [JsonProperty(PropertyName = "connect_reply"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "connect_reply")]
             public readonly ConnectReply ConnectReply;
-            [JsonProperty(PropertyName = "user_attributes"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "user_attributes")]
             public readonly Dictionary<String, String> UserAttributes;
-            [JsonProperty(PropertyName = "expected"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "expected")]
             public readonly ExpectedBrowserMonitoringConfigurationData ExpectedConfigurationData;
 
             public override String ToString()
@@ -145,15 +145,15 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
 
         public class ConnectReply
         {
-            [JsonProperty(PropertyName = "beacon"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "beacon")]
             public readonly String Beacon;
-            [JsonProperty(PropertyName = "browser_key"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "browser_key")]
             public readonly String BrowserKey;
-            [JsonProperty(PropertyName = "application_id"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "application_id")]
             public readonly String ApplicationId;
-            [JsonProperty(PropertyName = "error_beacon"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "error_beacon")]
             public readonly String ErrorBeacon;
-            [JsonProperty(PropertyName = "js_agent_file"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "js_agent_file")]
             public readonly String JsAgentFile;
         }
 

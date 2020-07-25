@@ -47,7 +47,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         }
 
         // Though currently unused, this function is left in place as a reference in case it is needed in the future.
-        [NotNull, UsedImplicitly]
         private static String ReversePathHash(String transactionName, String appName, String pathHash)
         {
             var pathHashInt = HexToInt(pathHash);

@@ -26,7 +26,6 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             Assert.AreEqual(expected, result);
         }
 
-        [NotNull, UsedImplicitly]
         private static IEnumerable<TestCaseData> GetRumTestData()
         {
             var rumContentDirectory = Path.Combine(TestContext.CurrentContext.TestDirectory, @"BrowserMonitoring\rum_loader_insertion_location\");

@@ -30,7 +30,6 @@ namespace NewRelic.Agent.Core.Utilities
         /// <param name="encodedString">The encoded string to decode. Can be null.</param>
         /// <param name="encodingKey">The encoding key. Can be null.</param>
         /// <returns>The decoded and deserialized data if possible, else null.</returns>
-        [CanBeNull, Pure]
         public static T TryDecodeAndDeserialize<T>(String encodedString, String encodingKey) where T : class
         {
             if (encodedString == null)

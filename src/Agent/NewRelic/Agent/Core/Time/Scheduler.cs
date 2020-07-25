@@ -170,7 +170,6 @@ namespace NewRelic.Agent.Core.Time
 
         private class TimerStatus : IDisposable
         {
-            [CanBeNull, UsedImplicitly]
             public Timer Timer;
             public Boolean HasRun;
 

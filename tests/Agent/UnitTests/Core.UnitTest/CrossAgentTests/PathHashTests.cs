@@ -74,15 +74,15 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         #region JSON test case data
         public class TestCase
         {
-            [JsonProperty(PropertyName = "name"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "name")]
             public readonly String Name;
-            [JsonProperty(PropertyName = "applicationName"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "applicationName")]
             public readonly String ApplicationName;
-            [JsonProperty(PropertyName = "transactionName"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "transactionName")]
             public readonly String TransactionName;
-            [JsonProperty(PropertyName = "referringPathHash"), CanBeNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "referringPathHash")]
             public readonly String ReferringPathHash;
-            [JsonProperty(PropertyName = "expectedPathHash"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "expectedPathHash")]
             public readonly String ExpectedPathHash;
 
             public override String ToString()

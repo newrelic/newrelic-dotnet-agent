@@ -352,29 +352,29 @@ namespace NewRelic.Agent.Core.Metrics
 
         public class WhitelistRuleTestCase
         {
-            [NotNull, JsonProperty(PropertyName = "testname")]
+            [JsonProperty(PropertyName = "testname")]
             public String TestName { get; set; }
-            [NotNull, JsonProperty(PropertyName = "transaction_segment_terms")]
+            [JsonProperty(PropertyName = "transaction_segment_terms")]
             public IEnumerable<ServerConfiguration.WhitelistRule> Rules { get; set; }
-            [NotNull, JsonProperty(PropertyName = "tests")]
+            [JsonProperty(PropertyName = "tests")]
             public IEnumerable<TestCase> Tests { get; set; }
         }
 
         public class RegexRuleTestCase
         {
-            [NotNull, JsonProperty(PropertyName = "testname")]
+            [JsonProperty(PropertyName = "testname")]
             public String TestName { get; set; }
-            [NotNull, JsonProperty(PropertyName = "rules")]
+            [JsonProperty(PropertyName = "rules")]
             public IEnumerable<ServerConfiguration.RegexRule> Rules { get; set; }
-            [NotNull, JsonProperty(PropertyName = "tests")]
+            [JsonProperty(PropertyName = "tests")]
             public IEnumerable<TestCase> Tests { get; set; }
         }
 
         public class TestCase
         {
-            [NotNull, JsonProperty(PropertyName = "input")]
+            [JsonProperty(PropertyName = "input")]
             public String Input { get; set; }
-            [CanBeNull, JsonProperty(PropertyName = "expected")]
+            [JsonProperty(PropertyName = "expected")]
             public String Expected { get; set; }
         }
 

@@ -209,36 +209,36 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
         public class TestCase
         {
-            [JsonProperty(PropertyName = "name"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "name")]
             public readonly String Name;
 
-            [JsonProperty(PropertyName = "appName"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "appName")]
             public readonly String AppName;
 
-            [JsonProperty(PropertyName = "transactionName"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "transactionName")]
             public readonly String TransactionName;
 
-            [JsonProperty(PropertyName = "transactionGuid"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "transactionGuid")]
             public readonly String TransactionGuid;
 
-            [JsonProperty(PropertyName = "inboundPayload"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "inboundPayload")]
             public readonly List<Object> InboundPayload;
 
-            [JsonProperty(PropertyName = "expectedIntrinsicFields"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "expectedIntrinsicFields")]
             public readonly Dictionary<String, String> ExpectedIntrinsicFields;
 
-            [JsonProperty(PropertyName = "nonExpectedIntrinsicFields"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "nonExpectedIntrinsicFields")]
             public readonly List<String> NonExpectedIntrinsicFields;
 
-            [JsonProperty(PropertyName = "outboundRequests"), CanBeNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "outboundRequests")]
             public readonly List<OutboundRequest> OutboundRequests;
 
             public class OutboundRequest
             {
-                [JsonProperty(PropertyName = "outboundTxnName"), NotNull, UsedImplicitly]
+                [JsonProperty(PropertyName = "outboundTxnName")]
                 public readonly String OutboundTxnName;
 
-                [JsonProperty(PropertyName = "expectedOutboundPayload"), NotNull, UsedImplicitly]
+                [JsonProperty(PropertyName = "expectedOutboundPayload")]
                 public readonly CrossApplicationRequestData ExpectedOutboundPayload;
             }
 
