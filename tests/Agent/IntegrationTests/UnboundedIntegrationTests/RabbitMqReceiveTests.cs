@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class RabbitMqReceiveTests : IClassFixture<RemoteServiceFixtures.RabbitMqReceiverFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.RabbitMqReceiverFixture _fixture;
 
-        public RabbitMqReceiveTests([NotNull] RemoteServiceFixtures.RabbitMqReceiverFixture fixture, [NotNull] ITestOutputHelper output)
+        public RabbitMqReceiveTests(RemoteServiceFixtures.RabbitMqReceiverFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

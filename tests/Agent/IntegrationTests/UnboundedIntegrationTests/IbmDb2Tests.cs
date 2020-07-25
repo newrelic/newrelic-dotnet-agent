@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -13,10 +12,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class IbmDb2Tests : IClassFixture<RemoteServiceFixtures.IbmDb2BasicMvcFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.IbmDb2BasicMvcFixture _fixture;
 
-        public IbmDb2Tests([NotNull] RemoteServiceFixtures.IbmDb2BasicMvcFixture fixture, [NotNull] ITestOutputHelper output)
+        public IbmDb2Tests(RemoteServiceFixtures.IbmDb2BasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
