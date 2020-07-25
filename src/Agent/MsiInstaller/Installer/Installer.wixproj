@@ -56,9 +56,6 @@
       <Name>WixUtilExtension</Name>
     </WixExtension>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <Target Name="SignInstaller">
     <!-- <Exec Command="&quot;$(ProjectDir)..\BuildTools\SignTool\signtool.exe&quot; sign /d &quot;New Relic .NET Agent&quot; /a &quot;$(OutputPath)\$(OutputName).msi&quot;" /> -->
@@ -72,7 +69,6 @@
   <PropertyGroup>
     <PreBuildEvent />
   </PropertyGroup>
-
   <UsingTask TaskName="ReadFileVersionFromDll" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <FilePath ParameterType="System.String" Required="true" />
@@ -80,12 +76,10 @@
     </ParameterGroup>
     <Task>
       <Using Namespace="System.Diagnostics" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
+      <Code Type="Fragment" Language="cs"><![CDATA[
                   FileVersionInfo myFileVersionInfo = FileVersionInfo.GetVersionInfo(FilePath);
                   FileVersionString = myFileVersionInfo.FileVersion;
-                  ]]>
-      </Code>
+                  ]]></Code>
     </Task>
   </UsingTask>
 </Project>
