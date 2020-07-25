@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasExpectedError)
             {
-                SetupConfiguration(expectedClasses, null, false, null, null, true);
+                SetupConfiguration(null, null, false, expectedClasses, null, true);
             }
 
             var expectedExceptionRoot = new IOException("Root Exception", new DirectoryNotFoundException());
