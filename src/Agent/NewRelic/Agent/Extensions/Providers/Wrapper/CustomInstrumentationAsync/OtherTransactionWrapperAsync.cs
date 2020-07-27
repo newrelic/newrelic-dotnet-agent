@@ -2,14 +2,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 {
     public class OtherTransactionWrapperAsync : IWrapper
     {
-        [NotNull]
         private static readonly string[] PossibleWrapperNames = {
             "NewRelic.Agent.Core.Tracer.Factories.BackgroundThreadTracerFactory",
             "NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper",

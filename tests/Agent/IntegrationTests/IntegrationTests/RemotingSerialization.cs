@@ -1,17 +1,15 @@
-﻿using JetBrains.Annotations;
-using Xunit;
+﻿using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests
 {
     public class RemotingSerialization : IClassFixture<RemoteServiceFixtures.OwinRemotingFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.OwinRemotingFixture _fixture;
 
         string _tcpResponse;
         string _httpResponse;
 
-        public RemotingSerialization([NotNull] RemoteServiceFixtures.OwinRemotingFixture fixture)
+        public RemotingSerialization(RemoteServiceFixtures.OwinRemotingFixture fixture)
         {
             _fixture = fixture;
             _fixture.AddActions(

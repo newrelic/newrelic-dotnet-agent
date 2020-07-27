@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
@@ -10,17 +9,13 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
     {
         private readonly long _functionId;
         public readonly Method Method;
-        [CanBeNull]
         public readonly String RequestedWrapperName;
-        [NotNull]
         public readonly bool IsAsync;
-        [CanBeNull]
         public readonly string RequestedMetricName;
-        [CanBeNull]
         public readonly int? RequestedTransactionNamePriority;
         public readonly bool StartWebTransaction;
 
-        public InstrumentedMethodInfo(long functionId, Method method, [CanBeNull] String requestedWrapperName, bool isAsync, [CanBeNull] string requestedMetricName, [CanBeNull] int? requestedTransactionNamePriority, bool startWebTransaction)
+        public InstrumentedMethodInfo(long functionId, Method method, String requestedWrapperName, bool isAsync, string requestedMetricName, int? requestedTransactionNamePriority, bool startWebTransaction)
         {
             Method = method;
             RequestedWrapperName = requestedWrapperName;

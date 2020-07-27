@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using JetBrains.Annotations;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
@@ -123,7 +122,6 @@ namespace NewRelic.Agent.Core
         /// Gets the log4net Level of the "Audit" log level.
         /// </summary>
         /// <returns>The "Audit" log4net Level.</returns>
-        [NotNull]
         public static Level GetAuditLevel()
         {
             return LogManager.GetRepository(Assembly.GetCallingAssembly()).LevelMap[AuditLogName];

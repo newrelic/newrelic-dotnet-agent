@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.Core.Transactions
         /// <summary>
         /// The name that was ignored
         /// </summary>
-        [NotNull]
         public readonly String IgnoredTransactionName;
 
-        public IgnoreTransactionException(String message, [NotNull] String ignoredTransactionName) : base(message)
+        public IgnoreTransactionException(String message, String ignoredTransactionName) : base(message)
         {
             IgnoredTransactionName = ignoredTransactionName;
         }

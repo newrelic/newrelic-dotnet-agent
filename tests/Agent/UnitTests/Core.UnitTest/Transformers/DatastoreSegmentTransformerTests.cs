@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metric;
@@ -19,8 +18,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class DatastoreSegmentTransformerTests
     {
-
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -268,9 +265,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(5, data.Value4);
         }
         #endregion Transform
-
-        [NotNull]
-        private static Segment GetSegment([NotNull] DatastoreVendor vendor, [NotNull] String operation, [NotNull] String model, [CanBeNull] CrossApplicationResponseData catResponseData = null)
+        private static Segment GetSegment(DatastoreVendor vendor, String operation, String model, CrossApplicationResponseData catResponseData = null)
         {
             var data = new DatastoreSegmentData()
             {
@@ -280,9 +275,7 @@ namespace NewRelic.Agent.Core.Transformers
             };
             return new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), data);
         }
-
-        [NotNull]
-        private static TypedSegment<DatastoreSegmentData> GetSegment([NotNull] DatastoreVendor vendor, [NotNull] String operation, [NotNull] String model, double duration, [CanBeNull] CrossApplicationResponseData catResponseData = null, [CanBeNull] String host = null, [CanBeNull] String portPathOrId = null)
+        private static TypedSegment<DatastoreSegmentData> GetSegment(DatastoreVendor vendor, String operation, String model, double duration, CrossApplicationResponseData catResponseData = null, String host = null, String portPathOrId = null)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             var datastoreVendorName = vendor;

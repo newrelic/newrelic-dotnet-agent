@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.Core.Wrapper
     /// </summary>
     public class WrapperTracer : ITracer
     {
-        [NotNull]
         private readonly AfterWrappedMethodDelegate _afterWrappedMethodDelegate;
 
-        public WrapperTracer([NotNull] AfterWrappedMethodDelegate afterWrappedMethodDelegate)
+        public WrapperTracer(AfterWrappedMethodDelegate afterWrappedMethodDelegate)
         {
             _afterWrappedMethodDelegate = afterWrappedMethodDelegate;
         }

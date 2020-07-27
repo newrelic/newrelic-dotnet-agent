@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -25,7 +24,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             AgentAttributes = agentAttributes;
         }
 
-        [NotNull]
         public IDictionary<String, Object> GetByType(TransactionEventAttributeType attributeType)
         {
             IDictionary<String, Object> attributes;

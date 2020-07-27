@@ -1,12 +1,11 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.Models
 {
     // Note: this data is referred to as "TransactionData" in the CAT spec.
-    [JsonConverter(typeof(CrossApplicationRequestDataConverter)), UsedImplicitly]
+    [JsonConverter(typeof(CrossApplicationRequestDataConverter))]
     public class CrossApplicationRequestData
     {
         public readonly String TransactionGuid;

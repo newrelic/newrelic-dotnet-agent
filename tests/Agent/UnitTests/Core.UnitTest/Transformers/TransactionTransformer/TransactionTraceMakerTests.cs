@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
@@ -19,16 +18,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     [TestFixture]
     public class TransactionTraceMakerTests
     {
-        [NotNull]
         private TransactionTraceMaker _transactionTraceMaker;
-
-        [NotNull]
         private IAttributeService _attributeService;
-
-        [NotNull]
         private IDatabaseService _databaseService;
-
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -290,8 +282,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 () => Assert.AreEqual("1.2.1", segment121.Name)
                 );
         }
-
-        [NotNull]
         private static ImmutableSegmentTreeNode BuildNode(ImmutableTransaction transaction = null, DateTime? startTime = null, TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null)
         {
             startTime = startTime ?? DateTime.Now;
@@ -336,8 +326,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false)))
                 .Build();
         }
-
-        [NotNull]
         private static SegmentTreeNodeBuilder GetNodeBuilder(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null)
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);

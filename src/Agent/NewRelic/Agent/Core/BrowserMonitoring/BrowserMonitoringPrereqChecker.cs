@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions;
@@ -16,20 +15,19 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         /// <summary>
         /// Returns true if RUM should be injected. Use if requestPath and contentType are not known.
         /// </summary>
-        Boolean ShouldManuallyInject([NotNull] ITransaction transaction);
+        Boolean ShouldManuallyInject(ITransaction transaction);
 
         /// <summary>
         /// Returns true if RUM should be injected. Use if requestPath and contentType are known.
         /// </summary>
-        Boolean ShouldAutomaticallyInject([NotNull] ITransaction transaction, [CanBeNull] String requestPath, [NotNull] String contentType);
+        Boolean ShouldAutomaticallyInject(ITransaction transaction, String requestPath, String contentType);
     }
 
     public class BrowserMonitoringPrereqChecker : IBrowserMonitoringPrereqChecker
     {
-        [NotNull]
         private readonly IConfigurationService _configurationService;
 
-        public BrowserMonitoringPrereqChecker([NotNull] IConfigurationService configurationService)
+        public BrowserMonitoringPrereqChecker(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
@@ -71,7 +69,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return isValid;
         }
 
-        private static Boolean IsHtmlContent([NotNull] String contentType)
+        private static Boolean IsHtmlContent(String contentType)
         {
             if (String.IsNullOrEmpty(contentType))
                 return false;
@@ -113,7 +111,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         /// <param name="requestPath">The requestPath to be evaluated for blacklisting.</param>
         /// <param name="requestPathExclusionList">A list of Regex's. </param>
         /// <returns>True if browser instrumentation should occur for the page request.</returns>
-        private static Boolean BrowserInstrumentationAllowedForUrlPath([CanBeNull] String requestPath, [NotNull] IEnumerable<Regex> requestPathExclusionList)
+        private static Boolean BrowserInstrumentationAllowedForUrlPath(String requestPath, IEnumerable<Regex> requestPathExclusionList)
         {
             if (String.IsNullOrEmpty(requestPath))
                 return true;
@@ -123,7 +121,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 .All(regex => !IsMatch(requestPath, regex));
         }
 
-        private static Boolean IsMatch([NotNull] String path, [NotNull] Regex regex)
+        private static Boolean IsMatch(String path, Regex regex)
         {
             try
             {

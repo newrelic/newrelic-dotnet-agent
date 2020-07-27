@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -9,8 +8,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public static class JavaScriptAgent
     {
-        [NotNull]
-        public static Dictionary<String, String> GetJavaScriptAgentConfigFromSource([NotNull] String source)
+        public static Dictionary<String, String> GetJavaScriptAgentConfigFromSource(String source)
         {
             const String regex = @"<script type=""text/javascript"">window.NREUM\|\|\(NREUM={}\);NREUM.info = (.*?)</script>";
             var match = Regex.Match(source, regex);

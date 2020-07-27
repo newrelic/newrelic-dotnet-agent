@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
@@ -9,12 +8,10 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
     public class MethodCall
     {
         public readonly Method Method;
-        [CanBeNull]
         public readonly Object InvocationTarget;
-        [NotNull]
         public readonly Object[] MethodArguments;
 
-        public MethodCall(Method method, [CanBeNull] Object invocationTarget, [NotNull] Object[] methodArguments)
+        public MethodCall(Method method, Object invocationTarget, Object[] methodArguments)
         {
             Method = method;
             InvocationTarget = invocationTarget;

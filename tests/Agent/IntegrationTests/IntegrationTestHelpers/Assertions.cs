@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
@@ -14,7 +13,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     {
         #region Transaction Traces
 
-        public static void TransactionTraceExists([NotNull] AgentLogFile agentLogFile, [NotNull] String transactionName)
+        public static void TransactionTraceExists(AgentLogFile agentLogFile, String transactionName)
         {
             var trace = agentLogFile.GetTransactionSamples()
                 .Where(sample => sample != null)
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(trace != null, failureMessage);
         }
 
-        public static void TransactionTraceHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, TransactionTraceAttributeType attributeType, [NotNull] TransactionSample sample)
+        public static void TransactionTraceHasAttributes(IEnumerable<KeyValuePair<String, String>> expectedAttributes, TransactionTraceAttributeType attributeType, TransactionSample sample)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -53,7 +52,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionTraceHasAttributes([NotNull] IEnumerable<String> expectedAttributes, TransactionTraceAttributeType attributeType, [NotNull] TransactionSample sample)
+        public static void TransactionTraceHasAttributes(IEnumerable<String> expectedAttributes, TransactionTraceAttributeType attributeType, TransactionSample sample)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -71,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionTraceDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, TransactionTraceAttributeType attributeType, [NotNull] TransactionSample sample)
+        public static void TransactionTraceDoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, TransactionTraceAttributeType attributeType, TransactionSample sample)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -178,7 +177,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Error Traces
 
-        public static void ErrorTraceHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, ErrorTraceAttributeType attributeType, [NotNull] ErrorTrace errorTrace)
+        public static void ErrorTraceHasAttributes(IEnumerable<KeyValuePair<String, String>> expectedAttributes, ErrorTraceAttributeType attributeType, ErrorTrace errorTrace)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -205,7 +204,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void ErrorTraceDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, ErrorTraceAttributeType attributeType, [NotNull] ErrorTrace errorTrace)
+        public static void ErrorTraceDoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, ErrorTraceAttributeType attributeType, ErrorTrace errorTrace)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -227,7 +226,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Error Events
 
-        public static void ErrorEventHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, EventAttributeType attributeType, [NotNull] ErrorEventEvents errorEvent)
+        public static void ErrorEventHasAttributes(IEnumerable<KeyValuePair<String, String>> expectedAttributes, EventAttributeType attributeType, ErrorEventEvents errorEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -269,7 +268,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void ErrorEventDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, EventAttributeType attributeType, [NotNull] ErrorEventEvents errorEvent)
+        public static void ErrorEventDoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, EventAttributeType attributeType, ErrorEventEvents errorEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -375,7 +374,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Transaction Events
 
-        public static void TransactionEventHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, TransactionEventAttributeType attributeType, [NotNull] TransactionEvent transactionEvent)
+        public static void TransactionEventHasAttributes(IEnumerable<KeyValuePair<String, String>> expectedAttributes, TransactionEventAttributeType attributeType, TransactionEvent transactionEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -403,7 +402,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionEventHasAttributes([NotNull] IEnumerable<String> expectedAttributes, TransactionEventAttributeType attributeType, [NotNull] TransactionEvent transactionEvent)
+        public static void TransactionEventHasAttributes(IEnumerable<String> expectedAttributes, TransactionEventAttributeType attributeType, TransactionEvent transactionEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -421,7 +420,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionEventDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, TransactionEventAttributeType attributeType, [NotNull] TransactionEvent transactionEvent)
+        public static void TransactionEventDoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, TransactionEventAttributeType attributeType, TransactionEvent transactionEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -443,7 +442,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Sql Traces
 
-        public static void SqlTraceExists([NotNull] IEnumerable<ExpectedSqlTrace> expectedSqlTraces, [NotNull] IEnumerable<SqlTrace> actualSqlTraces)
+        public static void SqlTraceExists(IEnumerable<ExpectedSqlTrace> expectedSqlTraces, IEnumerable<SqlTrace> actualSqlTraces)
         {
             actualSqlTraces = actualSqlTraces.ToList();
 
@@ -491,7 +490,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Log lines
 
-        public static void LogLinesExist([NotNull] IEnumerable<String> expectedLogLineRegexes, [NotNull] IEnumerable<String> actualLogLines)
+        public static void LogLinesExist(IEnumerable<String> expectedLogLineRegexes, IEnumerable<String> actualLogLines)
         {
             actualLogLines = actualLogLines.ToList();
 
@@ -507,7 +506,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(errorMessages == String.Empty, errorMessages);
         }
 
-        public static void LogLinesNotExist([NotNull] IEnumerable<String> unexpectedLogLineRegexes, [NotNull] IEnumerable<String> actualLogLines)
+        public static void LogLinesNotExist(IEnumerable<String> unexpectedLogLineRegexes, IEnumerable<String> actualLogLines)
         {
             actualLogLines = actualLogLines.ToList();
 

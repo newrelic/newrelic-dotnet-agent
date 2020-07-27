@@ -1,14 +1,12 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Transactions.TransactionNames
 {
     public class UriTransactionName : ITransactionName
     {
-        [NotNull]
         public readonly String Uri;
 
-        public UriTransactionName([NotNull] String uri)
+        public UriTransactionName(String uri)
         {
             Uri = uri;
         }

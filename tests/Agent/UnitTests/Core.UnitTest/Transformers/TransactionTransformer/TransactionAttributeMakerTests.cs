@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -25,13 +24,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     [TestFixture]
     public class TransactionAttributeMakerTests
     {
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private TransactionAttributeMaker _transactionAttributeMaker;
 
         [SetUp]

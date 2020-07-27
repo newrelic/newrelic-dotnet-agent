@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -14,7 +13,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
         }
 
-        [NotNull]
         public String Get()
         {
             var address = $"http://localhost:{Port}/";

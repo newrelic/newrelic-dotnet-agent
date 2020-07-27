@@ -5,7 +5,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
@@ -19,54 +18,40 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     {
         #region Constant/Static
 
-        [NotNull]
         private static readonly String AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
-        [NotNull]
         private static readonly String RepositoryRootPath = Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..", "..", "..");
 
-        [NotNull]
         protected static readonly String SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
 
-        [NotNull]
         protected readonly String SourceApplicationsDirectoryPath;
 
-        [NotNull]
         private static readonly String SourceNewRelicHomeDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64");
 
-        [NotNull]
         private static readonly String SourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64 CoreClr");
 
-        [NotNull]
         private static readonly String SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
 
-        [NotNull]
         private static readonly String SourceApplicationLauncherDirectoryPath = Path.Combine(SourceApplicationLauncherProjectDirectoryPath, "bin", Utilities.Configuration);
 
-        [NotNull]
         private static String DestinationWorkingDirectoryRemotePath { get { return EnvironmentVariables.DestinationWorkingDirectoryRemotePath ?? DestinationWorkingDirectoryRemoteDefault; } }
 
-        [NotNull]
         private static readonly String DestinationWorkingDirectoryRemoteDefault = Path.Combine(@"\\", Dns.GetHostName(), "C$", "IntegrationTestWorkingDirectory");
 
         #endregion
 
         #region Private
 
-        [CanBeNull]
         private String _port;
 
-        [NotNull]
         private String DestinationNewRelicLogFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Logs"); } }
 
         #endregion
 
         #region Abstract/Virtual
 
-        [NotNull]
         protected abstract String ApplicationDirectoryName { get; }
 
-        [NotNull]
         protected abstract String SourceApplicationDirectoryPath { get; }
 
         public abstract void CopyToRemote();
@@ -77,13 +62,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         #endregion
 
-        [NotNull]
         public const String AppName = "IntegrationTestAppName";
 
-        [NotNull]
         private readonly String _uniqueFolderName = Guid.NewGuid().ToString();
 
-        [CanBeNull]
         protected UInt32? RemoteProcessId
         {
             get
@@ -101,34 +83,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public bool KeepWorkingDirectory { get; set; } = false;
 
-        [NotNull]
         protected String DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, _uniqueFolderName); } }
 
-        [NotNull]
         protected String DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "New Relic Home"); } }
 
-        [NotNull]
         public String DestinationApplicationDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName); } }
 
-        [NotNull]
         protected String DestinationLauncherDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "ApplicationLauncher"); } }
 
-        [NotNull]
         protected String DestinationApplicationLauncherExecutablePath { get { return Path.Combine(DestinationLauncherDirectoryPath, HostedWebCoreTargetFramework, "ApplicationLauncher.exe"); } }
 
-        [NotNull]
         public String Port { get { return _port ?? (_port = _port = RandomPortGenerator.NextPortString()); } }
 
-        [NotNull]
         public readonly String DestinationServerName = new Uri(DestinationWorkingDirectoryRemotePath).Host;
 
-        [NotNull]
         public String DestinationNewRelicConfigFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "newrelic.config"); } }
 
-        [NotNull]
         public String DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Extensions"); } }
 
-        [NotNull]
         public AgentLogFile AgentLog { get { return new AgentLogFile(DestinationNewRelicLogFilePath, Timing.TimeToConnect); } }
 
         protected bool _isCoreApp;
@@ -254,7 +226,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             File.WriteAllText(extensionFilePath, extensionFileContents);
         }
 
-        public void AddAppSetting([CanBeNull] String key, [CanBeNull] String value)
+        public void AddAppSetting(String key, String value)
         {
             if (key == null || value == null)
                 return;

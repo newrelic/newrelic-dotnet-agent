@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -27,34 +26,15 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     public class MetricAggregatorTests
     {
-        [NotNull]
         private IDataTransportService _dataTransportService;
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IOutOfBandMetricSource _outOfBandMetricSource;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
-
-        [NotNull]
         private MetricAggregator _metricAggregator;
-
-        [NotNull]
         private IDnsStatic _dnsStatic;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private Action _harvestAction;
-
-        [NotNull]
         private ConfigurationAutoResponder _configurationAutoResponder;
 
         [SetUp]

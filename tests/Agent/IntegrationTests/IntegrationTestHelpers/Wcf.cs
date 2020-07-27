@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ServiceModel;
-using JetBrains.Annotations;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public static class Wcf
     {
-        [NotNull]
-        public static T GetClient<T>([NotNull] String destinationServerName, [NotNull] String destinationServerPort, [CanBeNull] String path = null)
+        public static T GetClient<T>(String destinationServerName, String destinationServerPort, String path = null)
         {
             if (destinationServerName == null)
                 throw new ArgumentNullException("destinationServerName");

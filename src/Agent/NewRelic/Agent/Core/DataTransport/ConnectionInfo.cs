@@ -1,31 +1,23 @@
 ﻿using System;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public class ConnectionInfo
     {
-        [NotNull]
         public readonly String Host;
         public readonly UInt32 Port;
         public readonly String HttpProtocol;
-        [CanBeNull]
         public readonly String ProxyHost;
-        [CanBeNull]
         public readonly String ProxyUriPath;
         public readonly Int32 ProxyPort;
-        [CanBeNull]
         public readonly String ProxyUsername;
-        [CanBeNull]
         public readonly String ProxyPassword;
-        [CanBeNull]
         public readonly String ProxyDomain;
-        [CanBeNull]
         public readonly WebProxy Proxy;
 
-        public ConnectionInfo([NotNull] IConfiguration configuration)
+        public ConnectionInfo(IConfiguration configuration)
         {
             Host = configuration.CollectorHost;
             Port = configuration.CollectorPort;
@@ -40,7 +32,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Proxy = GetWebProxy(ProxyHost, ProxyUriPath, ProxyPort, ProxyUsername, ProxyPassword, ProxyDomain);
         }
 
-        public ConnectionInfo([NotNull] IConfiguration configuration, [CanBeNull] String redirectHost)
+        public ConnectionInfo(IConfiguration configuration, String redirectHost)
         {
             Host = redirectHost ?? configuration.CollectorHost;
             Port = configuration.CollectorPort;
@@ -54,9 +46,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             Proxy = GetWebProxy(ProxyHost, ProxyUriPath, ProxyPort, ProxyUsername, ProxyPassword, ProxyDomain);
         }
-
-        [CanBeNull]
-        private static WebProxy GetWebProxy([CanBeNull] String proxyHost, String proxyUriPath, Int32 proxyPort, [CanBeNull] String proxyUsername, [CanBeNull] String proxyPassword, [CanBeNull] String proxyDomain)
+        private static WebProxy GetWebProxy(String proxyHost, String proxyUriPath, Int32 proxyPort, String proxyUsername, String proxyPassword, String proxyDomain)
         {
             if (String.IsNullOrEmpty(proxyHost))
                 return null;
@@ -75,8 +65,6 @@ namespace NewRelic.Agent.Core.DataTransport
             var proxyInformation = proxyAddress != null ? String.Format(" (Proxy: {0})", proxyAddress) : null;
             return String.Format("{0}:{1}{2}", Host, Port, proxyInformation);
         }
-
-        [CanBeNull]
         private String GetProxyAddress()
         {
             if (ProxyHost == null)
@@ -88,9 +76,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             return String.Format("{0}:{1}{2}", host, port, uriPath);
         }
-
-        [NotNull]
-        private String GetProxyHostWithoutCredentials([NotNull] String proxyHost)
+        private String GetProxyHostWithoutCredentials(String proxyHost)
         {
             var atIndexInProxyHost = proxyHost.IndexOf('@');
             if (atIndexInProxyHost < 0 || atIndexInProxyHost >= proxyHost.Length)

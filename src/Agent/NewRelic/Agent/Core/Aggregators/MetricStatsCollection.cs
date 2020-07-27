@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.WireModels;
 
@@ -22,7 +21,7 @@ namespace NewRelic.Agent.Core.Aggregators
         private Func<MetricDataWireModel, MetricDataWireModel, MetricDataWireModel> _mergeFunction = MetricDataWireModel.BuildAggregateData;
         private Func<MetricWireModel, MetricWireModel, MetricWireModel> _mergeUnscopedFunction = MetricWireModel.Merge;
 
-        public void Merge([NotNull] MetricStatsCollection engine)
+        public void Merge(MetricStatsCollection engine)
         {
             _unscopedStats.Merge(engine._unscopedStats, _mergeFunction);
             _preCreatedUnscopedStats.Merge(engine._preCreatedUnscopedStats, _mergeUnscopedFunction);
@@ -34,18 +33,18 @@ namespace NewRelic.Agent.Core.Aggregators
 
         }
 
-        public void MergeUnscopedStats([NotNull] IEnumerable<KeyValuePair<string, MetricDataWireModel>> unscoped)
+        public void MergeUnscopedStats(IEnumerable<KeyValuePair<string, MetricDataWireModel>> unscoped)
         {
             _unscopedStats.Merge(unscoped, _mergeFunction);
         }
 
         // These should have already gone through the prenaming process
-        public void MergeUnscopedStats([NotNull] MetricWireModel metric)
+        public void MergeUnscopedStats(MetricWireModel metric)
         {
             _preCreatedUnscopedStats.Merge(metric.MetricName.Name, metric, _mergeUnscopedFunction);
         }
 
-        public void MergeUnscopedStats(String name, [NotNull] MetricDataWireModel metric)
+        public void MergeUnscopedStats(String name, MetricDataWireModel metric)
         {
             _unscopedStats.Merge(name, metric, _mergeFunction);
         }

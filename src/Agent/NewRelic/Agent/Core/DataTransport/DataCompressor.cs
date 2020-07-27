@@ -4,7 +4,6 @@ using System.Text;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
@@ -12,22 +11,16 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         public const String DeflateCompression = "deflate";
         public const String GzipCompression = "gzip";
-
-        [NotNull]
-        public static Byte[] Compress([NotNull] String data)
+        public static Byte[] Compress(String data)
         {
             var bytes = new UTF8Encoding().GetBytes(data);
             return Compress(bytes);
         }
-
-        [NotNull]
-        public static Byte[] Compress([NotNull] Byte[] bytes)
+        public static Byte[] Compress(Byte[] bytes)
         {
             return Compress(bytes, DeflateCompression);
         }
-
-        [NotNull]
-        public static Byte[] Compress([NotNull] Byte[] bytes, [NotNull] String compressionType)
+        public static Byte[] Compress(Byte[] bytes, String compressionType)
         {
             using (var stream = new MemoryStream(bytes.Length))
             using (var outputStream = GetCompressionOutputStream(stream, compressionType))
@@ -52,9 +45,7 @@ namespace NewRelic.Agent.Core.DataTransport
                     throw new ArgumentException($"compressionType is not one of the valid options: {compressionType}");
             }
         }
-
-        [NotNull]
-        public static String Decompress([NotNull] Byte[] compressedBytes)
+        public static String Decompress(Byte[] compressedBytes)
         {
             using (var memoryStream = new MemoryStream())
             using (var inflaterStream = new InflaterInputStream(memoryStream, new Inflater()))

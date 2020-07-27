@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using JetBrains.Annotations;
 
 namespace BasicMvcApplication.Controllers
 {
@@ -39,7 +38,6 @@ namespace BasicMvcApplication.Controllers
             return "Async is working";
         }
 
-        [NotNull]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static async Task CustomMethodBackgroundThread()
         {
@@ -62,7 +60,6 @@ namespace BasicMvcApplication.Controllers
         }
 
 
-        [NotNull]
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static async Task CustomMethodBackgroundThreadWithError()
         {

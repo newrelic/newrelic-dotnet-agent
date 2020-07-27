@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.JsonConverters;
 using Newtonsoft.Json;
 
@@ -66,7 +65,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             AgentAttributes = agentAttributes;
         }
 
-        [NotNull]
         public IDictionary<String, Object> GetByType(EventAttributeType attributeType)
         {
             IDictionary<String, Object> attributes;

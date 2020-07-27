@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Aggregators;
@@ -33,12 +32,10 @@ using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 
-// ReSharper disable RedundantTypeArgumentsOfMethod
 namespace NewRelic.Agent.Core.DependencyInjection
 {
     public static class AgentServices
     {
-        [NotNull]
         public static IContainer GetContainer()
         {
 #if NET35
@@ -52,7 +49,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// Registers all of the services needed for the agent to run.
         /// </summary>
         /// <param name="container"></param>
-        public static void RegisterServices([NotNull] IContainer container)
+        public static void RegisterServices(IContainer container)
         {
             // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
             container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
@@ -150,7 +147,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
         /// <summary>
         /// Starts all of the services needed by resolving them.
         /// </summary>
-        public static void StartServices([NotNull] IContainer container)
+        public static void StartServices(IContainer container)
         {
             container.Resolve<AssemblyResolutionService>();
             container.Resolve<ITransactionFinalizer>();

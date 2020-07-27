@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
@@ -16,10 +15,9 @@ namespace NewRelic.Agent.IntegrationTests
     /// </summary>
     public class Rules : IClassFixture<RulesWebApi>
     {
-        [NotNull]
         private readonly RulesWebApi _fixture;
 
-        public Rules([NotNull] RulesWebApi fixture, [NotNull] ITestOutputHelper output)
+        public Rules(RulesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

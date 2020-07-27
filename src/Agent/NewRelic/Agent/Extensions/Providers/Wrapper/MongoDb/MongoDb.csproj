@@ -15,7 +15,6 @@
         <DebugType>pdbonly</DebugType>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
         <PackageReference Include="mongocsharpdriver" Version="1.10.0" />
     </ItemGroup>
     <ItemGroup>

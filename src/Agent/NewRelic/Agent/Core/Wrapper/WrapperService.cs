@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Logging;
@@ -11,21 +10,20 @@ namespace NewRelic.Agent.Core.Wrapper
 {
     public interface IWrapperService
     {
-        [CanBeNull]
-        AfterWrappedMethodDelegate BeforeWrappedMethod([NotNull] Type type, [NotNull] String methodName, [NotNull] String argumentSignature, [CanBeNull] Object invocationTarget, [NotNull] Object[] methodArguments, [CanBeNull] String tracerFactoryName, [CanBeNull] String metricName, [NotNull] uint tracerArguments, UInt64 functionId);
+        AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, String methodName, String argumentSignature, Object invocationTarget, Object[] methodArguments, String tracerFactoryName, String metricName, uint tracerArguments, UInt64 functionId);
     }
 
     public class WrapperService : IWrapperService
     {
         private readonly Int32 _maxConsecutiveFailures;
 
-        [NotNull] private readonly IConfigurationService _configurationService;
+        private readonly IConfigurationService _configurationService;
 
-        [NotNull] private readonly IAgentWrapperApi _agentWrapperApi;
+        private readonly IAgentWrapperApi _agentWrapperApi;
 
-        [NotNull] private readonly IWrapperMap _wrapperMap;
+        private readonly IWrapperMap _wrapperMap;
 
-        [NotNull] private readonly IAgentHealthReporter _agentHealthReporter;
+        private readonly IAgentHealthReporter _agentHealthReporter;
 
         private class InstrumentedMethodInfoWrapper
         {
@@ -39,10 +37,10 @@ namespace NewRelic.Agent.Core.Wrapper
             }
         }
 
-        [NotNull] private readonly ConcurrentDictionary<UInt64, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
+        private readonly ConcurrentDictionary<UInt64, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
 
-        public WrapperService([NotNull] IConfigurationService configurationService, [NotNull] IWrapperMap wrapperMap,
-            [NotNull] IAgentWrapperApi agentWrapperApi, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public WrapperService(IConfigurationService configurationService, IWrapperMap wrapperMap,
+            IAgentWrapperApi agentWrapperApi, IAgentHealthReporter agentHealthReporter)
         {
             _configurationService = configurationService;
             _maxConsecutiveFailures = configurationService.Configuration.WrapperExceptionLimit;

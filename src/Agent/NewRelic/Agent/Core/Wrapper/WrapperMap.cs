@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -15,7 +14,6 @@ namespace NewRelic.Agent.Core.Wrapper
         /// <summary>
         /// Return a tracked wrapper that CanWrap the given method.
         /// </summary>
-        [NotNull]
         TrackedWrapper Get(InstrumentedMethodInfo instrumentedMethodInfo);
 
         /// <summary>
@@ -32,7 +30,7 @@ namespace NewRelic.Agent.Core.Wrapper
 
         private readonly TrackedWrapper _noOpTrackedWrapper;
 
-        public WrapperMap([NotNull] IEnumerable<IWrapper> wrappers, [NotNull] IDefaultWrapper defaultWrapper, [NotNull] INoOpWrapper noOpWrapper)
+        public WrapperMap(IEnumerable<IWrapper> wrappers, IDefaultWrapper defaultWrapper, INoOpWrapper noOpWrapper)
         {
             _nonDefaultWrappers = wrappers
                 .Where(wrapper => wrapper != null)

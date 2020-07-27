@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -19,8 +18,6 @@ namespace NewRelic.Providers.Wrapper.WebServices
 
 
         public bool IsTransactionRequired => true;
-
-        [CanBeNull]
         private Func<Object, String> _getMethodInfo;
         private Func<Object, Object> _getMethodOwner;
         private Func<Object, Object> _getMethodTypeData;

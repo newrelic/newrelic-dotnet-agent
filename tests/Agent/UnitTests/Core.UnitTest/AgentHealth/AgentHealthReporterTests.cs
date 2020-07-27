@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
@@ -17,10 +16,7 @@ namespace NewRelic.Agent.Core.AgentHealth
     [TestFixture]
     public class AgentHealthReporterTests
     {
-        [NotNull]
         private AgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private List<MetricWireModel> _publishedMetrics;
 
         [SetUp]

@@ -3,18 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
-// ReSharper disable SpecifyACultureInStringConversionExplicitly
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
-
     [TestFixture]
     public class Class_ConcurrentDictionary
     {
-        [NotNull]
         private ConcurrentDictionary<Int32, String> _concurrentDictionary;
 
         public Class_ConcurrentDictionary()
@@ -64,7 +59,7 @@ namespace NewRelic.Collections.UnitTests
         [TestCase("foo", null, "foo")]
         [TestCase(null, "bar", "bar")]
         [TestCase("foo", "bar", "foobar")]
-        public void Merge_CallsMergeFunctionAsNeeded([CanBeNull] String existingValue, [CanBeNull] String newValue, [CanBeNull] String expectedMergedValue)
+        public void Merge_CallsMergeFunctionAsNeeded(String existingValue, String newValue, String expectedMergedValue)
         {
             const Int32 key = 1;
             _concurrentDictionary.Add(key, existingValue);
@@ -77,7 +72,7 @@ namespace NewRelic.Collections.UnitTests
         [TestCase(new[] { 1 })]
         [TestCase(new[] { 1, 1 })]
         [TestCase(new[] { 1, 1, 2 })]
-        public void ConcurrentDictionary_FunctionsAsNormalDictionary_ForSingleThreadedAccess([NotNull] Int32[] numbersToAdd)
+        public void ConcurrentDictionary_FunctionsAsNormalDictionary_ForSingleThreadedAccess(Int32[] numbersToAdd)
         {
             // Because we're not doing anything interesting with the dictionary itself, it seems reasonable to just wrap all of the basic dictionary API tests into one test
 
@@ -164,16 +159,12 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
-        // ReSharper disable RedundantAssignment
-        private static void ExerciseFullApi([NotNull] IDictionary<Int32, String> concurrentDictionary, [NotNull] ICollection<Int32> numbersToAdd)
+        private static void ExerciseFullApi(IDictionary<Int32, String> concurrentDictionary, ICollection<Int32> numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             var distinctNumberPairs = numbersToAdd.Distinct().Select(number => new KeyValuePair<Int32, String>(number, number.ToString())).ToList();
@@ -230,7 +221,5 @@ namespace NewRelic.Collections.UnitTests
             concurrentDictionary.Remove(distinctNumberPairs.First());
             concurrentDictionary.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }
-// ReSharper restore SpecifyACultureInStringConversionExplicitly

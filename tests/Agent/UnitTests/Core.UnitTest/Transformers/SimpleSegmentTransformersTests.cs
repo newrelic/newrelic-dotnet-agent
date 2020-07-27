@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
@@ -17,7 +16,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class SimpleSegmentTransformersTests
     {
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -168,16 +166,14 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-
-        [NotNull]
-        private static Segment GetSegment([NotNull] String name)
+        private static Segment GetSegment(String name)
         {
             var builder = new TypedSegment<SimpleSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new SimpleSegmentData(name));
             builder.End();
             return builder;
         }
 
-        public static TypedSegment<SimpleSegmentData> GetSegment([NotNull] String name, double duration, TimeSpan start = new TimeSpan())
+        public static TypedSegment<SimpleSegmentData> GetSegment(String name, double duration, TimeSpan start = new TimeSpan())
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             return new TypedSegment<SimpleSegmentData>(start, TimeSpan.FromSeconds(duration), GetSegment(name));

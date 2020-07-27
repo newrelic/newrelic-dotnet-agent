@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -24,31 +23,14 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     public class TransactionTraceAggregatorTests
     {
-        [NotNull]
         private TransactionTraceAggregator _transactionTraceAggregator;
-
-        [NotNull]
         private IDataTransportService _dataTransportService;
-
-        [NotNull]
         private IEnumerable<ITransactionCollector> _transactionCollectors;
-
-        [NotNull]
         private ITransactionCollector _transactionCollector1;
-
-        [NotNull]
         private ITransactionCollector _transactionCollector2;
-
-        [NotNull]
         private IDnsStatic _dnsStatic;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private Action _harvestAction;
-
-        [NotNull]
         private ConfigurationAutoResponder _configurationAutoResponder;
 
         [SetUp]

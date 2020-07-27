@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Net;
-using JetBrains.Annotations;
 
 namespace NewRelic.Parsing.ConnectionString
 {
@@ -17,7 +16,7 @@ namespace NewRelic.Parsing.ConnectionString
             return new KeyValuePair<String, String>(key, value);
         }
 
-        public static String NormalizeHostname([NotNull] String host)
+        public static String NormalizeHostname(String host)
         {
             var localhost = new[] { ".", "localhost" };
             var hostIsLocalhost = localhost.Contains(host);

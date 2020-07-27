@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.TestUtilities
 {
@@ -46,7 +45,7 @@ namespace NewRelic.Agent.TestUtilities
             return true;
         }
 
-        public static Boolean Wait([NotNull] Func<Boolean> predicate, TimeSpan timeout, TimeSpan? timeBetween = null)
+        public static Boolean Wait(Func<Boolean> predicate, TimeSpan timeout, TimeSpan? timeBetween = null)
         {
             if (timeBetween == null)
                 timeBetween = TimeSpan.FromMilliseconds(1);

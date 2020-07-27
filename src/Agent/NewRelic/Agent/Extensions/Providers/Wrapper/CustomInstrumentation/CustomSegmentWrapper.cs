@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 {
     public class CustomSegmentWrapper : IWrapper
     {
-        [NotNull]
         private static readonly String[] PossibleWrapperNames = {
             "NewRelic.Providers.Wrapper.CustomInstrumentation.CustomSegmentWrapper",
 

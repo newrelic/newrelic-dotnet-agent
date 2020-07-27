@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.ThreadProfiling;
 
@@ -8,10 +7,9 @@ namespace NewRelic.Agent.Core.Commands
 {
     public class StopThreadProfilerCommand : AbstractCommand
     {
-        [NotNull]
         public IThreadProfilingSessionControl ThreadProfilingService { get; set; }
 
-        public StopThreadProfilerCommand([NotNull] IThreadProfilingSessionControl threadProfilingService)
+        public StopThreadProfilerCommand(IThreadProfilingSessionControl threadProfilingService)
         {
             Name = "stop_profiler";
             ThreadProfilingService = threadProfilingService;
@@ -28,8 +26,6 @@ namespace NewRelic.Agent.Core.Commands
                 {"error", errorMessage}
             };
         }
-
-        [CanBeNull]
         private String StopThreadProfilingSessions(IDictionary<String, Object> arguments)
         {
             if (arguments == null)

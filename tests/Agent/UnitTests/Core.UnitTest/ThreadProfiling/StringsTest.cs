@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Config;
 using NUnit.Framework;
 namespace NewRelic.Agent.Core.Utils
@@ -205,7 +204,7 @@ namespace NewRelic.Agent.Core.Utils
         }
 
         [TestCaseSource("ConvertBytesToStringTestData")]
-        public void when_byte_array_is_decoded_into_string_one_byte_at_a_time_then_result_string_is_correct([NotNull] Encoding encoding, [NotNull] String content)
+        public void when_byte_array_is_decoded_into_string_one_byte_at_a_time_then_result_string_is_correct(Encoding encoding, String content)
         {
             var bytes = encoding.GetBytes(content);
             var decoder = encoding.GetDecoder();
@@ -226,7 +225,7 @@ namespace NewRelic.Agent.Core.Utils
         [TestCase("http://testsite.com?auth=http://verifyme.com%3Fxlxl=x1", "http://testsite.com")]
         [TestCase("", "")]
         [TestCase(null, "")]
-        public void validate_CleanUri_String_Version(String uri, [NotNull] String expected)
+        public void validate_CleanUri_String_Version(String uri, String expected)
         {
             var actual = Strings.CleanUri(uri);
             Assert.AreEqual(expected, actual);

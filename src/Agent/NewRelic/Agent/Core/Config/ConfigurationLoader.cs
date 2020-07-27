@@ -6,7 +6,6 @@ using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
 using Microsoft.Win32;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -54,7 +53,6 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        [NotNull]
         public static ValueWithProvenance<String> GetWebConfigAppSetting(String key)
         {
 #if NETSTANDARD2_0
@@ -80,8 +78,6 @@ namespace NewRelic.Agent.Core.Config
                 "WebConfigurationManager default app settings");
 #endif
         }
-
-        [NotNull]
         public static ValueWithProvenance<String> GetConfigSetting(String key)
         {
             ValueWithProvenance<String> value = GetWebConfigAppSetting(key);
@@ -282,7 +278,6 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize and return a BootstrapConfig, from a fixed, well-known file name.
         /// </summary>
         /// <returns></returns>
-        [NotNull]
         public static configuration Initialize()
         {
             var fileName = String.Empty;
@@ -321,7 +316,6 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="fileName"></param>
         /// <exception cref="">System.UnauthorizedAccessException</exception>
         /// <returns>The configuration.</returns>
-        [NotNull]
         public static configuration Initialize(string fileName)
         {
             using (StreamReader stream = new StreamReader(fileName))
@@ -352,7 +346,7 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="xml"></param>
         /// <param name="provenance">The file name or other user-friendly locus where the xml came from.</param>
         /// <returns>The configuration.</returns>
-        public static configuration InitializeFromXml([NotNull] String xml, String provenance = "unknown")
+        public static configuration InitializeFromXml(String xml, String provenance = "unknown")
         {
             configuration config;
 
@@ -546,13 +540,12 @@ namespace NewRelic.Agent.Core.Config
     // Property names such as "AgentEnabled" are added in here or inherited from BootstrapConfig.
     public partial class configuration : IBootstrapConfig
     {
-        [NotNull]
         public String Xml { get; set; }
 
         [XmlIgnore]
         public String ConfigurationFileName { get; set; }
 
-        public configuration Initialize([NotNull] String xml, String provenance)
+        public configuration Initialize(String xml, String provenance)
         {
             Xml = xml;
 

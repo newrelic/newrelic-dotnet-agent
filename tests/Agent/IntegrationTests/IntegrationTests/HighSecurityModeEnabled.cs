@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -14,10 +13,9 @@ namespace NewRelic.Agent.IntegrationTests
     {
         private const String QueryStringParameterValue = @"my thing";
 
-        [NotNull]
         private readonly RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture _fixture;
 
-        public HighSecurityModeEnabled([NotNull] RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture fixture, [NotNull] ITestOutputHelper output)
+        public HighSecurityModeEnabled(RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

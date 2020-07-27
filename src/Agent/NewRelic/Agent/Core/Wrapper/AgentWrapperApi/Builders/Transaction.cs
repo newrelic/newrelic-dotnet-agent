@@ -5,7 +5,6 @@ using System.Data;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -60,22 +59,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         /// ordered by the segment creation time.  A segment will always be preceeded in the list by its 
         /// parent segment (unless it is a root segment).
         /// </summary>
-        [NotNull]
         IList<Segment> Segments { get; }
-
-        [NotNull]
         ICandidateTransactionName CandidateTransactionName { get; }
-
-        [NotNull]
         ITransactionMetadata TransactionMetadata { get; }
-
-        [NotNull]
         ICallStackManager CallStackManager { get; }
 
         int UnitOfWorkCount { get; }
         int NestedTransactionAttempts { get; }
-
-        [NotNull]
         ImmutableTransaction ConvertToImmutableTransaction();
 
         void Ignore();
@@ -117,17 +107,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
     public class Transaction : ITransaction, ITransactionSegmentState
     {
         private static readonly ITransactionName EmptyTransactionName = new OtherTransactionName("empty", "empty");
-
-        [NotNull]
         private static readonly RNGCryptoServiceProvider RngCryptoServiceProvider = new RNGCryptoServiceProvider();
 
         private readonly ConcurrentList<Segment> _segments = new ConcurrentList<Segment>();
-        [NotNull]
         public IList<Segment> Segments { get => _segments; }
-
-        [NotNull]
         private readonly ITimer _timer;
-        [NotNull]
         private readonly DateTime _startTime;
         private TimeSpan? _forcedDuration;
 
@@ -136,7 +120,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         private int _totalNestedTransactionAttempts;
         private readonly int _transactionTracerMaxSegments;
 
-        [NotNull] private string _guid;
+        private string _guid;
 
         private volatile bool _ignoreAutoBrowserMonitoring;
         private volatile bool _ignoreAllBrowserMonitoring;
@@ -154,8 +138,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         private readonly SqlObfuscator _sqlObfuscator;
 
-        public Transaction([NotNull] IConfiguration configuration, [NotNull] ITransactionName initialTransactionName,
-            [NotNull] ITimer timer, [NotNull] DateTime startTime, [NotNull] ICallStackManager callStackManager, SqlObfuscator sqlObfuscator)
+        public Transaction(IConfiguration configuration, ITransactionName initialTransactionName,
+            ITimer timer, DateTime startTime, ICallStackManager callStackManager, SqlObfuscator sqlObfuscator)
         {
             CandidateTransactionName = new CandidateTransactionName(initialTransactionName);
             TransactionMetadata = new TransactionMetadata();
@@ -293,7 +277,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         /// Generates a guid according to this spec: https://source.datanerd.us/agents/agent-specs/blob/master/PORTED-0013-Cross-Application-Tracing.md#guid
         /// </summary>
         /// <returns>A special New Relic-style guid</returns>
-        [NotNull]
         private static String GenerateNewRelicGuid()
         {
             var rndBytes = new Byte[8];

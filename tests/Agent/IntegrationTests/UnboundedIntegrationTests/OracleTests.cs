@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -13,10 +12,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class OracleTests : IClassFixture<RemoteServiceFixtures.OracleBasicMvcFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;
 
-        public OracleTests([NotNull] RemoteServiceFixtures.OracleBasicMvcFixture fixture, [NotNull] ITestOutputHelper output)
+        public OracleTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

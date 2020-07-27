@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Models;
@@ -10,12 +9,11 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class DataTransmissionDefaults : IClassFixture<MvcWithCollectorFixture>
     {
-        [NotNull]
         private readonly MvcWithCollectorFixture _fixture;
 
         private IEnumerable<CollectedRequest> _collectedRequests = null;
 
-        public DataTransmissionDefaults([NotNull] MvcWithCollectorFixture fixture)
+        public DataTransmissionDefaults(MvcWithCollectorFixture fixture)
         {
             _fixture = fixture;
 

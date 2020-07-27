@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AgentApiTests : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
-        public AgentApiTests([NotNull] RemoteServiceFixtures.AgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
+        public AgentApiTests(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

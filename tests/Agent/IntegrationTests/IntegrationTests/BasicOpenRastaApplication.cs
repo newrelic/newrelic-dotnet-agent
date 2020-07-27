@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,10 +12,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class BasicOpenRastaApplication : IClassFixture<RemoteServiceFixtures.BasicOpenRastaApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicOpenRastaApplication _fixture;
 
-        public BasicOpenRastaApplication([NotNull] RemoteServiceFixtures.BasicOpenRastaApplication fixture, [NotNull] ITestOutputHelper output)
+        public BasicOpenRastaApplication(RemoteServiceFixtures.BasicOpenRastaApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

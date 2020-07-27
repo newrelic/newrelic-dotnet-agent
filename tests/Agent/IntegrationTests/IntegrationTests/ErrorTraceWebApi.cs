@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,10 +12,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ErrorTraceWebApi : IClassFixture<RemoteServiceFixtures.BasicWebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebApi _fixture;
 
-        public ErrorTraceWebApi([NotNull] RemoteServiceFixtures.BasicWebApi fixture, [NotNull] ITestOutputHelper testLogger)
+        public ErrorTraceWebApi(RemoteServiceFixtures.BasicWebApi fixture, ITestOutputHelper testLogger)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;

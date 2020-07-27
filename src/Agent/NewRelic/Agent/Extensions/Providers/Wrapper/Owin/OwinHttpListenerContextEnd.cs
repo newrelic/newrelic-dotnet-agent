@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Owin
 {
@@ -29,7 +28,7 @@ namespace NewRelic.Providers.Wrapper.Owin
             return new CanWrapResponse(canWrap);
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, [CanBeNull] ITransaction transaction)
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
             var owinHttpListenerContext = instrumentedMethodCall.MethodCall.InvocationTarget;
             var owinTransaction = OwinTransactionContext.ExtractTransactionFromContext(owinHttpListenerContext);

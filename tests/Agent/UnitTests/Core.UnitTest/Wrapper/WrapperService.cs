@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Tracer;
@@ -15,26 +14,12 @@ namespace NewRelic.Agent.Core.Wrapper
     public class Class_WrapperService
     {
         private const uint EmptyTracerArgs = 0;
-
-        [NotNull]
         private WrapperService _wrapperService;
-
-        [NotNull]
         private IWrapperMap _wrapperMap;
-
-        [NotNull]
         private IDefaultWrapper _defaultWrapper;
-
-        [NotNull]
         private INoOpWrapper _noOpWrapper;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
 
         [SetUp]

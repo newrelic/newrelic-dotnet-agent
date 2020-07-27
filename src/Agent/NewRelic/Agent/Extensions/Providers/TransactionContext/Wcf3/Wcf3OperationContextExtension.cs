@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.ServiceModel;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.TransactionContext
 {
@@ -18,13 +17,11 @@ namespace NewRelic.Agent.Extensions.Providers.TransactionContext
     /// </remarks>
     public class Wcf3OperationContextExtension : IExtension<OperationContext>
     {
-        [NotNull]
         private readonly IDictionary _items = new Hashtable();
 
         ///<summary>
         /// <see cref="IDictionary"/> stored in current instance context.
         ///</summary>
-        [NotNull]
         public IDictionary Items { get { return _items; } }
 
         ///<summary>

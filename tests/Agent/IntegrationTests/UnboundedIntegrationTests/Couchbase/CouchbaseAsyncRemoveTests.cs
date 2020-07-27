@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared.Couchbase;
 using NewRelic.Testing.Assertions;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
 {
     public class CouchbaseAsyncRemoveTests : IClassFixture<RemoteServiceFixtures.CouchbaseBasicMvcFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.CouchbaseBasicMvcFixture _fixture;
 
-        public CouchbaseAsyncRemoveTests([NotNull] RemoteServiceFixtures.CouchbaseBasicMvcFixture fixture, [NotNull] ITestOutputHelper output)
+        public CouchbaseAsyncRemoveTests(RemoteServiceFixtures.CouchbaseBasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

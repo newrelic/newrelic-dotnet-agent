@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -60,8 +59,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 return new TransactionTrace(timestamp, unknown1, unknown2, rootSegment, attributes);
             }
 
-            [CanBeNull]
-            private static JArray TryDecompress([CanBeNull] Object value)
+            private static JArray TryDecompress(Object value)
             {
                 if (value == null)
                     return null;
@@ -71,8 +69,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 return JArray.Parse(traceData);
             }
 
-            [NotNull]
-            private static String Decompress([NotNull] String compressedTraceData)
+            private static String Decompress(String compressedTraceData)
             {
                 var bytes = Convert.FromBase64String(compressedTraceData);
 
@@ -249,7 +246,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             UserAttributes = userAttributes;
         }
 
-        [NotNull]
         public IDictionary<String, Object> GetByType(TransactionTraceAttributeType attributeType)
         {
             IDictionary<String, Object> attributes;

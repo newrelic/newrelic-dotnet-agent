@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Api;
 using NewRelic.Agent.Core.CallStack;
@@ -27,11 +26,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         private const String NewRelicIdHttpHeader = "X-NewRelic-ID";
         private const String AppDataHttpHeader = "X-NewRelic-App-Data";
         private const String TransactionDataHttpHeader = "X-NewRelic-Transaction";
-
-        [NotNull]
         private CatHeaderHandler _catHeaderHandler;
-
-        [NotNull]
         private IConfiguration _configuration;
 
         [SetUp]
@@ -315,8 +310,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         #endregion oubound CAT request - inbound CAT response
 
         #region helpers
-
-        [NotNull]
         private ITransaction BuildTestTransaction(String pathHash = null, IEnumerable<String> alternatePathHashes = null, String referrerGuid = null, String referrerTripId = null, String referrerPathHash = null, String referrerCrossProcessId = null, String syntheticsResourceId = null, String syntheticsJobId = null, String syntheticsMonitorId = null, Boolean isSynthetics = false, Boolean hasCatResponseHeaders = false)
         {
             var name = new WebTransactionName("foo", "bar");

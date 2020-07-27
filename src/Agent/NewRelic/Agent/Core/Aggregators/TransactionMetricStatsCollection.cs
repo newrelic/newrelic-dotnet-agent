@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
@@ -30,14 +27,13 @@ namespace NewRelic.Agent.Core.Aggregators
             return transactionName;
         }
 
-        [ItemCanBeNull]
         public MetricDataWireModel GetUnscopedStat(MetricName name)
         {
             unscopedStats.TryGetValue(name, out MetricDataWireModel output);
             return output;
         }
 
-        public void MergeUnscopedStats(MetricName name, [NotNull] MetricDataWireModel metric)
+        public void MergeUnscopedStats(MetricName name, MetricDataWireModel metric)
         {
             if (name != null)
             {
@@ -45,7 +41,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        public void MergeScopedStats(MetricName name, [NotNull] MetricDataWireModel metric)
+        public void MergeScopedStats(MetricName name, MetricDataWireModel metric)
         {
             if (name != null)
             {

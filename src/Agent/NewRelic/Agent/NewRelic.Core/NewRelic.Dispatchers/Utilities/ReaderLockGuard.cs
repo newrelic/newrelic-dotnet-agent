@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.Dispatchers.Utilities
 {
     public class ReaderLockGuard : IDisposable
     {
-        [NotNull]
         private readonly ReaderWriterLock _lock;
 
-        public ReaderLockGuard([NotNull] ReaderWriterLock readerWriterLock)
+        public ReaderLockGuard(ReaderWriterLock readerWriterLock)
         {
             _lock = readerWriterLock;
         }

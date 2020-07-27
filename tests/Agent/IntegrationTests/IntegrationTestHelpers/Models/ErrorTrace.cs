@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -93,7 +92,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             RequestUri = requestUri;
         }
 
-        [NotNull]
         public IDictionary<String, Object> GetByType(ErrorTraceAttributeType attributeType)
         {
             IDictionary<String, Object> attributes;

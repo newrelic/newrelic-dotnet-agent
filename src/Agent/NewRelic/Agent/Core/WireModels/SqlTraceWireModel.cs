@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -20,13 +19,13 @@ namespace NewRelic.Agent.Core.WireModels
         /// ex. WebTransaction/ASP/post.aspx
         /// </summary>
         [JsonArrayIndex(Index = 0)]
-        [NotNull] public virtual String TransactionName { get; }
+        public virtual String TransactionName { get; }
 
         /// <summary>
         /// ex. http://localhost:8080/post.aspx
         /// </summary>
         [JsonArrayIndex(Index = 1)]
-        [NotNull] public virtual String Uri { get; }
+        public virtual String Uri { get; }
 
         /// <summary>
         /// The hash code of the obfuscated sql string.
@@ -40,14 +39,14 @@ namespace NewRelic.Agent.Core.WireModels
         /// ex. DELETE FROM be_DataStoreSettings WHERE ExtensionType = @type AND ExtensionId = @id; 
         /// </summary>        
         [JsonArrayIndex(Index = 3)]
-        [NotNull] public virtual String Sql { get; }
+        public virtual String Sql { get; }
 
         /// <summary>
         /// The name of the database metric that this sql statement is associated with.
         /// ex. Datastore/statement/MySQL/be_DataStoreSettings/DELETE
         /// </summary>
         [JsonArrayIndex(Index = 4)]
-        [NotNull] public virtual String DatastoreMetricName { get; }
+        public virtual String DatastoreMetricName { get; }
 
         /// <summary>
         /// Total call count ex. 1
@@ -80,10 +79,9 @@ namespace NewRelic.Agent.Core.WireModels
         public virtual TimeSpan MaxCallTime { get; }
 
         [JsonArrayIndex(Index = 9)]
-        [NotNull]
         public virtual IDictionary<String, Object> ParameterData { get; }
 
-        public SqlTraceWireModel([NotNull] String transactionName, [NotNull] String uri, Int64 sqlId, [NotNull] String sql, [NotNull] String datastoreMetricName, UInt32 callCount, TimeSpan totalCallTime, TimeSpan minCallTime, TimeSpan maxCallTime, [NotNull] IEnumerable<KeyValuePair<String, Object>> parameterData)
+        public SqlTraceWireModel(String transactionName, String uri, Int64 sqlId, String sql, String datastoreMetricName, UInt32 callCount, TimeSpan totalCallTime, TimeSpan minCallTime, TimeSpan maxCallTime, IEnumerable<KeyValuePair<String, Object>> parameterData)
         {
             TransactionName = transactionName;
             Uri = uri;

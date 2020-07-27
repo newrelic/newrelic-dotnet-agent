@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Commands
 {
@@ -12,7 +11,6 @@ namespace NewRelic.Agent.Core.Commands
         /// <summary>
         /// The name of this command.
         /// </summary>
-        [NotNull]
         String Name { get; }
 
         /// <summary>

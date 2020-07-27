@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -11,10 +10,7 @@ namespace NewRelic.Providers.Wrapper.ScriptHandlerFactory
         // these must be lazily instatiated when the wrapper is actually used, not when the wrapper is first instantiated, so they sit in a nested class
         private static class Statics
         {
-            [NotNull]
             public static readonly Func<Object, IHttpHandler> GetSyncHandlerOriginalHandler = VisibilityBypasser.Instance.GenerateFieldAccessor<IHttpHandler>(AssemblyName, SyncTypeName, "_originalHandler");
-
-            [NotNull]
             public static readonly Func<Object, IHttpHandler> GetAsyncHandlerOriginalHandler = VisibilityBypasser.Instance.GenerateFieldAccessor<IHttpHandler>(AssemblyName, AsyncTypeName, "_originalHandler");
         }
 
@@ -54,9 +50,7 @@ namespace NewRelic.Providers.Wrapper.ScriptHandlerFactory
             var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
             return Delegates.GetDelegateFor(segment);
         }
-
-        [CanBeNull]
-        private static IHttpHandler TryGetOriginalHandler([NotNull] String methodName, [NotNull] Object invocationTarget)
+        private static IHttpHandler TryGetOriginalHandler(String methodName, Object invocationTarget)
         {
             if (methodName == SyncMethodName)
                 return Statics.GetSyncHandlerOriginalHandler(invocationTarget);

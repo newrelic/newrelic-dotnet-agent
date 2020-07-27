@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
@@ -17,16 +16,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     [TestFixture, Category("BrowserMonitoring")]
     public class BrowserMonitoringPrereqCheckerTests
     {
-        [NotNull]
         private BrowserMonitoringPrereqChecker _checker;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private ITransaction _internalTransaction;
-
-        [NotNull]
         private ImmutableTransaction _immutableTransaction;
 
         [SetUp]
@@ -220,8 +212,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             }
 
         }
-
-        [NotNull]
         private ImmutableTransaction BuildTestTransaction(Boolean ignoreAutoBrowserMonitoring = false, Boolean ignoreAllBrowserMonitoring = false)
         {
             var name = new WebTransactionName("foo", "bar");

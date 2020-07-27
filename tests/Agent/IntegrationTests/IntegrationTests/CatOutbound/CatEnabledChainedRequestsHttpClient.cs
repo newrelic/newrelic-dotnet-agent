@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,13 +12,11 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
 {
     public class CatEnabledChainedRequestsHttpClient : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        [NotNull]
         private HttpResponseHeaders _responseHeaders;
 
-        public CatEnabledChainedRequestsHttpClient([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public CatEnabledChainedRequestsHttpClient(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

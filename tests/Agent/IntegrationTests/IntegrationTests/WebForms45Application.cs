@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class WebForms45Application : IClassFixture<RemoteServiceFixtures.WebForms45Application>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WebForms45Application _fixture;
 
-        public WebForms45Application([NotNull] RemoteServiceFixtures.WebForms45Application fixture, [NotNull] ITestOutputHelper output)
+        public WebForms45Application(RemoteServiceFixtures.WebForms45Application fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

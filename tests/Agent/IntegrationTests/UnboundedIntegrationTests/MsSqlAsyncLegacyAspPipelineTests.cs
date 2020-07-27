@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class MsSqlAsyncLegacyAspPipelineTests : IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.MsSqlBasicMvcFixture _fixture;
 
-        public MsSqlAsyncLegacyAspPipelineTests([NotNull] RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, [NotNull] ITestOutputHelper output)
+        public MsSqlAsyncLegacyAspPipelineTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
@@ -12,15 +11,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         /// Builds a metric name from a ITransactionName.
         /// </summary>
         /// <param name="transactionName">The original transaction name.</param>
-        TransactionMetricName GetTransactionMetricName([NotNull] ITransactionName transactionName);
+        TransactionMetricName GetTransactionMetricName(ITransactionName transactionName);
     }
 
     public class TransactionMetricNameMaker : ITransactionMetricNameMaker
     {
-        [NotNull]
         private readonly IMetricNameService _metricNameService;
 
-        public TransactionMetricNameMaker([NotNull] IMetricNameService metricNameService)
+        public TransactionMetricNameMaker(IMetricNameService metricNameService)
         {
             _metricNameService = metricNameService;
         }
@@ -32,7 +30,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return vettedTransactionMetricName;
         }
 
-        private TransactionMetricName GetProposedTransactionMetricName([NotNull] ITransactionName transactionName)
+        private TransactionMetricName GetProposedTransactionMetricName(ITransactionName transactionName)
         {
             if (transactionName is WebTransactionName)
                 return GetTransactionMetricName(transactionName as WebTransactionName);
@@ -48,28 +46,28 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             throw new NotImplementedException("Unsupported ITransactionName type");
         }
 
-        private TransactionMetricName GetTransactionMetricName([NotNull] WebTransactionName transactionName)
+        private TransactionMetricName GetTransactionMetricName(WebTransactionName transactionName)
         {
             return MetricNames.WebTransaction(transactionName.Category, transactionName.Name);
         }
 
-        private TransactionMetricName GetTransactionMetricName([NotNull] UriTransactionName transactionName)
+        private TransactionMetricName GetTransactionMetricName(UriTransactionName transactionName)
         {
             var normalizedUri = _metricNameService.NormalizeUrl(transactionName.Uri);
             return MetricNames.UriTransaction(normalizedUri);
         }
 
-        private TransactionMetricName GetTransactionMetricName([NotNull] OtherTransactionName transactionName)
+        private TransactionMetricName GetTransactionMetricName(OtherTransactionName transactionName)
         {
             return MetricNames.OtherTransaction(transactionName.Category, transactionName.Name);
         }
 
-        private TransactionMetricName GetTransactionMetricName([NotNull] MessageBrokerTransactionName transactionName)
+        private TransactionMetricName GetTransactionMetricName(MessageBrokerTransactionName transactionName)
         {
             return MetricNames.MessageBrokerTransaction(transactionName.DestinationType, transactionName.BrokerVendorName, transactionName.Destination);
         }
 
-        private TransactionMetricName GetTransactionMetricName([NotNull] CustomTransactionName transactionName)
+        private TransactionMetricName GetTransactionMetricName(CustomTransactionName transactionName)
         {
             return MetricNames.CustomTransaction(transactionName.Name, transactionName.IsWeb);
         }
@@ -83,19 +81,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         /// <summary>
         /// The prefix name (e.g. "WebTransaction")
         /// </summary>
-        [NotNull]
         public readonly String Prefix;
 
         /// <summary>
         /// The unprefixed name (e.g. "Foo/Bar")
         /// </summary>
-        [NotNull]
         public readonly String UnPrefixedName;
 
         /// <summary>
         /// The prefixed name (e.g. "WebTranaction/Foo/Bar")
         /// </summary>
-        [NotNull]
         public readonly String PrefixedName;
 
         /// <summary>
@@ -111,7 +106,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         /// <summary>
         /// Builds a new transaction metric name using a prefix and an unprefixed name. The Prefixed name will be $"{prefix}/{unprefixedName}".
         /// </summary>
-        public TransactionMetricName([NotNull] String prefix, [NotNull] String unprefixedName, Boolean shouldIgnore = false)
+        public TransactionMetricName(String prefix, String unprefixedName, Boolean shouldIgnore = false)
         {
             Prefix = prefix;
             UnPrefixedName = unprefixedName;

@@ -194,9 +194,7 @@ namespace InstallerActions
 
     internal abstract class MySession
     {
-        // ReSharper disable InconsistentNaming
         protected Session session { get; private set; }
-        // ReSharper restore InconsistentNaming
 
         protected MySession(Session session)
         {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -282,8 +281,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             return attributes.ToArray();
         }
-
-        [NotNull]
         private static ITransaction BuildTestTransaction(Boolean isWebTransaction = true, String uri = null, String referrerUri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, Boolean includeServiceRequest = false, Boolean includeUserAttributes = false)
         {
             var name = isWebTransaction
@@ -303,7 +300,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return internalTransaction;
         }
 
-        private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, String referrerUri = null, Boolean includeServiceRequest = false, Boolean includeUserAttributes = false)
+        private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, String referrerUri = null, Boolean includeServiceRequest = false, Boolean includeUserAttributes = false)
         {
             if (uri != null)
                 metadata.SetUri(uri);
@@ -347,8 +344,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 metadata.SetSyntheticsMonitorId("syntheticsMonitorId");
             }
         }
-
-        [NotNull]
         private static ImmutableSegmentTreeNode BuildNode(TimeSpan relativeStart = new TimeSpan(), TimeSpan? duration = null)
         {
             var methodCallData = new MethodCallData("typeName", "methodName", 1);

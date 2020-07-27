@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 
@@ -22,7 +21,7 @@ namespace NewRelic.Agent.Core.Commands
         public readonly UInt32 Duration;
         public readonly Boolean ReportData;
 
-        public ThreadProfilerCommandArgs([NotNull] IDictionary<String, Object> arguments)
+        public ThreadProfilerCommandArgs(IDictionary<String, Object> arguments)
         {
             var profileId = arguments.GetValueOrDefault("profile_id");
             if (profileId != null)
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.Core.Commands
             ReportData = ParseBooleanArgument(arguments, "report_data", true);
         }
 
-        private UInt32 ParseFloatArgument([NotNull] IDictionary<String, Object> arguments, [NotNull] String argumentName, Single defaultValue, Single minValue, Single maxValue)
+        private UInt32 ParseFloatArgument(IDictionary<String, Object> arguments, String argumentName, Single defaultValue, Single minValue, Single maxValue)
         {
             Object value;
             if (!arguments.TryGetValue(argumentName, out value) || value == null)
@@ -63,7 +62,7 @@ namespace NewRelic.Agent.Core.Commands
             }
         }
 
-        private Boolean ParseBooleanArgument([NotNull] IDictionary<String, Object> arguments, [NotNull] String argumentName, Boolean defaultValue)
+        private Boolean ParseBooleanArgument(IDictionary<String, Object> arguments, String argumentName, Boolean defaultValue)
         {
             var value = arguments.GetValueOrDefault(argumentName);
             if (value == null)

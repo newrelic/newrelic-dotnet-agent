@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -31,18 +30,13 @@ namespace NewRelic.Agent.Core.ThreadProfiling
     {
         private const Int32 InvalidSessionId = 0;
         #region PInvoke Targets and Delegate Instances
-        [NotNull]
         private readonly INativeMethods _nativeMethods;
         RequestFunctionNameCallback _callbackDelegateRequestFunctionNames;
         #endregion
 
         private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        [NotNull]
         private IAgent _agent;
-        [NotNull]
         private readonly IDataTransportService _dataTransportService;
-        [NotNull]
         private IScheduler _scheduler;
 
         private ThreadProfilingSampler _sampler;
@@ -50,15 +44,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         private Int32 _profileSessionId;
         private DateTime _startSessionTime;
         private DateTime _stopSessionTime;
-
-        [NotNull]
         private readonly IDictionary<ulong, ClassMethodNames> _functionNames = new ConcurrentDictionary<ulong, ClassMethodNames>();
-        [NotNull]
         private readonly Object _syncObjFunctionNames = new Object();
 
         private readonly Int32 _maxAggregatedNodes;
-
-        [NotNull]
         private readonly ThreadProfilingBucket _threadProfilingBucket;
 
         // The pruning list maintains a reference to all TreeNodes created. 
@@ -71,27 +60,23 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
         // Sync object used to serialize access to the three thread lists. Don't expect access to occur
         // often enough to warrant three separate synchronization objects. Optimize later if necessary.
-        [NotNull]
         private readonly Object _syncObjFailedProfiles = new Object();
 
         /// <summary>
         /// Count by thread Id of failed thread profiles received from unmanaged thread profiler.
         /// </summary>
-        [NotNull]
         private readonly Dictionary<UIntPtr, UInt32> _failedThreads = new Dictionary<UIntPtr, UInt32>();
-        [NotNull]
         private readonly Dictionary<UIntPtr, UInt32> _failedThreadErrorCodes = new Dictionary<UIntPtr, UInt32>();
 
         /// <summary>
         /// List of thread ids where the stack trace was large (greater than 2000)
         /// </summary>
-        [NotNull]
         private readonly List<UIntPtr> _largeStackOverflows = new List<UIntPtr>();
         private IntPtr _requestFunctionNamesFunctionPointer = IntPtr.Zero;
 
         #region Construction and Initializations
 
-        public ThreadProfilingService([NotNull] IAgent agent, [NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] INativeMethods nativeMethods, Int32 maxAggregatedNodes = 20000)
+        public ThreadProfilingService(IAgent agent, IDataTransportService dataTransportService, IScheduler scheduler, INativeMethods nativeMethods, Int32 maxAggregatedNodes = 20000)
         {
             _agent = agent;
             _dataTransportService = dataTransportService;
@@ -284,7 +269,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             _threadProfilingBucket.UpdateTree(stackInfo, depth);
         }
 
-        public void AddNodeToPruningList([NotNull] ProfileNode node)
+        public void AddNodeToPruningList(ProfileNode node)
         {
             PruningList.Add(node);
         }
@@ -352,8 +337,6 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         }
 
         #endregion
-
-        [NotNull]
         private IEnumerable<ThreadProfilingModel> SerializeData()
         {
             var samples = new Dictionary<String, Object>();
@@ -443,8 +426,6 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 Log.Error(e);
             }
         }
-
-        [NotNull]
         private static ClassMethodNames MarshalNames(IntPtr classNamePtr, IntPtr methodNamePtr)
         {
             var className = Marshal.PtrToStringUni(classNamePtr);
@@ -468,7 +449,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             UpdateRunnableCounts(_threadProfilingBucket.Tree.Root, nonRunnableLeafNodes);
         }
 
-        private static void UpdateRunnableCounts([NotNull] ProfileNode node, [NotNull] IEnumerable<String> nonRunnableLeafNodes)
+        private static void UpdateRunnableCounts(ProfileNode node, IEnumerable<String> nonRunnableLeafNodes)
         {
             if (node == null)
                 throw new ArgumentNullException("node");
@@ -479,7 +460,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
                 UpdateRunnableCountsForNodeChildren(node, nonRunnableLeafNodes);
         }
 
-        private static void UpdateRunnableCountsForLeafNode([NotNull] ProfileNode node, [NotNull] IEnumerable<String> nonRunnableLeafNodes)
+        private static void UpdateRunnableCountsForLeafNode(ProfileNode node, IEnumerable<String> nonRunnableLeafNodes)
         {
             var combinedClassMethodName = node.Details.ClassName + ":" + node.Details.MethodName;
 
@@ -490,7 +471,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             node.RunnableCount = 0;
         }
 
-        private static void UpdateRunnableCountsForNodeChildren([NotNull] ProfileNode node, [NotNull] IEnumerable<String> nonRunnableLeafNodes)
+        private static void UpdateRunnableCountsForNodeChildren(ProfileNode node, IEnumerable<String> nonRunnableLeafNodes)
         {
             if (node == null)
                 throw new ArgumentNullException("node");
@@ -531,12 +512,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
     public class ClassMethodNames
     {
-        [NotNull]
         public readonly String Class;
-        [NotNull]
         public readonly String Method;
 
-        public ClassMethodNames([NotNull] String @class, [NotNull] String method)
+        public ClassMethodNames(String @class, String method)
         {
             Class = @class;
             Method = method;

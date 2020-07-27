@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -20,22 +19,11 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     public class SqlTraceAggregatorTests
     {
-        [NotNull]
         private SqlTraceAggregator _sqlTraceAggregator;
-
-        [NotNull]
         private IDataTransportService _dataTransportService;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private ConfigurationAutoResponder _configurationAutoResponder;
-
-        [NotNull]
         private Action _harvestAction;
 
         [SetUp]
@@ -572,8 +560,6 @@ namespace NewRelic.Agent.Core.Aggregators
         #endregion testing
 
         #region Helpers
-
-        [NotNull]
         private static IConfiguration GetDefaultConfiguration(Int32? versionNumber = null, Int32? sqlTracesPerPeriod = null)
         {
             var configuration = Mock.Create<IConfiguration>();

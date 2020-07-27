@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-
+﻿
 namespace NewRelic.Agent.Extensions.Providers.TransactionContext
 {
     /// <summary>

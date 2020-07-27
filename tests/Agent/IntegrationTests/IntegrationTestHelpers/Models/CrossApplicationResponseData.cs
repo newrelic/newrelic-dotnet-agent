@@ -1,12 +1,11 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.Models
 {
     // Note: this data is referred to as "AppData" in the CAT spec.
-    [JsonConverter(typeof(CrossApplicationResponseDataConverter)), UsedImplicitly]
+    [JsonConverter(typeof(CrossApplicationResponseDataConverter))]
     public class CrossApplicationResponseData
     {
         public readonly String CrossProcessId;
@@ -18,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public readonly Boolean Unused;
 
         // For backwards compatibility we need to support deserializing AppData that is missing fields 5 and 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -28,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         }
 
         // For backwards compatibility we need to support deserializing AppData that is missing field 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength, String transactionGuid)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength, String transactionGuid)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -38,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             TransactionGuid = transactionGuid;
         }
 
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength, String transactionGuid, Boolean unused)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength, String transactionGuid, Boolean unused)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;

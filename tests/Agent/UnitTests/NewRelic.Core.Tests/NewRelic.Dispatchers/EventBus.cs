@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.WeakActions;
 using NUnit.Framework;
 
-
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Dispatchers.UnitTests
 {
     public class Class_EventBus
@@ -159,7 +156,7 @@ namespace NewRelic.Dispatchers.UnitTests
             {
                 public delegate void Action();
 
-                [NotNull] private readonly Action _action;
+                private readonly Action _action;
 
                 public Foo(Action action)
                 {

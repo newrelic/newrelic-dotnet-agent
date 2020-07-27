@@ -1,31 +1,30 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
     // Note: this data is referred to as "AppData" in the CAT spec.
-    [JsonConverter(typeof(JsonArrayConverter)), UsedImplicitly]
+    [JsonConverter(typeof(JsonArrayConverter))]
     public class CrossApplicationResponseData
     {
-        [NotNull, JsonArrayIndex(Index = 0), UsedImplicitly]
+        [JsonArrayIndex(Index = 0)]
         public readonly String CrossProcessId;
-        [NotNull, JsonArrayIndex(Index = 1), UsedImplicitly]
+        [JsonArrayIndex(Index = 1)]
         public readonly String TransactionName;
-        [JsonArrayIndex(Index = 2), UsedImplicitly]
+        [JsonArrayIndex(Index = 2)]
         public readonly Single QueueTimeInSeconds;
-        [JsonArrayIndex(Index = 3), UsedImplicitly]
+        [JsonArrayIndex(Index = 3)]
         public readonly Single ResponseTimeInSeconds;
-        [JsonArrayIndex(Index = 4), UsedImplicitly]
+        [JsonArrayIndex(Index = 4)]
         public readonly long ContentLength;
-        [CanBeNull, JsonArrayIndex(Index = 5), UsedImplicitly]
+        [JsonArrayIndex(Index = 5)]
         public readonly String TransactionGuid;
-        [JsonArrayIndex(Index = 6), UsedImplicitly]
+        [JsonArrayIndex(Index = 6)]
         public readonly Boolean Unused;
 
         // For backwards compatibility we need to support deserializing AppData that is missing fields 5 and 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         }
 
         // For backwards compatibility we need to support deserializing AppData that is missing field 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -45,7 +44,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             TransactionGuid = transactionGuid;
         }
 
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid, Boolean unused)
+        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid, Boolean unused)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
@@ -15,11 +14,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
     public interface ITransactionAttributeMaker
     {
-        [NotNull]
-        Attributes GetAttributes([NotNull] ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, [CanBeNull] TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats);
-
-        [NotNull]
-        Attributes GetUserAndAgentAttributes([NotNull] ITransactionAttributeMetadata metadata);
+        Attributes GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, ErrorData errorData, TransactionMetricStatsCollection txStats);
+        Attributes GetUserAndAgentAttributes(ITransactionAttributeMetadata metadata);
     }
 
     public class TransactionAttributeMaker : ITransactionAttributeMaker
@@ -156,7 +152,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return attributes;
         }
 
-        private static Boolean IsCatParticipant([NotNull] ImmutableTransaction immutableTransaction)
+        private static Boolean IsCatParticipant(ImmutableTransaction immutableTransaction)
         {
             // The logic of this method is specced in a footnote here: https://source.datanerd.us/agents/agent-specs/blob/master/Cross-Application-Tracing-PORTED.md#attributes
             // In short, you are a CAT participant if you received valid CAT headers on an inbound request data or you received an inbound response with CAT data
@@ -167,14 +163,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return (immutableTransaction.TransactionMetadata.HasCatResponseHeaders);
         }
 
-        private static Boolean IsSyntheticsParticipant([NotNull] ImmutableTransaction immutableTransaction)
+        private static Boolean IsSyntheticsParticipant(ImmutableTransaction immutableTransaction)
         {
             return (immutableTransaction.TransactionMetadata.SyntheticsResourceId != null && immutableTransaction.TransactionMetadata.SyntheticsJobId != null && immutableTransaction.TransactionMetadata.SyntheticsMonitorId != null);
 
         }
-
-        [NotNull]
-        private static IEnumerable<ImmutableSegmentTreeNode> GetNodesOfType<T>([NotNull] IEnumerable<ImmutableSegmentTreeNode> roots)
+        private static IEnumerable<ImmutableSegmentTreeNode> GetNodesOfType<T>(IEnumerable<ImmutableSegmentTreeNode> roots)
         {
             return roots
                 .SelectMany(root => root.Flatten(node => node.Children))

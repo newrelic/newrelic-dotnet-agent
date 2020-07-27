@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit.Abstractions;
 
@@ -16,42 +15,29 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private Boolean _initialized;
 
-        [NotNull]
         private readonly Object _initializeLock = new Object();
 
-        [NotNull]
         private readonly RemoteApplication _remoteApplication;
 
-        [NotNull]
         public RemoteApplication RemoteApplication { get { return _remoteApplication; } }
 
-        [NotNull]
         public AgentLogFile AgentLog { get { return _remoteApplication.AgentLog; } }
 
-        [NotNull]
         public String DestinationServerName { get { return _remoteApplication.DestinationServerName; } }
 
-        [NotNull]
         public String Port { get { return _remoteApplication.Port; } }
 
-        [NotNull]
         public String CommandLineArguments { get; set; }
 
-        [NotNull]
         public String DestinationNewRelicConfigFilePath { get { return _remoteApplication.DestinationNewRelicConfigFilePath; } }
 
-        [NotNull]
         public String DestinationApplicationDirectoryPath { get { return _remoteApplication.DestinationApplicationDirectoryPath; } }
 
-        [NotNull]
         public String DestinationNewRelicExtensionsDirectoryPath => _remoteApplication.DestinationNewRelicExtensionsDirectoryPath;
 
-        [NotNull]
         private readonly IDictionary<String, String> _initialNewRelicAppSettings = new Dictionary<String, String>();
-        [NotNull]
         public IDictionary<String, String> InitialNewRelicAppSettings { get { return _initialNewRelicAppSettings; } }
 
-        [CanBeNull]
         public ITestOutputHelper TestLogger { get; set; }
 
         public Boolean DelayKill;
@@ -84,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        protected RemoteApplicationFixture([NotNull] RemoteApplication remoteApplication)
+        protected RemoteApplicationFixture(RemoteApplication remoteApplication)
         {
             _remoteApplication = remoteApplication;
         }

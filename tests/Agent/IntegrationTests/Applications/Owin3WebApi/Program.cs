@@ -4,7 +4,6 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using CommandLine;
-using JetBrains.Annotations;
 using Microsoft.Owin.Hosting;
 
 namespace Owin3WebApi
@@ -12,7 +11,7 @@ namespace Owin3WebApi
     public class Program
     {
         [Option("port", Required = true)]
-        [NotNull] public String Port { get; set; }
+        public String Port { get; set; }
 
         static void Main(string[] args)
         {

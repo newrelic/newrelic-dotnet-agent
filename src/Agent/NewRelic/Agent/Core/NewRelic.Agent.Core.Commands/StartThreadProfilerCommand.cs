@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.ThreadProfiling;
 
 namespace NewRelic.Agent.Core.Commands
 {
     public class StartThreadProfilerCommand : AbstractCommand
     {
-        [NotNull]
         public IThreadProfilingSessionControl ThreadProfilingService { get; set; }
 
-        public StartThreadProfilerCommand([NotNull] IThreadProfilingSessionControl threadProfilingService)
+        public StartThreadProfilerCommand(IThreadProfilingSessionControl threadProfilingService)
         {
             Name = "start_profiler";
             ThreadProfilingService = threadProfilingService;
@@ -27,8 +25,6 @@ namespace NewRelic.Agent.Core.Commands
                 {"error", errorMessage}
             };
         }
-
-        [CanBeNull]
         private String StartThreadProfilingSessions(IDictionary<String, Object> arguments)
         {
             if (arguments == null)

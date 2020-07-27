@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
@@ -23,12 +22,8 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
             private static Func<Object, String> _propertyHost;
             private static Func<Object, Int32> _propertyPortPathOrId;
             private static Func<Object, Int64> _propertyDatabaseName;
-
-            [NotNull]
             public static readonly Func<Object, String> GetPropertyHost = AssignPropertyHost();
-            [NotNull]
             public static readonly Func<Object, Int32> GetPropertyPortPathOrId = AssignPropertyPortPathOrId();
-            [NotNull]
             public static readonly Func<Object, Int64> GetPropertyDatabaseName = AssignPropertyDatabaseName();
 
             private static Func<Object, String> AssignPropertyHost()
@@ -53,9 +48,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
             var canWrap = method.MatchesAny(assemblyName: "ServiceStack.Redis", typeName: "ServiceStack.Redis.RedisNativeClient", methodName: "SendCommand");
             return new CanWrapResponse(canWrap);
         }
-
-        [NotNull]
-        static String GetRedisCommand([NotNull] Byte[] command)
+        static String GetRedisCommand(Byte[] command)
         {
             // ServiceStack.Redis uses the same UTF8 encoder
             return System.Text.Encoding.UTF8.GetString(command);
@@ -82,9 +75,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 
             return Delegates.GetDelegateFor(segment);
         }
-
-        [CanBeNull]
-        private static String TryGetPropertyName([NotNull] String propertyName, [NotNull] Object contextObject)
+        private static String TryGetPropertyName(String propertyName, Object contextObject)
         {
             if (propertyName == PropertyHost)
                 return Statics.GetPropertyHost(contextObject);

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utils
 {
@@ -27,7 +26,7 @@ namespace NewRelic.Agent.Core.Utils
             }
         }
 
-        public HashSet([NotNull] IEnumerable<T> source)
+        public HashSet(IEnumerable<T> source)
         {
             map = new Dictionary<T, Object>();
             foreach (var item in source)

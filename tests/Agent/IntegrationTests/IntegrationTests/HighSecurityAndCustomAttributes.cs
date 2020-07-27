@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
@@ -13,10 +12,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class HighSecurityAndCustomAttributes : IClassFixture<HSMCustomAttributesWebApi>
     {
-        [NotNull]
         private readonly HSMCustomAttributesWebApi _fixture;
 
-        public HighSecurityAndCustomAttributes([NotNull] HSMCustomAttributesWebApi fixture, ITestOutputHelper output)
+        public HighSecurityAndCustomAttributes(HSMCustomAttributesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

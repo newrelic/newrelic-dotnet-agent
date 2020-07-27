@@ -4,14 +4,12 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using CommandLine;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
 {
     public class Program
     {
         [Option("port", Required = true)]
-        [NotNull]
         public String Port { get; set; }
 
         static void Main(string[] args)

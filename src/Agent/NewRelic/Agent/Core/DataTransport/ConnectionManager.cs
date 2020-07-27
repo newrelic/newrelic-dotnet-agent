@@ -2,7 +2,6 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
 using NewRelic.Agent.Core.Logging;
@@ -21,21 +20,15 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         private static readonly TimeSpan MinimumRetryTime = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan MaximumRetryTime = TimeSpan.FromMinutes(5);
-
-        [NotNull]
         private readonly IConnectionHandler _connectionHandler;
-
-        [NotNull]
         private readonly IScheduler _scheduler;
 
         private TimeSpan _retryTime = MinimumRetryTime;
 
         private Boolean _started;
-
-        [NotNull]
         private readonly Object _syncObject = new Object();
 
-        public ConnectionManager([NotNull] IConnectionHandler connectionHandler, [NotNull] IScheduler scheduler)
+        public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
         {
             _connectionHandler = connectionHandler;
             _scheduler = scheduler;

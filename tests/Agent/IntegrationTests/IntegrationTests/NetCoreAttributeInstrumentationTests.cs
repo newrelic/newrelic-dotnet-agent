@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class NetCoreAttributeInstrumentationTests : IClassFixture<RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture _fixture;
 
-        public NetCoreAttributeInstrumentationTests([NotNull] RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture fixture, [NotNull] ITestOutputHelper output)
+        public NetCoreAttributeInstrumentationTests(RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

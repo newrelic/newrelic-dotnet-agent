@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metric;
@@ -17,7 +16,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class MessageBrokerTransformerTests
     {
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -195,11 +193,7 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-
-
-
-        [NotNull]
-        private static Segment GetSegment([NotNull] String vendor, MetricNames.MessageBrokerDestinationType destinationType, String destination, MetricNames.MessageBrokerAction action)
+        private static Segment GetSegment(String vendor, MetricNames.MessageBrokerDestinationType destinationType, String destination, MetricNames.MessageBrokerAction action)
         {
             var timerFactory = Mock.Create<ITimerFactory>();
             var builder = new TypedSegment<MessageBrokerSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1),
@@ -209,7 +203,7 @@ namespace NewRelic.Agent.Core.Transformers
             return builder;
         }
 
-        private static TypedSegment<MessageBrokerSegmentData> GetSegment([NotNull] String vendor, MetricNames.MessageBrokerDestinationType destinationType, String destination, MetricNames.MessageBrokerAction action, double duration)
+        private static TypedSegment<MessageBrokerSegmentData> GetSegment(String vendor, MetricNames.MessageBrokerDestinationType destinationType, String destination, MetricNames.MessageBrokerAction action, double duration)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             var parameters = (new ConcurrentDictionary<String, Object>());

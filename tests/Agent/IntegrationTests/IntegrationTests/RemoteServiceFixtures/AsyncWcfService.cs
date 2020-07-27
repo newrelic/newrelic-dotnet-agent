@@ -2,7 +2,6 @@
 using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
@@ -15,7 +14,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private const String ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.exe";
         private const String TargetFramework = "net451";
 
-        [NotNull]
         public readonly String ExpectedTransactionName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.IWcfService.BeginServiceMethod";
 
         public AsyncWcfService() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))
@@ -40,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.Equal(expectedAsyncResult, actualAsyncResult);
         }
 
-        private async Task<String> QueryWcfService([NotNull] Applications.AsyncWcfService.IWcfService service, [NotNull] String input, [NotNull] String otherInput, TimeSpan timeout)
+        private async Task<String> QueryWcfService(Applications.AsyncWcfService.IWcfService service, String input, String otherInput, TimeSpan timeout)
         {
             var cancellationSource = new CancellationTokenSource();
             cancellationSource.CancelAfter(timeout);

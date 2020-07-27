@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.GZip;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.DataTransport
@@ -14,7 +13,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [TestCase("")]
         [TestCase("foo")]
         [TestCase("Զԣש", Description = "Some UTF-8 characters")]
-        public void DeflateCompressedDataShouldDecompressToSameValue([NotNull] String input)
+        public void DeflateCompressedDataShouldDecompressToSameValue(String input)
         {
             var compressed = DataCompressor.Compress(input);
             var decompressed = DataCompressor.Decompress(compressed);
@@ -26,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [TestCase("")]
         [TestCase("foo")]
         [TestCase("Զԣש", Description = "Some UTF-8 characters")]
-        public void GZipCompressedDataShouldDecompressToSameValue([NotNull] String input)
+        public void GZipCompressedDataShouldDecompressToSameValue(String input)
         {
             var compressed = DataCompressor.Compress(new UTF8Encoding().GetBytes(input), DataCompressor.GzipCompression);
             var decompressed = DecompressGzip(compressed);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
@@ -14,13 +13,8 @@ namespace NewRelic.Providers.Wrapper.Wcf3
         // these must be lazily instatiated when the wrapper is actually used, not when the wrapper is first instantiated, so they sit in a nested class
         private static class Statics
         {
-            [NotNull]
             public static readonly Func<Object, MethodInfo> GetSyncMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, SyncTypeName, "method");
-
-            [NotNull]
             public static Func<Object, MethodInfo> GetAsyncBeginMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, AsyncTypeName, "beginMethod");
-
-            [NotNull]
             public static Func<Object, MethodInfo> GetAsyncEndMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, AsyncTypeName, "endMethod");
         }
 
@@ -73,9 +67,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                     transaction.End();
                 });
         }
-
-        [CanBeNull]
-        private MethodInfo TryGetMethodInfo([NotNull] String methodName, [NotNull] Object invocationTarget)
+        private MethodInfo TryGetMethodInfo(String methodName, Object invocationTarget)
         {
             if (methodName == SyncMethodName)
                 return Statics.GetSyncMethodInfo(invocationTarget);
@@ -86,9 +78,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             throw new Exception("Unexpected instrumented method in wrapper: " + methodName);
         }
-
-        [NotNull]
-        private String GetTypeName([NotNull] MethodInfo methodInfo)
+        private String GetTypeName(MethodInfo methodInfo)
         {
             var type = methodInfo.DeclaringType;
             if (type == null)
@@ -100,9 +90,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             return name;
         }
-
-        [NotNull]
-        private String GetMethodName([NotNull] MethodInfo methodInfo)
+        private String GetMethodName(MethodInfo methodInfo)
         {
             var name = methodInfo.Name;
             if (name == null)
@@ -110,9 +98,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             return name;
         }
-
-        [NotNull]
-        private IEnumerable<KeyValuePair<String, String>> GetParameters([NotNull] MethodCall methodCall, [NotNull] MethodInfo methodInfo, [NotNull] Object[] arguments, [NotNull] IAgentWrapperApi agentWrapperApi)
+        private IEnumerable<KeyValuePair<String, String>> GetParameters(MethodCall methodCall, MethodInfo methodInfo, Object[] arguments, IAgentWrapperApi agentWrapperApi)
         {
             // only the begin methods will have parameters, end won't
             if (methodCall.Method.MethodName != SyncMethodName

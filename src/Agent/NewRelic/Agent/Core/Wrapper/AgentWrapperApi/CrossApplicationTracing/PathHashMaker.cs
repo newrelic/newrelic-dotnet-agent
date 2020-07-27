@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Dongle.Cryptography;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
@@ -14,8 +13,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         /// Calculates and returns a path hash based on the given parameters.
         /// </summary>
         /// <returns>Returns a path hash based on the given parameters.</returns>
-        [NotNull]
-        String CalculatePathHash([NotNull] String transactionName, [CanBeNull] String referringPathHash);
+        String CalculatePathHash(String transactionName, String referringPathHash);
     }
 
     public class PathHashMaker : IPathHashMaker
@@ -23,11 +21,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         private const Int32 TotalBits = 32;
         private const String PathHashSeparator = ";";
         public const Int32 AlternatePathHashMaxSize = 10;
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
 
-        public PathHashMaker([NotNull] IConfigurationService configurationService)
+        public PathHashMaker(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
@@ -51,8 +47,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         }
 
         // Though currently unused, this function is left in place as a reference in case it is needed in the future.
-        [NotNull, UsedImplicitly]
-        private static String ReversePathHash([NotNull] String transactionName, [NotNull] String appName, [NotNull] String pathHash)
+        private static String ReversePathHash(String transactionName, String appName, String pathHash)
         {
             var pathHashInt = HexToInt(pathHash);
             var rotatedReferringPathHash = pathHashInt ^ GetHash(appName, transactionName);
@@ -63,7 +58,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             return IntToHex(reversedPathHashInt);
         }
 
-        private static Int32 GetHash([NotNull] String appName, [NotNull] String txName)
+        private static Int32 GetHash(String appName, String txName)
         {
             var md5Hash = new MD5();
             var formattedInput = appName + PathHashSeparator + txName;
@@ -73,7 +68,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             return fromBytes;
         }
 
-        private static Int32 HexToIntOrZero([CanBeNull] String val)
+        private static Int32 HexToIntOrZero(String val)
         {
             if (val == null)
                 return 0;
@@ -81,7 +76,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             return HexToInt(val);
         }
 
-        private static Int32 HexToInt([NotNull] String val)
+        private static Int32 HexToInt(String val)
         {
             Int32 result;
             if (Int32.TryParse(val, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
@@ -89,8 +84,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
             return 0;
         }
-
-        [NotNull]
         private static String IntToHex(Int32 val)
         {
             var hex = val.ToString("x8");

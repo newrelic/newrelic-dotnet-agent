@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core;
@@ -35,47 +34,23 @@ namespace CompositeTests
     /// </summary>
     public class CompositeTestAgent
     {
-        [NotNull]
         private readonly IContainer _container;
-
-        [NotNull]
         private readonly ICollection<Action> _harvestActions;
-
-        [NotNull]
         private readonly ICollection<WaitCallback> _queuedCallbacks;
-
-        [NotNull]
         public List<MetricWireModel> Metrics { get; } = new List<MetricWireModel>();
-
-        [NotNull]
         public List<CustomEventWireModel> CustomEvents { get; } = new List<CustomEventWireModel>();
-
-        [NotNull]
         public List<TransactionTraceWireModel> TransactionTraces { get; } = new List<TransactionTraceWireModel>();
-
-        [NotNull]
         public List<TransactionEventWireModel> TransactionEvents { get; } = new List<TransactionEventWireModel>();
-
-        [NotNull]
         public List<ErrorTraceWireModel> ErrorTraces { get; } = new List<ErrorTraceWireModel>();
 
         public ErrorEventAdditions ErrorEventAdditionalInfo { get; } = new ErrorEventAdditions();
-
-        [NotNull]
         public List<ErrorEventWireModel> ErrorEvents { get; } = new List<ErrorEventWireModel>();
-
-        [NotNull]
         public configuration LocalConfiguration { get; }
-
-        [NotNull]
         public ServerConfiguration ServerConfiguration { get; }
 
         public IConfiguration CurrentConfiguration { get; private set; }
 
         private readonly bool _shouldAllowThreads;
-
-
-        [NotNull]
         public List<SqlTraceWireModel> SqlTraces { get; private set; } = new List<SqlTraceWireModel>();
 
         public CompositeTestAgent() : this(shouldAllowThreads: false)
@@ -163,7 +138,7 @@ namespace CompositeTests
             propInfo.SetValue(null, new Action(() => { }));
         }
 
-        private static Func<IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>([NotNull] List<T> dataBucket)
+        private static Func<IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(List<T> dataBucket)
         {
             return datas =>
             {
@@ -174,7 +149,7 @@ namespace CompositeTests
             };
         }
 
-        private static Func<ErrorEventAdditions, IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(ErrorEventAdditions additions, [NotNull] List<T> dataBucket)
+        private static Func<ErrorEventAdditions, IEnumerable<T>, DataTransportResponseStatus> SaveDataAndReturnSuccess<T>(ErrorEventAdditions additions, List<T> dataBucket)
         {
             return (_, datas) =>
             {
@@ -189,8 +164,6 @@ namespace CompositeTests
         {
             _container.Dispose();
         }
-
-        [NotNull]
         public IAgentWrapperApi GetAgentWrapperApi()
         {
             return _container.Resolve<IAgentWrapperApi>();
@@ -238,14 +211,10 @@ namespace CompositeTests
                 throw new NullReferenceException("newConfig");
             CurrentConfiguration = newConfig;
         }
-
-        [NotNull]
         private static configuration GetDefaultTestLocalConfiguration()
         {
             return new configuration();
         }
-
-        [NotNull]
         private static ServerConfiguration GetDefaultTestServerConfiguration()
         {
             return new ServerConfiguration

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class WcfAppSelfHosted : IClassFixture<RemoteServiceFixtures.WcfAppSelfHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppSelfHosted _fixture;
 
-        public WcfAppSelfHosted([NotNull] RemoteServiceFixtures.WcfAppSelfHosted fixture, [NotNull] ITestOutputHelper testLogger)
+        public WcfAppSelfHosted(RemoteServiceFixtures.WcfAppSelfHosted fixture, ITestOutputHelper testLogger)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;

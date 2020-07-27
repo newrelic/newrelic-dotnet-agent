@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
@@ -8,7 +7,6 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 {
     public class BucketProfile
     {
-        [NotNull]
         public readonly ProfileNode Root = new ProfileNode(
             // Set the id to IntPtr.Zero so that we don't request it from the unmanaged profiler - 
             // such a request makes it unhappy.
@@ -18,7 +16,6 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
     public class ProfileNodes : IEnumerable<ProfileNode>
     {
-        [NotNull]
         private readonly List<ProfileNode> _children;
 
         public ProfileNodes()
@@ -68,17 +65,14 @@ namespace NewRelic.Agent.Core.ThreadProfiling
     [JsonConverter(typeof(JsonArrayConverter))]
     public class ProfileNode
     {
-        [NotNull]
         [JsonArrayIndex(Index = 0)]
         public readonly ProfileNodeDetails Details = new ProfileNodeDetails();
 
         [JsonArrayIndex(Index = 1)]
         public uint RunnableCount;
 
-        [JsonArrayIndex(Index = 2), UsedImplicitly]
+        [JsonArrayIndex(Index = 2)]
         public readonly UInt32 Unused;
-
-        [NotNull]
         [JsonArrayIndex(Index = 3)]
         public readonly ProfileNodes Children = new ProfileNodes();
 

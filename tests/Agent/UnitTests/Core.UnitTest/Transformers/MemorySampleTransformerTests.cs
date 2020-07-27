@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
@@ -11,11 +10,11 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class MemorySampleTransformerTests
     {
-        [NotNull] private MemorySampleTransformer _memorySampleTransformer;
+        private MemorySampleTransformer _memorySampleTransformer;
 
-        [NotNull] private IMetricBuilder _metricBuilder;
+        private IMetricBuilder _metricBuilder;
 
-        [NotNull] private IMetricAggregator _metricAggregator;
+        private IMetricAggregator _metricAggregator;
 
         [SetUp]
         public void SetUp()

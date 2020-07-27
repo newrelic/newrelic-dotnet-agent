@@ -2,7 +2,6 @@
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Configuration;
 
 namespace NewRelic.Agent.Core
@@ -13,7 +12,6 @@ namespace NewRelic.Agent.Core
 
         static AgentInitializer()
         {
-            // ReSharper disable once ConvertClosureToMethodGroup
             InitializeAgent = () => CallOnce.TouchMe();
         }
 
@@ -22,7 +20,6 @@ namespace NewRelic.Agent.Core
         /// 
         /// This is the one place in our agent where we are capitulating the needs of unit tests by providing functionality that only tests should use.
         /// </summary>
-        [NotNull]
         public static Action InitializeAgent { get; private set; }
 
         private static class CallOnce
@@ -40,7 +37,6 @@ namespace NewRelic.Agent.Core
                 LoggerBootstrapper.Initialize();
 
                 // Force agent to be initialized
-                // ReSharper disable once UnusedVariable
                 var agent = Agent.Instance;
             }
 

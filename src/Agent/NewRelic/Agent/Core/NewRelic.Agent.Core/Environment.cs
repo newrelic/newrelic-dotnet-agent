@@ -8,7 +8,6 @@ using System.Management;
 using System.Web.Configuration;
 #endif
 using System.Web;
-using JetBrains.Annotations;
 using Microsoft.Win32;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utilities;
@@ -19,13 +18,12 @@ namespace NewRelic.Agent.Core
     [JsonConverter(typeof(EnvironmentConverter))]
     public class Environment
     {
-        [NotNull]
         private readonly List<Object[]> _environmentMap = new List<Object[]>();
 
         public UInt64 TotalPhysicalMemory { get; }
         public String AppDomainAppPath { get; }
 
-        public Environment([NotNull] ISystemInfo systemInfo)
+        public Environment(ISystemInfo systemInfo)
         {
             try
             {
@@ -92,7 +90,7 @@ namespace NewRelic.Agent.Core
             }
         }
 
-        public void AddVariable([NotNull] String name, [NotNull] Func<Object> valueGetter)
+        public void AddVariable(String name, Func<Object> valueGetter)
         {
             var value = null as Object;
             try
@@ -106,8 +104,6 @@ namespace NewRelic.Agent.Core
 
             _environmentMap.Add(new[] { name, value });
         }
-
-        [CanBeNull]
         private static Process TryGetCurrentProcess()
         {
             try
@@ -136,7 +132,6 @@ namespace NewRelic.Agent.Core
         }
 
 #if NET35
-        [CanBeNull]
         private static String TryGetAppDomainAppId()
         {
             try
@@ -150,9 +145,7 @@ namespace NewRelic.Agent.Core
             }
         }
 #endif
-
-        [CanBeNull]
-        public static String TryGetAppPath([NotNull] Func<String> pathGetter)
+        public static String TryGetAppPath(Func<String> pathGetter)
         {
             try
             {
@@ -182,7 +175,6 @@ namespace NewRelic.Agent.Core
         }
 
 #if NET35
-        [CanBeNull]
         public Version TryGetIisVersion()
         {
             try
@@ -213,8 +205,6 @@ namespace NewRelic.Agent.Core
             }
         }
 #endif
-
-        [NotNull]
         private static IEnumerable<String> GetLoadedAssemblyNames()
         {
             var versionZero = new Version(0, 0, 0, 0);
@@ -229,8 +219,7 @@ namespace NewRelic.Agent.Core
         }
 
 #if NET35
-        [NotNull]
-        private static IEnumerable<ManagementBaseObject> TryGetManagementObjects([NotNull] String query)
+        private static IEnumerable<ManagementBaseObject> TryGetManagementObjects(String query)
         {
             try
             {
@@ -249,7 +238,7 @@ namespace NewRelic.Agent.Core
 
         public class EnvironmentConverter : JsonConverter
         {
-            public override void WriteJson([NotNull] JsonWriter writer, Object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
             {
                 var environment = value as Environment;
                 if (environment == null)

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core
 {
     [TestFixture]

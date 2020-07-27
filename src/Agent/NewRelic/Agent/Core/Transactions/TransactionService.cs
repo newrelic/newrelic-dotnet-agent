@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
@@ -20,7 +19,6 @@ namespace NewRelic.Agent.Core.Transactions
         /// Returns the current internal transaction, if any.
         /// </summary>
         /// <returns></returns>
-        [CanBeNull]
         ITransaction GetCurrentInternalTransaction();
 
         /// <summary>
@@ -30,8 +28,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// <param name="onCreate">An action to perform if an internal transaction is created.</param>
         /// <param name="mustBeRootTransaction">Whether or not the transaction must be root.</param>
         /// <returns></returns>
-        [CanBeNull]
-        ITransaction GetOrCreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true);
+        ITransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true);
 
         /// <summary>
         /// Removes any outstanding internal transactions.
@@ -50,21 +47,13 @@ namespace NewRelic.Agent.Core.Transactions
     public class TransactionService : ConfigurationBasedService, ITransactionService
     {
         private const String TransactionContextKey = "NewRelic.Transaction";
-        [NotNull]
         private readonly IEnumerable<IContextStorage<ITransaction>> _sortedPrimaryContexts;
-
-        [CanBeNull]
         private readonly IContextStorage<ITransaction> _asyncContext;
-
-        [NotNull]
         private readonly ITimerFactory _timerFactory;
-        [NotNull]
         private readonly ICallStackManagerFactory _callStackManagerFactory;
-
-        [NotNull]
         private readonly IDatabaseService _databaseService;
 
-        public TransactionService([NotNull] IEnumerable<IContextStorageFactory> factories, [NotNull] ITimerFactory timerFactory, [NotNull] ICallStackManagerFactory callStackManagerFactory, [NotNull] IDatabaseService databaseService)
+        public TransactionService(IEnumerable<IContextStorageFactory> factories, ITimerFactory timerFactory, ICallStackManagerFactory callStackManagerFactory, IDatabaseService databaseService)
         {
             _sortedPrimaryContexts = GetPrimaryTransactionContexts(factories);
             _asyncContext = GetAsyncTransactionContext(factories);
@@ -74,9 +63,7 @@ namespace NewRelic.Agent.Core.Transactions
         }
 
         #region Private Helpers
-
-        [NotNull]
-        private static IEnumerable<IContextStorage<ITransaction>> GetPrimaryTransactionContexts([NotNull] IEnumerable<IContextStorageFactory> factories)
+        private static IEnumerable<IContextStorage<ITransaction>> GetPrimaryTransactionContexts(IEnumerable<IContextStorageFactory> factories)
         {
             var list = factories
                 .Where(factory => factory != null)
@@ -91,7 +78,7 @@ namespace NewRelic.Agent.Core.Transactions
                 .OrderByDescending(transactionContext => transactionContext.Priority).ToList();
         }
 
-        private static IContextStorage<ITransaction> GetAsyncTransactionContext([NotNull] IEnumerable<IContextStorageFactory> factories)
+        private static IContextStorage<ITransaction> GetAsyncTransactionContext(IEnumerable<IContextStorageFactory> factories)
         {
             return factories
                 .Where(factory => factory != null)
@@ -102,8 +89,6 @@ namespace NewRelic.Agent.Core.Transactions
                 .OrderByDescending(transactionContext => transactionContext.Priority)
                 .FirstOrDefault();
         }
-
-        [CanBeNull]
         private ITransaction TryGetInternalTransaction(IContextStorage<ITransaction> transactionContext)
         {
             try
@@ -134,7 +119,7 @@ namespace NewRelic.Agent.Core.Transactions
             return null;
         }
 
-        private ITransaction CreateInternalTransaction([NotNull] ITransactionName initialTransactionName, Action onCreate)
+        private ITransaction CreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate)
         {
             RemoveOutstandingInternalTransactions(true);
 

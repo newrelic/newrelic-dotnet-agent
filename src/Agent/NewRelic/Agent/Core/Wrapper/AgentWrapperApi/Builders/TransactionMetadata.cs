@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions;
@@ -13,43 +12,32 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public interface ITransactionMetadata : ITransactionAttributeMetadata
     {
-        [NotNull]
         ImmutableTransactionMetadata ConvertToImmutableMetadata();
-
-        [CanBeNull]
         string CrossApplicationReferrerPathHash { get; }
-
-        [CanBeNull]
         string CrossApplicationReferrerProcessId { get; }
-
-        [CanBeNull]
         string CrossApplicationReferrerTripId { get; }
-
-        [CanBeNull]
         string SyntheticsResourceId { get; }
-        [CanBeNull]
         string SyntheticsJobId { get; }
-        [CanBeNull]
         string SyntheticsMonitorId { get; }
         string LatestCrossApplicationPathHash { get; }
-        void SetUri([NotNull] String uri);
-        void SetOriginalUri([NotNull] string uri);
-        void SetPath([NotNull] string path);
-        void SetReferrerUri([NotNull] string uri);
+        void SetUri(String uri);
+        void SetOriginalUri(string uri);
+        void SetPath(string path);
+        void SetReferrerUri(string uri);
         void SetQueueTime(TimeSpan queueTime);
-        void AddRequestParameter([NotNull] string key, [NotNull] string value);
-        void AddServiceParameter([NotNull] string key, [NotNull] string value);
-        void AddUserAttribute([NotNull] string key, [NotNull] Object value);
-        void AddUserErrorAttribute([NotNull] string key, [NotNull] Object value);
+        void AddRequestParameter(string key, string value);
+        void AddServiceParameter(string key, string value);
+        void AddUserAttribute(string key, Object value);
+        void AddUserErrorAttribute(string key, Object value);
         void SetHttpResponseStatusCode(int statusCode, int? subStatusCode);
         void AddExceptionData(ErrorData errorData);
         void AddCustomErrorData(ErrorData errorData);
-        void SetCrossApplicationReferrerTripId([NotNull] string tripId);
-        void SetCrossApplicationReferrerPathHash([NotNull] string referrerPathHash);
-        void SetCrossApplicationReferrerProcessId([NotNull] string referrerProcessId);
+        void SetCrossApplicationReferrerTripId(string tripId);
+        void SetCrossApplicationReferrerPathHash(string referrerPathHash);
+        void SetCrossApplicationReferrerProcessId(string referrerProcessId);
         void SetCrossApplicationReferrerContentLength(long referrerContentLength);
-        void SetCrossApplicationReferrerTransactionGuid([NotNull] string transactionGuid);
-        void SetCrossApplicationPathHash([NotNull] string pathHash);
+        void SetCrossApplicationReferrerTransactionGuid(string transactionGuid);
+        void SetCrossApplicationPathHash(string pathHash);
         void SetSyntheticsResourceId(string syntheticsResourceId);
         void SetSyntheticsJobId(string syntheticsJobId);
         void SetSyntheticsMonitorId(string syntheticsMonitorId);
@@ -70,12 +58,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         // These can be written by one thread and read by another.
         private volatile string _crossApplicationReferrerPathHash;
         private volatile string _crossApplicationReferrerProcessId;
-        [CanBeNull] private volatile string _crossApplicationReferrerTripId;
-        [CanBeNull] private volatile string _crossApplicationReferrerTransactionGuid;
-        [CanBeNull] private volatile string _syntheticsResourceId;
-        [CanBeNull] private volatile string _syntheticsJobId;
-        [CanBeNull] private volatile string _syntheticsMonitorId;
-        [CanBeNull] private volatile string _latestCrossApplicationPathHash;
+        private volatile string _crossApplicationReferrerTripId;
+        private volatile string _crossApplicationReferrerTransactionGuid;
+        private volatile string _syntheticsResourceId;
+        private volatile string _syntheticsJobId;
+        private volatile string _syntheticsMonitorId;
+        private volatile string _latestCrossApplicationPathHash;
 
         //if this never gets set, then default to -1
         // thread safety for this occurrs in the getter and setter below
@@ -84,34 +72,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         private volatile Func<TimeSpan> _timeSpanQueueTime = null;
         //This is a Int32? struct
         private volatile int _httpResponseStatusCode = Int32.MinValue;
-
-
-        [CanBeNull]
         private volatile string _uri;
-        [CanBeNull]
         private volatile string _originalUri;
-        [CanBeNull]
         private volatile string _referrerUri;
-
-        [NotNull]
         private readonly IDictionary<string, string> _requestParameters = new ConcurrentDictionary<string, string>();
-        [NotNull]
         private readonly IDictionary<string, string> _serviceParameters = new ConcurrentDictionary<string, string>();
-        [NotNull]
         private readonly IDictionary<string, Object> _userAttributes = new ConcurrentDictionary<string, Object>();
-        [NotNull]
         private readonly IDictionary<string, Object> _userErrorAttributes = new ConcurrentDictionary<string, Object>();
 
         //everything below this does not have a getter, meaning it is only updated and not read during the transaction
-
-        [NotNull]
         private readonly IList<ErrorData> _transactionExceptionDatas = new ConcurrentList<ErrorData>();
-        [NotNull]
         private readonly IList<ErrorData> _customErrorDatas = new ConcurrentList<ErrorData>();
-        [NotNull]
         private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
-
-        [CanBeNull]
         private volatile string _path;
         private volatile int _httpResponseSubStatusCode = Int32.MinValue;
         private volatile bool _hasResponseCatHeaders;
@@ -272,9 +244,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         public string CrossApplicationReferrerTransactionGuid => _crossApplicationReferrerTransactionGuid;
         public string LatestCrossApplicationPathHash => _latestCrossApplicationPathHash;
         public string Uri => _uri;
-        [CanBeNull]
         public string OriginalUri => _originalUri;
-        [CanBeNull]
         public string ReferrerUri => _referrerUri;
 
         public TimeSpan? QueueTime => GetTimeSpan();

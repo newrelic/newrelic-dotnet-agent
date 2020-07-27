@@ -3,11 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.UnitTest.Fixtures
 {
     /// <summary>
@@ -15,11 +12,8 @@ namespace NewRelic.Agent.Core.UnitTest.Fixtures
     /// </summary>
     public class Logging : IDisposable
     {
-        [NotNull]
         public readonly log4net.Appender.MemoryAppender MemoryAppender = new log4net.Appender.MemoryAppender();
-        [NotNull]
         public readonly log4net.Repository.Hierarchy.Logger Logger = (log4net.LogManager.GetRepository() as log4net.Repository.Hierarchy.Hierarchy).Root;
-        [NotNull]
         private readonly log4net.Appender.AppenderCollection _previousAppenders = new log4net.Appender.AppenderCollection();
 
         /// <summary>
@@ -147,8 +141,6 @@ namespace NewRelic.Agent.Core.UnitTest.Fixtures
             return count;
 
         }
-
-        [NotNull]
         public IEnumerable<String> ErrorMessages
         {
             get

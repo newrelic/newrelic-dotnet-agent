@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Parsing;
@@ -27,7 +26,7 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
         }
 
         [TestCaseSource("GetSqlParsingTestCases")]
-        public void SqlParsingTest([NotNull] String inputSql, [NotNull] String expectedOperation, [NotNull] String expectedTable)
+        public void SqlParsingTest(String inputSql, String expectedOperation, String expectedTable)
         {
             var parsed = SqlParser.GetParsedDatabaseStatement(CommandType.Text, inputSql);
 

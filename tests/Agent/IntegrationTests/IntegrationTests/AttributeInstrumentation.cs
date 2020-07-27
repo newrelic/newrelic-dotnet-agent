@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -10,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AttributeInstrumentation : IClassFixture<RemoteServiceFixtures.AttributeInstrumentation>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.AttributeInstrumentation _fixture;
 
-        public AttributeInstrumentation([NotNull] RemoteServiceFixtures.AttributeInstrumentation fixture, [NotNull] ITestOutputHelper output)
+        public AttributeInstrumentation(RemoteServiceFixtures.AttributeInstrumentation fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
