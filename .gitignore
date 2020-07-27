@@ -25,7 +25,7 @@ _NCrunch_*/
 
 # NuGet package files
 Agent/NewRelic/Tray/packages/
-src/Agent/packages/
+packages/
 FunctionalTests/packages/
 PerformanceTests/packages/
 PhantomJSTests/packages/
@@ -66,8 +66,7 @@ NDependOut/
 test-results
 
 # Ignore FullAgent build output
-src/Agent/_build/
-src/Agent/NewRelic/Tray/_build/
+src/_build/
 build/_staging
 build/BuildArtifacts
 

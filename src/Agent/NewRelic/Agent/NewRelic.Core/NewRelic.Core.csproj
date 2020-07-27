@@ -4,7 +4,7 @@
         <AssemblyName>NewRelic.Core</AssemblyName>
         <RootNamespace>NewRelic.Core</RootNamespace>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
         <Description>New Relic Common Library</Description>
         <GitTagPrefix>v</GitTagPrefix>
     </PropertyGroup>

@@ -11,7 +11,7 @@ namespace ArtifactBuilder
         {
             Configuration = configuration;
             Platform = platform;
-            SourcePath = $@"{sourcePath}\src\Agent";
+            SourcePath = $@"{sourcePath}\src";
         }
 
         public string Configuration { get; }

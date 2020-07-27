@@ -17,7 +17,7 @@ namespace NewRelic.Installer
     {
         enum VersionResolution { Latest, Earliest, FirstFound, LastFound };
 
-        private const string HomeDirectoryNamePrefix = "New Relic Home ";
+        private const string HomeDirectoryNamePrefix = "src\\Agent\\New Relic Home ";
         private const string ProfilerSoFileName = "libNewRelicProfiler.so";
 
         [CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
@@ -56,36 +56,44 @@ namespace NewRelic.Installer
         private string DestinationProfilerDllPath => Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Profiler.dll");
         private string DestinationProfilerSoPath => Path.Combine(DestinationHomeDirectoryPath, ProfilerSoFileName);
         private String DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
-        private String DestinationRegistryFileName { get { return String.Format("New Relic Home {0}.reg", Bitness); } }
+        [NotNull]
+        private String DestinationRegistryFileName { get { return String.Format("src\\Agent\\New Relic Home {0}.reg", Bitness); } }
+        [NotNull]
         private String DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
         private String DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
-        private String BuildOutputPath { get { return Path.Combine(SolutionPath, "_build"); } }
+        [NotNull]
+        private String BuildOutputPath { get { return Path.Combine(SolutionPath, "src", "_build"); } }
+        [NotNull]
         private String AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
         private String CoreInstallerOutputPath { get { return Path.Combine(BuildOutputPath, "core_installer"); } }
 
         // input paths
         private String AnyCpuBuildDirectoryName { get { return String.Format("AnyCPU-{0}", Configuration); } }
-        private String NewRelicConfigPath { get { return Path.Combine(SolutionPath, "Configuration", "newrelic.config") ?? String.Empty; } }
-        private String NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
-        private String ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
-        private String CoreInstallerSourcePath { get { return Path.Combine(SolutionPath, "NewRelic", "CoreInstaller"); } }
+        [NotNull]
+        private String NewRelicConfigPath { get { return Path.Combine(SolutionPath, "src", "Agent", "Configuration", "newrelic.config") ?? String.Empty; } }
+        [NotNull]
+        private String NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
+        [NotNull]
+        private String ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
+        [NotNull]
+        private String CoreInstallerSourcePath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "CoreInstaller"); } }
 
-        private string LicenseFilePath => Path.Combine(SolutionPath, "Miscellaneous", "License.txt");
+        private string LicenseFilePath => Path.Combine(SolutionPath, "src", "Agent", "Miscellaneous", "License.txt");
 
         private string Core20ReadmeFileName = "netcore20-agent-readme.md";
-        private string ReadmeFilePath => Path.Combine(SolutionPath, "Miscellaneous", Core20ReadmeFileName);
+        private string ReadmeFilePath => Path.Combine(SolutionPath, "src", "Agent", "Miscellaneous", Core20ReadmeFileName);
 
         private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net35", "NewRelic.Api.Agent.dll");
 
         private string _homeBuilderProjectPath => Path.Combine(SolutionPath, "NewRelic", "Installer", "New Relic Home Builder", "New Relic Home Builder.csproj");
-        private string _coreProjectPath => Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj");
+        private string _coreProjectPath => Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "Core.csproj");
 
         private string AgentVersion => FileVersionInfo.GetVersionInfo(DestinationAgentFilePath).FileVersion;
         private string ProfilerDllPath
         {
             get
             {
-                var profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Windows", Bitness, "NewRelic.Profiler.dll");
+                var profilerPath = Path.Combine(SolutionPath, "src", "Agent", "ProfilerBuildsForDevMachines", "Windows", Bitness, "NewRelic.Profiler.dll");
                 return profilerPath;
             }
         }
@@ -93,7 +101,7 @@ namespace NewRelic.Installer
         {
             get
             {
-                var folderPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux", Bitness, "libNewRelicProfiler.so");
+                var folderPath = Path.Combine(SolutionPath, "src", "Agent", "ProfilerBuildsForDevMachines", "Linux", Bitness, "libNewRelicProfiler.so");
                 var profilerSoPath = Path.Combine(folderPath, ProfilerSoFileName);
 
                 return profilerSoPath;
@@ -101,8 +109,10 @@ namespace NewRelic.Installer
         }
         private String CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
         private String NewRelicAgentExtensionsPath { get { return Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
-        private String KeyFilePath { get { return Path.Combine(SolutionPath, "NewRelicStrongNameKey.snk"); } }
-        private String ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Extensions"); } }
+        [NotNull]
+        private String KeyFilePath { get { return Path.Combine(SolutionPath, "build", "keys", "NewRelicStrongNameKey.snk"); } }
+        [NotNull]
+        private String ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Extensions"); } }
 
         void RealMain()
         {

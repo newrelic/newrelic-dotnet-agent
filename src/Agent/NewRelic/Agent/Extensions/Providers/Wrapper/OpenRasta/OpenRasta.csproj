@@ -5,7 +5,7 @@
         <RootNamespace>NewRelic.Providers.Wrapper.OpenRasta</RootNamespace>
         <Description>OpenRasta Wrapper Provider for New Relic .NET Agent</Description>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DebugType>full</DebugType>

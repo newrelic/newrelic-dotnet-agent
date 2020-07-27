@@ -453,7 +453,7 @@ SPDX-License-Identifier: Apache-2.0
 		
 		<!-- API -->
 		<Component Id="ApiComponent" Guid="{26BF7AE0-A921-438C-A16C-FF6F8E0F9366}" Directory="NETAGENTFOLDER">
-			<File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\Agent\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll" />
+			<File Id="ApiFile" Name="NewRelic.Api.Agent.dll" KeyPath="yes" Source="$(var.RootSourcePath)\src\_build\AnyCPU-$(var.Configuration)\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll" />
 		</Component>
 
 		<!-- Configuration -->

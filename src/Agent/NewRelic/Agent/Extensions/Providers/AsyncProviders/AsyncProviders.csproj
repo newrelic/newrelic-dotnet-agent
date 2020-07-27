@@ -6,7 +6,7 @@
       <RootNamespace>NewRelic.Providers.AsyncProviders</RootNamespace>
       <Description>Async call stack and transaction tracking for New Relic .NET Agent</Description>
       <SignAssembly>true</SignAssembly>
-      <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+      <AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
