@@ -26,7 +26,7 @@ namespace ArtifactBuilder.Artifacts
             var serverMonitorFileName = DownloadServerMonitorMsi();
             DoInstallerReplacements($"NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi", serverMonitorFileName);
             package.CopyToLib(frameworkAgentComponents.AgentApiDll);
-            package.CopyToContent($@"{SourceDirectory}\src\Agent\_build\x64-{Configuration}\Installer\NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
+            package.CopyToContent($@"{SourceDirectory}\src\_build\x64-{Configuration}\Installer\NewRelicAgent_x64_{frameworkAgentComponents.Version}.msi");
             package.SetVersion(frameworkAgentComponents.Version);
             package.Pack();
         }
