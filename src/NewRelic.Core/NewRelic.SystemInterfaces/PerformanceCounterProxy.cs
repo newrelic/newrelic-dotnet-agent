@@ -153,7 +153,8 @@ namespace NewRelic.SystemInterfaces
         {
             var performanceCategory = _createPerformanceCounterCategory(perfCategoryName);
 
-            var instanceNames = performanceCategory.GetInstanceNames();
+            var instanceNames = performanceCategory.GetInstanceNames()
+                .Where(x => x.StartsWith(processName, StringComparison.OrdinalIgnoreCase));
 
             foreach (var instanceName in instanceNames)
             {
