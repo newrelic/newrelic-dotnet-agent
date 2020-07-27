@@ -8,9 +8,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public class WebConfigModifier
     {
-        private readonly String _configFilePath;
+        private readonly string _configFilePath;
 
-        public WebConfigModifier(String configFilePath)
+        public WebConfigModifier(string configFilePath)
         {
             _configFilePath = configFilePath;
         }

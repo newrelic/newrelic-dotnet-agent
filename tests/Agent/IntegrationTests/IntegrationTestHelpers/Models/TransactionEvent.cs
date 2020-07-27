@@ -9,24 +9,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     public class TransactionEvent
     {
         // index 0
-        public readonly IDictionary<String, Object> IntrinsicAttributes;
+        public readonly IDictionary<string, object> IntrinsicAttributes;
 
         // index 1
-        public readonly IDictionary<String, Object> UserAttributes;
+        public readonly IDictionary<string, object> UserAttributes;
 
         // index 2
-        public readonly IDictionary<String, Object> AgentAttributes;
+        public readonly IDictionary<string, object> AgentAttributes;
 
-        public TransactionEvent(IDictionary<String, Object> intrinsicAttributes, IDictionary<String, Object> userAttributes, IDictionary<String, Object> agentAttributes)
+        public TransactionEvent(IDictionary<string, object> intrinsicAttributes, IDictionary<string, object> userAttributes, IDictionary<string, object> agentAttributes)
         {
             IntrinsicAttributes = intrinsicAttributes;
             UserAttributes = userAttributes;
             AgentAttributes = agentAttributes;
         }
 
-        public IDictionary<String, Object> GetByType(TransactionEventAttributeType attributeType)
+        public IDictionary<string, object> GetByType(TransactionEventAttributeType attributeType)
         {
-            IDictionary<String, Object> attributes;
+            IDictionary<string, object> attributes;
             switch (attributeType)
             {
                 case TransactionEventAttributeType.Intrinsic:
@@ -42,18 +42,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                     throw new NotImplementedException();
             }
 
-            return attributes ?? new Dictionary<String, Object>();
+            return attributes ?? new Dictionary<string, object>();
         }
     }
 
     public class TransactionEventConverter : JsonConverter
     {
-        public override Boolean CanConvert(Type objectType)
+        public override bool CanConvert(Type objectType)
         {
             return true;
         }
 
-        public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var jArray = JArray.Load(reader);
             if (jArray == null)
@@ -61,14 +61,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             if (jArray.Count != 3)
                 throw new JsonSerializationException("jArray contains fewer elements than expected.");
 
-            var intrinsicAttributes = (jArray[0] ?? new JObject()).ToObject<IDictionary<String, Object>>(serializer);
-            var userAttributes = (jArray[1] ?? new JObject()).ToObject<IDictionary<String, Object>>(serializer);
-            var agentAttributes = (jArray[2] ?? new JObject()).ToObject<IDictionary<String, Object>>(serializer);
+            var intrinsicAttributes = (jArray[0] ?? new JObject()).ToObject<IDictionary<string, object>>(serializer);
+            var userAttributes = (jArray[1] ?? new JObject()).ToObject<IDictionary<string, object>>(serializer);
+            var agentAttributes = (jArray[2] ?? new JObject()).ToObject<IDictionary<string, object>>(serializer);
 
             return new TransactionEvent(intrinsicAttributes, userAttributes, agentAttributes);
         }
 
-        public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }

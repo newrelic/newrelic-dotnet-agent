@@ -45,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.HelloWorld", metricScope = "WebTransaction/WebService/BasicWebService.TestWebService.HelloWorld", callCount = 2}
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"DotNet/System.Web.Services.Protocols.SyncSessionlessHandler/ProcessRequest",
                 @"BasicWebService.TestWebService.HelloWorld"

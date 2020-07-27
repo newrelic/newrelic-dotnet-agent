@@ -12,22 +12,22 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     public class SqlTrace
     {
         // index 0
-        public readonly String TransactionName;
+        public readonly string TransactionName;
 
         // index 1
-        public readonly String Uri;
+        public readonly string Uri;
 
         // index 2
-        public readonly Int32 SqlId;
+        public readonly int SqlId;
 
         //index 3
-        public readonly String Sql;
+        public readonly string Sql;
 
         // index 4
-        public readonly String DatastoreMetricName;
+        public readonly string DatastoreMetricName;
 
         // index 5
-        public readonly UInt32 CallCount;
+        public readonly uint CallCount;
 
         // index 6
         public readonly TimeSpan TotalCallTime;
@@ -39,9 +39,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public readonly TimeSpan MaxCallTime;
 
         // index 9 (decompressed, for convenience)
-        public readonly IDictionary<String, Object> ParameterData;
+        public readonly IDictionary<string, object> ParameterData;
 
-        public SqlTrace(String transactionName, String uri, Int32 sqlId, String sql, String datastoreMetricName, UInt32 callCount, TimeSpan totalCallTime, TimeSpan minCallTime, TimeSpan maxCallTime, IDictionary<String, Object> parameterData)
+        public SqlTrace(string transactionName, string uri, int sqlId, string sql, string datastoreMetricName, uint callCount, TimeSpan totalCallTime, TimeSpan minCallTime, TimeSpan maxCallTime, IDictionary<string, object> parameterData)
         {
             TransactionName = transactionName;
             Uri = uri;
@@ -57,33 +57,33 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         public class SqlTraceConverter : JsonConverter
         {
-            public override Boolean CanConvert(Type objectType)
+            public override bool CanConvert(Type objectType)
             {
                 return true;
             }
 
-            public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
                 var jArray = JArray.Load(reader);
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var transactionName = (jArray[0] ?? new JObject()).ToObject<String>();
-                var uri = (jArray[1] ?? new JObject()).ToObject<String>();
-                var sqlId = (jArray[2] ?? new JObject()).ToObject<Int32>();
-                var sql = (jArray[3] ?? new JObject()).ToObject<String>();
-                var datastoreMetricName = (jArray[4] ?? new JObject()).ToObject<String>();
-                var callCount = (jArray[5] ?? new JObject()).ToObject<UInt32>();
-                var totalCallTime = TimeSpan.FromSeconds((Double)(jArray[6] ?? 0));
-                var minCallTime = TimeSpan.FromSeconds((Double)(jArray[7] ?? 0));
-                var maxCallTime = TimeSpan.FromSeconds((Double)(jArray[8] ?? 0));
+                var transactionName = (jArray[0] ?? new JObject()).ToObject<string>();
+                var uri = (jArray[1] ?? new JObject()).ToObject<string>();
+                var sqlId = (jArray[2] ?? new JObject()).ToObject<int>();
+                var sql = (jArray[3] ?? new JObject()).ToObject<string>();
+                var datastoreMetricName = (jArray[4] ?? new JObject()).ToObject<string>();
+                var callCount = (jArray[5] ?? new JObject()).ToObject<uint>();
+                var totalCallTime = TimeSpan.FromSeconds((double)(jArray[6] ?? 0));
+                var minCallTime = TimeSpan.FromSeconds((double)(jArray[7] ?? 0));
+                var maxCallTime = TimeSpan.FromSeconds((double)(jArray[8] ?? 0));
 
-                var parameterData = (jArray[9] ?? new JObject()).ToObject<Dictionary<String, Object>>();
+                var parameterData = (jArray[9] ?? new JObject()).ToObject<Dictionary<string, object>>();
 
                 return new SqlTrace(transactionName, uri, sqlId, sql, datastoreMetricName, callCount, totalCallTime, minCallTime, maxCallTime, parameterData);
             }
 
-            public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }

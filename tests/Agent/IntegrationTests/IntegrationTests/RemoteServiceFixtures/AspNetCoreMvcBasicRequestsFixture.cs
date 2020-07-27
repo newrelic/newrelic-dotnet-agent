@@ -7,13 +7,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class AspNetCoreMvcBasicRequestsFixture : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = @"AspNetCoreMvcBasicRequestsApplication";
-        private const String ExecutableName = @"AspNetCoreMvcBasicRequestsApplication.exe";
+        private const string ApplicationDirectoryName = @"AspNetCoreMvcBasicRequestsApplication";
+        private const string ExecutableName = @"AspNetCoreMvcBasicRequestsApplication.exe";
         public AspNetCoreMvcBasicRequestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true))
         {
         }
 
-        public String Get()
+        public string Get()
         {
             var address = $"http://localhost:{Port}/";
             var webClient = new WebClient();

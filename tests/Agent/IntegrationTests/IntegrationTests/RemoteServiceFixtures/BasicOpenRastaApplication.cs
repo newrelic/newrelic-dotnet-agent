@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     public class BasicOpenRastaApplication : RemoteApplicationFixture
     {
 
-        public String ResponseBody { get; private set; }
+        public string ResponseBody { get; private set; }
 
         public BasicOpenRastaApplication() : base(new RemoteWebApplication("OpenRastaWebApplication", ApplicationType.Bounded))
         {

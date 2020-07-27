@@ -64,13 +64,13 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "errorType", "System.Reflection.TargetInvocationException" },
                 { "errorMessage", "Oh no!" },
             };
 
-            var expectedErrorEventAttributes = new Dictionary<String, String>
+            var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Reflection.TargetInvocationException" },
                 { "error.message", "Oh no!" },

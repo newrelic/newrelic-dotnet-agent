@@ -6,12 +6,12 @@ namespace HostedWebCore
     public static class NativeMethods
     {
         [DllImport(@"inetsrv\hwebcore.dll")]
-        public static extern Int32 WebCoreActivate(
-            [In, MarshalAs(UnmanagedType.LPWStr)] String appHostConfigPath,
-            [In, MarshalAs(UnmanagedType.LPWStr)] String rootWebConfigPath,
-            [In, MarshalAs(UnmanagedType.LPWStr)] String instanceName);
+        public static extern int WebCoreActivate(
+            [In, MarshalAs(UnmanagedType.LPWStr)] string appHostConfigPath,
+            [In, MarshalAs(UnmanagedType.LPWStr)] string rootWebConfigPath,
+            [In, MarshalAs(UnmanagedType.LPWStr)] string instanceName);
 
         [DllImport(@"inetsrv\hwebcore.dll")]
-        public static extern Int32 WebCoreShutdown(Boolean immediate);
+        public static extern int WebCoreShutdown(bool immediate);
     }
 }

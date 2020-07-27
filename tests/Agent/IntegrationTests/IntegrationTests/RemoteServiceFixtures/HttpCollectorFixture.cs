@@ -17,7 +17,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             HttpCollectorApplication = new RemoteWebApplication("HttpCollector", ApplicationType.Bounded);
             HttpCollectorApplication.CopyToRemote();
-            HttpCollectorApplication.Start(String.Empty);
+            HttpCollectorApplication.Start(string.Empty);
 
             Actions(
                 setupConfiguration: () =>
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             );
         }
 
-        public String WarmUpCollector()
+        public string WarmUpCollector()
         {
             var address = $"http://{HttpCollectorApplication.DestinationServerName}:{HttpCollectorApplication.Port}/agent_listener/WarmUpCollector";
             var webClient = new WebClient();

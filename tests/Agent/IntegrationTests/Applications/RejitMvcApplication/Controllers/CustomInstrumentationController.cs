@@ -16,7 +16,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String Get()
+        public string Get()
         {
             return "It am working";
         }
@@ -27,7 +27,7 @@ namespace RejitMvcApplication.Controllers
         /// <param name="id">Selects which instrumented method to call within the action. Options: 0, 1</param>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetNodeAdd(int id)
+        public string GetNodeAdd(int id)
         {
             switch (id)
             {
@@ -51,7 +51,7 @@ namespace RejitMvcApplication.Controllers
         /// <param name="id">Selects which instrumented method to call within the action. Options: 0, 1</param>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetNodeDelete(int id)
+        public string GetNodeDelete(int id)
         {
             switch (id)
             {
@@ -74,7 +74,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetAttributeAdd()
+        public string GetAttributeAdd()
         {
             CustomMethodDefaultWrapperAddAttribute();
             return "It am working";
@@ -85,7 +85,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetAttributeChange()
+        public string GetAttributeChange()
         {
             CustomMethodDefaultWrapperChangeAttribute();
             return "It am working";
@@ -96,7 +96,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetAttributeDelete()
+        public string GetAttributeDelete()
         {
             CustomMethodDefaultWrapperDeleteAttribute();
             return "It am working";
@@ -107,7 +107,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetFileAdd()
+        public string GetFileAdd()
         {
             CustomMethodDefaultWrapperAddFile();
             return "It am working";
@@ -118,7 +118,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetFileRename()
+        public string GetFileRename()
         {
             CustomMethodDefaultWrapperRenameFile();
             return "It am working";
@@ -129,7 +129,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public String GetFileDelete()
+        public string GetFileDelete()
         {
             CustomMethodDefaultWrapperDeleteFile();
             return "It am working";

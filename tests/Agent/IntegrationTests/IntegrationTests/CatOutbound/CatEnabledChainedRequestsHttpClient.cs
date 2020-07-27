@@ -75,14 +75,14 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
                 new Assertions.ExpectedMetric { metricName = $@"External/{_fixture.RemoteApplication.DestinationServerName}/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/ChainedHttpClient" }
             };
             // Note: we are checking the attributes attached to the *Callee's* transaction, not the caller's transaction. The attributes attached to the caller's transaction are already fully vetted in the CatInbound tests.
-            var expectedTransactionEventIntrinsicAttributes1 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes1 = new List<string>
             {
                 "nr.guid",
                 "nr.pathHash",
                 "nr.referringPathHash",
                 "nr.referringTransactionGuid"
             };
-            var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<string, string>
             {
                 // This value comes from what we send to the application (see parameter passed to GetWithCatHeader above)
                 {"nr.tripId", "tripId"}

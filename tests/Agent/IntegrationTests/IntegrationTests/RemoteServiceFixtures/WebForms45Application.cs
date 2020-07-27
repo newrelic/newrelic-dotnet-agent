@@ -21,10 +21,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.NotNull(result);
         }
 
-        public void GetWithQueryString(IEnumerable<KeyValuePair<String, String>> parameters, Boolean expectException)
+        public void GetWithQueryString(IEnumerable<KeyValuePair<string, string>> parameters, bool expectException)
         {
             var parametersAsStrings = parameters.Select(param => $"{param.Key}={param.Value}");
-            var parametersAsString = String.Join("&", parametersAsStrings);
+            var parametersAsString = string.Join("&", parametersAsStrings);
             var address = $"http://{DestinationServerName}:{Port}/Default?{parametersAsString}";
 
             var exceptionOccurred = false;

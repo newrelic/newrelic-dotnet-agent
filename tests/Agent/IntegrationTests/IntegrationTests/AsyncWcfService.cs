@@ -57,7 +57,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric {metricName = @"OtherTransaction/all"}
             };
 
-            var expectedTraceSegmentNames = new List<String>
+            var expectedTraceSegmentNames = new List<string>
             {
                 @"NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.IWcfService.BeginServiceMethod",
                 @"External/www.google.com/Stream/GET"
@@ -66,11 +66,11 @@ namespace NewRelic.Agent.IntegrationTests
             {
                 new Assertions.ExpectedSegmentParameter { segmentName = @"External/www.google.com/Stream/GET", parameterName = @"uri", parameterValue = @"https://www.google.com:443/" },
             };
-            var expectedTraceAttributes = new Dictionary<String, String>
+            var expectedTraceAttributes = new Dictionary<string, string>
             {
                 {"service.request.value", "foo"},
             };
-            var unexpectedTraceAttributes = new List<String>
+            var unexpectedTraceAttributes = new List<string>
             {
                 "service.request.otherValue",
             };

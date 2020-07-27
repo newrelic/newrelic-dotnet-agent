@@ -7,15 +7,15 @@ namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
     public interface IWcfService
     {
         [OperationContract]
-        String GetString();
+        string GetString();
 
         [OperationContract]
-        String ReturnString(String input);
+        string ReturnString(string input);
 
         [OperationContract]
         void ThrowException();
 
         [OperationContract]
-        String IgnoredTransaction(String input);
+        string IgnoredTransaction(string input);
     }
 }

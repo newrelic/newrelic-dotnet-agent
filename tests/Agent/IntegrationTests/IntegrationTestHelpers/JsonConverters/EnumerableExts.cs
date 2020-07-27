@@ -7,7 +7,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.JsonConverters
 {
     public static class IEnumerableExtensions
     {
-        public static Boolean IsEmpty<T>(this IEnumerable<T> enumerable)
+        public static bool IsEmpty<T>(this IEnumerable<T> enumerable)
         {
             return !enumerable.Any();
         }
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.JsonConverters
             return new ReadOnlyDictionary<TKey, TValue>(dictionary);
         }
 
-        public static Boolean IsSequential(this IEnumerable<UInt32> sequence)
+        public static bool IsSequential(this IEnumerable<uint> sequence)
         {
             // Null is inherently sequential... sort of. I mean, it's not NOT sequential, right?
             if (sequence == null)
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.JsonConverters
             return source.Aggregate(TimeSpan.Zero, (runningTotal, nextItem) => runningTotal + selector(nextItem));
         }
 
-        public static Boolean IsSequential<T>(this IEnumerable<T> enumerable, Func<T, UInt32> predicate)
+        public static bool IsSequential<T>(this IEnumerable<T> enumerable, Func<T, uint> predicate)
         {
             if (enumerable == null)
                 return true;

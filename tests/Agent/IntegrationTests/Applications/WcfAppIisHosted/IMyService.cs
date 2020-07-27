@@ -9,10 +9,10 @@ namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted
     public interface IMyService
     {
         [OperationContract]
-        String GetData(Int32 value);
+        string GetData(int value);
 
         [OperationContract]
-        String IgnoredTransaction(String input);
+        string IgnoredTransaction(string input);
 
         [OperationContract]
         void ThrowException();

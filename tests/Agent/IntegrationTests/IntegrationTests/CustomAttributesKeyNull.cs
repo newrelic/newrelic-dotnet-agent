@@ -39,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests
         {
             var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributesKeyNull";
 
-            var unexpectedTransactionEventAttributes = new List<String>
+            var unexpectedTransactionEventAttributes = new List<string>
             {
                 "keywithnullvalue"
             };

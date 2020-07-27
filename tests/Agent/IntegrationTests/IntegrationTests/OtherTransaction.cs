@@ -51,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"DotNet/NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor.Program/SomeSlowMethod", metricScope = "OtherTransaction/Custom/MyCustomMetricName",  callCount = 1 }
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MyCustomMetricName",
                 @"NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor.Program/SomeSlowMethod"

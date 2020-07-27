@@ -43,7 +43,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside", metricScope = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"NetCoreAttributeInstrumentationApplication.Program/DoSomething",
                 @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside"

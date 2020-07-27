@@ -20,7 +20,7 @@ namespace AspNetCoreMvcBasicRequestsApplication.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult Query(String data)
+        public IActionResult Query(string data)
         {
             return View();
         }

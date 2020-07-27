@@ -22,7 +22,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         // GET: Query
-        public ActionResult Query(String data)
+        public ActionResult Query(string data)
         {
             return View("Index");
         }
@@ -34,14 +34,14 @@ namespace BasicMvcApplication.Controllers
         }
 
         // GET: Ignored
-        public String Ignored(String data)
+        public string Ignored(string data)
         {
             NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
             return data;
         }
 
         // GET: CustomParameters
-        public ActionResult CustomParameters(String key1, String value1, String key2, String value2)
+        public ActionResult CustomParameters(string key1, string value1, string key2, string value2)
         {
             NewRelic.Api.Agent.NewRelic.AddCustomParameter(key1, value1);
             NewRelic.Api.Agent.NewRelic.AddCustomParameter(key2, value2);
@@ -103,7 +103,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String GetBrowserTimingHeader()
+        public string GetBrowserTimingHeader()
         {
             return NewRelic.Api.Agent.NewRelic.GetBrowserTimingHeader();
         }
@@ -115,13 +115,13 @@ namespace BasicMvcApplication.Controllers
             return View();
         }
 
-        public String NotHtmlContentType()
+        public string NotHtmlContentType()
         {
             Response.ContentType = "application/json";
             return @"<html><head></head><body></body></html>";
         }
 
-        public String DoRedirect(String data)
+        public string DoRedirect(string data)
         {
             Response.Redirect("Index");
             return data;
@@ -133,7 +133,7 @@ namespace BasicMvcApplication.Controllers
             return View("Index");
         }
 
-        public String Chained(String chainedServerName, String chainedPortNumber, String chainedAction)
+        public string Chained(string chainedServerName, string chainedPortNumber, string chainedAction)
         {
             var address = $"http://{chainedServerName}:{chainedPortNumber}/Default/{chainedAction}";
             var httpWebRequest = WebRequest.Create(address);

@@ -40,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
             };
 
-            var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
+            var expectedErrorEventIntrinsicAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "type", "TransactionError" }

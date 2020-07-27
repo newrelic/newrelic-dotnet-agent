@@ -10,8 +10,8 @@ namespace NewRelic.Agent.IntegrationTests
     {
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        private String _responseBodyForHtmlContent;
-        private String _responseBodyForNonHtmlContent;
+        private string _responseBodyForHtmlContent;
+        private string _responseBodyForNonHtmlContent;
 
         public MvcRum(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {

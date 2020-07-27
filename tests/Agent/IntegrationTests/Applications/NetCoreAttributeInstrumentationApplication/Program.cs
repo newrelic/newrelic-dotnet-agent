@@ -21,7 +21,7 @@ namespace NetCoreAttributeInstrumentationApplication
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
-            var commandLine = String.Join(" ", args);
+            var commandLine = string.Join(" ", args);
 
             var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true);
 

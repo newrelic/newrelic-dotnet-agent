@@ -10,44 +10,44 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
     public class RemoteService : RemoteApplication
     {
-        private readonly String _executableName;
+        private readonly string _executableName;
 
-        private readonly String _applicationDirectoryName;
+        private readonly string _applicationDirectoryName;
 
-        private readonly Boolean _createsPidFile;
-        private readonly String _targetFramework;
+        private readonly bool _createsPidFile;
+        private readonly string _targetFramework;
 
         protected override string ApplicationDirectoryName => _applicationDirectoryName;
 
         protected bool IsCoreApp => _isCoreApp;
 
-        protected override String SourceApplicationDirectoryPath
+        protected override string SourceApplicationDirectoryPath
         {
             get
             {
                 return Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName, "bin", Utilities.Configuration,
-                        _targetFramework) ?? String.Empty;
+                        _targetFramework) ?? string.Empty;
             }
         }
 
-        private String DestinationApplicationExecutablePath => Path.Combine(DestinationApplicationDirectoryPath, _executableName);
+        private string DestinationApplicationExecutablePath => Path.Combine(DestinationApplicationDirectoryPath, _executableName);
 
-        public RemoteService(String applicationDirectoryName, String executableName, ApplicationType applicationType, Boolean createsPidFile = true, Boolean isCoreApp = false) : base(applicationType, isCoreApp)
+        public RemoteService(string applicationDirectoryName, string executableName, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false) : base(applicationType, isCoreApp)
         {
             _applicationDirectoryName = applicationDirectoryName;
             _executableName = executableName;
             _createsPidFile = createsPidFile;
-            _targetFramework = String.Empty;
+            _targetFramework = string.Empty;
 
             CaptureStandardOutputRequired = false;
         }
 
-        public RemoteService(String applicationDirectoryName, String executableName, String targetFramework, ApplicationType applicationType, Boolean createsPidFile = true, Boolean isCoreApp = false) : base(applicationType, isCoreApp)
+        public RemoteService(string applicationDirectoryName, string executableName, string targetFramework, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false) : base(applicationType, isCoreApp)
         {
             _applicationDirectoryName = applicationDirectoryName;
             _executableName = executableName;
             _createsPidFile = createsPidFile;
-            _targetFramework = targetFramework ?? String.Empty;
+            _targetFramework = targetFramework ?? string.Empty;
         }
         public override void CopyToRemote()
         {
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             Console.WriteLine($"[{DateTime.Now}] Successfully published {projectFile} to {deployPath}");
         }
 
-        public override Process Start(String commandLineArguments, bool captureStandardOutput = false, bool doProfile = true)
+        public override Process Start(string commandLineArguments, bool captureStandardOutput = false, bool doProfile = true)
         {
             var arguments = $"--port={Port} {commandLineArguments}";
             var applicationFilePath = DestinationApplicationExecutablePath;

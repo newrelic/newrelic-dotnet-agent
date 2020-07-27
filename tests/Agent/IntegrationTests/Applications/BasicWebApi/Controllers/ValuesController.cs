@@ -21,9 +21,9 @@ namespace BasicWebApi.Controllers
 
         [HttpGet]
         [Route("api/Values")]
-        public IEnumerable<String> Get()
+        public IEnumerable<string> Get()
         {
-            return new String[]
+            return new string[]
             {
                 "value 1",
                 "value 2",
@@ -32,14 +32,14 @@ namespace BasicWebApi.Controllers
 
         [HttpGet]
         [Route("api/Values/{id}")]
-        public String Get(UInt32 id)
+        public string Get(uint id)
         {
             return id.ToString(CultureInfo.InvariantCulture);
         }
 
         [HttpGet]
         [Route("api/Values")]
-        public String Get([FromUri] String data)
+        public string Get([FromUri] string data)
         {
             new WebClient().DownloadString("http://www.google.com");
             return data;
@@ -47,21 +47,21 @@ namespace BasicWebApi.Controllers
 
         [HttpPost]
         [Route("api/Values")]
-        public String Post([FromBody] String value)
+        public string Post([FromBody] string value)
         {
             return value;
         }
 
         [HttpPut]
         [Route("api/Values")]
-        public String Put(UInt32 id, [FromBody] String value)
+        public string Put(uint id, [FromBody] string value)
         {
-            return String.Format("{0}{1}", id, value);
+            return string.Format("{0}{1}", id, value);
         }
 
         [HttpDelete]
         [Route("api/Values")]
-        public String Delete(UInt32 id)
+        public string Delete(uint id)
         {
             return id.ToString(CultureInfo.InvariantCulture);
         }
@@ -75,7 +75,7 @@ namespace BasicWebApi.Controllers
 
         [HttpGet]
         [Route("api/Sleep")]
-        public String Sleep()
+        public string Sleep()
         {
             Thread.Sleep(TimeSpan.FromSeconds(3));
             return "Great success";
@@ -83,7 +83,7 @@ namespace BasicWebApi.Controllers
 
         [HttpGet]
         [Route("api/SegmentTerm")]
-        public String SegmentTerm()
+        public string SegmentTerm()
         {
             Thread.Sleep(TimeSpan.FromSeconds(3));
             return "Great success";
@@ -91,7 +91,7 @@ namespace BasicWebApi.Controllers
 
         [HttpGet]
         [Route("api/UrlRule")]
-        public String UrlRule()
+        public string UrlRule()
         {
             Thread.Sleep(TimeSpan.FromSeconds(3));
             return "Great success";

@@ -47,7 +47,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric {metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/WebService/HelloWorld/Greetings", callCount = 1},
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"AuthenticateRequest",
                 @"AuthorizeRequest",

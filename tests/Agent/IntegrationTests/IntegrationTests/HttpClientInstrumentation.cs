@@ -50,7 +50,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/Stream/GET", metricScope = @"WebTransaction/MVC/DefaultController/HttpClientTaskCancelled", callCount = 1 }
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"External/www.google.com/Stream/GET",
                 @"External/www.yahoo.com/Stream/GET"

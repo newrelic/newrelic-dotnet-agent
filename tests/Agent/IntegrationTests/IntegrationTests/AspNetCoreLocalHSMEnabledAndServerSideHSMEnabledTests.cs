@@ -11,7 +11,7 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AspNetCoreLocalHSMEnabledAndServerSideHSMEnabledTests : IClassFixture<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
     {
-        private const String QueryStringParameterValue = @"my thing";
+        private const string QueryStringParameterValue = @"my thing";
 
         private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
 
@@ -45,21 +45,21 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var unexpectedAgentAttributes = new List<String>
+            var unexpectedAgentAttributes = new List<string>
             {
                 @"request.parameters.data",
             };
 
-            var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200" }
             };
-            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
                 {"type", "Transaction"},
                 {"nr.apdexPerfZone", "F"}
             };
-            var expectedTransactionEventIntrinsicAttributes2 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
                 "timestamp",
                 "duration",
@@ -67,17 +67,17 @@ namespace NewRelic.Agent.IntegrationTests
                 "totalTime",
                 "name"
             };
-            var expectedTransactionEventAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200"}
             };
 
-            var unexpectedErrorTransactionEventAttributes = new List<String>
+            var unexpectedErrorTransactionEventAttributes = new List<string>
             {
                 "errorMessage"
             };
 
-            var expectedErrorTransactionEventAttributes = new List<String>
+            var expectedErrorTransactionEventAttributes = new List<string>
             {
                 "errorType"
             };
