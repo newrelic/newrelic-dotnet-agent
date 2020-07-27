@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
 {

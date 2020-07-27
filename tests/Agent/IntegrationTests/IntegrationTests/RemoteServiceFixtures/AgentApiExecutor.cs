@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
+﻿using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {

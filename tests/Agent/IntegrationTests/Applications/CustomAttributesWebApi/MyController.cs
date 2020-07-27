@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Collections.Generic;
 using System.Web.Http;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi

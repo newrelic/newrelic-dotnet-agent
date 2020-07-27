@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NewRelic.Agent.IntegrationTestHelpers
+﻿namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public class NewRelicConfigModifier
     {

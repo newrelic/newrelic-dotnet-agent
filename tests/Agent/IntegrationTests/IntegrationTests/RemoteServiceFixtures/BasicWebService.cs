@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Xml.Linq;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;

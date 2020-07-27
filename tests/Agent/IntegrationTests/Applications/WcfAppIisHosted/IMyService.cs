@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
-using System.ServiceModel;
-using System.ServiceModel.Web;
+﻿using System.ServiceModel;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted
 {

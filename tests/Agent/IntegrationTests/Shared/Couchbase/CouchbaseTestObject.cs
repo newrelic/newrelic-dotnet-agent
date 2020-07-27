@@ -3,8 +3,6 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 
-using System;
-
 namespace NewRelic.Agent.IntegrationTests.Shared.Couchbase
 {
     public class CouchbaseTestObject

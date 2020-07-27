@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 namespace NewRelic.Agent.IntegrationTestHelpers.JsonConverters
 {
     public enum TimeUnit

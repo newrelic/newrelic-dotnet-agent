@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.ServiceModel;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService

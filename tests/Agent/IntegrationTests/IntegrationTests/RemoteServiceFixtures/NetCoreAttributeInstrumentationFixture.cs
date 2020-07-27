@@ -1,7 +1,4 @@
-﻿using System;
-using System.Net;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using Xunit;
+﻿using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
