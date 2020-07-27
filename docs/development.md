@@ -13,7 +13,7 @@
 
 ## Building
 
-The New Relic .NET agent is primarily comprised of two solutions: `FullAgent.sln` and `Profiler.sln`.
+The New Relic .NET agent (managed) is contained in `FullAgent.sln`.
 
 ### FullAgent.sln
 
@@ -49,14 +49,14 @@ CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
 CORECLR_PROFILER_PATH=path\to\home\directory\NewRelic.Profiler.dll
 ```
 
-### Profiler.sln
+### Profiler
 
-The profiler implements interfaces defined by the unmanaged [.NET Profiling API](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/) that enable the agent to attach to and monitor a .NET process. The net35/main branch does not include source for the Profiler and the Profiler solution does not need to be built if you will only be working with the agent's managed C# code. Pre-built versions of the profiler for both Windows (x86 and x64) and Linux (x64) are checked into the repository (src/Agent/ProfilerBuildsForDevMachines) and are used for creating the home directories built by the FullAgent.sln. 
+The New Relic .NET Profiler is the unmanaged part of the Agent. The profiler implements interfaces defined by the unmanaged [.NET Profiling API](https://docs.microsoft.com/en-us/dotnet/framework/unmanaged-api/profiling/) that enable the agent to attach to and monitor a .NET process. The net35/main branch does not include source for the Profiler and the Profiler solution does not need to be built if you will only be working with the agent's managed C# code. Pre-built versions of the profiler for both Windows (x86 and x64) and Linux (x64) are checked into the repository (src/Agent/ProfilerBuildsForDevMachines) and are used for creating the home directories built by the FullAgent.sln. 
 
 ## Testing
 
 * Unit tests use the NUnit framework and are contained in the solutions. Run them using the Visual Studio Test Explorer.
-* There is a suite of [integration tests](./integration-tests.md). Refer to the separate documentation for setting up an environment to run the integration tests. Some integration tests require you to set up additional infrastructure (e.g., databases) and are therefore not easily run.
+* There is a suite of [integration tests](./integration-tests.md). Refer to the separate documentation for setting up an environment to run the integration tests. Some integration tests require set up of additional infrastructure (e.g., databases) and are therefore not easily run.
 
 ## Packaging
 
