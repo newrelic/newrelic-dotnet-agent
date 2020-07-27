@@ -6,122 +6,122 @@ namespace NewRelic.Agent.Configuration
 {
     public interface IConfiguration
     {
-        Object AgentRunId { get; }
-        Boolean AgentEnabled { get; }
-        String AgentLicenseKey { get; }
-        IEnumerable<String> ApplicationNames { get; }
-        Boolean AutoStartAgent { get; }
-        String BrowserMonitoringApplicationId { get; }
-        Boolean BrowserMonitoringAutoInstrument { get; }
-        String BrowserMonitoringBeaconAddress { get; }
-        String BrowserMonitoringErrorBeaconAddress { get; }
-        String BrowserMonitoringJavaScriptAgent { get; }
-        String BrowserMonitoringJavaScriptAgentFile { get; }
-        String BrowserMonitoringJavaScriptAgentLoaderType { get; }
-        String BrowserMonitoringKey { get; }
-        Boolean BrowserMonitoringUseSsl { get; }
+        object AgentRunId { get; }
+        bool AgentEnabled { get; }
+        string AgentLicenseKey { get; }
+        IEnumerable<string> ApplicationNames { get; }
+        bool AutoStartAgent { get; }
+        string BrowserMonitoringApplicationId { get; }
+        bool BrowserMonitoringAutoInstrument { get; }
+        string BrowserMonitoringBeaconAddress { get; }
+        string BrowserMonitoringErrorBeaconAddress { get; }
+        string BrowserMonitoringJavaScriptAgent { get; }
+        string BrowserMonitoringJavaScriptAgentFile { get; }
+        string BrowserMonitoringJavaScriptAgentLoaderType { get; }
+        string BrowserMonitoringKey { get; }
+        bool BrowserMonitoringUseSsl { get; }
 
-        Boolean CaptureAttributes { get; }
-        IEnumerable<String> CaptureAttributesIncludes { get; }
-        IEnumerable<String> CaptureAttributesExcludes { get; }
-        IEnumerable<String> CaptureAttributesDefaultExcludes { get; }
+        bool CaptureAttributes { get; }
+        IEnumerable<string> CaptureAttributesIncludes { get; }
+        IEnumerable<string> CaptureAttributesExcludes { get; }
+        IEnumerable<string> CaptureAttributesDefaultExcludes { get; }
 
-        Boolean CaptureTransactionEventsAttributes { get; }
-        IEnumerable<String> CaptureTransactionEventAttributesIncludes { get; }
-        IEnumerable<String> CaptureTransactionEventAttributesExcludes { get; }
+        bool CaptureTransactionEventsAttributes { get; }
+        IEnumerable<string> CaptureTransactionEventAttributesIncludes { get; }
+        IEnumerable<string> CaptureTransactionEventAttributesExcludes { get; }
 
-        Boolean CaptureTransactionTraceAttributes { get; }
-        IEnumerable<String> CaptureTransactionTraceAttributesIncludes { get; }
-        IEnumerable<String> CaptureTransactionTraceAttributesExcludes { get; }
+        bool CaptureTransactionTraceAttributes { get; }
+        IEnumerable<string> CaptureTransactionTraceAttributesIncludes { get; }
+        IEnumerable<string> CaptureTransactionTraceAttributesExcludes { get; }
 
-        Boolean CaptureErrorCollectorAttributes { get; }
-        IEnumerable<String> CaptureErrorCollectorAttributesIncludes { get; }
-        IEnumerable<String> CaptureErrorCollectorAttributesExcludes { get; }
+        bool CaptureErrorCollectorAttributes { get; }
+        IEnumerable<string> CaptureErrorCollectorAttributesIncludes { get; }
+        IEnumerable<string> CaptureErrorCollectorAttributesExcludes { get; }
 
-        Boolean CaptureBrowserMonitoringAttributes { get; }
-        IEnumerable<String> CaptureBrowserMonitoringAttributesIncludes { get; }
-        IEnumerable<String> CaptureBrowserMonitoringAttributesExcludes { get; }
+        bool CaptureBrowserMonitoringAttributes { get; }
+        IEnumerable<string> CaptureBrowserMonitoringAttributesIncludes { get; }
+        IEnumerable<string> CaptureBrowserMonitoringAttributesExcludes { get; }
 
-        Boolean CaptureCustomParameters { get; }
-        Boolean CaptureRequestParameters { get; }
+        bool CaptureCustomParameters { get; }
+        bool CaptureRequestParameters { get; }
 
-        String CollectorHost { get; }
-        String CollectorHttpProtocol { get; }
-        UInt32 CollectorPort { get; }
-        Boolean CollectorSendDataOnExit { get; }
-        Single CollectorSendDataOnExitThreshold { get; }
-        Boolean CollectorSendEnvironmentInfo { get; }
-        Boolean CollectorSyncStartup { get; }
-        UInt32 CollectorTimeout { get; }
+        string CollectorHost { get; }
+        string CollectorHttpProtocol { get; }
+        uint CollectorPort { get; }
+        bool CollectorSendDataOnExit { get; }
+        float CollectorSendDataOnExitThreshold { get; }
+        bool CollectorSendEnvironmentInfo { get; }
+        bool CollectorSyncStartup { get; }
+        uint CollectorTimeout { get; }
 
-        Boolean CompleteTransactionsOnThread { get; }
+        bool CompleteTransactionsOnThread { get; }
 
-        String CompressedContentEncoding { get; }
+        string CompressedContentEncoding { get; }
 
-        Int64 ConfigurationVersion { get; }
+        long ConfigurationVersion { get; }
 
-        String CrossApplicationTracingCrossProcessId { get; }
-        Boolean CrossApplicationTracingEnabled { get; }
-        Boolean DatabaseNameReportingEnabled { get; }
-        Boolean ErrorCollectorEnabled { get; }
-        Boolean ErrorCollectorCaptureEvents { get; }
-        UInt32 ErrorCollectorMaxEventSamplesStored { get; }
-        UInt32 ErrorsMaximumPerPeriod { get; }
-        IEnumerable<String> ExceptionsToIgnore { get; }
-        String EncodingKey { get; }
-        Boolean HighSecurityModeEnabled { get; }
-        Boolean InstanceReportingEnabled { get; }
-        Int32 InstrumentationLevel { get; }
-        Boolean InstrumentationLoggingEnabled { get; }
+        string CrossApplicationTracingCrossProcessId { get; }
+        bool CrossApplicationTracingEnabled { get; }
+        bool DatabaseNameReportingEnabled { get; }
+        bool ErrorCollectorEnabled { get; }
+        bool ErrorCollectorCaptureEvents { get; }
+        uint ErrorCollectorMaxEventSamplesStored { get; }
+        uint ErrorsMaximumPerPeriod { get; }
+        IEnumerable<string> ExceptionsToIgnore { get; }
+        string EncodingKey { get; }
+        bool HighSecurityModeEnabled { get; }
+        bool InstanceReportingEnabled { get; }
+        int InstrumentationLevel { get; }
+        bool InstrumentationLoggingEnabled { get; }
 
-        String Labels { get; }
+        string Labels { get; }
 
         IEnumerable<RegexRule> MetricNameRegexRules { get; }
 
-        String NewRelicConfigFilePath { get; }
+        string NewRelicConfigFilePath { get; }
 
-        String ProxyHost { get; }
-        String ProxyUriPath { get; }
-        Int32 ProxyPort { get; }
-        String ProxyUsername { get; }
-        String ProxyPassword { get; }
-        String ProxyDomain { get; }
+        string ProxyHost { get; }
+        string ProxyUriPath { get; }
+        int ProxyPort { get; }
+        string ProxyUsername { get; }
+        string ProxyPassword { get; }
+        string ProxyDomain { get; }
 
-        Boolean PutForDataSend { get; }
+        bool PutForDataSend { get; }
 
-        Boolean SlowSqlEnabled { get; }
+        bool SlowSqlEnabled { get; }
         TimeSpan SqlExplainPlanThreshold { get; }
-        Boolean SqlExplainPlansEnabled { get; }
-        Int32 SqlExplainPlansMax { get; }
-        UInt32 SqlStatementsPerTransaction { get; }
-        Int32 SqlTracesPerPeriod { get; }
-        Int32 StackTraceMaximumFrames { get; }
-        IEnumerable<String> HttpStatusCodesToIgnore { get; }
-        IEnumerable<String> ThreadProfilingIgnoreMethods { get; }
-        Boolean CustomEventsEnabled { get; }
-        UInt32 CustomEventsMaxSamplesStored { get; }
-        Boolean DisableSamplers { get; }
-        Boolean ThreadProfilingEnabled { get; }
-        Boolean TransactionEventsEnabled { get; }
-        UInt32 TransactionEventsMaxSamplesPerMinute { get; }
-        UInt32 TransactionEventsMaxSamplesStored { get; }
-        Boolean TransactionEventsTransactionsEnabled { get; }
+        bool SqlExplainPlansEnabled { get; }
+        int SqlExplainPlansMax { get; }
+        uint SqlStatementsPerTransaction { get; }
+        int SqlTracesPerPeriod { get; }
+        int StackTraceMaximumFrames { get; }
+        IEnumerable<string> HttpStatusCodesToIgnore { get; }
+        IEnumerable<string> ThreadProfilingIgnoreMethods { get; }
+        bool CustomEventsEnabled { get; }
+        uint CustomEventsMaxSamplesStored { get; }
+        bool DisableSamplers { get; }
+        bool ThreadProfilingEnabled { get; }
+        bool TransactionEventsEnabled { get; }
+        uint TransactionEventsMaxSamplesPerMinute { get; }
+        uint TransactionEventsMaxSamplesStored { get; }
+        bool TransactionEventsTransactionsEnabled { get; }
         IEnumerable<RegexRule> TransactionNameRegexRules { get; }
-        IDictionary<String, IEnumerable<String>> TransactionNameWhitelistRules { get; }
+        IDictionary<string, IEnumerable<string>> TransactionNameWhitelistRules { get; }
         TimeSpan TransactionTraceApdexF { get; }
         TimeSpan TransactionTraceApdexT { get; }
         TimeSpan TransactionTraceThreshold { get; }
-        Boolean TransactionTracerEnabled { get; }
-        Int32 TransactionTracerMaxSegments { get; }
-        String TransactionTracerRecordSql { get; }
+        bool TransactionTracerEnabled { get; }
+        int TransactionTracerMaxSegments { get; }
+        string TransactionTracerRecordSql { get; }
         TimeSpan TransactionTracerStackThreshold { get; }
-        Int32 TransactionTracerMaxStackTraces { get; }
+        int TransactionTracerMaxStackTraces { get; }
         IEnumerable<long> TrustedAccountIds { get; }
-        Boolean UsingServerSideConfig { get; }
+        bool UsingServerSideConfig { get; }
         IEnumerable<RegexRule> UrlRegexRules { get; }
         IEnumerable<Regex> RequestPathExclusionList { get; }
-        IDictionary<String, Double> WebTransactionsApdex { get; }
-        Int32 WrapperExceptionLimit { get; }
+        IDictionary<string, double> WebTransactionsApdex { get; }
+        int WrapperExceptionLimit { get; }
 
         bool UtilizationDetectAws { get; }
         bool UtilizationDetectAzure { get; }

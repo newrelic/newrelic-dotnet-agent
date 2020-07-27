@@ -1,18 +1,16 @@
-﻿using System;
-
-namespace NewRelic.Agent.Core.Transactions.TransactionNames
+﻿namespace NewRelic.Agent.Core.Transactions.TransactionNames
 {
     public class WebTransactionName : ITransactionName
     {
-        public readonly String Category;
-        public readonly String Name;
+        public readonly string Category;
+        public readonly string Name;
 
-        public WebTransactionName(String category, String name)
+        public WebTransactionName(string category, string name)
         {
             Category = category;
             Name = name;
         }
 
-        public Boolean IsWeb { get { return true; } }
+        public bool IsWeb { get { return true; } }
     }
 }

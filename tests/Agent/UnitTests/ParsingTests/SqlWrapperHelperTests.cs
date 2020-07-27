@@ -21,7 +21,7 @@ namespace SqlTests
         [TestCase("PostgreSQL", ExpectedResult = DatastoreVendor.Postgres)]
         [TestCase("IBMDB2", ExpectedResult = DatastoreVendor.IBMDB2)]
         public DatastoreVendor GetVendorName_ReturnsCorrectHost_IfOleDbConnectionProviderContainsKnownHost(
-            String provider)
+            string provider)
         {
             var command = new OleDbCommand
             {

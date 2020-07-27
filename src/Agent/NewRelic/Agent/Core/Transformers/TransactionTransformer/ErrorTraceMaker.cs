@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
@@ -109,7 +108,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             return errorMessage;
         }
-        private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(String uri, Attributes attributes, IEnumerable<String> stackTrace)
+        private ErrorTraceWireModel.ErrorTraceAttributesWireModel GetErrorTraceAttributes(string uri, Attributes attributes, IEnumerable<string> stackTrace)
         {
             var filteredAttributes = _attributeService.FilterAttributes(attributes, AttributeDestinations.ErrorTrace);
             var agentAttributes = filteredAttributes.GetAgentAttributesDictionary();

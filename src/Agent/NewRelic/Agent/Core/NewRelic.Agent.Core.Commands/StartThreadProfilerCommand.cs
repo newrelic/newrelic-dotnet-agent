@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Core.ThreadProfiling;
 
 namespace NewRelic.Agent.Core.Commands
@@ -14,18 +13,18 @@ namespace NewRelic.Agent.Core.Commands
             ThreadProfilingService = threadProfilingService;
         }
 
-        public override Object Process(IDictionary<String, Object> arguments)
+        public override object Process(IDictionary<string, object> arguments)
         {
             var errorMessage = StartThreadProfilingSessions(arguments);
             if (errorMessage == null)
-                return new Dictionary<String, Object>();
+                return new Dictionary<string, object>();
 
-            return new Dictionary<String, Object>
+            return new Dictionary<string, object>
             {
                 {"error", errorMessage}
             };
         }
-        private String StartThreadProfilingSessions(IDictionary<String, Object> arguments)
+        private string StartThreadProfilingSessions(IDictionary<string, object> arguments)
         {
             if (arguments == null)
                 return "No arguments sent with start_profiler command.";

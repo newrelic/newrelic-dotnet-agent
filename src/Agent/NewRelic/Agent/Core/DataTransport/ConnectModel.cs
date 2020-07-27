@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Core.Utilization;
 using Newtonsoft.Json;
 
@@ -8,15 +7,15 @@ namespace NewRelic.Agent.Core.DataTransport
     public class ConnectModel
     {
         [JsonProperty("pid")]
-        public readonly Int32 ProcessId;
+        public readonly int ProcessId;
         [JsonProperty("language")]
-        public readonly String Language;
+        public readonly string Language;
         [JsonProperty("host")]
-        public readonly String HostName;
+        public readonly string HostName;
         [JsonProperty("app_name")]
-        public readonly IEnumerable<String> AppNames;
+        public readonly IEnumerable<string> AppNames;
         [JsonProperty("agent_version")]
-        public readonly String AgentVersion;
+        public readonly string AgentVersion;
 
         [JsonProperty("agent_version_timestamp")]
         public readonly long AgentVersionTimestamp;
@@ -27,7 +26,7 @@ namespace NewRelic.Agent.Core.DataTransport
         public readonly SecuritySettingsModel SecuritySettings;
 
         [JsonProperty("high_security")]
-        public readonly Boolean HighSecurityModeEnabled;
+        public readonly bool HighSecurityModeEnabled;
 
         /// <summary>
         /// This identifier field is provided to avoid https://newrelic.atlassian.net/browse/DSCORE-778
@@ -37,7 +36,7 @@ namespace NewRelic.Agent.Core.DataTransport
         /// Providing this identifier works around this issue and allows users more flexibility in using application rollups.
         /// </summary>
         [JsonProperty("identifier")]
-        public readonly String Identifier;
+        public readonly string Identifier;
         [JsonProperty("labels")]
         public readonly IEnumerable<Label> Labels;
         [JsonProperty("settings")]
@@ -47,7 +46,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [JsonProperty("environment", NullValueHandling = NullValueHandling.Ignore)]
         public readonly Environment Environment;
 
-        public ConnectModel(Int32 processId, String language, String hostName, IEnumerable<String> appNames, String agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, String identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, UtilizationSettingsModel utilizationSettings, Environment environment)
+        public ConnectModel(int processId, string language, string hostName, IEnumerable<string> appNames, string agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, bool highSecurityModeEnabled, string identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, UtilizationSettingsModel utilizationSettings, Environment environment)
         {
             ProcessId = processId;
             Language = language;
@@ -69,12 +68,12 @@ namespace NewRelic.Agent.Core.DataTransport
     public class SecuritySettingsModel
     {
         [JsonProperty("capture_params")]
-        public readonly Boolean CaptureRequestParameters;
+        public readonly bool CaptureRequestParameters;
 
         [JsonProperty("transaction_tracer")]
         public readonly TransactionTraceSettingsModel TransactionTraceSettings;
 
-        public SecuritySettingsModel(Boolean captureRequestParameters, TransactionTraceSettingsModel transactionTraceSettings)
+        public SecuritySettingsModel(bool captureRequestParameters, TransactionTraceSettingsModel transactionTraceSettings)
         {
             CaptureRequestParameters = captureRequestParameters;
             TransactionTraceSettings = transactionTraceSettings;
@@ -84,9 +83,9 @@ namespace NewRelic.Agent.Core.DataTransport
     public class TransactionTraceSettingsModel
     {
         [JsonProperty("record_sql")]
-        public readonly String RecordSql;
+        public readonly string RecordSql;
 
-        public TransactionTraceSettingsModel(String recordSql)
+        public TransactionTraceSettingsModel(string recordSql)
         {
             RecordSql = recordSql;
         }
@@ -95,12 +94,12 @@ namespace NewRelic.Agent.Core.DataTransport
     public class JavascriptAgentSettingsModel
     {
         [JsonProperty("browser_monitoring.loader_debug")]
-        public readonly Boolean LoaderDebug;
+        public readonly bool LoaderDebug;
 
         [JsonProperty("browser_monitoring.loader")]
-        public readonly String Loader;
+        public readonly string Loader;
 
-        public JavascriptAgentSettingsModel(Boolean loaderDebug, String loader)
+        public JavascriptAgentSettingsModel(bool loaderDebug, string loader)
         {
             LoaderDebug = loaderDebug;
             Loader = loader;

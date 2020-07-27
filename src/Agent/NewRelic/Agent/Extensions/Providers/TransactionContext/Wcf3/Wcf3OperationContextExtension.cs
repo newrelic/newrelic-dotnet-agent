@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.ServiceModel;
 
 namespace NewRelic.Agent.Extensions.Providers.TransactionContext
@@ -45,7 +44,7 @@ namespace NewRelic.Agent.Extensions.Providers.TransactionContext
             }
         }
 
-        public static Boolean CanProvide { get { return OperationContext.Current != null; } }
+        public static bool CanProvide { get { return OperationContext.Current != null; } }
 
         /// <summary>
         /// <see cref="IExtension{T}"/> Attach() method

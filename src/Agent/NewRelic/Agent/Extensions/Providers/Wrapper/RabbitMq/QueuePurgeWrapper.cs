@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
@@ -18,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
             // (IModel) uint QueuePurge(string queue)
-            var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<String>(0);
+            var queue = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(0);
             var destType = RabbitMqHelper.GetBrokerDestinationType(queue);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, queue);
 

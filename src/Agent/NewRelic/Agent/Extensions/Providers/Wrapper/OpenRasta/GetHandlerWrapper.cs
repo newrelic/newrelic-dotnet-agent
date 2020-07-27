@@ -26,7 +26,7 @@ namespace NewRelic.Providers.Wrapper.OpenRasta
 
             //Since Open Rasta uses convention based routing (i.e. HTTP verbs) there will be little deviation in this name
             //however we should still pull it out of the MethodArguments for consistency and future-proofing
-            var action = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<String>(1);
+            var action = instrumentedMethodCall.MethodCall.MethodArguments.ExtractAs<string>(1);
             var actionName = action ?? instrumentedMethodCall.MethodCall.Method.MethodName;
 
             //Title casing actionName

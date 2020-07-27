@@ -1,5 +1,3 @@
-using System;
-
 namespace NewRelic.Agent.Core.Exceptions
 {
 
@@ -10,7 +8,7 @@ namespace NewRelic.Agent.Core.Exceptions
     public class ForceRestartException : InstructionException
     {
 
-        public ForceRestartException(String message) : base(message)
+        public ForceRestartException(string message) : base(message)
         {
         }
     }

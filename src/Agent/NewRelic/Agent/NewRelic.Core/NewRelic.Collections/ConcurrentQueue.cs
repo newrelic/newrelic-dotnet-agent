@@ -19,7 +19,7 @@ namespace NewRelic.Collections
             _writeLock = theLock.ReusableDisposableWriteLock();
         }
 
-        public Int32 Count
+        public int Count
         {
             get
             {
@@ -38,7 +38,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public Boolean Contains(T item)
+        public bool Contains(T item)
         {
             using (_readLock())
             {
@@ -46,7 +46,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public void CopyTo(T[] array, Int32 arrayIndex)
+        public void CopyTo(T[] array, int arrayIndex)
         {
             using (_readLock())
             {
@@ -123,7 +123,7 @@ namespace NewRelic.Collections
 
         #region ICollection
 
-        public void CopyTo(Array array, Int32 index)
+        public void CopyTo(Array array, int index)
         {
             using (_readLock())
             {

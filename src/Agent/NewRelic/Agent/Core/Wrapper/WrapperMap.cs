@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;

@@ -4,7 +4,6 @@ using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Collections;
@@ -29,8 +28,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_NullStats()
         {
-            const String vendor = "vendor1";
-            const String destination = "queueA";
+            const string vendor = "vendor1";
+            const string destination = "queueA";
             const MetricNames.MessageBrokerDestinationType destinationType = MetricNames.MessageBrokerDestinationType.Queue;
             const MetricNames.MessageBrokerAction action = MetricNames.MessageBrokerAction.Consume;
             var segment = GetSegment(vendor, destinationType, destination, action);
@@ -43,8 +42,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_NullTransactionStats()
         {
-            const String vendor = "vendor1";
-            const String destination = "queueA";
+            const string vendor = "vendor1";
+            const string destination = "queueA";
             const MetricNames.MessageBrokerDestinationType destinationType = MetricNames.MessageBrokerDestinationType.Queue;
             const MetricNames.MessageBrokerAction action = MetricNames.MessageBrokerAction.Consume;
             var segment = GetSegment(vendor, destinationType, destination, action);
@@ -57,8 +56,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesCustomSegmentMetrics()
         {
-            const String vendor = "vendor1";
-            const String destination = "queueA";
+            const string vendor = "vendor1";
+            const string destination = "queueA";
             const MetricNames.MessageBrokerDestinationType destinationType = MetricNames.MessageBrokerDestinationType.Queue;
             const MetricNames.MessageBrokerAction action = MetricNames.MessageBrokerAction.Consume;
             var segment = GetSegment(vendor, destinationType, destination, action, 5);
@@ -72,7 +71,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(1, unscoped.Count);
 
-            const String metricName = "MessageBroker/vendor1/Queue/Consume/Named/queueA";
+            const string metricName = "MessageBroker/vendor1/Queue/Consume/Named/queueA";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -97,8 +96,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_TwoTransformCallsSame()
         {
-            const String vendor = "vendor1";
-            const String destination = "queueA";
+            const string vendor = "vendor1";
+            const string destination = "queueA";
             const MetricNames.MessageBrokerDestinationType destinationType = MetricNames.MessageBrokerDestinationType.Queue;
             const MetricNames.MessageBrokerAction action = MetricNames.MessageBrokerAction.Consume;
             var segment = GetSegment(vendor, destinationType, destination, action);
@@ -113,7 +112,7 @@ namespace NewRelic.Agent.Core.Transformers
 
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(1, unscoped.Count);
-            const String metricName = "MessageBroker/vendor1/Queue/Consume/Named/queueA";
+            const string metricName = "MessageBroker/vendor1/Queue/Consume/Named/queueA";
 
 
             Assert.IsTrue(scoped.ContainsKey(metricName));
@@ -130,8 +129,8 @@ namespace NewRelic.Agent.Core.Transformers
         public void TransformSegment_TwoTransformCallsDifferent()
         {
 
-            const String vendor = "vendor1";
-            const String destination = "queueA";
+            const string vendor = "vendor1";
+            const string destination = "queueA";
             const MetricNames.MessageBrokerDestinationType destinationType = MetricNames.MessageBrokerDestinationType.Queue;
             const MetricNames.MessageBrokerAction action = MetricNames.MessageBrokerAction.Consume;
             var segment = GetSegment(vendor, destinationType, destination, action);
@@ -148,7 +147,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(2, scoped.Count);
             Assert.AreEqual(2, unscoped.Count);
 
-            const String metricName = "MessageBroker/vendor1/Queue/Consume/Named/queueA";
+            const string metricName = "MessageBroker/vendor1/Queue/Consume/Named/queueA";
 
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
@@ -159,7 +158,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, nameScoped.Value0);
             Assert.AreEqual(1, nameUnscoped.Value0);
 
-            const String metricName1 = "MessageBroker/vendor2/Queue/Consume/Named/myQueue";
+            const string metricName1 = "MessageBroker/vendor2/Queue/Consume/Named/myQueue";
 
             Assert.IsTrue(scoped.ContainsKey(metricName1));
             Assert.IsTrue(unscoped.ContainsKey(metricName1));
@@ -185,7 +184,7 @@ namespace NewRelic.Agent.Core.Transformers
         [TestCase(null, MetricNames.MessageBrokerAction.Produce, "MessageBroker/MSMQ/Queue/Produce/Temp")]
         public void GetTransactionTraceName_ReturnsCorrectName(string queueName, MetricNames.MessageBrokerAction action, string expectedResult)
         {
-            const String vendor = "MSMQ";
+            const string vendor = "MSMQ";
             const MetricNames.MessageBrokerDestinationType destinationType = MetricNames.MessageBrokerDestinationType.Queue;
             var segment = GetSegment(vendor, destinationType, queueName, action);
             var transactionTraceName = segment.GetTransactionTraceName();
@@ -193,7 +192,7 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-        private static Segment GetSegment(String vendor, MetricNames.MessageBrokerDestinationType destinationType, String destination, MetricNames.MessageBrokerAction action)
+        private static Segment GetSegment(string vendor, MetricNames.MessageBrokerDestinationType destinationType, string destination, MetricNames.MessageBrokerAction action)
         {
             var timerFactory = Mock.Create<ITimerFactory>();
             var builder = new TypedSegment<MessageBrokerSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1),
@@ -203,10 +202,10 @@ namespace NewRelic.Agent.Core.Transformers
             return builder;
         }
 
-        private static TypedSegment<MessageBrokerSegmentData> GetSegment(String vendor, MetricNames.MessageBrokerDestinationType destinationType, String destination, MetricNames.MessageBrokerAction action, double duration)
+        private static TypedSegment<MessageBrokerSegmentData> GetSegment(string vendor, MetricNames.MessageBrokerDestinationType destinationType, string destination, MetricNames.MessageBrokerAction action, double duration)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            var parameters = (new ConcurrentDictionary<String, Object>());
+            var parameters = (new ConcurrentDictionary<string, object>());
             return MessageBrokerSegmentDataTests.createMessageBrokerSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, vendor, destination, destinationType, action, false);
         }
     }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MoreLinq;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -10,7 +9,7 @@ namespace NewRelic.Agent.Core.Aggregators
     // lock before calling Insert() or Merge().
     public class SqlTraceStatsCollection
     {
-        private IDictionary<Int64, SqlTraceWireModel> _sqlTraceWireModels = new Dictionary<Int64, SqlTraceWireModel>();
+        private IDictionary<long, SqlTraceWireModel> _sqlTraceWireModels = new Dictionary<long, SqlTraceWireModel>();
 
         private int _maxTraces;
         private int _tracesCollected = 0;
@@ -20,7 +19,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             _maxTraces = maxTraces;
         }
-        public IDictionary<Int64, SqlTraceWireModel> Collection
+        public IDictionary<long, SqlTraceWireModel> Collection
         {
             get { return _sqlTraceWireModels; }
         }

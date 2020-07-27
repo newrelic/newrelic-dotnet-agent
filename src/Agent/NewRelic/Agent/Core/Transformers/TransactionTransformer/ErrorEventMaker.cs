@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NewRelic.Agent.Core.Errors;
+﻿using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using Attribute = NewRelic.Agent.Core.Transactions.Attribute;

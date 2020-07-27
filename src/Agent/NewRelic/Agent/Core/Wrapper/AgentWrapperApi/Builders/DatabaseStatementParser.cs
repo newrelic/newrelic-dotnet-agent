@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Collections;
 using NewRelic.Parsing;

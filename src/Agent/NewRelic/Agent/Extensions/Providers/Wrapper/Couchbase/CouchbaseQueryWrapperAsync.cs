@@ -7,8 +7,8 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 {
     public class CouchbaseQueryWrapperAsync : IWrapper
     {
-        private Func<Object, String> _getMethodInfo;
-        public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "Name"));
+        private Func<object, string> _getMethodInfo;
+        public Func<object, string> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "Name"));
 
         public bool IsTransactionRequired => true;
 
@@ -39,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.Couchbase
             var model = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
             var parm = instrumentedMethodCall.MethodCall.MethodArguments[0];
-            String commandText = null;
+            string commandText = null;
 
             try
             {

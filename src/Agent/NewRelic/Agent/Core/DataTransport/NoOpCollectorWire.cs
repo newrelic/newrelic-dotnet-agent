@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace NewRelic.Agent.Core.DataTransport
+﻿namespace NewRelic.Agent.Core.DataTransport
 {
     public class NoOpCollectorWire : ICollectorWire
     {
-        public String SendData(String method, ConnectionInfo connectionInfo, String serializedData)
+        public string SendData(string method, ConnectionInfo connectionInfo, string serializedData)
         {
             // Any valid JSON without an exception can be returned
             return "{}";

@@ -20,15 +20,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         string SyntheticsJobId { get; }
         string SyntheticsMonitorId { get; }
         string LatestCrossApplicationPathHash { get; }
-        void SetUri(String uri);
+        void SetUri(string uri);
         void SetOriginalUri(string uri);
         void SetPath(string path);
         void SetReferrerUri(string uri);
         void SetQueueTime(TimeSpan queueTime);
         void AddRequestParameter(string key, string value);
         void AddServiceParameter(string key, string value);
-        void AddUserAttribute(string key, Object value);
-        void AddUserErrorAttribute(string key, Object value);
+        void AddUserAttribute(string key, object value);
+        void AddUserErrorAttribute(string key, object value);
         void SetHttpResponseStatusCode(int statusCode, int? subStatusCode);
         void AddExceptionData(ErrorData errorData);
         void AddCustomErrorData(ErrorData errorData);
@@ -71,21 +71,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         //This is a timeSpan? struct
         private volatile Func<TimeSpan> _timeSpanQueueTime = null;
         //This is a Int32? struct
-        private volatile int _httpResponseStatusCode = Int32.MinValue;
+        private volatile int _httpResponseStatusCode = int.MinValue;
         private volatile string _uri;
         private volatile string _originalUri;
         private volatile string _referrerUri;
         private readonly IDictionary<string, string> _requestParameters = new ConcurrentDictionary<string, string>();
         private readonly IDictionary<string, string> _serviceParameters = new ConcurrentDictionary<string, string>();
-        private readonly IDictionary<string, Object> _userAttributes = new ConcurrentDictionary<string, Object>();
-        private readonly IDictionary<string, Object> _userErrorAttributes = new ConcurrentDictionary<string, Object>();
+        private readonly IDictionary<string, object> _userAttributes = new ConcurrentDictionary<string, object>();
+        private readonly IDictionary<string, object> _userErrorAttributes = new ConcurrentDictionary<string, object>();
 
         //everything below this does not have a getter, meaning it is only updated and not read during the transaction
         private readonly IList<ErrorData> _transactionExceptionDatas = new ConcurrentList<ErrorData>();
         private readonly IList<ErrorData> _customErrorDatas = new ConcurrentList<ErrorData>();
         private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
         private volatile string _path;
-        private volatile int _httpResponseSubStatusCode = Int32.MinValue;
+        private volatile int _httpResponseSubStatusCode = int.MinValue;
         private volatile bool _hasResponseCatHeaders;
 
         public ImmutableTransactionMetadata ConvertToImmutableMetadata()
@@ -143,7 +143,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             _serviceParameters.Add(key, value);
         }
 
-        public void AddUserAttribute(string key, Object value)
+        public void AddUserAttribute(string key, object value)
         {
             if (_userAttributes.ContainsKey(key))
             {
@@ -154,7 +154,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             _userAttributes.Add(key, value);
         }
 
-        public void AddUserErrorAttribute(string key, Object value)
+        public void AddUserErrorAttribute(string key, object value)
         {
             if (_userErrorAttributes.ContainsKey(key))
             {
@@ -169,7 +169,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode)
         {
             _httpResponseStatusCode = statusCode;
-            _httpResponseSubStatusCode = (subStatusCode.HasValue ? ((int)subStatusCode) : Int32.MinValue);
+            _httpResponseSubStatusCode = (subStatusCode.HasValue ? ((int)subStatusCode) : int.MinValue);
         }
 
         public void AddExceptionData(ErrorData errorData)
@@ -251,15 +251,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         private TimeSpan? GetTimeSpan() => _timeSpanQueueTime?.Invoke();
 
-        public int? HttpResponseStatusCode => (_httpResponseStatusCode == Int32.MinValue) ? default(Int32?) : _httpResponseStatusCode;
+        public int? HttpResponseStatusCode => (_httpResponseStatusCode == int.MinValue) ? default(int?) : _httpResponseStatusCode;
 
-        int? HttpResponseSubStatusCode => (_httpResponseSubStatusCode == Int32.MinValue) ? default(Int32?) : _httpResponseSubStatusCode;
+        int? HttpResponseSubStatusCode => (_httpResponseSubStatusCode == int.MinValue) ? default(int?) : _httpResponseSubStatusCode;
 
 
         public IEnumerable<KeyValuePair<string, string>> RequestParameters => _requestParameters.ToList();
         public IEnumerable<KeyValuePair<string, string>> ServiceParameters => _serviceParameters.ToList();
-        public IEnumerable<KeyValuePair<string, Object>> UserAttributes => _userAttributes.ToList();
-        public IEnumerable<KeyValuePair<string, Object>> UserErrorAttributes => _userErrorAttributes.ToList();
+        public IEnumerable<KeyValuePair<string, object>> UserAttributes => _userAttributes.ToList();
+        public IEnumerable<KeyValuePair<string, object>> UserErrorAttributes => _userErrorAttributes.ToList();
 
     }
 }

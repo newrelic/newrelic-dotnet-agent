@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
@@ -13,11 +12,9 @@ using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {

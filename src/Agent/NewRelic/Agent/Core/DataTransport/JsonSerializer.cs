@@ -1,11 +1,10 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public class JsonSerializer : ISerializer
     {
-        public string Serialize(Object[] parameters)
+        public string Serialize(object[] parameters)
         {
             return JsonConvert.SerializeObject(parameters);
         }

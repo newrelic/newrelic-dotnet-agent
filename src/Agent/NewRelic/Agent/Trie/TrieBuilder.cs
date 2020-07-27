@@ -15,10 +15,10 @@ namespace NewRelic.Trie
         public TrieBuilder(
             Func<T> rootNodeDataFactory,
             Func<IEnumerable<T>, T> nodeDataMerger,
-            Func<T, T, Int32> nodeDataComparor,
-            Func<T, Int32> nodeDataHasher,
-            Func<T, T, Boolean> canParentAcceptChildChecker,
-            Func<T, Boolean> canNodeHaveChildrenChecker)
+            Func<T, T, int> nodeDataComparor,
+            Func<T, int> nodeDataHasher,
+            Func<T, T, bool> canParentAcceptChildChecker,
+            Func<T, bool> canNodeHaveChildrenChecker)
         {
             _rootNodeMetaDataFactory = rootNodeDataFactory;
             _nodeMerger = nodeDataMerger;
@@ -50,7 +50,7 @@ namespace NewRelic.Trie
             return new TrieNode<T>(metaData);
         }
 
-        private static Boolean NodeDataGroupingIsNotEmpty(IGrouping<T, T> nodes)
+        private static bool NodeDataGroupingIsNotEmpty(IGrouping<T, T> nodes)
         {
             if (nodes == null)
                 return false;
@@ -65,7 +65,7 @@ namespace NewRelic.Trie
             return mergedNode;
         }
 
-        private Boolean TryAddNodeAsChild(TrieNode<T> parent, TrieNode<T> orphan)
+        private bool TryAddNodeAsChild(TrieNode<T> parent, TrieNode<T> orphan)
         {
             if (!_nodeComparor.PotentialChild(parent.Data, orphan.Data))
                 return false;

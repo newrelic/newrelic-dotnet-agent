@@ -15,18 +15,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public class DatastoreSegmentData : AbstractSegmentData
     {
-        public String Operation { protected get; set; }
+        public string Operation { protected get; set; }
         public DatastoreVendor DatastoreVendorName { get; set; }
-        public String Model { protected get; set; }
-        public String CommandText { get; set; }
-        public String Host { get; set; }
-        public String PortPathOrId { get; set; }
-        public String DatabaseName { get; set; }
-        public Func<Object> GetExplainPlanResources { get; set; }
-        public Func<Object, ExplainPlan> GenerateExplainPlan { get; set; }
-        public Func<Boolean> DoExplainPlanCondition { get; set; }
+        public string Model { protected get; set; }
+        public string CommandText { get; set; }
+        public string Host { get; set; }
+        public string PortPathOrId { get; set; }
+        public string DatabaseName { get; set; }
+        public Func<object> GetExplainPlanResources { get; set; }
+        public Func<object, ExplainPlan> GenerateExplainPlan { get; set; }
+        public Func<bool> DoExplainPlanCondition { get; set; }
 
-        private Object _explainPlanResources;
+        private object _explainPlanResources;
         private ExplainPlan _explainPlan;
         public ExplainPlan ExplainPlan => _explainPlan;
 
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             }
         }
 
-        internal override IEnumerable<KeyValuePair<String, Object>> Finish()
+        internal override IEnumerable<KeyValuePair<string, object>> Finish()
         {
             if (GetExplainPlanResources == null)
                 return null;
@@ -162,7 +162,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             var duration = segment.Duration.Value;
             var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
 
-            if (!String.IsNullOrEmpty(Model))
+            if (!string.IsNullOrEmpty(Model))
             {
                 MetricBuilder.TryBuildDatastoreStatementMetric(DatastoreVendorName, Model, Operation, duration, exclusiveDuration, txStats);
                 MetricBuilder.TryBuildDatastoreVendorOperationMetric(DatastoreVendorName, Operation, duration, exclusiveDuration, txStats, true);

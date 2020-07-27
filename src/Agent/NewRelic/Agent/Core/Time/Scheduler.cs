@@ -14,7 +14,7 @@ namespace NewRelic.Agent.Core.Time
     {
         // The System.Threading.Timer class uses -1 milliseconds as a magic "off" value
         private static readonly TimeSpan DisablePeriodicExecution = TimeSpan.FromMilliseconds(-1);
-        private readonly Object _lock = new Object();
+        private readonly object _lock = new object();
         private readonly DisposableCollection<TimerStatus> _oneTimeTimers = new DisposableCollection<TimerStatus>();
         private readonly IDictionary<Action, Timer> _recurringTimers = new Dictionary<Action, Timer>();
 
@@ -171,7 +171,7 @@ namespace NewRelic.Agent.Core.Time
         private class TimerStatus : IDisposable
         {
             public Timer Timer;
-            public Boolean HasRun;
+            public bool HasRun;
 
             public void Dispose()
             {

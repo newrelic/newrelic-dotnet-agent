@@ -1,6 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Extensions.Providers;
+﻿using NewRelic.Agent.Extensions.Providers;
 
 namespace NewRelic.Providers.AsyncProviders
 {
@@ -8,7 +6,7 @@ namespace NewRelic.Providers.AsyncProviders
     {
         public bool IsAsyncStorage => true;
 
-        public String Name => GetType().FullName;
+        public string Name => GetType().FullName;
 
         public bool IsValid => true;
 

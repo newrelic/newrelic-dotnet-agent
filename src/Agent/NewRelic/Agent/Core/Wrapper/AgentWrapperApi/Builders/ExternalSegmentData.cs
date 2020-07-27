@@ -2,24 +2,21 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public class ExternalSegmentData : AbstractSegmentData
     {
-        private const String TransactionGuidSegmentParameterKey = "transaction_guid";
+        private const string TransactionGuidSegmentParameterKey = "transaction_guid";
         public Uri Uri { get; }
-        public String Method { get; }
+        public string Method { get; }
 
-        public ExternalSegmentData(Uri uri, String method, CrossApplicationResponseData crossApplicationResponseData = null)
+        public ExternalSegmentData(Uri uri, string method, CrossApplicationResponseData crossApplicationResponseData = null)
         {
             Uri = uri;
             Method = method;
@@ -29,9 +26,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         public CrossApplicationResponseData CrossApplicationResponseData { get; set; }
 
 
-        internal override IEnumerable<KeyValuePair<String, Object>> Finish()
+        internal override IEnumerable<KeyValuePair<string, object>> Finish()
         {
-            var parameters = new Dictionary<String, Object>();
+            var parameters = new Dictionary<string, object>();
 
             // The CAT response data will not be null if the agent received a response that contained CAT headers (e.g. if the request went to an app that is monitored by a supported New Relic agent)
             if (CrossApplicationResponseData != null)

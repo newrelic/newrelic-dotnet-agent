@@ -4,15 +4,12 @@ using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Errors;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
 using Telerik.JustMock;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 
@@ -35,7 +32,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             Mock.Arrange(() => configuration.TransactionTracerEnabled).Returns(true);
             return configuration;
         }
-        public static ITransaction CreateDefaultTransaction(Boolean isWebTransaction = true, String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null)
+        public static ITransaction CreateDefaultTransaction(bool isWebTransaction = true, string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", bool addSegment = true, IEnumerable<Segment> segments = null)
         {
             var name = isWebTransaction
                 ? new WebTransactionName(transactionCategory, transactionName)
@@ -77,7 +74,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var transaction = new ImmutableTransaction(name, segments, metadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
             return transaction;
         }
-        public static TypedSegment<DatastoreSegmentData> BuildSegment(ITransactionSegmentState txSegmentState, DatastoreVendor vendor, String model, String commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null, String host = null, String portPathOrId = null, String databaseName = null)
+        public static TypedSegment<DatastoreSegmentData> BuildSegment(ITransactionSegmentState txSegmentState, DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
         {
             if (txSegmentState == null)
                 txSegmentState = Mock.Create<ITransactionSegmentState>();
@@ -94,7 +91,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return new TypedSegment<DatastoreSegmentData>(startTime, duration,
                 new TypedSegment<DatastoreSegmentData>(txSegmentState, methodCallData, data, false));
         }
-        private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null)
+        private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null)
         {
             if (uri != null)
                 metadata.SetUri(uri);

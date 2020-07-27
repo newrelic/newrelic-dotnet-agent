@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Reflection;
@@ -9,36 +8,36 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 {
     public class SendCommandWrapper : IWrapper
     {
-        private const String AssemblyName = "ServiceStack.Redis";
-        private const String TypeName = "ServiceStack.Redis.RedisClient";
-        private const String PropertyHost = "Host";
-        private const String PropertyPortPathOrId = "Port";
-        private const String PropertyDatabaseName = "Db";
+        private const string AssemblyName = "ServiceStack.Redis";
+        private const string TypeName = "ServiceStack.Redis.RedisClient";
+        private const string PropertyHost = "Host";
+        private const string PropertyPortPathOrId = "Port";
+        private const string PropertyDatabaseName = "Db";
 
         public bool IsTransactionRequired => true;
 
         private static class Statics
         {
-            private static Func<Object, String> _propertyHost;
-            private static Func<Object, Int32> _propertyPortPathOrId;
-            private static Func<Object, Int64> _propertyDatabaseName;
-            public static readonly Func<Object, String> GetPropertyHost = AssignPropertyHost();
-            public static readonly Func<Object, Int32> GetPropertyPortPathOrId = AssignPropertyPortPathOrId();
-            public static readonly Func<Object, Int64> GetPropertyDatabaseName = AssignPropertyDatabaseName();
+            private static Func<object, string> _propertyHost;
+            private static Func<object, int> _propertyPortPathOrId;
+            private static Func<object, long> _propertyDatabaseName;
+            public static readonly Func<object, string> GetPropertyHost = AssignPropertyHost();
+            public static readonly Func<object, int> GetPropertyPortPathOrId = AssignPropertyPortPathOrId();
+            public static readonly Func<object, long> GetPropertyDatabaseName = AssignPropertyDatabaseName();
 
-            private static Func<Object, String> AssignPropertyHost()
+            private static Func<object, string> AssignPropertyHost()
             {
-                return _propertyHost ?? (_propertyHost = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>(AssemblyName, TypeName, PropertyHost));
+                return _propertyHost ?? (_propertyHost = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(AssemblyName, TypeName, PropertyHost));
             }
 
-            private static Func<Object, Int32> AssignPropertyPortPathOrId()
+            private static Func<object, int> AssignPropertyPortPathOrId()
             {
-                return _propertyPortPathOrId ?? (_propertyPortPathOrId = VisibilityBypasser.Instance.GeneratePropertyAccessor<Int32>(AssemblyName, TypeName, PropertyPortPathOrId));
+                return _propertyPortPathOrId ?? (_propertyPortPathOrId = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(AssemblyName, TypeName, PropertyPortPathOrId));
             }
 
-            private static Func<Object, Int64> AssignPropertyDatabaseName()
+            private static Func<object, long> AssignPropertyDatabaseName()
             {
-                return _propertyDatabaseName ?? (_propertyDatabaseName = VisibilityBypasser.Instance.GeneratePropertyAccessor<Int64>(AssemblyName, TypeName, PropertyDatabaseName));
+                return _propertyDatabaseName ?? (_propertyDatabaseName = VisibilityBypasser.Instance.GeneratePropertyAccessor<long>(AssemblyName, TypeName, PropertyDatabaseName));
             }
         }
 
@@ -48,7 +47,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
             var canWrap = method.MatchesAny(assemblyName: "ServiceStack.Redis", typeName: "ServiceStack.Redis.RedisNativeClient", methodName: "SendCommand");
             return new CanWrapResponse(canWrap);
         }
-        static String GetRedisCommand(Byte[] command)
+        static string GetRedisCommand(byte[] command)
         {
             // ServiceStack.Redis uses the same UTF8 encoder
             return System.Text.Encoding.UTF8.GetString(command);
@@ -56,7 +55,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
-            var redisCommandWithArgumentsAsBytes = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<Byte[][]>(0);
+            var redisCommandWithArgumentsAsBytes = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<byte[][]>(0);
             var redisCommand = redisCommandWithArgumentsAsBytes[0];
             if (redisCommand == null)
                 return Delegates.NoOp;
@@ -75,7 +74,7 @@ namespace NewRelic.Providers.Wrapper.ServiceStackRedis
 
             return Delegates.GetDelegateFor(segment);
         }
-        private static String TryGetPropertyName(String propertyName, Object contextObject)
+        private static string TryGetPropertyName(string propertyName, object contextObject)
         {
             if (propertyName == PropertyHost)
                 return Statics.GetPropertyHost(contextObject);

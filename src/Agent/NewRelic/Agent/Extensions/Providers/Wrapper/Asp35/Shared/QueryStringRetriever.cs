@@ -57,7 +57,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
             agentWrapperApi.HandleWrapperException(new NullReferenceException(nameof(GetQueryStringBackingField)));
             return null;
         }
-        public static IDictionary<String, String> TryGetQueryStringAsDictionary(HttpRequest request, IAgentWrapperApi agentWrapperApi)
+        public static IDictionary<string, string> TryGetQueryStringAsDictionary(HttpRequest request, IAgentWrapperApi agentWrapperApi)
         {
             try
             {

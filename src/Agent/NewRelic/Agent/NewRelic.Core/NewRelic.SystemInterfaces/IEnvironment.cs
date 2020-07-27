@@ -12,6 +12,6 @@ namespace NewRelic.SystemInterfaces
         /// <returns>The value of the environment variable specified by variable, or null if the environment variable is not found.</returns>
         /// <exception cref="ArgumentNullException">variable is null.</exception>
         /// <exception cref="SecurityException">The caller does not have the required permission to perform this operation.</exception>
-        String GetEnvironmentVariable(String variable);
+        string GetEnvironmentVariable(string variable);
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
@@ -53,7 +52,7 @@ namespace NewRelic.Providers.Wrapper.Sql
             if (sqlCommand == null)
                 return Delegates.NoOp;
 
-            var sql = sqlCommand.CommandText ?? String.Empty;
+            var sql = sqlCommand.CommandText ?? string.Empty;
             var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);
             object GetConnectionInfo() => ConnectionInfo.FromConnectionString(vendor, sqlCommand.Connection.ConnectionString);
             var connectionInfo = (ConnectionInfo)transaction.GetOrSetValueFromCache(sqlCommand.Connection.ConnectionString, GetConnectionInfo);

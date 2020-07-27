@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
@@ -8,8 +7,8 @@ namespace NewRelic.Agent.Core.Wrapper
     {
         public readonly IWrapper Wrapper;
 
-        private Int32 _numberOfConsecutiveFailures;
-        public Int32 NumberOfConsecutiveFailures => _numberOfConsecutiveFailures;
+        private int _numberOfConsecutiveFailures;
+        public int NumberOfConsecutiveFailures => _numberOfConsecutiveFailures;
 
         public TrackedWrapper(IWrapper wrapper)
         {

@@ -34,7 +34,7 @@ namespace NewRelic.WeakActions
         }
         private static IWeakAction<T> ConstructWeakAction<T>(ConstructorInfo weakActionConstructor, Action<T> action, Action<Action<T>> actionGarbageCollectedCallback)
         {
-            var weakAction = (IWeakAction<T>)weakActionConstructor.Invoke(new Object[] { action, actionGarbageCollectedCallback });
+            var weakAction = (IWeakAction<T>)weakActionConstructor.Invoke(new object[] { action, actionGarbageCollectedCallback });
             if (weakAction == null)
                 throw new NullReferenceException("Unable to invoke weakEventHandlerConstructor.");
 
@@ -69,7 +69,7 @@ namespace NewRelic.WeakActions
         }
         private static IWeakAction<T1, T2> ConstructWeakAction<T1, T2>(ConstructorInfo weakActionConstructor, Action<T1, T2> action, Action<Action<T1, T2>> actionGarbageCollectedCallback)
         {
-            var weakAction = (IWeakAction<T1, T2>)weakActionConstructor.Invoke(new Object[] { action, actionGarbageCollectedCallback });
+            var weakAction = (IWeakAction<T1, T2>)weakActionConstructor.Invoke(new object[] { action, actionGarbageCollectedCallback });
             if (weakAction == null)
                 throw new NullReferenceException("Unable to invoke weakEventHandlerConstructor.");
 

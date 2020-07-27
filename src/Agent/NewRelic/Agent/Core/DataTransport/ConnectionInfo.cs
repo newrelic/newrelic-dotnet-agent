@@ -1,20 +1,19 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
     public class ConnectionInfo
     {
-        public readonly String Host;
-        public readonly UInt32 Port;
-        public readonly String HttpProtocol;
-        public readonly String ProxyHost;
-        public readonly String ProxyUriPath;
-        public readonly Int32 ProxyPort;
-        public readonly String ProxyUsername;
-        public readonly String ProxyPassword;
-        public readonly String ProxyDomain;
+        public readonly string Host;
+        public readonly uint Port;
+        public readonly string HttpProtocol;
+        public readonly string ProxyHost;
+        public readonly string ProxyUriPath;
+        public readonly int ProxyPort;
+        public readonly string ProxyUsername;
+        public readonly string ProxyPassword;
+        public readonly string ProxyDomain;
         public readonly WebProxy Proxy;
 
         public ConnectionInfo(IConfiguration configuration)
@@ -32,7 +31,7 @@ namespace NewRelic.Agent.Core.DataTransport
             Proxy = GetWebProxy(ProxyHost, ProxyUriPath, ProxyPort, ProxyUsername, ProxyPassword, ProxyDomain);
         }
 
-        public ConnectionInfo(IConfiguration configuration, String redirectHost)
+        public ConnectionInfo(IConfiguration configuration, string redirectHost)
         {
             Host = redirectHost ?? configuration.CollectorHost;
             Port = configuration.CollectorPort;
@@ -46,12 +45,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
             Proxy = GetWebProxy(ProxyHost, ProxyUriPath, ProxyPort, ProxyUsername, ProxyPassword, ProxyDomain);
         }
-        private static WebProxy GetWebProxy(String proxyHost, String proxyUriPath, Int32 proxyPort, String proxyUsername, String proxyPassword, String proxyDomain)
+        private static WebProxy GetWebProxy(string proxyHost, string proxyUriPath, int proxyPort, string proxyUsername, string proxyPassword, string proxyDomain)
         {
-            if (String.IsNullOrEmpty(proxyHost))
+            if (string.IsNullOrEmpty(proxyHost))
                 return null;
 
-            var proxyUri = String.IsNullOrEmpty(proxyUriPath) ? $"{proxyHost}:{proxyPort}" : $"{proxyHost}:{proxyPort}/{proxyUriPath.TrimStart('/')}";
+            var proxyUri = string.IsNullOrEmpty(proxyUriPath) ? $"{proxyHost}:{proxyPort}" : $"{proxyHost}:{proxyPort}/{proxyUriPath.TrimStart('/')}";
             var webProxy = new WebProxy(proxyUri);
             if (proxyUsername != null)
                 webProxy.Credentials = new NetworkCredential(proxyUsername, proxyPassword, proxyDomain);
@@ -59,24 +58,24 @@ namespace NewRelic.Agent.Core.DataTransport
             return webProxy;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             var proxyAddress = GetProxyAddress();
-            var proxyInformation = proxyAddress != null ? String.Format(" (Proxy: {0})", proxyAddress) : null;
-            return String.Format("{0}:{1}{2}", Host, Port, proxyInformation);
+            var proxyInformation = proxyAddress != null ? string.Format(" (Proxy: {0})", proxyAddress) : null;
+            return string.Format("{0}:{1}{2}", Host, Port, proxyInformation);
         }
-        private String GetProxyAddress()
+        private string GetProxyAddress()
         {
             if (ProxyHost == null)
                 return null;
 
             var host = GetProxyHostWithoutCredentials(ProxyHost);
             var port = ProxyPort;
-            var uriPath = String.IsNullOrEmpty(ProxyUriPath) ? String.Empty : "/" + ProxyUriPath.TrimStart('/');
+            var uriPath = string.IsNullOrEmpty(ProxyUriPath) ? string.Empty : "/" + ProxyUriPath.TrimStart('/');
 
-            return String.Format("{0}:{1}{2}", host, port, uriPath);
+            return string.Format("{0}:{1}{2}", host, port, uriPath);
         }
-        private String GetProxyHostWithoutCredentials(String proxyHost)
+        private string GetProxyHostWithoutCredentials(string proxyHost)
         {
             var atIndexInProxyHost = proxyHost.IndexOf('@');
             if (atIndexInProxyHost < 0 || atIndexInProxyHost >= proxyHost.Length)

@@ -1,10 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Requests;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Memoization;
 
@@ -56,7 +53,7 @@ namespace NewRelic.Agent.Core.Transactions
 
         #region Private Helpers
 
-        private Boolean ShouldIncludeInHighSecurity(Attribute attribute)
+        private bool ShouldIncludeInHighSecurity(Attribute attribute)
         {
             if (!_configuration.HighSecurityModeEnabled)
                 return true;

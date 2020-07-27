@@ -6,11 +6,11 @@ namespace NewRelic.Agent
     public class Label
     {
         [JsonProperty(PropertyName = "label_type")]
-        public readonly String Type;
+        public readonly string Type;
         [JsonProperty(PropertyName = "label_value")]
-        public readonly String Value;
+        public readonly string Value;
 
-        public Label(String labelType, String labelValue)
+        public Label(string labelType, string labelValue)
         {
             if (labelType == null)
                 throw new ArgumentNullException("labelType");

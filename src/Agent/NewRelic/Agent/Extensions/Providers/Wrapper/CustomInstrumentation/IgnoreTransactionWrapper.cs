@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentation
 {
     public class IgnoreTransactionWrapper : IWrapper
     {
-        private static readonly String[] PossibleWrapperNames = {
+        private static readonly string[] PossibleWrapperNames = {
             "NewRelic.Providers.Wrapper.CustomInstrumentation.IgnoreTransactionWrapper",
 
             // To support older custom instrumentation we need to also accept the old tracer factory name

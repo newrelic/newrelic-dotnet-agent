@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Agent.Extensions.Test
+﻿namespace Agent.Extensions.Test
 {
     public class SimpleClass
     {
@@ -12,7 +6,7 @@ namespace Agent.Extensions.Test
         {
         }
 
-        public void SimpleMethod(String str)
+        public void SimpleMethod(string str)
         {
 
         }

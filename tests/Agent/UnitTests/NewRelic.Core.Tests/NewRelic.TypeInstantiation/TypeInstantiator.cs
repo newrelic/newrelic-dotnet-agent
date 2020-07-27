@@ -18,11 +18,11 @@ namespace NewRelic.TypeInstantiation.UnitTests
     [TestFixture]
     public class Class_TypeInstantiator
     {
-        private static readonly String[] References = { "System.dll", new Uri(typeof(IInterface).Assembly.CodeBase).LocalPath };
+        private static readonly string[] References = { "System.dll", new Uri(typeof(IInterface).Assembly.CodeBase).LocalPath };
 
         private DirectoryInfo _tempDir;
 
-        private static Assembly GenerateAssembly(String source, String filePath = null, Assembly[] additionalAssemblyReferences = null)
+        private static Assembly GenerateAssembly(string source, string filePath = null, Assembly[] additionalAssemblyReferences = null)
         {
             using (var provider = new CSharpCodeProvider())
             {
@@ -222,7 +222,7 @@ public class Baz {}");
         {
             var directory = MakeTempDirForTest();
 
-            Action<String> testMethod1 = directoryPath =>
+            Action<string> testMethod1 = directoryPath =>
             {
                 var interfaceAssemblyPath = Path.Combine(directoryPath, "IDoSomething.dll");
                 var interfaceAssembly = GenerateAssembly(@"public interface IDoSomething : IInterface { }", interfaceAssemblyPath);
@@ -232,7 +232,7 @@ public class Baz {}");
             };
             AppDomainExtensions.IsolateMethodInAppDomain(testMethod1, AssemblyResolverHolder.AssemblyResolver, directory.FullName);
 
-            Action<String> testMethod2 = directoryPath =>
+            Action<string> testMethod2 = directoryPath =>
             {
                 // Add a method to IDoSomething so that our DoNothing class is no longer a valid implementation and will throw a TypeLoadException when loaded
                 var interfaceAssemblyPath = Path.Combine(directoryPath, "IDoSomething.dll");
@@ -270,7 +270,7 @@ public class Bar : IInterface {}"),
         public void when_finds_files_on_disk()
         {
             var directory = MakeTempDirForTest();
-            Action<String> testMethod = directoryPath =>
+            Action<string> testMethod = directoryPath =>
             {
                 var filePath1 = Path.Combine(directoryPath, "foo.dll");
                 var filePath2 = Path.Combine(directoryPath, "bar.dll");
@@ -304,7 +304,7 @@ public class Bar : IInterface {}"),
         public void when_empty_directory_on_disk()
         {
             DirectoryInfo directory = MakeTempDirForTest();
-            Action<String> testMethod = directoryPath =>
+            Action<string> testMethod = directoryPath =>
             {
                 var result = TypeInstantiator.ExportedInstancesFromDirectory<IInterface>(directoryPath);
                 Assert.AreEqual(0, result.Instances.Count());
@@ -327,7 +327,7 @@ public class Bar : IInterface {}"),
         public void when_invalid_file_on_disk()
         {
             var directory = MakeTempDirForTest();
-            Action<String> testMethod = directoryPath =>
+            Action<string> testMethod = directoryPath =>
             {
                 var filePath1 = Path.Combine(directoryPath, "foo.dll");
                 File.CreateText(filePath1);
@@ -396,7 +396,7 @@ public class Bar : IInterface {}"),
         {
             var directory = MakeTempDirForTest();
             var innerDirectory = Directory.CreateDirectory(Path.Combine(directory.FullName, "Nested Folder"));
-            Action<String, String> testMethod = (directoryPath, innerDirectoryPath) =>
+            Action<string, string> testMethod = (directoryPath, innerDirectoryPath) =>
             {
                 var filePath1 = Path.Combine(directoryPath, "foo.dll");
                 var filePath2 = Path.Combine(innerDirectoryPath, "bar.dll");
@@ -415,7 +415,7 @@ public class Bar : IInterface {}"),
         {
             var directory = MakeTempDirForTest();
             var innerDirectory = Directory.CreateDirectory(Path.Combine(directory.FullName, "Nested Folder"));
-            Action<String, String> testMethod = (directoryPath, innerDirectoryPath) =>
+            Action<string, string> testMethod = (directoryPath, innerDirectoryPath) =>
             {
                 var filePath1 = Path.Combine(directoryPath, "foo.dll");
                 var filePath2 = Path.Combine(innerDirectoryPath, "bar.dll");

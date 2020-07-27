@@ -21,19 +21,19 @@ namespace NewRelic.Agent.Core.WireModels
         /// ex. WebTransaction/ASP/post.aspx
         /// </summary>
         [JsonArrayIndex(Index = 1)]
-        public virtual String Path { get; }
+        public virtual string Path { get; }
 
         /// <summary>
         /// The error message.
         /// </summary>
         [JsonArrayIndex(Index = 2)]
-        public virtual String Message { get; }
+        public virtual string Message { get; }
 
         /// <summary>
         /// The class name of the exception thrown.
         /// </summary>
         [JsonArrayIndex(Index = 3)]
-        public virtual String ExceptionClassName { get; }
+        public virtual string ExceptionClassName { get; }
 
         /// <summary>
         /// Parameters associated with this error.
@@ -45,9 +45,9 @@ namespace NewRelic.Agent.Core.WireModels
         /// Guid of this error.
         /// </summary>
         [JsonArrayIndex(Index = 5)]
-        public virtual String Guid { get; }
+        public virtual string Guid { get; }
 
-        public ErrorTraceWireModel(DateTime timestamp, String path, String message, String exceptionClassName, ErrorTraceAttributesWireModel attributes, String guid)
+        public ErrorTraceWireModel(DateTime timestamp, string path, string message, string exceptionClassName, ErrorTraceAttributesWireModel attributes, string guid)
         {
             TimeStamp = timestamp;
             Path = path;
@@ -61,21 +61,21 @@ namespace NewRelic.Agent.Core.WireModels
         public class ErrorTraceAttributesWireModel
         {
             [JsonProperty("stack_trace")]
-            public virtual IEnumerable<String> StackTrace { get; }
+            public virtual IEnumerable<string> StackTrace { get; }
 
             [JsonProperty("agentAttributes")]
-            public virtual IEnumerable<KeyValuePair<String, Object>> AgentAttributes { get; }
+            public virtual IEnumerable<KeyValuePair<string, object>> AgentAttributes { get; }
 
             [JsonProperty("userAttributes")]
-            public virtual IEnumerable<KeyValuePair<String, Object>> UserAttributes { get; }
+            public virtual IEnumerable<KeyValuePair<string, object>> UserAttributes { get; }
 
             [JsonProperty("intrinsics")]
-            public virtual IEnumerable<KeyValuePair<String, Object>> Intrinsics { get; }
+            public virtual IEnumerable<KeyValuePair<string, object>> Intrinsics { get; }
 
             [JsonProperty("request_uri")]
-            public virtual String RequestUri { get; }
+            public virtual string RequestUri { get; }
 
-            public ErrorTraceAttributesWireModel(String requestUri, IEnumerable<KeyValuePair<String, Object>> agentAttributes, IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, IEnumerable<KeyValuePair<String, Object>> userAttributes, IEnumerable<String> stackTrace = null)
+            public ErrorTraceAttributesWireModel(string requestUri, IEnumerable<KeyValuePair<string, object>> agentAttributes, IEnumerable<KeyValuePair<string, object>> intrinsicAttributes, IEnumerable<KeyValuePair<string, object>> userAttributes, IEnumerable<string> stackTrace = null)
             {
                 AgentAttributes = agentAttributes.ToReadOnlyDictionary();
                 Intrinsics = intrinsicAttributes.ToReadOnlyDictionary();
@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.WireModels
                 RequestUri = requestUri;
 
                 if (stackTrace != null)
-                    StackTrace = new ReadOnlyCollection<String>(new List<String>(stackTrace));
+                    StackTrace = new ReadOnlyCollection<string>(new List<string>(stackTrace));
             }
         }
     }

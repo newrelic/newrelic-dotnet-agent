@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.Utilities
             _dnsStatic = dnsStatic;
         }
 
-        public UInt64 GetTotalPhysicalMemoryBytes()
+        public ulong GetTotalPhysicalMemoryBytes()
         {
             try
             {
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.Core.Utilities
             }
         }
 
-        public Int32 GetTotalLogicalProcessors()
+        public int GetTotalLogicalProcessors()
         {
             return System.Environment.ProcessorCount;
         }
@@ -98,15 +98,15 @@ namespace NewRelic.Agent.Core.Utilities
         [StructLayout(LayoutKind.Sequential)]
         private struct MemoryStatus
         {
-            public Int32 length;
-            private readonly Int32 memoryLoad;
-            public readonly UInt64 totalPhys;
-            private readonly UInt64 availPhys;
-            private readonly UInt64 totalPageFile;
-            private readonly UInt64 availPageFile;
-            private readonly UInt64 totalVirtual;
-            private readonly UInt64 availVirtual;
-            private readonly UInt64 availExtendedVirtual;
+            public int length;
+            private readonly int memoryLoad;
+            public readonly ulong totalPhys;
+            private readonly ulong availPhys;
+            private readonly ulong totalPageFile;
+            private readonly ulong availPageFile;
+            private readonly ulong totalVirtual;
+            private readonly ulong availVirtual;
+            private readonly ulong availExtendedVirtual;
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Aggregators
 {

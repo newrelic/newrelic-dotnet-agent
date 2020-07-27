@@ -2,13 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.DependencyInjection;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.SystemExtensions;
 using NewRelic.SystemExtensions.Collections.Generic;
 using IEnumerableExtensions = NewRelic.SystemExtensions.Collections.Generic.IEnumerableExtensions;
@@ -45,7 +40,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var duration = immutableTransaction.Duration;
             var uri = immutableTransaction.TransactionMetadata.Uri?.TrimAfter("?") ?? "/Unknown";
             var guid = immutableTransaction.Guid;
-            var xraySessionId = null as UInt64?; // The .NET agent does not support xray sessions
+            var xraySessionId = null as ulong?; // The .NET agent does not support xray sessions
 
             var isSynthetics = immutableTransaction.TransactionMetadata.IsSynthetics;
             var syntheticsResourceId = immutableTransaction.TransactionMetadata.SyntheticsResourceId;
@@ -64,8 +59,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             var relativeStartTime = TimeSpan.Zero;
             var relativeEndTime = immutableTransaction.Duration;
-            const String name = "ROOT";
-            var segmentParameters = new Dictionary<String, Object>();
+            const string name = "ROOT";
+            var segmentParameters = new Dictionary<string, object>();
 
             // Due to a bug in the UI, we must insert a fake top-level segment to be the parent of all of the REAL top-level segments. The UI does not know how to handle multiple top-level segments, but inserting a single faux segment to be the parent is a reasonable workaround.
             var fauxTopLevelSegment = GetFauxTopLevelSegment(segmentTrees, immutableTransaction);
@@ -80,8 +75,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             var relativeStartTime = TimeSpan.Zero;
             var relativeEndTime = immutableTransaction.Duration;
-            const String name = "Transaction";
-            var segmentParameters = new Dictionary<String, Object>();
+            const string name = "Transaction";
+            var segmentParameters = new Dictionary<string, object>();
             var children = segmentTrees.Select(childNode => CreateTransactionTraceSegment(childNode, immutableTransaction)).ToList();
             var firstSegmentClassName = children.First().ClassName;
             var firstSegmentMethodName = children.First().MethodName;
@@ -118,7 +113,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     {
         public TimeSpan Duration { get; }
 
-        public Boolean IsSynthetics { get; }
+        public bool IsSynthetics { get; }
 
         public TransactionMetricName TransactionMetricName { get; }
 
@@ -126,7 +121,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         private readonly GenerateWireModel _generateWireModel;
 
-        public TransactionTraceWireModelComponents(TransactionMetricName transactionMetricName, TimeSpan duration, Boolean isSynthetics, GenerateWireModel generateWireModel)
+        public TransactionTraceWireModelComponents(TransactionMetricName transactionMetricName, TimeSpan duration, bool isSynthetics, GenerateWireModel generateWireModel)
         {
             _generateWireModel = generateWireModel;
             Duration = duration;

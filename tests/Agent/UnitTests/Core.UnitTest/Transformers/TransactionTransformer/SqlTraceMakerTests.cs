@@ -68,7 +68,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var sqlTrace = _sqlTraceMaker.TryGetSqlTrace(transaction, transactionMetricName, datastoreSegment);
             Assert.IsNull(sqlTrace);
         }
-        private static ImmutableTransaction BuildTestTransaction(String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
+        private static ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
         {
             var txMetadata = new TransactionMetadata();
             if (uri != null)
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             return new ImmutableTransaction(name, segments, immutableMetadata, DateTime.UtcNow, TimeSpan.FromSeconds(1), guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
         }
-        private static TypedSegment<DatastoreSegmentData> BuildSegment(DatastoreVendor vendor, String model, String commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null, String host = null, String portPathOrId = null, String databaseName = null)
+        private static TypedSegment<DatastoreSegmentData> BuildSegment(DatastoreVendor vendor, string model, string commandText, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null, string host = null, string portPathOrId = null, string databaseName = null)
         {
             var data = new DatastoreSegmentData()
             {

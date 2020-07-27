@@ -1,5 +1,3 @@
-using System;
-
 namespace NewRelic.Agent.Core.Exceptions
 {
 
@@ -9,7 +7,7 @@ namespace NewRelic.Agent.Core.Exceptions
     public class PostTooBigException : RPMException
     {
 
-        public PostTooBigException(String message) : base(message)
+        public PostTooBigException(string message) : base(message)
         {
         }
     }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+﻿namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
     /// <summary>
     /// Holds method invocation arguments.
@@ -8,14 +6,14 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
     public class MethodCall
     {
         public readonly Method Method;
-        public readonly Object InvocationTarget;
-        public readonly Object[] MethodArguments;
+        public readonly object InvocationTarget;
+        public readonly object[] MethodArguments;
 
-        public MethodCall(Method method, Object invocationTarget, Object[] methodArguments)
+        public MethodCall(Method method, object invocationTarget, object[] methodArguments)
         {
             Method = method;
             InvocationTarget = invocationTarget;
-            MethodArguments = methodArguments ?? new Object[0];
+            MethodArguments = methodArguments ?? new object[0];
         }
     }
 }

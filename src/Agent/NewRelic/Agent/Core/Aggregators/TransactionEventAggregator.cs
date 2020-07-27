@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
@@ -29,7 +27,7 @@ namespace NewRelic.Agent.Core.Aggregators
         // Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
         private IResizableCappedCollection<TransactionEventWireModel> _transactionEvents = new ConcurrentReservoir<TransactionEventWireModel>(0);
         private ConcurrentList<TransactionEventWireModel> _syntheticsTransactionEvents = new ConcurrentList<TransactionEventWireModel>();
-        private const Double _reservoirReductionSizeMultiplier = 0.5;
+        private const double _reservoirReductionSizeMultiplier = 0.5;
 
         public TransactionEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
@@ -94,7 +92,7 @@ namespace NewRelic.Agent.Core.Aggregators
                     RetainEvents(transactionEvents);
                     break;
                 case DataTransportResponseStatus.PostTooBigError:
-                    ReduceReservoirSize((UInt32)(transactionEvents.Count() * _reservoirReductionSizeMultiplier));
+                    ReduceReservoirSize((uint)(transactionEvents.Count() * _reservoirReductionSizeMultiplier));
                     RetainEvents(transactionEvents);
                     break;
                 case DataTransportResponseStatus.OtherError:
@@ -114,12 +112,12 @@ namespace NewRelic.Agent.Core.Aggregators
                 .ForEach(AddEventToCollection);
         }
 
-        private UInt32 GetReservoirSize()
+        private uint GetReservoirSize()
         {
             return _transactionEvents.Size;
         }
 
-        private void ReduceReservoirSize(UInt32 newSize)
+        private void ReduceReservoirSize(uint newSize)
         {
             if (newSize >= GetReservoirSize())
                 return;

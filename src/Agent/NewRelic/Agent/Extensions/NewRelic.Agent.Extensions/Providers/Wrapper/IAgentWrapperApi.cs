@@ -26,7 +26,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="mustBeRootTransaction">Whether or not the transaction must be root.</param>
         /// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
-        ITransaction CreateWebTransaction(WebTransactionType type, String name, Boolean mustBeRootTransaction = true, Action onCreate = null);
+        ITransaction CreateWebTransaction(WebTransactionType type, string name, bool mustBeRootTransaction = true, Action onCreate = null);
 
         /// <summary>
         /// Create a new transaction for processing a message received from a message queue.
@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="destination">The destination queue of the message being handled. Can be null.</param>
         /// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
-        ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, String brokerVendorName, String destination = null, Action onCreate = null);
+        ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination = null, Action onCreate = null);
 
         /// <summary>
         /// Create a new transaction for processing an arbitrary transaction.
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="mustBeRootTransaction">Whether or not the transaction can exist within another transaction</param>
         /// <param name="onCreate">A callback that is called if a transaction is created. Can be null.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
-        ITransaction CreateOtherTransaction(String category, String name, Boolean mustBeRootTransaction = true, Action onCreate = null);
+        ITransaction CreateOtherTransaction(string category, string name, bool mustBeRootTransaction = true, Action onCreate = null);
 
         /// <summary>
         /// Casts an object as an ISegment instance.  This should be used when casting values retrieved from 
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// </summary>
         /// <param name="segment">An object that should be an instance of ISegment</param>
         /// <returns>A non-null ISegment instance.</returns>
-        ISegment CastAsSegment(Object segment);
+        ISegment CastAsSegment(object segment);
 
         /// <summary>
         /// Sets up the resources necessary to execute an explain plan.
@@ -71,7 +71,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="headers">The headers to be processed. Must not be null.</param>
         /// <param name="contentLength">The length of the content, in bytes, if available.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
-        void ProcessInboundRequest(IEnumerable<KeyValuePair<String, String>> headers, long? contentLength = null);
+        void ProcessInboundRequest(IEnumerable<KeyValuePair<string, string>> headers, long? contentLength = null);
 
         /// <summary>
         /// Tell the agent about an error that just occurred in the wrapper. Normally exceptions should just be thrown so that the agent can handle them directly, but this method is useful in situations where exceptions are happening outside the scope of the agent (for example, on another thread). This method is thread-safe.
@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="encoding">The encoding of the data in the stream.</param>
         /// <param name="contentType">The type of content in the stream.</param>
         /// <param name="requestPath">The path of the request</param>
-        Stream TryGetStreamInjector(Stream stream, Encoding encoding, String contentType, String requestPath);
+        Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath);
     }
 
     public enum WebTransactionType

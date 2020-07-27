@@ -4,12 +4,12 @@ namespace NewRelic.Agent.Core.Exceptions
 {
     public class RuntimeException : RPMException
     {
-        public RuntimeException(String message)
+        public RuntimeException(string message)
             : base(message)
         {
         }
 
-        public RuntimeException(String message, Exception ex)
+        public RuntimeException(string message, Exception ex)
             : base(message, ex)
         {
         }

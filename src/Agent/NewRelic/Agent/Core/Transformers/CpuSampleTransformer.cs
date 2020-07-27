@@ -58,12 +58,12 @@ namespace NewRelic.Agent.Core.Transformers
             return cpuUserTime;
         }
 
-        private Single GetCpuUserUtilization(TimeSpan cpuUserTime, DateTime currentSampleTime, DateTime lastSampleTime, Int32 processorCount)
+        private float GetCpuUserUtilization(TimeSpan cpuUserTime, DateTime currentSampleTime, DateTime lastSampleTime, int processorCount)
         {
             var wallClockTimeMs = (currentSampleTime - lastSampleTime).TotalMilliseconds;
             var cpuUserTimeMs = cpuUserTime.TotalMilliseconds;
-            var cpuUserUtilizationMs = (Single)(cpuUserTimeMs / (wallClockTimeMs * processorCount));
-            if (Single.IsNaN(cpuUserUtilizationMs) || Single.IsInfinity(cpuUserUtilizationMs))
+            var cpuUserUtilizationMs = (float)(cpuUserTimeMs / (wallClockTimeMs * processorCount));
+            if (float.IsNaN(cpuUserUtilizationMs) || float.IsInfinity(cpuUserUtilizationMs))
                 throw new Exception($"Invalid CPU Utilization. CPU time: {cpuUserTimeMs} (ms), Real time: {wallClockTimeMs} (ms)");
 
             return cpuUserUtilizationMs;

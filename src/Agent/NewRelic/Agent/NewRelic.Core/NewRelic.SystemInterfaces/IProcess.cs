@@ -9,9 +9,9 @@ namespace NewRelic.SystemInterfaces
 
     public interface IProcess
     {
-        String ProcessName { get; }
-        Int32 Id { get; }
-        String MainModuleFileName { get; }
+        string ProcessName { get; }
+        int Id { get; }
+        string MainModuleFileName { get; }
         DateTime StartTime { get; }
     }
 

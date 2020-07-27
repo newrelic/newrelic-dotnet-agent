@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Core.CallStack;
+﻿using NewRelic.Agent.Core.CallStack;
 
 namespace CompositeTests
 {

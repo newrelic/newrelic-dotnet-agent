@@ -16,25 +16,25 @@ namespace NewRelic.Agent.Core.Transactions
         {
             return _agentAttributes.Count + _userAttributes.Count + _intrinsics.Count;
         }
-        public virtual IDictionary<String, Object> GetAgentAttributesDictionary()
+        public virtual IDictionary<string, object> GetAgentAttributesDictionary()
         {
             return _agentAttributes
                 .Where(attribute => attribute != null)
-                .Select(attribute => new KeyValuePair<String, Object>(attribute.Key, attribute.Value))
+                .Select(attribute => new KeyValuePair<string, object>(attribute.Key, attribute.Value))
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
         }
-        public virtual IDictionary<String, Object> GetUserAttributesDictionary()
+        public virtual IDictionary<string, object> GetUserAttributesDictionary()
         {
             return _userAttributes
                 .Where(attribute => attribute != null)
-                .Select(attribute => new KeyValuePair<String, Object>(attribute.Key, attribute.Value))
+                .Select(attribute => new KeyValuePair<string, object>(attribute.Key, attribute.Value))
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
         }
-        public virtual IDictionary<String, Object> GetIntrinsicsDictionary()
+        public virtual IDictionary<string, object> GetIntrinsicsDictionary()
         {
             return _intrinsics
                 .Where(attribute => attribute != null)
-                .Select(attribute => new KeyValuePair<String, Object>(attribute.Key, attribute.Value))
+                .Select(attribute => new KeyValuePair<string, object>(attribute.Key, attribute.Value))
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
         }
         public virtual IList<Attribute> GetAgentAttributes()

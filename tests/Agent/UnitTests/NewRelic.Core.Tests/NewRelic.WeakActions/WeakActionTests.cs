@@ -15,7 +15,7 @@ namespace NewRelic.WeakActions.UnitTests
                 _action = action;
             }
 
-            public void OnObject(Object @object)
+            public void OnObject(object @object)
             {
                 _action();
             }
@@ -23,7 +23,7 @@ namespace NewRelic.WeakActions.UnitTests
 
         // a place to put foos that will help guarantee their lifetime, local variables have undefined lifetimes in optimized builds
         private Foo _foo;
-        private Boolean _fooOnObjectWasCalled;
+        private bool _fooOnObjectWasCalled;
 
 
         public WeakActionTests()
@@ -42,11 +42,11 @@ namespace NewRelic.WeakActions.UnitTests
         [Test]
         public void when_reference_is_not_garbage_collected_then_weak_action_is_called()
         {
-            var action = WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null);
+            var action = WeakActionUtilities.MakeWeak<object>(_foo.OnObject, null);
 
             GC.Collect();
 
-            action.Action(new Object());
+            action.Action(new object());
 
             Assert.True(_fooOnObjectWasCalled);
         }
@@ -55,12 +55,12 @@ namespace NewRelic.WeakActions.UnitTests
         public void when_garbage_collection_occurs_then_weak_action_is_not_called()
         {
             // NCrunch ignored due to NCrunch garbage collection bug, see http://stackoverflow.com/questions/16771249/how-to-force-full-garbage-collection-in-net-4-x
-            var action = WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null);
+            var action = WeakActionUtilities.MakeWeak<object>(_foo.OnObject, null);
             _foo = null;
 
             GC.Collect();
 
-            action.Action(new Object());
+            action.Action(new object());
 
             Assert.False(_fooOnObjectWasCalled);
         }
@@ -70,11 +70,11 @@ namespace NewRelic.WeakActions.UnitTests
         {
             var actionGarbageCollectedCallbackWasCalled = false;
 
-            var action = WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, _ => actionGarbageCollectedCallbackWasCalled = true);
+            var action = WeakActionUtilities.MakeWeak<object>(_foo.OnObject, _ => actionGarbageCollectedCallbackWasCalled = true);
 
             GC.Collect();
 
-            action.Action(new Object());
+            action.Action(new object());
 
             Assert.False(actionGarbageCollectedCallbackWasCalled);
         }
@@ -85,12 +85,12 @@ namespace NewRelic.WeakActions.UnitTests
             // NCrunch ignored due to NCrunch garbage collection bug, see http://stackoverflow.com/questions/16771249/how-to-force-full-garbage-collection-in-net-4-x
             var actionGarbageCollectedCallbackWasCalled = false;
 
-            var action = WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, _ => actionGarbageCollectedCallbackWasCalled = true);
+            var action = WeakActionUtilities.MakeWeak<object>(_foo.OnObject, _ => actionGarbageCollectedCallbackWasCalled = true);
             _foo = null;
 
             GC.Collect();
 
-            action.Action(new Object());
+            action.Action(new object());
 
             Assert.True(actionGarbageCollectedCallbackWasCalled);
         }
@@ -100,7 +100,7 @@ namespace NewRelic.WeakActions.UnitTests
         public void weak_reference_test()
         {
             // NCrunch ignored due to NCrunch garbage collection bug, see http://stackoverflow.com/questions/16771249/how-to-force-full-garbage-collection-in-net-4-x
-            var weakReference = new WeakReference(new Object());
+            var weakReference = new WeakReference(new object());
 
             GC.Collect();
 

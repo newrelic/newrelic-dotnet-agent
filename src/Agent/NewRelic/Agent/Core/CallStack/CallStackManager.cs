@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewRelic.Agent.Core.Logging;
@@ -38,7 +37,7 @@ namespace NewRelic.Agent.Core.CallStack
         bool AttachToAsync();
     }
 
-    public delegate void CallStackPop(Object uniqueObject, Object uniqueParent);
+    public delegate void CallStackPop(object uniqueObject, object uniqueParent);
 
     public interface ICallStackManagerFactory
     {

@@ -32,7 +32,7 @@ namespace NewRelic.Agent.Core
 
         private static IAgentApi _agentApiImplementation;
 
-        public const Int32 CustomTransactionNamePriority = 8;
+        public const int CustomTransactionNamePriority = 8;
 
         public static void SetAgentApiImplementation(IAgentApi agentApiImplementation)
         {
@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core
         /// <param name="attributes">The value to record.
         /// Only the first 1000 characters are retained.
         /// </param>
-        public static void RecordCustomEvent(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
+        public static void RecordCustomEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
         {
 
             _agentApiImplementation?.RecordCustomEvent(eventType, attributes);
@@ -63,7 +63,7 @@ namespace NewRelic.Agent.Core
         /// <param name="value">The value to record.
         /// Only the first 1000 characters are retained.
         /// </param>
-        public static void RecordMetric(String name, Single value)
+        public static void RecordMetric(string name, float value)
         {
             _agentApiImplementation?.RecordMetric(name, value);
         }
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core
         /// Only the first 1000 characters are retained.
         /// </param>
         /// <param name="millis">The response time to record in milliseconds.</param>
-        public static void RecordResponseTimeMetric(String name, Int64 millis)
+        public static void RecordResponseTimeMetric(string name, long millis)
         {
             _agentApiImplementation?.RecordResponseTimeMetric(name, millis);
         }
@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core
         /// <param name="name">The name of the metric to increment.
         /// Only the first 1000 characters are retained.
         /// </param>
-        public static void IncrementCounter(String name)
+        public static void IncrementCounter(string name)
         {
             _agentApiImplementation?.IncrementCounter(name);
         }
@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core
         /// May be null.
         /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
-        public static void NoticeError(Exception exception, IDictionary<String, String> customAttributes)
+        public static void NoticeError(Exception exception, IDictionary<string, string> customAttributes)
         {
             _agentApiImplementation?.NoticeError(exception, customAttributes);
         }
@@ -142,7 +142,7 @@ namespace NewRelic.Agent.Core
         /// May be null.
         /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
-        public static void NoticeError(String message, IDictionary<String, String> customAttributes)
+        public static void NoticeError(string message, IDictionary<string, string> customAttributes)
         {
             _agentApiImplementation?.NoticeError(message, customAttributes);
         }
@@ -155,7 +155,7 @@ namespace NewRelic.Agent.Core
         /// Only the first 1000 characters are retained.
         /// </param>
         /// <param name="value">The numeric value to add to the current transaction.</param>
-        public static void AddCustomParameter(String key, IConvertible value)
+        public static void AddCustomParameter(string key, IConvertible value)
         {
             _agentApiImplementation?.AddCustomParameter(key, value);
         }
@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core
         /// <param name="value">The value.
         /// Only the first 1000 characters are retained.
         /// </param>
-        public static void AddCustomParameter(String key, String value)
+        public static void AddCustomParameter(string key, string value)
         {
             _agentApiImplementation?.AddCustomParameter(key, value);
         }
@@ -186,7 +186,7 @@ namespace NewRelic.Agent.Core
         /// <param name="name">The name of the transaction starting with a forward slash.  example: /store/order
         /// Only the first 1000 characters are retained.
         /// </param>
-        public static void SetTransactionName(String category, String name)
+        public static void SetTransactionName(string category, string name)
         {
             _agentApiImplementation?.SetTransactionName(category, name);
         }
@@ -200,7 +200,7 @@ namespace NewRelic.Agent.Core
         /// Sets the User Name, Account Name and Product Name to associate with the RUM JavaScript footer for the current web transaction.
         /// Supports web applications only.
         /// </summary>
-        public static void SetUserParameters(String userName, String accountName, String productName)
+        public static void SetUserParameters(string userName, string accountName, string productName)
         {
             _agentApiImplementation?.SetUserParameters(userName, accountName, productName);
         }
@@ -239,15 +239,15 @@ namespace NewRelic.Agent.Core
         /// </code>
         /// </example>
         /// <returns>An html string to be embedded in a page header.</returns>
-        public static String GetBrowserTimingHeader()
+        public static string GetBrowserTimingHeader()
         {
-            return _agentApiImplementation?.GetBrowserTimingHeader() ?? String.Empty;
+            return _agentApiImplementation?.GetBrowserTimingHeader() ?? string.Empty;
         }
 
         [Obsolete]
-        public static String GetBrowserTimingFooter()
+        public static string GetBrowserTimingFooter()
         {
-            return _agentApiImplementation?.GetBrowserTimingFooter() ?? String.Empty;
+            return _agentApiImplementation?.GetBrowserTimingFooter() ?? string.Empty;
         }
 
         /// <summary>
@@ -259,7 +259,7 @@ namespace NewRelic.Agent.Core
         /// NewRelic.Api.Agent.NewRelic.DisableBrowserMonitoring()
         /// </code>
         /// </example>
-        public static void DisableBrowserMonitoring(Boolean overrideManual = false)
+        public static void DisableBrowserMonitoring(bool overrideManual = false)
         {
             _agentApiImplementation?.DisableBrowserMonitoring(overrideManual);
         }
@@ -288,19 +288,19 @@ namespace NewRelic.Agent.Core
         /// <param name="applicationName">The main application name.</param>
         /// <param name="applicationName2">An optional second application name.</param>
         /// <param name="applicationName3">An optional third application name.</param>
-        public static void SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)
+        public static void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
         {
             _agentApiImplementation?.SetApplicationName(applicationName, applicationName2, applicationName3);
         }
 
-        public static IEnumerable<KeyValuePair<String, String>> GetRequestMetadata()
+        public static IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
         {
-            return _agentApiImplementation?.GetRequestMetadata() ?? new Dictionary<String, String>();
+            return _agentApiImplementation?.GetRequestMetadata() ?? new Dictionary<string, string>();
         }
 
-        public static IEnumerable<KeyValuePair<String, String>> GetResponseMetadata()
+        public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
-            return _agentApiImplementation?.GetResponseMetadata() ?? new Dictionary<String, String>();
+            return _agentApiImplementation?.GetResponseMetadata() ?? new Dictionary<string, string>();
         }
 
     }

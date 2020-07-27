@@ -1,4 +1,3 @@
-using System;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 
@@ -189,7 +188,7 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void TestObfuscationFromGibberish()
         {
-            String stim = "qrx *().<'\"mumblefrob";  // That's an unterminated single quoted string.
+            string stim = "qrx *().<'\"mumblefrob";  // That's an unterminated single quoted string.
             Assert.AreEqual("qrx *().<?", obfuscator.GetObfuscatedSql(stim));
         }
 
@@ -203,9 +202,9 @@ namespace NewRelic.Agent.Core.Database
         [Test]
         public void TestNumbersInTableNames2()
         {
-            String expect = "SELECT [T1].startDate AS [startDate1], [T2].startDate AS [startDate2] FROM Foo AS [T1] " +
+            string expect = "SELECT [T1].startDate AS [startDate1], [T2].startDate AS [startDate2] FROM Foo AS [T1] " +
                 "INNER JOIN Bar AS [T2] ON [T1].someId = [T2].someId and [T1].id in (?)";
-            String stimul = "SELECT [T1].startDate AS [startDate1], [T2].startDate AS [startDate2] FROM Foo AS [T1] " +
+            string stimul = "SELECT [T1].startDate AS [startDate1], [T2].startDate AS [startDate2] FROM Foo AS [T1] " +
                 "INNER JOIN Bar AS [T2] ON [T1].someId = [T2].someId and [T1].id in (5)";
             Assert.AreEqual(expect, obfuscator.GetObfuscatedSql(stimul));
         }

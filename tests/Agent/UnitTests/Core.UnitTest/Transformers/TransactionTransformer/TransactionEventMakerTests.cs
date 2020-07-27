@@ -85,22 +85,22 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             Assert.IsFalse(transactionEvent.IsSynthetics());
         }
 
-        private static ImmutableTransaction BuildTestTransaction(Boolean isSynthetics = false, Boolean hasCatResponseHeaders = false)
+        private static ImmutableTransaction BuildTestTransaction(bool isSynthetics = false, bool hasCatResponseHeaders = false)
         {
             var name = new WebTransactionName("foo", "bar");
             var segments = Enumerable.Empty<Segment>();
-            var userErrorAttributes = new ConcurrentDictionary<String, Object>();
+            var userErrorAttributes = new ConcurrentDictionary<string, object>();
             userErrorAttributes.Add("CustomErrorAttrKey", "CustomErrorAttrValue");
 
             var metadata = new ImmutableTransactionMetadata("uri", "originalUri", "path", "referrerUri",
-            new TimeSpan(1), new ConcurrentDictionary<String, String>(),
-            new ConcurrentDictionary<String, String>(),
-            new ConcurrentDictionary<String, Object>(),
+            new TimeSpan(1), new ConcurrentDictionary<string, string>(),
+            new ConcurrentDictionary<string, string>(),
+            new ConcurrentDictionary<string, object>(),
             userErrorAttributes, 200,
             201, new List<ErrorData>(),
             new List<ErrorData>(), "crossApplicationReferrerPathHash",
             "crossApplicationPathHash",
-            new List<String>(), "crossApplicationReferrerTransactionGuid",
+            new List<string>(), "crossApplicationReferrerTransactionGuid",
             "crossApplicationReferrerProcessId", "crossApplicationReferrerTripId", "syntheticsResourceId",
             "syntheticsJobId", "syntheticsMonitorId", isSynthetics, hasCatResponseHeaders);
 

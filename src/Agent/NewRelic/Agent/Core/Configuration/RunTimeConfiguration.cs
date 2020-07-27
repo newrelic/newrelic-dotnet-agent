@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace NewRelic.Agent.Core.Configuration
 {
     public class RunTimeConfiguration
     {
-        public IEnumerable<String> ApplicationNames;
+        public IEnumerable<string> ApplicationNames;
 
         public RunTimeConfiguration()
         {
-            ApplicationNames = Enumerable.Empty<String>();
+            ApplicationNames = Enumerable.Empty<string>();
         }
 
-        public RunTimeConfiguration(IEnumerable<String> applicationNames)
+        public RunTimeConfiguration(IEnumerable<string> applicationNames)
         {
             ApplicationNames = applicationNames.ToList();
         }

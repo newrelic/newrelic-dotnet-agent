@@ -1,11 +1,9 @@
-﻿using System;
-
-namespace NewRelic.Agent
+﻿namespace NewRelic.Agent
 {
     public interface IAttribute
     {
-        String Key { get; }
-        Object Value { get; }
+        string Key { get; }
+        object Value { get; }
 
         AttributeDestinations DefaultDestinations { get; }
     }

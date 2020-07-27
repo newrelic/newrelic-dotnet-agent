@@ -10,8 +10,8 @@ namespace NewRelic.Agent.Core.Transactions
     {
         public IEnumerable<KeyValuePair<string, string>> RequestParameters { get; }
         public IEnumerable<KeyValuePair<string, string>> ServiceParameters { get; }
-        public IEnumerable<KeyValuePair<string, Object>> UserAttributes { get; }
-        public IEnumerable<KeyValuePair<string, Object>> UserErrorAttributes { get; }
+        public IEnumerable<KeyValuePair<string, object>> UserAttributes { get; }
+        public IEnumerable<KeyValuePair<string, object>> UserErrorAttributes { get; }
 
         public string Uri { get; }
         public string OriginalUri { get; }
@@ -38,10 +38,10 @@ namespace NewRelic.Agent.Core.Transactions
 
         public ImmutableTransactionMetadata(string uri, string originalUri, string path, string referrerUri,
             TimeSpan? queueTime, IEnumerable<KeyValuePair<string, string>> requestParameters,
-            IEnumerable<KeyValuePair<string, String>> serviceParameters,
-            IEnumerable<KeyValuePair<string, Object>> userAttributes,
-            IEnumerable<KeyValuePair<string, Object>> userErrorAttributes, int? httpResponseStatusCode,
-            Int32? httpResponseSubStatusCode, IEnumerable<ErrorData> transactionExceptionDatas,
+            IEnumerable<KeyValuePair<string, string>> serviceParameters,
+            IEnumerable<KeyValuePair<string, object>> userAttributes,
+            IEnumerable<KeyValuePair<string, object>> userErrorAttributes, int? httpResponseStatusCode,
+            int? httpResponseSubStatusCode, IEnumerable<ErrorData> transactionExceptionDatas,
             IEnumerable<ErrorData> customErrorDatas, string crossApplicationReferrerPathHash, string crossApplicationPathHash,
             IEnumerable<string> crossApplicationPathHashes, string crossApplicationReferrerTransactionGuid,
             string crossApplicationReferrerProcessId, string crossApplicationReferrerTripId, string syntheticsResourceId,

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Events
 {
@@ -7,7 +6,7 @@ namespace NewRelic.Agent.Core.Events
     {
         public readonly IEnumerable<string> AppNames;
 
-        public AppNameUpdateEvent(IEnumerable<String> appNames)
+        public AppNameUpdateEvent(IEnumerable<string> appNames)
         {
             AppNames = appNames;
         }

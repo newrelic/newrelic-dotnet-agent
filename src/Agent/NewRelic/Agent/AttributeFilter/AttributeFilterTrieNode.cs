@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using NewRelic.Trie;
 
 namespace NewRelic.Agent
@@ -38,7 +37,7 @@ namespace NewRelic.Agent
             return child.GetClusion(attribute, destination);
         }
 
-        private static Boolean NodeAppliesToAttribute(this TrieNode<AttributeFilterNode> nodeBuilder, IAttribute attribute)
+        private static bool NodeAppliesToAttribute(this TrieNode<AttributeFilterNode> nodeBuilder, IAttribute attribute)
         {
             if (nodeBuilder.Data.Wildcard)
                 return attribute.Key.StartsWith(nodeBuilder.Data.Key);

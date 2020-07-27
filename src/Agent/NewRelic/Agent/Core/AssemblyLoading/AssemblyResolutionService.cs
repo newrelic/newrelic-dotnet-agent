@@ -20,7 +20,7 @@ namespace NewRelic.Agent.Core.AssemblyLoading
             AppDomain.CurrentDomain.AssemblyResolve -= OnAssemblyResolutionFailure;
         }
 
-        private static Assembly OnAssemblyResolutionFailure(Object sender, ResolveEventArgs args)
+        private static Assembly OnAssemblyResolutionFailure(object sender, ResolveEventArgs args)
         {
             if (args == null)
                 return null;
@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.AssemblyLoading
             return TryGetAlreadyLoadedAssemblyFromFullName(args.Name);
         }
 
-        private static Assembly TryGetAlreadyLoadedAssemblyFromFullName(String fullAssemblyName)
+        private static Assembly TryGetAlreadyLoadedAssemblyFromFullName(string fullAssemblyName)
         {
             if (fullAssemblyName == null)
                 return null;
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.AssemblyLoading
             return TryGetAlreadyLoadedAssemblyBySimpleName(simpleAssemblyName);
         }
 
-        private static Assembly TryGetAlreadyLoadedAssemblyBySimpleName(String simpleAssemblyName)
+        private static Assembly TryGetAlreadyLoadedAssemblyBySimpleName(string simpleAssemblyName)
         {
             return AppDomain.CurrentDomain.GetAssemblies()
                 .Where(assembly => assembly != null)
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Core.AssemblyLoading
                 .FirstOrDefault();
         }
 
-        private static Boolean IsWrapperServiceOrTracerInStack()
+        private static bool IsWrapperServiceOrTracerInStack()
         {
             var stackFrames = new StackTrace().GetFrames();
             if (stackFrames == null)
@@ -75,7 +75,7 @@ namespace NewRelic.Agent.Core.AssemblyLoading
             return method.DeclaringType;
         }
 
-        private static Boolean IsNewRelicType(Type type)
+        private static bool IsNewRelicType(Type type)
         {
             var typeName = type.FullName;
             if (typeName == null)

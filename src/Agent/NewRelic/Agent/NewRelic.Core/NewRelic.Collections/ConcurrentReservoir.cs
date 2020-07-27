@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using NewRelic.Collections;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Collections
@@ -10,9 +9,9 @@ namespace NewRelic.Collections
     {
         private IList<T> _list = new ConcurrentList<T>();
         private readonly Random _random = new Random();
-        public UInt32 Size { get; private set; }
+        public uint Size { get; private set; }
         // technically we could run into race conditions with addCount but it is used for probabalistic calculations so if it is off by a bit it doesn't matter
-        private UInt64 _addCount;
+        private ulong _addCount;
 
         public int Count { get { return _list.Count; } }
 
@@ -22,7 +21,7 @@ namespace NewRelic.Collections
         /// Creates a ConcurrentReservoir with the supplied size as the maximum number of items the collection can contain.
         /// </summary>
         /// <param name="size">The maximum numer of items the collection can contain. CONTRACT: size < Int32.Max</param>
-        public ConcurrentReservoir(UInt32 size)
+        public ConcurrentReservoir(uint size)
         {
             Size = size;
         }
@@ -78,7 +77,7 @@ namespace NewRelic.Collections
             throw new NotSupportedException();
         }
 
-        public void Resize(UInt32 newSize)
+        public void Resize(uint newSize)
         {
             // There is a small risk of dropping data if an Add occurs on an old reference of _list
             Size = newSize;
@@ -88,7 +87,7 @@ namespace NewRelic.Collections
                 Add(item);
         }
 
-        public UInt64 GetAddAttemptsCount()
+        public ulong GetAddAttemptsCount()
         {
             return _addCount;
         }

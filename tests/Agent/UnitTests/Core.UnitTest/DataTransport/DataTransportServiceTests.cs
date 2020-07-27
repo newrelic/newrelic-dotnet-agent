@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -8,7 +7,6 @@ using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -47,8 +45,8 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsSuccessful_IfRequestSuccessful()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
-                .Returns<String, Object[]>(null);
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
+                .Returns<string, object[]>(null);
 
             var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
 
@@ -58,7 +56,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsConnectionError_IfConnectionException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new ConnectionException(null));
 
             var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
@@ -69,7 +67,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsPostTooBigError_IfPostTooBigException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new PostTooBigException(null));
 
             var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
@@ -80,7 +78,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsServiceUnavailableError_IfServiceUnavailableException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new ServiceUnavailableException(null));
 
             var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
@@ -91,7 +89,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_ReturnsOtherError_IfOtherException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new Exception());
 
             var result = _dataTransportService.Send(Enumerable.Empty<TransactionEventWireModel>());
@@ -102,7 +100,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_PublishesRestartAgentEvent_IfForceRestartException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new ForceRestartException(null));
 
             using (new EventExpectation<RestartAgentEvent>())
@@ -114,7 +112,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_PublishesShutdownAgentEvent_IfLicenseException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new LicenseException(null));
 
             using (new EventExpectation<KillAgentEvent>())
@@ -126,7 +124,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void SendXyz_PublishesShutdownAgentEvent_IfForceDisconnectException()
         {
-            Mock.Arrange(() => _connectionManager.SendDataRequest<Object>(Arg.IsAny<String>(), Arg.IsAny<Object[]>()))
+            Mock.Arrange(() => _connectionManager.SendDataRequest<object>(Arg.IsAny<string>(), Arg.IsAny<object[]>()))
                 .Throws(new ForceDisconnectException(null));
 
             using (new EventExpectation<KillAgentEvent>())

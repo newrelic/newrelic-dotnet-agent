@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Linq;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;

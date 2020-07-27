@@ -28,7 +28,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             return Delegates.GetDelegateFor(segment);
         }
-        private static String GetName(MethodCall methodCall)
+        private static string GetName(MethodCall methodCall)
         {
             var methodCallMessage = methodCall.MethodArguments.ExtractAs<System.Runtime.Remoting.Messaging.IMethodCallMessage>(0);
             if (methodCallMessage == null)
@@ -44,7 +44,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             if (methodName == null)
                 throw new NullReferenceException("methodName");
 
-            return String.Format("{0}.{1}", typeName, methodName);
+            return string.Format("{0}.{1}", typeName, methodName);
         }
 
     }

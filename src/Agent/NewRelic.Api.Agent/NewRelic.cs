@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 // This file is compiled into a dll which is shipped to the customer,
@@ -47,9 +46,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void RecordMetric(String name, Single value)
+        public static void RecordMetric(string name, float value)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.RecordMetric({0},{1})", name, value));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordMetric({0},{1})", name, value));
         }
 
         /// <summary>
@@ -68,9 +67,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void RecordResponseTimeMetric(String name, Int64 millis)
+        public static void RecordResponseTimeMetric(string name, long millis)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.RecordResponseTimeMetric({0},{1})", name, millis));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordResponseTimeMetric({0},{1})", name, millis));
         }
 
         /// <summary>
@@ -85,9 +84,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void IncrementCounter(String name)
+        public static void IncrementCounter(string name)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.IncrementCounter({0})", name));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.IncrementCounter({0})", name));
         }
 
         #endregion
@@ -129,9 +128,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(Exception exception, IDictionary<String, String> parameters)
+        public static void NoticeError(Exception exception, IDictionary<string, string> parameters)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
         }
 
         /// <summary>
@@ -161,7 +160,7 @@ namespace NewRelic.Api.Agent
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void NoticeError(Exception exception)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.NoticeError({0})", exception));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0})", exception));
         }
 
         /// <summary>
@@ -199,9 +198,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(String message, IDictionary<String, String> parameters)
+        public static void NoticeError(string message, IDictionary<string, string> parameters)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.NoticeError({0},{1})", message, parameters));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
         }
 
         #endregion
@@ -222,9 +221,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void AddCustomParameter(String key, IConvertible value)
+        public static void AddCustomParameter(string key, IConvertible value)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.AddCustomParameter({0},{1})", key, value));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.AddCustomParameter({0},{1})", key, value));
         }
 
         /// <summary>
@@ -243,9 +242,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void AddCustomParameter(String key, String value)
+        public static void AddCustomParameter(string key, string value)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.AddCustomParameter({0},{1})", key, value));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.AddCustomParameter({0},{1})", key, value));
         }
 
         /// <summary>
@@ -265,9 +264,9 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetTransactionName(String category, String name)
+        public static void SetTransactionName(string category, string name)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.SetTransactionName({0},{1})", category, name));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetTransactionName({0},{1})", category, name));
         }
 
         /// <summary>
@@ -277,7 +276,7 @@ namespace NewRelic.Api.Agent
         /// <param name="uri">The uri of the web transaction</param>
         public static void SetTransactionUri(Uri uri)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.SetUri({0})", uri));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetUri({0})", uri));
         }
 
         /// <summary>
@@ -330,7 +329,7 @@ namespace NewRelic.Api.Agent
         /// </example>
         /// <returns>An html string to be embedded in a page header.</returns>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static String GetBrowserTimingHeader()
+        public static string GetBrowserTimingHeader()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader()");
             return "<!-- New Relic Header -->";
@@ -350,7 +349,7 @@ namespace NewRelic.Api.Agent
         /// <returns>An html string to be embedded at the bottom of an html page.</returns>
         [Obsolete]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static String GetBrowserTimingFooter()
+        public static string GetBrowserTimingFooter()
         {
             return "<!-- New Relic Footer is Obsolete -->";
         }
@@ -388,7 +387,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetUserParameters(String userName, String accountName, String productName)
+        public static void SetUserParameters(string userName, string accountName, string productName)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetUserParameters(String userName, String accountName, String productName)");
         }
@@ -407,9 +406,9 @@ namespace NewRelic.Api.Agent
         /// Only the first 1000 characters are retained, and it must conform to the regexp given here: /^[a-zA-Z0-9:_ ]+$/
         /// </param>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void RecordCustomEvent(string eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
+        public static void RecordCustomEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("NewRelic.RecordCustomEvent({0},{1})", eventType, attributes));
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.RecordCustomEvent({0},{1})", eventType, attributes));
         }
 
         #endregion
@@ -447,7 +446,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)
+        public static void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)");
         }

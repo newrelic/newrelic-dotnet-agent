@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -7,12 +6,12 @@ namespace NewRelic.Parsing.ConnectionString
 {
     public class IbmDb2ConnectionStringParser : IConnectionStringParser
     {
-        private static readonly List<String> _hostKeys = new List<String> { "network address", "server", "hostname" };
-        private static readonly List<String> _databaseNameKeys = new List<String> { "database" };
+        private static readonly List<string> _hostKeys = new List<string> { "network address", "server", "hostname" };
+        private static readonly List<string> _databaseNameKeys = new List<string> { "database" };
 
         private readonly DbConnectionStringBuilder _connectionStringBuilder;
 
-        public IbmDb2ConnectionStringParser(String connectionString)
+        public IbmDb2ConnectionStringParser(string connectionString)
         {
             _connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
         }
@@ -27,7 +26,7 @@ namespace NewRelic.Parsing.ConnectionString
             return new ConnectionInfo(host, portPathOrId, databaseName);
         }
 
-        private String ParseHost()
+        private string ParseHost()
         {
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (host == null) return null;
@@ -36,7 +35,7 @@ namespace NewRelic.Parsing.ConnectionString
             return endOfHostname == -1 ? host : host.Substring(0, endOfHostname);
         }
 
-        private String ParsePortPathOrId()
+        private string ParsePortPathOrId()
         {
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (host == null) return null;

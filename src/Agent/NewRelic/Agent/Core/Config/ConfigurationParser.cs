@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.Config
     /// </summary>
     public class ConfigurationParser
     {
-        private delegate void ParseConfigurationValue(Object value);
+        private delegate void ParseConfigurationValue(object value);
         private readonly IDictionary<string, ParseConfigurationValue> parsers;
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.Config
         {
             foreach (KeyValuePair<string, ParseConfigurationValue> kvp in parsers)
             {
-                Object val;
+                object val;
                 if (config.TryGetValue(kvp.Key, out val))
                 {
                     try
@@ -117,7 +117,7 @@ namespace NewRelic.Agent.Core.Config
                     }
                     catch (InvalidCastException ex)
                     {
-                        throw new InvalidCastException(String.Format(
+                        throw new InvalidCastException(string.Format(
                             "Unable to cast configuration value \"{0}\".  The value was {1} ({2})",
                             kvp.Key, val, val.GetType()), ex);
                     }
@@ -125,13 +125,13 @@ namespace NewRelic.Agent.Core.Config
                     {
                         if (val == null)
                         {
-                            throw new ConfigurationParserException(String.Format(
+                            throw new ConfigurationParserException(string.Format(
                                 "An error occurred parsing the configuration value \"{0}\".  The value was null",
                                 kvp.Key), ex);
                         }
                         else
                         {
-                            throw new ConfigurationParserException(String.Format(
+                            throw new ConfigurationParserException(string.Format(
                                 "An error occurred parsing the configuration value \"{0}\".  The value was {1} ({2}).  Error : {3}",
                                 kvp.Key, val, val.GetType(), ex.Message), ex);
                         }
@@ -148,19 +148,19 @@ namespace NewRelic.Agent.Core.Config
         // rather than doing the conversion to Single or Double for us.
         public static float ToFloat(object value)
         {
-            if (value is Int32)
+            if (value is int)
             {
                 return (float)(int)value;
             }
-            else if (value is Decimal) // Decimal values come back from the JSON parser
+            else if (value is decimal) // Decimal values come back from the JSON parser
             {
-                return Decimal.ToSingle((Decimal)value);
+                return decimal.ToSingle((decimal)value);
             }
-            else if (value is Single)
+            else if (value is float)
             {
                 return (float)value;
             }
-            else if (value is Double)
+            else if (value is double)
             {
                 return (float)(double)value;
             }
@@ -201,9 +201,9 @@ namespace NewRelic.Agent.Core.Config
                 // Watch out: The JSON parser may deliver ints, decimals, strings, lists or maps.
                 // We have to convert decimals here to singles because SetValue will fail
                 // to convert decimal to float for us.
-                if (value is Decimal) // Decimal values come back from the JSON parser
+                if (value is decimal) // Decimal values come back from the JSON parser
                 {
-                    value = Decimal.ToSingle((Decimal)value);
+                    value = decimal.ToSingle((decimal)value);
                 }
                 PropertyInfo.SetValue(ConfigurationObject, value, null);
             }
@@ -268,11 +268,11 @@ namespace NewRelic.Agent.Core.Config
     /// </summary>
     public class ConfigurationParserException : Exception
     {
-        public ConfigurationParserException(String message)
+        public ConfigurationParserException(string message)
             : base(message)
         {
         }
-        public ConfigurationParserException(String message, Exception original)
+        public ConfigurationParserException(string message, Exception original)
             : base(message, original)
         {
         }

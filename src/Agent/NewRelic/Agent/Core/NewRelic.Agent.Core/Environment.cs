@@ -18,10 +18,10 @@ namespace NewRelic.Agent.Core
     [JsonConverter(typeof(EnvironmentConverter))]
     public class Environment
     {
-        private readonly List<Object[]> _environmentMap = new List<Object[]>();
+        private readonly List<object[]> _environmentMap = new List<object[]>();
 
-        public UInt64 TotalPhysicalMemory { get; }
-        public String AppDomainAppPath { get; }
+        public ulong TotalPhysicalMemory { get; }
+        public string AppDomainAppPath { get; }
 
         public Environment(ISystemInfo systemInfo)
         {
@@ -90,9 +90,9 @@ namespace NewRelic.Agent.Core
             }
         }
 
-        public void AddVariable(String name, Func<Object> valueGetter)
+        public void AddVariable(string name, Func<object> valueGetter)
         {
-            var value = null as Object;
+            var value = null as object;
             try
             {
                 value = valueGetter();
@@ -132,7 +132,7 @@ namespace NewRelic.Agent.Core
         }
 
 #if NET35
-        private static String TryGetAppDomainAppId()
+        private static string TryGetAppDomainAppId()
         {
             try
             {
@@ -145,7 +145,7 @@ namespace NewRelic.Agent.Core
             }
         }
 #endif
-        public static String TryGetAppPath(Func<String> pathGetter)
+        public static string TryGetAppPath(Func<string> pathGetter)
         {
             try
             {
@@ -190,8 +190,8 @@ namespace NewRelic.Agent.Core
                     if (majorVersionObject == null || minorVersionObject == null)
                         return null;
 
-                    var majorVersion = (Int32)majorVersionObject;
-                    var minorVersion = (Int32)minorVersionObject;
+                    var majorVersion = (int)majorVersionObject;
+                    var minorVersion = (int)minorVersionObject;
                     if (majorVersion == -1 || minorVersion == -1)
                         return null;
 
@@ -205,7 +205,7 @@ namespace NewRelic.Agent.Core
             }
         }
 #endif
-        private static IEnumerable<String> GetLoadedAssemblyNames()
+        private static IEnumerable<string> GetLoadedAssemblyNames()
         {
             var versionZero = new Version(0, 0, 0, 0);
             return AppDomain.CurrentDomain.GetAssemblies()
@@ -219,7 +219,7 @@ namespace NewRelic.Agent.Core
         }
 
 #if NET35
-        private static IEnumerable<ManagementBaseObject> TryGetManagementObjects(String query)
+        private static IEnumerable<ManagementBaseObject> TryGetManagementObjects(string query)
         {
             try
             {
@@ -238,7 +238,7 @@ namespace NewRelic.Agent.Core
 
         public class EnvironmentConverter : JsonConverter
         {
-            public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
                 var environment = value as Environment;
                 if (environment == null)
@@ -248,12 +248,12 @@ namespace NewRelic.Agent.Core
                 writer.WriteRawValue(serialized);
             }
 
-            public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
 
-            public override Boolean CanConvert(Type objectType)
+            public override bool CanConvert(Type objectType)
             {
                 return true;
             }

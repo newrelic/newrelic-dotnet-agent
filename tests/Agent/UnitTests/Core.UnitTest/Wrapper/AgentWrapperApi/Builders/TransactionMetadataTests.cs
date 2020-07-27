@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Linq;
 using MoreLinq;
-using NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

@@ -17,12 +17,10 @@ using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -170,7 +168,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             return transaction;
         }
 
-        private static CrossApplicationRequestData TryGetValidInboundPayload(List<Object> inboundPayload)
+        private static CrossApplicationRequestData TryGetValidInboundPayload(List<object> inboundPayload)
         {
             var serialized = JsonConvert.SerializeObject(inboundPayload);
             try
@@ -182,7 +180,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 return null;
             }
         }
-        private static ITransactionName GetTransactionNameFromString(String transactionName)
+        private static ITransactionName GetTransactionNameFromString(string transactionName)
         {
             var transactionNamePieces = transactionName.Split(MetricNames.PathSeparatorChar);
             if (transactionNamePieces.Length < 2)
@@ -191,11 +189,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 throw new TestFailureException($"Don't know how to create a transaction name that starts with {transactionNamePieces[0]}");
 
             var transactionNameCategory = transactionNamePieces[1];
-            var transactionNameTail = String.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
+            var transactionNameTail = string.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
             return new WebTransactionName(transactionNameCategory, transactionNameTail);
         }
 
-        private static void SetGuid(Transaction transaction, String transactionGuid)
+        private static void SetGuid(Transaction transaction, string transactionGuid)
         {
             // We have to set the guid via reflection because it is set up as an auto-generated value in Transaction
             var fieldInfo = typeof(Transaction).GetField("_guid", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -210,25 +208,25 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         public class TestCase
         {
             [JsonProperty(PropertyName = "name")]
-            public readonly String Name;
+            public readonly string Name;
 
             [JsonProperty(PropertyName = "appName")]
-            public readonly String AppName;
+            public readonly string AppName;
 
             [JsonProperty(PropertyName = "transactionName")]
-            public readonly String TransactionName;
+            public readonly string TransactionName;
 
             [JsonProperty(PropertyName = "transactionGuid")]
-            public readonly String TransactionGuid;
+            public readonly string TransactionGuid;
 
             [JsonProperty(PropertyName = "inboundPayload")]
-            public readonly List<Object> InboundPayload;
+            public readonly List<object> InboundPayload;
 
             [JsonProperty(PropertyName = "expectedIntrinsicFields")]
-            public readonly Dictionary<String, String> ExpectedIntrinsicFields;
+            public readonly Dictionary<string, string> ExpectedIntrinsicFields;
 
             [JsonProperty(PropertyName = "nonExpectedIntrinsicFields")]
-            public readonly List<String> NonExpectedIntrinsicFields;
+            public readonly List<string> NonExpectedIntrinsicFields;
 
             [JsonProperty(PropertyName = "outboundRequests")]
             public readonly List<OutboundRequest> OutboundRequests;
@@ -236,13 +234,13 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             public class OutboundRequest
             {
                 [JsonProperty(PropertyName = "outboundTxnName")]
-                public readonly String OutboundTxnName;
+                public readonly string OutboundTxnName;
 
                 [JsonProperty(PropertyName = "expectedOutboundPayload")]
                 public readonly CrossApplicationRequestData ExpectedOutboundPayload;
             }
 
-            public override String ToString()
+            public override string ToString()
             {
                 return Name;
             }
@@ -260,7 +258,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             }
         }
 
-        private const String JsonTestCaseData = @"
+        private const string JsonTestCaseData = @"
 [
   {
     ""name"": ""new_cat"",

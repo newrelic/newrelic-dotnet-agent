@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
@@ -299,8 +297,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportErrorTraceCollected(), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesSent(Arg.IsAny<Int32>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesRecollected(Arg.IsAny<int>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesSent(Arg.IsAny<int>()), Occurs.Never());
         }
 
         #endregion

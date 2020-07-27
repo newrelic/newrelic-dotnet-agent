@@ -1,7 +1,5 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Wrapper
 {

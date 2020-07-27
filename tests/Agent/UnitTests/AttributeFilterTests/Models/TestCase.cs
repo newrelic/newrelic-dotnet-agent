@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace AttributeFilterTests.Models
@@ -7,13 +6,13 @@ namespace AttributeFilterTests.Models
     public class TestCase
     {
         [JsonProperty(PropertyName = "testname")]
-        public String TestName;
+        public string TestName;
 
         [JsonProperty(PropertyName = "config")]
         public Configuration Configuration;
 
         [JsonProperty(PropertyName = "input_key")]
-        public String AttributeKey;
+        public string AttributeKey;
 
         [JsonProperty(PropertyName = "input_default_destinations")]
         public IEnumerable<Destinations> AttributeDestinations;

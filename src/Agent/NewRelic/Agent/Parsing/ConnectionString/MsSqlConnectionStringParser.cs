@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 
@@ -7,12 +6,12 @@ namespace NewRelic.Parsing.ConnectionString
 {
     public class MsSqlConnectionStringParser : IConnectionStringParser
     {
-        private static readonly List<String> _hostKeys = new List<String> { "server", "data source" };
-        private static readonly List<String> _databaseNameKeys = new List<String> { "database", "initial catalog" };
+        private static readonly List<string> _hostKeys = new List<string> { "server", "data source" };
+        private static readonly List<string> _databaseNameKeys = new List<string> { "database", "initial catalog" };
 
         private readonly DbConnectionStringBuilder _connectionStringBuilder;
 
-        public MsSqlConnectionStringParser(String connectionString)
+        public MsSqlConnectionStringParser(string connectionString)
         {
             _connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
         }
@@ -27,7 +26,7 @@ namespace NewRelic.Parsing.ConnectionString
             return new ConnectionInfo(host, portPathOrId, databaseName, instanceName);
         }
 
-        private String ParseHost()
+        private string ParseHost()
         {
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (host == null) return null;
@@ -46,7 +45,7 @@ namespace NewRelic.Parsing.ConnectionString
             return host;
         }
 
-        private String ParsePortPathOrId()
+        private string ParsePortPathOrId()
         {
             var portPathOrId = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (portPathOrId == null) return null;
@@ -70,7 +69,7 @@ namespace NewRelic.Parsing.ConnectionString
             return "default";
         }
 
-        private String ParseInstanceName()
+        private string ParseInstanceName()
         {
             var instanceName = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (instanceName == null) return null;

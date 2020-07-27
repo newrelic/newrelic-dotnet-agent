@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace NewRelic.SystemInterfaces
+﻿namespace NewRelic.SystemInterfaces
 {
     public class Environment : IEnvironment
     {
-        public String GetEnvironmentVariable(String variable)
+        public string GetEnvironmentVariable(string variable)
         {
             return System.Environment.GetEnvironmentVariable(variable);
         }

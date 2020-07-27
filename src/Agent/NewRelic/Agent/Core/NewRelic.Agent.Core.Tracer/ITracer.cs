@@ -1,6 +1,4 @@
 using System;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Tracer
 {
@@ -22,6 +20,6 @@ namespace NewRelic.Agent.Core.Tracer
         /// <param name="exception">
         /// The exception thrown by the invocation.
         /// </param>
-        void Finish(Object returnValue, Exception exception);
+        void Finish(object returnValue, Exception exception);
     }
 }

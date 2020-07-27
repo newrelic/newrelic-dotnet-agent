@@ -5,7 +5,6 @@ using System.Net.Mime;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
@@ -15,12 +14,12 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         /// <summary>
         /// Returns true if RUM should be injected. Use if requestPath and contentType are not known.
         /// </summary>
-        Boolean ShouldManuallyInject(ITransaction transaction);
+        bool ShouldManuallyInject(ITransaction transaction);
 
         /// <summary>
         /// Returns true if RUM should be injected. Use if requestPath and contentType are known.
         /// </summary>
-        Boolean ShouldAutomaticallyInject(ITransaction transaction, String requestPath, String contentType);
+        bool ShouldAutomaticallyInject(ITransaction transaction, string requestPath, string contentType);
     }
 
     public class BrowserMonitoringPrereqChecker : IBrowserMonitoringPrereqChecker
@@ -32,7 +31,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             _configurationService = configurationService;
         }
 
-        public Boolean ShouldManuallyInject(ITransaction transaction)
+        public bool ShouldManuallyInject(ITransaction transaction)
         {
             if (!IsValidBrowserMonitoringJavaScriptAgentLoaderType())
                 return false;
@@ -40,7 +39,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return !transaction.IgnoreAllBrowserMonitoring;
         }
 
-        public Boolean ShouldAutomaticallyInject(ITransaction transaction, String requestPath, String contentType)
+        public bool ShouldAutomaticallyInject(ITransaction transaction, string requestPath, string contentType)
         {
             if (!IsValidBrowserMonitoringJavaScriptAgentLoaderType())
                 return false;
@@ -61,7 +60,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return true;
         }
 
-        private Boolean IsValidBrowserMonitoringJavaScriptAgentLoaderType()
+        private bool IsValidBrowserMonitoringJavaScriptAgentLoaderType()
         {
             var loaderType = _configurationService.Configuration.BrowserMonitoringJavaScriptAgentLoaderType;
             var isValid = !loaderType.Equals("none", StringComparison.InvariantCultureIgnoreCase);
@@ -69,9 +68,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             return isValid;
         }
 
-        private static Boolean IsHtmlContent(String contentType)
+        private static bool IsHtmlContent(string contentType)
         {
-            if (String.IsNullOrEmpty(contentType))
+            if (string.IsNullOrEmpty(contentType))
                 return false;
 
             try
@@ -111,9 +110,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         /// <param name="requestPath">The requestPath to be evaluated for blacklisting.</param>
         /// <param name="requestPathExclusionList">A list of Regex's. </param>
         /// <returns>True if browser instrumentation should occur for the page request.</returns>
-        private static Boolean BrowserInstrumentationAllowedForUrlPath(String requestPath, IEnumerable<Regex> requestPathExclusionList)
+        private static bool BrowserInstrumentationAllowedForUrlPath(string requestPath, IEnumerable<Regex> requestPathExclusionList)
         {
-            if (String.IsNullOrEmpty(requestPath))
+            if (string.IsNullOrEmpty(requestPath))
                 return true;
 
             return requestPathExclusionList
@@ -121,7 +120,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 .All(regex => !IsMatch(requestPath, regex));
         }
 
-        private static Boolean IsMatch(String path, Regex regex)
+        private static bool IsMatch(string path, Regex regex)
         {
             try
             {

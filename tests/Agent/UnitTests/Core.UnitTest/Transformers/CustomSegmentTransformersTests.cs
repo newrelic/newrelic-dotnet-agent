@@ -1,11 +1,9 @@
 ﻿using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Collections;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -29,7 +27,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_NullTransactionStats()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name, 5);
             segment.AddMetricStats(null, _configurationService);
 
@@ -38,7 +36,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesCustomSegmentMetrics()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name, 5);
             segment.ChildFinished(GetSegment("kid", 2));
 
@@ -53,7 +51,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(1, unscoped.Count);
 
-            const String metricName = "Custom/name";
+            const string metricName = "Custom/name";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
             var data = scoped[metricName];
@@ -74,7 +72,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_TwoTransformCallsSame()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name, 5);
             segment.ChildFinished(GetSegment("kid", 2));
 
@@ -87,7 +85,7 @@ namespace NewRelic.Agent.Core.Transformers
             var scoped = txStats.GetScopedForTesting();
             var unscoped = txStats.GetUnscopedForTesting();
 
-            const String metricName = "Custom/name";
+            const string metricName = "Custom/name";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -109,10 +107,10 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_TwoTransformCallsDifferent()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name, 5);
             segment.ChildFinished(GetSegment("kid", 2));
-            const String name1 = "otherName";
+            const string name1 = "otherName";
             var segment1 = GetSegment(name1, 6);
             segment1.ChildFinished(GetSegment("kid", 4));
 
@@ -128,7 +126,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(2, scoped.Count);
             Assert.AreEqual(2, unscoped.Count);
 
-            const String metricName = "Custom/name";
+            const string metricName = "Custom/name";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -146,7 +144,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(5, data.Value3);
             Assert.AreEqual(5, data.Value4);
 
-            const String metricName1 = "Custom/otherName";
+            const string metricName1 = "Custom/otherName";
             Assert.IsTrue(scoped.ContainsKey(metricName1));
             Assert.IsTrue(unscoped.ContainsKey(metricName1));
 
@@ -172,7 +170,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void GetTransactionTraceName_ReturnsCorrectName()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name, 5);
 
             var transactionTraceName = segment.GetTransactionTraceName();
@@ -182,7 +180,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         #endregion GetTransactionTraceName
 
-        private static TypedSegment<CustomSegmentData> GetSegment(String name, double duration)
+        private static TypedSegment<CustomSegmentData> GetSegment(string name, double duration)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             return new TypedSegment<CustomSegmentData>(new TimeSpan(), TimeSpan.FromSeconds(duration),

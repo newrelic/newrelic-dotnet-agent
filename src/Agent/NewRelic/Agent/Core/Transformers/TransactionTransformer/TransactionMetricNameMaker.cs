@@ -81,32 +81,32 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         /// <summary>
         /// The prefix name (e.g. "WebTransaction")
         /// </summary>
-        public readonly String Prefix;
+        public readonly string Prefix;
 
         /// <summary>
         /// The unprefixed name (e.g. "Foo/Bar")
         /// </summary>
-        public readonly String UnPrefixedName;
+        public readonly string UnPrefixedName;
 
         /// <summary>
         /// The prefixed name (e.g. "WebTranaction/Foo/Bar")
         /// </summary>
-        public readonly String PrefixedName;
+        public readonly string PrefixedName;
 
         /// <summary>
         /// True iff this metric name's prefix is equal to MetricNames.WebTranasctionPrefix.
         /// </summary>
-        public readonly Boolean IsWebTransactionName;
+        public readonly bool IsWebTransactionName;
 
         /// <summary>
         /// True iff a transaction with this name should be ignored.
         /// </summary>
-        public readonly Boolean ShouldIgnore;
+        public readonly bool ShouldIgnore;
 
         /// <summary>
         /// Builds a new transaction metric name using a prefix and an unprefixed name. The Prefixed name will be $"{prefix}/{unprefixedName}".
         /// </summary>
-        public TransactionMetricName(String prefix, String unprefixedName, Boolean shouldIgnore = false)
+        public TransactionMetricName(string prefix, string unprefixedName, bool shouldIgnore = false)
         {
             Prefix = prefix;
             UnPrefixedName = unprefixedName;
@@ -115,7 +115,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             ShouldIgnore = shouldIgnore;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             return PrefixedName;
         }

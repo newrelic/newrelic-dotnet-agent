@@ -48,7 +48,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
             Assert.AreEqual(testCase.ExpectedPathHash, newPathHash);
         }
-        private static ITransactionName GetTransactionNameFromString(String transactionName)
+        private static ITransactionName GetTransactionNameFromString(string transactionName)
         {
             var transactionNamePieces = transactionName.Split(MetricNames.PathSeparatorChar);
             if (transactionNamePieces.Length < 2)
@@ -57,11 +57,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests
                 throw new TestFailureException($"Don't know how to create a transaction name that starts with {transactionNamePieces[0]}");
 
             var transactionNameCategory = transactionNamePieces[1];
-            var transactionNameTail = String.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
+            var transactionNameTail = string.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
             return new WebTransactionName(transactionNameCategory, transactionNameTail);
         }
 
-        private static void SetGuid(Transaction transaction, String transactionGuid)
+        private static void SetGuid(Transaction transaction, string transactionGuid)
         {
             // We have to set the guid via reflection because it is set up as an auto-generated value in Transaction
             var fieldInfo = typeof(Transaction).GetField("_guid", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -75,17 +75,17 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         public class TestCase
         {
             [JsonProperty(PropertyName = "name")]
-            public readonly String Name;
+            public readonly string Name;
             [JsonProperty(PropertyName = "applicationName")]
-            public readonly String ApplicationName;
+            public readonly string ApplicationName;
             [JsonProperty(PropertyName = "transactionName")]
-            public readonly String TransactionName;
+            public readonly string TransactionName;
             [JsonProperty(PropertyName = "referringPathHash")]
-            public readonly String ReferringPathHash;
+            public readonly string ReferringPathHash;
             [JsonProperty(PropertyName = "expectedPathHash")]
-            public readonly String ExpectedPathHash;
+            public readonly string ExpectedPathHash;
 
-            public override String ToString()
+            public override string ToString()
             {
                 return Name;
             }
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
             }
         }
 
-        private const String JsonTestCaseData = @"
+        private const string JsonTestCaseData = @"
 [
   {
     ""name"": ""no referring path hash"",

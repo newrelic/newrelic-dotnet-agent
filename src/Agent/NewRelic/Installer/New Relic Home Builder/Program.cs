@@ -21,20 +21,20 @@ namespace NewRelic.Installer
         private const string ProfilerSoFileName = "libNewRelicProfiler.so";
 
         [CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
-        public String SolutionPath { get; set; }
+        public string SolutionPath { get; set; }
 
         [CommandLine.Option("configuration", Required = false, HelpText = "$(Configuration)")]
-        public String Configuration { get; set; }
+        public string Configuration { get; set; }
 
         [CommandLine.Option("nugetPackageDir", Required = false, HelpText = "$(NuGetPackageRoot)")]
-        public String NuGetPackageDir { get; set; }
+        public string NuGetPackageDir { get; set; }
 
         private bool _isCoreClr = false;
         private bool _isLinux = false;
-        public String Bitness { get; set; }
+        public string Bitness { get; set; }
 
         // output paths
-        private String DestinationHomeDirectoryName
+        private string DestinationHomeDirectoryName
         {
             get
             {
@@ -51,24 +51,24 @@ namespace NewRelic.Installer
                 return name;
             }
         }
-        private String DestinationHomeDirectoryPath { get { return Path.Combine(SolutionPath, DestinationHomeDirectoryName); } }
-        private String DestinationAgentFilePath { get { return Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Agent.Core.dll"); } }
+        private string DestinationHomeDirectoryPath { get { return Path.Combine(SolutionPath, DestinationHomeDirectoryName); } }
+        private string DestinationAgentFilePath { get { return Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Agent.Core.dll"); } }
         private string DestinationProfilerDllPath => Path.Combine(DestinationHomeDirectoryPath, "NewRelic.Profiler.dll");
         private string DestinationProfilerSoPath => Path.Combine(DestinationHomeDirectoryPath, ProfilerSoFileName);
-        private String DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
-        private String DestinationRegistryFileName { get { return String.Format("src\\Agent\\New Relic Home {0}.reg", Bitness); } }
-        private String DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
-        private String DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
-        private String BuildOutputPath { get { return Path.Combine(SolutionPath, "src", "_build"); } }
-        private String AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
-        private String CoreInstallerOutputPath { get { return Path.Combine(BuildOutputPath, "core_installer"); } }
+        private string DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationHomeDirectoryPath, "Extensions"); } }
+        private string DestinationRegistryFileName { get { return string.Format("src\\Agent\\New Relic Home {0}.reg", Bitness); } }
+        private string DestinationRegistryFilePath { get { return Path.Combine(SolutionPath, DestinationRegistryFileName); } }
+        private string DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
+        private string BuildOutputPath { get { return Path.Combine(SolutionPath, "src", "_build"); } }
+        private string AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
+        private string CoreInstallerOutputPath { get { return Path.Combine(BuildOutputPath, "core_installer"); } }
 
         // input paths
-        private String AnyCpuBuildDirectoryName { get { return String.Format("AnyCPU-{0}", Configuration); } }
-        private String NewRelicConfigPath { get { return Path.Combine(SolutionPath, "src", "Agent", "Configuration", "newrelic.config") ?? String.Empty; } }
-        private String NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
-        private String ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
-        private String CoreInstallerSourcePath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "CoreInstaller"); } }
+        private string AnyCpuBuildDirectoryName { get { return string.Format("AnyCPU-{0}", Configuration); } }
+        private string NewRelicConfigPath { get { return Path.Combine(SolutionPath, "src", "Agent", "Configuration", "newrelic.config") ?? string.Empty; } }
+        private string NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
+        private string ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
+        private string CoreInstallerSourcePath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "CoreInstaller"); } }
 
         private string LicenseFilePath => Path.Combine(SolutionPath, "src", "Agent", "Miscellaneous", "License.txt");
 
@@ -99,10 +99,10 @@ namespace NewRelic.Installer
                 return profilerSoPath;
             }
         }
-        private String CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
-        private String NewRelicAgentExtensionsPath { get { return Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
-        private String KeyFilePath { get { return Path.Combine(SolutionPath, "build", "keys", "NewRelicStrongNameKey.snk"); } }
-        private String ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Extensions"); } }
+        private string CoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
+        private string NewRelicAgentExtensionsPath { get { return Path.Combine(CoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
+        private string KeyFilePath { get { return Path.Combine(SolutionPath, "build", "keys", "NewRelicStrongNameKey.snk"); } }
+        private string ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Extensions"); } }
 
         void RealMain()
         {
@@ -206,7 +206,7 @@ namespace NewRelic.Installer
             }
         }
 
-        private static void ReCreateDirectoryWithEveryoneAccess(String directoryPath)
+        private static void ReCreateDirectoryWithEveryoneAccess(string directoryPath)
         {
             try { Directory.Delete(directoryPath, true); }
             catch (DirectoryNotFoundException) { }
@@ -220,14 +220,14 @@ namespace NewRelic.Installer
             directoryInfo.SetAccessControl(directorySecurity);
         }
 
-        private void RepackAndCopyCoreAsembliesToDirectory(String sourceDirectoryPath, String destinationFilePath, String keyFilePath)
+        private void RepackAndCopyCoreAsembliesToDirectory(string sourceDirectoryPath, string destinationFilePath, string keyFilePath)
         {
             if (sourceDirectoryPath == null)
                 throw new ArgumentNullException("sourceDirectoryPath");
             if (destinationFilePath == null)
                 throw new ArgumentNullException("destinationFilePath");
 
-            var assemblyPathsToRepack = new List<String> { Path.Combine(sourceDirectoryPath, @"NewRelic.Agent.Core.dll") };
+            var assemblyPathsToRepack = new List<string> { Path.Combine(sourceDirectoryPath, @"NewRelic.Agent.Core.dll") };
 
             var coreAssemblies = Directory.GetFiles(sourceDirectoryPath)
                     .Where(filePath => filePath != null)
@@ -300,7 +300,7 @@ namespace NewRelic.Installer
         private string GetNugetPackageDllPath(string csprojPath, string packageName, VersionResolution versionResolution, params string[] packageSubFolders)
         {
             var folderPath = GetNugetPackageDllFolderPath(csprojPath, packageName, versionResolution, packageSubFolders);
-            var dllPath = Path.Combine(folderPath, $"{packageName}.dll") ?? String.Empty;
+            var dllPath = Path.Combine(folderPath, $"{packageName}.dll") ?? string.Empty;
 
             return dllPath;
         }
@@ -325,7 +325,7 @@ namespace NewRelic.Installer
             var version = GetVersion(versions, versionResolution);
             var packageFolder = $"{packageName}\\{version}";
 
-            var folderPath = Path.Combine(NuGetPackageDir, packageFolder, subFolderPath) ?? String.Empty;
+            var folderPath = Path.Combine(NuGetPackageDir, packageFolder, subFolderPath) ?? string.Empty;
 
             return folderPath;
         }
@@ -370,7 +370,7 @@ namespace NewRelic.Installer
             return netstandardAssemblyPaths;
         }
 
-        private static void CopyToDirectory(String sourceFilePath, String destinationDirectoryPath)
+        private static void CopyToDirectory(string sourceFilePath, string destinationDirectoryPath)
         {
             if (sourceFilePath == null)
                 throw new ArgumentNullException("sourceFilePath");
@@ -380,7 +380,7 @@ namespace NewRelic.Installer
             CopyToDirectories(sourceFilePath, new[] { destinationDirectoryPath });
         }
 
-        private static void CopyToDirectories(String sourceFilePath, IEnumerable<String> destinationDirectoryPaths)
+        private static void CopyToDirectories(string sourceFilePath, IEnumerable<string> destinationDirectoryPaths)
         {
             if (sourceFilePath == null)
                 throw new ArgumentNullException("sourceFilePath");
@@ -400,7 +400,7 @@ namespace NewRelic.Installer
         {
             var directoriesWithoutFramework = Directory.EnumerateDirectories(ExtensionsDirectoryPath, Configuration, SearchOption.AllDirectories);
 
-            List<string> allDirectoriesForConfiguration = new List<String>(directoriesWithoutFramework);
+            List<string> allDirectoriesForConfiguration = new List<string>(directoriesWithoutFramework);
 
             foreach (var directory in directoriesWithoutFramework)
             {
@@ -431,7 +431,7 @@ namespace NewRelic.Installer
             });
         }
 
-        private static void CopyNewRelicAssemblies(String assemblyFilePath, String destinationExtensionsDirectoryPath)
+        private static void CopyNewRelicAssemblies(string assemblyFilePath, string destinationExtensionsDirectoryPath)
         {
             var directoryPath = Path.GetDirectoryName(assemblyFilePath);
             if (directoryPath == null)
@@ -449,7 +449,7 @@ namespace NewRelic.Installer
                 .ForEach(filePath => CopyToDirectory(filePath, destinationExtensionsDirectoryPath));
         }
 
-        private static void TryCopyExtensionInstrumentationFile(String assemblyFilePath, String destinationExtensionsDirectoryPath)
+        private static void TryCopyExtensionInstrumentationFile(string assemblyFilePath, string destinationExtensionsDirectoryPath)
         {
             var directory = Path.GetDirectoryName(assemblyFilePath);
 
@@ -475,19 +475,19 @@ namespace NewRelic.Installer
             {
                 @"COR_ENABLE_PROFILING=1",
                 @"COR_PROFILER={71DA0A04-7777-4EC6-9643-7D28B46A8A41}",
-                String.Format(@"COR_PROFILER_PATH={0}", DestinationProfilerDllPath),
-                String.Format(@"NEWRELIC_HOME={0}\", DestinationHomeDirectoryPath)
+                string.Format(@"COR_PROFILER_PATH={0}", DestinationProfilerDllPath),
+                string.Format(@"NEWRELIC_HOME={0}\", DestinationHomeDirectoryPath)
             };
 
-            var bytes = new List<Byte>();
+            var bytes = new List<byte>();
             foreach (var @string in strings)
             {
                 if (@string == null)
                     continue;
                 bytes.AddRange(Encoding.Unicode.GetBytes(@string));
-                bytes.AddRange(new Byte[] { 0, 0 });
+                bytes.AddRange(new byte[] { 0, 0 });
             }
-            bytes.AddRange(new Byte[] { 0, 0 });
+            bytes.AddRange(new byte[] { 0, 0 });
 
             var hexString = BitConverter.ToString(bytes.ToArray()).Replace('-', ',');
             const string fileContentsFormatter =
@@ -499,7 +499,7 @@ namespace NewRelic.Installer
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WAS]
 ""Environment""=hex(7):{0}
 ";
-            var fileContents = String.Format(fileContentsFormatter, hexString);
+            var fileContents = string.Format(fileContentsFormatter, hexString);
             File.WriteAllText(DestinationRegistryFilePath, fileContents);
         }
 
@@ -520,7 +520,7 @@ namespace NewRelic.Installer
             }
         }
 
-        private void ParseCommandLineArguments(String[] commandLineArguments)
+        private void ParseCommandLineArguments(string[] commandLineArguments)
         {
             var defaultParser = CommandLine.Parser.Default;
             if (defaultParser == null)

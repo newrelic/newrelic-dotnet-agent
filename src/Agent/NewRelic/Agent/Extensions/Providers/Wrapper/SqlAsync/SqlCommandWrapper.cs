@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NewRelic.Parsing.ConnectionString;
@@ -54,7 +53,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
             if (sqlCommand == null)
                 return Delegates.NoOp;
 
-            var sql = sqlCommand.CommandText ?? String.Empty;
+            var sql = sqlCommand.CommandText ?? string.Empty;
 
             // NOTE: this wrapper currently only supports SqlCommand. If support for other commands is added then the vendor will need to be determined dynamically.
             var vendor = SqlWrapperHelper.GetVendorName(sqlCommand);

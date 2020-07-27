@@ -107,11 +107,11 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
                 );
         }
 
-        private static TransactionMetricName GetTransactionMetricName(String transactionName)
+        private static TransactionMetricName GetTransactionMetricName(string transactionName)
         {
             var segments = transactionName.Split('/');
             var prefix = segments[0];
-            var suffix = String.Join("/", segments.Skip(1));
+            var suffix = string.Join("/", segments.Skip(1));
             return new TransactionMetricName(prefix, suffix);
         }
 
@@ -119,25 +119,25 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public class TestCase
         {
             [JsonProperty(PropertyName = "testname")]
-            public readonly String TestName;
+            public readonly string TestName;
             [JsonProperty(PropertyName = "apptime_milliseconds")]
-            public readonly Int32 ApplicationTimeMilliseconds;
+            public readonly int ApplicationTimeMilliseconds;
             [JsonProperty(PropertyName = "queuetime_milliseconds")]
-            public readonly Int32 QueueTimeMilliseconds;
+            public readonly int QueueTimeMilliseconds;
             [JsonProperty(PropertyName = "browser_monitoring.attributes.enabled")]
-            public readonly Boolean BrowserMonitoringAttributesEnabled;
+            public readonly bool BrowserMonitoringAttributesEnabled;
             [JsonProperty(PropertyName = "transaction_name")]
-            public readonly String TransactionName;
+            public readonly string TransactionName;
             [JsonProperty(PropertyName = "license_key")]
-            public readonly String LicenseKey;
+            public readonly string LicenseKey;
             [JsonProperty(PropertyName = "connect_reply")]
             public readonly ConnectReply ConnectReply;
             [JsonProperty(PropertyName = "user_attributes")]
-            public readonly Dictionary<String, String> UserAttributes;
+            public readonly Dictionary<string, string> UserAttributes;
             [JsonProperty(PropertyName = "expected")]
             public readonly ExpectedBrowserMonitoringConfigurationData ExpectedConfigurationData;
 
-            public override String ToString()
+            public override string ToString()
             {
                 return TestName;
             }
@@ -146,45 +146,45 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
         public class ConnectReply
         {
             [JsonProperty(PropertyName = "beacon")]
-            public readonly String Beacon;
+            public readonly string Beacon;
             [JsonProperty(PropertyName = "browser_key")]
-            public readonly String BrowserKey;
+            public readonly string BrowserKey;
             [JsonProperty(PropertyName = "application_id")]
-            public readonly String ApplicationId;
+            public readonly string ApplicationId;
             [JsonProperty(PropertyName = "error_beacon")]
-            public readonly String ErrorBeacon;
+            public readonly string ErrorBeacon;
             [JsonProperty(PropertyName = "js_agent_file")]
-            public readonly String JsAgentFile;
+            public readonly string JsAgentFile;
         }
 
         public class ExpectedBrowserMonitoringConfigurationData
         {
             [JsonProperty("beacon")]
-            public String Beacon { get; set; }
+            public string Beacon { get; set; }
 
             [JsonProperty("errorBeacon")]
-            public String ErrorBeacon { get; set; }
+            public string ErrorBeacon { get; set; }
 
             [JsonProperty("licenseKey")]
-            public String BrowserLicenseKey { get; set; }
+            public string BrowserLicenseKey { get; set; }
 
             [JsonProperty("applicationID")]
-            public String ApplicationId { get; set; }
+            public string ApplicationId { get; set; }
 
             [JsonProperty("transactionName")]
-            public String ObfuscatedTransactionName { get; set; }
+            public string ObfuscatedTransactionName { get; set; }
 
             [JsonProperty("queueTime")]
-            public Int32 QueueTimeMilliseconds { get; set; }
+            public int QueueTimeMilliseconds { get; set; }
 
             [JsonProperty("applicationTime")]
-            public Int32 ApplicationTimeMilliseconds { get; set; }
+            public int ApplicationTimeMilliseconds { get; set; }
 
             [JsonProperty("agent")]
-            public String Agent { get; set; }
+            public string Agent { get; set; }
 
             [JsonProperty("atts", NullValueHandling = NullValueHandling.Ignore)]
-            public String ObfuscatedUserAttributes { get; set; }
+            public string ObfuscatedUserAttributes { get; set; }
         }
 
         public static IEnumerable<TestCase[]> TestCases
@@ -199,7 +199,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             }
         }
 
-        private const String JsonTestCaseData = @"
+        private const string JsonTestCaseData = @"
 [
   {
     ""testname"":""all fields present"",

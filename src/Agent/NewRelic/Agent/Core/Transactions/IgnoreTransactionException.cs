@@ -10,9 +10,9 @@ namespace NewRelic.Agent.Core.Transactions
         /// <summary>
         /// The name that was ignored
         /// </summary>
-        public readonly String IgnoredTransactionName;
+        public readonly string IgnoredTransactionName;
 
-        public IgnoreTransactionException(String message, String ignoredTransactionName) : base(message)
+        public IgnoreTransactionException(string message, string ignoredTransactionName) : base(message)
         {
             IgnoredTransactionName = ignoredTransactionName;
         }

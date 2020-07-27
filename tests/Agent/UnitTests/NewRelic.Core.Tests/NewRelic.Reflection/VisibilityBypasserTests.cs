@@ -9,11 +9,11 @@ namespace NewRelic.Reflection.UnitTests
 #pragma warning disable 414
     public class Base
     {
-        public virtual String VirtualProperty { get { return "base property"; } }
+        public virtual string VirtualProperty { get { return "base property"; } }
     }
     public class Derived : Base
     {
-        public override String VirtualProperty { get { return "derived property"; } }
+        public override string VirtualProperty { get { return "derived property"; } }
     }
 
     public class PublicOuter
@@ -21,32 +21,32 @@ namespace NewRelic.Reflection.UnitTests
         private class PrivateInner
         {
             public static PrivateInner Create() { return new PrivateInner(); }
-            public String ConstructorCalled = String.Empty;
+            public string ConstructorCalled = string.Empty;
             private PrivateInner() { ConstructorCalled = "0 parameters"; }
-            private PrivateInner(Boolean a) { ConstructorCalled = "1 parameters"; }
-            private PrivateInner(Boolean a, String b) { ConstructorCalled = "2 parameters"; }
-            private Int32 Int32ReturningMethod() { return 5; }
+            private PrivateInner(bool a) { ConstructorCalled = "1 parameters"; }
+            private PrivateInner(bool a, string b) { ConstructorCalled = "2 parameters"; }
+            private int Int32ReturningMethod() { return 5; }
             private PrivateInner PrivateInnerReturningMethod() { return new PrivateInner(); }
-            private readonly Int32 _int32Field = 3;
+            private readonly int _int32Field = 3;
             private PrivateInner PrivateInnerProperty { get { return new PrivateInner(); } }
-            private Int32 Int32Property { get { return 11; } }
+            private int Int32Property { get { return 11; } }
             public override string ToString() { return ConstructorCalled; }
         }
 
         public static PublicOuter Create() { return new PublicOuter(); }
-        public static Object CreatePrivateInner() { return PrivateInner.Create(); }
-        public String ConstructorCalled = String.Empty;
+        public static object CreatePrivateInner() { return PrivateInner.Create(); }
+        public string ConstructorCalled = string.Empty;
         private PublicOuter() { ConstructorCalled = "0 parameters"; }
-        private PublicOuter(Boolean a) { ConstructorCalled = "1 parameters"; }
-        private PublicOuter(Boolean a, String b) { ConstructorCalled = "2 parameters"; }
-        private Int32 Int32ReturningMethod() { return 9; }
+        private PublicOuter(bool a) { ConstructorCalled = "1 parameters"; }
+        private PublicOuter(bool a, string b) { ConstructorCalled = "2 parameters"; }
+        private int Int32ReturningMethod() { return 9; }
         private PrivateInner PrivateInnerReturningMethod() { return PrivateInner.Create(); }
         private PublicOuter PublicOuterReturningMethod() { return new PublicOuter(); }
         public readonly Base DerivedField = new Derived();
-        private readonly Int32 _int32Field = 7;
+        private readonly int _int32Field = 7;
         private PublicOuter PublicOuterProperty { get { return new PublicOuter(); } }
-        private Int32 Int32Property { get { return 13; } }
-        private String StringTakingAndReturningMethod(String @string) { return @string; }
+        private int Int32Property { get { return 13; } }
+        private string StringTakingAndReturningMethod(string @string) { return @string; }
     }
 
 #pragma warning restore 414
@@ -60,7 +60,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuter = PublicOuter.Create();
             var expectedValue = 7;
 
-            var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, Int32>(fieldName);
+            var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, int>(fieldName);
             var actualValue = fieldAccessor(publicOuter);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -75,7 +75,7 @@ namespace NewRelic.Reflection.UnitTests
             var privateInner = PublicOuter.CreatePrivateInner();
             var expectedValue = 3;
 
-            var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<Int32>(assemblyName, typeName, fieldName);
+            var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<int>(assemblyName, typeName, fieldName);
             var actualValue = fieldAccessor(privateInner);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -88,7 +88,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuter = PublicOuter.Create();
             var expectedValue = publicOuter.DerivedField;
 
-            var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, Object>(fieldName);
+            var fieldAccessor = VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, object>(fieldName);
             var actualValue = fieldAccessor(publicOuter);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -108,7 +108,7 @@ namespace NewRelic.Reflection.UnitTests
         {
             var fieldName = "does_not_exist";
 
-            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, Object>(fieldName));
+            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, object>(fieldName));
         }
 
         [Test]
@@ -117,7 +117,7 @@ namespace NewRelic.Reflection.UnitTests
             var fieldName = "_int32Field";
             var publicOuter = PublicOuter.Create();
 
-            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, String>(fieldName));
+            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateFieldAccessor<PublicOuter, string>(fieldName));
         }
     }
 
@@ -142,7 +142,7 @@ namespace NewRelic.Reflection.UnitTests
             var expectedValue = 9;
             var publicOuter = PublicOuter.Create();
 
-            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, Int32>(methodName);
+            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, int>(methodName);
             var actualValue = methodCaller(publicOuter);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -156,7 +156,7 @@ namespace NewRelic.Reflection.UnitTests
             var methodName = "PrivateInnerReturningMethod";
             var privateInner = PublicOuter.CreatePrivateInner();
 
-            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<Object>(assemblyName, typeName, methodName);
+            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<object>(assemblyName, typeName, methodName);
             var actualValue = methodCaller(privateInner);
 
             Assert.NotNull(actualValue);
@@ -171,7 +171,7 @@ namespace NewRelic.Reflection.UnitTests
             var expectedValue = 5;
             var privateInner = PublicOuter.CreatePrivateInner();
 
-            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<Int32>(assemblyName, typeName, methodName);
+            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<int>(assemblyName, typeName, methodName);
             var actualValue = methodCaller(privateInner);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -182,7 +182,7 @@ namespace NewRelic.Reflection.UnitTests
         {
             var methodName = "PublicOuterReturningMethod";
 
-            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, Int32>(methodName));
+            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, int>(methodName));
         }
 
         [Test]
@@ -192,7 +192,7 @@ namespace NewRelic.Reflection.UnitTests
             var expectedValue = 9;
             var publicOuter = PublicOuter.Create();
 
-            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, Object>(methodName);
+            var methodCaller = VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, object>(methodName);
             var actualValue = methodCaller(publicOuter);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -201,7 +201,7 @@ namespace NewRelic.Reflection.UnitTests
         [Test]
         public void no_method_by_that_name()
         {
-            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, Object>("does_not_exist"));
+            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GenerateParameterlessMethodCaller<PublicOuter, object>("does_not_exist"));
         }
 
         [Test]
@@ -211,7 +211,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuter = PublicOuter.Create();
             var expectedValue = "foo";
 
-            var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, String, String>(methodName);
+            var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, string, string>(methodName);
             var actualValue = methodCaller(publicOuter, expectedValue);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -224,7 +224,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuter = PublicOuter.Create();
             var expectedValue = "foo";
 
-            var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, Object, String>(methodName);
+            var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<PublicOuter, object, string>(methodName);
             var actualValue = methodCaller(publicOuter, expectedValue);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -239,7 +239,7 @@ namespace NewRelic.Reflection.UnitTests
             var publicOuter = PublicOuter.Create();
             var expectedValue = "foo";
 
-            var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<String, String>(assemblyName, typeName, methodName);
+            var methodCaller = VisibilityBypasser.Instance.GenerateOneParameterMethodCaller<string, string>(assemblyName, typeName, methodName);
             var actualValue = methodCaller(publicOuter, expectedValue);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -255,7 +255,7 @@ namespace NewRelic.Reflection.UnitTests
             var expectedValue = 13;
             var publicOuter = PublicOuter.Create();
 
-            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, Int32>(propertyName);
+            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, int>(propertyName);
             var actualValue = methodCaller(publicOuter);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -281,7 +281,7 @@ namespace NewRelic.Reflection.UnitTests
             var propertyName = "PrivateInnerProperty";
             var privateInner = PublicOuter.CreatePrivateInner();
 
-            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<Object>(assemblyName, typeName, propertyName);
+            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>(assemblyName, typeName, propertyName);
             var actualValue = methodCaller(privateInner);
 
             Assert.NotNull(actualValue);
@@ -296,7 +296,7 @@ namespace NewRelic.Reflection.UnitTests
             var expectedValue = 11;
             var privateInner = PublicOuter.CreatePrivateInner();
 
-            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<Int32>(assemblyName, typeName, propertyName);
+            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<int>(assemblyName, typeName, propertyName);
             var actualValue = methodCaller(privateInner);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -307,7 +307,7 @@ namespace NewRelic.Reflection.UnitTests
         {
             var propertyName = "PublicOuterProperty";
 
-            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, Int32>(propertyName));
+            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, int>(propertyName));
         }
 
         [Test]
@@ -317,7 +317,7 @@ namespace NewRelic.Reflection.UnitTests
             var expectedValue = 13;
             var publicOuter = PublicOuter.Create();
 
-            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, Object>(propertyName);
+            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, object>(propertyName);
             var actualValue = methodCaller(publicOuter);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -326,7 +326,7 @@ namespace NewRelic.Reflection.UnitTests
         [Test]
         public void no_method_by_that_name()
         {
-            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, Object>("does_not_exist"));
+            Assert.Throws<KeyNotFoundException>(() => VisibilityBypasser.Instance.GeneratePropertyAccessor<PublicOuter, object>("does_not_exist"));
         }
 
         [Test]
@@ -336,7 +336,7 @@ namespace NewRelic.Reflection.UnitTests
             var expectedValue = "derived property";
             var derived = new Derived() as Base;
 
-            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<Base, String>(propertyName);
+            var methodCaller = VisibilityBypasser.Instance.GeneratePropertyAccessor<Base, string>(propertyName);
             var actualValue = methodCaller(derived);
 
             Assert.AreEqual(expectedValue, actualValue);
@@ -357,7 +357,7 @@ namespace NewRelic.Reflection.UnitTests
         [Test]
         public void private_one_parameter_constructor_on_public_object()
         {
-            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<Boolean, PublicOuter>();
+            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool, PublicOuter>();
             var publicOuter = publicOuterFactory(true);
 
             Assert.AreEqual("1 parameters", publicOuter.ConstructorCalled);
@@ -366,7 +366,7 @@ namespace NewRelic.Reflection.UnitTests
         [Test]
         public void private_two_parameter_constructor_on_public_object()
         {
-            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<Boolean, String, PublicOuter>();
+            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool, string, PublicOuter>();
             var publicOuter = publicOuterFactory(true, "rawr");
 
             Assert.AreEqual("2 parameters", publicOuter.ConstructorCalled);
@@ -390,7 +390,7 @@ namespace NewRelic.Reflection.UnitTests
             var assemblyName = Assembly.GetExecutingAssembly().FullName;
             var typeName = "NewRelic.Reflection.UnitTests.PublicOuter+PrivateInner";
 
-            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<Boolean>(assemblyName, typeName);
+            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool>(assemblyName, typeName);
             var publicOuter = publicOuterFactory(true);
 
             Assert.AreEqual("1 parameters", publicOuter.ToString());
@@ -402,7 +402,7 @@ namespace NewRelic.Reflection.UnitTests
             var assemblyName = Assembly.GetExecutingAssembly().FullName;
             var typeName = "NewRelic.Reflection.UnitTests.PublicOuter+PrivateInner";
 
-            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<Boolean, String>(assemblyName, typeName);
+            var publicOuterFactory = VisibilityBypasser.Instance.GenerateTypeFactory<bool, string>(assemblyName, typeName);
             var publicOuter = publicOuterFactory(true, "rawr");
 
             Assert.AreEqual("2 parameters", publicOuter.ToString());
@@ -411,7 +411,7 @@ namespace NewRelic.Reflection.UnitTests
         [Test]
         public void no_constructor_found()
         {
-            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateTypeFactory<Boolean, Int32, PublicOuter>());
+            Assert.Throws<Exception>(() => VisibilityBypasser.Instance.GenerateTypeFactory<bool, int, PublicOuter>());
         }
     }
 }

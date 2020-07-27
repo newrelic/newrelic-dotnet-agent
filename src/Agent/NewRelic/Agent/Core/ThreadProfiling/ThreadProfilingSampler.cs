@@ -17,8 +17,8 @@ namespace NewRelic.Agent.Core.ThreadProfiling
     /// <param name="pArrayOfInt">Array of function identifiers for <paramref name="threadId"/>.</param>
     /// <param name="threadId">Thread Id for this stack snapshot.</param>
     /// <param name="length">Number of function identifies in <paramref name="pArrayOfInt"/>.</param>
-    public delegate void StackSnapshotSuccessCallback(IntPtr pArrayOfInt, UIntPtr threadId, Int32 length);
-    public delegate void StackSnapshotFailedCallback(UIntPtr threadId, UInt32 errorCode);
+    public delegate void StackSnapshotSuccessCallback(IntPtr pArrayOfInt, UIntPtr threadId, int length);
+    public delegate void StackSnapshotFailedCallback(UIntPtr threadId, uint errorCode);
     public delegate void StackSnapshotCompleteCallback();
     #endregion
 
@@ -48,13 +48,13 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         private ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
 
         // Maintains if the polling thread is already active
-        private Boolean _isPollingActivated;
+        private bool _isPollingActivated;
 
         // Thread Synchronisation instance
-        private readonly Object _syncObj = new Object();
-        private readonly Object _syncProfiledThread = new Object();
+        private readonly object _syncObj = new object();
+        private readonly object _syncProfiledThread = new object();
 
-        public Int32 NumberSamplesInSession { get; set; }
+        public int NumberSamplesInSession { get; set; }
 
         #endregion
 
@@ -67,10 +67,10 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         #endregion
 
         // i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
-        public readonly Dictionary<UIntPtr, Int32> ManagedThreadsFromProfiler;
+        public readonly Dictionary<UIntPtr, int> ManagedThreadsFromProfiler;
 
-        private UInt32 _frequencyMsec;
-        private UInt32 _durationMsec;
+        private uint _frequencyMsec;
+        private uint _durationMsec;
 
         public ThreadProfilingSampler(IAgent agent, IScheduler scheduler, INativeMethods nativeMethods)
         {
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             _scheduler = scheduler;
             _nativeMethods = nativeMethods;
 
-            ManagedThreadsFromProfiler = new Dictionary<UIntPtr, Int32>();
+            ManagedThreadsFromProfiler = new Dictionary<UIntPtr, int>();
 
             InitializeUnmanagedConnection();
         }
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
         }
 
-        public bool Start(UInt32 frequencyInMsec, UInt32 durationInMsec)
+        public bool Start(uint frequencyInMsec, uint durationInMsec)
         {
             _frequencyMsec = frequencyInMsec;
             _durationMsec = durationInMsec;
@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             return startedNewSession;
         }
 
-        public void Stop(Boolean reportData = true)
+        public void Stop(bool reportData = true)
         {
             lock (_syncObj)
             {
@@ -144,7 +144,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
         }
 
-        public void FailedProfileThreadDataCallback(UIntPtr threadId, UInt32 errorCode)
+        public void FailedProfileThreadDataCallback(UIntPtr threadId, uint errorCode)
         {
             try
             {
@@ -167,7 +167,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         {
         }
 
-        public void ProfiledThreadDataCallback(IntPtr data, UIntPtr threadId, Int32 length)
+        public void ProfiledThreadDataCallback(IntPtr data, UIntPtr threadId, int length)
         {
             lock (_syncProfiledThread)
             {
@@ -200,7 +200,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         /// </summary>
         private void InternalPolling_WaitCallback()
         {
-            while (!_shutdownEvent.WaitOne((Int32)_frequencyMsec, true))
+            while (!_shutdownEvent.WaitOne((int)_frequencyMsec, true))
             {
                 if (DurationElapsed())
                 {

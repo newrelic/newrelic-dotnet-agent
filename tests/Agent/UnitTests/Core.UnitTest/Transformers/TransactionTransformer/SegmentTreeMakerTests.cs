@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -398,11 +396,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 .Select(kvp => CreateSimpleSegment(kvp.Key, kvp.Value, kvp.Key.ToString()));
         }
 
-        private static Segment CreateSimpleSegment(int uniqueId, int? parentUniqueId, String name, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, Boolean combinable = false)
+        private static Segment CreateSimpleSegment(int uniqueId, int? parentUniqueId, string name, TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, bool combinable = false)
         {
             duration = duration ?? TimeSpan.Zero;
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            return SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration.Value, uniqueId, parentUniqueId, methodCallData, new Dictionary<String, Object>(), name, combinable);
+            return SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration.Value, uniqueId, parentUniqueId, methodCallData, new Dictionary<string, object>(), name, combinable);
         }
     }
 }

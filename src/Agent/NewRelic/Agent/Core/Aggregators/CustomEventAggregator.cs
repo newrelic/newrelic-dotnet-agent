@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Collections;
@@ -23,7 +21,7 @@ namespace NewRelic.Agent.Core.Aggregators
     /// </summary>
     public class CustomEventAggregator : AbstractAggregator<CustomEventWireModel>, ICustomEventAggregator
     {
-        private const Double ReservoirReductionSizeMultiplier = 0.5;
+        private const double ReservoirReductionSizeMultiplier = 0.5;
         private readonly IAgentHealthReporter _agentHealthReporter;
 
         // Note that synethics events must be recorded, and thus are stored in their own unique reservoir to ensure that they are never pushed out by non-synthetics events.
@@ -67,7 +65,7 @@ namespace NewRelic.Agent.Core.Aggregators
             ResetCollections(_configuration.CustomEventsMaxSamplesStored);
         }
 
-        private void ResetCollections(UInt32 customEventCollectionCapacity)
+        private void ResetCollections(uint customEventCollectionCapacity)
         {
             _customEvents = new ConcurrentReservoir<CustomEventWireModel>(customEventCollectionCapacity);
         }
@@ -81,7 +79,7 @@ namespace NewRelic.Agent.Core.Aggregators
                     RetainEvents(customEvents);
                     break;
                 case DataTransportResponseStatus.PostTooBigError:
-                    ReduceReservoirSize((UInt32)(customEvents.Count() * ReservoirReductionSizeMultiplier));
+                    ReduceReservoirSize((uint)(customEvents.Count() * ReservoirReductionSizeMultiplier));
                     RetainEvents(customEvents);
                     break;
                 case DataTransportResponseStatus.OtherError:
@@ -101,7 +99,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 .ForEach(_customEvents.Add);
         }
 
-        private void ReduceReservoirSize(UInt32 newSize)
+        private void ReduceReservoirSize(uint newSize)
         {
             if (newSize >= _customEvents.Size)
                 return;

@@ -16,11 +16,11 @@ namespace NewRelic.Agent.Core.Transactions
 
         public readonly DateTime StartTime;
         public readonly TimeSpan Duration;
-        public readonly String Guid;
+        public readonly string Guid;
 
-        public readonly Boolean IgnoreAutoBrowserMonitoring;
-        public readonly Boolean IgnoreAllBrowserMonitoring;
-        public readonly Boolean IgnoreApdex;
+        public readonly bool IgnoreAutoBrowserMonitoring;
+        public readonly bool IgnoreAllBrowserMonitoring;
+        public readonly bool IgnoreApdex;
 
         /// <summary>
         /// The SQL obfuscator as defined by user configuration
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Transactions
             _sqlObfuscator = sqlObfuscator;
         }
 
-        public Boolean IsWebTransaction()
+        public bool IsWebTransaction()
         {
             return TransactionName.IsWeb;
         }

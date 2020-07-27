@@ -73,18 +73,18 @@ namespace NewRelic.Agent.Core.Errors
             return TryCreateHttpErrorData(immutableTransaction);
         }
 
-        private static Boolean ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IConfigurationService configurationService)
+        private static bool ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IConfigurationService configurationService)
         {
             var errorTypeNames = errorData.Select(data => data.ErrorTypeName);
             return ShouldIgnoreAnyError(errorTypeNames, configurationService);
         }
 
-        private static Boolean ShouldIgnoreError(String errorTypeName, IConfigurationService configurationService)
+        private static bool ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
         {
             return ShouldIgnoreAnyError(new[] { errorTypeName }, configurationService);
         }
 
-        private static Boolean ShouldIgnoreAnyError(IEnumerable<String> errorTypeNames, IConfigurationService configurationService)
+        private static bool ShouldIgnoreAnyError(IEnumerable<string> errorTypeNames, IConfigurationService configurationService)
         {
             foreach (var errorClassName in errorTypeNames)
             {
@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core.Errors
 
             return false;
         }
-        private static String TryGetFormattedStatusCode(ImmutableTransaction immutableTransaction)
+        private static string TryGetFormattedStatusCode(ImmutableTransaction immutableTransaction)
         {
             if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
                 return null;
@@ -142,9 +142,9 @@ namespace NewRelic.Agent.Core.Errors
 
             return new ErrorData(errorMessage, errorTypeName, null, noticedAt);
         }
-        private static String GetFriendlyExceptionTypeName(String exceptionTypeName)
+        private static string GetFriendlyExceptionTypeName(string exceptionTypeName)
         {
-            return exceptionTypeName?.Split(new[] { '`' }, 2)[0] ?? String.Empty;
+            return exceptionTypeName?.Split(new[] { '`' }, 2)[0] ?? string.Empty;
         }
     }
 }

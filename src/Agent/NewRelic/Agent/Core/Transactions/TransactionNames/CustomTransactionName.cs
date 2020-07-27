@@ -1,14 +1,12 @@
-﻿using System;
-
-namespace NewRelic.Agent.Core.Transactions.TransactionNames
+﻿namespace NewRelic.Agent.Core.Transactions.TransactionNames
 {
     public class CustomTransactionName : ITransactionName
     {
-        public readonly String Name;
+        public readonly string Name;
 
-        public Boolean IsWeb { get; }
+        public bool IsWeb { get; }
 
-        public CustomTransactionName(String name, Boolean isWeb)
+        public CustomTransactionName(string name, bool isWeb)
         {
             Name = name;
             IsWeb = isWeb;

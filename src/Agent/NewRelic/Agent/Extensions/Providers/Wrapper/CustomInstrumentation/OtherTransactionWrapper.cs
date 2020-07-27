@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentation
@@ -33,11 +32,11 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentation
                 agentWrapperApi.CreateWebTransaction(WebTransactionType.Custom, name, false) :
                 agentWrapperApi.CreateOtherTransaction("Custom", name, mustBeRootTransaction: false);
 
-            var segment = !String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+            var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
                 ? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
                 : transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);
 
-            if (!String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
+            if (!string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
             {
                 transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
             }

@@ -186,7 +186,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
             Assert.IsNull(errorDataOut.ErrorTypeName);
         }
-        private static ImmutableTransaction BuildTestTransaction(DateTime startTime, TimeSpan duration, String uri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
+        private static ImmutableTransaction BuildTestTransaction(DateTime startTime, TimeSpan duration, string uri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
         {
             var transactionMetadata = new TransactionMetadata();
             if (uri != null)
@@ -203,8 +203,8 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
 
             return new ImmutableTransaction(name, segments, metadata, startTime, duration, guid, false, false, false, SqlObfuscator.GetObfuscatingSqlObfuscator());
         }
-        private static ImmutableTransaction BuildTestTransaction(String uri = null, String guid = null,
-            Int32? statusCode = null, Int32? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
+        private static ImmutableTransaction BuildTestTransaction(string uri = null, string guid = null,
+            int? statusCode = null, int? subStatusCode = null, IEnumerable<ErrorData> transactionExceptionDatas = null)
         {
             var transactionMetadata = new TransactionMetadata();
             if (uri != null)

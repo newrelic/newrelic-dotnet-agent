@@ -5,7 +5,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 {
     public interface IStackInfo
     {
-        void StoreFunctionIds(IntPtr data, Int32 length);
+        void StoreFunctionIds(IntPtr data, int length);
         int CurrentIndex { get; set; }
         IntPtr FunctionId { get; }
     }
@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         private readonly object _lock = new object();
         private IntPtr[] _functionIds;
 
-        public void StoreFunctionIds(IntPtr data, Int32 length)
+        public void StoreFunctionIds(IntPtr data, int length)
         {
             lock (_lock)
             {

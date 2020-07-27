@@ -9,9 +9,7 @@ using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
@@ -150,7 +148,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return _errorTraceMaker.GetErrorTrace(immutableTransaction, attributes, transactionMetricName, errorData);
         }
 
-        private TimeSpan? GetApdexT(ImmutableTransaction immutableTransaction, String transactionApdexMetricName)
+        private TimeSpan? GetApdexT(ImmutableTransaction immutableTransaction, string transactionApdexMetricName)
         {
             var apdexT = _metricNameService.TryGetApdex_t(transactionApdexMetricName);
             if (immutableTransaction.IsWebTransaction())
@@ -174,7 +172,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             }
         }
 
-        private void GenerateAndCollectMetrics(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, Boolean isErrorTranasction, TimeSpan? apdexT, String transactionApdexMetricName, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
+        private void GenerateAndCollectMetrics(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, bool isErrorTranasction, TimeSpan? apdexT, string transactionApdexMetricName, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
         {
             foreach (var segment in immutableTransaction.Segments)
             {
@@ -306,7 +304,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             segment.AddMetricStats(txStats, _configurationService);
         }
-        private void GetApdexMetrics(ImmutableTransaction immutableTransaction, Boolean isErrorTranasction, TimeSpan apdexT, String transactionApdexMetricName, TransactionMetricStatsCollection txStats)
+        private void GetApdexMetrics(ImmutableTransaction immutableTransaction, bool isErrorTranasction, TimeSpan apdexT, string transactionApdexMetricName, TransactionMetricStatsCollection txStats)
         {
             var isWebTransaction = immutableTransaction.IsWebTransaction();
 

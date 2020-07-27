@@ -21,22 +21,22 @@ namespace NewRelic.Agent.Core.Transactions
         public const int MaxTraceCount = 20;
         public const string HeaderKey = "X-NewRelic-Synthetics";
 
-        public String EncodingKey;
-        public const Int64 SupportedHeaderVersion = 1;
+        public string EncodingKey;
+        public const long SupportedHeaderVersion = 1;
 
         [JsonArrayIndex(Index = 0)]
-        public readonly Int64 Version;
+        public readonly long Version;
 
         [JsonArrayIndex(Index = 1)]
-        public readonly Int64 AccountId;
+        public readonly long AccountId;
         [JsonArrayIndex(Index = 2)]
-        public readonly String ResourceId;
+        public readonly string ResourceId;
         [JsonArrayIndex(Index = 3)]
-        public readonly String JobId;
+        public readonly string JobId;
         [JsonArrayIndex(Index = 4)]
-        public readonly String MonitorId;
+        public readonly string MonitorId;
 
-        public SyntheticsHeader(Int64 version, Int64 accountId, String resourceId, String jobId, String monitorId)
+        public SyntheticsHeader(long version, long accountId, string resourceId, string jobId, string monitorId)
         {
             Version = version;
             AccountId = accountId;
@@ -45,11 +45,11 @@ namespace NewRelic.Agent.Core.Transactions
             MonitorId = monitorId;
         }
 
-        public Boolean IsValidSyntheticsDataForSave()
+        public bool IsValidSyntheticsDataForSave()
         {
             return (!string.IsNullOrEmpty(ResourceId) && !string.IsNullOrEmpty(JobId) && !string.IsNullOrEmpty(MonitorId));
         }
-        public static SyntheticsHeader TryCreate(IEnumerable<Int64> trustedAccountIds, String obfuscatedHeader, String encodingKey)
+        public static SyntheticsHeader TryCreate(IEnumerable<long> trustedAccountIds, string obfuscatedHeader, string encodingKey)
         {
             try
             {
@@ -84,7 +84,7 @@ namespace NewRelic.Agent.Core.Transactions
                 return null;
             }
         }
-        public String TryGetObfuscated()
+        public string TryGetObfuscated()
         {
             try
             {
@@ -100,16 +100,16 @@ namespace NewRelic.Agent.Core.Transactions
                 return null;
             }
         }
-        private static String Obfuscate(String serializedHeader, String encodingKey)
+        private static string Obfuscate(string serializedHeader, string encodingKey)
         {
             return Strings.Base64Encode(serializedHeader, encodingKey);
         }
-        private static String Deobfuscate(String obfuscatedHeader, String encodingKey)
+        private static string Deobfuscate(string obfuscatedHeader, string encodingKey)
         {
             return Strings.Base64Decode(obfuscatedHeader, encodingKey);
         }
 
-        private static Int64 DeserializeVersion(String jsonSerializedHeader)
+        private static long DeserializeVersion(string jsonSerializedHeader)
         {
             if (jsonSerializedHeader == null)
                 throw new ArgumentNullException("jsonSerializedHeader");
@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.Transactions
                 throw new JsonSerializationException("Failed to get version from first item in X-NewRelic-Synthetics header array: " + jsonSerializedHeader);
             if (versionToken.Type != JTokenType.Integer)
                 throw new JsonSerializationException("Failed to parse version as an integer in X-NewRelic-Synthetics header array: " + jsonSerializedHeader);
-            return versionToken.ToObject<Int64>();
+            return versionToken.ToObject<long>();
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace NewRelic.Agent.Core.Transactions
         // if version = 2 & SupportedHeaderVersion = 2 then true
         // if version = 3 & SupportedHeaderVersion = 2 then false
         /// </summary>
-        private static Boolean IsUnsupportedVersion(Int64 version)
+        private static bool IsUnsupportedVersion(long version)
         {
             return (version != SupportedHeaderVersion);
         }
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// <summary>
         /// IsUntrustedAccount: https://source.datanerd.us/agents/agent-specs/blob/master/Synthetics-PORTED.md#verify-account-id
         /// </summary>
-        private static Boolean IsUntrustedAccount(SyntheticsHeader syntheticsHeader, IEnumerable<Int64> trustedAccountIds)
+        private static bool IsUntrustedAccount(SyntheticsHeader syntheticsHeader, IEnumerable<long> trustedAccountIds)
         {
             return !(trustedAccountIds.Contains(syntheticsHeader.AccountId));
         }

@@ -8,12 +8,12 @@ namespace NewRelic.SystemExtensions
         /// <param name="max">Exclusive upper bound.</param>
         /// <returns>A random number in the range [0, max)</returns>
         /// <remarks>Thanks Will/PHP team.</remarks>
-        public static UInt64 Next64(this Random random, UInt64 max)
+        public static ulong Next64(this Random random, ulong max)
         {
             // figure out the largest number we can generate with even distribution between 0 and max
-            var largestMultiple = UInt64.MaxValue - (UInt64.MaxValue % max);
-            var bytes = new Byte[16];
-            UInt64 random64;
+            var largestMultiple = ulong.MaxValue - (ulong.MaxValue % max);
+            var bytes = new byte[16];
+            ulong random64;
             // generate random 64-bit numbers until we get one that is less than largestMultiple
             do
             {

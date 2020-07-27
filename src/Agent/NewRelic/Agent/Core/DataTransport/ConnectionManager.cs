@@ -25,8 +25,8 @@ namespace NewRelic.Agent.Core.DataTransport
 
         private TimeSpan _retryTime = MinimumRetryTime;
 
-        private Boolean _started;
-        private readonly Object _syncObject = new Object();
+        private bool _started;
+        private readonly object _syncObject = new object();
 
         public ConnectionManager(IConnectionHandler connectionHandler, IScheduler scheduler)
         {
@@ -135,7 +135,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        public T SendDataRequest<T>(String method, params Object[] data)
+        public T SendDataRequest<T>(string method, params object[] data)
         {
             lock (_syncObject)
             {
@@ -147,7 +147,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Helper methods
 
-        private static void ImmediateShutdown(String message)
+        private static void ImmediateShutdown(string message)
         {
             Log.InfoFormat("Shutting down: {0}", message);
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
