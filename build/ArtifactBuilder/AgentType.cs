@@ -1,8 +1,8 @@
 namespace ArtifactBuilder
 {
-	public enum AgentType
-	{
-		Framework,
-		Core
-	}
+    public enum AgentType
+    {
+        Framework,
+        Core
+    }
 }

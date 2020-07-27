@@ -4,25 +4,25 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-	class WriterLockGuard : IDisposable
-	{
-		[NotNull]
-		private readonly ReaderWriterLock _lock;
+    class WriterLockGuard : IDisposable
+    {
+        [NotNull]
+        private readonly ReaderWriterLock _lock;
 
-		public WriterLockGuard([NotNull] ReaderWriterLock readerWriterLock)
-		{
-			_lock = readerWriterLock;
-		}
+        public WriterLockGuard([NotNull] ReaderWriterLock readerWriterLock)
+        {
+            _lock = readerWriterLock;
+        }
 
-		public WriterLockGuard Acquire()
-		{
-			_lock.AcquireWriterLock(Timeout.Infinite);
-			return this;
-		}
+        public WriterLockGuard Acquire()
+        {
+            _lock.AcquireWriterLock(Timeout.Infinite);
+            return this;
+        }
 
-		public void Dispose()
-		{
-			_lock.ReleaseWriterLock();
-		}
-	}
+        public void Dispose()
+        {
+            _lock.ReleaseWriterLock();
+        }
+    }
 }

@@ -8,70 +8,70 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class OtherTransactionAsyncWithError : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
+    public class OtherTransactionAsyncWithError : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-		public OtherTransactionAsyncWithError([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions
-			(
-				setupConfiguration: () =>
-				{
-					var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-					configModifier.ForceTransactionTraces();
+        public OtherTransactionAsyncWithError([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.ForceTransactionTraces();
 
-					var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
 
-					CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomMethodBackgroundThreadWithError", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync");
-				},
-				exerciseApplication: () =>
-				{
-					_fixture.GetBackgroundThreadWithError();
-				}
-			);
-			_fixture.Initialize();
-		}
+                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomMethodBackgroundThreadWithError", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.GetBackgroundThreadWithError();
+                }
+            );
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			var expectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", metricScope = "OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 }
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", metricScope = "OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError", callCount = 1 }
+            };
 
-			var expectedTransactionTraceSegments = new List<string>
-			{
-				@"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError",
-			};
+            var expectedTransactionTraceSegments = new List<string>
+            {
+                @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError",
+            };
 
-			var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-			var transactionSample = _fixture.AgentLog
-				.GetTransactionSamples()
-				.FirstOrDefault(sample => sample.Path == @"OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError");
+            var transactionSample = _fixture.AgentLog
+                .GetTransactionSamples()
+                .FirstOrDefault(sample => sample.Path == @"OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError");
 
-			var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
-				.FirstOrDefault();
-			var tracedError = _fixture.AgentLog.TryGetErrorTrace("OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError");
+            var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
+                .FirstOrDefault();
+            var tracedError = _fixture.AgentLog.TryGetErrorTrace("OtherTransaction/Custom/BasicMvcApplication.Controllers.CustomInstrumentationAsyncController/CustomMethodBackgroundThreadWithError");
 
-			NrAssert.Multiple(
-				() => Assert.NotNull(transactionSample),
-				() => Assert.NotNull(transactionEvent),
-				() => Assert.NotNull(tracedError)
-				);
+            NrAssert.Multiple(
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionEvent),
+                () => Assert.NotNull(tracedError)
+                );
 
-			NrAssert.Multiple
-			(
-				() => Assertions.MetricsExist(expectedMetrics, metrics),
-				() => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
-			);
-		}
-	}
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
+            );
+        }
+    }
 }

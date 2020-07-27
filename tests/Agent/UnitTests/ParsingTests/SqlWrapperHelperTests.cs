@@ -10,124 +10,124 @@ using NUnit.Framework;
 
 namespace SqlTests
 {
-	[TestFixture]
-	public class SqlWrapperHelperTests
-	{
-		#region GetVendorName
+    [TestFixture]
+    public class SqlWrapperHelperTests
+    {
+        #region GetVendorName
 
-		[Test]
-		[TestCase("SQL Server", ExpectedResult = DatastoreVendor.MSSQL)]
-		[TestCase("MySql", ExpectedResult = DatastoreVendor.MySQL)]
-		[TestCase("Oracle", ExpectedResult = DatastoreVendor.Oracle)]
-		[TestCase("PostgreSQL", ExpectedResult = DatastoreVendor.Postgres)]
-		[TestCase("IBMDB2", ExpectedResult = DatastoreVendor.IBMDB2)]
-		public DatastoreVendor GetVendorName_ReturnsCorrectHost_IfOleDbConnectionProviderContainsKnownHost(
-			[NotNull] String provider)
-		{
-			var command = new OleDbCommand
-			{
-				Connection = new OleDbConnection("Provider=" + provider)
-			};
+        [Test]
+        [TestCase("SQL Server", ExpectedResult = DatastoreVendor.MSSQL)]
+        [TestCase("MySql", ExpectedResult = DatastoreVendor.MySQL)]
+        [TestCase("Oracle", ExpectedResult = DatastoreVendor.Oracle)]
+        [TestCase("PostgreSQL", ExpectedResult = DatastoreVendor.Postgres)]
+        [TestCase("IBMDB2", ExpectedResult = DatastoreVendor.IBMDB2)]
+        public DatastoreVendor GetVendorName_ReturnsCorrectHost_IfOleDbConnectionProviderContainsKnownHost(
+            [NotNull] String provider)
+        {
+            var command = new OleDbCommand
+            {
+                Connection = new OleDbConnection("Provider=" + provider)
+            };
 
-			return SqlWrapperHelper.GetVendorName(command);
-		}
+            return SqlWrapperHelper.GetVendorName(command);
+        }
 
-		[Test]
-		[TestCase("SqlCommand", ExpectedResult = DatastoreVendor.MSSQL)]
-		[TestCase("MySqlCommand", ExpectedResult = DatastoreVendor.MySQL)]
-		[TestCase("OracleCommand", ExpectedResult = DatastoreVendor.Oracle)]
-		[TestCase("OracleDatabase", ExpectedResult = DatastoreVendor.Oracle)]
-		[TestCase("NpgsqlCommand", ExpectedResult = DatastoreVendor.Postgres)]
-		[TestCase("DB2Command", ExpectedResult = DatastoreVendor.IBMDB2)]
-		public DatastoreVendor
-			GetVendorName_ReturnsCorrectHost([NotNull] string typeName)
-		{
-			return SqlWrapperHelper.GetVendorName(typeName);
-		}
+        [Test]
+        [TestCase("SqlCommand", ExpectedResult = DatastoreVendor.MSSQL)]
+        [TestCase("MySqlCommand", ExpectedResult = DatastoreVendor.MySQL)]
+        [TestCase("OracleCommand", ExpectedResult = DatastoreVendor.Oracle)]
+        [TestCase("OracleDatabase", ExpectedResult = DatastoreVendor.Oracle)]
+        [TestCase("NpgsqlCommand", ExpectedResult = DatastoreVendor.Postgres)]
+        [TestCase("DB2Command", ExpectedResult = DatastoreVendor.IBMDB2)]
+        public DatastoreVendor
+            GetVendorName_ReturnsCorrectHost([NotNull] string typeName)
+        {
+            return SqlWrapperHelper.GetVendorName(typeName);
+        }
 
-		[Test]
-		public void GetVendorName_ReturnsSqlServer_IfTypeNameIsNotProvidedAndCommandIsSqlCommand()
-		{
-			var command = new SqlCommand();
+        [Test]
+        public void GetVendorName_ReturnsSqlServer_IfTypeNameIsNotProvidedAndCommandIsSqlCommand()
+        {
+            var command = new SqlCommand();
 
-			var datastoreName = SqlWrapperHelper.GetVendorName(command);
+            var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-			Assert.AreEqual(DatastoreVendor.MSSQL, datastoreName);
-		}
+            Assert.AreEqual(DatastoreVendor.MSSQL, datastoreName);
+        }
 
-		[Test]
-		public void GetVendorName_ReturnsOracle_IfTypeNameIsNotProvidedAndCommandIsOracleCommand()
-		{
+        [Test]
+        public void GetVendorName_ReturnsOracle_IfTypeNameIsNotProvidedAndCommandIsOracleCommand()
+        {
 #pragma warning disable 618    // Ignore deprecated warnings
-			var command = new OracleCommand();
+            var command = new OracleCommand();
 #pragma warning restore 618
 
-			var datastoreName = SqlWrapperHelper.GetVendorName(command);
+            var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-			Assert.AreEqual(DatastoreVendor.Oracle, datastoreName);
-		}
+            Assert.AreEqual(DatastoreVendor.Oracle, datastoreName);
+        }
 
-		[Test]
-		public void GetVendorName_ReturnsUnknown_IfCommandIsOfUnknownType()
-		{
-			var command = new UnknownDbCommand();
+        [Test]
+        public void GetVendorName_ReturnsUnknown_IfCommandIsOfUnknownType()
+        {
+            var command = new UnknownDbCommand();
 
-			var datastoreName = SqlWrapperHelper.GetVendorName(command);
+            var datastoreName = SqlWrapperHelper.GetVendorName(command);
 
-			Assert.AreEqual(DatastoreVendor.Other, datastoreName);
-		}
+            Assert.AreEqual(DatastoreVendor.Other, datastoreName);
+        }
 
-		public class UnknownDbCommand : IDbCommand
-		{
-			public void Dispose()
-			{
-				throw new NotImplementedException();
-			}
+        public class UnknownDbCommand : IDbCommand
+        {
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
 
-			public void Prepare()
-			{
-				throw new NotImplementedException();
-			}
+            public void Prepare()
+            {
+                throw new NotImplementedException();
+            }
 
-			public void Cancel()
-			{
-				throw new NotImplementedException();
-			}
+            public void Cancel()
+            {
+                throw new NotImplementedException();
+            }
 
-			public IDbDataParameter CreateParameter()
-			{
-				throw new NotImplementedException();
-			}
+            public IDbDataParameter CreateParameter()
+            {
+                throw new NotImplementedException();
+            }
 
-			public int ExecuteNonQuery()
-			{
-				throw new NotImplementedException();
-			}
+            public int ExecuteNonQuery()
+            {
+                throw new NotImplementedException();
+            }
 
-			public IDataReader ExecuteReader()
-			{
-				throw new NotImplementedException();
-			}
+            public IDataReader ExecuteReader()
+            {
+                throw new NotImplementedException();
+            }
 
-			public IDataReader ExecuteReader(CommandBehavior behavior)
-			{
-				throw new NotImplementedException();
-			}
+            public IDataReader ExecuteReader(CommandBehavior behavior)
+            {
+                throw new NotImplementedException();
+            }
 
-			public object ExecuteScalar()
-			{
-				throw new NotImplementedException();
-			}
+            public object ExecuteScalar()
+            {
+                throw new NotImplementedException();
+            }
 
-			public IDbConnection Connection { get; set; }
-			public IDbTransaction Transaction { get; set; }
-			public string CommandText { get; set; }
-			public int CommandTimeout { get; set; }
-			public CommandType CommandType { get; set; }
-			public IDataParameterCollection Parameters { get; set; }
-			public UpdateRowSource UpdatedRowSource { get; set; }
-		}
+            public IDbConnection Connection { get; set; }
+            public IDbTransaction Transaction { get; set; }
+            public string CommandText { get; set; }
+            public int CommandTimeout { get; set; }
+            public CommandType CommandType { get; set; }
+            public IDataParameterCollection Parameters { get; set; }
+            public UpdateRowSource UpdatedRowSource { get; set; }
+        }
 
-		#endregion GetVendorName
-	}
+        #endregion GetVendorName
+    }
 }

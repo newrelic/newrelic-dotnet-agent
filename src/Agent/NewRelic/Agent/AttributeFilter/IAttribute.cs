@@ -3,14 +3,14 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent
 {
-	public interface IAttribute
-	{
-		[NotNull]
-		String Key { get; }
+    public interface IAttribute
+    {
+        [NotNull]
+        String Key { get; }
 
-		[NotNull]
-		Object Value { get; }
+        [NotNull]
+        Object Value { get; }
 
-		AttributeDestinations DefaultDestinations { get; }
-	}
+        AttributeDestinations DefaultDestinations { get; }
+    }
 }

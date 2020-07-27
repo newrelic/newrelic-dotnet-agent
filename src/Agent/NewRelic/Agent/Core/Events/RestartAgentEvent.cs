@@ -1,6 +1,6 @@
 ﻿namespace NewRelic.Agent.Core.Events
 {
-	public class RestartAgentEvent
-	{
-	}
+    public class RestartAgentEvent
+    {
+    }
 }

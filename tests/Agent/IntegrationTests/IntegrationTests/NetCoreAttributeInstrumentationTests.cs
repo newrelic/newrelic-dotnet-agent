@@ -10,61 +10,61 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class NetCoreAttributeInstrumentationTests : IClassFixture<RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture _fixture;
+    public class NetCoreAttributeInstrumentationTests : IClassFixture<RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture _fixture;
 
-		public NetCoreAttributeInstrumentationTests([NotNull] RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.BypassAgentConnectionErrorLineRegexCheck = true;
-			_fixture.Actions
-			(
-				setupConfiguration: () =>
-				{
-					var configPath = fixture.DestinationNewRelicConfigFilePath;
-					var configModifier = new NewRelicConfigModifier(configPath);
-					configModifier.ForceTransactionTraces();
+        public NetCoreAttributeInstrumentationTests([NotNull] RemoteServiceFixtures.NetCoreAttributeInstrumentationFixture fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.BypassAgentConnectionErrorLineRegexCheck = true;
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ForceTransactionTraces();
 
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "instrumentation", "applications", "application" }, "name", "NetCoreAttributeInstrumentationApplication.exe");
-				}
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "instrumentation", "applications", "application" }, "name", "NetCoreAttributeInstrumentationApplication.exe");
+                }
 
-			);
-			_fixture.Initialize();
-		}
+            );
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			var expectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomething", metricScope = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside", metricScope = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomething", metricScope = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside", metricScope = @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething", callCount = 1 },
+            };
 
-			var expectedTransactionTraceSegments = new List<String>
-			{
-				@"NetCoreAttributeInstrumentationApplication.Program/DoSomething",
-				@"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside"
-			};
+            var expectedTransactionTraceSegments = new List<String>
+            {
+                @"NetCoreAttributeInstrumentationApplication.Program/DoSomething",
+                @"DotNet/NetCoreAttributeInstrumentationApplication.Program/DoSomethingInside"
+            };
 
-			var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-			var transactionSample = _fixture.AgentLog.GetTransactionSamples().Where(sample => sample.Path == @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething")
-				.FirstOrDefault();
+            var transactionSample = _fixture.AgentLog.GetTransactionSamples().Where(sample => sample.Path == @"OtherTransaction/Custom/NetCoreAttributeInstrumentationApplication.Program/DoSomething")
+                .FirstOrDefault();
 
-			Assert.NotNull(metrics);
+            Assert.NotNull(metrics);
 
-			Assert.NotNull(transactionSample);
+            Assert.NotNull(transactionSample);
 
-			NrAssert.Multiple
-			(
-				() => Assertions.MetricsExist(expectedMetrics, metrics),
-				() => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
-			);
-		}
-	}
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
+            );
+        }
+    }
 }

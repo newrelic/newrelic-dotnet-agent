@@ -4,25 +4,25 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Dispatchers.Utilities
 {
-	public class ReaderLockGuard : IDisposable
-	{
-		[NotNull]
-		private readonly ReaderWriterLock _lock;
+    public class ReaderLockGuard : IDisposable
+    {
+        [NotNull]
+        private readonly ReaderWriterLock _lock;
 
-		public ReaderLockGuard([NotNull] ReaderWriterLock readerWriterLock)
-		{
-			_lock = readerWriterLock;
-		}
+        public ReaderLockGuard([NotNull] ReaderWriterLock readerWriterLock)
+        {
+            _lock = readerWriterLock;
+        }
 
-		public ReaderLockGuard Acquire()
-		{
-			_lock.AcquireReaderLock(Timeout.Infinite);
-			return this;
-		}
+        public ReaderLockGuard Acquire()
+        {
+            _lock.AcquireReaderLock(Timeout.Infinite);
+            return this;
+        }
 
-		public void Dispose()
-		{
-			_lock.ReleaseReaderLock();
-		}
-	}
+        public void Dispose()
+        {
+            _lock.ReleaseReaderLock();
+        }
+    }
 }

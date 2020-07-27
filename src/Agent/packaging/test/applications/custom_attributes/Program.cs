@@ -12,7 +12,7 @@ namespace custom_attributes
         }
 
         [NewRelic.Api.Agent.Transaction]
-        static void Transaction() 
+        static void Transaction()
         {
             Thing();
         }

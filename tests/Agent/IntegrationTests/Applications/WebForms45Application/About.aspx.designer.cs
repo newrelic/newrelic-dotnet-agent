@@ -9,9 +9,7 @@
 
 namespace WebForms45Application
 {
-
-
-	public partial class About
-	{
-	}
+    public partial class About
+    {
+    }
 }

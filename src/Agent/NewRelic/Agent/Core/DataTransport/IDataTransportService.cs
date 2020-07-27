@@ -9,20 +9,20 @@ using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-	public interface IDataTransportService
-	{
-		[NotNull]
-		IEnumerable<CommandModel> GetAgentCommands();
-		void SendCommandResults([NotNull] IDictionary<String, Object> commandResults);
-		void SendThreadProfilingData([NotNull] IEnumerable<ThreadProfilingModel> threadProfilingData);
-		DataTransportResponseStatus Send([NotNull] IEnumerable<TransactionTraceWireModel> transactionSampleDatas);
-		DataTransportResponseStatus Send([NotNull] IEnumerable<ErrorTraceWireModel> errorTraceDatas);
+    public interface IDataTransportService
+    {
+        [NotNull]
+        IEnumerable<CommandModel> GetAgentCommands();
+        void SendCommandResults([NotNull] IDictionary<String, Object> commandResults);
+        void SendThreadProfilingData([NotNull] IEnumerable<ThreadProfilingModel> threadProfilingData);
+        DataTransportResponseStatus Send([NotNull] IEnumerable<TransactionTraceWireModel> transactionSampleDatas);
+        DataTransportResponseStatus Send([NotNull] IEnumerable<ErrorTraceWireModel> errorTraceDatas);
 
-		DataTransportResponseStatus Send([NotNull] IEnumerable<MetricWireModel> metrics);
-		DataTransportResponseStatus Send([NotNull] IEnumerable<TransactionEventWireModel> transactionEvents);
-		DataTransportResponseStatus Send(ErrorEventAdditions additions, IEnumerable<ErrorEventWireModel> errorEvents);
+        DataTransportResponseStatus Send([NotNull] IEnumerable<MetricWireModel> metrics);
+        DataTransportResponseStatus Send([NotNull] IEnumerable<TransactionEventWireModel> transactionEvents);
+        DataTransportResponseStatus Send(ErrorEventAdditions additions, IEnumerable<ErrorEventWireModel> errorEvents);
 
-		DataTransportResponseStatus Send([NotNull] IEnumerable<SqlTraceWireModel> sqlTraceWireModels);
-		DataTransportResponseStatus Send([NotNull] IEnumerable<CustomEventWireModel> customEvents);
-	}
+        DataTransportResponseStatus Send([NotNull] IEnumerable<SqlTraceWireModel> sqlTraceWireModels);
+        DataTransportResponseStatus Send([NotNull] IEnumerable<CustomEventWireModel> customEvents);
+    }
 }

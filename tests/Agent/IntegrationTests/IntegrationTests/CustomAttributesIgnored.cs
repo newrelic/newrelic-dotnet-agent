@@ -12,112 +12,112 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class CustomAttributesIgnored : IClassFixture<CustomAttributesWebApi>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
+    public class CustomAttributesIgnored : IClassFixture<CustomAttributesWebApi>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-		public CustomAttributesIgnored([NotNull] RemoteServiceFixtures.CustomAttributesWebApi fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions(setupConfiguration: () =>
-			{
-				var configPath = _fixture.DestinationNewRelicConfigFilePath;
-				var configModifier = new NewRelicConfigModifier(configPath);
-				configModifier.ForceTransactionTraces();
-				
-				CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-				CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "exclude", "*");
-				CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "name");
-				CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "foo");
-				CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "hey");
-			},
-			
-			exerciseApplication: () =>
-				{
-					_fixture.Get();
+        public CustomAttributesIgnored([NotNull] RemoteServiceFixtures.CustomAttributesWebApi fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions(setupConfiguration: () =>
+            {
+                var configPath = _fixture.DestinationNewRelicConfigFilePath;
+                var configModifier = new NewRelicConfigModifier(configPath);
+                configModifier.ForceTransactionTraces();
 
-					//This transaction trace will appear as error trace instead of transaction trace.
-					_fixture.Get404();
-					_fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
-				}
+                CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
+                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "exclude", "*");
+                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "name");
+                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "foo");
+                CommonUtils.AddXmlNodeInNewRelicConfig(configPath, new[] { "configuration", "attributes" }, "include", "hey");
+            },
 
-				);
-			_fixture.Initialize();
-		}
+            exerciseApplication: () =>
+                {
+                    _fixture.Get();
 
-		[Fact]
-		public void Test()
-		{
-			var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
-			var expectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
+                    //This transaction trace will appear as error trace instead of transaction trace.
+                    _fixture.Get404();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
+                }
 
-			var expectedTransactionTraceAttributes = new Dictionary<String, String>
-			{
-				{ "foo", "bar" },
-			};
-			var unexpectedTransactionTraceAttributes = new List<String>
-			{
-				"key",
-				"hey",
-				"faz",
-			};
-			var expectedErrorTraceAttributes = new Dictionary<String, String>
-			{
-				{ "hey", "dude" },
-			};
-			var unexpectedErrorTraceAttributes = new List<String>
-			{
-				"faz",
-				"foo",
-				"key",
-			};
+                );
+            _fixture.Initialize();
+        }
 
-			var expectedErrorEventAttributes = new Dictionary<String, String>
-			{
-				{ "hey", "dude" },
-			};
-			var unexpectedErrorEventAttributes = new List<String>
-			{
-				"faz",
-				"foo",
-				"key",
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
+            var expectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
 
-			var expectedTransactionEventAttributes = new Dictionary<String, String>
-			{
-				{ "foo", "bar" }
-			};
-			var unexpectedTranscationEventAttributes = new List<String>
-			{
-				"key",
-				"faz",
-				"hey"
-			};
+            var expectedTransactionTraceAttributes = new Dictionary<String, String>
+            {
+                { "foo", "bar" },
+            };
+            var unexpectedTransactionTraceAttributes = new List<String>
+            {
+                "key",
+                "hey",
+                "faz",
+            };
+            var expectedErrorTraceAttributes = new Dictionary<String, String>
+            {
+                { "hey", "dude" },
+            };
+            var unexpectedErrorTraceAttributes = new List<String>
+            {
+                "faz",
+                "foo",
+                "key",
+            };
 
-			var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-				.Where(sample => sample.Path == expectedTransactionName)
-				.FirstOrDefault();
-			var errorTrace = _fixture.AgentLog.GetErrorTraces()
-				.Where(trace => trace.Path == expectedTracedErrorPathAsync)
-				.FirstOrDefault();
-			var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var expectedErrorEventAttributes = new Dictionary<String, String>
+            {
+                { "hey", "dude" },
+            };
+            var unexpectedErrorEventAttributes = new List<String>
+            {
+                "faz",
+                "foo",
+                "key",
+            };
 
-			var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+            var expectedTransactionEventAttributes = new Dictionary<String, String>
+            {
+                { "foo", "bar" }
+            };
+            var unexpectedTranscationEventAttributes = new List<String>
+            {
+                "key",
+                "faz",
+                "hey"
+            };
 
-			NrAssert.Multiple
-			(
-				() => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
-				() => Assertions.ErrorTraceHasAttributes(expectedErrorTraceAttributes, ErrorTraceAttributeType.User, errorTrace),
-				() => Assertions.TransactionEventHasAttributes(expectedTransactionEventAttributes, TransactionEventAttributeType.User, transactionEvent),
-				() => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
-				() => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorTraceAttributes, ErrorTraceAttributeType.User, errorTrace),
-				() => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTranscationEventAttributes, TransactionEventAttributeType.User, transactionEvent),
-				() => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0]),
-				() => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0])
-			);
+            var transactionSample = _fixture.AgentLog.GetTransactionSamples()
+                .Where(sample => sample.Path == expectedTransactionName)
+                .FirstOrDefault();
+            var errorTrace = _fixture.AgentLog.GetErrorTraces()
+                .Where(trace => trace.Path == expectedTracedErrorPathAsync)
+                .FirstOrDefault();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
 
-		}
-	}
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
+
+            NrAssert.Multiple
+            (
+                () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
+                () => Assertions.ErrorTraceHasAttributes(expectedErrorTraceAttributes, ErrorTraceAttributeType.User, errorTrace),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAttributes, TransactionEventAttributeType.User, transactionEvent),
+                () => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
+                () => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorTraceAttributes, ErrorTraceAttributeType.User, errorTrace),
+                () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTranscationEventAttributes, TransactionEventAttributeType.User, transactionEvent),
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0]),
+                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0])
+            );
+
+        }
+    }
 }

@@ -5,20 +5,20 @@ using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Commands
 {
-	/// <summary>
-	/// A command that restarts the agent. 
-	/// </summary>
-	public class RestartCommand : AbstractCommand
-	{
-		public RestartCommand()
-		{
-			Name = "restart";
-		}
+    /// <summary>
+    /// A command that restarts the agent. 
+    /// </summary>
+    public class RestartCommand : AbstractCommand
+    {
+        public RestartCommand()
+        {
+            Name = "restart";
+        }
 
-		public override object Process(IDictionary<String, object> arguments)
-		{
-			EventBus<RestartAgentEvent>.Publish(new RestartAgentEvent());
-			return null;
-		}
-	}
+        public override object Process(IDictionary<String, object> arguments)
+        {
+            EventBus<RestartAgentEvent>.Publish(new RestartAgentEvent());
+            return null;
+        }
+    }
 }

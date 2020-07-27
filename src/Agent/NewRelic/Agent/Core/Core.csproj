@@ -76,6 +76,11 @@
     <Compile Include="$(SolutionDir)Shared\SharedLog4NetRepository.cs">
       <Link>Properties\SharedLog4NetRepository.cs</Link>
     </Compile>
+    <Compile Update="AgentInstallConfiguration_Generated.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AgentInstallConfiguration_Generated.tt</DependentUpon>
+    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

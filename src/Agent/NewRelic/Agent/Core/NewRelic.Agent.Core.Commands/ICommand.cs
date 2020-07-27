@@ -4,23 +4,23 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Commands
 {
-	/// <summary>
-	/// Commands are downloaded from the RPM service and executed. 
-	/// </summary>
-	public interface ICommand
-	{
-		/// <summary>
-		/// The name of this command.
-		/// </summary>
-		[NotNull]
-	    String Name { get; }
+    /// <summary>
+    /// Commands are downloaded from the RPM service and executed. 
+    /// </summary>
+    public interface ICommand
+    {
+        /// <summary>
+        /// The name of this command.
+        /// </summary>
+        [NotNull]
+        String Name { get; }
 
-		/// <summary>
-		/// Executes this command.  This is called from the CommandService
-	    /// if it receives a command from the rpm service that matches this command.
-		/// </summary>
-		/// <param name="arguments"></param>
-		/// <returns></returns>
-		Object Process(IDictionary<String, object> arguments); // throws CommandException;
-	}
+        /// <summary>
+        /// Executes this command.  This is called from the CommandService
+        /// if it receives a command from the rpm service that matches this command.
+        /// </summary>
+        /// <param name="arguments"></param>
+        /// <returns></returns>
+        Object Process(IDictionary<String, object> arguments); // throws CommandException;
+    }
 }

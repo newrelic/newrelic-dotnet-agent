@@ -15,101 +15,101 @@ using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.CrossAgentTests
 {
-	//https://source.datanerd.us/newrelic/cross_agent_tests/blob/master/cat/path_hashing.json
-	[TestFixture]
-	public class PathHashTests
-	{
-		[NotNull]
-		private IConfiguration _configuration;
+    //https://source.datanerd.us/newrelic/cross_agent_tests/blob/master/cat/path_hashing.json
+    [TestFixture]
+    public class PathHashTests
+    {
+        [NotNull]
+        private IConfiguration _configuration;
 
-		[NotNull]
-		private IPathHashMaker _pathHashMaker;
+        [NotNull]
+        private IPathHashMaker _pathHashMaker;
 
-		[SetUp]
-		public void SetUp()
-		{
-			_configuration = Mock.Create<IConfiguration>();
-			Mock.Arrange(() => _configuration.CrossApplicationTracingEnabled).Returns(true);
-			var configurationService = Mock.Create<IConfigurationService>();
-			Mock.Arrange(() => configurationService.Configuration).Returns(() => _configuration);
+        [SetUp]
+        public void SetUp()
+        {
+            _configuration = Mock.Create<IConfiguration>();
+            Mock.Arrange(() => _configuration.CrossApplicationTracingEnabled).Returns(true);
+            var configurationService = Mock.Create<IConfigurationService>();
+            Mock.Arrange(() => configurationService.Configuration).Returns(() => _configuration);
 
-			_pathHashMaker = new PathHashMaker(configurationService);
-		}
+            _pathHashMaker = new PathHashMaker(configurationService);
+        }
 
-		[Test]
-		public void JsonCanDeserialize()
-		{
-			JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-		}
+        [Test]
+        public void JsonCanDeserialize()
+        {
+            JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
+        }
 
-		[Test]
-		[TestCaseSource(typeof(PathHashTests), nameof(TestCases))]
-		public void Test([NotNull] TestCase testCase)
-		{
-			Mock.Arrange(() => _configuration.ApplicationNames).Returns(new[] { testCase.ApplicationName });
+        [Test]
+        [TestCaseSource(typeof(PathHashTests), nameof(TestCases))]
+        public void Test([NotNull] TestCase testCase)
+        {
+            Mock.Arrange(() => _configuration.ApplicationNames).Returns(new[] { testCase.ApplicationName });
 
-			var newPathHash = _pathHashMaker.CalculatePathHash(testCase.TransactionName, testCase.ReferringPathHash);
+            var newPathHash = _pathHashMaker.CalculatePathHash(testCase.TransactionName, testCase.ReferringPathHash);
 
-			Assert.AreEqual(testCase.ExpectedPathHash, newPathHash);
-		}
+            Assert.AreEqual(testCase.ExpectedPathHash, newPathHash);
+        }
 
-		[NotNull]
-		private static ITransactionName GetTransactionNameFromString([NotNull] String transactionName)
-		{
-			var transactionNamePieces = transactionName.Split(MetricNames.PathSeparatorChar);
-			if (transactionNamePieces.Length < 2)
-				throw new TestFailureException($"Invalid transaction name '{transactionName}'");
-			if (transactionNamePieces[0] != "WebTransaction")
-				throw new TestFailureException($"Don't know how to create a transaction name that starts with {transactionNamePieces[0]}");
+        [NotNull]
+        private static ITransactionName GetTransactionNameFromString([NotNull] String transactionName)
+        {
+            var transactionNamePieces = transactionName.Split(MetricNames.PathSeparatorChar);
+            if (transactionNamePieces.Length < 2)
+                throw new TestFailureException($"Invalid transaction name '{transactionName}'");
+            if (transactionNamePieces[0] != "WebTransaction")
+                throw new TestFailureException($"Don't know how to create a transaction name that starts with {transactionNamePieces[0]}");
 
-			var transactionNameCategory = transactionNamePieces[1];
-			var transactionNameTail = String.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
-			return new WebTransactionName(transactionNameCategory, transactionNameTail);
-		}
+            var transactionNameCategory = transactionNamePieces[1];
+            var transactionNameTail = String.Join(MetricNames.PathSeparator, transactionNamePieces.Skip(2));
+            return new WebTransactionName(transactionNameCategory, transactionNameTail);
+        }
 
-		private static void SetGuid(Transaction transaction, String transactionGuid)
-		{
-			// We have to set the guid via reflection because it is set up as an auto-generated value in Transaction
-			var fieldInfo = typeof(Transaction).GetField("_guid", BindingFlags.Instance | BindingFlags.NonPublic);
-			if (fieldInfo == null)
-				throw new NullReferenceException(nameof(fieldInfo));
+        private static void SetGuid(Transaction transaction, String transactionGuid)
+        {
+            // We have to set the guid via reflection because it is set up as an auto-generated value in Transaction
+            var fieldInfo = typeof(Transaction).GetField("_guid", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (fieldInfo == null)
+                throw new NullReferenceException(nameof(fieldInfo));
 
-			fieldInfo.SetValue(transaction, transactionGuid);
-		}
+            fieldInfo.SetValue(transaction, transactionGuid);
+        }
 
-		#region JSON test case data
-		public class TestCase
-		{
-			[JsonProperty(PropertyName = "name"), NotNull, UsedImplicitly]
-			public readonly String Name;
-			[JsonProperty(PropertyName = "applicationName"), NotNull, UsedImplicitly]
-			public readonly String ApplicationName;
-			[JsonProperty(PropertyName = "transactionName"), NotNull, UsedImplicitly]
-			public readonly String TransactionName;
-			[JsonProperty(PropertyName = "referringPathHash"), CanBeNull, UsedImplicitly]
-			public readonly String ReferringPathHash;
-			[JsonProperty(PropertyName = "expectedPathHash"), NotNull, UsedImplicitly]
-			public readonly String ExpectedPathHash;
+        #region JSON test case data
+        public class TestCase
+        {
+            [JsonProperty(PropertyName = "name"), NotNull, UsedImplicitly]
+            public readonly String Name;
+            [JsonProperty(PropertyName = "applicationName"), NotNull, UsedImplicitly]
+            public readonly String ApplicationName;
+            [JsonProperty(PropertyName = "transactionName"), NotNull, UsedImplicitly]
+            public readonly String TransactionName;
+            [JsonProperty(PropertyName = "referringPathHash"), CanBeNull, UsedImplicitly]
+            public readonly String ReferringPathHash;
+            [JsonProperty(PropertyName = "expectedPathHash"), NotNull, UsedImplicitly]
+            public readonly String ExpectedPathHash;
 
-			public override String ToString()
-			{
-				return Name;
-			}
-		}
+            public override String ToString()
+            {
+                return Name;
+            }
+        }
 
-		public static IEnumerable<TestCase[]> TestCases
-		{
-			get
-			{
-				var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
-				Assert.NotNull(testCases);
-				return testCases
-					.Where(testCase => testCase != null)
-					.Select(testCase => new[] { testCase });
-			}
-		}
+        public static IEnumerable<TestCase[]> TestCases
+        {
+            get
+            {
+                var testCases = JsonConvert.DeserializeObject<IEnumerable<TestCase>>(JsonTestCaseData);
+                Assert.NotNull(testCases);
+                return testCases
+                    .Where(testCase => testCase != null)
+                    .Select(testCase => new[] { testCase });
+            }
+        }
 
-		private const String JsonTestCaseData = @"
+        private const String JsonTestCaseData = @"
 [
   {
     ""name"": ""no referring path hash"",
@@ -163,6 +163,6 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 ]
 ";
 
-		#endregion JSON test case data
-	}
+        #endregion JSON test case data
+    }
 }

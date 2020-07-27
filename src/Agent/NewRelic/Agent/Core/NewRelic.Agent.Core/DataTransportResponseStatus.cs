@@ -5,12 +5,12 @@ using System.Text;
 
 namespace NewRelic.Agent.Core
 {
-	public enum DataTransportResponseStatus
-	{ 
-		RequestSuccessful, 
-		ConnectionError, 
-		ServiceUnavailableError,
-		PostTooBigError, 
-		OtherError 
-	}
+    public enum DataTransportResponseStatus
+    {
+        RequestSuccessful,
+        ConnectionError,
+        ServiceUnavailableError,
+        PostTooBigError,
+        OtherError
+    }
 }

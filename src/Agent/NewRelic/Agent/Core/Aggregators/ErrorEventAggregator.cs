@@ -14,143 +14,143 @@ using NewRelic.SystemInterfaces;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
-	public struct ErrorEventAdditions
-	{
-		public uint reservoir_size;
-		public uint events_seen;
-	}
+    public struct ErrorEventAdditions
+    {
+        public uint reservoir_size;
+        public uint events_seen;
+    }
 
-	public interface IErrorEventAggregator
-	{
-		void Collect([NotNull] ErrorEventWireModel errorEventWireModel);
-	}
+    public interface IErrorEventAggregator
+    {
+        void Collect([NotNull] ErrorEventWireModel errorEventWireModel);
+    }
 
-	/// <summary>
-	/// An service for collecting and managing error events.
-	/// </summary>
-	public class ErrorEventAggregator : AbstractAggregator<ErrorEventWireModel>, IErrorEventAggregator
-	{
-		[NotNull]
-		private readonly IAgentHealthReporter _agentHealthReporter;
+    /// <summary>
+    /// An service for collecting and managing error events.
+    /// </summary>
+    public class ErrorEventAggregator : AbstractAggregator<ErrorEventWireModel>, IErrorEventAggregator
+    {
+        [NotNull]
+        private readonly IAgentHealthReporter _agentHealthReporter;
 
-		[NotNull]
-		private IResizableCappedCollection<ErrorEventWireModel> _errorEvents = new ConcurrentReservoir<ErrorEventWireModel>(0);
+        [NotNull]
+        private IResizableCappedCollection<ErrorEventWireModel> _errorEvents = new ConcurrentReservoir<ErrorEventWireModel>(0);
 
-		// Note that Synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they
-		// are never pushed out by non-Synthetics events.
-		[NotNull]
-		private ConcurrentList<ErrorEventWireModel> _syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
+        // Note that Synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they
+        // are never pushed out by non-Synthetics events.
+        [NotNull]
+        private ConcurrentList<ErrorEventWireModel> _syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
 
-		[NotNull]
-		private const Double _reservoirReductionSizeMultiplier = 0.5;
+        [NotNull]
+        private const Double _reservoirReductionSizeMultiplier = 0.5;
 
-		public ErrorEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
-			: base(dataTransportService, scheduler, processStatic)
-		{
-			_agentHealthReporter = agentHealthReporter;
-			ResetCollections(_configuration.ErrorCollectorMaxEventSamplesStored);
-		}
+        public ErrorEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+            : base(dataTransportService, scheduler, processStatic)
+        {
+            _agentHealthReporter = agentHealthReporter;
+            ResetCollections(_configuration.ErrorCollectorMaxEventSamplesStored);
+        }
 
-		public override void Collect(ErrorEventWireModel errorEventWireModel)
-		{
-			_agentHealthReporter.ReportErrorEventSeen();
+        public override void Collect(ErrorEventWireModel errorEventWireModel)
+        {
+            _agentHealthReporter.ReportErrorEventSeen();
 
-			AddEventToCollection(errorEventWireModel);
-		}
+            AddEventToCollection(errorEventWireModel);
+        }
 
-		protected override void Harvest()
-		{
-			// create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
-			var errorEvents = _errorEvents;
-			var syntheticErrorEvents = _syntheticsErrorEvents;
-			var aggregatedEvents = errorEvents.Union(syntheticErrorEvents).ToList();
+        protected override void Harvest()
+        {
+            // create new reservoirs to put future events into (we don't want to add events to a reservoir that is being sent)
+            var errorEvents = _errorEvents;
+            var syntheticErrorEvents = _syntheticsErrorEvents;
+            var aggregatedEvents = errorEvents.Union(syntheticErrorEvents).ToList();
 
-			// Retrieve the number of add attempts before resetting the collection.
-			var addAttempts = _errorEvents.GetAddAttemptsCount();
+            // Retrieve the number of add attempts before resetting the collection.
+            var addAttempts = _errorEvents.GetAddAttemptsCount();
 
-			ResetCollections(GetReservoirSize());
+            ResetCollections(GetReservoirSize());
 
-			// if we don't have any events to publish then don't
-			if (aggregatedEvents.Count <= 0)
-				return;
+            // if we don't have any events to publish then don't
+            if (aggregatedEvents.Count <= 0)
+                return;
 
-			_agentHealthReporter.ReportErrorEventsSent(aggregatedEvents.Count);
-			 
-			var additions = new ErrorEventAdditions();
-			additions.reservoir_size = GetReservoirSize();
-			additions.events_seen = Convert.ToUInt32(addAttempts);
+            _agentHealthReporter.ReportErrorEventsSent(aggregatedEvents.Count);
 
-			var responseStatus = DataTransportService.Send(additions, aggregatedEvents);
+            var additions = new ErrorEventAdditions();
+            additions.reservoir_size = GetReservoirSize();
+            additions.events_seen = Convert.ToUInt32(addAttempts);
 
-			HandleResponse(responseStatus, aggregatedEvents);
-		}
+            var responseStatus = DataTransportService.Send(additions, aggregatedEvents);
 
-		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-		{
-			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
-			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
+            HandleResponse(responseStatus, aggregatedEvents);
+        }
 
-			ResetCollections(_configuration.ErrorCollectorMaxEventSamplesStored); 
-		}
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
+            // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-		#region Private Helpers
+            ResetCollections(_configuration.ErrorCollectorMaxEventSamplesStored);
+        }
 
-		private void ResetCollections(uint errorEventCollectionCapacity)
-		{
-			_errorEvents = new ConcurrentReservoir<ErrorEventWireModel>(errorEventCollectionCapacity);
-			_syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
+        #region Private Helpers
 
-		}
+        private void ResetCollections(uint errorEventCollectionCapacity)
+        {
+            _errorEvents = new ConcurrentReservoir<ErrorEventWireModel>(errorEventCollectionCapacity);
+            _syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
 
-		private void AddEventToCollection([NotNull] ErrorEventWireModel errorEvents)
-		{
-			if (errorEvents.IsSynthetics() && _syntheticsErrorEvents.Count < SyntheticsHeader.MaxEventCount)
-				_syntheticsErrorEvents.Add(errorEvents);
-			else
-				_errorEvents.Add(errorEvents);
-		}
+        }
 
-		private UInt32 GetReservoirSize()
-		{
-			return _errorEvents.Size;
-		}
+        private void AddEventToCollection([NotNull] ErrorEventWireModel errorEvents)
+        {
+            if (errorEvents.IsSynthetics() && _syntheticsErrorEvents.Count < SyntheticsHeader.MaxEventCount)
+                _syntheticsErrorEvents.Add(errorEvents);
+            else
+                _errorEvents.Add(errorEvents);
+        }
 
-		private void ReduceReservoirSize(UInt32 newSize)
-		{
-			if (newSize >= GetReservoirSize())
-				return;
+        private UInt32 GetReservoirSize()
+        {
+            return _errorEvents.Size;
+        }
 
-			_errorEvents.Resize(newSize);
-		}
+        private void ReduceReservoirSize(UInt32 newSize)
+        {
+            if (newSize >= GetReservoirSize())
+                return;
 
-		private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
-		{
-			switch (responseStatus)
-			{
-				case DataTransportResponseStatus.ServiceUnavailableError:
-				case DataTransportResponseStatus.ConnectionError:
-					RetainEvents(errorEvents);
-					break;
-				case DataTransportResponseStatus.PostTooBigError:
-					ReduceReservoirSize((UInt32)(errorEvents.Count() * _reservoirReductionSizeMultiplier));
-					RetainEvents(errorEvents);
-					break;
-				case DataTransportResponseStatus.OtherError:
-				case DataTransportResponseStatus.RequestSuccessful:
-				default:
-					break;
-			}
-		}
+            _errorEvents.Resize(newSize);
+        }
 
-		private void RetainEvents([NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
-		{
-			errorEvents = errorEvents.ToList();
+        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
+        {
+            switch (responseStatus)
+            {
+                case DataTransportResponseStatus.ServiceUnavailableError:
+                case DataTransportResponseStatus.ConnectionError:
+                    RetainEvents(errorEvents);
+                    break;
+                case DataTransportResponseStatus.PostTooBigError:
+                    ReduceReservoirSize((UInt32)(errorEvents.Count() * _reservoirReductionSizeMultiplier));
+                    RetainEvents(errorEvents);
+                    break;
+                case DataTransportResponseStatus.OtherError:
+                case DataTransportResponseStatus.RequestSuccessful:
+                default:
+                    break;
+            }
+        }
 
-			errorEvents
-				.Where(@event => @event != null)
-				.ForEach(AddEventToCollection);
-		}
+        private void RetainEvents([NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
+        {
+            errorEvents = errorEvents.ToList();
 
-		#endregion
-	}
+            errorEvents
+                .Where(@event => @event != null)
+                .ForEach(AddEventToCollection);
+        }
+
+        #endregion
+    }
 }

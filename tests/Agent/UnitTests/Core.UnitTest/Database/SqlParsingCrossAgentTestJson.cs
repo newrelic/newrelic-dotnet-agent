@@ -2,15 +2,15 @@ using System;
 
 namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
 {
-	public static class SqlParsingCrossAgentTestJson
-	{
+    public static class SqlParsingCrossAgentTestJson
+    {
 
-		// Doesn't parse these cases with no whitespace after the "from":
-		//   {""input"":""SELECT * FROM(foobar)"",                                  ""operation"":""select"", ""table"":""foobar""}
-		//   {""input"":""SELECT * FROM(SELECT * FROM foobar) WHERE x > y"",        ""operation"":""select"", ""table"":""(subquery)""}
+        // Doesn't parse these cases with no whitespace after the "from":
+        //   {""input"":""SELECT * FROM(foobar)"",                                  ""operation"":""select"", ""table"":""foobar""}
+        //   {""input"":""SELECT * FROM(SELECT * FROM foobar) WHERE x > y"",        ""operation"":""select"", ""table"":""(subquery)""}
 
 
-		public const String TestCases =
+        public const String TestCases =
 @"[
   {""input"":""SELECT * FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},
   {""input"":""SELECT F FROM foobar"",                                   ""operation"":""select"", ""table"":""foobar""},
@@ -71,5 +71,5 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
   {""input"":""\""mystoredprocedure\""abc"",      ""operation"":""other"", ""table"":null},
   {""input"":""mystoredprocedure"",      ""operation"":""other"", ""table"":null}
 ]";
-	}
+    }
 }

@@ -11,76 +11,76 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class CallStackFallbackWcfAppIisHosted : IClassFixture<RemoteServiceFixtures.WcfAppIisHosted>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.WcfAppIisHosted _fixture;
+    public class CallStackFallbackWcfAppIisHosted : IClassFixture<RemoteServiceFixtures.WcfAppIisHosted>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.WcfAppIisHosted _fixture;
 
-		public CallStackFallbackWcfAppIisHosted([NotNull] RemoteServiceFixtures.WcfAppIisHosted fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions(
-				setupConfiguration: () =>
-				{
-					var newRelicConfig = _fixture.DestinationNewRelicConfigFilePath;
-					var configModifier = new NewRelicConfigModifier(newRelicConfig);
-					configModifier.ForceTransactionTraces();
-					configModifier.SetLogLevel("Finest");
+        public CallStackFallbackWcfAppIisHosted([NotNull] RemoteServiceFixtures.WcfAppIisHosted fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions(
+                setupConfiguration: () =>
+                {
+                    var newRelicConfig = _fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(newRelicConfig);
+                    configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("Finest");
 
-					CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(newRelicConfig, new[] { "configuration", "attributes" }, "include", "service.request.*");
+                    CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(newRelicConfig, new[] { "configuration", "attributes" }, "include", "service.request.*");
 
-					var webConfig = Path.Combine(_fixture.DestinationApplicationDirectoryPath, "web.config");
-					CommonUtils.ModifyOrCreateXmlAttribute(webConfig, "", new[] { "configuration", "system.serviceModel", "serviceHostingEnvironment" }, "aspNetCompatibilityEnabled", "false");
+                    var webConfig = Path.Combine(_fixture.DestinationApplicationDirectoryPath, "web.config");
+                    CommonUtils.ModifyOrCreateXmlAttribute(webConfig, "", new[] { "configuration", "system.serviceModel", "serviceHostingEnvironment" }, "aspNetCompatibilityEnabled", "false");
 
-					_fixture.DisableAsyncLocalCallStack();
-					
-				},
-				exerciseApplication: () =>
-				{
-					_fixture.GetString();
-				});
-			_fixture.Initialize();
-		}
+                    _fixture.DisableAsyncLocalCallStack();
 
-		[Fact]
-		public void Test()
-		{
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.GetString();
+                });
+            _fixture.Initialize();
+        }
 
-			var expectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Apdex" },
-				new Assertions.ExpectedMetric { metricName = @"ApdexAll" },
-				new Assertions.ExpectedMetric { metricName = @"Apdex/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData" },
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1},
-				new Assertions.ExpectedMetric { metricName = @"DotNet/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
-			};
-			var unexpectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
-			};
+        [Fact]
+        public void Test()
+        {
 
-			var expectedTraceAttributes = new Dictionary<String, String>
-			{
-				{ "service.request.value", "42" },
-			};
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Apdex" },
+                new Assertions.ExpectedMetric { metricName = @"ApdexAll" },
+                new Assertions.ExpectedMetric { metricName = @"Apdex/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData" },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = @"DotNet/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", metricScope = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted.IMyService.GetData", callCount = 1 },
+            };
+            var unexpectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
+            };
 
-			var metrics = _fixture.AgentLog.GetMetrics().ToList();
-			var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
-			var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
+            var expectedTraceAttributes = new Dictionary<String, String>
+            {
+                { "service.request.value", "42" },
+            };
 
-			NrAssert.Multiple
-			(
-				() => Assert.NotNull(transactionSample),
-				() => Assertions.TransactionTraceHasAttributes(expectedTraceAttributes, TransactionTraceAttributeType.Agent, transactionSample),
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+            var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
 
-				() => Assert.Equal(1, transactionEvents.Count),
+            NrAssert.Multiple
+            (
+                () => Assert.NotNull(transactionSample),
+                () => Assertions.TransactionTraceHasAttributes(expectedTraceAttributes, TransactionTraceAttributeType.Agent, transactionSample),
 
-				() => Assertions.MetricsExist(expectedMetrics, metrics),
-				() => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics)
-			);
-		}
-	}
+                () => Assert.Equal(1, transactionEvents.Count),
+
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
+                () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics)
+            );
+        }
+    }
 }

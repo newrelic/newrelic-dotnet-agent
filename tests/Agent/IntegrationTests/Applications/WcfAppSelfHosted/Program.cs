@@ -10,88 +10,89 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
 {
-	public class Program
-	{
-		[Option("port", Required = true)]
-		[NotNull] public String Port { get; set; }
+    public class Program
+    {
+        [Option("port", Required = true)]
+        [NotNull] public String Port { get; set; }
 
-		public static void Main(string[] args)
-		{
-			if (Parser.Default == null)
-				throw new NullReferenceException("CommandLine.Parser.Default");
+        public static void Main(string[] args)
+        {
+            if (Parser.Default == null)
+                throw new NullReferenceException("CommandLine.Parser.Default");
 
-			var program = new Program();
-			if (!Parser.Default.ParseArgumentsStrict(args, program))
-				return;
+            var program = new Program();
+            if (!Parser.Default.ParseArgumentsStrict(args, program))
+                return;
 
-			program.RealMain();
-		}
+            program.RealMain();
+        }
 
-		private void RealMain()
-		{
-			var baseAddress = new Uri(String.Format(@"http://localhost:{0}/", Port));
-			var serviceHost = ServiceHostFactory(baseAddress);
-			using (new ServiceHostDisposer(serviceHost))
-			{
-				var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());
-				CreatePidFile();
-				eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
-			}
-		}
+        private void RealMain()
+        {
+            var baseAddress = new Uri(String.Format(@"http://localhost:{0}/", Port));
+            var serviceHost = ServiceHostFactory(baseAddress);
+            using (new ServiceHostDisposer(serviceHost))
+            {
+                var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());
+                CreatePidFile();
+                eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+            }
+        }
 
-		[NotNull] private static ServiceHost ServiceHostFactory([NotNull] Uri baseAddress)
-		{
-			if (baseAddress == null)
-				throw new ArgumentNullException("baseAddress");
+        [NotNull]
+        private static ServiceHost ServiceHostFactory([NotNull] Uri baseAddress)
+        {
+            if (baseAddress == null)
+                throw new ArgumentNullException("baseAddress");
 
-			var serviceHost = new ServiceHost(typeof (WcfService), baseAddress);
-			if (serviceHost.Description == null)
-				throw new NullReferenceException("serviceHost.Description");
-			if (serviceHost.Description.Behaviors == null)
-				throw new NullReferenceException("serviceHost.Description.Behaviors");
+            var serviceHost = new ServiceHost(typeof(WcfService), baseAddress);
+            if (serviceHost.Description == null)
+                throw new NullReferenceException("serviceHost.Description");
+            if (serviceHost.Description.Behaviors == null)
+                throw new NullReferenceException("serviceHost.Description.Behaviors");
 
-			var serviceMetadataBehavior = new ServiceMetadataBehavior
-			{
-				HttpGetEnabled = true,
-				HttpsGetEnabled = true,
-				MetadataExporter =
-				{
-					PolicyVersion = PolicyVersion.Policy15
-				}
-			};
-			serviceHost.Description.Behaviors.Add(serviceMetadataBehavior);
+            var serviceMetadataBehavior = new ServiceMetadataBehavior
+            {
+                HttpGetEnabled = true,
+                HttpsGetEnabled = true,
+                MetadataExporter =
+                {
+                    PolicyVersion = PolicyVersion.Policy15
+                }
+            };
+            serviceHost.Description.Behaviors.Add(serviceMetadataBehavior);
 
-			return serviceHost;
-		}
+            return serviceHost;
+        }
 
-		private class ServiceHostDisposer : IDisposable
-		{
-			[NotNull] private readonly ServiceHost _serviceHost;
+        private class ServiceHostDisposer : IDisposable
+        {
+            [NotNull] private readonly ServiceHost _serviceHost;
 
-			public ServiceHostDisposer([NotNull] ServiceHost serviceHost)
-			{
-				if (serviceHost == null)
-					throw new ArgumentNullException("serviceHost");
-				
-				_serviceHost = serviceHost;
-				_serviceHost.Open();
-			}
+            public ServiceHostDisposer([NotNull] ServiceHost serviceHost)
+            {
+                if (serviceHost == null)
+                    throw new ArgumentNullException("serviceHost");
 
-			public void Dispose()
-			{
-				_serviceHost.Close();
-				(_serviceHost as IDisposable).Dispose();
-			}
-		}
+                _serviceHost = serviceHost;
+                _serviceHost.Open();
+            }
 
-		private static void CreatePidFile()
-		{
-			var pid = Process.GetCurrentProcess().Id;
-			var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-			var pidFilePath = thisAssemblyPath + ".pid";
-			var file = File.CreateText(pidFilePath);
-			file.WriteLine(pid);
-		}
+            public void Dispose()
+            {
+                _serviceHost.Close();
+                (_serviceHost as IDisposable).Dispose();
+            }
+        }
 
-	}
+        private static void CreatePidFile()
+        {
+            var pid = Process.GetCurrentProcess().Id;
+            var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+            var pidFilePath = thisAssemblyPath + ".pid";
+            var file = File.CreateText(pidFilePath);
+            file.WriteLine(pid);
+        }
+
+    }
 }

@@ -8,11 +8,11 @@ using System.Web.UI.WebControls;
 
 namespace WebForms45Application
 {
-	public partial class _Default : Page
-	{
-		protected void Page_Load(object sender, EventArgs e)
-		{
+    public partial class _Default : Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
 
-		}
-	}
+        }
+    }
 }

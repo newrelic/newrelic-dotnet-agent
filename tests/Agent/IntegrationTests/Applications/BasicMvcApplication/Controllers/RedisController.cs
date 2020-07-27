@@ -8,36 +8,36 @@ using ServiceStack.Redis;
 
 namespace BasicMvcApplication.Controllers
 {
-	public class RedisController : Controller
-	{
-		public string Get()
-		{
-			using (var client = new RedisClient("localhost"))
-			{
-				client.ServerVersionNumber = 1;
+    public class RedisController : Controller
+    {
+        public string Get()
+        {
+            using (var client = new RedisClient("localhost"))
+            {
+                client.ServerVersionNumber = 1;
 
-				ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.SaveAsync());
-				ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.Shutdown());
-				ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.RewriteAppendOnlyFileAsync());
-			}
+                ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.SaveAsync());
+                ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.Shutdown());
+                ThisIsBadAndYouShouldFeelBad.SwallowExceptionsFromInvalidRedisHost(() => client.RewriteAppendOnlyFileAsync());
+            }
 
-			return "Great success";
-		}
+            return "Great success";
+        }
 
-		public class ThisIsBadAndYouShouldFeelBad
-		{
-			public static void SwallowExceptionsFromInvalidRedisHost([NotNull] Action command)
-			{
-				try
-				{
-					command();
-				}
-				catch
-				{
-					//For reals, we should test against a real redis instance instead of 
-					//throwing exceptions every call.
-				}
-			}
-		}
-	}
+        public class ThisIsBadAndYouShouldFeelBad
+        {
+            public static void SwallowExceptionsFromInvalidRedisHost([NotNull] Action command)
+            {
+                try
+                {
+                    command();
+                }
+                catch
+                {
+                    //For reals, we should test against a real redis instance instead of 
+                    //throwing exceptions every call.
+                }
+            }
+        }
+    }
 }

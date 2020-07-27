@@ -1,35 +1,35 @@
-﻿using DotNet_Msmq_Shared;
+﻿using System;
+using DotNet_Msmq_Shared;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using System;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
-	public class NServiceBusReceiverFixture : RemoteApplicationFixture
-	{
-		private const string ApplicationDirectoryName = @"NServiceBusReceiverHost";
-		private const string ExecutableName = @"NServiceBus.Host.exe";
-		private const string TargetFramework = "net452";
+    public class NServiceBusReceiverFixture : RemoteApplicationFixture
+    {
+        private const string ApplicationDirectoryName = @"NServiceBusReceiverHost";
+        private const string ExecutableName = @"NServiceBus.Host.exe";
+        private const string TargetFramework = "net452";
 
-		public readonly NServiceBusBasicMvcApplicationFixture SendFixture;
+        public readonly NServiceBusBasicMvcApplicationFixture SendFixture;
 
-		public NServiceBusReceiverFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Unbounded, false))
-		{
-			SendFixture = new NServiceBusBasicMvcApplicationFixture();
-			SendFixture.DelayKill = true;
-			SendFixture.Initialize();
+        public NServiceBusReceiverFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Unbounded, false))
+        {
+            SendFixture = new NServiceBusBasicMvcApplicationFixture();
+            SendFixture.DelayKill = true;
+            SendFixture.Initialize();
 
-			MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost", true);
-			MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.error", true);
-			MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.retries", true);
-			MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.timeouts", true);
-			MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.timeoutsdispatcher", true);
-		}
+            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost", true);
+            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.error", true);
+            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.retries", true);
+            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.timeouts", true);
+            MessageQueueUtil.CreateEmptyQueue("nservicebusreceiverhost.timeoutsdispatcher", true);
+        }
 
-		public override void Dispose()
-		{
-			SendFixture.Dispose();
+        public override void Dispose()
+        {
+            SendFixture.Dispose();
 
-			base.Dispose();
-		}
-	}
+            base.Dispose();
+        }
+    }
 }

@@ -15,25 +15,25 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
-	public class BasicOpenRastaApplication : RemoteApplicationFixture
-	{
+    public class BasicOpenRastaApplication : RemoteApplicationFixture
+    {
 
-		[CanBeNull]
-		public String ResponseBody { get; private set; }
+        [CanBeNull]
+        public String ResponseBody { get; private set; }
 
-		public BasicOpenRastaApplication() : base(new RemoteWebApplication("OpenRastaWebApplication", ApplicationType.Bounded))
-		{
-		}
+        public BasicOpenRastaApplication() : base(new RemoteWebApplication("OpenRastaWebApplication", ApplicationType.Bounded))
+        {
+        }
 
-		public void Get()
-		{
-			var address = $"http://{DestinationServerName}:{Port}/home";
-			var result = new WebClient().DownloadString(address);
+        public void Get()
+        {
+            var address = $"http://{DestinationServerName}:{Port}/home";
+            var result = new WebClient().DownloadString(address);
 
-			Assert.NotNull(result);
-			Assert.Contains("GET", result);
-		}
+            Assert.NotNull(result);
+            Assert.Contains("GET", result);
+        }
 
 
-	}
+    }
 }

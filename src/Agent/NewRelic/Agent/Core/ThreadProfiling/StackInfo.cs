@@ -3,55 +3,55 @@ using System.Runtime.InteropServices;
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
-	public interface IStackInfo
-	{
-		void StoreFunctionIds(IntPtr data, Int32 length);
-		int CurrentIndex { get; set; }
-		IntPtr FunctionId { get; }
-	}
+    public interface IStackInfo
+    {
+        void StoreFunctionIds(IntPtr data, Int32 length);
+        int CurrentIndex { get; set; }
+        IntPtr FunctionId { get; }
+    }
 
-	public class StackInfo : IStackInfo
-	{
-		private readonly object _lock = new object();
-		private IntPtr[] _functionIds;
+    public class StackInfo : IStackInfo
+    {
+        private readonly object _lock = new object();
+        private IntPtr[] _functionIds;
 
-		public void StoreFunctionIds(IntPtr data, Int32 length)
-		{
-			lock (_lock)
-			{
-				if (length > 0 && data != IntPtr.Zero)
-				{
-					_functionIds = new IntPtr[length];
-					CurrentIndex = length - 1;
-					Marshal.Copy(data, _functionIds, 0, length);
-				}
-			}
-		}
+        public void StoreFunctionIds(IntPtr data, Int32 length)
+        {
+            lock (_lock)
+            {
+                if (length > 0 && data != IntPtr.Zero)
+                {
+                    _functionIds = new IntPtr[length];
+                    CurrentIndex = length - 1;
+                    Marshal.Copy(data, _functionIds, 0, length);
+                }
+            }
+        }
 
-		public int CurrentIndex { get; set; }
+        public int CurrentIndex { get; set; }
 
-		/// <summary>
-		/// Returns the next function id in the stack.
-		/// </summary>
-		/// <remarks>
-		/// Note that the functions are stored in reverse order so the top-most function is the last in the list.
-		/// </remarks>
-		public IntPtr FunctionId
-		{
-			get
-			{
-				lock (_lock)
-				{
-					if (_functionIds != null && CurrentIndex >= 0 && CurrentIndex < _functionIds.Length)
-					{
-						return _functionIds[CurrentIndex];
-					}
-					else
-					{
-						return IntPtr.Zero;
-					}
-				}
-			}
-		}
-	}
+        /// <summary>
+        /// Returns the next function id in the stack.
+        /// </summary>
+        /// <remarks>
+        /// Note that the functions are stored in reverse order so the top-most function is the last in the list.
+        /// </remarks>
+        public IntPtr FunctionId
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    if (_functionIds != null && CurrentIndex >= 0 && CurrentIndex < _functionIds.Length)
+                    {
+                        return _functionIds[CurrentIndex];
+                    }
+                    else
+                    {
+                        return IntPtr.Zero;
+                    }
+                }
+            }
+        }
+    }
 }

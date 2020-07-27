@@ -5,19 +5,19 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Configuration
 {
-	public class RunTimeConfiguration
-	{
-		[NotNull]
-		public IEnumerable<String> ApplicationNames;
+    public class RunTimeConfiguration
+    {
+        [NotNull]
+        public IEnumerable<String> ApplicationNames;
 
-		public RunTimeConfiguration()
-		{
-			ApplicationNames = Enumerable.Empty<String>();
-		}
+        public RunTimeConfiguration()
+        {
+            ApplicationNames = Enumerable.Empty<String>();
+        }
 
-		public RunTimeConfiguration([NotNull] IEnumerable<String> applicationNames)
-		{
-			ApplicationNames = applicationNames.ToList();
-		}
-	}
+        public RunTimeConfiguration([NotNull] IEnumerable<String> applicationNames)
+        {
+            ApplicationNames = applicationNames.ToList();
+        }
+    }
 }

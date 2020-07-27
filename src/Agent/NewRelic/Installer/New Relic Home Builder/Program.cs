@@ -82,24 +82,24 @@ namespace NewRelic.Installer
         private string AgentVersion => FileVersionInfo.GetVersionInfo(DestinationAgentFilePath).FileVersion;
 
         private string ProfilerDllPath
-		{
-			get
-			{
+        {
+            get
+            {
                 var profilerPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Windows", Bitness, "NewRelic.Profiler.dll");
-				return profilerPath;
-			}
-		}
+                return profilerPath;
+            }
+        }
 
-		private string ProfilerSoPath
-		{
-			get
-			{
-				var folderPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux");
-				var profilerSoPath = Path.Combine(folderPath, ProfilerSoFileName);
+        private string ProfilerSoPath
+        {
+            get
+            {
+                var folderPath = Path.Combine(SolutionPath, "ProfilerBuildsForDevMachines", "Linux");
+                var profilerSoPath = Path.Combine(folderPath, ProfilerSoFileName);
 
-				return profilerSoPath;
-			}
-		}
+                return profilerSoPath;
+            }
+        }
 
         private string AgentCoreBuildDirectoryPath { get { return Path.Combine(AnyCpuBuildPath, @"NewRelic.Agent.Core", _isCoreClr ? "netstandard2.0" : "net35"); } }
         private string ILRepackedNewRelicAgentCorePath { get { return Path.Combine(AgentCoreBuildDirectoryPath + "-ILRepacked", "NewRelic.Agent.Core.dll"); } }
@@ -198,7 +198,7 @@ namespace NewRelic.Installer
         {
             CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
             CopyToDirectory(ThirdPartyNoticesFilePath, DestinationHomeDirectoryPath);
-            
+
             if (_isCoreClr)
             {
                 CopyToDirectory(AgentApiPath, DestinationHomeDirectoryPath);

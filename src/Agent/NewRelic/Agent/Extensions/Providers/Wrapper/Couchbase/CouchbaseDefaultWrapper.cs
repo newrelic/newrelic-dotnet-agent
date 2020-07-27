@@ -5,65 +5,65 @@ using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.Couchbase
 {
-	public class CouchbaseDefaultWrapper : IWrapper
-	{
-		private Func<Object, String> _getMethodInfo;
-		public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "Name"));
+    public class CouchbaseDefaultWrapper : IWrapper
+    {
+        private Func<Object, String> _getMethodInfo;
+        public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "Name"));
 
-		public bool IsTransactionRequired => true;
+        public bool IsTransactionRequired => true;
 
-		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
-		{
-			var method = methodInfo.Method;
-			var canWrap = method.MatchesAny("Couchbase.NetClient", "Couchbase.CouchbaseBucket", new[]
-				{
-					"Append",
-					"Decrement",
-					"Exists",
-					"Get",
-					"GetAndLock",
-					"GetAndTouch",
-					"GetDocument",
-					"GetFromReplica",
-					"GetWithLock",
-					"Increment",
-					"Insert",
-					"Invoke",
-					"Observe",
-					"Prepend",
-					"Remove",
-					"Replace",
-					"Touch",
-					"Unlock",
-					"Upsert"
-				});
-			return new CanWrapResponse(canWrap);
-		}
+        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        {
+            var method = methodInfo.Method;
+            var canWrap = method.MatchesAny("Couchbase.NetClient", "Couchbase.CouchbaseBucket", new[]
+                {
+                    "Append",
+                    "Decrement",
+                    "Exists",
+                    "Get",
+                    "GetAndLock",
+                    "GetAndTouch",
+                    "GetDocument",
+                    "GetFromReplica",
+                    "GetWithLock",
+                    "Increment",
+                    "Insert",
+                    "Invoke",
+                    "Observe",
+                    "Prepend",
+                    "Remove",
+                    "Replace",
+                    "Touch",
+                    "Unlock",
+                    "Upsert"
+                });
+            return new CanWrapResponse(canWrap);
+        }
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
-		{
-			var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+        {
+            var operation = instrumentedMethodCall.MethodCall.Method.MethodName;
 
-			if (operation.StartsWith("Get"))
-			{
-				operation = "Get";
-			}
+            if (operation.StartsWith("Get"))
+            {
+                operation = "Get";
+            }
 
-			var parm = instrumentedMethodCall.MethodCall.MethodArguments[0];
-			if (parm is IList || parm is IDictionary)
-			{
-				operation += "Multiple";
-			}
+            var parm = instrumentedMethodCall.MethodCall.MethodArguments[0];
+            if (parm is IList || parm is IDictionary)
+            {
+                operation += "Multiple";
+            }
 
-			var model = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
-				
-			var segment = transaction.StartDatastoreSegment(
-				instrumentedMethodCall.MethodCall, 
-				operation, 
-				DatastoreVendor.Couchbase,
-				model);
+            var model = GetMethodInfo.Invoke(instrumentedMethodCall.MethodCall.InvocationTarget);
 
-			return Delegates.GetDelegateFor(segment);
-		}
-	}
+            var segment = transaction.StartDatastoreSegment(
+                instrumentedMethodCall.MethodCall,
+                operation,
+                DatastoreVendor.Couchbase,
+                model);
+
+            return Delegates.GetDelegateFor(segment);
+        }
+    }
 }

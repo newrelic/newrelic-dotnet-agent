@@ -1,54 +1,54 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Diagnostics;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using Microsoft.AspNetCore.Http;
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.AspNetCore
 {
-	public class ExceptionHandlerMiddlewareWrapper : IWrapper
-	{
-		public bool IsTransactionRequired => true;
+    public class ExceptionHandlerMiddlewareWrapper : IWrapper
+    {
+        public bool IsTransactionRequired => true;
 
-		public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
-		{
-			return new CanWrapResponse("NewRelic.Providers.Wrapper.AspNetCore.ExceptionHandlerMiddlewareWrapper".Equals(methodInfo.RequestedWrapperName));
-		}
+        public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
+        {
+            return new CanWrapResponse("NewRelic.Providers.Wrapper.AspNetCore.ExceptionHandlerMiddlewareWrapper".Equals(methodInfo.RequestedWrapperName));
+        }
 
-		public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
-		{
-			if (instrumentedMethodCall.IsAsync)
-			{
-				transaction.AttachToAsync();
-			}
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+        {
+            if (instrumentedMethodCall.IsAsync)
+            {
+                transaction.AttachToAsync();
+            }
 
-			//Do nothing at the begining of the instrumented method.
-			
-			return Delegates.GetDelegateFor<Task>(onSuccess: HandleSuccess);
+            //Do nothing at the begining of the instrumented method.
 
-			void HandleSuccess(Task task)
-			{
-				task.ContinueWith(OnTaskCompletion);
-			}
+            return Delegates.GetDelegateFor<Task>(onSuccess: HandleSuccess);
 
-			void OnTaskCompletion(Task completedTask)
-			{
-				try
-				{
-					var context = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[0];
+            void HandleSuccess(Task task)
+            {
+                task.ContinueWith(OnTaskCompletion);
+            }
 
-					var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+            void OnTaskCompletion(Task completedTask)
+            {
+                try
+                {
+                    var context = (HttpContext)instrumentedMethodCall.MethodCall.MethodArguments[0];
 
-					if (exceptionHandlerFeature != null)
-					{
-						transaction.NoticeError(exceptionHandlerFeature.Error);
-					}
-				}
-				catch (Exception ex)
-				{
-					agentWrapperApi.SafeHandleException(ex);
-				}
-			}
-		}
-	}
+                    var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+
+                    if (exceptionHandlerFeature != null)
+                    {
+                        transaction.NoticeError(exceptionHandlerFeature.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    agentWrapperApi.SafeHandleException(ex);
+                }
+            }
+        }
+    }
 }

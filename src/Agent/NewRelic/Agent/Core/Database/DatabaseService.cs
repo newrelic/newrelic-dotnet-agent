@@ -5,39 +5,39 @@ using NewRelic.Agent.Core.Utilities;
 
 namespace NewRelic.Agent.Core.Database
 {
-	public interface IDatabaseService
-	{
-		SqlObfuscator SqlObfuscator { get; }
-	}
-	public class DatabaseService : ConfigurationBasedService, IDatabaseService
-	{
-		[NotNull]
-		public SqlObfuscator SqlObfuscator { get; private set; }
+    public interface IDatabaseService
+    {
+        SqlObfuscator SqlObfuscator { get; }
+    }
+    public class DatabaseService : ConfigurationBasedService, IDatabaseService
+    {
+        [NotNull]
+        public SqlObfuscator SqlObfuscator { get; private set; }
 
-		public DatabaseService()
-		{
-			SqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerEnabled, _configuration.TransactionTracerRecordSql);
-		}
+        public DatabaseService()
+        {
+            SqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerEnabled, _configuration.TransactionTracerRecordSql);
+        }
 
-		public static long GenerateSqlId(string sql)
-		{
-			var hashCode = string.IsNullOrEmpty(sql) ? string.Empty.GetHashCode() : sql.GetHashCode();
-			var numberOfDigits = Math.Floor(Math.Log10(hashCode) + 1);
+        public static long GenerateSqlId(string sql)
+        {
+            var hashCode = string.IsNullOrEmpty(sql) ? string.Empty.GetHashCode() : sql.GetHashCode();
+            var numberOfDigits = Math.Floor(Math.Log10(hashCode) + 1);
 
-			if (numberOfDigits == 9)
-			{
-				hashCode = hashCode % 100000000;    // reduce to 8 digits
-			}
+            if (numberOfDigits == 9)
+            {
+                hashCode = hashCode % 100000000;    // reduce to 8 digits
+            }
 
-			return hashCode;
-		}
+            return hashCode;
+        }
 
-		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-		{
-			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
-			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
+            // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
 
-			SqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerEnabled, _configuration.TransactionTracerRecordSql);
-		}
-	}
+            SqlObfuscator = SqlObfuscator.GetSqlObfuscator(_configuration.TransactionTracerEnabled, _configuration.TransactionTracerRecordSql);
+        }
+    }
 }

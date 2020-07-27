@@ -1,57 +1,57 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class ThreadProfileTests : IClassFixture<MvcWithCollectorFixture>
-	{
-		[NotNull]
-		private readonly MvcWithCollectorFixture _fixture;
+    public class ThreadProfileTests : IClassFixture<MvcWithCollectorFixture>
+    {
+        [NotNull]
+        private readonly MvcWithCollectorFixture _fixture;
 
-		public ThreadProfileTests([NotNull] MvcWithCollectorFixture fixture)
-		{
-			_fixture = fixture;
-			_fixture.DelayKill = true;
+        public ThreadProfileTests([NotNull] MvcWithCollectorFixture fixture)
+        {
+            _fixture = fixture;
+            _fixture.DelayKill = true;
 
-			_fixture.AddActions(
-				exerciseApplication: () =>
-				{
-					_fixture.Get();
-					_fixture.TriggerThreadProfile();
-				}
-			);
-			_fixture.Initialize();
-		}
+            _fixture.AddActions(
+                exerciseApplication: () =>
+                {
+                    _fixture.Get();
+                    _fixture.TriggerThreadProfile();
+                }
+            );
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			_fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileStartingLogLineRegex, TimeSpan.FromMinutes(3));
-			
-			var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        [Fact]
+        public void Test()
+        {
+            _fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileStartingLogLineRegex, TimeSpan.FromMinutes(3));
 
-			Task.Run(() => RequestUntilCancelled(cancellationTokenSource), cancellationTokenSource.Token).Wait();
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
-			var threadProfileMatch = _fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileDataLogLineRegex, TimeSpan.FromMinutes(1));
-			var threadProfileString = threadProfileMatch.Value;
+            Task.Run(() => RequestUntilCancelled(cancellationTokenSource), cancellationTokenSource.Token).Wait();
 
-			Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", threadProfileString);
-			Assert.Contains(@"[""HostedWebCore.Program"",""Main"",0]", threadProfileString);
-			Assert.Contains(@"System.Threading", threadProfileString);
-			Assert.Contains(@"System.Web", threadProfileString);
-		}
+            var threadProfileMatch = _fixture.AgentLog.WaitForLogLine(AgentLogFile.ThreadProfileDataLogLineRegex, TimeSpan.FromMinutes(1));
+            var threadProfileString = threadProfileMatch.Value;
 
-		private void RequestUntilCancelled(CancellationTokenSource cancellationTokenSource)
-		{
-			while (!cancellationTokenSource.IsCancellationRequested)
-			{
-				_fixture.Get();
-			}
-		}
-	}
+            Assert.Contains(@"""OTHER"":[[[""Native"",""Function Call"",0]", threadProfileString);
+            Assert.Contains(@"[""HostedWebCore.Program"",""Main"",0]", threadProfileString);
+            Assert.Contains(@"System.Threading", threadProfileString);
+            Assert.Contains(@"System.Web", threadProfileString);
+        }
+
+        private void RequestUntilCancelled(CancellationTokenSource cancellationTokenSource)
+        {
+            while (!cancellationTokenSource.IsCancellationRequested)
+            {
+                _fixture.Get();
+            }
+        }
+    }
 }

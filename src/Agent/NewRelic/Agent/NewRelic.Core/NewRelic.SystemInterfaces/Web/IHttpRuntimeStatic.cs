@@ -2,8 +2,8 @@
 
 namespace NewRelic.SystemInterfaces.Web
 {
-	public interface IHttpRuntimeStatic
-	{
-		String AppDomainAppVirtualPath { get; }
-	}
+    public interface IHttpRuntimeStatic
+    {
+        String AppDomainAppVirtualPath { get; }
+    }
 }

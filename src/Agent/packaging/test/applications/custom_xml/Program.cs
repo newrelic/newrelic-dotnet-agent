@@ -11,7 +11,7 @@ namespace custom_xml
             Transaction();
         }
 
-        static void Transaction() 
+        static void Transaction()
         {
             Thing();
         }

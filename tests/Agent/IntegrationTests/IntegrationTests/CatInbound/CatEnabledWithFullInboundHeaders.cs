@@ -11,101 +11,101 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
-	public class CatEnabledWithFullInboundHeaders : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
-	{
-		[NotNull]
-		private RemoteServiceFixtures.BasicMvcApplication _fixture;
+    public class CatEnabledWithFullInboundHeaders : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    {
+        [NotNull]
+        private RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-		[NotNull]
-		private HttpResponseHeaders _responseHeaders;
+        [NotNull]
+        private HttpResponseHeaders _responseHeaders;
 
-		public CatEnabledWithFullInboundHeaders([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions
-			(
-				setupConfiguration: () =>
-				{
-					var configPath = fixture.DestinationNewRelicConfigFilePath;
-					var configModifier = new NewRelicConfigModifier(configPath);
+        public CatEnabledWithFullInboundHeaders([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
 
-					configModifier.ForceTransactionTraces();
+                    configModifier.ForceTransactionTraces();
 
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration" }, "crossApplicationTracingEnabled", "true");
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "crossApplicationTracer" }, "enabled", "true");
-				},
-				exerciseApplication: () =>
-				{
-					_fixture.GetIgnored();
-					_responseHeaders = _fixture.GetWithCatHeader(requestData: new CrossApplicationRequestData("guid", false, "tripId", "pathHash"));
-				}
-			);
-			_fixture.Initialize();
-		}
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration" }, "crossApplicationTracingEnabled", "true");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "crossApplicationTracer" }, "enabled", "true");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.GetIgnored();
+                    _responseHeaders = _fixture.GetWithCatHeader(requestData: new CrossApplicationRequestData("guid", false, "tripId", "pathHash"));
+                }
+            );
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			var catResponseHeader = _responseHeaders.GetValues(@"X-NewRelic-App-Data")?.FirstOrDefault();
-			Assert.NotNull(catResponseHeader);
+        [Fact]
+        public void Test()
+        {
+            var catResponseHeader = _responseHeaders.GetValues(@"X-NewRelic-App-Data")?.FirstOrDefault();
+            Assert.NotNull(catResponseHeader);
 
-			var catResponseData = HeaderEncoder.DecodeAndDeserialize<CrossApplicationResponseData>(catResponseHeader, HeaderEncoder.IntegrationTestEncodingKey);
+            var catResponseData = HeaderEncoder.DecodeAndDeserialize<CrossApplicationResponseData>(catResponseHeader, HeaderEncoder.IntegrationTestEncodingKey);
 
-			var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Index");
-			var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Index");
-			var metrics = _fixture.AgentLog.GetMetrics();
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/DefaultController/Index");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Index");
+            var metrics = _fixture.AgentLog.GetMetrics();
 
-			NrAssert.Multiple
-			(
-				() => Assert.NotNull(transactionSample),
-				() => Assert.NotNull(transactionEvent)
-			);
-			
-			var expectedTransactionTraceIntrinsicAttributes1 = new List<String>
-			{
-				"client_cross_process_id",
-				"path_hash"
-			};
-			var expectedTransactionTraceIntrinsicAttributes2 = new Dictionary<String, String>
-			{
-				// These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
-				{"referring_transaction_guid", "guid"},
-				{"trip_id", "tripId"}
-			};
-			var expectedTransactionEventIntrinsicAttributes1 = new List<String>
-			{
-				"nr.guid",
-				"nr.pathHash"
-			};
-			var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<String, String>
-			{
-				// These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
-				{"nr.referringPathHash", "pathHash"},
-				{"nr.referringTransactionGuid", "guid"},
-				{"nr.tripId", "tripId"}
-			};
+            NrAssert.Multiple
+            (
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionEvent)
+            );
 
-			NrAssert.Multiple
-			(
-				() => Assert.Equal($"{_fixture.AgentLog.GetAccountId()}#{_fixture.AgentLog.GetApplicationId()}", catResponseData.CrossProcessId),
-				() => Assert.Equal("WebTransaction/MVC/DefaultController/Index", catResponseData.TransactionName),
-				() => Assert.True(catResponseData.QueueTimeInSeconds >= 0),
-				() => Assert.True(catResponseData.ResponseTimeInSeconds >= 0),
-				() => Assert.Equal(-1, catResponseData.ContentLength),
-				() => Assert.NotNull(catResponseData.TransactionGuid),
-				() => Assert.Equal(false, catResponseData.Unused),
+            var expectedTransactionTraceIntrinsicAttributes1 = new List<String>
+            {
+                "client_cross_process_id",
+                "path_hash"
+            };
+            var expectedTransactionTraceIntrinsicAttributes2 = new Dictionary<String, String>
+            {
+                // These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
+                {"referring_transaction_guid", "guid"},
+                {"trip_id", "tripId"}
+            };
+            var expectedTransactionEventIntrinsicAttributes1 = new List<String>
+            {
+                "nr.guid",
+                "nr.pathHash"
+            };
+            var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<String, String>
+            {
+                // These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
+                {"nr.referringPathHash", "pathHash"},
+                {"nr.referringTransactionGuid", "guid"},
+                {"nr.tripId", "tripId"}
+            };
 
-				// Trace attributes
-				() => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceIntrinsicAttributes1, TransactionTraceAttributeType.Intrinsic, transactionSample),
-				() => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceIntrinsicAttributes2, TransactionTraceAttributeType.Intrinsic, transactionSample),
+            NrAssert.Multiple
+            (
+                () => Assert.Equal($"{_fixture.AgentLog.GetAccountId()}#{_fixture.AgentLog.GetApplicationId()}", catResponseData.CrossProcessId),
+                () => Assert.Equal("WebTransaction/MVC/DefaultController/Index", catResponseData.TransactionName),
+                () => Assert.True(catResponseData.QueueTimeInSeconds >= 0),
+                () => Assert.True(catResponseData.ResponseTimeInSeconds >= 0),
+                () => Assert.Equal(-1, catResponseData.ContentLength),
+                () => Assert.NotNull(catResponseData.TransactionGuid),
+                () => Assert.False(catResponseData.Unused),
 
-				// Event attributes
-				() => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, transactionEvent),
-				() => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvent),
+                // Trace attributes
+                () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceIntrinsicAttributes1, TransactionTraceAttributeType.Intrinsic, transactionSample),
+                () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceIntrinsicAttributes2, TransactionTraceAttributeType.Intrinsic, transactionSample),
 
-				() => Assertions.MetricsExist(Expectations.ExpectedMetricsCatEnabled, metrics)
-			);
-		}
-	}
+                // Event attributes
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, transactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvent),
+
+                () => Assertions.MetricsExist(Expectations.ExpectedMetricsCatEnabled, metrics)
+            );
+        }
+    }
 }

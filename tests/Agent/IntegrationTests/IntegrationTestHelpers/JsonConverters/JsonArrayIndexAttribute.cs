@@ -2,9 +2,9 @@
 
 namespace NewRelic.Agent.IntegrationTestHelpers.JsonConverters
 {
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-	public sealed class JsonArrayIndexAttribute : System.Attribute
-	{
-		public UInt32 Index { get; set; }
-	}
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public sealed class JsonArrayIndexAttribute : System.Attribute
+    {
+        public UInt32 Index { get; set; }
+    }
 }
