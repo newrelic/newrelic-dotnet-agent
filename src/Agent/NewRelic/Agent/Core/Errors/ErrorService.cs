@@ -135,7 +135,54 @@ namespace NewRelic.Agent.Core.Errors
             // We want to show to the stacktace from the outermost exception since that will provide the most context for the base exception.
             var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
             var noticedAt = DateTime.UtcNow;
-            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes);
+
+            var isExpected = IsErrorExpected(exception);
+            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
+        }
+
+        private bool IsErrorExpected(Exception exception)
+        {
+            var isExpected = IsExceptionExpected(exception);
+
+            if (!isExpected)
+            {
+                var baseException = exception.GetBaseException();
+                return IsExceptionExpected(baseException);
+            }
+            return isExpected;
+        }
+
+        private bool IsExceptionExpected(Exception exception)
+        {
+            var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
+            var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsConfiguration;
+
+            if (expectedErrorInfo.TryGetValue(exceptionTypeName, out var expectedMessages))
+            {
+                if (expectedMessages != Enumerable.Empty<string>())
+                {
+                    return ContainsSubstring(expectedMessages, exception.Message);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
+        {
+            foreach (var item in subStringList)
+            {
+                if (sourceString.Contains(item))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private ReadOnlyDictionary<string, object> CaptureAttributes<T>(IDictionary<string, T> attributes)

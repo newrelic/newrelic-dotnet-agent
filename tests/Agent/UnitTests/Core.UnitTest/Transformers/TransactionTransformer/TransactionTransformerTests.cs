@@ -25,8 +25,8 @@ using NewRelic.Agent.Core.DistributedTracing;
 using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Spans;
 using NewRelic.Agent.Core.Segments.Tests;
-using Telerik.JustMock.Helpers;
 using System.Threading;
+using System.IO;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 {
@@ -775,6 +775,121 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             {
                 Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric is contained: " + current);
             }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ErrorMetrics_ExpectedErrorClasses(bool expectForError)
+        {
+
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+            var errorEvents = new List<ErrorEventWireModel>();
+            var errorTraces = new List<ErrorTraceWireModel>();
+
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+            Mock.Arrange(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>())).DoInstead<ErrorEventWireModel>(errorEvent => errorEvents.Add(errorEvent));
+            Mock.Arrange(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>())).DoInstead<ErrorTraceWireModel>(errorTrace => errorTraces.Add(errorTrace));
+            Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(2));
+
+            if (expectForError)
+            {
+                Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
+                Mock.Arrange(() => _configuration.ExpectedErrorsConfiguration).Returns(new Dictionary<string, IEnumerable<string>>()
+                {
+                    { "System.IO.IOException", Enumerable.Empty<string>()}
+                });
+            }
+
+            var transaction = TestTransactions.CreateDefaultTransaction(false, configurationService: _configurationService, exception: new IOException());
+
+            _transactionTransformer.Transform(transaction);
+
+            string[] unscoped = new string[] {
+                "Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
+
+            // When an error is expected, unscoped error metrics should not be generated.
+            foreach (string current in unscoped)
+            {
+                if (expectForError)
+                {
+                    Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric should not contain: " + current);
+
+                }
+                else
+                {
+                    Assert.IsTrue(generatedMetrics.ContainsKey(current), "Metric should contain: " + current);
+                }
+            }
+
+            // When an error is expected, ErrorsExpected/all metric is generated, frustrating score apdex metric should not be generated. 
+            if (expectForError)
+            {
+                Assert.IsTrue(generatedMetrics.ContainsKey("ErrorsExpected/all"));
+                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0); //sastisfying apdex
+                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value0); //sastisfying apdex
+                Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value0); //sastisfying
+            }
+            else
+            {
+                Assert.IsFalse(generatedMetrics.ContainsKey("ErrorsExpected/all"));
+                Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value2); //frustrating apdex
+                Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value2); //frustrating apdex
+                Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value2); //frustrating apdex
+            }
+
+            Assert.That(errorEvents.Count > 0, "Expect error events.");
+            Assert.That(errorTraces.Count > 0, "Expect error traces.");
+        }
+
+        [Test]
+        public void IgnoredErrors_Override_ExpectedErrors()
+        {
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
+            var errorEvents = new List<ErrorEventWireModel>();
+            var errorTraces = new List<ErrorTraceWireModel>();
+
+            _errorTraceMaker = new ErrorTraceMaker(_configurationService);
+            _errorEventMaker = new ErrorEventMaker(_attribDefSvc);
+
+            Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
+            Mock.Arrange(() => _errorEventAggregator.Collect(Arg.IsAny<ErrorEventWireModel>())).DoInstead<ErrorEventWireModel>(errorEvent => errorEvents.Add(errorEvent));
+            Mock.Arrange(() => _errorTraceAggregator.Collect(Arg.IsAny<ErrorTraceWireModel>())).DoInstead<ErrorTraceWireModel>(errorTrace => errorTraces.Add(errorTrace));
+            Mock.Arrange(() => _metricNameService.TryGetApdex_t(Arg.IsAny<string>())).Returns(TimeSpan.FromSeconds(2));
+
+            Mock.Arrange(() => _configuration.ErrorCollectorEnabled).Returns(true);
+            Mock.Arrange(() => _configuration.ExpectedErrorsConfiguration).Returns(new Dictionary<string, IEnumerable<string>>()
+            {
+                { "System.IO.IOException", Enumerable.Empty<string>()}
+            });
+            Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new List<string>()
+            {
+                { "System.IO.IOException"}
+            });
+
+            var transaction = TestTransactions.CreateDefaultTransaction(false, configurationService: _configurationService, exception: new IOException());
+
+            _transactionTransformer.Transform(transaction);
+
+            string[] unscoped = new string[] {
+                "Errors/all", "Errors/allOther", "Errors/OtherTransaction/TransactionName"};
+
+            // When an error is ignored, unscoped error metrics should not be generated.
+            foreach (string current in unscoped)
+            {
+                Assert.IsFalse(generatedMetrics.ContainsKey(current), "Metric should not contain: " + current);
+            }
+
+            // When an error is ignored, ErrorsExpected/all metric is generated, frustrating score apdex metric should not be generated. 
+            Assert.IsFalse(generatedMetrics.ContainsKey("ErrorsExpected/all"));
+            Assert.AreEqual(1, generatedMetrics["ApdexOther/Transaction/TransactionName"].Value0); //sastisfying apdex
+            Assert.AreEqual(1, generatedMetrics["ApdexOther"].Value0); //sastisfying apdex
+            Assert.AreEqual(1, generatedMetrics["ApdexAll"].Value0); //sastisfying apdex
+
+            Assert.That(errorEvents.Count == 0, "Expect no error events.");
+            Assert.That(errorTraces.Count == 0, "Expect no error traces.");
         }
 
         [Test]

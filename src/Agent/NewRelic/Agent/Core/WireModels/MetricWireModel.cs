@@ -265,22 +265,29 @@ namespace NewRelic.Agent.Core.WireModels
 
             #region Error metrics
 
-            public static void TryBuildErrorsMetrics(bool isWebTransaction, TransactionMetricStatsCollection txStats)
+            public static void TryBuildErrorsMetrics(bool isWebTransaction, TransactionMetricStatsCollection txStats, bool isErrorExpected)
             {
                 var data = MetricDataWireModel.BuildCountData();
 
-                //All metric
-                txStats.MergeUnscopedStats(MetricNames.ErrorsAll, data);
+                if (!isErrorExpected)
+                {
+                    //All metric
+                    txStats.MergeUnscopedStats(MetricNames.ErrorsAll, data);
 
-                //all web/other metric
-                var proposedName = isWebTransaction
-                    ? MetricNames.ErrorsAllWeb
-                    : MetricNames.ErrorsAllOther;
-                txStats.MergeUnscopedStats(proposedName, data);
+                    //all web/other metric
+                    var proposedName = isWebTransaction
+                        ? MetricNames.ErrorsAllWeb
+                        : MetricNames.ErrorsAllOther;
+                    txStats.MergeUnscopedStats(proposedName, data);
 
-                //transaction error metric
-                proposedName = MetricNames.GetErrorTransaction(txStats.GetTransactionName().PrefixedName);
-                txStats.MergeUnscopedStats(proposedName, data);
+                    //transaction error metric
+                    proposedName = MetricNames.GetErrorTransaction(txStats.GetTransactionName().PrefixedName);
+                    txStats.MergeUnscopedStats(proposedName, data);
+                }
+                else
+                {
+                    txStats.MergeUnscopedStats(MetricNames.ErrorsExpectedAll, data);
+                }
             }
 
             #endregion
