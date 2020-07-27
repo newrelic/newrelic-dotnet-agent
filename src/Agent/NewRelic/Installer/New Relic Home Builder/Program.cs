@@ -73,8 +73,9 @@ namespace NewRelic.Installer
         private string NewRelicConfigXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Config", "Configuration.xsd"); } }
         private string ExtensionsXsdPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "NewRelic.Agent.Core.Extension", "extension.xsd"); } }
         private string NewRelicAgentCoreCsprojPath { get { return Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj"); } }
-        private string LicenseSourceDirectoryPath { get { return Path.GetFullPath(Path.Combine(SolutionPath, "Miscellaneous")); } }
+        private string LicenseSourceDirectoryPath { get { return Path.GetFullPath(Path.Combine(SolutionPath, @"..\..", "licenses")); } }
         private string LicenseFilePath => Path.Combine(LicenseSourceDirectoryPath, "LICENSE.txt");
+        private string ThirdPartyNoticesFilePath => Path.Combine(LicenseSourceDirectoryPath, "THIRD_PARTY_NOTICES.txt");
         private readonly string Core20ReadmeFileName = "netcore20-agent-readme.md";
         private string ReadmeFilePath => Path.Combine(SolutionPath, "Miscellaneous", Core20ReadmeFileName);
         private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net35", "NewRelic.Api.Agent.dll");
@@ -196,7 +197,8 @@ namespace NewRelic.Installer
         private void CopyOtherDependencies()
         {
             CopyToDirectory(LicenseFilePath, DestinationHomeDirectoryPath);
-
+            CopyToDirectory(ThirdPartyNoticesFilePath, DestinationHomeDirectoryPath);
+            
             if (_isCoreClr)
             {
                 CopyToDirectory(AgentApiPath, DestinationHomeDirectoryPath);
@@ -204,6 +206,10 @@ namespace NewRelic.Installer
                 File.Move(Path.Combine(DestinationHomeDirectoryPath, Core20ReadmeFileName), Path.Combine(DestinationHomeDirectoryPath, "README.md"));
                 return;
             }
+
+            // We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.
+            var jetBrainsAnnotationsAssemblyPath = Path.Combine(AgentCoreBuildDirectoryPath, "JetBrains.Annotations.dll");
+            CopyToDirectory(jetBrainsAnnotationsAssemblyPath, DestinationExtensionsDirectoryPath);
         }
 
         private static void ReCreateDirectoryWithEveryoneAccess(string directoryPath)
@@ -247,7 +253,7 @@ namespace NewRelic.Installer
             var netstandardProjectsToIncludeInBothAgents = new[] { "AspNetCore" };
             var directories = allDirectoriesForConfiguration.ToList()
                 .Where(directoryPath => directoryPath != null)
-                .Where(directoryPath => directoryPath.Contains("netstandard") == _isCoreClr || netstandardProjectsToIncludeInBothAgents.Any(directoryPath.Contains))
+                .Where(directoryPath => directoryPath.Contains("netstandard") == _isCoreClr)
                 .Select(directoryPath => new DirectoryInfo(directoryPath))
                 .Where(directoryInfo => directoryInfo.Parent != null)
                 .Where(directoryInfo => directoryInfo.Parent.Name == "bin" || directoryInfo.Parent.Name == Configuration)

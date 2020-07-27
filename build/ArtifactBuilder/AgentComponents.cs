@@ -41,6 +41,8 @@ namespace ArtifactBuilder
 		public string ExtensionXsd;
 		public string NewRelicXsd;
 		public string NewRelicConfig;
+		public string NewRelicLicenseFile;
+        public string NewRelicThirdPartyNoticesFile;
 
 		private List<string> AllComponents
 		{

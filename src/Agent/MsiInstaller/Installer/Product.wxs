@@ -215,9 +215,12 @@ SPDX-License-Identifier: Apache-2.0
 		<!-- Main Product -->
 		<ComponentGroup Id="ProductComponents" Directory="NETAGENTFOLDER">
 			<!-- Text -->
-			<Component Id="LicenseComponent" Guid="{47114807-F20A-478D-9F4F-4B3D6CF195BE}">
-				<File Id="LicenseFile" Name="License.txt" KeyPath="yes" Source="$(var.AgentSourcePath)\Miscellaneous\License.txt" />
-			</Component>
+      <Component Id="LicenseComponent" Guid="{47114807-F20A-478D-9F4F-4B3D6CF195BE}">
+        <File Id="LicenseFile" Name="LICENSE.txt" KeyPath="yes" Source="$(var.RootSourcePath)\licenses\LICENSE.txt" />
+      </Component>
+      <Component Id="ThirdPartyNoticesComponent" Guid="{AE9FF10E-629E-49FB-957D-672CBC8AD6E3}">
+        <File Id="ThirdPartyNoticesFile" Name="THIRD_PARTY_NOTICES.txt" KeyPath="yes" Source="$(var.RootSourcePath)\licenses\THIRD_PARTY_NOTICES.txt" />
+      </Component>
 
 			<!-- Libraries -->
 			<?ifdef IsWin64?>

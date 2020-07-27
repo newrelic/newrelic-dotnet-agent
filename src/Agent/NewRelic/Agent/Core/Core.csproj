@@ -128,6 +128,11 @@
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Parsing'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
       <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.AttributeFilter'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.Configuration'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Trie'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Dongle'" />
+      <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.LabelsService'" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
@@ -147,8 +152,8 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net35'">7</ILRepackIncludeCount>
-      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">7</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net35'">12</ILRepackIncludeCount>
+      <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">12</ILRepackIncludeCount>
     </PropertyGroup>
 
     <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />
