@@ -7,7 +7,7 @@ namespace ArtifactBuilder
         public FrameworkAgentComponents(string configuration, string platform, string sourcePath)
             : base(configuration, platform, sourcePath) { }
 
-        protected override string SourceHomeBuilderPath => $@"{SourcePath}\New Relic Home {Platform}";
+        protected override string SourceHomeBuilderPath => $@"{SourcePath}\Agent\New Relic Home {Platform}";
 
         protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
             $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Agent.AttributeFilter.dll",
