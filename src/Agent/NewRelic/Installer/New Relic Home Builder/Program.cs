@@ -109,7 +109,7 @@ namespace NewRelic.Installer
         private string AgentApiPath => Path.Combine(AnyCpuBuildPath, "NewRelic.Api.Agent", _isCoreClr ? "netstandard2.0" : "net35", "NewRelic.Api.Agent.dll");
 
         private string _homeBuilderProjectPath => Path.Combine(SolutionPath, "NewRelic", "Installer", "New Relic Home Builder", "New Relic Home Builder.csproj");
-        private string _coreProjectPath => Path.Combine(SolutionPath, "NewRelic", "Agent", "Core", "Core.csproj");
+        private string _coreProjectPath => Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Core", "Core.csproj");
 
         private string AgentVersion => FileVersionInfo.GetVersionInfo(DestinationAgentFilePath).FileVersion;
 
