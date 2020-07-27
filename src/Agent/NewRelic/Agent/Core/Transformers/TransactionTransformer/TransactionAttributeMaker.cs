@@ -99,6 +99,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 _attribDefs.ErrorDotMessage.TrySetValue(attribValues, errorData.ErrorMessage);
                 _attribDefs.IsError.TrySetValue(attribValues, true);
                 _attribDefs.ErrorEventSpanId.TrySetValue(attribValues, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorDataSpanId);
+
+                if (errorData.IsExpected)
+                {
+                    _attribDefs.IsErrorExpected.TrySetValue(attribValues, true);
+                }
             }
 
             var isCatParticipant = IsCatParticipant(immutableTransaction);

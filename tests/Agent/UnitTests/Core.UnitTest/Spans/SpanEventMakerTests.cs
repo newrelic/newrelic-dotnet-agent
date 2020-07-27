@@ -80,10 +80,8 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         private IMetricNameService _metricNameSvc;
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
         private ITransactionAttributeMaker _transactionAttribMaker;
-        private TransactionMetricStatsCollection _metricStatsCollection;
 
         private IConfiguration _config;
-        private int _configVersion = 1;
         private IConfigurationService _configurationService;
         private IEnvironment _environment;
         private IProcessStatic _processStatic;
@@ -377,6 +375,37 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             );
         }
 
+        [TestCase(true)]
+        [TestCase(true)]
+        public void GetSpanEvent_Generates_ExpecedErrorAttribute(bool hasExpectedError)
+        {
+            // ARRANGE
+            var testError = new ErrorData("error message", "ErrorType", "stack trace", DateTime.UtcNow, null, hasExpectedError);
+            var segments = new List<Segment>()
+            {
+                _baseGenericSegment.CreateSimilar(TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(5), new List<KeyValuePair<string, object>>())
+            };
+            segments[0].ErrorData = testError;
+            var immutableTransaction = BuildTestTransaction(segments, sampled: true, hasIncomingPayload: true);
+            var transactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(immutableTransaction.TransactionName);
+            var metricStatsCollection = new TransactionMetricStatsCollection(transactionMetricName);
+            var transactionAttributes = _transactionAttribMaker.GetAttributes(immutableTransaction, transactionMetricName, TimeSpan.FromSeconds(1), immutableTransaction.Duration, metricStatsCollection);
+
+            // ACT
+            var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttributes).ToList();
+            var rootSpanEvent = spanEvents[0];
+
+            // ASSERT
+            if (hasExpectedError)
+            {
+                CollectionAssert.Contains(rootSpanEvent.AgentAttributes().Keys, "error.expected");
+            }
+            else
+            {
+                CollectionAssert.DoesNotContain(rootSpanEvent.AgentAttributes().Keys, "error.expected");
+            }
+        }
+
         #endregion
 
         #region Datastore
@@ -571,7 +600,6 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                 var rootSpanAttribsDic = rootSpan.GetAttributeValuesDic(classification);
 
                 var hasExistCheck = false;
-                var hasNotExistCheck = false;
 
                 foreach (var trxAttrib in trxAttribs)
                 {
@@ -585,7 +613,6 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
                     }
                     else
                     {
-                        hasNotExistCheck = true;
                         assertions.Add(() => Assert.IsFalse(rootSpanAttribsDic.ContainsKey(attribName), $"{classificationLocal} attributes should have attribute {attribName}"));
                     }
                 }
