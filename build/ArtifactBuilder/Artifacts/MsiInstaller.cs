@@ -22,7 +22,7 @@ namespace ArtifactBuilder.Artifacts
         {
             Platform = platform;
             Configuration = configuration;
-            MsiDirectory = $@"{sourceDirectory}\src\Agent\_build\{Platform}-{Configuration}\Installer";
+            MsiDirectory = $@"{sourceDirectory}\src\_build\{Platform}-{Configuration}\Installer";
             OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}-{Platform}";
         }
 

@@ -5,7 +5,7 @@
 		<AssemblyName>NewRelic.Providers.Wrapper.WrapperUtilities</AssemblyName>
 		<Description>Provides generic utility functions used by Wrapper Providers for New Relic .NET Agent</Description>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
