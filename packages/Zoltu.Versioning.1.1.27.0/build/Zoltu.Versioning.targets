@@ -1,0 +1,21 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<UsingTask TaskName="Zoltu.Versioning.GitTask" AssemblyFile="$(MSBuildThisFileDirectory)Zoltu.Versioning.dll" />
+
+	<Target Name="GenerateVersionFileFromGit" BeforeTargets="BeforeBuild">
+		<PropertyGroup>
+			<GitVersionOnlyMajorAndMinorInAssemblyVersion Condition=" '$(GitVersionOnlyMajorAndMinorInAssemblyVersion)' == '' ">false</GitVersionOnlyMajorAndMinorInAssemblyVersion>
+			<GitVersionOnlyMajorAndMinorInAssemblyFileVersion Condition=" '$(GitVersionOnlyMajorAndMinorInAssemblyFileVersion)' == '' ">false</GitVersionOnlyMajorAndMinorInAssemblyFileVersion>
+			<GitVersionOnlyMajorAndMinorInAssemblyInformationalVersion Condition=" '$(GitVersionOnlyMajorAndMinorInAssemblyInformationalVersion)' == '' ">false</GitVersionOnlyMajorAndMinorInAssemblyInformationalVersion>
+		</PropertyGroup>
+		
+		<Zoltu.Versioning.GitTask
+			OutputFilePath="$(ProjectDir)Properties\VersionAssemblyInfo.cs"
+			OnlyMajorAndMinorInAssemblyVersion="$(GitVersionOnlyMajorAndMinorInAssemblyVersion)"
+			OnlyMajorAndMinorInAssemblyFileVersion="$(GitVersionOnlyMajorAndMinorInAssemblyFileVersion)"
+			OnlyMajorAndMinorInAssemblyInformationalVersion="$(GitVersionOnlyMajorAndMinorInAssemblyInformationalVersion)"/>
+	</Target>
+
+	<ItemGroup>
+		<Compile Include="Properties\VersionAssemblyInfo.cs" />
+	</ItemGroup>
+</Project>

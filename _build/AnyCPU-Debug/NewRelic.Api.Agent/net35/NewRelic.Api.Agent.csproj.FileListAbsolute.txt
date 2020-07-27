@@ -1,0 +1,7 @@
+C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.AssemblyInfoInputs.cache
+C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.AssemblyInfo.cs
+C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.csproj.CoreCompileInputs.cache
+C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.csproj.CopyComplete
+C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll
+C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.pdb
+C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.XML
