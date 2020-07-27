@@ -66,8 +66,7 @@ NDependOut/
 test-results
 
 # Ignore FullAgent build output
-src/Agent/_build/
-src/Agent/NewRelic/Tray/_build/
+src/_build/
 build/_staging
 build/BuildArtifacts
 
