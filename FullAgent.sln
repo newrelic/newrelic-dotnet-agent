@@ -221,6 +221,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreInstaller", "CoreInstal
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewRelic.Testing.Assertions", "tests\Agent\NewRelic.Testing.Assertions\NewRelic.Testing.Assertions.csproj", "{2A932B62-8787-4963-8D53-F83BF6ACBB5C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{54492339-D50C-4104-B837-360D6FECB54B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -747,8 +752,8 @@ Global
 		{50FE074A-0573-46A5-8B68-837041225182} = {E3DAC9C6-AE41-4B37-A253-C621E568590E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
+		SolutionGuid = {D8B98070-6B8E-403C-A07F-A3F2E4A3A3D0}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = FullAgent.vsmdi

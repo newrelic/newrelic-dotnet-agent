@@ -39,7 +39,7 @@ namespace NewRelic.Build.RepackAssemblies
             foreach (var directory in frameworkBuildDirectories)
             {
                 var asyncLocalDllFilePath = Path.Combine(directory, "NewRelic.Providers.CallStack.AsyncLocal.dll");
-                var keyFilePath = Path.Combine(SolutionPath, "KeyFile.snk");
+                var keyFilePath = Path.Combine(SolutionPath, "build", "keys", "KeyFile.snk");
 
                 var assemblyPathsToRepack = new List<string>
                 {
