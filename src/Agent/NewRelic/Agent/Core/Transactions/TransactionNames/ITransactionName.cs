@@ -2,8 +2,8 @@
 
 namespace NewRelic.Agent.Core.Transactions.TransactionNames
 {
-	public interface ITransactionName
-	{
-		Boolean IsWeb { get; }
-	}
+    public interface ITransactionName
+    {
+        Boolean IsWeb { get; }
+    }
 }

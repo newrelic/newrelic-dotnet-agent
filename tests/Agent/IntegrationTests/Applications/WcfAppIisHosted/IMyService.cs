@@ -5,16 +5,16 @@ using System.ServiceModel.Web;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted
 {
-	[ServiceContract]
-	public interface IMyService
-	{
-		[OperationContract]
-		String GetData(Int32 value);
+    [ServiceContract]
+    public interface IMyService
+    {
+        [OperationContract]
+        String GetData(Int32 value);
 
-		[OperationContract]
-		String IgnoredTransaction(String input);
+        [OperationContract]
+        String IgnoredTransaction(String input);
 
-		[OperationContract]
-		void ThrowException();
-	}
+        [OperationContract]
+        void ThrowException();
+    }
 }

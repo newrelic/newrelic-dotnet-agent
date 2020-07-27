@@ -20,14 +20,14 @@ namespace AspNetCoreMvcBasicRequestsApplication.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-	    public IActionResult Query(String data)
-	    {
-		    return View();
-	    }
+        public IActionResult Query(String data)
+        {
+            return View();
+        }
 
-	    public void ThrowException()
-	    {
-		    throw new Exception("ExceptionMessage");
-	    }
-	}
+        public void ThrowException()
+        {
+            throw new Exception("ExceptionMessage");
+        }
+    }
 }

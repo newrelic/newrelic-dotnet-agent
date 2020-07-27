@@ -1,7 +1,7 @@
 namespace NewRelic.Parsing.ConnectionString
 {
-	public interface IConnectionStringParser
-	{
-		ConnectionInfo GetConnectionInfo();
-	}
+    public interface IConnectionStringParser
+    {
+        ConnectionInfo GetConnectionInfo();
+    }
 }

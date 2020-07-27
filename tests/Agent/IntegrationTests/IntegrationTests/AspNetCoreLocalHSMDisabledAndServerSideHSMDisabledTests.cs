@@ -9,46 +9,46 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
-	{
-		private const String QueryStringParameterValue = @"my thing";
+    public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    {
+        private const String QueryStringParameterValue = @"my thing";
 
-		[NotNull]
-		private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+        [NotNull]
+        private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
-		public AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests([NotNull] RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions
-			(
-				setupConfiguration: () =>
-				{
-					var configPath = fixture.DestinationNewRelicConfigFilePath;
-					var configModifier = new NewRelicConfigModifier(configPath);
-					configModifier.ForceTransactionTraces();
+        public AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests([NotNull] RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ForceTransactionTraces();
 
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "requestParameters" }, "enabled", "true");
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "service" }, "ssl", "false");
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
-					CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "highSecurity" }, "enabled", "false");
-				},
-				exerciseApplication: () => _fixture.GetWithData(QueryStringParameterValue)
-			);
-			_fixture.Initialize();
-		}
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "log" }, "level", "debug");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "requestParameters" }, "enabled", "true");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "service" }, "ssl", "false");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "recordSql", "raw");
+                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "highSecurity" }, "enabled", "false");
+                },
+                exerciseApplication: () => _fixture.GetWithData(QueryStringParameterValue)
+            );
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			var expectedAttributes = new Dictionary<String, String>
-			{
-				{ "request.parameters.data", QueryStringParameterValue },
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedAttributes = new Dictionary<String, String>
+            {
+                { "request.parameters.data", QueryStringParameterValue },
+            };
 
-			var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
-			Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
-		}
-	}
+            var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+            Assertions.TransactionTraceHasAttributes(expectedAttributes, TransactionTraceAttributeType.Agent, transactionSample);
+        }
+    }
 }

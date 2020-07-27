@@ -1,64 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NewRelic.Agent.Configuration;
+using NewRelic.Agent.Core.Aggregators;
+using NewRelic.Agent.Core.CallStack;
+using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
+using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
-using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.CallStack;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
 
-	public class MethodSegmentData : AbstractSegmentData
-	{
-		[NotNull]
-		private readonly String _typeName;
-		[NotNull]
-		private readonly String _methodName;
+    public class MethodSegmentData : AbstractSegmentData
+    {
+        [NotNull]
+        private readonly String _typeName;
+        [NotNull]
+        private readonly String _methodName;
 
-		public String Type => _typeName;
-		public String Method => _methodName;
+        public String Type => _typeName;
+        public String Method => _methodName;
 
-		public MethodSegmentData(String typeName, String methodName)
-		{
-			_typeName = typeName;
-			_methodName = methodName;
-		}
+        public MethodSegmentData(String typeName, String methodName)
+        {
+            _typeName = typeName;
+            _methodName = methodName;
+        }
 
-		public override bool IsCombinableWith(AbstractSegmentData otherData)
-		{
-			var otherTypedSegment = otherData as MethodSegmentData;
-			if (otherTypedSegment == null)
-				return false;
+        public override bool IsCombinableWith(AbstractSegmentData otherData)
+        {
+            var otherTypedSegment = otherData as MethodSegmentData;
+            if (otherTypedSegment == null)
+                return false;
 
-			if (Type != otherTypedSegment.Type)
-				return false;
+            if (Type != otherTypedSegment.Type)
+                return false;
 
-			if (Method != otherTypedSegment.Method)
-				return false;
+            if (Method != otherTypedSegment.Method)
+                return false;
 
-			return true;
-		}
+            return true;
+        }
 
-		public override string GetTransactionTraceName()
-		{
-			return MetricNames.GetDotNetInvocation(Type, Method).ToString();
-		}
+        public override string GetTransactionTraceName()
+        {
+            return MetricNames.GetDotNetInvocation(Type, Method).ToString();
+        }
 
-		public override void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService)
-		{
-			var duration = segment.Duration.Value;
-			var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
-			MetricBuilder.TryBuildMethodSegmentMetric(Type, Method, duration, exclusiveDuration, txStats);
-		}
+        public override void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService)
+        {
+            var duration = segment.Duration.Value;
+            var exclusiveDuration = TimeSpanMath.Max(TimeSpan.Zero, duration - durationOfChildren);
+            MetricBuilder.TryBuildMethodSegmentMetric(Type, Method, duration, exclusiveDuration, txStats);
+        }
 
-		public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
-		{
-			return new TypedSegment<MethodSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
-		}
-	}
+        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+        {
+            return new TypedSegment<MethodSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
+        }
+    }
 }

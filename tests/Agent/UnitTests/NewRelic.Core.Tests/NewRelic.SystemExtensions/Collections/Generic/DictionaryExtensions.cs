@@ -6,200 +6,200 @@ using NUnit.Framework;
 
 namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 {
-	public class DictionaryExtensions
-	{
-		public class GetValueOrDefault
-		{
-			[Test]
-			public void when_no_default_provided_and_key_exists_then_value_from_dictionary_is_returned()
-				{
-					const string expectedKey = "foo";
-					const string expectedValue = "bar";
-					var dictionary = new Dictionary<String, String> {{expectedKey, expectedValue}};
+    public class DictionaryExtensions
+    {
+        public class GetValueOrDefault
+        {
+            [Test]
+            public void when_no_default_provided_and_key_exists_then_value_from_dictionary_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "bar";
+                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
 
-					var actualValue = dictionary.GetValueOrDefault(expectedKey);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-					Assert.AreEqual(expectedValue, actualValue);
-				}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_no_default_provided_for_reference_type_and_key_does_not_exist_then_null_is_returned()
-				{
-					const string expectedKey = "foo";
-					const string expectedValue = null;
-					var dictionary = new Dictionary<String, String>();
+            [Test]
+            public void when_no_default_provided_for_reference_type_and_key_does_not_exist_then_null_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = null;
+                var dictionary = new Dictionary<String, String>();
 
-					var actualValue = dictionary.GetValueOrDefault(expectedKey);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-					Assert.AreEqual(expectedValue, actualValue);
-				}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_no_default_provided_for_value_type_and_key_does_not_exist_then_0_is_returned()
-				{
-					const string expectedKey = "foo";
-					const Int32 expectedValue = 0;
-					var dictionary = new Dictionary<String, Int32>();
+            [Test]
+            public void when_no_default_provided_for_value_type_and_key_does_not_exist_then_0_is_returned()
+            {
+                const string expectedKey = "foo";
+                const Int32 expectedValue = 0;
+                var dictionary = new Dictionary<String, Int32>();
 
-					var actualValue = dictionary.GetValueOrDefault(expectedKey);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-					Assert.AreEqual(expectedValue, actualValue);
-				}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_default_provided_and_key_exists_then_value_from_dictionary_is_returned()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = "bar";
-				var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
+            [Test]
+            public void when_default_provided_and_key_exists_then_value_from_dictionary_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "bar";
+                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, "default");
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, "default");
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_default_provided_for_reference_type_and_key_does_not_exist_then_default_is_returned()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = "default";
-				var dictionary = new Dictionary<String, String>();
+            [Test]
+            public void when_default_provided_for_reference_type_and_key_does_not_exist_then_default_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "default";
+                var dictionary = new Dictionary<String, String>();
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_default_provided_for_value_type_and_key_does_not_exist_then_default_is_returned()
-			{
-				const string expectedKey = "foo";
-				const Int32 expectedValue = 123;
-				var dictionary = new Dictionary<String, Int32>();
+            [Test]
+            public void when_default_provided_for_value_type_and_key_does_not_exist_then_default_is_returned()
+            {
+                const string expectedKey = "foo";
+                const Int32 expectedValue = 123;
+                var dictionary = new Dictionary<String, Int32>();
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_default_function_provided_and_key_exists_then_value_from_dictionary_is_returned()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = "bar";
-				var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
+            [Test]
+            public void when_default_function_provided_and_key_exists_then_value_from_dictionary_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "bar";
+                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => "default");
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, () => "default");
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_default_function_provided_for_reference_type_and_key_does_not_exist_then_default_is_returned()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = "default";
-				var dictionary = new Dictionary<String, String>();
+            [Test]
+            public void when_default_function_provided_for_reference_type_and_key_does_not_exist_then_default_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "default";
+                var dictionary = new Dictionary<String, String>();
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_default_function_provided_for_value_type_and_key_does_not_exist_then_default_is_returned()
-			{
-				const string expectedKey = "foo";
-				const Int32 expectedValue = 123;
-				var dictionary = new Dictionary<String, Int32>();
+            [Test]
+            public void when_default_function_provided_for_value_type_and_key_does_not_exist_then_default_is_returned()
+            {
+                const string expectedKey = "foo";
+                const Int32 expectedValue = 123;
+                var dictionary = new Dictionary<String, Int32>();
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_dictionary_is_null_and_no_default_is_provided_then_null_is_returned()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = null;
-				var dictionary = null as IDictionary<String, String>;
+            [Test]
+            public void when_dictionary_is_null_and_no_default_is_provided_then_null_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = null;
+                var dictionary = null as IDictionary<String, String>;
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_dictionary_is_null_and_default_is_provided_then_default_is_returned()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = "default";
-				var dictionary = null as IDictionary<String, String>;
+            [Test]
+            public void when_dictionary_is_null_and_default_is_provided_then_default_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "default";
+                var dictionary = null as IDictionary<String, String>;
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_dictionary_is_null_and_default_function_is_provided_then_default_is_returned()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = "default";
-				var dictionary = null as IDictionary<String, String>;
+            [Test]
+            public void when_dictionary_is_null_and_default_function_is_provided_then_default_is_returned()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "default";
+                var dictionary = null as IDictionary<String, String>;
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_key_is_null_and_no_default_is_provided_then_null_is_returned()
-			{
-				const string expectedKey = null;
-				const string expectedValue = null;
-				var dictionary = new Dictionary<String, String>();
+            [Test]
+            public void when_key_is_null_and_no_default_is_provided_then_null_is_returned()
+            {
+                const string expectedKey = null;
+                const string expectedValue = null;
+                var dictionary = new Dictionary<String, String>();
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_key_is_null_and_default_is_provided_then_default_is_returned()
-			{
-				const string expectedKey = null;
-				const string expectedValue = "default";
-				var dictionary = new Dictionary<String, String>();
+            [Test]
+            public void when_key_is_null_and_default_is_provided_then_default_is_returned()
+            {
+                const string expectedKey = null;
+                const string expectedValue = "default";
+                var dictionary = new Dictionary<String, String>();
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_key_is_null_and_default_function_is_provided_then_default_is_returned()
-			{
-				const string expectedKey = null;
-				const string expectedValue = "default";
-				var dictionary = new Dictionary<String, String>();
+            [Test]
+            public void when_key_is_null_and_default_function_is_provided_then_default_is_returned()
+            {
+                const string expectedKey = null;
+                const string expectedValue = "default";
+                var dictionary = new Dictionary<String, String>();
 
-				var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
+                var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
-				Assert.AreEqual(expectedValue, actualValue);
-			}
+                Assert.AreEqual(expectedValue, actualValue);
+            }
 
-			[Test]
-			public void when_defaultEvaluator_is_null_then_ArgumentNullException_is_thrown()
-			{
-				const string expectedKey = "foo";
-				const string expectedValue = "bar";
-				var dictionary = new Dictionary<String, String> {{expectedKey, expectedValue}};
+            [Test]
+            public void when_defaultEvaluator_is_null_then_ArgumentNullException_is_thrown()
+            {
+                const string expectedKey = "foo";
+                const string expectedValue = "bar";
+                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
 
-				Assert.Throws<ArgumentNullException>(() => dictionary.GetValueOrDefault(expectedKey, null as Func<String>));
-			}
+                Assert.Throws<ArgumentNullException>(() => dictionary.GetValueOrDefault(expectedKey, null as Func<String>));
+            }
 
-		}
-	}
+        }
+    }
 }

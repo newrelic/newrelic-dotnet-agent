@@ -14,201 +14,201 @@ using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Metrics
 {
-	/// <summary>
-	/// Normalizes transaction names using rules sent from the RPM service.
-	/// </summary>
-	public class MetricNameService : ConfigurationBasedService, IMetricNameService
-	{
-		private static readonly TransactionMetricName NormalizedWebTransactionMetricName = new TransactionMetricName(MetricNames.WebTransactionPrefix, "Normalized/*");
-		private static readonly TransactionMetricName NormalizedOtherTransactionMetricName = new TransactionMetricName(MetricNames.OtherTransactionPrefix, "Normalized/*");
-	
-		[NotNull]
-		private readonly Utils.HashSet<String> _transactionNames = new Utils.HashSet<String>();
+    /// <summary>
+    /// Normalizes transaction names using rules sent from the RPM service.
+    /// </summary>
+    public class MetricNameService : ConfigurationBasedService, IMetricNameService
+    {
+        private static readonly TransactionMetricName NormalizedWebTransactionMetricName = new TransactionMetricName(MetricNames.WebTransactionPrefix, "Normalized/*");
+        private static readonly TransactionMetricName NormalizedOtherTransactionMetricName = new TransactionMetricName(MetricNames.OtherTransactionPrefix, "Normalized/*");
 
-		#region Public API
-		
-		public string NormalizeUrl(String url)
-		{
-			ITimer timer = new Timer();
-			try
-			{
-				url = StripParameters(url);
-				url = RenameUsingRegexRules(url, _configuration.UrlRegexRules);
+        [NotNull]
+        private readonly Utils.HashSet<String> _transactionNames = new Utils.HashSet<String>();
 
-				return url;
-			}
-			finally
-			{
-				timer.Stop();
-			}
-		}
+        #region Public API
 
-		public TimeSpan? TryGetApdex_t(String transactionName)
-		{
-			if (_configuration.WebTransactionsApdex.TryGetValue(transactionName, out double apdexT))
-			{
-				return TimeSpan.FromSeconds(Convert.ToSingle(apdexT));
-			}
-			return null;
-		}
+        public string NormalizeUrl(String url)
+        {
+            ITimer timer = new Timer();
+            try
+            {
+                url = StripParameters(url);
+                url = RenameUsingRegexRules(url, _configuration.UrlRegexRules);
 
-		public TransactionMetricName RenameTransaction(TransactionMetricName proposedTransactionName)
-		{
-			var shouldIgnore = false;
-			String newPrefixedTransactionName;
-			try
-			{
-				newPrefixedTransactionName = RenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules);
-				newPrefixedTransactionName = RenameUsingWhitelistRules(newPrefixedTransactionName, _configuration.TransactionNameWhitelistRules);
-			}
-			catch (IgnoreTransactionException ex)
-			{
-				Log.Debug(ex.Message);
-				shouldIgnore = true;
-				newPrefixedTransactionName = ex.IgnoredTransactionName;
-			}
+                return url;
+            }
+            finally
+            {
+                timer.Stop();
+            }
+        }
 
-			// Renaming rules are not allowed to change the first segment of a transaction name
-			var newTransactionName = GetTransactionMetricName(newPrefixedTransactionName, proposedTransactionName, shouldIgnore);
+        public TimeSpan? TryGetApdex_t(String transactionName)
+        {
+            if (_configuration.WebTransactionsApdex.TryGetValue(transactionName, out double apdexT))
+            {
+                return TimeSpan.FromSeconds(Convert.ToSingle(apdexT));
+            }
+            return null;
+        }
 
-			if (!IsMetricNameAllowed(newPrefixedTransactionName))
-				return proposedTransactionName.IsWebTransactionName ? NormalizedWebTransactionMetricName : NormalizedOtherTransactionMetricName;
+        public TransactionMetricName RenameTransaction(TransactionMetricName proposedTransactionName)
+        {
+            var shouldIgnore = false;
+            String newPrefixedTransactionName;
+            try
+            {
+                newPrefixedTransactionName = RenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules);
+                newPrefixedTransactionName = RenameUsingWhitelistRules(newPrefixedTransactionName, _configuration.TransactionNameWhitelistRules);
+            }
+            catch (IgnoreTransactionException ex)
+            {
+                Log.Debug(ex.Message);
+                shouldIgnore = true;
+                newPrefixedTransactionName = ex.IgnoredTransactionName;
+            }
 
-			return newTransactionName;
-		}
+            // Renaming rules are not allowed to change the first segment of a transaction name
+            var newTransactionName = GetTransactionMetricName(newPrefixedTransactionName, proposedTransactionName, shouldIgnore);
 
-		public String RenameMetric(String metricName)
-		{
-			if (metricName == null)
-				return null;
+            if (!IsMetricNameAllowed(newPrefixedTransactionName))
+                return proposedTransactionName.IsWebTransactionName ? NormalizedWebTransactionMetricName : NormalizedOtherTransactionMetricName;
 
-			try
-			{
-				return RenameUsingRegexRules(metricName, _configuration.MetricNameRegexRules);
-			}
-			catch (IgnoreTransactionException)
-			{
-				return null;
-			}
-		}
+            return newTransactionName;
+        }
 
-		#endregion Public API
+        public String RenameMetric(String metricName)
+        {
+            if (metricName == null)
+                return null;
 
-		#region Event Handlers
+            try
+            {
+                return RenameUsingRegexRules(metricName, _configuration.MetricNameRegexRules);
+            }
+            catch (IgnoreTransactionException)
+            {
+                return null;
+            }
+        }
 
-		protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
-		{
-			// It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
-			// If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
-		}
+        #endregion Public API
 
-		#endregion
+        #region Event Handlers
 
-		#region Helper methods
+        protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            // It is *CRITICAL* that this method never do anything more complicated than clearing data and starting and ending subscriptions.
+            // If this method ends up trying to send data synchronously (even indirectly via the EventBus or RequestBus) then the user's application will deadlock (!!!).
+        }
 
-		/// <summary>
-		/// Takes a proposed prefixed transaction name as a string (e.g. "WebTransaction/Foo/Bar"), as well as an original transaction metric name, and returns a new TransactionMetricName. The proposed prefixed name will be converted to a metric name and returned iff it starts with the same prefix as the original metric name; otherwise, the original metric name will be returned.
-		/// </summary>
-		private static TransactionMetricName GetTransactionMetricName([NotNull] String proposedPrefixedTransactionName, TransactionMetricName originalTransactionMetricName, Boolean shouldIgnore)
-		{
-			if (!proposedPrefixedTransactionName.StartsWith($"{originalTransactionMetricName.Prefix}{MetricNames.PathSeparator}"))
-				return new TransactionMetricName(originalTransactionMetricName.Prefix, originalTransactionMetricName.UnPrefixedName, shouldIgnore);
+        #endregion
 
-			var proposedUnprefixedTransactionName = proposedPrefixedTransactionName.Substring(originalTransactionMetricName.Prefix.Length + 1);
+        #region Helper methods
 
-			return new TransactionMetricName(originalTransactionMetricName.Prefix, proposedUnprefixedTransactionName, shouldIgnore);
-		}
+        /// <summary>
+        /// Takes a proposed prefixed transaction name as a string (e.g. "WebTransaction/Foo/Bar"), as well as an original transaction metric name, and returns a new TransactionMetricName. The proposed prefixed name will be converted to a metric name and returned iff it starts with the same prefix as the original metric name; otherwise, the original metric name will be returned.
+        /// </summary>
+        private static TransactionMetricName GetTransactionMetricName([NotNull] String proposedPrefixedTransactionName, TransactionMetricName originalTransactionMetricName, Boolean shouldIgnore)
+        {
+            if (!proposedPrefixedTransactionName.StartsWith($"{originalTransactionMetricName.Prefix}{MetricNames.PathSeparator}"))
+                return new TransactionMetricName(originalTransactionMetricName.Prefix, originalTransactionMetricName.UnPrefixedName, shouldIgnore);
 
-		[NotNull]
-		private static String StripParameters([NotNull] String url)
-		{
-			int index;
-			if ((index = url.IndexOf('?')) > 0)
-				return url.Substring(0, index);
+            var proposedUnprefixedTransactionName = proposedPrefixedTransactionName.Substring(originalTransactionMetricName.Prefix.Length + 1);
 
-			return url;
-		}
-		
-		[NotNull]
-		private static String RenameUsingRegexRules([NotNull] String input, [NotNull] IEnumerable<RegexRule> rules)
-		{
-			foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
-			{
-				var ruleResult = rule.ApplyTo(input);
-				if (!ruleResult.IsMatch)
-					continue;
+            return new TransactionMetricName(originalTransactionMetricName.Prefix, proposedUnprefixedTransactionName, shouldIgnore);
+        }
 
-				if (rule.Ignore)
-					throw new IgnoreTransactionException($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"", input);
+        [NotNull]
+        private static String StripParameters([NotNull] String url)
+        {
+            int index;
+            if ((index = url.IndexOf('?')) > 0)
+                return url.Substring(0, index);
 
-				if (ruleResult.Replacement == null)
-					throw new Exception("RuleResult matched but returned null replacement string");
+            return url;
+        }
 
-				input = ruleResult.Replacement;
+        [NotNull]
+        private static String RenameUsingRegexRules([NotNull] String input, [NotNull] IEnumerable<RegexRule> rules)
+        {
+            foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
+            {
+                var ruleResult = rule.ApplyTo(input);
+                if (!ruleResult.IsMatch)
+                    continue;
 
-				if (rule.TerminateChain)
-					break;
-			}
+                if (rule.Ignore)
+                    throw new IgnoreTransactionException($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"", input);
 
-			return input;
-		}
+                if (ruleResult.Replacement == null)
+                    throw new Exception("RuleResult matched but returned null replacement string");
 
-		[NotNull]
-		private static string RenameUsingWhitelistRules([NotNull] string metricName, [NotNull] IDictionary<string, IEnumerable<string>> whitelistRules)
-		{
-			if (!whitelistRules.Any())
-				return metricName;
+                input = ruleResult.Replacement;
 
-			var originalSegments = metricName.Split(MetricNames.PathSeparatorChar);
-			if (originalSegments.Count() < 3 || (originalSegments.Count() == 3 && originalSegments[2] == ""))
-				return metricName;
+                if (rule.TerminateChain)
+                    break;
+            }
 
-			var prefix = originalSegments[0] + MetricNames.PathSeparator + originalSegments[1];
-			var allowedSegments = whitelistRules.GetValueOrDefault(prefix);
-			if (allowedSegments == null)
-				return metricName;
+            return input;
+        }
 
-			var transformedSegments = originalSegments
-				.Skip(2)
-				.Select(segment => FilterSegment(segment, allowedSegments))
-				.Unless((previous, current) => previous == "*" && current == "*");
+        [NotNull]
+        private static string RenameUsingWhitelistRules([NotNull] string metricName, [NotNull] IDictionary<string, IEnumerable<string>> whitelistRules)
+        {
+            if (!whitelistRules.Any())
+                return metricName;
 
-			var allSegments = originalSegments.Take(2).Concat(transformedSegments);
-			return String.Join(MetricNames.PathSeparator, allSegments.ToArray());
-		}
+            var originalSegments = metricName.Split(MetricNames.PathSeparatorChar);
+            if (originalSegments.Count() < 3 || (originalSegments.Count() == 3 && originalSegments[2] == ""))
+                return metricName;
 
-		[CanBeNull]
-		private static String FilterSegment([CanBeNull] String segment, [NotNull] IEnumerable<String> allowedSegments)
-		{
-			if (allowedSegments.Contains(segment))
-				return segment;
+            var prefix = originalSegments[0] + MetricNames.PathSeparator + originalSegments[1];
+            var allowedSegments = whitelistRules.GetValueOrDefault(prefix);
+            if (allowedSegments == null)
+                return metricName;
 
-			return "*";
-		}
+            var transformedSegments = originalSegments
+                .Skip(2)
+                .Select(segment => FilterSegment(segment, allowedSegments))
+                .Unless((previous, current) => previous == "*" && current == "*");
 
-		/// <summary>
-		/// Checks if the given metric name is whitelisted according to the "black hole"
-		/// 
-		/// This logic is an implementation of the "black hole" rule.
-		/// </summary>
-		/// <param name="metricName"></param>
-		/// <returns>True if the name is on (or is added to) the whitelist, else false</returns>
-		private Boolean IsMetricNameAllowed(String metricName)
-		{
-			lock (_transactionNames)
-			{
-				// If metric name is already in whitelist, allow it through
-				if (_transactionNames.Contains(metricName))
-					return true;
+            var allSegments = originalSegments.Take(2).Concat(transformedSegments);
+            return String.Join(MetricNames.PathSeparator, allSegments.ToArray());
+        }
 
-				// Otherwise, add the name to the whitelist and then allow it through
-				_transactionNames.Add(metricName);
+        [CanBeNull]
+        private static String FilterSegment([CanBeNull] String segment, [NotNull] IEnumerable<String> allowedSegments)
+        {
+            if (allowedSegments.Contains(segment))
+                return segment;
 
-				return true;
-			}
-		}
+            return "*";
+        }
 
-		#endregion
-	}
+        /// <summary>
+        /// Checks if the given metric name is whitelisted according to the "black hole"
+        /// 
+        /// This logic is an implementation of the "black hole" rule.
+        /// </summary>
+        /// <param name="metricName"></param>
+        /// <returns>True if the name is on (or is added to) the whitelist, else false</returns>
+        private Boolean IsMetricNameAllowed(String metricName)
+        {
+            lock (_transactionNames)
+            {
+                // If metric name is already in whitelist, allow it through
+                if (_transactionNames.Contains(metricName))
+                    return true;
+
+                // Otherwise, add the name to the whitelist and then allow it through
+                _transactionNames.Add(metricName);
+
+                return true;
+            }
+        }
+
+        #endregion
+    }
 }
 

@@ -7,86 +7,86 @@ using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-	/// <summary>
-	/// A collection of disposable objects.  Items will be disposed on removal from this collection.
-	/// </summary>
-	public class DisposableCollection : IDisposable, ICollection<IDisposable>
-	{
-		[NotNull] private readonly ICollection<IDisposable> _disposables = new Collection<IDisposable>();
+    /// <summary>
+    /// A collection of disposable objects.  Items will be disposed on removal from this collection.
+    /// </summary>
+    public class DisposableCollection : IDisposable, ICollection<IDisposable>
+    {
+        [NotNull] private readonly ICollection<IDisposable> _disposables = new Collection<IDisposable>();
 
-		#region Implementation of IDisposable
+        #region Implementation of IDisposable
 
-		public void Dispose()
-		{
-			foreach (var disposable in _disposables)
-			{
-				Debug.Assert(disposable != null);
-				disposable.Dispose();
-			}
+        public void Dispose()
+        {
+            foreach (var disposable in _disposables)
+            {
+                Debug.Assert(disposable != null);
+                disposable.Dispose();
+            }
 
-			_disposables.Clear();
-		}
+            _disposables.Clear();
+        }
 
-		#endregion
+        #endregion
 
-		#region Implementation of IEnumerable
+        #region Implementation of IEnumerable
 
-		public IEnumerator<IDisposable> GetEnumerator()
-		{
-			return _disposables.GetEnumerator();
-		}
+        public IEnumerator<IDisposable> GetEnumerator()
+        {
+            return _disposables.GetEnumerator();
+        }
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
-		#endregion
+        #endregion
 
-		#region Implementation of ICollection<IDisposable>
+        #region Implementation of ICollection<IDisposable>
 
-		public void Add(IDisposable item)
-		{
-			if (item == null)
-				return;
+        public void Add(IDisposable item)
+        {
+            if (item == null)
+                return;
 
-			_disposables.Add(item);
-		}
+            _disposables.Add(item);
+        }
 
-		public void Clear()
-		{
-			Dispose();
-		}
+        public void Clear()
+        {
+            Dispose();
+        }
 
-		public bool Contains(IDisposable item)
-		{
-			if (item == null)
-				return false;
+        public bool Contains(IDisposable item)
+        {
+            if (item == null)
+                return false;
 
-			return _disposables.Contains(item);
-		}
+            return _disposables.Contains(item);
+        }
 
-		public void CopyTo(IDisposable[] array, int arrayIndex)
-		{
-			_disposables.CopyTo(array, arrayIndex);
-		}
+        public void CopyTo(IDisposable[] array, int arrayIndex)
+        {
+            _disposables.CopyTo(array, arrayIndex);
+        }
 
-		public bool Remove(IDisposable item)
-		{
-			if (item == null)
-				return false;
+        public bool Remove(IDisposable item)
+        {
+            if (item == null)
+                return false;
 
-			if (!_disposables.Contains(item))
-				return false;
+            if (!_disposables.Contains(item))
+                return false;
 
-			item.Dispose();
-			_disposables.Remove(item);
-			return true;
-		}
+            item.Dispose();
+            _disposables.Remove(item);
+            return true;
+        }
 
-		public int Count { get { return _disposables.Count; } }
-		public bool IsReadOnly { get { return _disposables.IsReadOnly; } }
+        public int Count { get { return _disposables.Count; } }
+        public bool IsReadOnly { get { return _disposables.IsReadOnly; } }
 
-		#endregion
-	}
+        #endregion
+    }
 }

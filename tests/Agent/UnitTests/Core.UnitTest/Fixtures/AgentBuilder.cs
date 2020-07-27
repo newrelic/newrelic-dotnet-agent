@@ -1,62 +1,63 @@
-﻿using NewRelic.Agent.Core.Config;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.Config;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.Fixtures
 {
-	public class AgentBuilder
-	{
-	   
-		public static AgentBuilder Agent() {
-			return new AgentBuilder();
-		}
+    public class AgentBuilder
+    {
 
-		//Builds from internal means
-		public static IAgent Build()
-		{
-			return Build(false);  
-		}
+        public static AgentBuilder Agent()
+        {
+            return new AgentBuilder();
+        }
 
-		//Builds from internal means
-		public static IAgent Build(bool shouldConnect)
-		{
-			return Mock.Create<IAgent>();
-		}
+        //Builds from internal means
+        public static IAgent Build()
+        {
+            return Build(false);
+        }
 
-		//Builds from external source
-		private static configuration NewAgentConfig()
-		{
-			return NewAgentConfig(false);
-		}
+        //Builds from internal means
+        public static IAgent Build(bool shouldConnect)
+        {
+            return Mock.Create<IAgent>();
+        }
 
-		private static configuration NewAgentConfig(bool connectStaging)
-		{
+        //Builds from external source
+        private static configuration NewAgentConfig()
+        {
+            return NewAgentConfig(false);
+        }
 
-			configuration config = new configuration();
-			config.rootAgentEnabled = true;
-			config.threadProfilingEnabled = false;
-			config.log = new configurationLog();
-			config.log.level = "DEBUG";
-			config.application = new configurationApplication();
-			config.application.name = new List<String> { "FryTests" };
-			config.service = new configurationService();
-			config.requestParameters = new configurationRequestParameters { enabled = false };
-			config.transactionTracer = new configurationTransactionTracer { recordSql = configurationTransactionTracerRecordSql.obfuscated };
+        private static configuration NewAgentConfig(bool connectStaging)
+        {
 
-			if (connectStaging)
-			{
-				config.service.host = "staging-collector.newrelic.com";
-				config.service.licenseKey = "b25fd3ca20fe323a9a7c4a092e48d62dc64cc61d";
-			}
-			else
-			{
-				config.service.licenseKey = "";
-			}
-			config.Initialize("<configuration/>", "AgentTestHardCoded");
-			return config;
-		}
+            configuration config = new configuration();
+            config.rootAgentEnabled = true;
+            config.threadProfilingEnabled = false;
+            config.log = new configurationLog();
+            config.log.level = "DEBUG";
+            config.application = new configurationApplication();
+            config.application.name = new List<String> { "FryTests" };
+            config.service = new configurationService();
+            config.requestParameters = new configurationRequestParameters { enabled = false };
+            config.transactionTracer = new configurationTransactionTracer { recordSql = configurationTransactionTracerRecordSql.obfuscated };
+
+            if (connectStaging)
+            {
+                config.service.host = "staging-collector.newrelic.com";
+                config.service.licenseKey = "b25fd3ca20fe323a9a7c4a092e48d62dc64cc61d";
+            }
+            else
+            {
+                config.service.licenseKey = "";
+            }
+            config.Initialize("<configuration/>", "AgentTestHardCoded");
+            return config;
+        }
 
 
-	}
+    }
 }

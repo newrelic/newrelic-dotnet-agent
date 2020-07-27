@@ -10,68 +10,68 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class OtherTransactionAsync : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
+    public class OtherTransactionAsync : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-		public OtherTransactionAsync([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions
-			(
-				setupConfiguration: () =>
-				{
-					var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-					configModifier.ForceTransactionTraces();
+        public OtherTransactionAsync([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
+                    configModifier.ForceTransactionTraces();
 
-					var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
+                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentation.xml";
 
-					CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomMethodBackgroundThread", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync", "MyCustomMetricName", 7);
-				},
-				exerciseApplication: () =>
-				{
-					_fixture.GetBackgroundThread();
-				}
-			);
-			_fixture.Initialize();
-		}
+                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomMethodBackgroundThread", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.OtherTransactionWrapperAsync", "MyCustomMetricName", 7);
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.GetBackgroundThread();
+                }
+            );
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			var expectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MyCustomMetricName", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", metricScope = "OtherTransaction/Custom/MyCustomMetricName", callCount = 1 }
-			};
-			
-			var expectedTransactionTraceSegments = new List<string>
-			{
-				@"MyCustomMetricName",
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Custom/MyCustomMetricName", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", metricScope = "OtherTransaction/Custom/MyCustomMetricName", callCount = 1 }
+            };
 
-			var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var expectedTransactionTraceSegments = new List<string>
+            {
+                @"MyCustomMetricName",
+            };
 
-			var transactionSample = _fixture.AgentLog
-				.GetTransactionSamples()
-				.FirstOrDefault(sample => sample.Path == @"OtherTransaction/Custom/MyCustomMetricName");
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-			var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
-				.FirstOrDefault();
+            var transactionSample = _fixture.AgentLog
+                .GetTransactionSamples()
+                .FirstOrDefault(sample => sample.Path == @"OtherTransaction/Custom/MyCustomMetricName");
 
-			NrAssert.Multiple(
-				() => Assert.NotNull(transactionSample),
-				() => Assert.NotNull(transactionEvent)
-				);
+            var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
+                .FirstOrDefault();
 
-			NrAssert.Multiple
-			(
-				() => Assertions.MetricsExist(expectedMetrics, metrics),
-				() => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
-			);
-		}
-	}
+            NrAssert.Multiple(
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionEvent)
+                );
+
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
+            );
+        }
+    }
 }

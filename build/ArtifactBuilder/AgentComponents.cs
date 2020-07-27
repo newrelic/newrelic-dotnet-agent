@@ -5,136 +5,136 @@ using System.Linq;
 
 namespace ArtifactBuilder
 {
-	public abstract class AgentComponents
-	{
-		public AgentComponents(string configuration, string platform, string sourcePath)
-		{
-			Configuration = configuration;
-			Platform = platform;
-			SourcePath = $@"{sourcePath}\src\Agent";
-		}
+    public abstract class AgentComponents
+    {
+        public AgentComponents(string configuration, string platform, string sourcePath)
+        {
+            Configuration = configuration;
+            Platform = platform;
+            SourcePath = $@"{sourcePath}\src\Agent";
+        }
 
-		public string Configuration { get; }
+        public string Configuration { get; }
 
-		public static AgentComponents GetAgentComponents(AgentType agentType, string configuration, string platform, string sourceDirectory)
-		{
-			AgentComponents agentComponents;
-			switch (agentType)
-			{
-				case AgentType.Framework:
-					agentComponents = new FrameworkAgentComponents(configuration, platform, sourceDirectory);
-					break;
-				default:
-					throw new Exception("Invalid AgentType");
-			}
-			agentComponents.CreateAgentComponents();
-			return agentComponents;
-		}
+        public static AgentComponents GetAgentComponents(AgentType agentType, string configuration, string platform, string sourceDirectory)
+        {
+            AgentComponents agentComponents;
+            switch (agentType)
+            {
+                case AgentType.Framework:
+                    agentComponents = new FrameworkAgentComponents(configuration, platform, sourceDirectory);
+                    break;
+                default:
+                    throw new Exception("Invalid AgentType");
+            }
+            agentComponents.CreateAgentComponents();
+            return agentComponents;
+        }
 
-		public string Platform { get; }
-		public string SourcePath { get; }
-		public List<string> ExtensionDirectoryComponents { get; set; }
-		public List<string> WrapperXmlFiles { get; set; }
-		public List<string> RootInstallDirectoryComponents { get; set; }
-		public string AgentApiDll;
-		public string LinuxProfiler;
-		public string ExtensionXsd;
-		public string NewRelicXsd;
-		public string NewRelicConfig;
+        public string Platform { get; }
+        public string SourcePath { get; }
+        public List<string> ExtensionDirectoryComponents { get; set; }
+        public List<string> WrapperXmlFiles { get; set; }
+        public List<string> RootInstallDirectoryComponents { get; set; }
+        public string AgentApiDll;
+        public string LinuxProfiler;
+        public string ExtensionXsd;
+        public string NewRelicXsd;
+        public string NewRelicConfig;
 
-		private List<string> AllComponents
-		{
-			get
-			{
-				var list = RootInstallDirectoryComponents
-					.Concat(ExtensionDirectoryComponents)
-					.Concat(WrapperXmlFiles)
-					.Append(ExtensionXsd)
-					.Append(AgentApiDll);
+        private List<string> AllComponents
+        {
+            get
+            {
+                var list = RootInstallDirectoryComponents
+                    .Concat(ExtensionDirectoryComponents)
+                    .Concat(WrapperXmlFiles)
+                    .Append(ExtensionXsd)
+                    .Append(AgentApiDll);
 
-				if (!string.IsNullOrEmpty(LinuxProfiler))
-				{
-					list = list.Append(LinuxProfiler);
-				}
+                if (!string.IsNullOrEmpty(LinuxProfiler))
+                {
+                    list = list.Append(LinuxProfiler);
+                }
 
-				return list.ToList();
-			}
-		}
-		
-		public string Version
-		{
-			get
-			{
-				try
-				{
-					return System.Diagnostics.FileVersionInfo.GetVersionInfo(AgentApiDll).FileVersion;
-				}
-				catch
-				{
-					return string.Empty;
-				}
-			}
-		}
+                return list.ToList();
+            }
+        }
 
-		protected abstract string SourceHomeBuilderPath { get; }
-		protected abstract List<string> IgnoredHomeBuilderFiles { get; }
-		protected abstract void CreateAgentComponents();
+        public string Version
+        {
+            get
+            {
+                try
+                {
+                    return System.Diagnostics.FileVersionInfo.GetVersionInfo(AgentApiDll).FileVersion;
+                }
+                catch
+                {
+                    return string.Empty;
+                }
+            }
+        }
 
-		public void CopyComponents(string destinationDirectory)
-		{
-			FileHelpers.CopyFile(RootInstallDirectoryComponents, destinationDirectory);
-			FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions");
-			FileHelpers.CopyFile(WrapperXmlFiles, $@"{destinationDirectory}\extensions");
-		}
+        protected abstract string SourceHomeBuilderPath { get; }
+        protected abstract List<string> IgnoredHomeBuilderFiles { get; }
+        protected abstract void CreateAgentComponents();
 
-		public void ValidateComponents()
-		{
-			CheckForMissingComponents();
-			CheckForMissingFilesInHomeBuilderDirectory();
-		}
+        public void CopyComponents(string destinationDirectory)
+        {
+            FileHelpers.CopyFile(RootInstallDirectoryComponents, destinationDirectory);
+            FileHelpers.CopyFile(ExtensionDirectoryComponents, $@"{destinationDirectory}\extensions");
+            FileHelpers.CopyFile(WrapperXmlFiles, $@"{destinationDirectory}\extensions");
+        }
 
-		private void LogAndThrow(string msg, IList<string> files)
-		{
-			if (files.Count > 0)
-			{
-				var sb = new System.Text.StringBuilder();
-				sb.AppendLine(msg);
-				sb.AppendLine();
-				foreach (var item in files)
-				{
-					sb.AppendLine(item);
-				}
-				throw new PackagingException(sb.ToString());
-			}
-		}
+        public void ValidateComponents()
+        {
+            CheckForMissingComponents();
+            CheckForMissingFilesInHomeBuilderDirectory();
+        }
 
-		private void CheckForMissingComponents()
-		{
-			var missingComponents = new List<string>();
+        private void LogAndThrow(string msg, IList<string> files)
+        {
+            if (files.Count > 0)
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine(msg);
+                sb.AppendLine();
+                foreach (var item in files)
+                {
+                    sb.AppendLine(item);
+                }
+                throw new PackagingException(sb.ToString());
+            }
+        }
 
-			foreach (var item in AllComponents)
-			{
-				if (!File.Exists(item)) missingComponents.Add(item);
-			}
+        private void CheckForMissingComponents()
+        {
+            var missingComponents = new List<string>();
 
-			LogAndThrow($@"Missing components - make sure you have built the agent for {Platform}-{Configuration}", missingComponents);
-		}
+            foreach (var item in AllComponents)
+            {
+                if (!File.Exists(item)) missingComponents.Add(item);
+            }
 
-		private void CheckForMissingFilesInHomeBuilderDirectory()
-		{
-			var missingComponents = new List<string>();
-			var homeBuilderFiles = Directory.EnumerateFiles(SourceHomeBuilderPath, "*.*", SearchOption.AllDirectories);
-			homeBuilderFiles = homeBuilderFiles.Where(x => !x.Contains(@"\Logs\"));
+            LogAndThrow($@"Missing components - make sure you have built the agent for {Platform}-{Configuration}", missingComponents);
+        }
 
-			foreach (var file in homeBuilderFiles)
-			{
-				if (!AllComponents.Contains(file) && !IgnoredHomeBuilderFiles.Contains(file))
-				{
-					missingComponents.Add(file);
-				}
-			}
+        private void CheckForMissingFilesInHomeBuilderDirectory()
+        {
+            var missingComponents = new List<string>();
+            var homeBuilderFiles = Directory.EnumerateFiles(SourceHomeBuilderPath, "*.*", SearchOption.AllDirectories);
+            homeBuilderFiles = homeBuilderFiles.Where(x => !x.Contains(@"\Logs\"));
 
-			LogAndThrow("Additional Files in Home Builder directory that are missing", missingComponents);
-		}
-	}
+            foreach (var file in homeBuilderFiles)
+            {
+                if (!AllComponents.Contains(file) && !IgnoredHomeBuilderFiles.Contains(file))
+                {
+                    missingComponents.Add(file);
+                }
+            }
+
+            LogAndThrow("Additional Files in Home Builder directory that are missing", missingComponents);
+        }
+    }
 }

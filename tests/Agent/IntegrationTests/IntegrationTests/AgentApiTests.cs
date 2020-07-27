@@ -10,60 +10,60 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class AgentApiTests : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
+    public class AgentApiTests : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
-		public AgentApiTests([NotNull] RemoteServiceFixtures.AgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions(
-				setupConfiguration: () =>
-				{
-					var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-					
-					CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<String, String>("autoStart", "false") });
-				});
-			_fixture.Initialize();
-		}
+        public AgentApiTests([NotNull] RemoteServiceFixtures.AgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions(
+                setupConfiguration: () =>
+                {
+                    var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
 
-		[Fact]
-		public void Test()
-		{
-			var expectedMetrics = new[]
-			{
-				new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
-			};
+                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<String, String>("autoStart", "false") });
+                });
+            _fixture.Initialize();
+        }
 
-			var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
-			{
-				{ "error.class", "System.Exception" },
-				{ "error.message", "Rawr!" },
-				{ "type", "TransactionError" }
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedMetrics = new[]
+            {
+                new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
+            };
 
-			var expectedErrorEventCustomAttributes = new Dictionary<String, String>
-			{
-				{"hey", "dude"},
-				{"faz", "baz"}
-			};
+            var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
+            {
+                { "error.class", "System.Exception" },
+                { "error.message", "Rawr!" },
+                { "type", "TransactionError" }
+            };
 
-			var actualMetrics = _fixture.AgentLog.GetMetrics();
-			var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-			var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var expectedErrorEventCustomAttributes = new Dictionary<String, String>
+            {
+                {"hey", "dude"},
+                {"faz", "baz"}
+            };
 
-			NrAssert.Multiple
-				(
-					() => Assertions.MetricsExist(expectedMetrics, actualMetrics),
-					() => Assert.NotNull(errorTrace),
-					() => Assert.Equal("100", errorEventPayload.Additions.ReservoirSize.ToString()),
-					() => Assert.Equal("2", errorEventPayload.Additions.EventsSeen.ToString()),
-					() => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[0]),
-					() => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[1]),
-					() => Assertions.ErrorEventHasAttributes(expectedErrorEventCustomAttributes, EventAttributeType.User, errorEventPayload.Events[1])
-				);
-		}
-	}
+            var actualMetrics = _fixture.AgentLog.GetMetrics();
+            var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
+            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+
+            NrAssert.Multiple
+                (
+                    () => Assertions.MetricsExist(expectedMetrics, actualMetrics),
+                    () => Assert.NotNull(errorTrace),
+                    () => Assert.Equal("100", errorEventPayload.Additions.ReservoirSize.ToString()),
+                    () => Assert.Equal("2", errorEventPayload.Additions.EventsSeen.ToString()),
+                    () => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[0]),
+                    () => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEventPayload.Events[1]),
+                    () => Assertions.ErrorEventHasAttributes(expectedErrorEventCustomAttributes, EventAttributeType.User, errorEventPayload.Events[1])
+                );
+        }
+    }
 }

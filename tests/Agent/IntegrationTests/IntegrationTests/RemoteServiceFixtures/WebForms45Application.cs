@@ -8,38 +8,38 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
-	public class WebForms45Application : RemoteApplicationFixture
-	{
-		public WebForms45Application() : base(new RemoteWebApplication("WebForms45Application", ApplicationType.Bounded))
-		{
-		}
+    public class WebForms45Application : RemoteApplicationFixture
+    {
+        public WebForms45Application() : base(new RemoteWebApplication("WebForms45Application", ApplicationType.Bounded))
+        {
+        }
 
-		public void Get()
-		{
-			var address = $"http://{DestinationServerName}:{Port}/Default.aspx";
-			var result = new WebClient().DownloadString(address);
+        public void Get()
+        {
+            var address = $"http://{DestinationServerName}:{Port}/Default.aspx";
+            var result = new WebClient().DownloadString(address);
 
-			Assert.NotNull(result);
-		}
+            Assert.NotNull(result);
+        }
 
-		public void GetWithQueryString([NotNull] IEnumerable<KeyValuePair<String, String>> parameters, Boolean expectException)
-		{
-			var parametersAsStrings = parameters.Select(param => $"{param.Key}={param.Value}");
-			var parametersAsString = String.Join("&", parametersAsStrings);
+        public void GetWithQueryString([NotNull] IEnumerable<KeyValuePair<String, String>> parameters, Boolean expectException)
+        {
+            var parametersAsStrings = parameters.Select(param => $"{param.Key}={param.Value}");
+            var parametersAsString = String.Join("&", parametersAsStrings);
             var address = $"http://{DestinationServerName}:{Port}/Default?{parametersAsString}";
 
-			var exceptionOccurred = false;
-			try
-			{
-				var result = new WebClient().DownloadString(address);
-				Assert.NotNull(result);
-			}
-			catch
-			{
-				exceptionOccurred = true;
-			}
+            var exceptionOccurred = false;
+            try
+            {
+                var result = new WebClient().DownloadString(address);
+                Assert.NotNull(result);
+            }
+            catch
+            {
+                exceptionOccurred = true;
+            }
 
-			Assert.Equal(expectException, exceptionOccurred);
-		}
-	}
+            Assert.Equal(expectException, exceptionOccurred);
+        }
+    }
 }

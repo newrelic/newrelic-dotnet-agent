@@ -1,9 +1,9 @@
 ﻿namespace OpenRastaSite.Resources
 {
-	public class Basket
-	{
-		public string Title { get; set; }
+    public class Basket
+    {
+        public string Title { get; set; }
 
-	}
+    }
 
 }

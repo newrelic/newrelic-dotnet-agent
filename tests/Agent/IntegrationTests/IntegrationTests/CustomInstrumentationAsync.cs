@@ -9,78 +9,78 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class CustomInstrumentationAsync : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
+    public class CustomInstrumentationAsync : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-		public CustomInstrumentationAsync([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions
-			(
-				setupConfiguration: () =>
-				{
-					var configPath = fixture.DestinationNewRelicConfigFilePath;
-					var configModifier = new NewRelicConfigModifier(configPath);
-					configModifier.ForceTransactionTraces();
-					
-					var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentationAsync.xml";
+        public CustomInstrumentationAsync([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ForceTransactionTraces();
 
-					CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomMethodDefaultWrapperAsync", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "MyCustomMetricName", 7);
-					CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomSegmentTransactionSegmentWrapper", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.CustomSegmentWrapperAsync");
-					CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomSegmentAlternateParameterNamingTheSegment", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.CustomSegmentWrapperAsync");
-				},
-				exerciseApplication: () =>
-				{
-					_fixture.GetCustomInstrumentationAsync();
-				}
-			);
-			_fixture.Initialize();
-		}
+                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\CustomInstrumentationAsync.xml";
 
-		[Fact]
-		public void Test()
-		{
-			var expectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", callCount = 1 },
+                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomMethodDefaultWrapperAsync", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "MyCustomMetricName", 7);
+                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomSegmentTransactionSegmentWrapper", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.CustomSegmentWrapperAsync");
+                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "BasicMvcApplication", "BasicMvcApplication.Controllers.CustomInstrumentationAsyncController", "CustomSegmentAlternateParameterNamingTheSegment", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.CustomSegmentWrapperAsync");
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.GetCustomInstrumentationAsync();
+                }
+            );
+            _fixture.Initialize();
+        }
 
-				// Scoped
-				new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 }
-			};
+        [Fact]
+        public void Test()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/MyCustomMetricName", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", callCount = 1 },
 
-			var expectedTransactionTraceSegments = new List<string>
-			{
-				@"MyCustomMetricName",
-				@"AsyncCustomSegmentName",
-				@"AsyncCustomSegmentNameAlternate"
-			};
+                // Scoped
+                new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentName", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Custom/AsyncCustomSegmentNameAlternate", metricScope = "WebTransaction/Custom/MyCustomMetricName", callCount = 1 }
+            };
 
-			var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var expectedTransactionTraceSegments = new List<string>
+            {
+                @"MyCustomMetricName",
+                @"AsyncCustomSegmentName",
+                @"AsyncCustomSegmentNameAlternate"
+            };
 
-			var transactionSample = _fixture.AgentLog
-				.GetTransactionSamples()
-				.FirstOrDefault(sample => sample.Path == @"WebTransaction/Custom/MyCustomMetricName");
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-			var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
-				.FirstOrDefault();
+            var transactionSample = _fixture.AgentLog
+                .GetTransactionSamples()
+                .FirstOrDefault(sample => sample.Path == @"WebTransaction/Custom/MyCustomMetricName");
 
-			NrAssert.Multiple(
-				() => Assert.NotNull(transactionSample),
-				() => Assert.NotNull(transactionEvent)
-				);
+            var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
+                .FirstOrDefault();
 
-			NrAssert.Multiple
-			(
-				() => Assertions.MetricsExist(expectedMetrics, metrics),
-				() => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
-			);
-		}
-	}
+            NrAssert.Multiple(
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionEvent)
+                );
+
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample)
+            );
+        }
+    }
 }

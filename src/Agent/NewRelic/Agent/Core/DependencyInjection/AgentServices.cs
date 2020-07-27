@@ -36,128 +36,128 @@ using NewRelic.SystemInterfaces.Web;
 // ReSharper disable RedundantTypeArgumentsOfMethod
 namespace NewRelic.Agent.Core.DependencyInjection
 {
-	public static class AgentServices
-	{
-		[NotNull]
-		public static IContainer GetContainer()
-		{
+    public static class AgentServices
+    {
+        [NotNull]
+        public static IContainer GetContainer()
+        {
 #if NET35
-			return new WindsorContainer();
+            return new WindsorContainer();
 #else
-			return new CoreContainer();
+            return new CoreContainer();
 #endif
-		}
+        }
 
-		/// <summary>
-		/// Registers all of the services needed for the agent to run.
-		/// </summary>
-		/// <param name="container"></param>
-		public static void RegisterServices([NotNull] IContainer container)
-		{
-			// we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
-			container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
-			container.Register<ICallStackManagerFactory, ResolvedCallStackManagerFactory>();
+        /// <summary>
+        /// Registers all of the services needed for the agent to run.
+        /// </summary>
+        /// <param name="container"></param>
+        public static void RegisterServices([NotNull] IContainer container)
+        {
+            // we register this factory instead of just loading the storage contexts here because deferring the logic gives us a logger
+            container.RegisterFactory<IEnumerable<IContextStorageFactory>>(ExtensionsLoader.LoadContextStorageFactories);
+            container.Register<ICallStackManagerFactory, ResolvedCallStackManagerFactory>();
 
-			// IWrapper map
-			container.RegisterFactory<IEnumerable<IWrapper>>(() => ExtensionsLoader.LoadWrappers());
-			container.Register<IWrapperMap, WrapperMap>();
+            // IWrapper map
+            container.RegisterFactory<IEnumerable<IWrapper>>(() => ExtensionsLoader.LoadWrappers());
+            container.Register<IWrapperMap, WrapperMap>();
 
-			// Other
-			container.Register<ICpuSampleTransformer, CpuSampleTransformer>();
-			container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
-			container.Register<IEnvironment, SystemInterfaces.Environment>();
-			container.Register<IAgentWrapperApi, AgentWrapperApi>();
-			container.Register<CpuSampler, CpuSampler>();
-			container.Register<MemorySampler, MemorySampler>();
-			container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
-			container.Register<IProcessStatic, ProcessStatic>();
-			container.Register<IDnsStatic, DnsStatic>();
-			container.Register<IHttpRuntimeStatic, HttpRuntimeStatic>();
-			container.Register<IConfigurationManagerStatic, ConfigurationManagerStatic>();
-			container.Register<ISerializer, JsonSerializer>();
-			container.Register<ICollectorWireFactory, HttpCollectorWireFactory>();
-			container.Register<Environment, Environment>();
-			container.Register<IConnectionHandler, ConnectionHandler>();
-			container.Register<IConnectionManager, ConnectionManager>();
-			container.Register<IDataTransportService, DataTransportService>();
-			container.Register<IScheduler, Scheduler>();
-			container.Register<ISystemInfo, SystemInfo>();
-			container.Register<ITimerFactory, TimerFactory>();
-			container.Register<IDateTimeStatic, DateTimeStatic>();
-			container.Register<IMetricAggregator, MetricAggregator>();
-			container.Register<IAllMetricStatsCollection, MetricWireModel > ();
-			container.Register<IAllMetricStatsCollection, TransactionMetricStatsCollection > ();
-			container.Register<Func<MetricWireModel, MetricWireModel, MetricWireModel>>(MetricWireModel.Merge);
-			container.Register<ITransactionTraceAggregator, TransactionTraceAggregator>();
-			container.Register<ITransactionEventAggregator, TransactionEventAggregator>();
-			container.Register<ISqlTraceAggregator, SqlTraceAggregator>();
-			container.Register<IErrorTraceAggregator, ErrorTraceAggregator>();
-			container.Register<IErrorEventAggregator, ErrorEventAggregator>();
-			container.Register<ICustomEventAggregator, CustomEventAggregator>();
-			container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
-			container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
+            // Other
+            container.Register<ICpuSampleTransformer, CpuSampleTransformer>();
+            container.Register<IMemorySampleTransformer, MemorySampleTransformer>();
+            container.Register<IEnvironment, SystemInterfaces.Environment>();
+            container.Register<IAgentWrapperApi, AgentWrapperApi>();
+            container.Register<CpuSampler, CpuSampler>();
+            container.Register<MemorySampler, MemorySampler>();
+            container.Register<IBrowserMonitoringPrereqChecker, BrowserMonitoringPrereqChecker>();
+            container.Register<IProcessStatic, ProcessStatic>();
+            container.Register<IDnsStatic, DnsStatic>();
+            container.Register<IHttpRuntimeStatic, HttpRuntimeStatic>();
+            container.Register<IConfigurationManagerStatic, ConfigurationManagerStatic>();
+            container.Register<ISerializer, JsonSerializer>();
+            container.Register<ICollectorWireFactory, HttpCollectorWireFactory>();
+            container.Register<Environment, Environment>();
+            container.Register<IConnectionHandler, ConnectionHandler>();
+            container.Register<IConnectionManager, ConnectionManager>();
+            container.Register<IDataTransportService, DataTransportService>();
+            container.Register<IScheduler, Scheduler>();
+            container.Register<ISystemInfo, SystemInfo>();
+            container.Register<ITimerFactory, TimerFactory>();
+            container.Register<IDateTimeStatic, DateTimeStatic>();
+            container.Register<IMetricAggregator, MetricAggregator>();
+            container.Register<IAllMetricStatsCollection, MetricWireModel>();
+            container.Register<IAllMetricStatsCollection, TransactionMetricStatsCollection>();
+            container.Register<Func<MetricWireModel, MetricWireModel, MetricWireModel>>(MetricWireModel.Merge);
+            container.Register<ITransactionTraceAggregator, TransactionTraceAggregator>();
+            container.Register<ITransactionEventAggregator, TransactionEventAggregator>();
+            container.Register<ISqlTraceAggregator, SqlTraceAggregator>();
+            container.Register<IErrorTraceAggregator, ErrorTraceAggregator>();
+            container.Register<IErrorEventAggregator, ErrorEventAggregator>();
+            container.Register<ICustomEventAggregator, CustomEventAggregator>();
+            container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
+            container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();
 #if NET35
-			container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
+            container.RegisterFactory<IEnumerable<IOutOfBandMetricSource>>(container.ResolveAll<IOutOfBandMetricSource>);
 #endif
-			container.Register<IThreadPoolStatic, ThreadPoolStatic>();
-			container.Register<ITransactionTransformer, TransactionTransformer>();
-			container.Register<ICustomEventTransformer, CustomEventTransformer>();
-			container.Register<ICustomErrorDataTransformer, CustomErrorDataTransformer>();
-			container.Register<ISegmentTreeMaker, SegmentTreeMaker>();
-			container.Register<ITransactionMetricNameMaker, TransactionMetricNameMaker>();
-			container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
-			container.Register<ITransactionEventMaker, TransactionEventMaker>();
-			container.Register<ICallStackManager, CallStackManager>();
+            container.Register<IThreadPoolStatic, ThreadPoolStatic>();
+            container.Register<ITransactionTransformer, TransactionTransformer>();
+            container.Register<ICustomEventTransformer, CustomEventTransformer>();
+            container.Register<ICustomErrorDataTransformer, CustomErrorDataTransformer>();
+            container.Register<ISegmentTreeMaker, SegmentTreeMaker>();
+            container.Register<ITransactionMetricNameMaker, TransactionMetricNameMaker>();
+            container.Register<ITransactionTraceMaker, TransactionTraceMaker>();
+            container.Register<ITransactionEventMaker, TransactionEventMaker>();
+            container.Register<ICallStackManager, CallStackManager>();
 
-			var transactionCollectors = new List<ITransactionCollector> {
-				new SlowestTransactionCollector(),
-				new SyntheticsTransactionCollector(),
-				new KeyTransactionCollector() };
-			container.Register<ITransactionCollector, SlowestTransactionCollector>();
-			container.Register<ITransactionCollector, SyntheticsTransactionCollector>();
-			container.Register<ITransactionCollector, KeyTransactionCollector>();
-			container.Register<IEnumerable<ITransactionCollector>>(transactionCollectors);
+            var transactionCollectors = new List<ITransactionCollector> {
+                new SlowestTransactionCollector(),
+                new SyntheticsTransactionCollector(),
+                new KeyTransactionCollector() };
+            container.Register<ITransactionCollector, SlowestTransactionCollector>();
+            container.Register<ITransactionCollector, SyntheticsTransactionCollector>();
+            container.Register<ITransactionCollector, KeyTransactionCollector>();
+            container.Register<IEnumerable<ITransactionCollector>>(transactionCollectors);
 
-			container.Register<ITransactionAttributeMaker, TransactionAttributeMaker>();
-			container.Register<IErrorTraceMaker, ErrorTraceMaker>();
-			container.Register<IErrorEventMaker, ErrorEventMaker>();
-			container.Register<ICatHeaderHandler, CatHeaderHandler>();
-			container.Register<ISyntheticsHeaderHandler, SyntheticsHeaderHandler>();
-			container.Register<IPathHashMaker, PathHashMaker>();
-			container.Register<ITransactionFinalizer, TransactionFinalizer>();
-			container.Register<IBrowserMonitoringScriptMaker, BrowserMonitoringScriptMaker>();
-			container.Register<ISqlTraceMaker, SqlTraceMaker>();
-			container.Register<IAgentApi, AgentApiImplementation>();
-			container.Register<IDefaultWrapper, DefaultWrapper>();
-			container.Register<INoOpWrapper, NoOpWrapper>();
+            container.Register<ITransactionAttributeMaker, TransactionAttributeMaker>();
+            container.Register<IErrorTraceMaker, ErrorTraceMaker>();
+            container.Register<IErrorEventMaker, ErrorEventMaker>();
+            container.Register<ICatHeaderHandler, CatHeaderHandler>();
+            container.Register<ISyntheticsHeaderHandler, SyntheticsHeaderHandler>();
+            container.Register<IPathHashMaker, PathHashMaker>();
+            container.Register<ITransactionFinalizer, TransactionFinalizer>();
+            container.Register<IBrowserMonitoringScriptMaker, BrowserMonitoringScriptMaker>();
+            container.Register<ISqlTraceMaker, SqlTraceMaker>();
+            container.Register<IAgentApi, AgentApiImplementation>();
+            container.Register<IDefaultWrapper, DefaultWrapper>();
+            container.Register<INoOpWrapper, NoOpWrapper>();
 
-			container.Register<AssemblyResolutionService, AssemblyResolutionService>();
-			container.Register<IConfigurationService, ConfigurationService>();
-			container.Register<IMetricNameService, MetricNameService>();
-			container.Register<IWrapperService, WrapperService>();
-			container.Register<ILabelsService, LabelsService>();
-			
-			container.Register<ITransactionService, TransactionService>();
-			container.Register<IAttributeService, AttributeService>();
-			container.Register<DatabaseService, DatabaseService>();
-			container.Register<CommandService, CommandService>();
-			container.Register<ConfigurationTracker, ConfigurationTracker>();
-			container.Register<IDatabaseService, DatabaseService>();
+            container.Register<AssemblyResolutionService, AssemblyResolutionService>();
+            container.Register<IConfigurationService, ConfigurationService>();
+            container.Register<IMetricNameService, MetricNameService>();
+            container.Register<IWrapperService, WrapperService>();
+            container.Register<ILabelsService, LabelsService>();
 
-			container.Build();
-		}
+            container.Register<ITransactionService, TransactionService>();
+            container.Register<IAttributeService, AttributeService>();
+            container.Register<DatabaseService, DatabaseService>();
+            container.Register<CommandService, CommandService>();
+            container.Register<ConfigurationTracker, ConfigurationTracker>();
+            container.Register<IDatabaseService, DatabaseService>();
 
-		/// <summary>
-		/// Starts all of the services needed by resolving them.
-		/// </summary>
-		public static void StartServices([NotNull] IContainer container)
-		{
-			container.Resolve<AssemblyResolutionService>();
-			container.Resolve<ITransactionFinalizer>();
-			container.Resolve<IAgentHealthReporter>();
-			container.Resolve<CpuSampler>();
-			container.Resolve<MemorySampler>();
-			container.Resolve<ConfigurationTracker>();
-		}
-	}
+            container.Build();
+        }
+
+        /// <summary>
+        /// Starts all of the services needed by resolving them.
+        /// </summary>
+        public static void StartServices([NotNull] IContainer container)
+        {
+            container.Resolve<AssemblyResolutionService>();
+            container.Resolve<ITransactionFinalizer>();
+            container.Resolve<IAgentHealthReporter>();
+            container.Resolve<CpuSampler>();
+            container.Resolve<MemorySampler>();
+            container.Resolve<ConfigurationTracker>();
+        }
+    }
 }

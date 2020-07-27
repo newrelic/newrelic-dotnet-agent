@@ -4,32 +4,32 @@ using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 {
-	[TestFixture]
-	public class CrossApplicationRequestDataTests
-	{
-		[Test]
-		public void SerializesCorrectly()
-		{
-			var data = new CrossApplicationRequestData("guid", true, "tripId", "pathHash");
+    [TestFixture]
+    public class CrossApplicationRequestDataTests
+    {
+        [Test]
+        public void SerializesCorrectly()
+        {
+            var data = new CrossApplicationRequestData("guid", true, "tripId", "pathHash");
 
-			var serialized = JsonConvert.SerializeObject(data);
+            var serialized = JsonConvert.SerializeObject(data);
 
-			Assert.AreEqual("[\"guid\",true,\"tripId\",\"pathHash\"]", serialized);
-		}
+            Assert.AreEqual("[\"guid\",true,\"tripId\",\"pathHash\"]", serialized);
+        }
 
-		[Test]
-		public void DeserializesCorrectly()
-		{
-			var json = "[\"guid\",true,\"tripId\",\"pathHash\"]";
-			var deserialized = JsonConvert.DeserializeObject<CrossApplicationRequestData>(json);
+        [Test]
+        public void DeserializesCorrectly()
+        {
+            var json = "[\"guid\",true,\"tripId\",\"pathHash\"]";
+            var deserialized = JsonConvert.DeserializeObject<CrossApplicationRequestData>(json);
 
-			Assert.NotNull(deserialized);
-			NrAssert.Multiple(
-				() => Assert.AreEqual("guid", deserialized.TransactionGuid),
-				() => Assert.AreEqual(true, deserialized.Unused),
-				() => Assert.AreEqual("tripId", deserialized.TripId),
-				() => Assert.AreEqual("pathHash", deserialized.PathHash)
-				);
-		}
-	}
+            Assert.NotNull(deserialized);
+            NrAssert.Multiple(
+                () => Assert.AreEqual("guid", deserialized.TransactionGuid),
+                () => Assert.AreEqual(true, deserialized.Unused),
+                () => Assert.AreEqual("tripId", deserialized.TripId),
+                () => Assert.AreEqual("pathHash", deserialized.PathHash)
+                );
+        }
+    }
 }

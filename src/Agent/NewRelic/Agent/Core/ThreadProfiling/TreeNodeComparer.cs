@@ -2,36 +2,36 @@
 
 namespace NewRelic.Agent.Core.ThreadProfiling
 {
-	public class ProfileNodeComparer : IComparer
-	{
-		public int Compare(object x, object y)
-		{
-			int result = 0;
+    public class ProfileNodeComparer : IComparer
+    {
+        public int Compare(object x, object y)
+        {
+            int result = 0;
 
-			ProfileNode left = x as ProfileNode;
-			ProfileNode right = y as ProfileNode;
+            ProfileNode left = x as ProfileNode;
+            ProfileNode right = y as ProfileNode;
 
-			if (left.RunnableCount < right.RunnableCount)
-			{
-				result = 1;
-			}
-			else if (left.RunnableCount > right.RunnableCount)
-			{
-				result = -1;
-			}
-			else
-			{
-				if (left.Depth > right.Depth)
-				{
-					result = 1;
-				}
-				else if (left.Depth < right.Depth)
-				{
-					result = -1;
-				}
-			}
+            if (left.RunnableCount < right.RunnableCount)
+            {
+                result = 1;
+            }
+            else if (left.RunnableCount > right.RunnableCount)
+            {
+                result = -1;
+            }
+            else
+            {
+                if (left.Depth > right.Depth)
+                {
+                    result = 1;
+                }
+                else if (left.Depth < right.Depth)
+                {
+                    result = -1;
+                }
+            }
 
-			return result;
-		}
-	}
+            return result;
+        }
+    }
 }

@@ -10,127 +10,127 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
-	public class BasicMvcApplication : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
-	{
-		[NotNull]
-		private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
+    public class BasicMvcApplication : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    {
+        [NotNull]
+        private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-		public BasicMvcApplication([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
-		{
-			_fixture = fixture;
-			_fixture.TestLogger = output;
-			_fixture.Actions
-			(
-				setupConfiguration: () =>
-				{
-					var configPath = fixture.DestinationNewRelicConfigFilePath;
-					var configModifier = new NewRelicConfigModifier(configPath);
-					configModifier.ForceTransactionTraces();
-				},
-				exerciseApplication: () =>
-				{
-					_fixture.Get();
-				}
-			);
-			_fixture.Initialize();
-		}
+        public BasicMvcApplication([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        {
+            _fixture = fixture;
+            _fixture.TestLogger = output;
+            _fixture.Actions
+            (
+                setupConfiguration: () =>
+                {
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ForceTransactionTraces();
+                },
+                exerciseApplication: () =>
+                {
+                    _fixture.Get();
+                }
+            );
+            _fixture.Initialize();
+        }
 
-		[Fact]
-		public void Test()
-		{
-			var expectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-			};
-			var unexpectedMetrics = new List<Assertions.ExpectedMetric>
-			{
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Integrated Pipeline" },
-				new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Default/Ignored" },
-				new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Normalized/*" },
-				new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
+        [Fact]
+        public void Test()
+        {
+            var expectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+            };
+            var unexpectedMetrics = new List<Assertions.ExpectedMetric>
+            {
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Integrated Pipeline" },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/Default/Ignored" },
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Normalized/*" },
+                new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
 
-				// The .NET agent does not have the information needed to generate this metric
-				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
-				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-			};
+                // The .NET agent does not have the information needed to generate this metric
+                new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+            };
 
-			var expectedTransactionTraceSegments = new List<String>
-			{
-				@"AuthenticateRequest",
-				@"AuthorizeRequest",
-				@"ResolveRequestCache",
-				@"MapRequestHandler",
-				@"AcquireRequestState",
-				@"ExecuteRequestHandler",
-				@"DotNet/DefaultController/Index",
-				@"ReleaseRequestState",
-				@"UpdateRequestCache",
-				@"EndRequest",
-			};
-			var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
-			{
-				{ "response.status", "200" }
-			};
-			var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<String, String>
-			{
-				{"type", "Transaction"}
-			};
-			var expectedTransactionEventIntrinsicAttributes2 = new List<String>
-			{
-				"timestamp",
-				"duration",
-				"webDuration",
-				"queueDuration",
-				"totalTime"
-			};
-			var expectedTransactionEventAgentAttributes = new Dictionary<String, String>
-			{
-				{ "response.status", "200"}
-			};
+            var expectedTransactionTraceSegments = new List<String>
+            {
+                @"AuthenticateRequest",
+                @"AuthorizeRequest",
+                @"ResolveRequestCache",
+                @"MapRequestHandler",
+                @"AcquireRequestState",
+                @"ExecuteRequestHandler",
+                @"DotNet/DefaultController/Index",
+                @"ReleaseRequestState",
+                @"UpdateRequestCache",
+                @"EndRequest",
+            };
+            var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
+            {
+                { "response.status", "200" }
+            };
+            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<String, String>
+            {
+                {"type", "Transaction"}
+            };
+            var expectedTransactionEventIntrinsicAttributes2 = new List<String>
+            {
+                "timestamp",
+                "duration",
+                "webDuration",
+                "queueDuration",
+                "totalTime"
+            };
+            var expectedTransactionEventAgentAttributes = new Dictionary<String, String>
+            {
+                { "response.status", "200"}
+            };
 
-			var metrics = _fixture.AgentLog.GetMetrics().ToList();
+            var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
-			var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-				.Where(sample => sample.Path == @"WebTransaction/MVC/DefaultController/Index")
-				.FirstOrDefault();
-			var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
-				.FirstOrDefault();
+            var transactionSample = _fixture.AgentLog.GetTransactionSamples()
+                .Where(sample => sample.Path == @"WebTransaction/MVC/DefaultController/Index")
+                .FirstOrDefault();
+            var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
+                .FirstOrDefault();
 
-			NrAssert.Multiple(
-				() => Assert.NotNull(transactionSample),
-				() => Assert.NotNull(transactionEvent),
-				() => Assert.NotNull(_fixture.ResponseBody)
-				);
+            NrAssert.Multiple(
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionEvent),
+                () => Assert.NotNull(_fixture.ResponseBody)
+                );
 
-			NrAssert.Multiple
-			(
-				() => Assertions.MetricsExist(expectedMetrics, metrics),
-				() => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-				() => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
-				() => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAgentAttributes, TransactionTraceAttributeType.Agent, transactionSample),
-				() => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, transactionEvent),
-				() => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvent),
-				() => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent),
-				() => JavaScriptAgent.GetJavaScriptAgentConfigFromSource(_fixture.ResponseBody),
-				() => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-				() => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
-			);
-		}
-	}
+            NrAssert.Multiple
+            (
+                () => Assertions.MetricsExist(expectedMetrics, metrics),
+                () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+                () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAgentAttributes, TransactionTraceAttributeType.Agent, transactionSample),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes1, TransactionEventAttributeType.Intrinsic, transactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvent),
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent),
+                () => JavaScriptAgent.GetJavaScriptAgentConfigFromSource(_fixture.ResponseBody),
+                () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
+            );
+        }
+    }
 }

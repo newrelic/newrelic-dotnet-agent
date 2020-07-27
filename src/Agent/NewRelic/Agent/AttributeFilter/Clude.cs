@@ -1,9 +1,9 @@
 ﻿namespace NewRelic.Agent
 {
-	internal enum Clude
-	{
-		Unknown = 0,
-		Exclude,
-		Include,
-	}
+    internal enum Clude
+    {
+        Unknown = 0,
+        Exclude,
+        Include,
+    }
 }

@@ -1,244 +1,244 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;
 using Telerik.JustMock;
 using Telerik.JustMock.Helpers;
-using System.Collections.Generic;
-using NewRelic.Agent.Core.Tracer;
 
 namespace NewRelic.Agent.Core.Wrapper
 {
-	[TestFixture]
-	public class Class_WrapperService
-	{
-		private const uint EmptyTracerArgs = 0;
+    [TestFixture]
+    public class Class_WrapperService
+    {
+        private const uint EmptyTracerArgs = 0;
 
-		[NotNull]
-		private WrapperService _wrapperService;
+        [NotNull]
+        private WrapperService _wrapperService;
 
-		[NotNull]
-		private IWrapperMap _wrapperMap;
+        [NotNull]
+        private IWrapperMap _wrapperMap;
 
-		[NotNull]
-		private IDefaultWrapper _defaultWrapper;
+        [NotNull]
+        private IDefaultWrapper _defaultWrapper;
 
-		[NotNull]
-		private INoOpWrapper _noOpWrapper;
+        [NotNull]
+        private INoOpWrapper _noOpWrapper;
 
-		[NotNull]
-		private IConfigurationService _configurationService;
+        [NotNull]
+        private IConfigurationService _configurationService;
 
-		[NotNull]
-		private IAgentWrapperApi _agentWrapperApi;
+        [NotNull]
+        private IAgentWrapperApi _agentWrapperApi;
 
-		[NotNull]
-		private IAgentHealthReporter _agentHealthReporter;
+        [NotNull]
+        private IAgentHealthReporter _agentHealthReporter;
 
-		[SetUp]
-		public void SetUp()
-		{
-			_wrapperMap = Mock.Create<IWrapperMap>();
-			_agentWrapperApi = Mock.Create<IAgentWrapperApi>();
-			_configurationService = Mock.Create<IConfigurationService>();
-			_agentHealthReporter = Mock.Create<IAgentHealthReporter>();
+        [SetUp]
+        public void SetUp()
+        {
+            _wrapperMap = Mock.Create<IWrapperMap>();
+            _agentWrapperApi = Mock.Create<IAgentWrapperApi>();
+            _configurationService = Mock.Create<IConfigurationService>();
+            _agentHealthReporter = Mock.Create<IAgentHealthReporter>();
 
-			Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(10);
+            Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(10);
 
-			_defaultWrapper = Mock.Create<IDefaultWrapper>();
-			_noOpWrapper = Mock.Create<INoOpWrapper>();
-			_wrapperService = new WrapperService(_configurationService, _wrapperMap, _agentWrapperApi, _agentHealthReporter);
-		}
+            _defaultWrapper = Mock.Create<IDefaultWrapper>();
+            _noOpWrapper = Mock.Create<INoOpWrapper>();
+            _wrapperService = new WrapperService(_configurationService, _wrapperMap, _agentWrapperApi, _agentHealthReporter);
+        }
 
-		[Test]
-		public void BeforeWrappedMethod_PassesCorrectParametersToWrapperLoader()
-		{
-			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(() => new TrackedWrapper(Mock.Create<IWrapper>()));
+        [Test]
+        public void BeforeWrappedMethod_PassesCorrectParametersToWrapperLoader()
+        {
+            Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(() => new TrackedWrapper(Mock.Create<IWrapper>()));
 
-			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
-			_wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+            var type = typeof(Class_WrapperService);
+            const String methodName = "MyMethod";
+            const String tracerFactoryName = "MyTracer";
+            var target = new Object();
+            var arguments = new Object[0];
+            _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
 
-			var method = new Method(type, methodName, String.Empty);
-			var expectedMethodCall = new MethodCall(method, target, arguments);
-			var instrumetedMethodInfo = new InstrumentedMethodInfo(0, expectedMethodCall.Method, tracerFactoryName, false, null, null, false);
+            var method = new Method(type, methodName, String.Empty);
+            var expectedMethodCall = new MethodCall(method, target, arguments);
+            var instrumetedMethodInfo = new InstrumentedMethodInfo(0, expectedMethodCall.Method, tracerFactoryName, false, null, null, false);
 
-			Mock.Assert(() => _wrapperMap.Get(instrumetedMethodInfo));
-		}
+            Mock.Assert(() => _wrapperMap.Get(instrumetedMethodInfo));
+        }
 
-		[Test]
-		public void BeforeWrappedMethod_ReturnsSomethingSimilarToResultOfLazyMap()
-		{
-			var result = null as String;
+        [Test]
+        public void BeforeWrappedMethod_ReturnsSomethingSimilarToResultOfLazyMap()
+        {
+            var result = null as String;
 
-			var wrapper = Mock.Create<IWrapper>();
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
-			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
+            var wrapper = Mock.Create<IWrapper>();
+            Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+            Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new TrackedWrapper(wrapper));
 
-			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+            var type = typeof(Class_WrapperService);
+            const String methodName = "MyMethod";
+            const String tracerFactoryName = "MyTracer";
+            var target = new Object();
+            var arguments = new Object[0];
 
-			var action = _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
-			action(null, null);
+            var action = _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+            action(null, null);
 
-			Assert.AreEqual("foo", result);
-		}
+            Assert.AreEqual("foo", result);
+        }
 
-		[Test]
-		public void BeforeWrappedMethod_UsesDefaultWrapper_IfNoMatchingWrapper_ButDefaultWrapperCanWrapReturnsTrue()
-		{
-			var result = null as String;
-			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
+        [Test]
+        public void BeforeWrappedMethod_UsesDefaultWrapper_IfNoMatchingWrapper_ButDefaultWrapperCanWrapReturnsTrue()
+        {
+            var result = null as String;
+            var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
 
-			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(true));
-			Mock.Arrange(() => _defaultWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+            Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(true));
+            Mock.Arrange(() => _defaultWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
 
-			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+            var type = typeof(Class_WrapperService);
+            const String methodName = "MyMethod";
+            const String tracerFactoryName = "MyTracer";
+            var target = new Object();
+            var arguments = new Object[0];
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+            var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
 
-			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
-			action(null, null);
+            var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+            action(null, null);
 
-			Assert.AreEqual("foo", result);
-		}
+            Assert.AreEqual("foo", result);
+        }
 
-		[Test]
-		public void BeforeWrappedMethod_UsesNoOpWrapper_IfNoMatchingWrapper_AndDefaultWrapperCanWrapReturnsFalse()
-		{
-			string result = null;
-			var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
-			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
-			Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(false));
+        [Test]
+        public void BeforeWrappedMethod_UsesNoOpWrapper_IfNoMatchingWrapper_AndDefaultWrapperCanWrapReturnsFalse()
+        {
+            string result = null;
+            var wrapperMap = new WrapperMap(new List<IWrapper>(), _defaultWrapper, _noOpWrapper);
+            Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((_, __) => result = "foo");
+            Mock.Arrange(() => _defaultWrapper.CanWrap(Arg.IsAny<InstrumentedMethodInfo>())).Returns(new CanWrapResponse(false));
 
-			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+            var type = typeof(Class_WrapperService);
+            const String methodName = "MyMethod";
+            const String tracerFactoryName = "MyTracer";
+            var target = new Object();
+            var arguments = new Object[0];
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+            var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
 
-			var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
-			action(null, null);
+            var action = wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+            action(null, null);
 
-			Assert.AreEqual("foo", result);
-		}
-		
-		[Test]
-		public void BeforeWrappedMethod_DoesNotSetNullOnFirstThrownException()
-		{
-			var wrapper = Mock.Create<IWrapper>();
-			var trackedWrapper = new TrackedWrapper(wrapper);
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Throws(new Exception());
-			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
+            Assert.AreEqual("foo", result);
+        }
 
-			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+        [Test]
+        public void BeforeWrappedMethod_DoesNotSetNullOnFirstThrownException()
+        {
+            var wrapper = Mock.Create<IWrapper>();
+            var trackedWrapper = new TrackedWrapper(wrapper);
+            Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Throws(new Exception());
+            Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
 
-			Assert.Throws<Exception>(() => _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0));
+            var type = typeof(Class_WrapperService);
+            const String methodName = "MyMethod";
+            const String tracerFactoryName = "MyTracer";
+            var target = new Object();
+            var arguments = new Object[0];
 
-			Mock.Assert(_wrapperMap);
-		}
+            Assert.Throws<Exception>(() => _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0));
 
-		[Test]
-		public void BeforeWrappedMethod_SetsNoOpWhenThrowsExceptionTooManyTimes()
-		{
-			var wrapper = Mock.Create<IWrapper>();
-			var trackedWrapper = new TrackedWrapper(wrapper);
+            Mock.Assert(_wrapperMap);
+        }
 
-			var wrapperMap = new WrapperMap(new List<IWrapper> { wrapper }, _defaultWrapper, _noOpWrapper);
+        [Test]
+        public void BeforeWrappedMethod_SetsNoOpWhenThrowsExceptionTooManyTimes()
+        {
+            var wrapper = Mock.Create<IWrapper>();
+            var trackedWrapper = new TrackedWrapper(wrapper);
 
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Throws(new Exception());
-			Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(1);
-			Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).OccursOnce();
+            var wrapperMap = new WrapperMap(new List<IWrapper> { wrapper }, _defaultWrapper, _noOpWrapper);
 
-			var type = typeof(System.Web.HttpApplication);
-			const String methodName = "ExecuteStep";
-			const String tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
-			var invocationTarget = new Object();
-			var arguments = new Object[2];
-			var argumentSignature = "IExecutionStep,System.Boolean&";
-			var metricName = String.Empty;
+            Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Throws(new Exception());
+            Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(1);
+            Mock.Arrange(() => _noOpWrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).OccursOnce();
 
-			var method = new Method(type, methodName, argumentSignature);
-			var methodCall = new MethodCall(method, invocationTarget, arguments);
-			var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
-			Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
+            var type = typeof(System.Web.HttpApplication);
+            const String methodName = "ExecuteStep";
+            const String tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
+            var invocationTarget = new Object();
+            var arguments = new Object[2];
+            var argumentSignature = "IExecutionStep,System.Boolean&";
+            var metricName = String.Empty;
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+            var method = new Method(type, methodName, argumentSignature);
+            var methodCall = new MethodCall(method, invocationTarget, arguments);
+            var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
+            Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 
-			Assert.Throws<Exception>(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
-			Assert.DoesNotThrow(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
-			Mock.Assert(_noOpWrapper);
-		}
+            var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
 
-		[Test]
-		public void AfterWrappedMethod_DoesNotSetNullOnFirstThrownException()
-		{
-			var wrapper = Mock.Create<IWrapper>();
-			var trackedWrapper = new TrackedWrapper(wrapper);
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((result, exception) => { throw new Exception(); });
-			Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
+            Assert.Throws<Exception>(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
+            Assert.DoesNotThrow(() => wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0));
+            Mock.Assert(_noOpWrapper);
+        }
 
-			var type = typeof(Class_WrapperService);
-			const String methodName = "MyMethod";
-			const String tracerFactoryName = "MyTracer";
-			var target = new Object();
-			var arguments = new Object[0];
+        [Test]
+        public void AfterWrappedMethod_DoesNotSetNullOnFirstThrownException()
+        {
+            var wrapper = Mock.Create<IWrapper>();
+            var trackedWrapper = new TrackedWrapper(wrapper);
+            Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((result, exception) => { throw new Exception(); });
+            Mock.Arrange(() => _wrapperMap.Get(Arg.IsAny<InstrumentedMethodInfo>())).Returns(trackedWrapper);
 
-			var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
-			Assert.Throws<Exception>(() => afterWrappedMethod(null, null));
+            var type = typeof(Class_WrapperService);
+            const String methodName = "MyMethod";
+            const String tracerFactoryName = "MyTracer";
+            var target = new Object();
+            var arguments = new Object[0];
 
-			Mock.Assert(_wrapperMap);
-		}
+            var afterWrappedMethod = _wrapperService.BeforeWrappedMethod(type, methodName, String.Empty, target, arguments, tracerFactoryName, null, EmptyTracerArgs, 0);
+            Assert.Throws<Exception>(() => afterWrappedMethod(null, null));
 
-		[Test]
-		public void AfterWrappedMethod_SetsNoOpWhenThrowsExceptionTooManyTimes()
-		{
-			var wrapper = Mock.Create<IWrapper>();
-			var trackedWrapper = new TrackedWrapper(wrapper);
+            Mock.Assert(_wrapperMap);
+        }
 
-			var wrapperMap = new WrapperMap(new List<IWrapper> { wrapper }, _defaultWrapper, _noOpWrapper);
+        [Test]
+        public void AfterWrappedMethod_SetsNoOpWhenThrowsExceptionTooManyTimes()
+        {
+            var wrapper = Mock.Create<IWrapper>();
+            var trackedWrapper = new TrackedWrapper(wrapper);
 
-			Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((result, exception) => { throw new Exception(); });
-			Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(1);
+            var wrapperMap = new WrapperMap(new List<IWrapper> { wrapper }, _defaultWrapper, _noOpWrapper);
 
-			var type = typeof(System.Web.HttpApplication);
-			const String methodName = "ExecuteStep";
-			const String tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
-			var invocationTarget = new Object();
-			var arguments = new Object[2];
-			var argumentSignature = "IExecutionStep,System.Boolean&";
-			var metricName = String.Empty;
+            Mock.Arrange(() => wrapper.BeforeWrappedMethod(Arg.IsAny<InstrumentedMethodCall>(), Arg.IsAny<IAgentWrapperApi>(), Arg.IsAny<ITransaction>())).Returns((result, exception) => { throw new Exception(); });
+            Mock.Arrange(() => _configurationService.Configuration.WrapperExceptionLimit).Returns(1);
 
-			var method = new Method(type, methodName, argumentSignature);
-			var methodCall = new MethodCall(method, invocationTarget, arguments);
-			var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
-			Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
+            var type = typeof(System.Web.HttpApplication);
+            const String methodName = "ExecuteStep";
+            const String tracerFactoryName = "NewRelic.Agent.Core.Tracer.Factories.DefaultTracerFactory";
+            var invocationTarget = new Object();
+            var arguments = new Object[2];
+            var argumentSignature = "IExecutionStep,System.Boolean&";
+            var metricName = String.Empty;
 
-			var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
+            var method = new Method(type, methodName, argumentSignature);
+            var methodCall = new MethodCall(method, invocationTarget, arguments);
+            var info = new InstrumentedMethodInfo(0, methodCall.Method, tracerFactoryName, false, null, null, false);
+            Mock.Arrange(() => wrapper.CanWrap(info)).Returns(new CanWrapResponse(true));
 
-			var afterWrappedMethod1 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
-			Assert.Throws<Exception>(() => afterWrappedMethod1(null, null));
+            var wrapperService = new WrapperService(_configurationService, wrapperMap, _agentWrapperApi, _agentHealthReporter);
 
-			var afterWrappedMethod2 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
-			Assert.DoesNotThrow(() => afterWrappedMethod2(null, null));
-		}
-	}
+            var afterWrappedMethod1 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
+            Assert.Throws<Exception>(() => afterWrappedMethod1(null, null));
+
+            var afterWrappedMethod2 = wrapperService.BeforeWrappedMethod(type, methodName, argumentSignature, invocationTarget, arguments, tracerFactoryName, metricName, EmptyTracerArgs, 0);
+            Assert.DoesNotThrow(() => afterWrappedMethod2(null, null));
+        }
+    }
 }

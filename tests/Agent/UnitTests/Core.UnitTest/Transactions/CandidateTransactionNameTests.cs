@@ -7,92 +7,92 @@ using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Transactions
 {
-	[TestFixture]
-	public class CandidateTransactionNameTests
-	{
-		[NotNull]
-		private WebTransactionName _initialTransactionName;
-		
-		[NotNull]
-		private CandidateTransactionName _candidateTransactionName;
+    [TestFixture]
+    public class CandidateTransactionNameTests
+    {
+        [NotNull]
+        private WebTransactionName _initialTransactionName;
 
-		[SetUp]
-		public void SetUp()
-		{
-			_initialTransactionName = new WebTransactionName("initialCategory", "initialName");
-			_candidateTransactionName = new CandidateTransactionName(_initialTransactionName);
-		}
+        [NotNull]
+        private CandidateTransactionName _candidateTransactionName;
 
-		[Test]
-		public void Build_UsesInitialName_IfNoOtherNamesAdded()
-		{
-			var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
+        [SetUp]
+        public void SetUp()
+        {
+            _initialTransactionName = new WebTransactionName("initialCategory", "initialName");
+            _candidateTransactionName = new CandidateTransactionName(_initialTransactionName);
+        }
 
-			NrAssert.Multiple
-				(
-				() => Assert.AreEqual("initialCategory", builtName.Category),
-				() => Assert.AreEqual("initialName", builtName.Name)
-				);
-		}
+        [Test]
+        public void Build_UsesInitialName_IfNoOtherNamesAdded()
+        {
+            var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
 
-		[Test]
-		public void Build_UsesHighestPriorityName()
-		{
-			_candidateTransactionName.TrySet(new WebTransactionName("newCategory", "newName"), 4);
+            NrAssert.Multiple
+                (
+                () => Assert.AreEqual("initialCategory", builtName.Category),
+                () => Assert.AreEqual("initialName", builtName.Name)
+                );
+        }
 
-			var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
+        [Test]
+        public void Build_UsesHighestPriorityName()
+        {
+            _candidateTransactionName.TrySet(new WebTransactionName("newCategory", "newName"), 4);
 
-			NrAssert.Multiple
-				(
-				
-				() => Assert.AreEqual("newCategory", builtName.Category),
-				() => Assert.AreEqual("newName", builtName.Name)
-				);
-		}
+            var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
 
-		[Test]
-		public void Build_IgnoresSamePriorityNames()
-		{
-			Assert.IsFalse(_candidateTransactionName.TrySet(new WebTransactionName("newCategory", "newName"), 0));
+            NrAssert.Multiple
+                (
 
-			var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
+                () => Assert.AreEqual("newCategory", builtName.Category),
+                () => Assert.AreEqual("newName", builtName.Name)
+                );
+        }
 
-			NrAssert.Multiple
-				(
-				() => Assert.AreEqual("initialCategory", builtName.Category),
-				() => Assert.AreEqual("initialName", builtName.Name)
-				);
-		}
+        [Test]
+        public void Build_IgnoresSamePriorityNames()
+        {
+            Assert.IsFalse(_candidateTransactionName.TrySet(new WebTransactionName("newCategory", "newName"), 0));
 
-		[Test]
-		public void Build_IgnoresLowerPriorityNames()
-		{
-			Assert.IsTrue(_candidateTransactionName.TrySet(new WebTransactionName("newCategory3", "newName3"), 3));
-			Assert.IsFalse(_candidateTransactionName.TrySet(new WebTransactionName("newCategory2", "newName2"), 2));
+            var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
 
-			var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
+            NrAssert.Multiple
+                (
+                () => Assert.AreEqual("initialCategory", builtName.Category),
+                () => Assert.AreEqual("initialName", builtName.Name)
+                );
+        }
 
-			NrAssert.Multiple
-				(
-				
-				() => Assert.AreEqual("newCategory3", builtName.Category),
-				() => Assert.AreEqual("newName3", builtName.Name)
-				);
-		}
+        [Test]
+        public void Build_IgnoresLowerPriorityNames()
+        {
+            Assert.IsTrue(_candidateTransactionName.TrySet(new WebTransactionName("newCategory3", "newName3"), 3));
+            Assert.IsFalse(_candidateTransactionName.TrySet(new WebTransactionName("newCategory2", "newName2"), 2));
 
-		[Test]
-		public void Build_IgnoresNamesAddedAfterFreezing()
-		{
-			_candidateTransactionName.Freeze();
-			Assert.IsFalse(_candidateTransactionName.TrySet(new WebTransactionName("newCategory", "newName"), 6));
+            var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
 
-			var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
+            NrAssert.Multiple
+                (
 
-			NrAssert.Multiple
-				(
-				() => Assert.AreEqual("initialCategory", builtName.Category),
-				() => Assert.AreEqual("initialName", builtName.Name)
-				);
-		}
-	}
+                () => Assert.AreEqual("newCategory3", builtName.Category),
+                () => Assert.AreEqual("newName3", builtName.Name)
+                );
+        }
+
+        [Test]
+        public void Build_IgnoresNamesAddedAfterFreezing()
+        {
+            _candidateTransactionName.Freeze();
+            Assert.IsFalse(_candidateTransactionName.TrySet(new WebTransactionName("newCategory", "newName"), 6));
+
+            var builtName = _candidateTransactionName.CurrentTransactionName as WebTransactionName;
+
+            NrAssert.Multiple
+                (
+                () => Assert.AreEqual("initialCategory", builtName.Category),
+                () => Assert.AreEqual("initialName", builtName.Name)
+                );
+        }
+    }
 }
