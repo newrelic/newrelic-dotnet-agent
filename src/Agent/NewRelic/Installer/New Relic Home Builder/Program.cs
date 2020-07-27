@@ -83,7 +83,7 @@ namespace NewRelic.Installer
         [NotNull]
         private String DestinationNewRelicConfigXsdPath { get { return Path.Combine(DestinationHomeDirectoryPath, "newrelic.xsd"); } }
         [NotNull]
-        private String BuildOutputPath { get { return Path.Combine(SolutionPath, "_build"); } }
+        private String BuildOutputPath { get { return Path.Combine(SolutionPath, "src", "_build"); } }
         [NotNull]
         private String AnyCpuBuildPath { get { return Path.Combine(BuildOutputPath, AnyCpuBuildDirectoryName); } }
         [NotNull]

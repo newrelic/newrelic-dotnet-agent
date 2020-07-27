@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
     <PropertyGroup>
         <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AssemblyName>NewRelic.Agent.Core</AssemblyName>
@@ -6,8 +6,8 @@
         <Description></Description>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>$(SolutionDir)build\keys\NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
-        <IntermediateOutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
-        <OutputPath>$(SolutionDir)\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+        <IntermediateOutputPath>$(SolutionDir)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
+        <OutputPath>$(SolutionDir)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DebugType>full</DebugType>
