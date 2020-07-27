@@ -77,7 +77,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 }
             };
 
-            var expectedTransactionEventIntrinsicAttributes = new List<String>
+            var expectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "databaseDuration"
             };

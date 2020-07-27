@@ -40,7 +40,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Peek/Named/private$\nrtestqueue", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Peek/Named/private$\nrtestqueue", callCount = 1, metricScope = "WebTransaction/MVC/MSMQController/Msmq_Peek"}
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MessageBroker/Msmq/Queue/Peek/Named/private$\nrtestqueue"
             };

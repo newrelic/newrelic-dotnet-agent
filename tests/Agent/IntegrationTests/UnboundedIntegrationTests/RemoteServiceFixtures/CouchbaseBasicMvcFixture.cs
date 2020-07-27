@@ -846,7 +846,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         #endregion
 
-        private readonly IList<String> _documentIds = new List<String>();
+        private readonly IList<string> _documentIds = new List<string>();
 
         private void RemoveDocuments()
         {
@@ -856,14 +856,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             }
         }
 
-        private String GenerateDocumentId()
+        private string GenerateDocumentId()
         {
             var documentId = $"integrationTestDocumentId-{Guid.NewGuid().ToString("N")}";
             _documentIds.Add(documentId);
             return documentId;
         }
 
-        private String InsertDocument()
+        private string InsertDocument()
         {
             var documentId = GenerateDocumentId();
 

@@ -76,7 +76,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", metricScope = "WebTransaction/MVC/DefaultController/MsSql" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", metricScope = "WebTransaction/MVC/DefaultController/MsSql" }
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 $"Datastore/statement/MSSQL/teammembers/select"
             };
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
             };
 
-            var expectedTransactionEventIntrinsicAttributes = new List<String>
+            var expectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "databaseDuration"
             };

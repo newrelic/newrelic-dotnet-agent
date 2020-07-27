@@ -9,14 +9,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
     public class MsSqlBasicMvcFixture : RemoteApplicationFixture
     {
-        private const String CreatePersonTableMsSql = "CREATE TABLE {0} (FirstName varchar(20) NOT NULL, LastName varchar(20) NOT NULL, Email varchar(50) NOT NULL)";
-        private const String DropPersonTableMsSql = "DROP TABLE {0}";
-        private const String TargetFramework = "net452";
+        private const string CreatePersonTableMsSql = "CREATE TABLE {0} (FirstName varchar(20) NOT NULL, LastName varchar(20) NOT NULL, Email varchar(50) NOT NULL)";
+        private const string DropPersonTableMsSql = "DROP TABLE {0}";
+        private const string TargetFramework = "net452";
 
-        private readonly String _connectionString = MsSqlConfiguration.MsSqlConnectionString;
+        private readonly string _connectionString = MsSqlConfiguration.MsSqlConnectionString;
 
-        private readonly String _tableName;
-        public String TableName
+        private readonly string _tableName;
+        public string TableName
         {
             get { return _tableName; }
         }
@@ -83,7 +83,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             }
         }
 
-        private static String GenerateTableName()
+        private static string GenerateTableName()
         {
             var tableId = Guid.NewGuid().ToString("N").ToLower();
             return $"person{tableId}";
@@ -95,7 +95,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             {
                 connection.Open();
 
-                var createTable = String.Format(CreatePersonTableMsSql, TableName);
+                var createTable = string.Format(CreatePersonTableMsSql, TableName);
                 using (var command = new SqlCommand(createTable, connection))
                 {
                     command.ExecuteNonQuery();
@@ -105,7 +105,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         private void DropTable()
         {
-            var dropTableSql = String.Format(DropPersonTableMsSql, TableName);
+            var dropTableSql = string.Format(DropPersonTableMsSql, TableName);
 
             using (var connection = new SqlConnection(_connectionString))
             {

@@ -23,22 +23,22 @@ namespace BasicMvcApplication.Controllers
     /// </remarks>
     public class DefaultController : Controller
     {
-        private const String InsertPersonMsSql = "INSERT INTO {0} (FirstName, LastName, Email) VALUES('Testy', 'McTesterson', 'testy@mctesterson.com')";
-        private const String DeletePersonMsSql = "DELETE FROM {0} WHERE Email = 'testy@mctesterson.com'";
-        private const String CountPersonMsSql = "SELECT COUNT(*) FROM {0} WITH(nolock)";
+        private const string InsertPersonMsSql = "INSERT INTO {0} (FirstName, LastName, Email) VALUES('Testy', 'McTesterson', 'testy@mctesterson.com')";
+        private const string DeletePersonMsSql = "DELETE FROM {0} WHERE Email = 'testy@mctesterson.com'";
+        private const string CountPersonMsSql = "SELECT COUNT(*) FROM {0} WITH(nolock)";
 
-        private const String InsertHotelOracleSql = "INSERT INTO {0} (HOTEL_ID, BOOKING_DATE) VALUES (1, SYSDATE)";
-        private const String DeleteHotelOracleSql = "DELETE FROM {0} WHERE HOTEL_ID = 1";
-        private const String CountHotelOracleSql = "SELECT COUNT(*) FROM {0}";
+        private const string InsertHotelOracleSql = "INSERT INTO {0} (HOTEL_ID, BOOKING_DATE) VALUES (1, SYSDATE)";
+        private const string DeleteHotelOracleSql = "DELETE FROM {0} WHERE HOTEL_ID = 1";
+        private const string CountHotelOracleSql = "SELECT COUNT(*) FROM {0}";
 
-        private const String InsertHotelDB2Sql = "INSERT INTO {0} (HOTEL_ID, BOOKING_DATE) VALUES (1, SYSDATE)";
-        private const String DeleteHotelDB2Sql = "DELETE FROM {0} WHERE HOTEL_ID = 1";
-        private const String CountHotelDB2Sql = "SELECT COUNT(*) FROM {0}";
+        private const string InsertHotelDB2Sql = "INSERT INTO {0} (HOTEL_ID, BOOKING_DATE) VALUES (1, SYSDATE)";
+        private const string DeleteHotelDB2Sql = "DELETE FROM {0} WHERE HOTEL_ID = 1";
+        private const string CountHotelDB2Sql = "SELECT COUNT(*) FROM {0}";
 
         [HttpGet]
-        public String MsSql(String tableName)
+        public string MsSql(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = MsSqlConfiguration.MsSqlConnectionString;
 
@@ -62,9 +62,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertPersonMsSql, tableName);
-                var countSql = String.Format(CountPersonMsSql, tableName);
-                var deleteSql = String.Format(DeletePersonMsSql, tableName);
+                var insertSql = string.Format(InsertPersonMsSql, tableName);
+                var countSql = string.Format(CountPersonMsSql, tableName);
+                var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
                 using (var command = new SqlCommand(insertSql, connection))
                 {
@@ -82,13 +82,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public async Task<String> MsSqlAsync(String tableName)
+        public async Task<string> MsSqlAsync(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = MsSqlConfiguration.MsSqlConnectionString;
 
@@ -111,9 +111,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertPersonMsSql, tableName);
-                var countSql = String.Format(CountPersonMsSql, tableName);
-                var deleteSql = String.Format(DeletePersonMsSql, tableName);
+                var insertSql = string.Format(InsertPersonMsSql, tableName);
+                var countSql = string.Format(CountPersonMsSql, tableName);
+                var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
                 using (var command = new SqlCommand(insertSql, connection))
                 {
@@ -131,12 +131,12 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
-        public String MsSql_WithParameterizedQuery(String tableName)
+        public string MsSql_WithParameterizedQuery(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = MsSqlConfiguration.MsSqlConnectionString;
 
@@ -160,9 +160,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertPersonMsSql, tableName);
-                var countSql = String.Format(CountPersonMsSql, tableName);
-                var deleteSql = String.Format(DeletePersonMsSql, tableName);
+                var insertSql = string.Format(InsertPersonMsSql, tableName);
+                var countSql = string.Format(CountPersonMsSql, tableName);
+                var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
                 using (var command = new SqlCommand(insertSql, connection))
                 {
@@ -180,13 +180,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public async Task<String> MsSqlAsync_WithParameterizedQuery(String tableName)
+        public async Task<string> MsSqlAsync_WithParameterizedQuery(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = MsSqlConfiguration.MsSqlConnectionString;
 
@@ -210,9 +210,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertPersonMsSql, tableName);
-                var countSql = String.Format(CountPersonMsSql, tableName);
-                var deleteSql = String.Format(DeletePersonMsSql, tableName);
+                var insertSql = string.Format(InsertPersonMsSql, tableName);
+                var countSql = string.Format(CountPersonMsSql, tableName);
+                var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
                 using (var command = new SqlCommand(insertSql, connection))
                 {
@@ -230,13 +230,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public String MySql()
+        public string MySql()
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = MySqlTestConfiguration.MySqlConnectionString;
 
@@ -253,13 +253,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public async Task<String> MySqlAsync()
+        public async Task<string> MySqlAsync()
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = MySqlTestConfiguration.MySqlConnectionString;
 
@@ -276,13 +276,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public String Oracle(String tableName)
+        public string Oracle(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = OracleConfiguration.OracleConnectionString;
 
@@ -301,9 +301,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertHotelOracleSql, tableName);
-                var countSql = String.Format(CountHotelOracleSql, tableName);
-                var deleteSql = String.Format(DeleteHotelOracleSql, tableName);
+                var insertSql = string.Format(InsertHotelOracleSql, tableName);
+                var countSql = string.Format(CountHotelOracleSql, tableName);
+                var deleteSql = string.Format(DeleteHotelOracleSql, tableName);
 
                 using (var command = new OracleCommand(insertSql, connection))
                 {
@@ -321,13 +321,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public async Task<String> OracleAsync(String tableName)
+        public async Task<string> OracleAsync(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = OracleConfiguration.OracleConnectionString;
 
@@ -346,9 +346,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertHotelOracleSql, tableName);
-                var countSql = String.Format(CountHotelOracleSql, tableName);
-                var deleteSql = String.Format(DeleteHotelOracleSql, tableName);
+                var insertSql = string.Format(InsertHotelOracleSql, tableName);
+                var countSql = string.Format(CountHotelOracleSql, tableName);
+                var deleteSql = string.Format(DeleteHotelOracleSql, tableName);
 
                 using (var command = new OracleCommand(insertSql, connection))
                 {
@@ -366,12 +366,12 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
         [HttpGet]
-        public String Postgres()
+        public string Postgres()
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = PostgresConfiguration.PostgresConnectionString;
 
@@ -388,13 +388,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public async Task<String> PostgresAsync()
+        public async Task<string> PostgresAsync()
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionString = PostgresConfiguration.PostgresConnectionString;
 
@@ -411,16 +411,16 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
 
         [HttpGet]
-        public String StackExchangeRedis()
+        public string StackExchangeRedis()
         {
             var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
 
-            String value;
+            string value;
 
             using (var redis = StackExchange.Redis.ConnectionMultiplexer.Connect(connectionString))
             {
@@ -434,11 +434,11 @@ namespace BasicMvcApplication.Controllers
 
 
         [HttpGet]
-        public String StackExchangeRedisStrongName()
+        public string StackExchangeRedisStrongName()
         {
             var connectionString = StackExchangeRedisConfiguration.StackExchangeRedisConnectionString;
 
-            String value;
+            string value;
 
             //Alias StrongName assembly to avoid type collisions
             using (var redis = StackExchangeStrongNameAlias::StackExchange.Redis.ConnectionMultiplexer.Connect(connectionString))
@@ -452,9 +452,9 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String EnterpriseLibraryOracle(String tableName)
+        public string EnterpriseLibraryOracle(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             var connectionStringSettings = new ConnectionStringSettings("OracleConnection", OracleConfiguration.OracleConnectionString, "Oracle.ManagedDataAccess.Client");
             var connectionStringsSection = new ConnectionStringsSection();
@@ -472,21 +472,21 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            var insertSql = String.Format(InsertHotelOracleSql, tableName);
-            var countSql = String.Format(CountHotelOracleSql, tableName);
-            var deleteSql = String.Format(DeleteHotelOracleSql, tableName);
+            var insertSql = string.Format(InsertHotelOracleSql, tableName);
+            var countSql = string.Format(CountHotelOracleSql, tableName);
+            var deleteSql = string.Format(DeleteHotelOracleSql, tableName);
 
             var insertCount = oracleDatabase.ExecuteNonQuery(CommandType.Text, insertSql);
             var hotelCount = oracleDatabase.ExecuteScalar(CommandType.Text, countSql);
             var deleteCount = oracleDatabase.ExecuteNonQuery(CommandType.Text, deleteSql);
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public String EnterpriseLibraryMsSql(String tableName)
+        public string EnterpriseLibraryMsSql(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             //var msSqlDatabase = new DatabaseProviderFactory().Create("MSSQLConnection");
             var msSqlDatabase = new SqlDatabase(MsSqlConfiguration.MsSqlConnectionString);
@@ -503,21 +503,21 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            var insertSql = String.Format(InsertPersonMsSql, tableName);
-            var countSql = String.Format(CountPersonMsSql, tableName);
-            var deleteSql = String.Format(DeletePersonMsSql, tableName);
+            var insertSql = string.Format(InsertPersonMsSql, tableName);
+            var countSql = string.Format(CountPersonMsSql, tableName);
+            var deleteSql = string.Format(DeletePersonMsSql, tableName);
 
             var insertCount = msSqlDatabase.ExecuteNonQuery(CommandType.Text, insertSql);
             var teamMemberCount = msSqlDatabase.ExecuteScalar(CommandType.Text, countSql);
             var deleteCount = msSqlDatabase.ExecuteNonQuery(CommandType.Text, deleteSql);
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public String InvokeIbmDb2Query(String tableName)
+        public string InvokeIbmDb2Query(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             using (var connection = new DB2Connection(Db2Configuration.Db2ConnectionString))
             {
@@ -534,9 +534,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertHotelDB2Sql, tableName);
-                var countSql = String.Format(CountHotelDB2Sql, tableName);
-                var deleteSql = String.Format(DeleteHotelDB2Sql, tableName);
+                var insertSql = string.Format(InsertHotelDB2Sql, tableName);
+                var countSql = string.Format(CountHotelDB2Sql, tableName);
+                var deleteSql = string.Format(DeleteHotelDB2Sql, tableName);
 
                 using (var command = new DB2Command(insertSql, connection))
                 {
@@ -554,13 +554,13 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
         [HttpGet]
-        public async Task<String> InvokeIbmDb2QueryAsync(String tableName)
+        public async Task<string> InvokeIbmDb2QueryAsync(string tableName)
         {
-            var teamMembers = new List<String>();
+            var teamMembers = new List<string>();
 
             using (var connection = new DB2Connection(Db2Configuration.Db2ConnectionString))
             {
@@ -577,9 +577,9 @@ namespace BasicMvcApplication.Controllers
                     }
                 }
 
-                var insertSql = String.Format(InsertHotelDB2Sql, tableName);
-                var countSql = String.Format(CountHotelDB2Sql, tableName);
-                var deleteSql = String.Format(DeleteHotelDB2Sql, tableName);
+                var insertSql = string.Format(InsertHotelDB2Sql, tableName);
+                var countSql = string.Format(CountHotelDB2Sql, tableName);
+                var deleteSql = string.Format(DeleteHotelDB2Sql, tableName);
 
                 using (var command = new DB2Command(insertSql, connection))
                 {
@@ -597,7 +597,7 @@ namespace BasicMvcApplication.Controllers
                 }
             }
 
-            return String.Join(",", teamMembers);
+            return string.Join(",", teamMembers);
         }
 
     }

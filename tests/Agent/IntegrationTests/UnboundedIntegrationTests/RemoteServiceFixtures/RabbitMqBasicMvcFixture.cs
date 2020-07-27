@@ -10,21 +10,21 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
     public class RabbitMqBasicMvcFixture : RemoteApplicationFixture
     {
-        private readonly IList<String> _queues = new List<String>();
-        private readonly IList<String> _exchanges = new List<String>();
+        private readonly IList<string> _queues = new List<string>();
+        private readonly IList<string> _exchanges = new List<string>();
 
         public RabbitMqBasicMvcFixture() : base(new RemoteWebApplication("RabbitMqBasicMvcApplication", ApplicationType.Unbounded))
         {
         }
 
-        private String GenerateQueue()
+        private string GenerateQueue()
         {
             var name = $"integrationTestQueue-{Guid.NewGuid()}";
             _queues.Add(name);
             return name;
         }
 
-        private String GenerateExchange()
+        private string GenerateExchange()
         {
             var name = $"integrationTestExchange-{Guid.NewGuid()}";
             _exchanges.Add(name);
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         #region RabbitMQController Actions
 
-        public String GetMessageQueue_RabbitMQ_SendReceive(String message)
+        public string GetMessageQueue_RabbitMQ_SendReceive(string message)
         {
             var queueName = GenerateQueue();
             var address = $"http://{DestinationServerName}:{Port}/RabbitMQ/RabbitMQ_SendReceive?queueName={queueName}&message={message}";
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             }
         }
 
-        public void GetMessageQueue_RabbitMQ_SendReceiveTopic(String topicName, String message)
+        public void GetMessageQueue_RabbitMQ_SendReceiveTopic(string topicName, string message)
         {
             var exchangeName = GenerateExchange();
             var address = $"http://{DestinationServerName}:{Port}/RabbitMQ/RabbitMQ_SendReceiveTopic?exchangeName={exchangeName}&topicName={topicName}&message={message}";
@@ -82,7 +82,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             }
         }
 
-        public void GetMessageQueue_RabbitMQ_SendReceiveTempQueue(String message)
+        public void GetMessageQueue_RabbitMQ_SendReceiveTempQueue(string message)
         {
             var address = $"http://{DestinationServerName}:{Port}/RabbitMQ/RabbitMQ_SendReceiveTempQueue?message={message}";
 
@@ -93,7 +93,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             }
         }
 
-        public String GetMessageQueue_RabbitMQ_Purge()
+        public string GetMessageQueue_RabbitMQ_Purge()
         {
             var queueName = GenerateQueue();
             var address = $"http://{DestinationServerName}:{Port}/RabbitMQ/RabbitMQ_QueuePurge?queueName={queueName}";

@@ -13,8 +13,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
     {
         private readonly RemoteServiceFixtures.RabbitMqBasicMvcFixture _fixture;
 
-        private String _sendReceiveQueue;
-        private String _purgeQueue;
+        private string _sendReceiveQueue;
+        private string _purgeQueue;
 
         public RabbitMqTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)
         {

@@ -7,10 +7,10 @@ namespace NServiceBusReceiver
 {
     public class SampleNServiceBusMessage : ICommand
     {
-        public Int32 Id { get; private set; }
-        public String FooBar { get; private set; }
+        public int Id { get; private set; }
+        public string FooBar { get; private set; }
 
-        public SampleNServiceBusMessage(Int32 id, String fooBar)
+        public SampleNServiceBusMessage(int id, string fooBar)
         {
             Thread.Sleep(250);
             Id = id;

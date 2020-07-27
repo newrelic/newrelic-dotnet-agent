@@ -51,7 +51,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransactionTotalTime/Message/NServiceBus/Queue/Named/NServiceBusReceiver.SampleNServiceBusMessage2"}
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MessageBroker/NServiceBus/Queue/Consume/Named/NServiceBusReceiver.SampleNServiceBusMessage2"
             };

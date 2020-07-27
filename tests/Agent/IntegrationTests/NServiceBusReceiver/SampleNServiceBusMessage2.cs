@@ -10,11 +10,11 @@ namespace NServiceBusReceiver
 {
     public class SampleNServiceBusMessage2 : ICommand
     {
-        public Int32 Id { get; private set; }
-        public String FooBar { get; private set; }
-        public Boolean IsValid { get; private set; }
+        public int Id { get; private set; }
+        public string FooBar { get; private set; }
+        public bool IsValid { get; private set; }
 
-        public SampleNServiceBusMessage2(Int32 id, String fooBar, Boolean isValid = true)
+        public SampleNServiceBusMessage2(int id, string fooBar, bool isValid = true)
         {
             Thread.Sleep(250);
             Id = id;
