@@ -1,9 +1,0 @@
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\Core.csprojAssemblyReference.cache
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\NewRelic.Agent.Core.Properties.Resources.resources
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\Core.csproj.GenerateResource.cache
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\Core.AssemblyInfoInputs.cache
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\Core.AssemblyInfo.cs
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\Core.csproj.CoreCompileInputs.cache
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\Core.csproj.CopyComplete
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\NewRelic.Agent.Core.dll
-C:\Users\LyniceSpangler\git\net35main\newrelic-dotnet-agent\_build\AnyCPU-Debug\NewRelic.Agent.Core\net35\NewRelic.Agent.Core.pdb
