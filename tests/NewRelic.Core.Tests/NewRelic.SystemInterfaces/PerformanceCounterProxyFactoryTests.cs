@@ -61,8 +61,11 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			GivenPerfCategoryHasTheseInstanceNames(instanceNameToIdMap.Keys.ToArray());
 			GivenPerfCategoryHasTheseProcessPerformanceCounters(instanceNameToIdMap);
 
+            var testCategoryName = GetTestCategoryName();
+
 			//Act
-			var performanceCounter = _factory.CreatePerformanceCounterProxy(GetTestCategoryName(), "mycounter");
+            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null);
+			var performanceCounter = _factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName);
 			
 			//Assert
 			Assert.NotNull(performanceCounter);
@@ -74,7 +77,8 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 		{
 			const string currentProcessName = "myprocess";
 			const int currentProcessId = 1;
-			var instanceNameToIdMap = new Dictionary<string, int>
+
+            var instanceNameToIdMap = new Dictionary<string, int>
 			{
 				{ currentProcessName + "1", currentProcessId }
 			};
@@ -86,15 +90,18 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			var newCatName1 = GetTestCategoryName();
 			var newCatName2 = GetTestCategoryName();
 
-			_factory.CreatePerformanceCounterProxy(newCatName1, "mycounter1");
-			_factory.CreatePerformanceCounterProxy(newCatName1, "mycounter2");
-			_factory.CreatePerformanceCounterProxy(newCatName2, "mycounter");
+            var processInstanceName1 = _factory.GetCurrentProcessInstanceNameForCategory(newCatName1, null);
+            var processInstanceName2 = _factory.GetCurrentProcessInstanceNameForCategory(newCatName2, null);
+
+            _factory.CreatePerformanceCounterProxy(newCatName1, "mycounter1", processInstanceName1);
+			_factory.CreatePerformanceCounterProxy(newCatName1, "mycounter2", processInstanceName1);
+			_factory.CreatePerformanceCounterProxy(newCatName2, "mycounter", processInstanceName2);
 
 			Assert.AreEqual(2, _instanceNameLookupCount);
 		}
 
 		[Test]
-		public void ShouldThrowExceptionIfInstanceNameIsNotFound()
+		public void ShouldThrowExceptionIfCreatePerfCounterWithEmptyInstanceName()
 		{
 			const string currentProcessName = "myprocess";
 			const int currentProcessId = 1;
@@ -108,11 +115,15 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			GivenPerfCategoryHasTheseInstanceNames(instanceNameToIdMap.Keys.ToArray());
 			GivenPerfCategoryHasTheseProcessPerformanceCounters(instanceNameToIdMap);
 
-			Assert.Throws<Exception>(() => _factory.CreatePerformanceCounterProxy(GetTestCategoryName(), "mycounter"));
+            var testCategoryName = GetTestCategoryName();
+
+            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null);
+
+            Assert.Throws<ArgumentException>(() => _factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName));
 		}
 
 		[Test]
-		public void ShouldThrowExceptionIfProcessPerformanceCounterCannotOpen()
+		public void ShouldReturnNullIfCannotObtainPerfCounterInstanceName()
 		{
 			const string currentProcessName = "myprocess";
 			const int currentProcessId = 1;
@@ -126,24 +137,73 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			GivenPerfCategoryHasTheseProcessPerformanceCounters(instanceNameToIdMap);
 			_createProcessIdPerformanceCounter = (_, __, ___) => throw new Exception("Cannot create process performance counter.");
 
-			Assert.Throws<Exception>(() => _factory.CreatePerformanceCounterProxy(GetTestCategoryName(), "mycounter"));
+            var testCategoryName = GetTestCategoryName();
+
+            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
 		}
 
-		[Test]
-		public void ShouldThrowExceptionIfNoInstanceNamesMatchTheProcessName()
+        [Test]
+        public void ShouldThrowIfObtainPerfCounterInstanceNameIsUnauthorized()
+        {
+            const string currentProcessName = "myprocess";
+            const int currentProcessId = 1;
+            var instanceNameToIdMap = new Dictionary<string, int>
+            {
+                { currentProcessName + "1", currentProcessId }
+            };
+
+            GivenCurrentProcessHasThisNameAndId(currentProcessName, currentProcessId);
+            GivenPerfCategoryHasTheseInstanceNames(instanceNameToIdMap.Keys.ToArray());
+            GivenPerfCategoryHasTheseProcessPerformanceCounters(instanceNameToIdMap);
+            _createProcessIdPerformanceCounter = (_, __, ___) => throw new UnauthorizedAccessException("Cannot create process performance counter.");
+
+            var testCategoryName = GetTestCategoryName();
+
+            Assert.Throws<UnauthorizedAccessException>(()=>_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
+
+            //Assert.Throws<UnauthorizedAccessException>(()=>_factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName));
+        }
+
+        [Test]
+        public void ShouldThrowIfObtainPerfCounterProxyIsUnauthorized()
+        {
+            const string currentProcessName = "myprocess";
+            const int currentProcessId = 1;
+            var instanceNameToIdMap = new Dictionary<string, int>
+            {
+                { currentProcessName + "1", currentProcessId }
+            };
+
+            GivenCurrentProcessHasThisNameAndId(currentProcessName, currentProcessId);
+            GivenPerfCategoryHasTheseInstanceNames(instanceNameToIdMap.Keys.ToArray());
+            GivenPerfCategoryHasTheseProcessPerformanceCounters(instanceNameToIdMap);
+            _createPerformanceCounter = (_, __, ___) => throw new UnauthorizedAccessException("Test Unauthorized Access");
+
+            var testCategoryName = GetTestCategoryName();
+
+            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null);
+
+            Assert.Throws<UnauthorizedAccessException>(()=>_factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName));
+        }
+
+
+        [Test]
+		public void ShouldReturnNullIfNoInstanceNamesMatchTheProcessName()
 		{
 			const string currentProcessName = "myprocess";
 			const int currentProcessId = 1;
 			var instanceNameToIdMap = new Dictionary<string, int>
 			{
-				{ "p1", currentProcessId }
+				{ "p1", 2 }
 			};
 
 			GivenCurrentProcessHasThisNameAndId(currentProcessName, currentProcessId);
 			GivenPerfCategoryHasTheseInstanceNames(instanceNameToIdMap.Keys.ToArray());
 			GivenPerfCategoryHasTheseProcessPerformanceCounters(instanceNameToIdMap);
 
-			Assert.Throws<Exception>(() => _factory.CreatePerformanceCounterProxy(GetTestCategoryName(), "mycounter"));
+            var testCategoryName = GetTestCategoryName();
+
+            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
 		}
 
 		private void GivenCurrentProcessHasThisNameAndId(string processName, int processId)
