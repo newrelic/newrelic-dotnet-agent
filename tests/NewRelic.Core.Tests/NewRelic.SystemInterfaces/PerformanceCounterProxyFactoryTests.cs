@@ -64,7 +64,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
             var testCategoryName = GetTestCategoryName();
 
 			//Act
-            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName);
+            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null);
 			var performanceCounter = _factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName);
 			
 			//Assert
@@ -90,8 +90,8 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 			var newCatName1 = GetTestCategoryName();
 			var newCatName2 = GetTestCategoryName();
 
-            var processInstanceName1 = _factory.GetCurrentProcessInstanceNameForCategory(newCatName1);
-            var processInstanceName2 = _factory.GetCurrentProcessInstanceNameForCategory(newCatName2);
+            var processInstanceName1 = _factory.GetCurrentProcessInstanceNameForCategory(newCatName1, null);
+            var processInstanceName2 = _factory.GetCurrentProcessInstanceNameForCategory(newCatName2, null);
 
             _factory.CreatePerformanceCounterProxy(newCatName1, "mycounter1", processInstanceName1);
 			_factory.CreatePerformanceCounterProxy(newCatName1, "mycounter2", processInstanceName1);
@@ -117,7 +117,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName);
+            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null);
 
             Assert.Throws<ArgumentException>(() => _factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName));
 		}
@@ -139,7 +139,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName));
+            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
 		}
 
         [Test]
@@ -159,7 +159,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            Assert.Throws<UnauthorizedAccessException>(()=>_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName));
+            Assert.Throws<UnauthorizedAccessException>(()=>_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
 
             //Assert.Throws<UnauthorizedAccessException>(()=>_factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName));
         }
@@ -181,7 +181,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName);
+            var processInstanceName = _factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null);
 
             Assert.Throws<UnauthorizedAccessException>(()=>_factory.CreatePerformanceCounterProxy(testCategoryName, "mycounter", processInstanceName));
         }
@@ -203,7 +203,7 @@ namespace NewRelic.Core.Tests.NewRelic.SystemInterfaces
 
             var testCategoryName = GetTestCategoryName();
 
-            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName));
+            Assert.IsNull(_factory.GetCurrentProcessInstanceNameForCategory(testCategoryName, null));
 		}
 
 		private void GivenCurrentProcessHasThisNameAndId(string processName, int processId)

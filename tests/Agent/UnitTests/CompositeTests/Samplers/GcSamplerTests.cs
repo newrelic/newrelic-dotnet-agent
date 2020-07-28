@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => _perfCounterProxyFactory.CreatePerformanceCounterProxy(Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>()))
                 .Returns(mockProxy);
 
-            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>()))
+            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>(),Arg.IsAny<string>()))
                 .Returns("Test Value");
 
             //Holds the results of the perf counter captures so that we may compare them as part of our assertions.
@@ -170,7 +170,7 @@ namespace NewRelic.Agent.Core.Samplers
                      }
                  });
 
-            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>()))
+            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>(),Arg.IsAny<string>()))
                 .Returns("Test Value");
 
             var gcSampleTransformer = Mock.Create<IGcSampleTransformer>();
@@ -198,7 +198,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             var countAttempts = 0;
 
-            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>()))
+            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>(),Arg.IsAny<string>()))
                 .Returns<string>((catName) =>
                 {
                     countAttempts++;
@@ -261,7 +261,7 @@ namespace NewRelic.Agent.Core.Samplers
                     throw new Exception();
                 });
 
-            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>()))
+            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>(),Arg.IsAny<string>()))
            .Returns("Test Value");
 
             //Intercept the stop call for the scheduler to see if the sampler was shut down.
@@ -318,7 +318,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => _perfCounterProxyFactory.CreatePerformanceCounterProxy(Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>()))
                 .Returns(mockProxy);
 
-            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>()))
+            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>(),Arg.IsAny<string>()))
                 .Returns("Test Value");
 
             var gcSampleTransformer = Mock.Create<IGcSampleTransformer>();
@@ -364,7 +364,7 @@ namespace NewRelic.Agent.Core.Samplers
             Mock.Arrange(() => _perfCounterProxyFactory.CreatePerformanceCounterProxy(Arg.IsAny<string>(), Arg.IsAny<string>(), Arg.IsAny<string>()))
                 .Returns(mockProxy);
 
-            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>()))
+            Mock.Arrange(() => _perfCounterProxyFactory.GetCurrentProcessInstanceNameForCategory(Arg.IsAny<string>(),Arg.IsAny<string>()))
                 .Returns("Test Value");
 
             var gcSampleTransformer = Mock.Create<IGcSampleTransformer>();
