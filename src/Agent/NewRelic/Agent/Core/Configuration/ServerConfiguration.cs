@@ -206,7 +206,7 @@ namespace NewRelic.Agent.Core.Configuration
             public IEnumerable<KeyValuePair<string, IEnumerable<string>>> ErrorCollectorExpectedMessages { get; set; }
 
             [JsonProperty("error_collector.expected_status_codes")]
-            public IEnumerable<string> ErrorCollectorExpectedStatusCodes { get; set; }
+            public string ErrorCollectorExpectedStatusCodes { get; set; }
 
             [JsonProperty("ignored_params")]
             public IEnumerable<string> ParametersToIgnore { get; set; }
