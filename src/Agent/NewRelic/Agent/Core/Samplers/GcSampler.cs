@@ -306,7 +306,7 @@ namespace NewRelic.Agent.Core.Samplers
             var currentPerfCounterInstName = default(string);
             try
             {
-                currentPerfCounterInstName = _pcProxyFactory.GetCurrentProcessInstanceNameForCategory(GCPerfCounterCategoryName);
+                currentPerfCounterInstName = _pcProxyFactory.GetCurrentProcessInstanceNameForCategory(GCPerfCounterCategoryName, _perfCounterInstanceName);
 
                 if (string.IsNullOrWhiteSpace(currentPerfCounterInstName))
                 {

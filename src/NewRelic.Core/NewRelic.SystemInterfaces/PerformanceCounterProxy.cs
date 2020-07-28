@@ -64,7 +64,7 @@ namespace NewRelic.SystemInterfaces
     public interface IPerformanceCounterProxyFactory
     {
         IPerformanceCounterProxy CreatePerformanceCounterProxy(string categoryName, string counterName, string instanceName);
-        string GetCurrentProcessInstanceNameForCategory(string categoryName);
+        string GetCurrentProcessInstanceNameForCategory(string categoryName, string lastKnownName);
     }
 
     public class PerformanceCounterProxyFactory : IPerformanceCounterProxyFactory
@@ -120,12 +120,12 @@ namespace NewRelic.SystemInterfaces
         /// </summary>
         /// <returns>the instance name or NULL if one could not be identified.</returns>
         /// <param name="categoryName"></param>
-        public string GetCurrentProcessInstanceNameForCategory(string categoryName)
+        public string GetCurrentProcessInstanceNameForCategory(string categoryName, string lastKnownName)
         {
             var processName = _processStatic.GetCurrentProcess().ProcessName;
             var pid = _processStatic.GetCurrentProcess().Id;
 
-            var result = GetInstanceNameForProcessAndCategory(categoryName, processName, pid);
+            var result = GetInstanceNameForProcessAndCategory(categoryName, processName, pid, lastKnownName);
 
             return result;
         }
@@ -149,12 +149,14 @@ namespace NewRelic.SystemInterfaces
         /// <param name="processName"></param>
         /// <param name="pid"></param>
         /// <returns>The instance name that will be used to collect performance counter data for the process</returns>
-        private string GetInstanceNameForProcessAndCategory(string perfCategoryName, string processName, int pid)
+        private string GetInstanceNameForProcessAndCategory(string perfCategoryName, string processName, int pid, string lastKnownName)
         {
             var performanceCategory = _createPerformanceCounterCategory(perfCategoryName);
 
             var instanceNames = performanceCategory.GetInstanceNames()
-                .Where(x => x.StartsWith(processName, StringComparison.OrdinalIgnoreCase));
+                .Where(x => x.StartsWith(processName, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x == lastKnownName)
+                .ToList();
 
             foreach (var instanceName in instanceNames)
             {
