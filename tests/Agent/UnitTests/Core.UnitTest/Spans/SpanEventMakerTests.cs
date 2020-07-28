@@ -376,7 +376,7 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
         }
 
         [TestCase(true)]
-        [TestCase(true)]
+        [TestCase(false)]
         public void GetSpanEvent_Generates_ExpecedErrorAttribute(bool hasExpectedError)
         {
             // ARRANGE
@@ -394,15 +394,20 @@ namespace NewRelic.Agent.Core.Spans.UnitTest
             // ACT
             var spanEvents = _spanEventMaker.GetSpanEvents(immutableTransaction, TransactionName, transactionAttributes).ToList();
             var rootSpanEvent = spanEvents[0];
+            var spanEvent = spanEvents[1];
 
             // ASSERT
             if (hasExpectedError)
             {
                 CollectionAssert.Contains(rootSpanEvent.AgentAttributes().Keys, "error.expected");
+                Assert.AreEqual(true, rootSpanEvent.AgentAttributes()["error.expected"]);
+                CollectionAssert.Contains(spanEvent.AgentAttributes().Keys, "error.expected");
+                Assert.AreEqual(true, spanEvent.AgentAttributes()["error.expected"]);
             }
             else
             {
                 CollectionAssert.DoesNotContain(rootSpanEvent.AgentAttributes().Keys, "error.expected");
+                CollectionAssert.DoesNotContain(spanEvent.AgentAttributes().Keys, "error.expected");
             }
         }
 
