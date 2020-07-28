@@ -3855,7 +3855,7 @@ namespace NewRelic.Agent.Core.Config
         
         private List<configurationErrorCollectorErrorClass> expectedMessagesField;
         
-        private configurationErrorCollectorExpectedStatusCodes expectedStatusCodesField;
+        private string expectedStatusCodesField;
         
         private configurationErrorCollectorAttributes attributesField;
         
@@ -3873,7 +3873,6 @@ namespace NewRelic.Agent.Core.Config
         public configurationErrorCollector()
         {
             this.attributesField = new configurationErrorCollectorAttributes();
-            this.expectedStatusCodesField = new configurationErrorCollectorExpectedStatusCodes();
             this.expectedMessagesField = new List<configurationErrorCollectorErrorClass>();
             this.expectedClassesField = new configurationErrorCollectorExpectedClasses();
             this.ignoreStatusCodesField = new configurationErrorCollectorIgnoreStatusCodes();
@@ -3932,7 +3931,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public configurationErrorCollectorExpectedStatusCodes expectedStatusCodes
+        public string expectedStatusCodes
         {
             get
             {
@@ -4220,47 +4219,6 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationErrorCollectorErrorClass Clone()
         {
             return ((configurationErrorCollectorErrorClass)(this.MemberwiseClone()));
-        }
-        #endregion
-    }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public partial class configurationErrorCollectorExpectedStatusCodes
-    {
-        
-        private List<float> codeField;
-        
-        /// <summary>
-        /// configurationErrorCollectorExpectedStatusCodes class constructor
-        /// </summary>
-        public configurationErrorCollectorExpectedStatusCodes()
-        {
-            this.codeField = new List<float>();
-        }
-        
-        [System.Xml.Serialization.XmlElementAttribute("code")]
-        public List<float> code
-        {
-            get
-            {
-                return this.codeField;
-            }
-            set
-            {
-                this.codeField = value;
-            }
-        }
-        
-        #region Clone method
-        /// <summary>
-        /// Create a clone of this configurationErrorCollectorExpectedStatusCodes object
-        /// </summary>
-        public virtual configurationErrorCollectorExpectedStatusCodes Clone()
-        {
-            return ((configurationErrorCollectorExpectedStatusCodes)(this.MemberwiseClone()));
         }
         #endregion
     }

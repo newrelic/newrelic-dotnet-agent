@@ -1291,25 +1291,12 @@
                   </xs:complexType>
               </xs:element>
 
-              <xs:element name="expectedStatusCodes">
-                  <xs:complexType>
-                      <xs:annotation>
-                          <xs:documentation>
-                              A comma separated list of status codes to be marked as expected.
-                          </xs:documentation>
-                      </xs:annotation>
-  
-                      <xs:sequence minOccurs="0" maxOccurs="unbounded">
-                          <xs:element name="code" type="xs:float">
-                              <xs:annotation>
-                                  <xs:documentation>
-                                      You may use standard integral HTTP errorcodes, such as just 401, or may use Microsoft FullStatusCodes, with decimal points, such as 401.4 or 403.18.
-                                  </xs:documentation>
-                              </xs:annotation>
-                          </xs:element>
-                      </xs:sequence>
-  
-                  </xs:complexType>
+              <xs:element name="expectedStatusCodes" minOccurs="0" maxOccurs="1" type="xs:string">
+                  <xs:annotation>
+                      <xs:documentation>
+                              A comma separated list of status codes to be marked as expected. You may use standard integral HTTP errorcodes, such as just 401, or may use Microsoft FullStatusCodes, with decimal points, such as 401.4 or 403.18.
+                      </xs:documentation>
+                  </xs:annotation>
               </xs:element>
 
               <xs:element name="attributes" minOccurs="0" maxOccurs="1">
