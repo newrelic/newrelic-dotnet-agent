@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.BrowserMonitoring;
@@ -30,46 +29,21 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
     [TestFixture]
     public class AgentWrapperApiTests
     {
-        [NotNull]
         private ITransaction _transaction;
-
-        [NotNull]
         private ITransactionService _transactionService;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
-
-        [NotNull]
         private ITransactionTransformer _transactionTransformer;
-
-        [NotNull]
         private ICallStackManager _callStackManager;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private IPathHashMaker _pathHashMaker;
-
-        [NotNull]
         private ICatHeaderHandler _catHeaderHandler;
 
 
-        [NotNull] private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
-
-        [NotNull]
+        private ISyntheticsHeaderHandler _syntheticsHeaderHandler;
         private ITransactionFinalizer _transactionFinalizer;
-
-        [NotNull]
         private IBrowserMonitoringPrereqChecker _browserMonitoringPrereqChecker;
-
-        [NotNull]
         private IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
 
         [SetUp]
@@ -716,8 +690,7 @@ namespace NotNewRelic
 {
     public static class ExceptionBuilder
     {
-        [NotNull]
-        public static Exception BuildException([NotNull] String message)
+        public static Exception BuildException(String message)
         {
             try
             {

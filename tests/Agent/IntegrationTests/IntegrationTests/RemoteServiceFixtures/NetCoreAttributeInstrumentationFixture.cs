@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 

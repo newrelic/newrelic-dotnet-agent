@@ -18,7 +18,6 @@ namespace NewRelic.SystemExtensions.UnitTests
             Assert.Throws<ArgumentNullException>(() => (null as String).TruncateUnicode(0));
         }
 
-
         [TestCase("foo", 4, "foo")]
         [TestCase("foo", 3, "foo")]
         [TestCase("foo", 2, "fo")]
@@ -32,7 +31,6 @@ namespace NewRelic.SystemExtensions.UnitTests
             Assert.AreEqual(expectedResult, actualResult);
         }
 
-
         [TestCase(null, false, new String[] { })]
         [TestCase(null, false, new[] { "baz" })]
         [TestCase("foo", false, new String[] { })]
@@ -45,12 +43,10 @@ namespace NewRelic.SystemExtensions.UnitTests
         [TestCase("foobar", true, new[] { "foo", "baz" })]
         public void ContainsAny_ReturnsTrue_IfSourceStringContainsAnyOfTargetStrings_WhileIgnoringCase(String source, Boolean expectedResult, params String[] searchTargets)
         {
-            // ReSharper disable once RedundantArgumentDefaultValue
             var result = source.ContainsAny(searchTargets, StringComparison.InvariantCultureIgnoreCase);
 
             Assert.AreEqual(expectedResult, result);
         }
-
 
         [TestCase(null, false, new String[] { })]
         [TestCase(null, false, new[] { "baz" })]
@@ -66,7 +62,6 @@ namespace NewRelic.SystemExtensions.UnitTests
         {
             Assert.AreEqual(expectedResult, source.ContainsAny(searchTargets, StringComparison.InvariantCulture));
         }
-
 
         [TestCase("foo bar zip zap", "zip", "foo bar ")]
         [TestCase("foo-bar-baz", "-", "foo")]
@@ -104,7 +99,6 @@ namespace NewRelic.SystemExtensions.UnitTests
             Assert.AreEqual(expectedResult, actualResult);
         }
 
-
         [TestCase("foo", "bar", "barfoo")]
         [TestCase("barfoo", "bar", "barfoo")]
         [TestCase("arfoo", "bar", "bararfoo")]
@@ -115,7 +109,6 @@ namespace NewRelic.SystemExtensions.UnitTests
 
             Assert.AreEqual(expectedResult, actualResult);
         }
-
 
         [TestCase("foo", "bar", "foobar")]
         [TestCase("foobar", "bar", "foobar")]

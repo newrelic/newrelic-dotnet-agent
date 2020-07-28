@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -10,12 +9,11 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class GetBrowserTimingHeader : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
         private String _browserTimingHeader;
 
-        public GetBrowserTimingHeader([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public GetBrowserTimingHeader(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

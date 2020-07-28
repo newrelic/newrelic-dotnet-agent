@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
 
@@ -16,12 +15,11 @@ namespace NewRelic.Agent.Core.TransactionTraces
         /// without calling the WireModel method.
         /// </summary>
         /// <param name="transactionTraceWireModelComponents"></param>
-        void Collect([NotNull] TransactionTraceWireModelComponents transactionTraceWireModelComponents);
+        void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents);
 
         /// <summary>
         /// Returns an immutable enumerable of samples and clears the sample storage.
         /// </summary>
-        [NotNull]
         IEnumerable<TransactionTraceWireModelComponents> GetAndClearCollectedSamples();
     }
 }

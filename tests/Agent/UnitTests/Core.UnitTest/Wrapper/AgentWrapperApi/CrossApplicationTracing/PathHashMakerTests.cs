@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -12,11 +11,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
     {
         private const String AppName = "appName";
         private const String ReferringPathHash = "12345678";
-
-        [NotNull]
         private PathHashMaker _pathHashMaker;
-
-        [NotNull]
         private IConfiguration _configuration;
 
         [SetUp]

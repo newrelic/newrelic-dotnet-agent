@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
@@ -12,8 +11,6 @@ namespace NewRelic.Agent.Core.TransactionTraces
     public class SlowestTransactionCollector : ITransactionCollector, IDisposable
     {
         private volatile TransactionTraceWireModelComponents _slowTransaction;
-
-        [NotNull]
         protected ConfigurationSubscriber ConfigurationSubscription = new ConfigurationSubscriber();
 
         public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)

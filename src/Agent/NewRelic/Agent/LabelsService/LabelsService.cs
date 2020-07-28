@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.SystemExtensions;
 
@@ -9,23 +8,18 @@ namespace NewRelic.Agent
 {
     public class LabelsService : ILabelsService
     {
-        [NotNull]
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(LabelsService));
 
         private const Int32 MaxLabels = 64;
         private const Int32 MaxLength = 255;
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
 
         public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration(); } }
 
-        public LabelsService([NotNull] IConfigurationService configurationService)
+        public LabelsService(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
-
-        [NotNull]
         private IEnumerable<Label> GetLabelsFromConfiguration()
         {
             var labelsString = _configurationService.Configuration.Labels;
@@ -55,9 +49,7 @@ namespace NewRelic.Agent
                 return Enumerable.Empty<Label>();
             }
         }
-
-        [NotNull]
-        private static Label CreateLabelFromString([NotNull] String typeAndValueString)
+        private static Label CreateLabelFromString(String typeAndValueString)
         {
             if (typeAndValueString == null)
                 throw new ArgumentNullException("typeAndValueString");
@@ -87,9 +79,7 @@ namespace NewRelic.Agent
 
             return new Label(typeTruncated, valueTruncated);
         }
-
-        [NotNull]
-        private static String Truncate([NotNull] String value)
+        private static String Truncate(String value)
         {
             var result = value.TruncateUnicode(MaxLength);
             if (result.Length != value.Length)

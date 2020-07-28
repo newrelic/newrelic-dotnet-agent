@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ServiceModel;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
@@ -11,7 +10,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const String ApplicationDirectoryName = "WcfAppIisHosted";
 
-        [NotNull]
         public readonly String ExpectedTransactionName = @"WebTransaction/DotNetService/MyService/GetData";
 
         public WcfAppIisHosted() : base(new RemoteWebApplication(ApplicationDirectoryName, ApplicationType.Bounded))

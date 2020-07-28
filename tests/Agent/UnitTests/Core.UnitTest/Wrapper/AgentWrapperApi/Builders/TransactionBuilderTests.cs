@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
@@ -19,13 +18,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
     [TestFixture]
     public class TransactionBuilderTests
     {
-        [NotNull]
         private IConfiguration _configuration;
-
-        [CanBeNull]
         private Transaction _builder;
-
-        [CanBeNull]
         private TransactionFinalizedEvent _publishedEvent;
 
         private EventSubscription<TransactionFinalizedEvent> _eventSubscription;

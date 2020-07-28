@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metric;
@@ -20,61 +19,24 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     [TestFixture]
     public class TransactionTransformerSqlTraceTests
     {
-        [NotNull]
         private TransactionTransformer _transactionTransformer;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private ISegmentTreeMaker _segmentTreeMaker;
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
-
-        [NotNull]
         private IMetricAggregator _metricAggregator;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private ITransactionTraceAggregator _transactionTraceAggregator;
-
-        [NotNull]
         private ITransactionTraceMaker _transactionTraceMaker;
-
-        [NotNull]
         private ITransactionEventAggregator _transactionEventAggregator;
-
-        [NotNull]
         private ITransactionEventMaker _transactionEventMaker;
-
-        [NotNull]
         private ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private IErrorTraceAggregator _errorTraceAggregator;
-
-        [NotNull]
         private IErrorTraceMaker _errorTraceMaker;
-
-        [NotNull]
         private IErrorEventAggregator _errorEventAggregator;
-
-        [NotNull]
         private IErrorEventMaker _errorEventMaker;
-
-        [NotNull]
         private ISqlTraceAggregator _sqlTraceAggregator;
-
-        [NotNull]
         private ISqlTraceMaker _sqlTraceMaker;
 
         // TransactionTransformerSqlTraceTests is modelled after TransactionTransformerTests, but more real (non-mock) objects are required so that appropriate segment trees get generated.
@@ -122,8 +84,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             // create TransactionTransformer
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker);
         }
-
-        [NotNull]
         public IMetricBuilder GetSimpleMetricBuilder()
         {
             _metricNameService = Mock.Create<IMetricNameService>();
@@ -198,8 +158,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         }
 
         #region Helpers
-
-        [NotNull]
         private static IConfiguration GetDefaultConfiguration()
         {
             var configuration = Mock.Create<IConfiguration>();

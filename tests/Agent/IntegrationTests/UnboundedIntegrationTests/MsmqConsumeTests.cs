@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -18,10 +17,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
     /// </remarks>
     public class MsmqConsumeTests : IClassFixture<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.MSMQBasicMVCApplicationFixture _fixture;
 
-        public MsmqConsumeTests([NotNull] RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, [NotNull] ITestOutputHelper output)
+        public MsmqConsumeTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

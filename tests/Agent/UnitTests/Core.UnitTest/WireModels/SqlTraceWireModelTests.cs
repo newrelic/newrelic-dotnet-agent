@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Metric;
@@ -21,7 +20,6 @@ namespace NewRelic.Agent.Core.WireModels
     [TestFixture, Category("SqlTraces")]
     public class SqlTraceWireModelTests
     {
-        [NotNull]
         private SqlTraceWireModel _sqlTraceWireModel;
 
         private const String TransactionName = "WebTransaction/ASP/post.aspx";
@@ -33,8 +31,6 @@ namespace NewRelic.Agent.Core.WireModels
         private static readonly TimeSpan TotalCallTime = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan MinCallTime = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan MaxCallTime = TimeSpan.FromSeconds(1);
-
-        [NotNull]
         private readonly Dictionary<String, Object> _parameterData = new Dictionary<String, Object>();
 
         [SetUp]

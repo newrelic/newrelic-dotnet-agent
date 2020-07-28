@@ -1,14 +1,13 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.WeakActions;
 
 namespace NewRelic.Dispatchers
 {
     public class WeakEventSubscription<T> : IDisposable
     {
-        [NotNull] private readonly IWeakAction<T> _callback;
+        private readonly IWeakAction<T> _callback;
 
-        public WeakEventSubscription([NotNull] Action<T> callback)
+        public WeakEventSubscription(Action<T> callback)
         {
             _callback = WeakActionUtilities.MakeWeak(callback, garbageCollectedAction => EventBus<T>.Unsubscribe(garbageCollectedAction));
             EventBus<T>.Subscribe(_callback);

@@ -1,8 +1,6 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Utilities
 {
     public class Class_DisposableCollection
@@ -17,9 +15,9 @@ namespace NewRelic.Agent.Core.Utilities
             }
         }
 
-        [NotNull] private Disposable _disposable1;
-        [NotNull] private Disposable _disposable2;
-        [NotNull] private DisposableCollection _disposableCollection;
+        private Disposable _disposable1;
+        private Disposable _disposable2;
+        private DisposableCollection _disposableCollection;
 
         [SetUp]
         public void SetUp()

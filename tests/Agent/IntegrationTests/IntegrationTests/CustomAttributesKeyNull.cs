@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class CustomAttributesKeyNull : IClassFixture<RemoteServiceFixtures.CustomAttributesWebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributesKeyNull([NotNull] RemoteServiceFixtures.CustomAttributesWebApi fixture, [NotNull] ITestOutputHelper output)
+        public CustomAttributesKeyNull(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

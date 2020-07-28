@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
 
@@ -11,9 +10,9 @@ namespace NewRelic.Dispatchers.UnitTests
         {
             public delegate void Action();
 
-            [NotNull] private readonly Action _onObjectCallback;
+            private readonly Action _onObjectCallback;
 
-            public Foo([NotNull] Action onObjectCallback)
+            public Foo(Action onObjectCallback)
             {
                 _onObjectCallback = onObjectCallback;
             }

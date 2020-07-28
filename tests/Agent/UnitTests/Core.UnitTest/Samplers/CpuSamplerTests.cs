@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers;
@@ -11,16 +10,9 @@ namespace NewRelic.Agent.Core.Samplers
     [TestFixture]
     public class CpuSamplerTests
     {
-        [NotNull]
         private CpuSampler _cpuSampler;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private ICpuSampleTransformer _cpuSampleTransformer;
-
-        [NotNull]
         private Action _sampleAction;
 
         [SetUp]

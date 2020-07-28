@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers
 {
@@ -23,7 +22,6 @@ namespace NewRelic.Agent.Extensions.Providers
         /// those), there will be almost no contention on the locks for the call stacks, since
         /// an instance of this storage type will be created for each transaction.
         /// </summary>
-        [NotNull]
         private readonly IThreadLocal<T> _threadLocal;
 
         /// <summary>

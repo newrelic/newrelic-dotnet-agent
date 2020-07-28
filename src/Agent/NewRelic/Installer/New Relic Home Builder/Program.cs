@@ -17,9 +17,6 @@ namespace NewRelic.Installer
         private const string HomeDirectoryNamePrefix = "src\\Agent\\New Relic Home ";
         private const string ProfilerSoFileName = "libNewRelicProfiler.so";
 
-        // ReSharper disable MemberCanBePrivate.Global
-        // ReSharper disable UnusedAutoPropertyAccessor.Global
-
         [CommandLine.Option("solution", Required = true, HelpText = "$(SolutionDir)")]
         public string SolutionPath { get; set; }
 
@@ -31,11 +28,7 @@ namespace NewRelic.Installer
 
         private bool _isCoreClr = false;
         private bool _isLinux = false;
-
         public string Bitness { get; set; }
-
-        // ReSharper restore UnusedAutoPropertyAccessor.Global
-        // ReSharper restore MemberCanBePrivate.Global
 
         // output paths
         private string DestinationHomeDirectoryName
@@ -106,7 +99,6 @@ namespace NewRelic.Installer
         private string NewRelicCorePath { get { return Path.Combine(NewRelicCoreBuildDirectoryPath, "NewRelic.Core.dll"); } }
         private string NewRelicAgentExtensionsPath { get { return Path.Combine(AgentCoreBuildDirectoryPath, "NewRelic.Agent.Extensions.dll"); } }
         private string ExtensionsDirectoryPath { get { return Path.Combine(SolutionPath, "src", "Agent", "NewRelic", "Agent", "Extensions"); } }
-        private string KeyFilePath { get { return Path.Combine(SolutionPath, "build", "keys", "NewRelicStrongNameKey.snk"); } }
 
         void RealMain()
         {
@@ -206,10 +198,6 @@ namespace NewRelic.Installer
                 File.Move(Path.Combine(DestinationHomeDirectoryPath, Core20ReadmeFileName), Path.Combine(DestinationHomeDirectoryPath, "README.md"));
                 return;
             }
-
-            // We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.
-            var jetBrainsAnnotationsAssemblyPath = Path.Combine(AgentCoreBuildDirectoryPath, "JetBrains.Annotations.dll");
-            CopyToDirectory(jetBrainsAnnotationsAssemblyPath, DestinationExtensionsDirectoryPath);
         }
 
         private static void ReCreateDirectoryWithEveryoneAccess(string directoryPath)

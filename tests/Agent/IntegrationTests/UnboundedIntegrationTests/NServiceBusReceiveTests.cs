@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -13,9 +12,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class NServiceBusReceiveTests : IClassFixture<NServiceBusReceiverFixture>
     {
-        [NotNull] private readonly NServiceBusReceiverFixture _fixture;
+        private readonly NServiceBusReceiverFixture _fixture;
 
-        public NServiceBusReceiveTests([NotNull] NServiceBusReceiverFixture fixture, [NotNull] ITestOutputHelper output)
+        public NServiceBusReceiveTests(NServiceBusReceiverFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -30,7 +29,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    // TODO: long term seems we could make these calls from the fixture.
                     _fixture.SendFixture.GetMessageQueue_NServiceBus_SendValid();
                     _fixture.SendFixture.GetMessageQueue_NServiceBus_SendInvalid();
 

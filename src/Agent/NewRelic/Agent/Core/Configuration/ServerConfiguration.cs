@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -65,7 +64,7 @@ namespace NewRelic.Agent.Core.Configuration
         public Boolean UsingServerSideConfig { get; private set; }
 
         [JsonProperty("agent_config")]
-        [NotNull] public AgentConfig RpmConfig { get; set; }
+        public AgentConfig RpmConfig { get; set; }
 
 
         // CAT
@@ -134,8 +133,6 @@ namespace NewRelic.Agent.Core.Configuration
         {
             RpmConfig = new AgentConfig();
         }
-
-        [NotNull]
         public static ServerConfiguration GetDefault() => new ServerConfiguration
         {
             RpmConfig =
@@ -247,9 +244,7 @@ namespace NewRelic.Agent.Core.Configuration
             [JsonProperty("terms")]
             public IEnumerable<String> Terms { get; set; }
         }
-
-        [NotNull]
-        public static ServerConfiguration FromJson([NotNull] String json)
+        public static ServerConfiguration FromJson(String json)
         {
             var serverConfiguration = JsonConvert.DeserializeObject<ServerConfiguration>(json);
             Debug.Assert(serverConfiguration != null);
@@ -259,7 +254,7 @@ namespace NewRelic.Agent.Core.Configuration
             return serverConfiguration;
         }
 
-        public static Boolean JsonContainsNonNullProperty([NotNull] String json, [NotNull] String propertyName)
+        public static Boolean JsonContainsNonNullProperty(String json, String propertyName)
         {
             var dictionary = JsonConvert.DeserializeObject<IDictionary<String, Object>>(json);
             Debug.Assert(dictionary != null);
@@ -267,8 +262,6 @@ namespace NewRelic.Agent.Core.Configuration
             return dictionary.ContainsKey(propertyName)
                 && dictionary[propertyName] != null;
         }
-
-        [NotNull]
         public static ServerConfiguration FromDeserializedReturnValue(Object deserializedJson)
         {
             var json = JsonConvert.SerializeObject(deserializedJson);

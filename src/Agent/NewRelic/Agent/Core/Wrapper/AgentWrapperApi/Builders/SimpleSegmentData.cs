@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -13,7 +12,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public class SimpleSegmentData : AbstractSegmentData
     {
-        [NotNull]
         private readonly String _name;
 
         public String Name => _name;
@@ -48,7 +46,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             MetricBuilder.TryBuildSimpleSegmentMetric(Name, duration, exclusiveDuration, txStats);
         }
 
-        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
         {
             return new TypedSegment<SimpleSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
         }

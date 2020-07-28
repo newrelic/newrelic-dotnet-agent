@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -50,7 +49,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             }
         }
 
-        public void GetWithQueryString([NotNull] IEnumerable<KeyValuePair<String, String>> parameters, Boolean expectException)
+        public void GetWithQueryString(IEnumerable<KeyValuePair<String, String>> parameters, Boolean expectException)
         {
             var parametersAsStrings = parameters.Select(param => $"{param.Key}={param.Value}");
             var parametersAsString = String.Join("&", parametersAsStrings);

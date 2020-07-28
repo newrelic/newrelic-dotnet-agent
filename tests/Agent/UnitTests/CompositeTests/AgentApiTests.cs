@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
@@ -16,7 +15,6 @@ namespace CompositeTests
     [TestFixture]
     public class AgentApiTests
     {
-        [NotNull]
         private static CompositeTestAgent _compositeTestAgent;
 
         [SetUp]

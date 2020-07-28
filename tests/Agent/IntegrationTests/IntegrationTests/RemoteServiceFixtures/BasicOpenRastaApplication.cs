@@ -7,7 +7,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -18,7 +17,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     public class BasicOpenRastaApplication : RemoteApplicationFixture
     {
 
-        [CanBeNull]
         public String ResponseBody { get; private set; }
 
         public BasicOpenRastaApplication() : base(new RemoteWebApplication("OpenRastaWebApplication", ApplicationType.Bounded))

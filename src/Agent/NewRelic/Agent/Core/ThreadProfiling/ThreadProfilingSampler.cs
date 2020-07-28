@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.SystemExtensions.Collections.Generic;
@@ -38,10 +37,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         StackSnapshotFailedCallback _failedProfileCallbackDelegate;
         StackSnapshotCompleteCallback _completeCallbackDelegate;
         #endregion
-
-        [NotNull]
         private readonly IAgent _agent;
-        [NotNull]
         private IScheduler _scheduler;
         private readonly INativeMethods _nativeMethods;
 
@@ -49,16 +45,13 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
         // This will enable the thread to pause and
         // also enable the thread to terminate
-        [NotNull]
         private ManualResetEvent _shutdownEvent = new ManualResetEvent(false);
 
         // Maintains if the polling thread is already active
         private Boolean _isPollingActivated;
 
         // Thread Synchronisation instance
-        [NotNull]
         private readonly Object _syncObj = new Object();
-        [NotNull]
         private readonly Object _syncProfiledThread = new Object();
 
         public Int32 NumberSamplesInSession { get; set; }
@@ -74,13 +67,12 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         #endregion
 
         // i.e.,  this is a dictionary of ManagedThreadId, Total Call Count
-        [NotNull]
         public readonly Dictionary<UIntPtr, Int32> ManagedThreadsFromProfiler;
 
         private UInt32 _frequencyMsec;
         private UInt32 _durationMsec;
 
-        public ThreadProfilingSampler([NotNull] IAgent agent, IScheduler scheduler, [NotNull] INativeMethods nativeMethods)
+        public ThreadProfilingSampler(IAgent agent, IScheduler scheduler, INativeMethods nativeMethods)
         {
             _agent = agent;
             _scheduler = scheduler;

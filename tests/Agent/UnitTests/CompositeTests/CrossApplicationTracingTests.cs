@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -12,10 +11,7 @@ namespace CompositeTests
 {
     internal class CrossApplicationTracingTests
     {
-        [NotNull]
         private static CompositeTestAgent _compositeTestAgent;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]

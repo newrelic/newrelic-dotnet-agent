@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Events;
@@ -15,31 +14,18 @@ namespace NewRelic.Agent.Core.Configuration
 {
     public class ConfigurationService : IConfigurationService, IDisposable
     {
-        [NotNull]
         private readonly IEnvironment _environment;
-
-        [NotNull]
         private configuration _localConfiguration = new configuration();
-
-        [NotNull]
         private ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
-
-        [NotNull]
         private RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
-
-        [NotNull]
         private readonly Subscriptions _subscriptions = new Subscriptions();
-
-        [NotNull]
         private readonly IProcessStatic _processStatic;
-        [NotNull]
         private readonly IHttpRuntimeStatic _httpRuntimeStatic;
-        [NotNull]
         private readonly IConfigurationManagerStatic _configurationManagerStatic;
 
         public IConfiguration Configuration { get; private set; }
 
-        public ConfigurationService([NotNull] IEnvironment environment, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
+        public ConfigurationService(IEnvironment environment, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic)
         {
             _environment = environment;
             _processStatic = processStatic;
@@ -54,14 +40,14 @@ namespace NewRelic.Agent.Core.Configuration
             _subscriptions.Add<GetCurrentConfigurationRequest, IConfiguration>(OnGetCurrentConfiguration);
         }
 
-        private void OnConfigurationDeserialized([NotNull] ConfigurationDeserializedEvent configurationDeserializedEvent)
+        private void OnConfigurationDeserialized(ConfigurationDeserializedEvent configurationDeserializedEvent)
         {
             _localConfiguration = configurationDeserializedEvent.Configuration;
             UpdateLogLevel(_localConfiguration);
             UpdateAndPublishConfiguration(ConfigurationUpdateSource.Local);
         }
 
-        private static void UpdateLogLevel([NotNull] configuration localConfiguration)
+        private static void UpdateLogLevel(configuration localConfiguration)
         {
             var hierarchy = log4net.LogManager.GetRepository(Assembly.GetCallingAssembly()) as log4net.Repository.Hierarchy.Hierarchy;
             var logger = hierarchy.Root;
@@ -74,7 +60,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        private void OnServerConfigurationUpdated([NotNull] ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
+        private void OnServerConfigurationUpdated(ServerConfigurationUpdatedEvent serverConfigurationUpdatedEvent)
         {
             try
             {
@@ -87,7 +73,7 @@ namespace NewRelic.Agent.Core.Configuration
             }
         }
 
-        private void OnAppNameUpdate([NotNull] AppNameUpdateEvent appNameUpdateEvent)
+        private void OnAppNameUpdate(AppNameUpdateEvent appNameUpdateEvent)
         {
             if (_runTimeConfiguration.ApplicationNames.SequenceEqual(appNameUpdateEvent.AppNames))
                 return;
@@ -104,7 +90,7 @@ namespace NewRelic.Agent.Core.Configuration
             EventBus<ConfigurationUpdatedEvent>.Publish(configurationUpdatedEvent);
         }
 
-        private void OnGetCurrentConfiguration([NotNull] GetCurrentConfigurationRequest eventData, [NotNull] RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
+        private void OnGetCurrentConfiguration(GetCurrentConfigurationRequest eventData, RequestBus<GetCurrentConfigurationRequest, IConfiguration>.ResponseCallback callback)
         {
             callback(Configuration);
         }

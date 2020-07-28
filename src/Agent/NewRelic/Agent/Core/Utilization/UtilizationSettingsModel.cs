@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilization
@@ -9,7 +8,7 @@ namespace NewRelic.Agent.Core.Utilization
     [JsonObject(MemberSerialization.OptIn)]
     public class UtilizationSettingsModel
     {
-        public UtilizationSettingsModel(int logicalProcessors, ulong totalRamBytes, [NotNull] string hostname, string bootId, [NotNull] IEnumerable<IVendorModel> vendors, [CanBeNull] UtilitizationConfig utilitizationConfig)
+        public UtilizationSettingsModel(int logicalProcessors, ulong totalRamBytes, string hostname, string bootId, IEnumerable<IVendorModel> vendors, UtilitizationConfig utilitizationConfig)
         {
             LogicalProcessors = logicalProcessors;
             TotalRamMebibytes = totalRamBytes / (1024 * 1024);
@@ -33,23 +32,14 @@ namespace NewRelic.Agent.Core.Utilization
 
         [JsonProperty("total_ram_mib")]
         public readonly ulong TotalRamMebibytes;
-
-        [NotNull]
         [JsonProperty("hostname")]
         public readonly string Hostname;
 
         [JsonProperty("boot_id", NullValueHandling = NullValueHandling.Ignore)]
         public readonly String BootId;
-
-        [NotNull]
         public readonly IDictionary<string, IVendorModel> Vendors;
-
-        [CanBeNull]
         [JsonProperty("vendors", NullValueHandling = NullValueHandling.Ignore)]
-        [UsedImplicitly]
         private IDictionary<String, IVendorModel> VendorsForSerialization { get { return Vendors.Any() ? Vendors : null; } }
-
-        [CanBeNull]
         [JsonProperty("config", NullValueHandling = NullValueHandling.Ignore)]
         public readonly UtilitizationConfig Config;
     }

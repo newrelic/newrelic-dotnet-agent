@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Trie
 {
     internal class TrieNodeComparor<T> : IComparer<T>, IEqualityComparer<T>
     {
-        [NotNull]
         private readonly Func<T, T, Int32> _nodeComparor;
-
-        [NotNull]
         private readonly Func<T, Int32> _nodeHasher;
-
-        [NotNull]
         private readonly Func<T, T, Boolean> _potentialChildChecker;
 
         public Int32 Compare(T left, T right)
@@ -29,7 +23,7 @@ namespace NewRelic.Trie
             return _nodeComparor(left, right);
         }
 
-        public TrieNodeComparor([NotNull] Func<T, T, Int32> nodeComparor, [NotNull] Func<T, Int32> nodeHasher, [NotNull] Func<T, T, Boolean> potentialChildChecker)
+        public TrieNodeComparor(Func<T, T, Int32> nodeComparor, Func<T, Int32> nodeHasher, Func<T, T, Boolean> potentialChildChecker)
         {
             _nodeComparor = nodeComparor;
             _nodeHasher = nodeHasher;

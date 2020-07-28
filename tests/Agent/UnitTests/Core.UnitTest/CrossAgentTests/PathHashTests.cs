@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
@@ -19,10 +18,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
     [TestFixture]
     public class PathHashTests
     {
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private IPathHashMaker _pathHashMaker;
 
         [SetUp]
@@ -44,7 +40,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
         [Test]
         [TestCaseSource(typeof(PathHashTests), nameof(TestCases))]
-        public void Test([NotNull] TestCase testCase)
+        public void Test(TestCase testCase)
         {
             Mock.Arrange(() => _configuration.ApplicationNames).Returns(new[] { testCase.ApplicationName });
 
@@ -52,9 +48,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests
 
             Assert.AreEqual(testCase.ExpectedPathHash, newPathHash);
         }
-
-        [NotNull]
-        private static ITransactionName GetTransactionNameFromString([NotNull] String transactionName)
+        private static ITransactionName GetTransactionNameFromString(String transactionName)
         {
             var transactionNamePieces = transactionName.Split(MetricNames.PathSeparatorChar);
             if (transactionNamePieces.Length < 2)
@@ -80,15 +74,15 @@ namespace NewRelic.Agent.Core.CrossAgentTests
         #region JSON test case data
         public class TestCase
         {
-            [JsonProperty(PropertyName = "name"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "name")]
             public readonly String Name;
-            [JsonProperty(PropertyName = "applicationName"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "applicationName")]
             public readonly String ApplicationName;
-            [JsonProperty(PropertyName = "transactionName"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "transactionName")]
             public readonly String TransactionName;
-            [JsonProperty(PropertyName = "referringPathHash"), CanBeNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "referringPathHash")]
             public readonly String ReferringPathHash;
-            [JsonProperty(PropertyName = "expectedPathHash"), NotNull, UsedImplicitly]
+            [JsonProperty(PropertyName = "expectedPathHash")]
             public readonly String ExpectedPathHash;
 
             public override String ToString()

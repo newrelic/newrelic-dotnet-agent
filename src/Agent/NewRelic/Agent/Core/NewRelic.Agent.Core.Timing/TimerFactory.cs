@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Timing;
+﻿using NewRelic.Agent.Core.Timing;
 
 namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Timing
 {
@@ -9,7 +8,6 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Timing
         /// Starts and returns a new timer.
         /// </summary>
         /// <returns>A started timer.</returns>
-        [NotNull]
         ITimer StartNewTimer();
     }
 

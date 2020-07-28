@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AsyncWcfService : IClassFixture<RemoteServiceFixtures.AsyncWcfService>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.AsyncWcfService _fixture;
 
-        public AsyncWcfService([NotNull] RemoteServiceFixtures.AsyncWcfService fixture, [NotNull] ITestOutputHelper output)
+        public AsyncWcfService(RemoteServiceFixtures.AsyncWcfService fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

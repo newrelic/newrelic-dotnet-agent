@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using JetBrains.Annotations;
 using ServiceStack.Redis;
 
 namespace BasicMvcApplication.Controllers
@@ -26,7 +25,7 @@ namespace BasicMvcApplication.Controllers
 
         public class ThisIsBadAndYouShouldFeelBad
         {
-            public static void SwallowExceptionsFromInvalidRedisHost([NotNull] Action command)
+            public static void SwallowExceptionsFromInvalidRedisHost(Action command)
             {
                 try
                 {

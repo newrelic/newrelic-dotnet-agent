@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Configuration
 {
     public class RunTimeConfiguration
     {
-        [NotNull]
         public IEnumerable<String> ApplicationNames;
 
         public RunTimeConfiguration()
@@ -15,7 +13,7 @@ namespace NewRelic.Agent.Core.Configuration
             ApplicationNames = Enumerable.Empty<String>();
         }
 
-        public RunTimeConfiguration([NotNull] IEnumerable<String> applicationNames)
+        public RunTimeConfiguration(IEnumerable<String> applicationNames)
         {
             ApplicationNames = applicationNames.ToList();
         }

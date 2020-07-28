@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -11,10 +10,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
     public class RemoteService : RemoteApplication
     {
-        [NotNull]
         private readonly String _executableName;
 
-        [NotNull]
         private readonly String _applicationDirectoryName;
 
         private readonly Boolean _createsPidFile;
@@ -33,10 +30,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        [NotNull]
         private String DestinationApplicationExecutablePath => Path.Combine(DestinationApplicationDirectoryPath, _executableName);
 
-        public RemoteService([NotNull] String applicationDirectoryName, [NotNull] String executableName, ApplicationType applicationType, Boolean createsPidFile = true, Boolean isCoreApp = false) : base(applicationType, isCoreApp)
+        public RemoteService(String applicationDirectoryName, String executableName, ApplicationType applicationType, Boolean createsPidFile = true, Boolean isCoreApp = false) : base(applicationType, isCoreApp)
         {
             _applicationDirectoryName = applicationDirectoryName;
             _executableName = executableName;
@@ -46,7 +42,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             CaptureStandardOutputRequired = false;
         }
 
-        public RemoteService([NotNull] String applicationDirectoryName, [NotNull] String executableName, [CanBeNull] String targetFramework, ApplicationType applicationType, Boolean createsPidFile = true, Boolean isCoreApp = false) : base(applicationType, isCoreApp)
+        public RemoteService(String applicationDirectoryName, String executableName, String targetFramework, ApplicationType applicationType, Boolean createsPidFile = true, Boolean isCoreApp = false) : base(applicationType, isCoreApp)
         {
             _applicationDirectoryName = applicationDirectoryName;
             _executableName = executableName;

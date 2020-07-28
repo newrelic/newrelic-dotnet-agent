@@ -5,7 +5,6 @@ using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.SystemExtensions;
@@ -73,9 +72,7 @@ namespace NewRelic.Providers.Wrapper.WebApi1
                     }
                 });
         }
-
-        [CanBeNull]
-        private static String TryGetControllerName([NotNull] HttpActionContext httpActionContext)
+        private static String TryGetControllerName(HttpActionContext httpActionContext)
         {
             var controllerContext = httpActionContext.ControllerContext;
             if (controllerContext == null)
@@ -87,9 +84,7 @@ namespace NewRelic.Providers.Wrapper.WebApi1
 
             return controllerDescriptor.ControllerName;
         }
-
-        [CanBeNull]
-        private static String TryGetActionName([NotNull] HttpActionContext httpActionContext)
+        private static String TryGetActionName(HttpActionContext httpActionContext)
         {
             var actionDescriptor = httpActionContext.ActionDescriptor;
             if (actionDescriptor == null)

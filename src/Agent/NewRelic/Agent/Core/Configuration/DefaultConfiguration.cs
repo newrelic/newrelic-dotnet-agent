@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Logging;
@@ -32,35 +31,22 @@ namespace NewRelic.Agent.Core.Configuration
 #endif
 
         private static Int64 _currentConfigurationVersion;
-
-        [NotNull]
         private readonly IEnvironment _environment = new EnvironmentMock();
-
-        [NotNull]
         private readonly IProcessStatic _processStatic = new ProcessStatic();
-
-        [NotNull]
         private readonly IHttpRuntimeStatic _httpRuntimeStatic = new HttpRuntimeStatic();
-
-        [NotNull]
         private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
 
         /// <summary>
         /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
         /// </summary>
-        [NotNull]
         public static readonly DefaultConfiguration Instance = new DefaultConfiguration();
-        [NotNull]
         private readonly configuration _localConfiguration = new configuration();
-        [NotNull]
         private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
-        [NotNull]
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
 
         /// <summary>
         /// _localConfiguration.AppSettings will be loaded into this field
         /// </summary>
-        [NotNull]
         private readonly IDictionary<String, String> _appSettings;
 
         /// <summary>
@@ -71,7 +57,7 @@ namespace NewRelic.Agent.Core.Configuration
             ConfigurationVersion = Interlocked.Increment(ref _currentConfigurationVersion);
         }
 
-        protected DefaultConfiguration([NotNull] IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic)
+        protected DefaultConfiguration(IEnvironment environment, configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic)
             : this()
         {
             _environment = environment;
@@ -90,8 +76,6 @@ namespace NewRelic.Agent.Core.Configuration
 
             _appSettings = TransformAppSettings();
         }
-
-        [NotNull]
         private IDictionary<String, String> TransformAppSettings()
         {
             if (_localConfiguration.appSettings == null)
@@ -103,7 +87,7 @@ namespace NewRelic.Agent.Core.Configuration
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
         }
 
-        private Boolean TryGetAppSettingAsBooleanWithDefault([NotNull] String key, Boolean defaultValue)
+        private Boolean TryGetAppSettingAsBooleanWithDefault(String key, Boolean defaultValue)
         {
             var value = _appSettings.GetValueOrDefault(key);
 
@@ -115,7 +99,7 @@ namespace NewRelic.Agent.Core.Configuration
             return parsedBoolean;
         }
 
-        private Int32 TryGetAppSettingAsIntWithDefault([NotNull] String key, Int32 defaultValue)
+        private Int32 TryGetAppSettingAsIntWithDefault(String key, Int32 defaultValue)
         {
             var value = _appSettings.GetValueOrDefault(key);
 
@@ -127,7 +111,6 @@ namespace NewRelic.Agent.Core.Configuration
             return parsedInt;
         }
 
-        // ReSharper disable PossibleNullReferenceException
 
         #region IConfiguration Properties
 
@@ -167,8 +150,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         private IEnumerable<String> _applicationNames;
         public virtual IEnumerable<String> ApplicationNames { get { return _applicationNames ?? (_applicationNames = GetApplicationNames()); } }
-
-        [NotNull]
         private IEnumerable<String> GetApplicationNames()
         {
             var runtimeAppNames = _runTimeConfiguration.ApplicationNames.ToList();
@@ -919,8 +900,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         #region Helpers
 
-        // ReSharper restore PossibleNullReferenceException
-        private TimeSpan ParseTransactionThreshold(String threshold, [NotNull] Func<Double, TimeSpan> numberToTimeSpanConverter)
+        private TimeSpan ParseTransactionThreshold(String threshold, Func<Double, TimeSpan> numberToTimeSpanConverter)
         {
             if (String.IsNullOrEmpty(threshold))
                 return TransactionTraceApdexF;
@@ -936,8 +916,6 @@ namespace NewRelic.Agent.Core.Configuration
             if (server == null) return local;
             return server.Value && local;
         }
-
-        [NotNull]
         private static String ServerOverrides(String server, String local)
         {
             return server ?? local ?? String.Empty;
@@ -952,15 +930,11 @@ namespace NewRelic.Agent.Core.Configuration
         {
             return HighSecurityModeEnabled ? overriddenValue : originalValue;
         }
-
-        [NotNull]
         private static T ServerOverrides<T>(T server, T local) where T : class
         {
             Debug.Assert(local != null);
             return server ?? local;
         }
-
-        [CanBeNull]
         private String EnvironmentOverrides(String local, params String[] environmentVariableNames)
         {
             return (environmentVariableNames ?? Enumerable.Empty<String>())
@@ -969,8 +943,6 @@ namespace NewRelic.Agent.Core.Configuration
                 .FirstOrDefault()
                 ?? local;
         }
-
-        [CanBeNull]
         private int? EnvironmentOverrides(int? local, params string[] environmentVariableNames)
         {
             var env = environmentVariableNames
@@ -1006,9 +978,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             return list;
         }
-
-        [NotNull]
-        public static IEnumerable<RegexRule> GetRegexRules([CanBeNull] IEnumerable<ServerConfiguration.RegexRule> rules)
+        public static IEnumerable<RegexRule> GetRegexRules(IEnumerable<ServerConfiguration.RegexRule> rules)
         {
             if (rules == null)
                 return new List<RegexRule>();
@@ -1020,7 +990,7 @@ namespace NewRelic.Agent.Core.Configuration
                 .ToList();
         }
 
-        private static RegexRule? TryGetRegexRule([CanBeNull] ServerConfiguration.RegexRule rule)
+        private static RegexRule? TryGetRegexRule(ServerConfiguration.RegexRule rule)
         {
             if (rule == null)
                 return null;
@@ -1037,9 +1007,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             return new RegexRule(matchExpression, replacement, ignore, evaluationOrder, terminateChain, eachSegment, replaceAll);
         }
-
-        [CanBeNull]
-        private static String UpdateRegexForDotNet([CanBeNull] String replacement)
+        private static String UpdateRegexForDotNet(String replacement)
         {
             if (string.IsNullOrEmpty(replacement))
                 return replacement;
@@ -1048,9 +1016,7 @@ namespace NewRelic.Agent.Core.Configuration
             var backreferencePattern = new Regex(@"\\(\d+)");
             return backreferencePattern.Replace(replacement, "$$$1");
         }
-
-        [NotNull]
-        public static IDictionary<String, IEnumerable<String>> GetWhitelistRules([CanBeNull] IEnumerable<ServerConfiguration.WhitelistRule> whitelistRules)
+        public static IDictionary<String, IEnumerable<String>> GetWhitelistRules(IEnumerable<ServerConfiguration.WhitelistRule> whitelistRules)
         {
             if (whitelistRules == null)
                 return new Dictionary<String, IEnumerable<String>>();
@@ -1063,7 +1029,7 @@ namespace NewRelic.Agent.Core.Configuration
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepLast);
         }
 
-        private static KeyValuePair<String, IEnumerable<String>>? TryGetValidPrefixAndTerms([NotNull] ServerConfiguration.WhitelistRule rule)
+        private static KeyValuePair<String, IEnumerable<String>>? TryGetValidPrefixAndTerms(ServerConfiguration.WhitelistRule rule)
         {
             if (rule.Terms == null)
             {
@@ -1081,10 +1047,7 @@ namespace NewRelic.Agent.Core.Configuration
             var terms = rule.Terms;
             return new KeyValuePair<String, IEnumerable<String>>(prefix, terms);
         }
-
-
-        [CanBeNull]
-        private static String TryGetValidPrefix([CanBeNull] String prefix)
+        private static String TryGetValidPrefix(String prefix)
         {
             if (prefix == null)
                 return null;
@@ -1136,8 +1099,6 @@ namespace NewRelic.Agent.Core.Configuration
         {
             Log.WarnFormat("Deprecated configuration property '{0}'.  Use '{1}'.  See http://docs.newrelic.com for details.", deprecatedPropertyName, newPropertyName);
         }
-
-        [NotNull]
         private IEnumerable<String> GetDeprecatedExplicitlyDisabledParameters()
         {
             var disabledProperties = new List<String>();
@@ -1204,8 +1165,6 @@ namespace NewRelic.Agent.Core.Configuration
                 return localAttributeValue;
             }
         }
-
-        [NotNull]
         private IEnumerable<String> GetDeprecatedIgnoreParameters()
         {
             var ignoreParameters = new List<String>();
@@ -1218,8 +1177,6 @@ namespace NewRelic.Agent.Core.Configuration
 
             return ignoreParameters.Distinct();
         }
-
-        [NotNull]
         private IEnumerable<String> DeprecatedIgnoreCustomParameters()
         {
             if (_localConfiguration.parameterGroups != null
@@ -1232,8 +1189,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
             return Enumerable.Empty<String>();
         }
-
-        [NotNull]
         private IEnumerable<String> DeprecatedIgnoreIdentityParameters()
         {
             if (_localConfiguration.parameterGroups != null
@@ -1246,8 +1201,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
             return Enumerable.Empty<String>();
         }
-
-        [NotNull]
         private IEnumerable<String> DeprecatedIgnoreResponseHeaderParameters()
         {
             if (_localConfiguration.parameterGroups != null
@@ -1260,8 +1213,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
             return Enumerable.Empty<String>();
         }
-
-        [NotNull]
         private IEnumerable<String> DeprecatedIgnoreRequestHeaderParameters()
         {
             if (_localConfiguration.parameterGroups != null
@@ -1274,8 +1225,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
             return Enumerable.Empty<String>();
         }
-
-        [NotNull]
         private IEnumerable<String> DeprecatedIgnoreServiceRequestParameters()
         {
             if (_localConfiguration.parameterGroups != null
@@ -1288,8 +1237,6 @@ namespace NewRelic.Agent.Core.Configuration
             }
             return Enumerable.Empty<String>();
         }
-
-        [NotNull]
         private IEnumerable<String> DeprecatedIgnoreRequestParameters()
         {
             if (_localConfiguration.requestParameters != null

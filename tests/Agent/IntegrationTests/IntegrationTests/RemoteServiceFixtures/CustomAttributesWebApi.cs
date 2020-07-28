@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Newtonsoft.Json;
@@ -18,11 +17,8 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private const String ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi.exe";
         private const String TargetFramework = "net451";
 
-        [NotNull]
         public readonly String ExpectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
-        [NotNull]
         public readonly String ExpectedTracedErrorPathLegacy = @"DotNet/Microsoft.Owin.Host.HttpListener.OwinHttpListener/StartProcessingRequest";
-        [NotNull]
         public readonly String ExpectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
 
         public CustomAttributesWebApi() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))

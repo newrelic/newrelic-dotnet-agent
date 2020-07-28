@@ -3,8 +3,6 @@ using NewRelic.Agent.Core.Utils;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 
-// ReSharper disable CheckNamespace
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Transactions.UnitTest
 {
     [TestFixture]

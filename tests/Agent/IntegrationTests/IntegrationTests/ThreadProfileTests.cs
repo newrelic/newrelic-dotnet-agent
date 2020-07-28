@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
@@ -10,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ThreadProfileTests : IClassFixture<MvcWithCollectorFixture>
     {
-        [NotNull]
         private readonly MvcWithCollectorFixture _fixture;
 
-        public ThreadProfileTests([NotNull] MvcWithCollectorFixture fixture)
+        public ThreadProfileTests(MvcWithCollectorFixture fixture)
         {
             _fixture = fixture;
             _fixture.DelayKill = true;

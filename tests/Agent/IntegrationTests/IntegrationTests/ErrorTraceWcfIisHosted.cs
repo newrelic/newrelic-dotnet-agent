@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,10 +12,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ErrorTraceWcfIisHosted : IClassFixture<RemoteServiceFixtures.WcfAppIisHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppIisHosted _fixture;
 
-        public ErrorTraceWcfIisHosted([NotNull] RemoteServiceFixtures.WcfAppIisHosted fixture, [NotNull] ITestOutputHelper testLogger)
+        public ErrorTraceWcfIisHosted(RemoteServiceFixtures.WcfAppIisHosted fixture, ITestOutputHelper testLogger)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;

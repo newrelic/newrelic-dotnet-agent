@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.SystemExtensions;
 using Newtonsoft.Json;
@@ -14,8 +13,6 @@ namespace NewRelic.Agent.Core.Metric
         private const String ApdexPerfZoneFrustrating = "F";
 
         private TimeSpan _apdexT = TimeSpan.Zero;
-
-        [CanBeNull]
         public static String GetApdexPerfZoneOrNull(TimeSpan? responseTime, TimeSpan? apdexT)
         {
             if (responseTime == null || apdexT == null)

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DependencyInjection;
@@ -18,19 +17,15 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
     public interface ITransactionTraceMaker
     {
-        [NotNull]
-        TransactionTraceWireModel GetTransactionTrace([NotNull] ImmutableTransaction immutableTransaction, IEnumerable<ImmutableSegmentTreeNode> segmentTrees, TransactionMetricName transactionMetricName, Attributes attributes);
+        TransactionTraceWireModel GetTransactionTrace(ImmutableTransaction immutableTransaction, IEnumerable<ImmutableSegmentTreeNode> segmentTrees, TransactionMetricName transactionMetricName, Attributes attributes);
     }
 
     public class TransactionTraceMaker : ITransactionTraceMaker
     {
-        [NotNull]
         private readonly IAttributeService _attributeService;
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
 
-        public TransactionTraceMaker([NotNull] IAttributeService attributeService, [NotNull] IConfigurationService configurationService)
+        public TransactionTraceMaker(IAttributeService attributeService, IConfigurationService configurationService)
         {
             _attributeService = attributeService;
             _configurationService = configurationService;
@@ -65,9 +60,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             return trace;
         }
-
-        [NotNull]
-        private TransactionTraceSegment GetRootSegment([NotNull] IEnumerable<ImmutableSegmentTreeNode> segmentTrees, [NotNull] ImmutableTransaction immutableTransaction)
+        private TransactionTraceSegment GetRootSegment(IEnumerable<ImmutableSegmentTreeNode> segmentTrees, ImmutableTransaction immutableTransaction)
         {
             var relativeStartTime = TimeSpan.Zero;
             var relativeEndTime = immutableTransaction.Duration;
@@ -83,9 +76,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             return new TransactionTraceSegment(relativeStartTime, relativeEndTime, name, segmentParameters, children, firstSegmentClassName, firstSegmentMethodName);
         }
-
-        [NotNull]
-        private TransactionTraceSegment GetFauxTopLevelSegment([NotNull] IEnumerable<ImmutableSegmentTreeNode> segmentTrees, [NotNull] ImmutableTransaction immutableTransaction)
+        private TransactionTraceSegment GetFauxTopLevelSegment(IEnumerable<ImmutableSegmentTreeNode> segmentTrees, ImmutableTransaction immutableTransaction)
         {
             var relativeStartTime = TimeSpan.Zero;
             var relativeEndTime = immutableTransaction.Duration;
@@ -97,8 +88,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             return new TransactionTraceSegment(relativeStartTime, relativeEndTime, name, segmentParameters, children, firstSegmentClassName, firstSegmentMethodName);
         }
-
-        [NotNull]
         private TransactionTraceSegment CreateTransactionTraceSegment(ImmutableSegmentTreeNode node, ImmutableTransaction immutableTransaction)
         {
 

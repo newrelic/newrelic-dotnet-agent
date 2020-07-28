@@ -3,7 +3,6 @@ using System.Data;
 using System.Data.OleDb;
 using System.Data.OracleClient;
 using System.Data.SqlClient;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing;
 using NUnit.Framework;
@@ -22,7 +21,7 @@ namespace SqlTests
         [TestCase("PostgreSQL", ExpectedResult = DatastoreVendor.Postgres)]
         [TestCase("IBMDB2", ExpectedResult = DatastoreVendor.IBMDB2)]
         public DatastoreVendor GetVendorName_ReturnsCorrectHost_IfOleDbConnectionProviderContainsKnownHost(
-            [NotNull] String provider)
+            String provider)
         {
             var command = new OleDbCommand
             {
@@ -40,7 +39,7 @@ namespace SqlTests
         [TestCase("NpgsqlCommand", ExpectedResult = DatastoreVendor.Postgres)]
         [TestCase("DB2Command", ExpectedResult = DatastoreVendor.IBMDB2)]
         public DatastoreVendor
-            GetVendorName_ReturnsCorrectHost([NotNull] string typeName)
+            GetVendorName_ReturnsCorrectHost(string typeName)
         {
             return SqlWrapperHelper.GetVendorName(typeName);
         }

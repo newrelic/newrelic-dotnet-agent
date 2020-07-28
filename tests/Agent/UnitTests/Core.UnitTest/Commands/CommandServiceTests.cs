@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using Newtonsoft.Json;
@@ -12,7 +11,6 @@ namespace NewRelic.Agent.Core.Commands
     [TestFixture]
     public class CommandServiceTests
     {
-        [NotNull]
         private IDataTransportService _dataTransportService;
 
         [SetUp]
@@ -91,8 +89,6 @@ namespace NewRelic.Agent.Core.Commands
     public class MockCommand : AbstractCommand
     {
         public int Attempts = 0;
-
-        [NotNull]
         public List<String> RequiredArguments = new List<String>();
 
         public MockCommand(String commandName)

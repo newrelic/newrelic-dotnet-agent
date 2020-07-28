@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.SystemExtensions.Collections.Generic;
 
@@ -16,16 +15,11 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         private const String NativeFunctionDescriptiveName = "Function Call";
         private const String UnknownClassName = "UnknownClass";
         private const String UnknownMethodName = "UnknownMethod";
-
-        [NotNull]
         public readonly BucketProfile Tree;
-        [NotNull]
         private readonly Object _syncObj = new Object();
-
-        [NotNull]
         private readonly IThreadProfilingProcessing _service;
 
-        public ThreadProfilingBucket([NotNull] IThreadProfilingProcessing service)
+        public ThreadProfilingBucket(IThreadProfilingProcessing service)
         {
             _service = service;
             Tree = new BucketProfile();
@@ -60,7 +54,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
         }
 
-        private void UpdateTree([NotNull] ProfileNode parent, [NotNull] IStackInfo stackInfo, UInt32 depth)
+        private void UpdateTree(ProfileNode parent, IStackInfo stackInfo, UInt32 depth)
         {
             if (stackInfo.CurrentIndex < 0)
                 return;
@@ -107,7 +101,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             return treeDepth - 1;
         }
 
-        private static Int32 GetDepth([NotNull] ProfileNode node, Int32 currentDepth)
+        private static Int32 GetDepth(ProfileNode node, Int32 currentDepth)
         {
             currentDepth++;
 
@@ -136,7 +130,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             return functionIds;
         }
 
-        public void PopulateNames([NotNull] IDictionary<ulong, ClassMethodNames> namesSource)
+        public void PopulateNames(IDictionary<ulong, ClassMethodNames> namesSource)
         {
             var nodes = Tree.Root.Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
                 .Where(node => node != null);
@@ -147,7 +141,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
         }
 
-        private void PopulateNames([NotNull] ProfileNode node, [NotNull] IDictionary<ulong, ClassMethodNames> namesSource)
+        private void PopulateNames(ProfileNode node, IDictionary<ulong, ClassMethodNames> namesSource)
         {
             if (node.FunctionId == IntPtr.Zero)
             {
@@ -178,7 +172,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
         }
 
-        private static void PruneTree([NotNull] ProfileNode node)
+        private static void PruneTree(ProfileNode node)
         {
             if (node.Children.Count <= 0)
                 return;

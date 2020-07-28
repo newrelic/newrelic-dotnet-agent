@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,10 +12,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class WcfAppIisHostedAspNetCompatible : IClassFixture<RemoteServiceFixtures.WcfAppIisHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppIisHosted _fixture;
 
-        public WcfAppIisHostedAspNetCompatible([NotNull] RemoteServiceFixtures.WcfAppIisHosted fixture, [NotNull] ITestOutputHelper output)
+        public WcfAppIisHostedAspNetCompatible(RemoteServiceFixtures.WcfAppIisHosted fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

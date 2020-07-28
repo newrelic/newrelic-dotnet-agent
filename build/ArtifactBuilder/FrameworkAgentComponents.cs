@@ -26,7 +26,6 @@ namespace ArtifactBuilder
         {
             var agentDllsForExtensionDirectory = new List<string>()
             {
-                $@"{SourceHomeBuilderPath}\Extensions\JetBrains.Annotations.dll",
                 $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Core.dll",
                 $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Parsing.dll"
             };

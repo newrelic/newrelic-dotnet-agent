@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
@@ -14,10 +13,7 @@ namespace CompositeTests
     [TestFixture]
     public class SegmentsTests
     {
-        [NotNull]
         private static CompositeTestAgent _compositeTestAgent;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]
@@ -646,8 +642,6 @@ namespace CompositeTests
         #endregion
 
         #region Helper methods
-
-        [NotNull]
         private static TransactionTraceSegment GetFirstSegmentOrThrow()
         {
             var trace = _compositeTestAgent.TransactionTraces.FirstOrDefault();

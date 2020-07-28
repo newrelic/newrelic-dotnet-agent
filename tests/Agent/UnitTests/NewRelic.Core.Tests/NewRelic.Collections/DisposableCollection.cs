@@ -1,11 +1,9 @@
 ﻿using System;
 using NUnit.Framework;
 
-
 namespace NewRelic.Collections.UnitTests
 {
     [TestFixture]
-    // ReSharper disable once InconsistentNaming
     public class Class_DisposableCollection
     {
         private class Disposable : IDisposable

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ApiAppNameChangeTests : IClassFixture<RemoteServiceFixtures.ApiAppNameChangeFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.ApiAppNameChangeFixture _fixture;
 
-        public ApiAppNameChangeTests([NotNull] RemoteServiceFixtures.ApiAppNameChangeFixture fixture, [NotNull] ITestOutputHelper output)
+        public ApiAppNameChangeTests(RemoteServiceFixtures.ApiAppNameChangeFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.DependencyInjection;
@@ -22,19 +21,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
     [TestFixture]
     public class TransactionFinalizerTests
     {
-        [NotNull]
         private TransactionFinalizer _transactionFinalizer;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private IPathHashMaker _pathHashMaker;
-
-        [NotNull]
         private ITransactionTransformer _transactionTransformer;
 
         [SetUp]

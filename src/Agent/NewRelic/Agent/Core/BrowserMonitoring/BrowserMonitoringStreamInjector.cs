@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utils;
 
@@ -9,16 +8,11 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public class BrowserMonitoringStreamInjector : Stream
     {
-        [NotNull]
         private readonly BrowserMonitoringWriter _jsWriter;
-
-        [NotNull]
         private readonly Encoding _contentEncoding;
-
-        [CanBeNull]
         private Action<Byte[], Int32, Int32> _streamWriter;
 
-        public BrowserMonitoringStreamInjector([NotNull] Func<String> getJavascriptAgentScript, [NotNull] Stream output, [NotNull] Encoding contentEncoding)
+        public BrowserMonitoringStreamInjector(Func<String> getJavascriptAgentScript, Stream output, Encoding contentEncoding)
         {
             _jsWriter = new BrowserMonitoringWriter(getJavascriptAgentScript);
             OutputStream = output;
@@ -41,8 +35,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             OutputStream.Close();
             base.Close();
         }
-
-        [NotNull]
         private Stream OutputStream { get; }
 
         public override void Flush()
@@ -75,8 +67,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             _streamWriter(buffer, offset, count);
         }
-
-        [NotNull]
         private Action<Byte[], Int32, Int32> GetStreamWriter()
         {
             try
@@ -91,13 +81,11 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             }
         }
 
-        private void PassThroughStreamWriter([NotNull] Byte[] buffer, Int32 offset, Int32 count)
+        private void PassThroughStreamWriter(Byte[] buffer, Int32 offset, Int32 count)
         {
             OutputStream.Write(buffer, offset, count);
         }
-
-        [NotNull]
-        private Action<Byte[], Int32, Int32> GetInjectingStreamWriter([NotNull] Encoding contentEncoding)
+        private Action<Byte[], Int32, Int32> GetInjectingStreamWriter(Encoding contentEncoding)
         {
             return (buffer, offset, count) =>
             {
@@ -143,9 +131,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 }
             };
         }
-
-        [CanBeNull]
-        private Byte[] TryGetInjectedBytes([NotNull] Encoding contentEncoding, [NotNull] Byte[] buffer, Int32 offset, Int32 count)
+        private Byte[] TryGetInjectedBytes(Encoding contentEncoding, Byte[] buffer, Int32 offset, Int32 count)
         {
             var decoder = _contentEncoding.GetDecoder();
             var decodedBuffer = Strings.GetStringBufferFromBytes(decoder, buffer, offset, count);
@@ -154,9 +140,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             return TryGetBrowserMonitoringHeaders(contentEncoding, decodedBuffer);
         }
-
-        [CanBeNull]
-        private Byte[] TryGetBrowserMonitoringHeaders([NotNull] Encoding contentEncoding, [NotNull] String content)
+        private Byte[] TryGetBrowserMonitoringHeaders(Encoding contentEncoding, String content)
         {
             var contentWithBrowserMonitoringHeaders = _jsWriter.WriteScriptHeaders(content);
             if (String.IsNullOrEmpty(contentWithBrowserMonitoringHeaders))

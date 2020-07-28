@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -22,7 +21,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
     public interface IErrorEventAggregator
     {
-        void Collect([NotNull] ErrorEventWireModel errorEventWireModel);
+        void Collect(ErrorEventWireModel errorEventWireModel);
     }
 
     /// <summary>
@@ -30,21 +29,15 @@ namespace NewRelic.Agent.Core.Aggregators
     /// </summary>
     public class ErrorEventAggregator : AbstractAggregator<ErrorEventWireModel>, IErrorEventAggregator
     {
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private IResizableCappedCollection<ErrorEventWireModel> _errorEvents = new ConcurrentReservoir<ErrorEventWireModel>(0);
 
         // Note that Synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they
         // are never pushed out by non-Synthetics events.
-        [NotNull]
         private ConcurrentList<ErrorEventWireModel> _syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
-
-        [NotNull]
         private const Double _reservoirReductionSizeMultiplier = 0.5;
 
-        public ErrorEventAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public ErrorEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
         {
             _agentHealthReporter = agentHealthReporter;
@@ -102,7 +95,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         }
 
-        private void AddEventToCollection([NotNull] ErrorEventWireModel errorEvents)
+        private void AddEventToCollection(ErrorEventWireModel errorEvents)
         {
             if (errorEvents.IsSynthetics() && _syntheticsErrorEvents.Count < SyntheticsHeader.MaxEventCount)
                 _syntheticsErrorEvents.Add(errorEvents);
@@ -123,7 +116,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _errorEvents.Resize(newSize);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, IEnumerable<ErrorEventWireModel> errorEvents)
         {
             switch (responseStatus)
             {
@@ -142,7 +135,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        private void RetainEvents([NotNull] IEnumerable<ErrorEventWireModel> errorEvents)
+        private void RetainEvents(IEnumerable<ErrorEventWireModel> errorEvents)
         {
             errorEvents = errorEvents.ToList();
 

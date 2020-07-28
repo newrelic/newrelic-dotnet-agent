@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -11,10 +10,7 @@ namespace NewRelic.Agent.Core.TransactionTraces
 {
     public class SyntheticsTransactionCollector : ITransactionCollector, IDisposable
     {
-        [NotNull]
         private volatile ICollection<TransactionTraceWireModelComponents> _collectedSamples = new ConcurrentHashSet<TransactionTraceWireModelComponents>();
-
-        [NotNull]
         private readonly ConfigurationSubscriber _configurationSubscription = new ConfigurationSubscriber();
 
         public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)

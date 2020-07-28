@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Exceptions;
@@ -18,16 +17,9 @@ namespace NewRelic.Agent.Core.DataTransport
     [TestFixture]
     public class DataTransportServiceTests
     {
-        [NotNull]
         private DataTransportService _dataTransportService;
-
-        [NotNull]
         private IConnectionManager _connectionManager;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private DisposableCollection _disposableCollection;
 
         [SetUp]

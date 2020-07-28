@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.XPath;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
 using Xunit;
 
@@ -15,11 +14,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     {
         private class NamespaceAndName
         {
-            [NotNull] public String Namespace = String.Empty;
-            [NotNull] public String Name = String.Empty;
+            public String Namespace = String.Empty;
+            public String Name = String.Empty;
         }
 
-        public static void CopyDirectory([NotNull] String sourceDirectoryPath, [NotNull] String destinationDirectoryPath, [NotNull] String searchPattern = "*")
+        public static void CopyDirectory(String sourceDirectoryPath, String destinationDirectoryPath, String searchPattern = "*")
         {
             var sourceDirectory = new DirectoryInfo(sourceDirectoryPath);
 
@@ -61,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         /// <param name="attributeName">The xml attribute name to set.</param>
         /// <param name="value">The value to apply to the xml attribute.</param>
         /// <exception cref="System.ArgumentNullException">If any of the argument values are null.</exception>
-        public static void SetAttributeOnTracerFactoryInNewRelicInstrumentation([NotNull] String filePath, [NotNull] String tracerFactoryName, [NotNull] String attributeName, [NotNull] String value)
+        public static void SetAttributeOnTracerFactoryInNewRelicInstrumentation(String filePath, String tracerFactoryName, String attributeName, String value)
         {
             if (filePath == null)
                 throw new ArgumentNullException("filePath");
@@ -108,37 +107,37 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             document.Save(filePath);
         }
 
-        public static void ModifyOrCreateXmlAttributeInNewRelicConfig([NotNull] String filePath, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String attributeName, [NotNull] String value)
+        public static void ModifyOrCreateXmlAttributeInNewRelicConfig(String filePath, IEnumerable<String> parentNodeNames, String attributeName, String value)
         {
             ModifyOrCreateXmlAttribute(filePath, "urn:newrelic-config", parentNodeNames, attributeName, value);
         }
 
-        public static void ModifyOrCreateXmlAttributesInNewRelicConfig([NotNull] String filePath, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] IEnumerable<KeyValuePair<String, String>> attributes)
+        public static void ModifyOrCreateXmlAttributesInNewRelicConfig(String filePath, IEnumerable<String> parentNodeNames, IEnumerable<KeyValuePair<String, String>> attributes)
         {
             ModifyOrCreateXmlAttributes(filePath, "urn:newrelic-config", parentNodeNames, attributes);
         }
 
-        public static void ModifyOrCreateXmlNodeInNewRelicConfig([NotNull] String filePath, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String nodeName, [NotNull] String value)
+        public static void ModifyOrCreateXmlNodeInNewRelicConfig(String filePath, IEnumerable<String> parentNodeNames, String nodeName, String value)
         {
             ModifyOrCreateXmlNode(filePath, "urn:newrelic-config", parentNodeNames, nodeName, value);
         }
 
-        public static void AddXmlNodeInNewRelicConfig([NotNull] String filePath, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String nodeName, [NotNull] String value)
+        public static void AddXmlNodeInNewRelicConfig(String filePath, IEnumerable<String> parentNodeNames, String nodeName, String value)
         {
             AddXmlNode(filePath, "urn:newrelic-config", parentNodeNames, nodeName, value);
         }
 
-        public static void DeleteXmlNodeFromNewRelicConfig([NotNull] String filePath, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String nodeName)
+        public static void DeleteXmlNodeFromNewRelicConfig(String filePath, IEnumerable<String> parentNodeNames, String nodeName)
         {
             DeleteXmlNode(filePath, "urn:newrelic-config", parentNodeNames, nodeName);
         }
 
-        public static void SetAppNameInAppConfig([NotNull] string filePath, [NotNull] string applicationName)
+        public static void SetAppNameInAppConfig(string filePath, string applicationName)
         {
             SetAppConfigAppSetting(filePath, "NewRelic.AppName", applicationName);
         }
 
-        public static void SetAppConfigAppSetting([NotNull] string filePath, [NotNull] string key, [NotNull] string value)
+        public static void SetAppConfigAppSetting(string filePath, string key, string value)
         {
             var document = new XmlDocument();
             document.Load(filePath);
@@ -166,12 +165,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             document.Save(filePath);
         }
 
-        public static void SetNewRelicAppSetting([NotNull] String filePath, [NotNull] String key, [NotNull] String value)
+        public static void SetNewRelicAppSetting(String filePath, String key, String value)
         {
             SetAppSetting(filePath, "urn:newrelic-config", key, value);
         }
 
-        public static void SetAppSetting([NotNull] String filePath, [NotNull] String @namespace, [NotNull] String key, [NotNull] String value)
+        public static void SetAppSetting(String filePath, String @namespace, String key, String value)
         {
             var parentNodes = new[] { "configuration", "appSettings", "add" };
             var attributes = new[]
@@ -182,7 +181,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             ModifyOrCreateXmlAttributes(filePath, @namespace, parentNodes, attributes);
         }
 
-        public static void AddXmlNode([NotNull] String filePath, [NotNull] String @namespace, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String nodeName, [NotNull] String value)
+        public static void AddXmlNode(String filePath, String @namespace, IEnumerable<String> parentNodeNames, String nodeName, String value)
         {
             if (filePath == null)
                 throw new ArgumentNullException("filePath");
@@ -202,7 +201,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             AddXmlNode(filePath, parentNodes, leafNode, value);
         }
 
-        public static void DeleteXmlNode([NotNull] String filePath, [NotNull] String @namespace, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String nodeName)
+        public static void DeleteXmlNode(String filePath, String @namespace, IEnumerable<String> parentNodeNames, String nodeName)
         {
             var document = new XmlDocument();
             document.Load(filePath);
@@ -231,7 +230,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             document.Save(filePath);
         }
 
-        public static void ModifyOrCreateXmlNode([NotNull] String filePath, [NotNull] String @namespace, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String nodeName, [NotNull] String value)
+        public static void ModifyOrCreateXmlNode(String filePath, String @namespace, IEnumerable<String> parentNodeNames, String nodeName, String value)
         {
             if (filePath == null)
                 throw new ArgumentNullException("filePath");
@@ -251,13 +250,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             ModifyOrCreateXmlNode(filePath, parentNodes, attributeNode, value);
         }
 
-        public static void ModifyOrCreateXmlAttribute([NotNull] String filePath, [NotNull] String @namespace, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] String attributeName, [NotNull] String value)
+        public static void ModifyOrCreateXmlAttribute(String filePath, String @namespace, IEnumerable<String> parentNodeNames, String attributeName, String value)
         {
             var attributes = new[] { new KeyValuePair<String, String>(attributeName, value) };
             ModifyOrCreateXmlAttributes(filePath, @namespace, parentNodeNames, attributes);
         }
 
-        public static void ModifyOrCreateXmlAttributes([NotNull] String filePath, [NotNull] String @namespace, [NotNull] IEnumerable<String> parentNodeNames, [NotNull] IEnumerable<KeyValuePair<String, String>> attributes)
+        public static void ModifyOrCreateXmlAttributes(String filePath, String @namespace, IEnumerable<String> parentNodeNames, IEnumerable<KeyValuePair<String, String>> attributes)
         {
             if (filePath == null)
                 throw new ArgumentNullException("filePath");
@@ -280,7 +279,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             ModifyOrCreateXmlAttributes(filePath, parentNodes, attributeNodes);
         }
 
-        private static void ModifyOrCreateXmlAttributes([NotNull] String filePath, [NotNull] IEnumerable<NamespaceAndName> parentNodes, [NotNull] IEnumerable<KeyValuePair<NamespaceAndName, String>> attributeNodes)
+        private static void ModifyOrCreateXmlAttributes(String filePath, IEnumerable<NamespaceAndName> parentNodes, IEnumerable<KeyValuePair<NamespaceAndName, String>> attributeNodes)
         {
             if (filePath == null)
                 throw new ArgumentNullException("filePath");
@@ -305,7 +304,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             document.Save(filePath);
         }
 
-        private static void ModifyOrCreateXmlNode([NotNull] String filePath, [NotNull] IEnumerable<NamespaceAndName> parentNodes, [NotNull] NamespaceAndName node, [NotNull] String value)
+        private static void ModifyOrCreateXmlNode(String filePath, IEnumerable<NamespaceAndName> parentNodes, NamespaceAndName node, String value)
         {
             if (filePath == null)
                 throw new ArgumentNullException("filePath");
@@ -330,7 +329,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             document.Save(filePath);
         }
 
-        private static void AddXmlNode([NotNull] String filePath, [NotNull] IEnumerable<NamespaceAndName> parentNodes, [NotNull] NamespaceAndName node, [NotNull] String value)
+        private static void AddXmlNode(String filePath, IEnumerable<NamespaceAndName> parentNodes, NamespaceAndName node, String value)
         {
             if (filePath == null)
                 throw new ArgumentNullException("filePath");
@@ -355,7 +354,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             document.Save(filePath);
         }
 
-        private static void SetOrCreateAttribute([NotNull] XPathNavigator navigator, [NotNull] NamespaceAndName attribute, [NotNull] String value)
+        private static void SetOrCreateAttribute(XPathNavigator navigator, NamespaceAndName attribute, String value)
         {
             if (navigator == null)
                 throw new ArgumentNullException("navigator");
@@ -376,7 +375,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
-        private static void SetOrCreateNode([NotNull] XPathNavigator navigator, [NotNull] NamespaceAndName node, [NotNull] String value)
+        private static void SetOrCreateNode(XPathNavigator navigator, NamespaceAndName node, String value)
         {
             if (navigator == null)
                 throw new ArgumentNullException("navigator");
@@ -389,7 +388,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             navigator.SetValue(value);
         }
 
-        private static void MoveToOrCreateChildNode([NotNull] XPathNavigator navigator, [NotNull] NamespaceAndName childNode)
+        private static void MoveToOrCreateChildNode(XPathNavigator navigator, NamespaceAndName childNode)
         {
             if (navigator == null)
                 throw new ArgumentNullException("navigator");
@@ -407,7 +406,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             navigator.MoveToChild(childNode.Name, childNode.Namespace);
         }
 
-        private static Boolean MoveToChildNode([NotNull] XPathNavigator navigator, [NotNull] NamespaceAndName childNode)
+        private static Boolean MoveToChildNode(XPathNavigator navigator, NamespaceAndName childNode)
         {
             if (navigator == null)
                 throw new ArgumentNullException("navigator");
@@ -428,8 +427,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return true;
         }
 
-        [NotNull]
-        public static String GetLocalPathFromRemotePath([NotNull] String remotePath)
+        public static String GetLocalPathFromRemotePath(String remotePath)
         {
             var match = Regex.Match(remotePath, @"\\\\.*?\\(.)\$\\(.*)");
             var driveLetter = match.Groups[1];
@@ -437,7 +435,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return String.Format(@"{0}:\{1}", driveLetter, path);
         }
 
-        public static void AddCustomInstrumentation([NotNull] String instrumentationFilePath, [NotNull] String assemblyName, [NotNull] String typeName, [NotNull] String methodName, [CanBeNull] String wrapperName = null, [CanBeNull] String metricName = null, [CanBeNull] Int32? transactionNamingPriority = null)
+        public static void AddCustomInstrumentation(String instrumentationFilePath, String assemblyName, String typeName, String methodName, String wrapperName = null, String metricName = null, Int32? transactionNamingPriority = null)
         {
             const String instrumentationNamespace = "urn:newrelic-extension";
 
@@ -490,7 +488,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var inst = File.ReadAllText(instrumentationFilePath);
         }
 
-        private static void CreateEmptyInstrumentationFile([NotNull] String instrumentationFilePath)
+        private static void CreateEmptyInstrumentationFile(String instrumentationFilePath)
         {
             const String emptyInstrumentationFileText = @"<?xml version=""1.0"" encoding=""utf-8""?>
             <extension xmlns=""urn:newrelic-extension"">
@@ -512,7 +510,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return item.AsEnumerableInternal();
         }
 
-        private static IEnumerable<T> AsEnumerableInternal<T>([NotNull] this T item)
+        private static IEnumerable<T> AsEnumerableInternal<T>(this T item)
         {
             yield return item;
         }

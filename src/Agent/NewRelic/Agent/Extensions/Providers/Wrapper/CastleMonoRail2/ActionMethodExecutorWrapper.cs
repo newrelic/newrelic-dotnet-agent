@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -20,11 +19,7 @@ namespace NewRelic.Providers.Wrapper.CastleMonoRail2
         {
             private static Func<Object, String> _propertyControllerName;
             private static Func<Object, String> _propertyActionName;
-
-            [NotNull]
             public static readonly Func<Object, String> GetPropertyControllerName = AssignPropertyControllerName();
-
-            [NotNull]
             public static readonly Func<Object, String> GetPropertyAction = AssignPropertyAction();
 
             private static Func<Object, String> AssignPropertyControllerName()
@@ -65,8 +60,7 @@ namespace NewRelic.Providers.Wrapper.CastleMonoRail2
             return Delegates.GetDelegateFor(segment);
         }
 
-        [CanBeNull]
-        private static String TryGetPropertyName([NotNull] String propertyName, [NotNull] Object contextObject)
+        private static String TryGetPropertyName(String propertyName, Object contextObject)
         {
             if (propertyName == PropertyControllerName)
                 return Statics.GetPropertyControllerName(contextObject);

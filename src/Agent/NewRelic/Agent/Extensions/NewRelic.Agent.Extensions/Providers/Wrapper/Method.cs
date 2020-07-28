@@ -1,19 +1,15 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
     public class Method
     {
-        [NotNull]
         public readonly Type Type;
-        [NotNull]
         public readonly String MethodName;
-        [NotNull]
         public readonly String ParameterTypeNames;
         private readonly int _hashCode;
 
-        public Method([NotNull] Type type, [NotNull] String methodName, [NotNull] String parameterTypeNames, int hashCode)
+        public Method(Type type, String methodName, String parameterTypeNames, int hashCode)
         {
             if (type == null)
                 throw new ArgumentNullException("type");
@@ -30,7 +26,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
             _hashCode = hashCode;
         }
 
-        public Method([NotNull] Type type, [NotNull] String methodName, [NotNull] String parameterTypeNames) :
+        public Method(Type type, String methodName, String parameterTypeNames) :
             this(type, methodName, parameterTypeNames, GetHashCode(type, methodName, parameterTypeNames))
         {
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
@@ -12,20 +11,17 @@ namespace NewRelic.Agent.Core.WireModels
     public class ErrorEventWireModel
     {
         [JsonArrayIndex(Index = 0)]
-        [NotNull]
         public readonly ReadOnlyDictionary<String, Object> IntrinsicAttributes;
 
         [JsonArrayIndex(Index = 1)]
-        [NotNull]
         public readonly ReadOnlyDictionary<String, Object> UserAttributes;
 
         [JsonArrayIndex(Index = 2)]
-        [NotNull]
         public readonly ReadOnlyDictionary<String, Object> AgentAttributes;
 
         private readonly bool _isSynthetics;
 
-        public ErrorEventWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, bool isSynthetics)
+        public ErrorEventWireModel(IEnumerable<KeyValuePair<String, Object>> agentAttributes, IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, IEnumerable<KeyValuePair<String, Object>> userAttributes, bool isSynthetics)
         {
             IntrinsicAttributes = new ReadOnlyDictionary<String, Object>(intrinsicAttributes.ToDictionary<String, Object>());
             UserAttributes = new ReadOnlyDictionary<String, Object>(userAttributes.ToDictionary<String, Object>());

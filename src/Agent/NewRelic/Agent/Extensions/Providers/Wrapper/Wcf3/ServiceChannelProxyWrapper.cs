@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
@@ -29,8 +28,6 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             return Delegates.GetDelegateFor(segment);
         }
-
-        [NotNull]
         private static String GetName(MethodCall methodCall)
         {
             var methodCallMessage = methodCall.MethodArguments.ExtractAs<System.Runtime.Remoting.Messaging.IMethodCallMessage>(0);

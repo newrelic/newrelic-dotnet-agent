@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -11,18 +10,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Synthetics
 {
     public interface ISyntheticsHeaderHandler
     {
-        [NotNull]
-        IEnumerable<KeyValuePair<String, String>> TryGetOutboundSyntheticsRequestHeader([NotNull] ITransaction transaction);
-
-        [CanBeNull]
-        SyntheticsHeader TryDecodeInboundRequestHeaders([NotNull] IDictionary<String, String> headers);
+        IEnumerable<KeyValuePair<String, String>> TryGetOutboundSyntheticsRequestHeader(ITransaction transaction);
+        SyntheticsHeader TryDecodeInboundRequestHeaders(IDictionary<String, String> headers);
     }
 
     public class SyntheticsHeaderHandler : ISyntheticsHeaderHandler
     {
-        [NotNull] private readonly IConfigurationService _configurationService;
+        private readonly IConfigurationService _configurationService;
 
-        public SyntheticsHeaderHandler([NotNull] IConfigurationService configurationService)
+        public SyntheticsHeaderHandler(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }

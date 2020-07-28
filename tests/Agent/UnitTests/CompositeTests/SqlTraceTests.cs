@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
@@ -14,10 +13,7 @@ namespace CompositeTests
     [TestFixture]
     public class SqlTraceTests
     {
-        [NotNull]
         private static CompositeTestAgent _compositeTestAgent;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]

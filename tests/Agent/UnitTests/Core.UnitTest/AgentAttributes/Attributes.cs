@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -12,7 +11,6 @@ namespace NewRelic.Agent.Core.AgentAttributes
     [TestFixture]
     public class Class_Attributes
     {
-        [NotNull]
         private Attributes _attributes;
 
         private AttributeService _attributeService;

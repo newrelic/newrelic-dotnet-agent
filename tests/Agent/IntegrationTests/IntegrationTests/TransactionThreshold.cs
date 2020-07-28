@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -8,10 +7,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class TransactionThreshold : IClassFixture<RemoteServiceFixtures.BasicWebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebApi _fixture;
 
-        public TransactionThreshold([NotNull] RemoteServiceFixtures.BasicWebApi fixture, [NotNull] ITestOutputHelper output)
+        public TransactionThreshold(RemoteServiceFixtures.BasicWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

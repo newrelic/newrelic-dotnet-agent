@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Text;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public class HeaderEncoder
     {
-        [NotNull]
         public const String IntegrationTestEncodingKey = "d67afc830dab717fd163bfcb0b8b88423e9a1a3b";
 
         /// <summary>
@@ -16,8 +14,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         /// <param name="data">The data to encode. Must not be null.</param>
         /// <param name="encodingKey">The encoding key. Can be null.</param>
         /// <returns>The serialized and encoded data.</returns>
-        [NotNull, Pure]
-        public static String SerializeAndEncode([NotNull] Object data, [CanBeNull] String encodingKey)
+        public static String SerializeAndEncode(Object data, String encodingKey)
         {
             var serializedData = JsonConvert.SerializeObject(data);
             if (serializedData == null)
@@ -33,8 +30,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         /// <param name="encodingKey">The encoding key. Can be null.</param>
         /// <param name="maxKeyLength">supplied key will be truncated to this length, for compatibility with agent code which stops at 13</param>
         /// <returns>The decoded and deserialized data if possible, else null.</returns>
-        [NotNull, Pure]
-        public static T DecodeAndDeserialize<T>([NotNull] String encodedString, [CanBeNull] String encodingKey, [CanBeNull] Int32? maxKeyLength = null) where T : class
+        public static T DecodeAndDeserialize<T>(String encodedString, String encodingKey, Int32? maxKeyLength = null) where T : class
         {
             var decodedString = Base64Decode(encodedString, encodingKey != null && maxKeyLength.HasValue ? encodingKey.Substring(0, maxKeyLength.Value) : encodingKey);
             var deserializedData = JsonConvert.DeserializeObject<T>(decodedString);
@@ -44,8 +40,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return deserializedData;
         }
 
-        [NotNull]
-        public static String Base64Encode([NotNull] String val, String encodingKey = null)
+        public static String Base64Encode(String val, String encodingKey = null)
         {
             var encodedBytes = Encoding.UTF8.GetBytes(val);
 
@@ -55,8 +50,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return Convert.ToBase64String(encodedBytes);
         }
 
-        [NotNull]
-        public static String Base64Decode([NotNull] String val, String encodingKey = null)
+        public static String Base64Decode(String val, String encodingKey = null)
         {
             var bytes = Convert.FromBase64String(val);
 
@@ -66,8 +60,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return Encoding.UTF8.GetString(bytes);
         }
 
-        [NotNull]
-        public static Byte[] EncodeWithKey([NotNull] Byte[] bytes, [NotNull] String key)
+        public static Byte[] EncodeWithKey(Byte[] bytes, String key)
         {
             var keyBytes = Encoding.UTF8.GetBytes(key);
 

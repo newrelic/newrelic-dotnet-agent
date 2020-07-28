@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
@@ -20,24 +15,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public class DatastoreSegmentData : AbstractSegmentData
     {
-        [CanBeNull]
         public String Operation { protected get; set; }
         public DatastoreVendor DatastoreVendorName { get; set; }
-        [CanBeNull]
         public String Model { protected get; set; }
-        [CanBeNull]
         public String CommandText { get; set; }
-        [CanBeNull]
         public String Host { get; set; }
-        [CanBeNull]
         public String PortPathOrId { get; set; }
-        [CanBeNull]
         public String DatabaseName { get; set; }
-        [CanBeNull]
         public Func<Object> GetExplainPlanResources { get; set; }
-        [CanBeNull]
         public Func<Object, ExplainPlan> GenerateExplainPlan { get; set; }
-        [CanBeNull]
         public Func<Boolean> DoExplainPlanCondition { get; set; }
 
         private Object _explainPlanResources;
@@ -196,7 +182,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             }
         }
 
-        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
         {
             return new TypedSegment<DatastoreSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
         }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ErrorTraceWebService : IClassFixture<RemoteServiceFixtures.BasicWebService>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebService _fixture;
 
-        public ErrorTraceWebService([NotNull] RemoteServiceFixtures.BasicWebService fixture, [NotNull] ITestOutputHelper output)
+        public ErrorTraceWebService(RemoteServiceFixtures.BasicWebService fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

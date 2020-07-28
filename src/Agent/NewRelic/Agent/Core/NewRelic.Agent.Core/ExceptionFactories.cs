@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Exceptions;
 
 namespace NewRelic.Agent.Core
@@ -46,8 +45,6 @@ namespace NewRelic.Agent.Core
         private ExceptionFactories()
         {
         }
-
-        [NotNull]
         public static Exception NewException(HttpStatusCode statusCode, String statusDescription)
         {
             IExceptionFactory factory;
@@ -64,7 +61,6 @@ namespace NewRelic.Agent.Core
         /// <param name="type">Type of the exception, as given in some well-known RPM/collector space.</param>
         /// <param name="message">Message payload for the constructed exception.</param>
         /// <returns>A created exception</returns>
-        [NotNull]
         public static Exception NewException(String type, String message)
         {
             IExceptionFactory factory;
@@ -159,7 +155,6 @@ namespace NewRelic.Agent.Core
 
         private interface IExceptionFactory
         {
-            [NotNull]
             Exception CreateException(String message);
         }
 

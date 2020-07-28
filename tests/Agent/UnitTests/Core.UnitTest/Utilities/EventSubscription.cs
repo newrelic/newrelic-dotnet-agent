@@ -1,8 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Utilities.UnitTest
 {
     [TestFixture]

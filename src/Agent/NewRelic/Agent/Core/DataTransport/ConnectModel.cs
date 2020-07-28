@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Utilization;
 using Newtonsoft.Json;
 
@@ -10,20 +9,12 @@ namespace NewRelic.Agent.Core.DataTransport
     {
         [JsonProperty("pid")]
         public readonly Int32 ProcessId;
-
-        [NotNull]
         [JsonProperty("language")]
         public readonly String Language;
-
-        [NotNull]
         [JsonProperty("host")]
         public readonly String HostName;
-
-        [NotNull]
         [JsonProperty("app_name")]
         public readonly IEnumerable<String> AppNames;
-
-        [NotNull]
         [JsonProperty("agent_version")]
         public readonly String AgentVersion;
 
@@ -32,8 +23,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
         [JsonProperty("build_timestamp")]
         public readonly long BuildTimestamp;
-
-        [NotNull]
         [JsonProperty("security_settings")]
         public readonly SecuritySettingsModel SecuritySettings;
 
@@ -47,27 +36,18 @@ namespace NewRelic.Agent.Core.DataTransport
         ///
         /// Providing this identifier works around this issue and allows users more flexibility in using application rollups.
         /// </summary>
-        [NotNull]
         [JsonProperty("identifier")]
         public readonly String Identifier;
-
-        [NotNull]
         [JsonProperty("labels")]
         public readonly IEnumerable<Label> Labels;
-
-        [NotNull]
         [JsonProperty("settings")]
         public readonly JavascriptAgentSettingsModel JavascriptAgentSettings;
-
-        [NotNull]
         [JsonProperty("utilization")]
         public readonly UtilizationSettingsModel UtilizationSettings;
-
-        [CanBeNull]
         [JsonProperty("environment", NullValueHandling = NullValueHandling.Ignore)]
         public readonly Environment Environment;
 
-        public ConnectModel(Int32 processId, [NotNull] String language, [NotNull] String hostName, [NotNull] IEnumerable<String> appNames, [NotNull] String agentVersion, long agentVersionTimestamp, [NotNull] SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, [NotNull] String identifier, [NotNull] IEnumerable<Label> labels, [NotNull] JavascriptAgentSettingsModel javascriptAgentSettings, [NotNull] UtilizationSettingsModel utilizationSettings, [CanBeNull] Environment environment)
+        public ConnectModel(Int32 processId, String language, String hostName, IEnumerable<String> appNames, String agentVersion, long agentVersionTimestamp, SecuritySettingsModel securitySettings, Boolean highSecurityModeEnabled, String identifier, IEnumerable<Label> labels, JavascriptAgentSettingsModel javascriptAgentSettings, UtilizationSettingsModel utilizationSettings, Environment environment)
         {
             ProcessId = processId;
             Language = language;

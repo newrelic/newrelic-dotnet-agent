@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
@@ -18,7 +17,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
     [TestFixture]
     public class TransactionEventMakerTests
     {
-        [NotNull] private TransactionEventMaker _transactionEventMaker;
+        private TransactionEventMaker _transactionEventMaker;
 
         [SetUp]
         public void SetUp()

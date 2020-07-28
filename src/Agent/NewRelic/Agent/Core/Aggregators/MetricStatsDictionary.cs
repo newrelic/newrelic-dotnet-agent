@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Aggregators
@@ -37,7 +36,7 @@ namespace NewRelic.Agent.Core.Aggregators
         /// <param name="key">The key to merge with.</param>
         /// <param name="value">The value to merge.</param>
         /// <param name="mergeFunction">A function that will merge two values (existingValue, newValue) if an existing value is found.</param>
-        public void Merge([NotNull] TKey key, TValue value, [NotNull] Func<TValue, TValue, TValue> mergeFunction)
+        public void Merge(TKey key, TValue value, Func<TValue, TValue, TValue> mergeFunction)
         {
             if (TryGetValue(key, out TValue existing))
             {
@@ -54,7 +53,7 @@ namespace NewRelic.Agent.Core.Aggregators
         /// </summary>
         /// <param name="metricsToMerge"></param>
         /// <param name="mergeFunction">A function that will merge two values (existingValue, newValue) if an existing value is found.</param>
-        public void Merge([NotNull] IEnumerable<KeyValuePair<TKey, TValue>> metricsToMerge, [NotNull] Func<TValue, TValue, TValue> mergeFunction)
+        public void Merge(IEnumerable<KeyValuePair<TKey, TValue>> metricsToMerge, Func<TValue, TValue, TValue> mergeFunction)
         {
             foreach (var metric in metricsToMerge)
             {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Logging;
@@ -12,7 +11,7 @@ namespace NewRelic.Agent.Core.Transformers
 {
     public interface ICustomEventTransformer
     {
-        void Transform([NotNull] String eventType, [NotNull] IEnumerable<KeyValuePair<String, Object>> attributes);
+        void Transform(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes);
     }
 
     public class CustomEventTransformer : ICustomEventTransformer
@@ -20,17 +19,11 @@ namespace NewRelic.Agent.Core.Transformers
         private const Int32 EventTypeValueLengthLimit = 256;
         private const Int32 CustomAttributeLengthLimit = 256;
         private const String EventTypeRegexText = @"^[a-zA-Z0-9:_ ]{1,256}$";
-
-        [NotNull]
         private static readonly Regex EventTypeRegex = new Regex(EventTypeRegexText, RegexOptions.Compiled);
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
-
-        [NotNull]
         private readonly ICustomEventAggregator _customEventAggregator;
 
-        public CustomEventTransformer([NotNull] IConfigurationService configurationService, [NotNull] ICustomEventAggregator customEventAggregator)
+        public CustomEventTransformer(IConfigurationService configurationService, ICustomEventAggregator customEventAggregator)
         {
             _configurationService = configurationService;
             _customEventAggregator = customEventAggregator;
@@ -58,7 +51,7 @@ namespace NewRelic.Agent.Core.Transformers
             _customEventAggregator.Collect(customEvent);
         }
 
-        private static void LogNullValuedAttributes([NotNull] IEnumerable<KeyValuePair<String, Object>> attributes)
+        private static void LogNullValuedAttributes(IEnumerable<KeyValuePair<String, Object>> attributes)
         {
             var nullValuedAttributeNames = attributes.Where(attribute => attribute.Value == null).Select(attribute => attribute.Key).ToArray();
             if (!nullValuedAttributeNames.Any())

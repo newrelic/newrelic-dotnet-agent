@@ -8,9 +8,7 @@ using NUnit.Framework;
 namespace NewRelic.Agent.Core.Utilities
 {
     [TestFixture]
-    // ReSharper disable InconsistentNaming
     public class Class_IEnumerableExtensions
-    // ReSharper restore InconsistentNaming
     {
         [Test]
         [TestCase(ExpectedResult = true, Description = "Single element sequence")]

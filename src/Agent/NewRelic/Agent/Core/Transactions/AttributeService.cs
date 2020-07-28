@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
@@ -13,8 +12,7 @@ namespace NewRelic.Agent.Core.Transactions
 {
     public interface IAttributeService
     {
-        [NotNull]
-        Attributes FilterAttributes([NotNull] Attributes attributes, AttributeDestinations attributeDestination);
+        Attributes FilterAttributes(Attributes attributes, AttributeDestinations attributeDestination);
     }
 
     public class AttributeService : ConfigurationBasedService, IAttributeService
@@ -24,14 +22,12 @@ namespace NewRelic.Agent.Core.Transactions
         public const string AgentAttributesKey = "agentAttributes";
         public const string UserAttributesKey = "userAttributes";
         public const string IntrinsicsKey = "intrinsics";
-
-        [NotNull]
         private IAttributeFilter<Attribute> _attributeFilter { get { return Memoizer.Memoize(ref _attributeFilterBacker, CreateAttributeFilter); } }
         private IAttributeFilter<Attribute> _attributeFilterBacker;
 
         #region Event Handlers
 
-        public Attributes FilterAttributes([NotNull] Attributes attributes, AttributeDestinations attributeDestination)
+        public Attributes FilterAttributes(Attributes attributes, AttributeDestinations attributeDestination)
         {
             var filteredAttributes = new Attributes();
 
@@ -119,8 +115,7 @@ namespace NewRelic.Agent.Core.Transactions
 
     internal static class AttributeFilterExtensions
     {
-        [NotNull]
-        public static IEnumerable<Attribute> FilterAttributes(this IEnumerable<Attribute> attributes, [NotNull] IAttributeFilter<Attribute> attributeFilter, AttributeDestinations destination)
+        public static IEnumerable<Attribute> FilterAttributes(this IEnumerable<Attribute> attributes, IAttributeFilter<Attribute> attributeFilter, AttributeDestinations destination)
         {
             if (attributes == null)
                 return Enumerable.Empty<Attribute>();

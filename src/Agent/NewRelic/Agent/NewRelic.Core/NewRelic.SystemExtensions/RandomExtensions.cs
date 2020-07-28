@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 namespace NewRelic.SystemExtensions
 {
     public static class RandomExtensions
@@ -9,7 +8,7 @@ namespace NewRelic.SystemExtensions
         /// <param name="max">Exclusive upper bound.</param>
         /// <returns>A random number in the range [0, max)</returns>
         /// <remarks>Thanks Will/PHP team.</remarks>
-        public static UInt64 Next64([NotNull] this Random random, UInt64 max)
+        public static UInt64 Next64(this Random random, UInt64 max)
         {
             // figure out the largest number we can generate with even distribution between 0 and max
             var largestMultiple = UInt64.MaxValue - (UInt64.MaxValue % max);

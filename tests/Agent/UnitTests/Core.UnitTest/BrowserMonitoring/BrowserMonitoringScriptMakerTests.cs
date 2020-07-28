@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Configuration.UnitTest;
@@ -22,19 +21,10 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     [TestFixture]
     public class BrowserMonitoringScriptMakerTests
     {
-        [NotNull]
         private BrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private IAttributeService _attributeService;
 
         [SetUp]
@@ -197,8 +187,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             Assert.Throws<NullReferenceException>(() => _browserMonitoringScriptMaker.GetScript(transaction));
         }
-
-        [NotNull]
         private ITransaction BuildTestTransaction(TimeSpan? queueTime = null, TimeSpan? applicationTime = null)
         {
             var name = new WebTransactionName("foo", "bar");

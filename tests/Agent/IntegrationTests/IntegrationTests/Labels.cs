@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json.Linq;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class Labels : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public Labels([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public Labels(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

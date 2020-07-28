@@ -1,21 +1,18 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.Transactions;
+﻿using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
     public interface ITransactionEventMaker
     {
-        [NotNull]
-        TransactionEventWireModel GetTransactionEvent([NotNull] ImmutableTransaction immutableTransaction, [NotNull] Attributes attributes);
+        TransactionEventWireModel GetTransactionEvent(ImmutableTransaction immutableTransaction, Attributes attributes);
     }
 
     public class TransactionEventMaker : ITransactionEventMaker
     {
-        [NotNull]
         private readonly IAttributeService _attributeService;
 
-        public TransactionEventMaker([NotNull] IAttributeService attributeService)
+        public TransactionEventMaker(IAttributeService attributeService)
         {
             _attributeService = attributeService;
         }

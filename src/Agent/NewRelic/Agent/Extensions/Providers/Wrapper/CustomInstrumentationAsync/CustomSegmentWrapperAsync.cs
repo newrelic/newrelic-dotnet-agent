@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 
@@ -8,7 +7,6 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 {
     public class CustomSegmentWrapperAsync : IWrapper
     {
-        [NotNull]
         private static readonly String[] PossibleWrapperNames = {
             "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.CustomSegmentWrapperAsync",
         };

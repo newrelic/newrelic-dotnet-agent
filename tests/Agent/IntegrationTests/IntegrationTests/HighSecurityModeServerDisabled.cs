@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.IntegrationTestHelpers;
+﻿using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -7,10 +6,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class HighSecurityModeServerDisabled : IClassFixture<RemoteServiceFixtures.BasicWebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebApi _fixture;
 
-        public HighSecurityModeServerDisabled([NotNull] RemoteServiceFixtures.BasicWebApi fixture, [NotNull] ITestOutputHelper output)
+        public HighSecurityModeServerDisabled(RemoteServiceFixtures.BasicWebApi fixture, ITestOutputHelper output)
         {
 
             _fixture = fixture;

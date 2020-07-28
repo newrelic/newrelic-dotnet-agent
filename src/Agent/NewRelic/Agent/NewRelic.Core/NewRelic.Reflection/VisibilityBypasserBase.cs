@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using JetBrains.Annotations;
 
 namespace NewRelic.Reflection
 {
@@ -22,9 +21,7 @@ namespace NewRelic.Reflection
         }
 
         #region Field Access
-
-        [NotNull]
-        public Func<Object, TResult> GenerateFieldAccessor<TResult>([NotNull] String assemblyName, [NotNull] String typeName, [NotNull] String fieldName)
+        public Func<Object, TResult> GenerateFieldAccessor<TResult>(String assemblyName, String typeName, String fieldName)
         {
             if (assemblyName == null)
                 throw new ArgumentNullException("assemblyName");
@@ -36,9 +33,7 @@ namespace NewRelic.Reflection
             var ownerType = GetType(assemblyName, typeName);
             return GenerateFieldAccessor<TResult>(ownerType, fieldName);
         }
-
-        [NotNull]
-        public Func<Object, TResult> GenerateFieldAccessor<TResult>([NotNull] Type ownerType, [NotNull] String fieldName)
+        public Func<Object, TResult> GenerateFieldAccessor<TResult>(Type ownerType, String fieldName)
         {
             if (ownerType == null)
                 throw new ArgumentNullException("ownerType");
@@ -48,9 +43,7 @@ namespace NewRelic.Reflection
             var dynamicMethod = GenerateFieldAccessorInternal<TResult>(ownerType, fieldName);
             return (Func<Object, TResult>)dynamicMethod.CreateDelegate(typeof(Func<Object, TResult>));
         }
-
-        [NotNull]
-        public Func<TOwner, TResult> GenerateFieldAccessor<TOwner, TResult>([NotNull] String fieldName)
+        public Func<TOwner, TResult> GenerateFieldAccessor<TOwner, TResult>(String fieldName)
         {
             if (fieldName == null)
                 throw new ArgumentNullException("fieldName");
@@ -58,16 +51,12 @@ namespace NewRelic.Reflection
             var dynamicMethod = GenerateFieldAccessorInternal<TResult>(typeof(TOwner), fieldName);
             return (Func<TOwner, TResult>)dynamicMethod.CreateDelegate(typeof(Func<TOwner, TResult>));
         }
-
-        [NotNull]
-        private static DynamicMethod GenerateFieldAccessorInternal<TResult>([NotNull] Type ownerType, [NotNull] String fieldName)
+        private static DynamicMethod GenerateFieldAccessorInternal<TResult>(Type ownerType, String fieldName)
         {
             var fieldInfo = GetFieldInfo(ownerType, fieldName);
             return GenerateFieldAccessorInternal<TResult>(fieldInfo);
         }
-
-        [NotNull]
-        private static DynamicMethod GenerateFieldAccessorInternal<TResult>([NotNull] FieldInfo fieldInfo)
+        private static DynamicMethod GenerateFieldAccessorInternal<TResult>(FieldInfo fieldInfo)
         {
             var resultType = typeof(TResult);
             if (!resultType.IsAssignableFrom(fieldInfo.FieldType))
@@ -91,9 +80,7 @@ namespace NewRelic.Reflection
         #endregion
 
         #region Method Access
-
-        [NotNull]
-        public Func<TOwner, TResult> GenerateParameterlessMethodCaller<TOwner, TResult>([NotNull] String methodName)
+        public Func<TOwner, TResult> GenerateParameterlessMethodCaller<TOwner, TResult>(String methodName)
         {
             if (methodName == null)
                 throw new ArgumentNullException("methodName");
@@ -104,9 +91,7 @@ namespace NewRelic.Reflection
             var methodCaller = GenerateMethodCallerInternal(ownerType, resultType, methodName);
             return owner => (TResult)methodCaller(owner);
         }
-
-        [NotNull]
-        public Func<Object, TResult> GenerateParameterlessMethodCaller<TResult>([NotNull] String assemblyName, [NotNull] String typeName, [NotNull] String methodName)
+        public Func<Object, TResult> GenerateParameterlessMethodCaller<TResult>(String assemblyName, String typeName, String methodName)
         {
             if (assemblyName == null)
                 throw new ArgumentNullException("assemblyName");
@@ -121,9 +106,7 @@ namespace NewRelic.Reflection
             var methodCaller = GenerateMethodCallerInternal(ownerType, resultType, methodName);
             return owner => (TResult)methodCaller(owner);
         }
-
-        [NotNull]
-        public Func<TOwner, TParameter, TResult> GenerateOneParameterMethodCaller<TOwner, TParameter, TResult>([NotNull] String methodName)
+        public Func<TOwner, TParameter, TResult> GenerateOneParameterMethodCaller<TOwner, TParameter, TResult>(String methodName)
         {
             if (methodName == null)
                 throw new ArgumentNullException("methodName");
@@ -135,9 +118,7 @@ namespace NewRelic.Reflection
             var methodCaller = GenerateMethodCallerInternal(ownerType, resultType, parameterType, methodName);
             return (owner, parameter) => (TResult)methodCaller(owner, parameter);
         }
-
-        [NotNull]
-        public Func<Object, TParameter, TResult> GenerateOneParameterMethodCaller<TParameter, TResult>([NotNull] String assemblyName, [NotNull] String typeName, [NotNull] String methodName)
+        public Func<Object, TParameter, TResult> GenerateOneParameterMethodCaller<TParameter, TResult>(String assemblyName, String typeName, String methodName)
         {
             if (assemblyName == null)
                 throw new ArgumentNullException("assemblyName");
@@ -153,8 +134,6 @@ namespace NewRelic.Reflection
             var methodCaller = GenerateMethodCallerInternal(ownerType, resultType, parameterType, methodName);
             return (owner, parameter) => (TResult)methodCaller(owner, parameter);
         }
-
-        [NotNull]
         public Func<object, object, TResult> GenerateOneParameterMethodCaller<TResult>(string assemblyName, string typeName, string methodName, string parameterTypeName)
         {
             if (assemblyName == null) throw new ArgumentNullException("assemblyName");
@@ -169,23 +148,17 @@ namespace NewRelic.Reflection
             var methodCaller = GenerateMethodCallerInternal(ownerType, resultType, parameterType, methodName);
             return (owner, parameter) => (TResult)methodCaller(owner, parameter);
         }
-
-        [NotNull]
-        private static Func<Object, Object> GenerateMethodCallerInternal([NotNull] Type ownerType, [NotNull] Type resultType, [NotNull] String methodName)
+        private static Func<Object, Object> GenerateMethodCallerInternal(Type ownerType, Type resultType, String methodName)
         {
             var methodInfo = GetMethodInfo(ownerType, methodName);
             return GenerateMethodCallerInternal(resultType, methodInfo);
         }
-
-        [NotNull]
-        private static Func<Object, Object, Object> GenerateMethodCallerInternal([NotNull] Type ownerType, [NotNull] Type resultType, [NotNull] Type parameterType, [NotNull] String methodName)
+        private static Func<Object, Object, Object> GenerateMethodCallerInternal(Type ownerType, Type resultType, Type parameterType, String methodName)
         {
             var methodInfo = GetMethodInfo(ownerType, methodName);
             return GenerateMethodCallerInternal(resultType, parameterType, methodInfo);
         }
-
-        [NotNull]
-        private static Func<Object, Object> GenerateMethodCallerInternal([NotNull] Type resultType, [NotNull] MethodInfo methodInfo)
+        private static Func<Object, Object> GenerateMethodCallerInternal(Type resultType, MethodInfo methodInfo)
         {
             if (!resultType.IsAssignableFrom(methodInfo.ReturnType))
                 throw new Exception(String.Format("The return type {0} for method {1} does not inherit or implement {2}", methodInfo.ReturnType.AssemblyQualifiedName, methodInfo.Name, resultType.AssemblyQualifiedName));
@@ -193,9 +166,7 @@ namespace NewRelic.Reflection
             var dynamicMethod = GenerateMethodCallerInternal(methodInfo);
             return (Func<Object, Object>)dynamicMethod.CreateDelegate(typeof(Func<Object, Object>));
         }
-
-        [NotNull]
-        private static Func<Object, Object, Object> GenerateMethodCallerInternal([NotNull] Type resultType, [NotNull] Type parameterType, [NotNull] MethodInfo methodInfo)
+        private static Func<Object, Object, Object> GenerateMethodCallerInternal(Type resultType, Type parameterType, MethodInfo methodInfo)
         {
             if (!resultType.IsAssignableFrom(methodInfo.ReturnType))
                 throw new Exception(String.Format("The return type {0} for method {1} does not inherit or implement {2}", methodInfo.ReturnType.AssemblyQualifiedName, methodInfo.Name, resultType.AssemblyQualifiedName));
@@ -211,9 +182,7 @@ namespace NewRelic.Reflection
             var dynamicMethod = GenerateMethodCallerInternal(methodInfo);
             return (Func<Object, Object, Object>)dynamicMethod.CreateDelegate(typeof(Func<Object, Object, Object>));
         }
-
-        [NotNull]
-        private static DynamicMethod GenerateMethodCallerInternal([NotNull] MethodInfo methodInfo)
+        private static DynamicMethod GenerateMethodCallerInternal(MethodInfo methodInfo)
         {
             var ownerType = methodInfo.DeclaringType;
             if (ownerType == null)
@@ -264,9 +233,7 @@ namespace NewRelic.Reflection
         #endregion
 
         #region Property Access
-
-        [NotNull]
-        public Func<TOwner, TResult> GeneratePropertyAccessor<TOwner, TResult>([NotNull] String propertyName)
+        public Func<TOwner, TResult> GeneratePropertyAccessor<TOwner, TResult>(String propertyName)
         {
             if (propertyName == null)
                 throw new ArgumentNullException("propertyName");
@@ -277,9 +244,7 @@ namespace NewRelic.Reflection
             var propertyGetter = GeneratePropertyAccessorInternal(ownerType, resultType, propertyName);
             return owner => (TResult)propertyGetter(owner);
         }
-
-        [NotNull]
-        public Func<Object, TResult> GeneratePropertyAccessor<TResult>([NotNull] String assemblyName, [NotNull] String typeName, [NotNull] String propertyName)
+        public Func<Object, TResult> GeneratePropertyAccessor<TResult>(String assemblyName, String typeName, String propertyName)
         {
             if (propertyName == null)
                 throw new ArgumentNullException("propertyName");
@@ -294,9 +259,7 @@ namespace NewRelic.Reflection
             var propertyGetter = GeneratePropertyAccessorInternal(ownerType, resultType, propertyName);
             return owner => (TResult)propertyGetter(owner);
         }
-
-        [NotNull]
-        private Func<Object, Object> GeneratePropertyAccessorInternal([NotNull] Type ownerType, [NotNull] Type resultType, [NotNull] String propertyName)
+        private Func<Object, Object> GeneratePropertyAccessorInternal(Type ownerType, Type resultType, String propertyName)
         {
             var propertyInfo = GetPropertyInfo(ownerType, propertyName);
             if (propertyInfo == null)
@@ -310,9 +273,7 @@ namespace NewRelic.Reflection
         #endregion
 
         #region Constructor Access
-
-        [NotNull]
-        public Func<Object> GenerateTypeFactory([NotNull] String assemblyName, [NotNull] String typeName)
+        public Func<Object> GenerateTypeFactory(String assemblyName, String typeName)
         {
             if (assemblyName == null)
                 throw new ArgumentNullException("assemblyName");
@@ -322,9 +283,7 @@ namespace NewRelic.Reflection
             var type = GetType(assemblyName, typeName);
             return GenerateTypeFactory<Func<Object>>(type, new Type[] { });
         }
-
-        [NotNull]
-        public Func<TParam, Object> GenerateTypeFactory<TParam>([NotNull] String assemblyName, [NotNull] String typeName)
+        public Func<TParam, Object> GenerateTypeFactory<TParam>(String assemblyName, String typeName)
         {
             if (assemblyName == null)
                 throw new ArgumentNullException("assemblyName");
@@ -334,9 +293,7 @@ namespace NewRelic.Reflection
             var type = GetType(assemblyName, typeName);
             return GenerateTypeFactory<Func<TParam, Object>>(type, new[] { typeof(TParam) });
         }
-
-        [NotNull]
-        public Func<TParam1, TParam2, Object> GenerateTypeFactory<TParam1, TParam2>([NotNull] String assemblyName, [NotNull] String typeName)
+        public Func<TParam1, TParam2, Object> GenerateTypeFactory<TParam1, TParam2>(String assemblyName, String typeName)
         {
             if (assemblyName == null)
                 throw new ArgumentNullException("assemblyName");
@@ -346,33 +303,25 @@ namespace NewRelic.Reflection
             var type = GetType(assemblyName, typeName);
             return GenerateTypeFactory<Func<TParam1, TParam2, Object>>(type, new[] { typeof(TParam1), typeof(TParam2) });
         }
-
-        [NotNull]
         public Func<TResult> GenerateTypeFactory<TResult>()
         {
             var type = typeof(TResult);
             var constructor = GenerateTypeFactory<Func<Object>>(type, new Type[] { });
             return () => (TResult)constructor();
         }
-
-        [NotNull]
         public Func<TParam, TResult> GenerateTypeFactory<TParam, TResult>()
         {
             var type = typeof(TResult);
             var constructor = GenerateTypeFactory<Func<TParam, Object>>(type, new[] { typeof(TParam) });
             return param => (TResult)constructor(param);
         }
-
-        [NotNull]
         public Func<TParam1, TParam2, TResult> GenerateTypeFactory<TParam1, TParam2, TResult>()
         {
             var type = typeof(TResult);
             var constructor = GenerateTypeFactory<Func<TParam1, TParam2, Object>>(type, new[] { typeof(TParam1), typeof(TParam2) });
             return (param1, param2) => (TResult)constructor(param1, param2);
         }
-
-        [NotNull]
-        private T GenerateTypeFactory<T>([NotNull] Type type, params Type[] parameterTypes) where T : class
+        private T GenerateTypeFactory<T>(Type type, params Type[] parameterTypes) where T : class
         {
             var constructor = reflection.GetConstructor(type, parameterTypes);
 
@@ -406,9 +355,7 @@ namespace NewRelic.Reflection
         #endregion
 
         #region Helpers
-
-        [NotNull]
-        private Type GetType([NotNull] String assemblyName, [NotNull] String typeName)
+        private Type GetType(String assemblyName, String typeName)
         {
             var assembly = Assembly.Load(assemblyName);
             if (assembly == null)
@@ -418,9 +365,7 @@ namespace NewRelic.Reflection
                 throw new NullReferenceException("type");
             return type;
         }
-
-        [NotNull]
-        private static FieldInfo GetFieldInfo([NotNull] Type type, [NotNull] String fieldName)
+        private static FieldInfo GetFieldInfo(Type type, String fieldName)
         {
             var fieldInfo = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             if (fieldInfo == null)
@@ -428,9 +373,7 @@ namespace NewRelic.Reflection
 
             return fieldInfo;
         }
-
-        [NotNull]
-        private static MethodInfo GetMethodInfo([NotNull] Type type, [NotNull] String methodName)
+        private static MethodInfo GetMethodInfo(Type type, String methodName)
         {
             var methodInfo = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
             if (methodInfo == null)
@@ -438,9 +381,7 @@ namespace NewRelic.Reflection
 
             return methodInfo;
         }
-
-        [NotNull]
-        private static PropertyInfo GetPropertyInfo([NotNull] Type type, [NotNull] String propertyName)
+        private static PropertyInfo GetPropertyInfo(Type type, String propertyName)
         {
             var propertyInfo = type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             if (propertyInfo == null)
@@ -448,9 +389,7 @@ namespace NewRelic.Reflection
 
             return propertyInfo;
         }
-
-        [NotNull]
-        private static MethodInfo GetPropertyGetter([NotNull] Type type, [NotNull] String propertyName)
+        private static MethodInfo GetPropertyGetter(Type type, String propertyName)
         {
             var propertyInfo = GetPropertyInfo(type, propertyName);
             var methodInfo = propertyInfo.GetGetMethod(true);
@@ -459,9 +398,7 @@ namespace NewRelic.Reflection
 
             return methodInfo;
         }
-
-        [NotNull]
-        private static DynamicMethod CreateDynamicMethod([NotNull] Type ownerType, [NotNull] Type resultType, params Type[] parameterTypes)
+        private static DynamicMethod CreateDynamicMethod(Type ownerType, Type resultType, params Type[] parameterTypes)
         {
             return new DynamicMethod(Guid.NewGuid().ToString(), resultType, parameterTypes, ownerType);
         }

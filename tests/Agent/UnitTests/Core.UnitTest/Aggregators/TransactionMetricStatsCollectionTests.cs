@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transformers;
@@ -18,8 +17,6 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     class TransactionMetricStatsCollectionTests
     {
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
 
         [SetUp]
@@ -28,8 +25,6 @@ namespace NewRelic.Agent.Core.Aggregators
             _metricBuilder = GetSimpleMetricBuilder();
 
         }
-
-        [NotNull]
         public static IMetricBuilder GetSimpleMetricBuilder()
         {
             var metricNameService = Mock.Create<IMetricNameService>();

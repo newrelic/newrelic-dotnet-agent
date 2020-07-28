@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
@@ -11,10 +10,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
     [TestFixture]
     public class TransactionMetricNameMakerTests
     {
-        [NotNull]
         private TransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
 
         [SetUp]

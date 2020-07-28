@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -11,19 +10,12 @@ namespace NewRelic.Agent.Core.Transactions
 {
     public class ImmutableTransaction
     {
-        [NotNull]
         public readonly ITransactionName TransactionName;
-
-        [NotNull]
         public readonly IEnumerable<Segment> Segments;
-
-        [NotNull]
         public readonly ImmutableTransactionMetadata TransactionMetadata;
 
         public readonly DateTime StartTime;
         public readonly TimeSpan Duration;
-
-        [NotNull]
         public readonly String Guid;
 
         public readonly Boolean IgnoreAutoBrowserMonitoring;
@@ -38,7 +30,7 @@ namespace NewRelic.Agent.Core.Transactions
         private IDictionary<string, string> ObfuscatedSqlCache => _obfuscatedSqlCache ?? (_obfuscatedSqlCache = new Dictionary<string, string>());
 
         // The sqlObfuscator parameter should be the SQL obfuscator as defined by user configuration: obfuscate, off, or raw.
-        public ImmutableTransaction([NotNull] ITransactionName transactionName, [NotNull] IEnumerable<Segment> segments, [NotNull] ImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, [NotNull] string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, SqlObfuscator sqlObfuscator)
+        public ImmutableTransaction(ITransactionName transactionName, IEnumerable<Segment> segments, ImmutableTransactionMetadata transactionMetadata, DateTime startTime, TimeSpan duration, string guid, bool ignoreAutoBrowserMonitoring, bool ignoreAllBrowserMonitoring, bool ignoreApdex, SqlObfuscator sqlObfuscator)
         {
             TransactionName = transactionName;
             Segments = segments.Where(segment => segment != null).ToList();

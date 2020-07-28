@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Metrics;
 using Telerik.JustMock;
 
@@ -7,7 +6,6 @@ namespace NewRelic.Agent.Core.WireModels
 {
     public static class Utilities
     {
-        [NotNull]
         public static IMetricBuilder GetSimpleMetricBuilder()
         {
             var metricNameService = Mock.Create<IMetricNameService>();

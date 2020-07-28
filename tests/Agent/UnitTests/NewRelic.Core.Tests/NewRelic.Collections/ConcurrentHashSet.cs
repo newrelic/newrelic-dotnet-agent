@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NUnit.Framework;
 
 
@@ -10,10 +9,8 @@ using NUnit.Framework;
 
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
     public class Class_ConcurrentHashSet
     {
-        [NotNull]
         private readonly ConcurrentHashSet<Int32> _concurrentHashSet;
 
         public Class_ConcurrentHashSet()
@@ -25,7 +22,7 @@ namespace NewRelic.Collections.UnitTests
         [TestCase(new[] { 1 })]
         [TestCase(new[] { 1, 1 })]
         [TestCase(new[] { 1, 1, 2 })]
-        public void ConcurrentHashSet_FunctionsAsNormalHashSet_ForSingleThreadedAccess([NotNull] params Int32[] numbersToAdd)
+        public void ConcurrentHashSet_FunctionsAsNormalHashSet_ForSingleThreadedAccess(params Int32[] numbersToAdd)
         {
             // Because we're not doing anything interesting with the hashset itself, it seems reasonable to just wrap all of the basic hashset API tests into one test
             var distinctNumbers = numbersToAdd.Distinct().ToList();
@@ -85,16 +82,12 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
-        // ReSharper disable RedundantAssignment
-        private static void ExerciseFullApi([NotNull] ConcurrentHashSet<Int32> hashSet, [NotNull] Int32[] numbersToAdd)
+        private static void ExerciseFullApi(ConcurrentHashSet<Int32> hashSet, Int32[] numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             foreach (var number in numbersToAdd)
@@ -121,6 +114,5 @@ namespace NewRelic.Collections.UnitTests
             hashSet.Remove(numbersToAdd.First());
             hashSet.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }

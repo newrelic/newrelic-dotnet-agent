@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent;
 using Newtonsoft.Json;
 
@@ -31,38 +30,28 @@ namespace AttributeFilterTests.Models
         public IEnumerable<String> AttributesExclude = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "browser_monitoring.attributes.exclude")]
-        [NotNull]
         public IEnumerable<String> BrowserMonitoringAttributeExcludes = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "browser_monitoring.attributes.include")]
-        [NotNull]
         public IEnumerable<String> BrowserMonitoringAttributeIncludes = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "error_collector.attributes.exclude")]
-        [NotNull]
         public IEnumerable<String> ErrorCollectorAttributeExcludes = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "error_collector.attributes.include")]
-        [NotNull]
         public IEnumerable<String> ErrorCollectorAttributeIncludes = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "transaction_events.attributes.exclude")]
-        [NotNull]
         public IEnumerable<String> TransactionEventsAttributeExcludes = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "transaction_events.attributes.include")]
-        [NotNull]
         public IEnumerable<String> TransactionEventsAttributeIncludes = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "transaction_tracer.attributes.exclude")]
-        [NotNull]
         public IEnumerable<String> TransactionTracerAttributeExcludes = Enumerable.Empty<String>();
 
         [JsonProperty(PropertyName = "transaction_tracer.attributes.include")]
-        [NotNull]
         public IEnumerable<String> TransactionTracerAttributeIncludes = Enumerable.Empty<String>();
-
-        [NotNull]
         public AttributeFilter<Attribute>.Settings ToAttributeFilterSettings()
         {
             return new AttributeFilter<Attribute>.Settings

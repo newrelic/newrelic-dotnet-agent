@@ -1,6 +1,5 @@
 using System;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Database
@@ -13,21 +12,13 @@ namespace NewRelic.Agent.Core.Database
         private const String RawSetting = "raw";
         private const String OffSetting = "off";
         private const int SqlStatementMaxLength = 16384;
-
-        [NotNull]
         private static readonly SqlObfuscator ObfuscatingSqlObfuscatorInstanceUsingExplicit = new ObfuscatingSqlObfuscatorUsingExplicit();
-        [NotNull]
         private static readonly SqlObfuscator RawSqlObfuscatorInstance = new RawSqlObfuscator();
-        [NotNull]
         private static readonly SqlObfuscator NoSqlObfuscatorInstance = new NoSqlObfuscator();
-
-        [NotNull]
         public static SqlObfuscator GetObfuscatingSqlObfuscator()
         {
             return ObfuscatingSqlObfuscatorInstanceUsingExplicit;
         }
-
-        [NotNull]
         public static SqlObfuscator GetSqlObfuscator(bool transactionTracerEnabled, string recordSqlValue)
         {
             if (!transactionTracerEnabled)

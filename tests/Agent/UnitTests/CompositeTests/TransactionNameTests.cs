@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -9,10 +8,7 @@ namespace CompositeTests
     [TestFixture]
     public class TransactionNameTests
     {
-        [NotNull]
         private static CompositeTestAgent _compositeTestAgent;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]

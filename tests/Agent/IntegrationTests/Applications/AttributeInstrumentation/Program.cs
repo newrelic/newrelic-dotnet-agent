@@ -6,14 +6,12 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
-using JetBrains.Annotations;
 
 namespace AttributeInstrumentation
 {
     class Program
     {
         [Option("port", Required = true)]
-        [NotNull]
         public string Port { get; set; }
 
         static void Main(string[] args)

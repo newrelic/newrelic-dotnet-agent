@@ -3,18 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NUnit.Framework;
-
-
-
 
 namespace NewRelic.Collections.UnitTests
 {
-    // ReSharper disable once InconsistentNaming
     public class Class_ConcurrentList
     {
-        [NotNull]
         private readonly ConcurrentList<Int32> _concurrentList;
 
         public Class_ConcurrentList()
@@ -26,7 +20,7 @@ namespace NewRelic.Collections.UnitTests
         [TestCase(new[] { 1 })]
         [TestCase(new[] { 1, 1 })]
         [TestCase(new[] { 1, 1, 2 })]
-        public void ConcurrentList_FunctionsAsNormalList_ForSingleThreadedAccess([NotNull] params Int32[] numbersToAdd)
+        public void ConcurrentList_FunctionsAsNormalList_ForSingleThreadedAccess(params Int32[] numbersToAdd)
         {
             // Because we're not doing anything interesting with the list itself, it seems reasonable to just wrap all of the basic list API tests into one test
 
@@ -105,16 +99,12 @@ namespace NewRelic.Collections.UnitTests
                 })
                 .ToList();
 
-            // ReSharper disable PossibleNullReferenceException
             tasks.ForEach(task => task.Start());
             tasks.ForEach(task => task.Wait());
-            // ReSharper restore PossibleNullReferenceException
         }
 
-        // ReSharper disable RedundantAssignment
-        private static void ExerciseFullApi([NotNull] IList<Int32> concurrentList, [NotNull] Int32[] numbersToAdd)
+        private static void ExerciseFullApi(IList<Int32> concurrentList, Int32[] numbersToAdd)
         {
-            // ReSharper disable once NotAccessedVariable
             dynamic _;
 
             // Add
@@ -174,6 +164,5 @@ namespace NewRelic.Collections.UnitTests
 
             concurrentList.Clear();
         }
-        // ReSharper restore RedundantAssignment
     }
 }

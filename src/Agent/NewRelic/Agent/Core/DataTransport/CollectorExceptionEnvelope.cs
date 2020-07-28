@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.Core.DataTransport
     [JsonConverter(typeof(CollectorExceptionEnvelopeConverter))]
     public class CollectorExceptionEnvelope
     {
-        [NotNull]
         public readonly Exception Exception;
 
-        public CollectorExceptionEnvelope([NotNull] Exception exception)
+        public CollectorExceptionEnvelope(Exception exception)
         {
             Exception = exception;
         }
@@ -36,9 +34,7 @@ namespace NewRelic.Agent.Core.DataTransport
             var exception = DeserializeExceptionFromCollectorResponse(jToken);
             return new CollectorExceptionEnvelope(exception);
         }
-
-        [NotNull]
-        private static Exception DeserializeExceptionFromCollectorResponse([NotNull] JToken jToken)
+        private static Exception DeserializeExceptionFromCollectorResponse(JToken jToken)
         {
             if (jToken.Type != JTokenType.Object)
                 return new Exception(jToken.ToString());

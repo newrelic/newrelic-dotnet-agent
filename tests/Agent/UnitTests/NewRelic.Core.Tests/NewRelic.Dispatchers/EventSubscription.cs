@@ -1,8 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
 
-
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Dispatchers.UnitTests
 {
     public class Class_EventSubscription

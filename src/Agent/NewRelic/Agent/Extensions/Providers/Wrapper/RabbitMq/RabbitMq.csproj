@@ -15,9 +15,6 @@
         <DebugType>pdbonly</DebugType>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
-    </ItemGroup>
-    <ItemGroup>
         <Content Include="Instrumentation.xml">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>

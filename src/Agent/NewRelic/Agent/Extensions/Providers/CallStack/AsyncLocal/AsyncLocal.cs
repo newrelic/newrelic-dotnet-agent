@@ -1,5 +1,4 @@
 ﻿using System.Runtime.Remoting.Messaging;
-using JetBrains.Annotations;
 
 namespace NewRelic.Providers.CallStack.AsyncLocal
 {
@@ -9,15 +8,12 @@ namespace NewRelic.Providers.CallStack.AsyncLocal
     /// <typeparam name="T"></typeparam>
     public class AsyncLocal<T>
     {
-        [NotNull]
         private readonly string _key;
 
         public AsyncLocal(string key)
         {
             this._key = key;
         }
-
-        [CanBeNull]
         public T Value
         {
             get
