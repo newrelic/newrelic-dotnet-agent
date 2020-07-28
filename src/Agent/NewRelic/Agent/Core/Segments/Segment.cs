@@ -231,6 +231,11 @@ namespace NewRelic.Agent.Core.Segments
             {
                 AttribDefs.SpanErrorClass.TrySetValue(attribValues, ErrorData.ErrorTypeName);
                 AttribDefs.SpanErrorMessage.TrySetValue(attribValues, ErrorData.ErrorMessage);
+
+                if (ErrorData.IsExpected)
+                {
+                    AttribDefs.SpanIsErrorExpected.TrySetValue(attribValues, ErrorData.IsExpected);
+                }
             }
 
             Data.SetSpanTypeSpecificAttributes(attribValues);

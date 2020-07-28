@@ -32,6 +32,7 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using Telerik.JustMock;
 
@@ -787,6 +788,40 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.False(DoAttributesContain(transactionAttributes, "error.message")),
                 () => Assert.False(DoAttributesContain(transactionAttributes, "error"))
             );
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetAttributes_ExpecedErrorAttribute_SentToCorrectDestinations(bool isErrorExpected)
+        {
+            // ARRANGE
+            var timer = Mock.Create<ITimer>();
+            var expectedStartTime = DateTime.Now;
+            var transactionMetricName = new TransactionMetricName("WebTransaction", "TransactionName");
+            var apdexT = TimeSpan.FromSeconds(2);
+
+            var priority = 0.5f;
+            var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
+            transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData(isErrorExpected: isErrorExpected));
+            var immutableTransaction = transaction.ConvertToImmutableTransaction();
+
+            var txStats = new TransactionMetricStatsCollection(new TransactionMetricName("WebTransaction", "myTx"));
+            txStats.MergeUnscopedStats(MetricNames.ExternalAll, MetricDataWireModel.BuildTimingData(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2)));
+
+            var totalTime = TimeSpan.FromSeconds(1);
+
+            // ACT
+            var attributes = _transactionAttributeMaker.GetAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
+
+            // ASSERT
+            if (isErrorExpected)
+            {
+                AssertAttributeShouldBeAvailableFor(attributes, "error.expected", AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace);
+            }
+            else
+            {
+                Assert.False(DoAttributesContain(attributes, "error.expected"));
+            }
         }
 
         #region Distributed Trace
@@ -1569,9 +1604,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
         #endregion
 
-        private ErrorData MakeErrorData()
+        private ErrorData MakeErrorData(bool isErrorExpected = false)
         {
-            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "userErrorAttributeKey", "userErrorAttributeValue" } }));
+            return new ErrorData("message", "type", "stacktrace", DateTime.UtcNow, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>() { { "userErrorAttributeKey", "userErrorAttributeValue" } }), isErrorExpected);
         }
 
         private void AssertAttributeShouldBeAvailableFor(IAttributeValueCollection attribValues, string attribName, params AttributeDestinations[] destinations)
