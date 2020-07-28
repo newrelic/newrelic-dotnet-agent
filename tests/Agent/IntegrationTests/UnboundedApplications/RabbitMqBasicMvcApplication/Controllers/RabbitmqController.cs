@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using System.Web.Mvc;
 using NewRelic.Agent.IntegrationTests.Shared;
 using RabbitMQ.Client;

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Messaging;
-using System.Threading;
 using System.Web.Mvc;
 using NServiceBusReceiver;
 
