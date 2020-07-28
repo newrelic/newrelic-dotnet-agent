@@ -19,7 +19,7 @@ namespace NewRelic.Agent.Core.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -64,12 +64,12 @@ namespace NewRelic.Agent.Core.Properties {
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
         ///&lt;!-- The documentation in here must be kept up to date with that embedded in comments in newrelic.config --&gt;
         ///&lt;xs:schema attributeFormDefault=&quot;unqualified&quot; elementFormDefault=&quot;qualified&quot; targetNamespace=&quot;urn:newrelic-config&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:nr=&quot;Configuration.xsd&quot;&gt;
-        ///&lt;xs:element name=&quot;configuration&quot;&gt;
-        ///  &lt;xs:complexType&gt;
-        ///    &lt;xs:all&gt;
-        ///      &lt;xs:element name=&quot;service&quot; minOccurs=&quot;1&quot; maxOccurs=&quot;1&quot;&gt;
-        ///      &lt;xs:complexType&gt;
-        ///      &lt;xs:annotatio [rest of string was truncated]&quot;;.
+        ///	&lt;xs:element name=&quot;configuration&quot;&gt;
+        ///		&lt;xs:complexType&gt;
+        ///			&lt;xs:all&gt;
+        ///				&lt;xs:element name=&quot;service&quot; minOccurs=&quot;1&quot; maxOccurs=&quot;1&quot;&gt;
+        ///					&lt;xs:complexType&gt;
+        ///						&lt;xs:annotatio [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Configuration {
             get {

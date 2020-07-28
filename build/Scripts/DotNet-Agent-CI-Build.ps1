@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 ###############
 
 $nugetPath = (Resolve-Path ".\build\Tools\nuget.exe").Path
-$solutions = @("src\Agent\FullAgent.sln", "src\Agent\MsiInstaller\MsiInstaller.sln", "tests\Agent\IntegrationTests\IntegrationTests.sln", "tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln")
+$solutions = @("FullAgent.sln", "src\Agent\MsiInstaller\MsiInstaller.sln", "tests\Agent\IntegrationTests\IntegrationTests.sln", "tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln")
 
 Write-Host "Restoring NuGet packages"
 foreach ($sln in $solutions) {
@@ -19,7 +19,7 @@ foreach ($sln in $solutions) {
 $msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
 
 $solutions = [Ordered]@{
-    "src\Agent\FullAgent.sln"                                    = @("Configuration=Release;AllowUnsafeBlocks=true");
+    "FullAgent.sln"                                    = @("Configuration=Release;AllowUnsafeBlocks=true");
     "src\Agent\MsiInstaller\MsiInstaller.sln"                    = @("Configuration=Release;Platform=x86;AllowUnsafeBlocks=true","Configuration=Release;Platform=x64;AllowUnsafeBlocks=true");
     "tests\Agent\IntegrationTests\IntegrationTests.sln"                      = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");
     "tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln"             = @("Configuration=Release;DeployOnBuild=true;PublishProfile=LocalDeploy");

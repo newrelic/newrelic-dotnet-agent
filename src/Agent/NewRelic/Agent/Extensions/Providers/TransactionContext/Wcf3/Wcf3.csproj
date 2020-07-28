@@ -5,7 +5,7 @@
     <RootNamespace>NewRelic.Agent.Extensions.Providers.TransactionContext</RootNamespace>
     <Description>WCF 3 Transaction Context Provider for New Relic .NET Agent</Description>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)KeyFile.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   
   <ItemGroup>

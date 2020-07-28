@@ -35,7 +35,7 @@ namespace ArtifactBuilder.Artifacts
             // At some point we should change the job to pull from the new location under the Build\BuildArtifacts directory
             if (AgentType == AgentType.Core)
             {
-                FileHelpers.CopyFile(zipFilePath, $@"{SourceDirectory}\src\Agent\_build\CoreArtifacts");
+                FileHelpers.CopyFile(zipFilePath, $@"{SourceDirectory}\src\_build\CoreArtifacts");
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -14,8 +14,8 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <WixCATargetsPath Condition=" '$(WixCATargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.CA.targets</WixCATargetsPath>
-    <IntermediateOutputPath>$(SolutionDir)..\..\Agent\_build\$(Platform)-$(Configuration)\$(AssemblyName)</IntermediateOutputPath>
-    <OutputPath>$(SolutionDir)..\..\Agent\_build\$(Platform)-$(Configuration)\$(AssemblyName)</OutputPath>
+    <IntermediateOutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)</IntermediateOutputPath>
+    <OutputPath>$(SolutionDir)..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)</OutputPath>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>267d8a59</NuGetPackageImportStamp>
   </PropertyGroup>
