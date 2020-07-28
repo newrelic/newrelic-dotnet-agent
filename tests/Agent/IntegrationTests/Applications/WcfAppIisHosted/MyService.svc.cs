@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Threading;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppIisHosted
 {
     public class MyService : IMyService
     {
-        public String GetData(Int32 value)
+        public string GetData(int value)
         {
-            return String.Format("You entered: {0}", value);
+            return string.Format("You entered: {0}", value);
         }
 
-        public String IgnoredTransaction(String input)
+        public string IgnoredTransaction(string input)
         {
             NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
             return input;

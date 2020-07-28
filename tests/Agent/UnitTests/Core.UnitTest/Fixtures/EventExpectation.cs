@@ -7,7 +7,7 @@ namespace NewRelic.Agent.Core.Fixtures
     public class EventExpectation<T> : IDisposable
     {
         private readonly EventSubscription<T> _subscription;
-        private Boolean _eventWasFired;
+        private bool _eventWasFired;
 
         public EventExpectation()
         {

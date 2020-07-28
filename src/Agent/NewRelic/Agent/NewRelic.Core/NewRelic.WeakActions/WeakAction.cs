@@ -8,7 +8,7 @@ namespace NewRelic.WeakActions
         protected readonly WeakReference WeakReference;
         protected readonly MethodInfo MethodInfo;
 
-        protected WeakAction(Object target, MethodInfo methodInfo)
+        protected WeakAction(object target, MethodInfo methodInfo)
         {
             if (methodInfo == null)
                 throw new ArgumentException("action.Method is null.", "methodInfo");

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
@@ -22,14 +21,14 @@ namespace NewRelic.Agent.Core.Utilization
             // ACT
             var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-            var expectedObject = new Dictionary<String, Object>
+            var expectedObject = new Dictionary<string, object>
             {
                 {"metadata_version", 3},
                 {"logical_processors", 4},
                 {"total_ram_mib", 1024},
                 {"hostname", "lo-calhost"},
                 {
-                    "config",  new Dictionary<String, Object>
+                    "config",  new Dictionary<string, object>
                     {
                         {"hostname", "loc-alhost"},
                         {"logical_processors", 2},
@@ -37,10 +36,10 @@ namespace NewRelic.Agent.Core.Utilization
                     }
                 },
                 {
-                    "vendors", new Dictionary<String, Object>
+                    "vendors", new Dictionary<string, object>
                     {
                         {
-                            "aws", new Dictionary<String, Object>
+                            "aws", new Dictionary<string, object>
                             {
                                 {"id", "123456"},
                                 {"type", "t2.micro"},
@@ -51,7 +50,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 
         }
 
@@ -65,14 +64,14 @@ namespace NewRelic.Agent.Core.Utilization
             // ACT
             var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-            var expectedObject = new Dictionary<String, Object>
+            var expectedObject = new Dictionary<string, object>
             {
                 {"metadata_version", 3},
                 {"logical_processors", 4},
                 {"total_ram_mib", 1024},
                 {"hostname", "lo-calhost"},
                 {
-                    "config",  new Dictionary<String, Object>
+                    "config",  new Dictionary<string, object>
                     {
                         {"hostname", "loc-alhost"},
                         {"logical_processors", 2},
@@ -81,7 +80,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
 
         }
 
@@ -95,7 +94,7 @@ namespace NewRelic.Agent.Core.Utilization
             // ACT
             var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-            var expectedObject = new Dictionary<String, Object>
+            var expectedObject = new Dictionary<string, object>
             {
                 {"metadata_version", 3},
                 {"logical_processors", 4},
@@ -103,7 +102,7 @@ namespace NewRelic.Agent.Core.Utilization
                 {"hostname", "lo-calhost"}
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -116,7 +115,7 @@ namespace NewRelic.Agent.Core.Utilization
             // ACT
             var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-            var expectedObject = new Dictionary<String, Object>
+            var expectedObject = new Dictionary<string, object>
             {
                 {"metadata_version", 3},
                 {"logical_processors", 4},
@@ -124,7 +123,7 @@ namespace NewRelic.Agent.Core.Utilization
                 {"hostname", "lo-calhost"}
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -137,14 +136,14 @@ namespace NewRelic.Agent.Core.Utilization
             // ACT
             var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-            var expectedObject = new Dictionary<String, Object>
+            var expectedObject = new Dictionary<string, object>
             {
                 {"metadata_version", 3},
                 {"logical_processors", 4},
                 {"total_ram_mib", 1024},
                 {"hostname", "lo-calhost"},
                 {
-                    "config",  new Dictionary<String, Object>
+                    "config",  new Dictionary<string, object>
                     {
                         {"hostname", "loc-alhost"},
                         {"logical_processors", 2},
@@ -153,7 +152,7 @@ namespace NewRelic.Agent.Core.Utilization
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         [Test]
@@ -166,21 +165,21 @@ namespace NewRelic.Agent.Core.Utilization
             // ACT
             var actualJson = JsonConvert.SerializeObject(settingsModel);
 
-            var expectedObject = new Dictionary<String, Object>
+            var expectedObject = new Dictionary<string, object>
             {
                 {"metadata_version", 3},
                 {"logical_processors", 4},
                 {"total_ram_mib", 1024},
                 {"hostname", "lo-calhost"},
                 {
-                    "config",  new Dictionary<String, Object>
+                    "config",  new Dictionary<string, object>
                     {
                         {"total_ram_mib", 2048}
                     }
                 }
             };
             var expectedJson = JsonConvert.SerializeObject(expectedObject);
-            Assert.AreEqual(expectedJson, actualJson, String.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
+            Assert.AreEqual(expectedJson, actualJson, string.Format("Expected {0}, but was {1}.", expectedJson, JsonConvert.SerializeObject(settingsModel)));
         }
 
         //Same method used in main code, except this one take the config vs having it be global.
@@ -191,7 +190,7 @@ namespace NewRelic.Agent.Core.Utilization
                 return null;
             }
 
-            if (String.IsNullOrEmpty(configuration.UtilizationBillingHost)
+            if (string.IsNullOrEmpty(configuration.UtilizationBillingHost)
                 && configuration.UtilizationLogicalProcessors == null
                 && configuration.UtilizationTotalRamMib == null)
             {
@@ -204,7 +203,7 @@ namespace NewRelic.Agent.Core.Utilization
         //Same method used in main code, except this one take the config vs having it be global.
         private UtilitizationConfig GetUtilitizationConfig(string billingHost, int? logicalProcessors, int? totalRamMib)
         {
-            if (String.IsNullOrEmpty(billingHost)
+            if (string.IsNullOrEmpty(billingHost)
                 && logicalProcessors == null
                 && totalRamMib == null)
             {

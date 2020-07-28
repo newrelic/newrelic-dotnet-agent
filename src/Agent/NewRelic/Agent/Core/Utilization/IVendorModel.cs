@@ -1,15 +1,14 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Utilization
 {
     public interface IVendorModel
     {
         [JsonIgnore]
-        String VendorName { get; }
+        string VendorName { get; }
 
         [JsonProperty("id")]
-        String Id { get; }
+        string Id { get; }
 
     }
 }

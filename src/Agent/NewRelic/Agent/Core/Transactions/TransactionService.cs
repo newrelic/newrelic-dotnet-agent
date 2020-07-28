@@ -28,7 +28,7 @@ namespace NewRelic.Agent.Core.Transactions
         /// <param name="onCreate">An action to perform if an internal transaction is created.</param>
         /// <param name="mustBeRootTransaction">Whether or not the transaction must be root.</param>
         /// <returns></returns>
-        ITransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true);
+        ITransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, bool mustBeRootTransaction = true);
 
         /// <summary>
         /// Removes any outstanding internal transactions.
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Core.Transactions
 
     public class TransactionService : ConfigurationBasedService, ITransactionService
     {
-        private const String TransactionContextKey = "NewRelic.Transaction";
+        private const string TransactionContextKey = "NewRelic.Transaction";
         private readonly IEnumerable<IContextStorage<ITransaction>> _sortedPrimaryContexts;
         private readonly IContextStorage<ITransaction> _asyncContext;
         private readonly ITimerFactory _timerFactory;
@@ -199,7 +199,7 @@ namespace NewRelic.Agent.Core.Transactions
             return true;
         }
 
-        public ITransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, Boolean mustBeRootTransaction = true)
+        public ITransaction GetOrCreateInternalTransaction(ITransactionName initialTransactionName, Action onCreate = null, bool mustBeRootTransaction = true)
         {
             var transaction = GetCurrentInternalTransaction();
             if (transaction == null)

@@ -49,7 +49,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_fixture.QueueName}", callCount = 1, metricScope = $"OtherTransaction/Message/RabbitMQ/Queue/Named/{_fixture.QueueName}"},
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 $"MessageBroker/RabbitMQ/Queue/Consume/Named/{_fixture.QueueName}"
             };

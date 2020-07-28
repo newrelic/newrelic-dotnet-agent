@@ -4,14 +4,12 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {

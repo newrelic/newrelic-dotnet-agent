@@ -11,11 +11,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
     public class MessageBrokerSegmentData : AbstractSegmentData
     {
 
-        private const String TransactionGuidSegmentParameterKey = "transaction_guid";
+        private const string TransactionGuidSegmentParameterKey = "transaction_guid";
 
-        public String Vendor { get; set; }
+        public string Vendor { get; set; }
 
-        public String Destination { get; set; }
+        public string Destination { get; set; }
 
         public MetricNames.MessageBrokerDestinationType DestinationType { get; set; }
 

@@ -8,9 +8,9 @@ namespace NewRelic.Agent.Core.Database
     {
         public abstract string GetObfuscatedSql(string sql, DatastoreVendor vendor = DatastoreVendor.Other);
 
-        private const String ObfuscatedSetting = "obfuscated";
-        private const String RawSetting = "raw";
-        private const String OffSetting = "off";
+        private const string ObfuscatedSetting = "obfuscated";
+        private const string RawSetting = "raw";
+        private const string OffSetting = "off";
         private const int SqlStatementMaxLength = 16384;
         private static readonly SqlObfuscator ObfuscatingSqlObfuscatorInstanceUsingExplicit = new ObfuscatingSqlObfuscatorUsingExplicit();
         private static readonly SqlObfuscator RawSqlObfuscatorInstance = new RawSqlObfuscator();

@@ -10,23 +10,23 @@ namespace NewRelic.Collections.UnitTests
     [TestFixture]
     public class Class_ConcurrentDictionary
     {
-        private ConcurrentDictionary<Int32, String> _concurrentDictionary;
+        private ConcurrentDictionary<int, string> _concurrentDictionary;
 
         public Class_ConcurrentDictionary()
         {
-            _concurrentDictionary = new ConcurrentDictionary<Int32, String>();
+            _concurrentDictionary = new ConcurrentDictionary<int, string>();
         }
 
         [SetUp]
         public void Setup()
         {
-            _concurrentDictionary = new ConcurrentDictionary<Int32, String>();
+            _concurrentDictionary = new ConcurrentDictionary<int, string>();
         }
 
         [TestCase(1, "1", 1, "1")]
         [TestCase(1, null, 1, "1")]
         [TestCase(1, "1", 2, "2")]
-        public void GetOrSetValue_ReturnsCorrectValues(Int32 key, String value, Int32 searchKey, String expectedValue)
+        public void GetOrSetValue_ReturnsCorrectValues(int key, string value, int searchKey, string expectedValue)
         {
             // Arrange 
             _concurrentDictionary.Add(key, value);
@@ -49,7 +49,7 @@ namespace NewRelic.Collections.UnitTests
         [Test]
         public void Merge_InsertsNewValue_IfNoExistingValue()
         {
-            const Int32 key = 1;
+            const int key = 1;
             _concurrentDictionary.Merge(key, "foo", (existing, next) => { throw new Exception("Merge function shouldn't have been called"); });
 
             Assert.AreEqual("foo", _concurrentDictionary[key]);
@@ -59,9 +59,9 @@ namespace NewRelic.Collections.UnitTests
         [TestCase("foo", null, "foo")]
         [TestCase(null, "bar", "bar")]
         [TestCase("foo", "bar", "foobar")]
-        public void Merge_CallsMergeFunctionAsNeeded(String existingValue, String newValue, String expectedMergedValue)
+        public void Merge_CallsMergeFunctionAsNeeded(string existingValue, string newValue, string expectedMergedValue)
         {
-            const Int32 key = 1;
+            const int key = 1;
             _concurrentDictionary.Add(key, existingValue);
 
             _concurrentDictionary.Merge(key, newValue, (existing, next) => existing + next);
@@ -72,11 +72,11 @@ namespace NewRelic.Collections.UnitTests
         [TestCase(new[] { 1 })]
         [TestCase(new[] { 1, 1 })]
         [TestCase(new[] { 1, 1, 2 })]
-        public void ConcurrentDictionary_FunctionsAsNormalDictionary_ForSingleThreadedAccess(Int32[] numbersToAdd)
+        public void ConcurrentDictionary_FunctionsAsNormalDictionary_ForSingleThreadedAccess(int[] numbersToAdd)
         {
             // Because we're not doing anything interesting with the dictionary itself, it seems reasonable to just wrap all of the basic dictionary API tests into one test
 
-            var distinctNumberPairs = numbersToAdd.Distinct().Select(number => new KeyValuePair<Int32, String>(number, number.ToString())).ToList();
+            var distinctNumberPairs = numbersToAdd.Distinct().Select(number => new KeyValuePair<int, string>(number, number.ToString())).ToList();
 
             // Indexer -- Set
             foreach (var number in numbersToAdd)
@@ -104,7 +104,7 @@ namespace NewRelic.Collections.UnitTests
             Assert.AreEqual(_concurrentDictionary.Count, distinctNumberPairs.Count);
 
             // CopyTo
-            var destinationArray = new KeyValuePair<Int32, String>[distinctNumberPairs.Count];
+            var destinationArray = new KeyValuePair<int, string>[distinctNumberPairs.Count];
             _concurrentDictionary.CopyTo(destinationArray, 0);
             Assert.True(distinctNumberPairs.SequenceEqual(destinationArray));
 
@@ -122,7 +122,7 @@ namespace NewRelic.Collections.UnitTests
 
             // TryGetValue
             var largeNumber = numbersToAdd.Max() + 1;
-            String outValue;
+            string outValue;
             _concurrentDictionary.TryGetValue(numbersToAdd.First(), out outValue);
             Assert.AreEqual(numbersToAdd.First().ToString(), outValue);
             _concurrentDictionary.TryGetValue(largeNumber, out outValue);
@@ -163,11 +163,11 @@ namespace NewRelic.Collections.UnitTests
             tasks.ForEach(task => task.Wait());
         }
 
-        private static void ExerciseFullApi(IDictionary<Int32, String> concurrentDictionary, ICollection<Int32> numbersToAdd)
+        private static void ExerciseFullApi(IDictionary<int, string> concurrentDictionary, ICollection<int> numbersToAdd)
         {
             dynamic _;
 
-            var distinctNumberPairs = numbersToAdd.Distinct().Select(number => new KeyValuePair<Int32, String>(number, number.ToString())).ToList();
+            var distinctNumberPairs = numbersToAdd.Distinct().Select(number => new KeyValuePair<int, string>(number, number.ToString())).ToList();
 
             foreach (var number in numbersToAdd)
                 concurrentDictionary[number] = number.ToString();
@@ -197,7 +197,7 @@ namespace NewRelic.Collections.UnitTests
 
             _ = concurrentDictionary.Count;
 
-            var destinationArray = new KeyValuePair<Int32, String>[500];
+            var destinationArray = new KeyValuePair<int, string>[500];
             concurrentDictionary.CopyTo(destinationArray, 0);
             _ = concurrentDictionary.Contains(distinctNumberPairs.First());
             _ = concurrentDictionary.ContainsKey(numbersToAdd.First());
@@ -205,7 +205,7 @@ namespace NewRelic.Collections.UnitTests
             _ = concurrentDictionary.Values;
 
             var largeNumber = numbersToAdd.Max() + 1;
-            String outValue;
+            string outValue;
             concurrentDictionary.TryGetValue(numbersToAdd.First(), out outValue);
             concurrentDictionary.TryGetValue(largeNumber, out outValue);
 

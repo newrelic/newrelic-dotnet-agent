@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Core.JsonConverters;
+﻿using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
@@ -9,13 +8,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
     public class CrossApplicationRequestData
     {
         [JsonArrayIndex(Index = 0)]
-        public readonly String TransactionGuid;
+        public readonly string TransactionGuid;
         [JsonArrayIndex(Index = 1)]
-        public readonly Boolean Unused;
+        public readonly bool Unused;
         [JsonArrayIndex(Index = 2)]
-        public readonly String TripId;
+        public readonly string TripId;
         [JsonArrayIndex(Index = 3)]
-        public readonly String PathHash;
+        public readonly string PathHash;
 
         // For backwards compatibility we need to support deserializing transactionData that may be missing any number of fields
         public CrossApplicationRequestData()
@@ -23,25 +22,25 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
 
         }
 
-        public CrossApplicationRequestData(String transactionGuid)
+        public CrossApplicationRequestData(string transactionGuid)
         {
             TransactionGuid = transactionGuid;
         }
 
-        public CrossApplicationRequestData(String transactionGuid, Boolean unused)
+        public CrossApplicationRequestData(string transactionGuid, bool unused)
         {
             TransactionGuid = transactionGuid;
             Unused = unused;
         }
 
-        public CrossApplicationRequestData(String transactionGuid, Boolean unused, String tripId)
+        public CrossApplicationRequestData(string transactionGuid, bool unused, string tripId)
         {
             TransactionGuid = transactionGuid;
             Unused = unused;
             TripId = tripId;
         }
 
-        public CrossApplicationRequestData(String transactionGuid, Boolean unused, String tripId, String pathHash)
+        public CrossApplicationRequestData(string transactionGuid, bool unused, string tripId, string pathHash)
         {
             TransactionGuid = transactionGuid;
             Unused = unused;

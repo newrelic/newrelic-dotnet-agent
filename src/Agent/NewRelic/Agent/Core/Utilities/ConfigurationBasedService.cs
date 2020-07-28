@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Configuration;
+﻿using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Requests;

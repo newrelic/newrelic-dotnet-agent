@@ -10,8 +10,8 @@ namespace NewRelic.Agent
     {
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(LabelsService));
 
-        private const Int32 MaxLabels = 64;
-        private const Int32 MaxLength = 255;
+        private const int MaxLabels = 64;
+        private const int MaxLength = 255;
         private readonly IConfigurationService _configurationService;
 
         public IEnumerable<Label> Labels { get { return GetLabelsFromConfiguration(); } }
@@ -23,7 +23,7 @@ namespace NewRelic.Agent
         private IEnumerable<Label> GetLabelsFromConfiguration()
         {
             var labelsString = _configurationService.Configuration.Labels;
-            if (String.IsNullOrEmpty(labelsString))
+            if (string.IsNullOrEmpty(labelsString))
                 return Enumerable.Empty<Label>();
 
             try
@@ -49,7 +49,7 @@ namespace NewRelic.Agent
                 return Enumerable.Empty<Label>();
             }
         }
-        private static Label CreateLabelFromString(String typeAndValueString)
+        private static Label CreateLabelFromString(string typeAndValueString)
         {
             if (typeAndValueString == null)
                 throw new ArgumentNullException("typeAndValueString");
@@ -67,11 +67,11 @@ namespace NewRelic.Agent
                 throw new NullReferenceException("value");
 
             var typeTrimmed = type.Trim();
-            if (typeTrimmed == String.Empty)
+            if (typeTrimmed == string.Empty)
                 throw new FormatException("Expected colon separated string containing a non-empty first item but received " + typeTrimmed);
 
             var valueTrimmed = value.Trim();
-            if (valueTrimmed == String.Empty)
+            if (valueTrimmed == string.Empty)
                 throw new FormatException("Expected colon separated string containing a non-empty second item but received " + valueTrimmed);
 
             var typeTruncated = Truncate(typeTrimmed);
@@ -79,7 +79,7 @@ namespace NewRelic.Agent
 
             return new Label(typeTruncated, valueTruncated);
         }
-        private static String Truncate(String value)
+        private static string Truncate(string value)
         {
             var result = value.TruncateUnicode(MaxLength);
             if (result.Length != value.Length)

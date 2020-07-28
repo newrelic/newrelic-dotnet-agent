@@ -1,5 +1,4 @@
-﻿using System;
-using System.ServiceModel;
+﻿using System.ServiceModel;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
@@ -8,11 +7,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class WcfAppSelfHosted : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = "WcfAppSelfHosted";
-        private const String ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted.exe";
-        private const String TargetFramework = "net451";
+        private const string ApplicationDirectoryName = "WcfAppSelfHosted";
+        private const string ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted.exe";
+        private const string TargetFramework = "net451";
 
-        public readonly String ExpectedTransactionName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted.IWcfService.GetString";
+        public readonly string ExpectedTransactionName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted.IWcfService.GetString";
 
         public WcfAppSelfHosted() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))
         {

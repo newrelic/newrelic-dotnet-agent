@@ -1,14 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Remoting;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Providers.CallStack.AsyncLocal;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
-using Telerik.JustMock;
 
 namespace NewRelic.Providers.CallStack.AsyncLocalTests
 {

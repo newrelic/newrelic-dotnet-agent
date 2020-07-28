@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -59,23 +58,23 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
                 () => Assert.NotNull(transactionEvent)
             );
 
-            var expectedTransactionTraceIntrinsicAttributes1 = new List<String>
+            var expectedTransactionTraceIntrinsicAttributes1 = new List<string>
             {
                 "client_cross_process_id",
                 "path_hash"
             };
-            var expectedTransactionTraceIntrinsicAttributes2 = new Dictionary<String, String>
+            var expectedTransactionTraceIntrinsicAttributes2 = new Dictionary<string, string>
             {
                 // These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
                 {"referring_transaction_guid", "guid"},
                 {"trip_id", "tripId"}
             };
-            var expectedTransactionEventIntrinsicAttributes1 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes1 = new List<string>
             {
                 "nr.guid",
                 "nr.pathHash"
             };
-            var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<string, string>
             {
                 // These values come from what we send to the application (see parameter passed to GetWithCatHeader above)
                 {"nr.referringPathHash", "pathHash"},

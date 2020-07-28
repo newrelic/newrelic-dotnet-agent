@@ -99,7 +99,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual Boolean ContainsKey(TKey key)
+        public virtual bool ContainsKey(TKey key)
         {
             using (_readLock())
             {
@@ -118,7 +118,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual Boolean Remove(TKey key)
+        public virtual bool Remove(TKey key)
         {
             using (_writeLock())
             {
@@ -126,7 +126,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual Boolean TryGetValue(TKey key, out TValue value)
+        public virtual bool TryGetValue(TKey key, out TValue value)
         {
             using (_readLock())
             {
@@ -183,7 +183,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual Boolean Contains(KeyValuePair<TKey, TValue> item)
+        public virtual bool Contains(KeyValuePair<TKey, TValue> item)
         {
             using (_readLock())
             {
@@ -191,7 +191,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual void CopyTo(KeyValuePair<TKey, TValue>[] array, Int32 arrayIndex)
+        public virtual void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             using (_readLock())
             {
@@ -199,7 +199,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual Boolean Remove(KeyValuePair<TKey, TValue> item)
+        public virtual bool Remove(KeyValuePair<TKey, TValue> item)
         {
             using (_writeLock())
             {
@@ -207,7 +207,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual Int32 Count
+        public virtual int Count
         {
             get
             {
@@ -218,7 +218,7 @@ namespace NewRelic.Collections
             }
         }
 
-        public virtual Boolean IsReadOnly
+        public virtual bool IsReadOnly
         {
             get
             {

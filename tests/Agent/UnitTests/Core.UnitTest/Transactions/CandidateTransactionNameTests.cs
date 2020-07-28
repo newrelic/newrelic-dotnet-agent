@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+﻿using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Errors;
@@ -86,7 +85,7 @@ namespace NewRelic.Agent.Core.Transformers
                 .DoInstead<Attributes, ErrorData>((attributes, _) => attributesPassedToErrorTraceMaker = attributes);
 
             // ACT
-            var inputAttributes = new Dictionary<String, String>
+            var inputAttributes = new Dictionary<string, string>
             {
                 {"key1", "value1"},
                 {"key2", "value2"}

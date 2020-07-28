@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
@@ -19,7 +18,7 @@ namespace NewRelic.Agent.Core.Aggregators
     public class SqlTraceAggregator : AbstractAggregator<SqlTraceStatsCollection>, ISqlTraceAggregator
     {
         private SqlTraceStatsCollection _sqlTraceStats = new SqlTraceStatsCollection();
-        private readonly Object _sqlTraceLock = new Object();
+        private readonly object _sqlTraceLock = new object();
         private readonly IAgentHealthReporter _agentHealthReporter;
 
         public SqlTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
@@ -38,7 +37,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         protected override void Harvest()
         {
-            IDictionary<Int64, SqlTraceWireModel> oldSqlTraces;
+            IDictionary<long, SqlTraceWireModel> oldSqlTraces;
             lock (_sqlTraceLock)
             {
                 oldSqlTraces = _sqlTraceStats.Collection;

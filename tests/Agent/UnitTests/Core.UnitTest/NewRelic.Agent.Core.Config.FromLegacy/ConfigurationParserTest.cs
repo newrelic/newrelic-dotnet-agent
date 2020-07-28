@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 set
                 {
-                    Object test = null;
+                    object test = null;
                     Console.Write(test.ToString());
                 }
             }
@@ -42,7 +42,7 @@ namespace NewRelic.Agent.Core.Config
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic"),
             System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"),
                 ConfigurationAttribute("test_null")]
-            public String TestNull
+            public string TestNull
             {
                 set
                 {

@@ -21,39 +21,39 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
     public class BrowserMonitoringConfigurationData
     {
         [JsonProperty("beacon")]
-        public String Beacon { get; }
+        public string Beacon { get; }
 
         [JsonProperty("errorBeacon")]
-        public String ErrorBeacon { get; }
+        public string ErrorBeacon { get; }
 
         [JsonProperty("licenseKey")]
-        public String BrowserLicenseKey { get; }
+        public string BrowserLicenseKey { get; }
 
         [JsonProperty("applicationID")]
-        public String ApplicationId { get; }
+        public string ApplicationId { get; }
 
         [JsonProperty("transactionName")]
-        public String ObfuscatedTransactionName { get; }
+        public string ObfuscatedTransactionName { get; }
 
         [JsonProperty("queueTime")]
-        public Int32 QueueTimeMilliseconds => (Int32)_queueTime.TotalMilliseconds;
+        public int QueueTimeMilliseconds => (int)_queueTime.TotalMilliseconds;
         private readonly TimeSpan _queueTime;
 
         [JsonProperty("applicationTime")]
-        public Int32 ApplicationTimeMilliseconds => (Int32)_applicationTime.TotalMilliseconds;
+        public int ApplicationTimeMilliseconds => (int)_applicationTime.TotalMilliseconds;
         private readonly TimeSpan _applicationTime;
 
         [JsonProperty("agent")]
-        public String Agent { get; }
+        public string Agent { get; }
 
         [JsonProperty("atts")]
-        public String ObfuscatedUserAttributes { get; }
+        public string ObfuscatedUserAttributes { get; }
 
         [JsonProperty("sslForHttp", NullValueHandling = NullValueHandling.Ignore)]
-        public String SslForHttp => _sslForHttp ? "true" : null;
-        private readonly Boolean _sslForHttp;
+        public string SslForHttp => _sslForHttp ? "true" : null;
+        private readonly bool _sslForHttp;
 
-        public BrowserMonitoringConfigurationData(String licenseKey, String beacon, String errorBeacon, String browserMonitoringKey, String applicationId, String obfuscatedTransactionName, TimeSpan queueTime, TimeSpan applicationTime, String jsAgentPayloadFile, String obfuscatedFormattedAttributes, Boolean sslForHttp)
+        public BrowserMonitoringConfigurationData(string licenseKey, string beacon, string errorBeacon, string browserMonitoringKey, string applicationId, string obfuscatedTransactionName, TimeSpan queueTime, TimeSpan applicationTime, string jsAgentPayloadFile, string obfuscatedFormattedAttributes, bool sslForHttp)
         {
             Beacon = beacon;
             ErrorBeacon = errorBeacon;
@@ -63,11 +63,11 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             _queueTime = queueTime;
             _applicationTime = applicationTime;
             Agent = jsAgentPayloadFile;
-            ObfuscatedUserAttributes = obfuscatedFormattedAttributes ?? String.Empty;
+            ObfuscatedUserAttributes = obfuscatedFormattedAttributes ?? string.Empty;
             _sslForHttp = sslForHttp;
         }
 
-        public String ToJsonString()
+        public string ToJsonString()
         {
             return JsonConvert.SerializeObject(this, Formatting.None, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         }

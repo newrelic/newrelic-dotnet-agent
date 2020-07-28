@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.TransactionTraces
 {

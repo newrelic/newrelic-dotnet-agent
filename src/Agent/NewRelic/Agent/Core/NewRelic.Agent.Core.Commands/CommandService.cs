@@ -7,14 +7,13 @@ using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands
 {
     public class CommandService : DisposableService
     {
-        private readonly IDictionary<String, ICommand> _knownCommands = new Dictionary<String, ICommand>();
+        private readonly IDictionary<string, ICommand> _knownCommands = new Dictionary<string, ICommand>();
         private readonly IDataTransportService _dataTransportService;
         private readonly IScheduler _scheduler;
 
@@ -45,9 +44,9 @@ namespace NewRelic.Agent.Core.Commands
 
             _dataTransportService.SendCommandResults(commandResults);
         }
-        public IDictionary<String, Object> ProcessCommands(IEnumerable<CommandModel> commandModels)
+        public IDictionary<string, object> ProcessCommands(IEnumerable<CommandModel> commandModels)
         {
-            var results = new Dictionary<String, Object>();
+            var results = new Dictionary<string, object>();
 
             if (commandModels == null)
                 return results;

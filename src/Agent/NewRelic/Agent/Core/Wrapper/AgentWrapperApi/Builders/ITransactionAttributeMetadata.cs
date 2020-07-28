@@ -12,8 +12,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
     {
         IEnumerable<KeyValuePair<string, string>> RequestParameters { get; }
         IEnumerable<KeyValuePair<string, string>> ServiceParameters { get; }
-        IEnumerable<KeyValuePair<string, Object>> UserAttributes { get; }
-        IEnumerable<KeyValuePair<string, Object>> UserErrorAttributes { get; }
+        IEnumerable<KeyValuePair<string, object>> UserAttributes { get; }
+        IEnumerable<KeyValuePair<string, object>> UserErrorAttributes { get; }
 
         string Uri { get; }
         string OriginalUri { get; }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.Time
@@ -14,7 +10,7 @@ namespace NewRelic.Agent.Core.Time
         [TestCase(1, 1, 1)]
         [TestCase(2, 3, 2)]
         [TestCase(3, 2, 2)]
-        public void Min_ReturnsMinTime(Int32 seconds1, Int32 seconds2, Int32 expectedSeconds)
+        public void Min_ReturnsMinTime(int seconds1, int seconds2, int expectedSeconds)
         {
             var time1 = TimeSpan.FromSeconds(seconds1);
             var time2 = TimeSpan.FromSeconds(seconds2);
@@ -29,7 +25,7 @@ namespace NewRelic.Agent.Core.Time
         [TestCase(1, 1, 1)]
         [TestCase(2, 3, 3)]
         [TestCase(3, 2, 3)]
-        public void Max_ReturnsMaxTime(Int32 seconds1, Int32 seconds2, Int32 expectedSeconds)
+        public void Max_ReturnsMaxTime(int seconds1, int seconds2, int expectedSeconds)
         {
             var time1 = TimeSpan.FromSeconds(seconds1);
             var time2 = TimeSpan.FromSeconds(seconds2);

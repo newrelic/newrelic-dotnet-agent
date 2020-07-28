@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -78,13 +77,13 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Supportability/Transactions/allOther" },
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "errorType", "System.Exception" },
                 { "errorMessage", "ExceptionMessage" },
             };
 
-            var expectedErrorEventAttributes = new Dictionary<String, String>
+            var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "error.message", "ExceptionMessage" },

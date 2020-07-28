@@ -10,11 +10,11 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class AsyncWcfService : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = "AsyncWcfService";
-        private const String ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.exe";
-        private const String TargetFramework = "net451";
+        private const string ApplicationDirectoryName = "AsyncWcfService";
+        private const string ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.exe";
+        private const string TargetFramework = "net451";
 
-        public readonly String ExpectedTransactionName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.IWcfService.BeginServiceMethod";
+        public readonly string ExpectedTransactionName = @"WebTransaction/WCF/NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.IWcfService.BeginServiceMethod";
 
         public AsyncWcfService() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))
         {
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.Equal(expectedAsyncResult, actualAsyncResult);
         }
 
-        private async Task<String> QueryWcfService(Applications.AsyncWcfService.IWcfService service, String input, String otherInput, TimeSpan timeout)
+        private async Task<string> QueryWcfService(Applications.AsyncWcfService.IWcfService service, string input, string otherInput, TimeSpan timeout)
         {
             var cancellationSource = new CancellationTokenSource();
             cancellationSource.CancelAfter(timeout);

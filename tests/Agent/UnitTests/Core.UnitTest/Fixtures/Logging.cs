@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -45,7 +44,7 @@ namespace NewRelic.Agent.Core.UnitTest.Fixtures
             Logger.RemoveAllAppenders();
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             var builder = new StringBuilder();
             var logEvents = MemoryAppender.GetEvents();
@@ -141,7 +140,7 @@ namespace NewRelic.Agent.Core.UnitTest.Fixtures
             return count;
 
         }
-        public IEnumerable<String> ErrorMessages
+        public IEnumerable<string> ErrorMessages
         {
             get
             {

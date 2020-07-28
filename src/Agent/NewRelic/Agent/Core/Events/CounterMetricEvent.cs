@@ -1,20 +1,18 @@
-﻿using System;
-
-namespace NewRelic.Agent.Core.Events
+﻿namespace NewRelic.Agent.Core.Events
 {
     public class CounterMetricEvent
     {
-        public readonly String Namespace;
-        public readonly String Name;
-        public readonly Int32 Count;
+        public readonly string Namespace;
+        public readonly string Name;
+        public readonly int Count;
 
-        public CounterMetricEvent(String @namespace, String name, Int32 count = 1)
+        public CounterMetricEvent(string @namespace, string name, int count = 1)
         {
             Namespace = @namespace;
             Name = name;
             Count = count;
         }
-        public CounterMetricEvent(String name, Int32 count = 1)
+        public CounterMetricEvent(string name, int count = 1)
         {
             Namespace = "";
             Name = name;

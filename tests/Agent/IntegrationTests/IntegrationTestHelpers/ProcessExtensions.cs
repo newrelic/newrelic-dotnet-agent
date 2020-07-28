@@ -10,7 +10,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public static class ProcessExtensions
     {
-        public static UInt32 StartRemote(String remoteMachineName, String launcherRemoteFilePath, String applicationRemoteFilePath, String newRelicHomeRemoteDirectoryPath, String arguments)
+        public static uint StartRemote(string remoteMachineName, string launcherRemoteFilePath, string applicationRemoteFilePath, string newRelicHomeRemoteDirectoryPath, string arguments)
         {
             Contract.Assert(remoteMachineName != null);
             Contract.Assert(launcherRemoteFilePath != null);
@@ -22,9 +22,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var applicationLocalFilePath = CommonUtils.GetLocalPathFromRemotePath(applicationRemoteFilePath);
             var newRelicHomeLocalDirectoryPath = CommonUtils.GetLocalPathFromRemotePath(newRelicHomeRemoteDirectoryPath);
             var workingDirectory = Path.GetDirectoryName(launcherLocalFilePath);
-            var commandLine = String.Format(@"{0} --application=""{1}"" --newrelichome=""{2}"" --arguments=""{3}""", launcherLocalFilePath, applicationLocalFilePath, newRelicHomeLocalDirectoryPath, arguments.Replace("\"", "`"));
+            var commandLine = string.Format(@"{0} --application=""{1}"" --newrelichome=""{2}"" --arguments=""{3}""", launcherLocalFilePath, applicationLocalFilePath, newRelicHomeLocalDirectoryPath, arguments.Replace("\"", "`"));
             Console.WriteLine("Command:          {0}", commandLine);
-            var processCreateArguments = new Object[] { commandLine, workingDirectory, null, 0 };
+            var processCreateArguments = new object[] { commandLine, workingDirectory, null, 0 };
 
             InvokeMethodRemote("Win32_Process", "Create", processCreateArguments, remoteMachineName);
             var processIdObject = processCreateArguments[3];
@@ -32,7 +32,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return Convert.ToUInt32(processIdObject);
         }
 
-        public static void KillTreeRemote(String remoteMachineName, UInt32 processId)
+        public static void KillTreeRemote(string remoteMachineName, uint processId)
         {
             Contract.Assert(remoteMachineName != null);
 
@@ -40,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             KillProcessRemote(remoteMachineName, processId);
         }
 
-        private static void KillProcessRemote(String remoteMachineName, UInt32 processId)
+        private static void KillProcessRemote(string remoteMachineName, uint processId)
         {
             Contract.Assert(remoteMachineName != null);
 
@@ -57,7 +57,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
         }
 
-        public static void KillProcessChildrenRemote(String remoteMachineName, UInt32 parentProcessId)
+        public static void KillProcessChildrenRemote(string remoteMachineName, uint parentProcessId)
         {
             Contract.Assert(remoteMachineName != null);
 
@@ -67,27 +67,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .ForEachNow(childProcessId => KillTreeRemote(remoteMachineName, childProcessId));
         }
 
-        private static IEnumerable<ManagementObject> GetProcessesRemote(String remoteMachineName, UInt32 processId)
+        private static IEnumerable<ManagementObject> GetProcessesRemote(string remoteMachineName, uint processId)
         {
-            var whereClause = String.Format("ProcessId={0}", processId);
+            var whereClause = string.Format("ProcessId={0}", processId);
             return GetProcessesRemote(remoteMachineName, whereClause);
         }
 
-        private static IEnumerable<ManagementObject> GetChildProcessesRemote(String remoteMachineName, UInt32 parentProcessId)
+        private static IEnumerable<ManagementObject> GetChildProcessesRemote(string remoteMachineName, uint parentProcessId)
         {
-            var whereClause = String.Format(@"ParentProcessId={0}", parentProcessId);
+            var whereClause = string.Format(@"ParentProcessId={0}", parentProcessId);
             return GetProcessesRemote(remoteMachineName, whereClause);
         }
 
-        private static IEnumerable<ManagementObject> GetProcessesRemote(String remoteMachineName, String whereClause)
+        private static IEnumerable<ManagementObject> GetProcessesRemote(string remoteMachineName, string whereClause)
         {
-            var wmiScope = String.Format(@"\\{0}\root\cimv2", remoteMachineName);
-            var childrenWmiQuery = String.Format(@"SELECT * FROM Win32_Process WHERE {0}", whereClause);
+            var wmiScope = string.Format(@"\\{0}\root\cimv2", remoteMachineName);
+            var childrenWmiQuery = string.Format(@"SELECT * FROM Win32_Process WHERE {0}", whereClause);
             var children = new ManagementObjectSearcher(wmiScope, childrenWmiQuery).Get();
             return children.Cast<ManagementObject>();
         }
 
-        private static void InvokeMethodRemote(String @class, String method, Object[] arguments, String remoteMachineName)
+        private static void InvokeMethodRemote(string @class, string method, object[] arguments, string remoteMachineName)
         {
             var connectionOptions = new ConnectionOptions
             {
@@ -95,7 +95,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 Authentication = AuthenticationLevel.Default,
                 EnablePrivileges = true,
             };
-            var scopePath = String.Format(@"\\{0}\root\cimv2", remoteMachineName);
+            var scopePath = string.Format(@"\\{0}\root\cimv2", remoteMachineName);
             var managementScope = new ManagementScope(scopePath, connectionOptions);
             var managementPath = new ManagementPath(@class);
             new ManagementClass(managementScope, managementPath, null).InvokeMethod(method, arguments);

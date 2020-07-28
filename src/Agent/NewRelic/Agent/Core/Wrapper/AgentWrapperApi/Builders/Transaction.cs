@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using NewRelic.Agent.Configuration;
@@ -277,9 +275,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         /// Generates a guid according to this spec: https://source.datanerd.us/agents/agent-specs/blob/master/PORTED-0013-Cross-Application-Tracing.md#guid
         /// </summary>
         /// <returns>A special New Relic-style guid</returns>
-        private static String GenerateNewRelicGuid()
+        private static string GenerateNewRelicGuid()
         {
-            var rndBytes = new Byte[8];
+            var rndBytes = new byte[8];
             RngCryptoServiceProvider.GetBytes(rndBytes);
             return $"{BitConverter.ToUInt64(rndBytes, 0):X}";
         }

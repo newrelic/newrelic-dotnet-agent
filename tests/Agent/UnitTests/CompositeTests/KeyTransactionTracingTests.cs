@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utils;
+﻿using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 
 namespace CompositeTests

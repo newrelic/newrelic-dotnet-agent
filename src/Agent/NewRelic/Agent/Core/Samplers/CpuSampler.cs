@@ -12,7 +12,7 @@ namespace NewRelic.Agent.Core.Samplers
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly ICpuSampleTransformer _cpuSampleTransformer;
 
-        private readonly Int32 _processorCount;
+        private readonly int _processorCount;
         private DateTime _lastSampleTime;
         private TimeSpan _lastProcessorTime;
 
@@ -64,13 +64,13 @@ namespace NewRelic.Agent.Core.Samplers
 
     public class ImmutableCpuSample
     {
-        public readonly Int32 ProcessorCount;
+        public readonly int ProcessorCount;
         public readonly DateTime LastSampleTime;
         public readonly TimeSpan LastUserProcessorTime;
         public readonly DateTime CurrentSampleTime;
         public readonly TimeSpan CurrentUserProcessorTime;
 
-        public ImmutableCpuSample(Int32 processorCount, DateTime lastSampleTime, TimeSpan lastUserProcessorTime, DateTime currentSampleTime, TimeSpan currentUserProcessorTime)
+        public ImmutableCpuSample(int processorCount, DateTime lastSampleTime, TimeSpan lastUserProcessorTime, DateTime currentSampleTime, TimeSpan currentUserProcessorTime)
         {
             ProcessorCount = processorCount;
             LastSampleTime = lastSampleTime;

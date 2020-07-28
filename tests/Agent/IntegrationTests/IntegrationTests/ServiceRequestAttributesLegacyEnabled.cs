@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -34,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedTransactionTraceAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAttributes = new Dictionary<string, string>
             {
                 { "service.request.input", "foo" },
             };

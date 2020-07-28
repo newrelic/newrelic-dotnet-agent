@@ -15,7 +15,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "bar";
-                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
+                var dictionary = new Dictionary<string, string> { { expectedKey, expectedValue } };
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
@@ -27,7 +27,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = null;
-                var dictionary = new Dictionary<String, String>();
+                var dictionary = new Dictionary<string, string>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
@@ -38,8 +38,8 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             public void when_no_default_provided_for_value_type_and_key_does_not_exist_then_0_is_returned()
             {
                 const string expectedKey = "foo";
-                const Int32 expectedValue = 0;
-                var dictionary = new Dictionary<String, Int32>();
+                const int expectedValue = 0;
+                var dictionary = new Dictionary<string, int>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
@@ -51,7 +51,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "bar";
-                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
+                var dictionary = new Dictionary<string, string> { { expectedKey, expectedValue } };
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, "default");
 
@@ -63,7 +63,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "default";
-                var dictionary = new Dictionary<String, String>();
+                var dictionary = new Dictionary<string, string>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
@@ -74,8 +74,8 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             public void when_default_provided_for_value_type_and_key_does_not_exist_then_default_is_returned()
             {
                 const string expectedKey = "foo";
-                const Int32 expectedValue = 123;
-                var dictionary = new Dictionary<String, Int32>();
+                const int expectedValue = 123;
+                var dictionary = new Dictionary<string, int>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
@@ -87,7 +87,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "bar";
-                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
+                var dictionary = new Dictionary<string, string> { { expectedKey, expectedValue } };
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, () => "default");
 
@@ -99,7 +99,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "default";
-                var dictionary = new Dictionary<String, String>();
+                var dictionary = new Dictionary<string, string>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
@@ -110,8 +110,8 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             public void when_default_function_provided_for_value_type_and_key_does_not_exist_then_default_is_returned()
             {
                 const string expectedKey = "foo";
-                const Int32 expectedValue = 123;
-                var dictionary = new Dictionary<String, Int32>();
+                const int expectedValue = 123;
+                var dictionary = new Dictionary<string, int>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
@@ -123,7 +123,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = null;
-                var dictionary = null as IDictionary<String, String>;
+                var dictionary = null as IDictionary<string, string>;
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
@@ -135,7 +135,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "default";
-                var dictionary = null as IDictionary<String, String>;
+                var dictionary = null as IDictionary<string, string>;
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
@@ -147,7 +147,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "default";
-                var dictionary = null as IDictionary<String, String>;
+                var dictionary = null as IDictionary<string, string>;
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
@@ -159,7 +159,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = null;
                 const string expectedValue = null;
-                var dictionary = new Dictionary<String, String>();
+                var dictionary = new Dictionary<string, string>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey);
 
@@ -171,7 +171,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = null;
                 const string expectedValue = "default";
-                var dictionary = new Dictionary<String, String>();
+                var dictionary = new Dictionary<string, string>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, expectedValue);
 
@@ -183,7 +183,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = null;
                 const string expectedValue = "default";
-                var dictionary = new Dictionary<String, String>();
+                var dictionary = new Dictionary<string, string>();
 
                 var actualValue = dictionary.GetValueOrDefault(expectedKey, () => expectedValue);
 
@@ -195,9 +195,9 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
             {
                 const string expectedKey = "foo";
                 const string expectedValue = "bar";
-                var dictionary = new Dictionary<String, String> { { expectedKey, expectedValue } };
+                var dictionary = new Dictionary<string, string> { { expectedKey, expectedValue } };
 
-                Assert.Throws<ArgumentNullException>(() => dictionary.GetValueOrDefault(expectedKey, null as Func<String>));
+                Assert.Throws<ArgumentNullException>(() => dictionary.GetValueOrDefault(expectedKey, null as Func<string>));
             }
 
         }

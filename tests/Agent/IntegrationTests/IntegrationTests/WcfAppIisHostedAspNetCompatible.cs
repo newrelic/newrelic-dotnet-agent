@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -68,7 +67,7 @@ namespace NewRelic.Agent.IntegrationTests
             {
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
-            var expectedTraceAttributes = new Dictionary<String, String>
+            var expectedTraceAttributes = new Dictionary<string, string>
             {
                 { "service.request.value", "42" },
             };

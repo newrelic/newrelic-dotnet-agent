@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Trie;
 using NUnit.Framework;
@@ -8,7 +7,7 @@ namespace TrieTests
 {
     internal class TestNode
     {
-        public String Key;
+        public string Key;
         public IEnumerable<TestNode> Children = new TestNode[] { };
     }
 
@@ -18,7 +17,7 @@ namespace TrieTests
         [Test]
         public void when_()
         {
-            var trieBuilder = new TrieBuilder<String>(
+            var trieBuilder = new TrieBuilder<string>(
                 rootNodeDataFactory: () => "",
                 nodeDataMerger: nodeDatas => nodeDatas.First(),
                 nodeDataComparor: (first, second) => first.CompareTo(second),
@@ -67,7 +66,7 @@ namespace TrieTests
             AssertTree(expectedTree, trie);
         }
 
-        private void AssertTree(TestNode expected, TrieNode<String> actual)
+        private void AssertTree(TestNode expected, TrieNode<string> actual)
         {
             Assert.AreEqual(expected.Key, actual.Data);
             Assert.AreEqual(expected.Children.Count(), actual.Children.Count);

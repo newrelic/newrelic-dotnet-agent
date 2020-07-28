@@ -22,7 +22,7 @@ namespace NewRelic.TypeInstantiation
             };
         }
 
-        private static Assembly AssemblyFromPath(String path)
+        private static Assembly AssemblyFromPath(string path)
         {
             if (path == null)
                 return null;
@@ -59,7 +59,7 @@ namespace NewRelic.TypeInstantiation
             }
         }
 
-        private static Boolean TypeIsInstantiatable(Type type)
+        private static bool TypeIsInstantiatable(Type type)
         {
             if (type == null)
                 return false;
@@ -72,7 +72,7 @@ namespace NewRelic.TypeInstantiation
             return true;
         }
 
-        private static Boolean TypeImplements<T>(Type type)
+        private static bool TypeImplements<T>(Type type)
         {
             return type != null
                 && typeof(T).IsAssignableFrom(type);
@@ -86,7 +86,7 @@ namespace NewRelic.TypeInstantiation
             }
             catch (Exception ex)
             {
-                var message = String.Format("An exception was thrown while constructing an instance of type {0}", type.FullName);
+                var message = string.Format("An exception was thrown while constructing an instance of type {0}", type.FullName);
                 throw new Exception(message, ex);
             }
         }
@@ -110,7 +110,7 @@ namespace NewRelic.TypeInstantiation
 
             return new GetTypesResult(types, exceptions);
         }
-        public static TypeInstantiatorResult<T> ExportedInstancesFromDirectory<T>(String directoryPath, Boolean recursive = false)
+        public static TypeInstantiatorResult<T> ExportedInstancesFromDirectory<T>(string directoryPath, bool recursive = false)
         {
             if (directoryPath == null)
                 return new TypeInstantiatorResult<T>();

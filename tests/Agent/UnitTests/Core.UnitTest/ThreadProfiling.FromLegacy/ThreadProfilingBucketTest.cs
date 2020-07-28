@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using NewRelic.Agent.Core.UnitTest;
 using NUnit.Framework;
 
 namespace NewRelic.Agent.Core.ThreadProfiling

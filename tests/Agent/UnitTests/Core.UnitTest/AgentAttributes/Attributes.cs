@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;

@@ -1,5 +1,4 @@
 ﻿using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.Tracer;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NUnit.Framework;

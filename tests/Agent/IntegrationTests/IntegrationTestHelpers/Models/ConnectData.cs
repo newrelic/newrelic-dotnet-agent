@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.Models

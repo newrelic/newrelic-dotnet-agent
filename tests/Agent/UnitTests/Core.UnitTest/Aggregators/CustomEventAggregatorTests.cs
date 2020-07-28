@@ -308,9 +308,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportCustomEventCollected(), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<UInt32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(Arg.IsAny<int>()), Occurs.Never());
         }
 
         [Test]

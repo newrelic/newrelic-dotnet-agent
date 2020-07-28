@@ -2,19 +2,16 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public class CustomSegmentData : AbstractSegmentData
     {
-        public String Name { get; }
+        public string Name { get; }
 
-        public CustomSegmentData(String name)
+        public CustomSegmentData(string name)
         {
             Name = name;
         }

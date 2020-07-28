@@ -5,11 +5,11 @@ namespace NewRelic.Trie
 {
     internal class TrieNodeComparor<T> : IComparer<T>, IEqualityComparer<T>
     {
-        private readonly Func<T, T, Int32> _nodeComparor;
-        private readonly Func<T, Int32> _nodeHasher;
-        private readonly Func<T, T, Boolean> _potentialChildChecker;
+        private readonly Func<T, T, int> _nodeComparor;
+        private readonly Func<T, int> _nodeHasher;
+        private readonly Func<T, T, bool> _potentialChildChecker;
 
-        public Int32 Compare(T left, T right)
+        public int Compare(T left, T right)
         {
             if (left == null && right == null)
                 return 0;
@@ -23,24 +23,24 @@ namespace NewRelic.Trie
             return _nodeComparor(left, right);
         }
 
-        public TrieNodeComparor(Func<T, T, Int32> nodeComparor, Func<T, Int32> nodeHasher, Func<T, T, Boolean> potentialChildChecker)
+        public TrieNodeComparor(Func<T, T, int> nodeComparor, Func<T, int> nodeHasher, Func<T, T, bool> potentialChildChecker)
         {
             _nodeComparor = nodeComparor;
             _nodeHasher = nodeHasher;
             _potentialChildChecker = potentialChildChecker;
         }
 
-        public Boolean Equals(T left, T right)
+        public bool Equals(T left, T right)
         {
             return Compare(left, right) == 0;
         }
 
-        public Int32 GetHashCode(T node)
+        public int GetHashCode(T node)
         {
             return _nodeHasher(node);
         }
 
-        public Boolean PotentialChild(T parent, T child)
+        public bool PotentialChild(T parent, T child)
         {
             return _potentialChildChecker(parent, child);
         }

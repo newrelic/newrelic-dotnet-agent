@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core.Time
             AssertEventuallyTrue(() => wasExecuted);
         }
 
-        private static void AssertEventuallyTrue(Func<Boolean> wasExecutedFunc)
+        private static void AssertEventuallyTrue(Func<bool> wasExecutedFunc)
         {
             Assertions.Eventually(wasExecutedFunc, TimeSpan.FromSeconds(5));
         }

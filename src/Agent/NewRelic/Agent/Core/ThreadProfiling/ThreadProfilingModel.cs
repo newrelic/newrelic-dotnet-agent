@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
@@ -10,7 +9,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
     public class ThreadProfilingModel
     {
         [JsonArrayIndex(Index = 0)]
-        public readonly Int32 ProfileSessionId;
+        public readonly int ProfileSessionId;
 
         [JsonArrayIndex(Index = 1), DateTimeSerializesAsUnixTime]
         public readonly DateTime StartTime;
@@ -19,18 +18,18 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public readonly DateTime StopTime;
 
         [JsonArrayIndex(Index = 3)]
-        public readonly Int32 NumberOfSamples;
+        public readonly int NumberOfSamples;
 
         [JsonArrayIndex(Index = 4)]
-        public IDictionary<String, Object> Samples;
+        public IDictionary<string, object> Samples;
 
         [JsonArrayIndex(Index = 5)]
-        public readonly Int32 TotalThreadCount;
+        public readonly int TotalThreadCount;
 
         [JsonArrayIndex(Index = 6)]
-        public readonly Int32 RunnableThreadCount;
+        public readonly int RunnableThreadCount;
 
-        public ThreadProfilingModel(Int32 profileSessionId, DateTime startTime, DateTime stopTime, Int32 numberOfSamples, IDictionary<String, Object> samples, Int32 totalThreadCount, Int32 runnableThreadCount)
+        public ThreadProfilingModel(int profileSessionId, DateTime startTime, DateTime stopTime, int numberOfSamples, IDictionary<string, object> samples, int totalThreadCount, int runnableThreadCount)
         {
             ProfileSessionId = profileSessionId;
             StartTime = startTime;

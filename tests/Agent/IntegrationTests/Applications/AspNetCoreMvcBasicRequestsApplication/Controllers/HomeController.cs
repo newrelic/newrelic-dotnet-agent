@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using AspNetCoreMvcBasicRequestsApplication.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +17,7 @@ namespace AspNetCoreMvcBasicRequestsApplication.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult Query(String data)
+        public IActionResult Query(string data)
         {
             return View();
         }

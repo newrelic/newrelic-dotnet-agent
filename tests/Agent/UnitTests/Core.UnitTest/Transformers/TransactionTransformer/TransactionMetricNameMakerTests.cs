@@ -1,6 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Transactions;
+﻿using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -37,8 +35,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         [Test]
         public void BuiltTransactionName_BuildsUriWebTransactionMetricName_IfUriTransactionName()
         {
-            Mock.Arrange(() => _metricNameService.NormalizeUrl(Arg.IsAny<String>()))
-                .Returns<String>((uri) => uri + "/normalized");
+            Mock.Arrange(() => _metricNameService.NormalizeUrl(Arg.IsAny<string>()))
+                .Returns<string>((uri) => uri + "/normalized");
             var transactionName = new UriTransactionName("http://www.google.com/yomama");
 
             var builtName = _transactionMetricNameMaker.GetTransactionMetricName(transactionName);

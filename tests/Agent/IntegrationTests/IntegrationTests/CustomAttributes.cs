@@ -43,22 +43,22 @@ namespace NewRelic.Agent.IntegrationTests
             var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
             var expectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
 
-            var expectedTransactionTraceAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAttributes = new Dictionary<string, string>
             {
                 { "key", "value" },
                 { "foo", "bar" },
             };
-            var expectedErrorTraceAttributes = new Dictionary<String, String>
+            var expectedErrorTraceAttributes = new Dictionary<string, string>
             {
                 { "hey", "dude" },
                 { "faz", "baz" }
             };
-            var expectedErrorEventAttributes = new Dictionary<String, String>
+            var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "hey", "dude" },
                 { "faz", "baz" }
             };
-            var expectedTransactionEventAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAttributes = new Dictionary<string, string>
             {
                 { "key", "value" },
                 { "foo", "bar" }

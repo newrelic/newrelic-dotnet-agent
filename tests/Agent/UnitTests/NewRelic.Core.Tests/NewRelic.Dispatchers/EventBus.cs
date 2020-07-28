@@ -10,17 +10,17 @@ namespace NewRelic.Dispatchers.UnitTests
         [Test]
         public void publishing_without_subscribing_does_not_throw_exception()
         {
-            EventBus<Object>.Publish(new Object());
+            EventBus<object>.Publish(new object());
         }
 
         [Test]
         public void publishing_reaches_one_subscriber()
         {
             bool wasCalled = false;
-            Action<Object> callback = _ => wasCalled = true;
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Publish(new Object());
-            EventBus<Object>.Unsubscribe(callback);
+            Action<object> callback = _ => wasCalled = true;
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Publish(new object());
+            EventBus<object>.Unsubscribe(callback);
 
             Assert.True(wasCalled);
         }
@@ -30,13 +30,13 @@ namespace NewRelic.Dispatchers.UnitTests
         {
             bool firstWasCalled = false;
             bool secondWasCalled = false;
-            Action<Object> firstCallback = _ => firstWasCalled = true;
-            Action<Object> secondCallback = _ => secondWasCalled = true;
-            EventBus<Object>.Subscribe(firstCallback);
-            EventBus<Object>.Subscribe(secondCallback);
-            EventBus<Object>.Publish(new Object());
-            EventBus<Object>.Unsubscribe(firstCallback);
-            EventBus<Object>.Unsubscribe(secondCallback);
+            Action<object> firstCallback = _ => firstWasCalled = true;
+            Action<object> secondCallback = _ => secondWasCalled = true;
+            EventBus<object>.Subscribe(firstCallback);
+            EventBus<object>.Subscribe(secondCallback);
+            EventBus<object>.Publish(new object());
+            EventBus<object>.Unsubscribe(firstCallback);
+            EventBus<object>.Unsubscribe(secondCallback);
 
             Assert.True(firstWasCalled);
             Assert.True(secondWasCalled);
@@ -46,10 +46,10 @@ namespace NewRelic.Dispatchers.UnitTests
         public void publishing_after_unsubscribe_does_not_callback()
         {
             bool wasCalled = false;
-            Action<Object> callback = _ => wasCalled = true;
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Unsubscribe(callback);
-            EventBus<Object>.Publish(new Object());
+            Action<object> callback = _ => wasCalled = true;
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Unsubscribe(callback);
+            EventBus<object>.Publish(new object());
 
             Assert.False(wasCalled);
         }
@@ -58,11 +58,11 @@ namespace NewRelic.Dispatchers.UnitTests
         public void publishing_after_publishing_and_unsubscribing_does_not_callback()
         {
             int callCount = 0;
-            Action<Object> callback = _ => ++callCount;
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Publish(new Object());
-            EventBus<Object>.Unsubscribe(callback);
-            EventBus<Object>.Publish(new Object());
+            Action<object> callback = _ => ++callCount;
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Publish(new object());
+            EventBus<object>.Unsubscribe(callback);
+            EventBus<object>.Publish(new object());
 
             Assert.AreEqual(1, callCount);
         }
@@ -71,10 +71,10 @@ namespace NewRelic.Dispatchers.UnitTests
         public void publishing_wrong_event_does_not_callback()
         {
             bool wasCalled = false;
-            Action<Object> callback = _ => wasCalled = true;
-            EventBus<Object>.Subscribe(callback);
-            EventBus<String>.Publish(String.Empty);
-            EventBus<Object>.Unsubscribe(callback);
+            Action<object> callback = _ => wasCalled = true;
+            EventBus<object>.Subscribe(callback);
+            EventBus<string>.Publish(string.Empty);
+            EventBus<object>.Unsubscribe(callback);
 
             Assert.False(wasCalled);
         }
@@ -83,11 +83,11 @@ namespace NewRelic.Dispatchers.UnitTests
         public void subscribing_twice_results_in_one_callback()
         {
             int callCount = 0;
-            Action<Object> callback = _ => ++callCount;
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Publish(new Object());
-            EventBus<Object>.Unsubscribe(callback);
+            Action<object> callback = _ => ++callCount;
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Publish(new object());
+            EventBus<object>.Unsubscribe(callback);
 
             Assert.AreEqual(1, callCount);
         }
@@ -96,11 +96,11 @@ namespace NewRelic.Dispatchers.UnitTests
         public void subscribing_twice_requires_one_unsubscribes()
         {
             bool wasCalled = false;
-            Action<Object> callback = _ => wasCalled = true;
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Unsubscribe(callback);
-            EventBus<Object>.Publish(new object());
+            Action<object> callback = _ => wasCalled = true;
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Unsubscribe(callback);
+            EventBus<object>.Publish(new object());
 
             Assert.False(wasCalled);
         }
@@ -108,16 +108,16 @@ namespace NewRelic.Dispatchers.UnitTests
         [Test]
         public void unsubscribing_a_callback_that_is_not_subscribed_does_not_throw()
         {
-            EventBus<Object>.Unsubscribe(_ => { });
+            EventBus<object>.Unsubscribe(_ => { });
         }
 
         [Test]
         public void unsubscribing_twice_after_subscribing_once_does_not_throw()
         {
-            Action<Object> callback = _ => { };
-            EventBus<Object>.Subscribe(callback);
-            EventBus<Object>.Unsubscribe(callback);
-            EventBus<Object>.Unsubscribe(callback);
+            Action<object> callback = _ => { };
+            EventBus<object>.Subscribe(callback);
+            EventBus<object>.Unsubscribe(callback);
+            EventBus<object>.Unsubscribe(callback);
         }
 
         [Test]
@@ -125,11 +125,11 @@ namespace NewRelic.Dispatchers.UnitTests
         {
             var firstCalled = false;
             var secondCalled = false;
-            using (new EventSubscription<Object>(_ => firstCalled = true))
-            using (new EventSubscription<Object>(_ => { throw new Exception(); }))
-            using (new EventSubscription<Object>(_ => secondCalled = true))
+            using (new EventSubscription<object>(_ => firstCalled = true))
+            using (new EventSubscription<object>(_ => { throw new Exception(); }))
+            using (new EventSubscription<object>(_ => secondCalled = true))
             {
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
             }
 
             Assert.True(firstCalled);
@@ -140,9 +140,9 @@ namespace NewRelic.Dispatchers.UnitTests
         public void when_publishing_asynchronously_then_processing_occurs_on_a_different_thread()
         {
             int? threadId = null;
-            using (new EventSubscription<Object>(_ => threadId = Thread.CurrentThread.ManagedThreadId))
+            using (new EventSubscription<object>(_ => threadId = Thread.CurrentThread.ManagedThreadId))
             {
-                EventBus<Object>.PublishAsync(new Object());
+                EventBus<object>.PublishAsync(new object());
 
                 while (threadId == null) ;
 
@@ -163,7 +163,7 @@ namespace NewRelic.Dispatchers.UnitTests
                     _action = action;
                 }
 
-                public void OnObject(Object @object)
+                public void OnObject(object @object)
                 {
                     _action();
                 }
@@ -171,7 +171,7 @@ namespace NewRelic.Dispatchers.UnitTests
 
             // a place to put foos that will help guarantee their lifetime, local variables have undefined lifetimes in optimized builds
             private Foo _foo;
-            private Boolean _fooOnObjectWasCalled;
+            private bool _fooOnObjectWasCalled;
 
             public Method_WeakSubscribe()
             {
@@ -190,12 +190,12 @@ namespace NewRelic.Dispatchers.UnitTests
             public void when_weak_action_is_garbage_collected_then_callback_is_not_called()
             {
                 // NCrunch ignored due to NCrunch garbage collection bug, see http://stackoverflow.com/questions/16771249/how-to-force-full-garbage-collection-in-net-4-x
-                EventBus<Object>.WeakSubscribe(_foo.OnObject);
+                EventBus<object>.WeakSubscribe(_foo.OnObject);
                 _foo = null;
 
                 GC.Collect();
 
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
 
                 Assert.False(_fooOnObjectWasCalled);
             }
@@ -203,11 +203,11 @@ namespace NewRelic.Dispatchers.UnitTests
             [Test]
             public void when_weak_action_is_strongly_referenced_then_callback_is_called()
             {
-                EventBus<Object>.WeakSubscribe(_foo.OnObject);
+                EventBus<object>.WeakSubscribe(_foo.OnObject);
 
                 GC.Collect();
 
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
 
                 Assert.True(_fooOnObjectWasCalled);
             }
@@ -215,11 +215,11 @@ namespace NewRelic.Dispatchers.UnitTests
             [Test]
             public void when_weak_action_is_subscribed_then_callback_is_called()
             {
-                EventBus<Object>.Subscribe(WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null));
+                EventBus<object>.Subscribe(WeakActionUtilities.MakeWeak<object>(_foo.OnObject, null));
 
                 GC.Collect();
 
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
 
                 Assert.True(_fooOnObjectWasCalled);
             }
@@ -228,12 +228,12 @@ namespace NewRelic.Dispatchers.UnitTests
             public void when_weak_action_is_subscribed_but_not_strongly_referenced_then_callback_is_not_called()
             {
                 // NCrunch ignored due to NCrunch garbage collection bug, see http://stackoverflow.com/questions/16771249/how-to-force-full-garbage-collection-in-net-4-x
-                EventBus<Object>.Subscribe(WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null));
+                EventBus<object>.Subscribe(WeakActionUtilities.MakeWeak<object>(_foo.OnObject, null));
                 _foo = null;
 
                 GC.Collect();
 
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
 
                 Assert.False(_fooOnObjectWasCalled);
             }
@@ -241,13 +241,13 @@ namespace NewRelic.Dispatchers.UnitTests
             [Test]
             public void when_weak_action_is_unsubscribed_then_callback_is_not_called()
             {
-                var weakAction = WeakActionUtilities.MakeWeak<Object>(_foo.OnObject, null);
-                EventBus<Object>.Subscribe(weakAction);
-                EventBus<Object>.Unsubscribe(weakAction);
+                var weakAction = WeakActionUtilities.MakeWeak<object>(_foo.OnObject, null);
+                EventBus<object>.Subscribe(weakAction);
+                EventBus<object>.Unsubscribe(weakAction);
 
                 GC.Collect();
 
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
 
                 Assert.False(_fooOnObjectWasCalled);
             }

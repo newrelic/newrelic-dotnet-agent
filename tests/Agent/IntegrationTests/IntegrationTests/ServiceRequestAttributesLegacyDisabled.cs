@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -38,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var unexpectedTransactionTraceAttributes = new List<String>
+            var unexpectedTransactionTraceAttributes = new List<string>
             {
                 "service.request.input",
             };

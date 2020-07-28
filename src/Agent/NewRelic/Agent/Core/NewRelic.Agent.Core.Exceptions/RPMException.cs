@@ -8,11 +8,11 @@ namespace NewRelic.Agent.Core.Exceptions
     /// </summary>
     public class RPMException : System.Exception
     {
-        public RPMException(String message) : base(message)
+        public RPMException(string message) : base(message)
         {
         }
 
-        public RPMException(String message, Exception exception) : base(message, exception)
+        public RPMException(string message, Exception exception) : base(message, exception)
         {
         }
     }

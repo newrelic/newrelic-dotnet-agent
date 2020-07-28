@@ -1,13 +1,11 @@
-﻿using System;
-
-namespace NewRelic.Agent.Extensions.Providers.Wrapper
+﻿namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
     public class CanWrapResponse
     {
-        public Boolean CanWrap;
-        public String AdditionalInformation;
+        public bool CanWrap;
+        public string AdditionalInformation;
 
-        public CanWrapResponse(Boolean canWrap, String additionalInformation = null)
+        public CanWrapResponse(bool canWrap, string additionalInformation = null)
         {
             CanWrap = canWrap;
             AdditionalInformation = additionalInformation;

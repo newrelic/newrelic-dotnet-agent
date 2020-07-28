@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -40,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
             };
 
-            var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
+            var expectedErrorEventIntrinsicAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "type", "TransactionError" }

@@ -13,10 +13,10 @@ namespace RabbitMqReceiverHost
 {
     public class Program
     {
-        public static void Main(String[] args)
+        public static void Main(string[] args)
         {
             Console.WriteLine($"Process Id: {Process.GetCurrentProcess().Id}");
-            Console.WriteLine($"Executing with arguments: {String.Join(" ", args)}");
+            Console.WriteLine($"Executing with arguments: {string.Join(" ", args)}");
 
             var queueNameArg = args.FirstOrDefault(x => x.StartsWith("--queue="));
             if (queueNameArg == null)

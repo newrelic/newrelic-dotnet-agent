@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 #if NET35
 using System.Data.Odbc;
 using System.Data.OleDb;
 #endif
-using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing
@@ -37,7 +34,7 @@ namespace NewRelic.Parsing
             return GetVendorName(command.GetType().Name);
         }
 
-        public static DatastoreVendor GetVendorName(String typeName)
+        public static DatastoreVendor GetVendorName(string typeName)
         {
 
             if (Vendors.TryGetValue(typeName, out DatastoreVendor vendor))
@@ -63,7 +60,7 @@ namespace NewRelic.Parsing
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        private static DatastoreVendor ExtractVendorNameFromString(String text)
+        private static DatastoreVendor ExtractVendorNameFromString(string text)
         {
             text = text.ToLowerInvariant();
             if (text.Contains("SQL Server".ToLowerInvariant()) || text.Contains("SQLServer".ToLowerInvariant()))

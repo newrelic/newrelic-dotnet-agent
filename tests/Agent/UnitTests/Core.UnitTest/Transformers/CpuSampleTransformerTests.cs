@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.WireModels;
 using NUnit.Framework;
 using Telerik.JustMock;

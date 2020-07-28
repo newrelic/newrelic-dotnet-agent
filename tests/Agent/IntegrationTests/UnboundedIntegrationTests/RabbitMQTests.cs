@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,8 +11,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
     {
         private readonly RemoteServiceFixtures.RabbitMqBasicMvcFixture _fixture;
 
-        private String _sendReceiveQueue;
-        private String _purgeQueue;
+        private string _sendReceiveQueue;
+        private string _purgeQueue;
 
         public RabbitMqTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)
         {

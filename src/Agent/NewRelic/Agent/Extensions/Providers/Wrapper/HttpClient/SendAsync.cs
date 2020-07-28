@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +11,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 {
     public class SendAsync : IWrapper
     {
-        public const String InstrumentedTypeName = "System.Net.Http.HttpClient";
+        public const string InstrumentedTypeName = "System.Net.Http.HttpClient";
 
         public bool IsTransactionRequired => true;
 
@@ -144,20 +143,20 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             }
         }
 
-        private static Boolean ValidTaskResponse(Task<HttpResponseMessage> response)
+        private static bool ValidTaskResponse(Task<HttpResponseMessage> response)
         {
             return (response?.Status == TaskStatus.RanToCompletion);
         }
 
-        private static KeyValuePair<String, String> Flatten(KeyValuePair<String, IEnumerable<String>> header)
+        private static KeyValuePair<string, string> Flatten(KeyValuePair<string, IEnumerable<string>> header)
         {
             var key = header.Key;
-            var values = header.Value ?? Enumerable.Empty<String>();
+            var values = header.Value ?? Enumerable.Empty<string>();
 
             // According to RFC 2616 (http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2), multi-valued headers can be represented as a single comma-delimited list of values
-            var flattenedValues = String.Join(",", values);
+            var flattenedValues = string.Join(",", values);
 
-            return new KeyValuePair<String, String>(key, flattenedValues);
+            return new KeyValuePair<string, string>(key, flattenedValues);
         }
     }
 }

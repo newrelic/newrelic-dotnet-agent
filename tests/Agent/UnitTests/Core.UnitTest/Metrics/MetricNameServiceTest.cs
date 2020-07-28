@@ -45,7 +45,7 @@ namespace NewRelic.Agent.Core.Metrics
         [TestCase("/banana/pie", "/BANANA/*", Description = "Rule with regex that matches")]
         [TestCase("/apple/banana/pie", "/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
         [TestCase("/banana/apple/pie", "/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
-        public void NormalizeUrl_RenamesUrlAccordingToRules_IfRuleIsNotIgnore(String input, String expectedOutput)
+        public void NormalizeUrl_RenamesUrlAccordingToRules_IfRuleIsNotIgnore(string input, string expectedOutput)
         {
             Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
             {
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Metrics
         [Test]
         [TestCase("/apple", true)]
         [TestCase("/banana", false)]
-        public void NormalizeUrl_Throws_IfIgnoreRuleMatchesInput(String input, Boolean shouldThrow)
+        public void NormalizeUrl_Throws_IfIgnoreRuleMatchesInput(string input, bool shouldThrow)
         {
             Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
             {
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.Metrics
                 if (test == null)
                     continue;
 
-                String actualOutput;
+                string actualOutput;
                 try
                 {
                     actualOutput = _metricNameService.NormalizeUrl(test.Input);
@@ -122,9 +122,9 @@ namespace NewRelic.Agent.Core.Metrics
         [Test]
         [TestCase("WebTransaction/Touchdown/Throw", 0.9)]
         [TestCase("WebTransaction/Touchdown/throw", 0.4)]
-        public void TryGetApdex_t_ReturnsCorrectApdexValue_IfMatchIsFound(String input, Double expectedOutput)
+        public void TryGetApdex_t_ReturnsCorrectApdexValue_IfMatchIsFound(string input, double expectedOutput)
         {
-            Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<String, Double>
+            Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<string, double>
             {
                 {"WebTransaction/Touchdown/Throw", 0.9},
                 {"WebTransaction/Touchdown/throw", 0.4}
@@ -139,9 +139,9 @@ namespace NewRelic.Agent.Core.Metrics
         [Test]
         [TestCase("WebTransaction/Touchdown/throw")]
         [TestCase("WebTransaction/TD/Run")]
-        public void TryGetApdex_t_ReturnsNull_IfMatchIsNotFound(String input)
+        public void TryGetApdex_t_ReturnsNull_IfMatchIsNotFound(string input)
         {
-            Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<String, Double>
+            Mock.Arrange(() => _configuration.WebTransactionsApdex).Returns(new Dictionary<string, double>
             {
                 {"WebTransaction/Touchdown/Throw", 0.9}
             });
@@ -161,7 +161,7 @@ namespace NewRelic.Agent.Core.Metrics
         [TestCase("WebTransaction/banana/pie", "WebTransaction/BANANA/*", Description = "Rule with regex that matches")]
         [TestCase("WebTransaction/apple/banana/pie", "WebTransaction/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
         [TestCase("WebTransaction/banana/apple/pie", "WebTransaction/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
-        public void RenameTransaction_RenamesTransactionAccordingToRules_IfRuleIsNotIgnore(String originalName, String expectedOutput)
+        public void RenameTransaction_RenamesTransactionAccordingToRules_IfRuleIsNotIgnore(string originalName, string expectedOutput)
         {
             var originalMetricName = AsTransactionMetricName(originalName);
 
@@ -180,7 +180,7 @@ namespace NewRelic.Agent.Core.Metrics
         [Test]
         [TestCase("WebTransaction/apple", null)]
         [TestCase("WebTransaction/banana", "WebTransaction/banana")]
-        public void RenameTransaction_ReturnsShouldIgnore_IfIgnoreRuleMatchesInput(String originalName, String expectedOutput)
+        public void RenameTransaction_ReturnsShouldIgnore_IfIgnoreRuleMatchesInput(string originalName, string expectedOutput)
         {
             var originalMetricName = AsTransactionMetricName(originalName);
 
@@ -219,7 +219,7 @@ namespace NewRelic.Agent.Core.Metrics
             Assert.AreEqual(originalMetricName.PrefixedName, newName.PrefixedName);
         }
 
-        private void CallRenameTransactionAndAssert(String originalName, String expectedRename, Boolean isWebTransaction = true)
+        private void CallRenameTransactionAndAssert(string originalName, string expectedRename, bool isWebTransaction = true)
         {
             var originalMetricName = AsTransactionMetricName(originalName);
             var newMetricName = _metricNameService.RenameTransaction(originalMetricName);
@@ -228,10 +228,10 @@ namespace NewRelic.Agent.Core.Metrics
             Assert.AreEqual(expectedRename, newMetricName.PrefixedName);
         }
 
-        private TransactionMetricName AsTransactionMetricName(String originalName)
+        private TransactionMetricName AsTransactionMetricName(string originalName)
         {
             var segments = originalName.Split(MetricNames.PathSeparatorChar);
-            return new TransactionMetricName(segments[0], String.Join(MetricNames.PathSeparator, segments.Skip(1)));
+            return new TransactionMetricName(segments[0], string.Join(MetricNames.PathSeparator, segments.Skip(1)));
         }
 
         [Test]
@@ -241,7 +241,7 @@ namespace NewRelic.Agent.Core.Metrics
             {
                 new RegexRule("/InvalidSegment", "/ValidSegment", false, 10, false, false, false)
             });
-            Mock.Arrange(() => _configuration.TransactionNameWhitelistRules).Returns(new Dictionary<String, IEnumerable<String>>
+            Mock.Arrange(() => _configuration.TransactionNameWhitelistRules).Returns(new Dictionary<string, IEnumerable<string>>
             {
                 {"WebTransaction/Uri", new[]{"ValidSegment"}}
             });
@@ -300,7 +300,7 @@ namespace NewRelic.Agent.Core.Metrics
         [TestCase("/banana/pie", "/BANANA/*", Description = "Rule with regex that matches")]
         [TestCase("/apple/banana/pie", "/APPLE/BANANA/*", Description = "Two matching rules that don't conflict")]
         [TestCase("/banana/apple/pie", "/BANANA/*", Description = "Two matching rules that conflict -- evaluation order matters!")]
-        public void RenameMetric_RenamesMetricAccordingToRules_IfRuleIsNotIgnore(String input, String expectedOutput)
+        public void RenameMetric_RenamesMetricAccordingToRules_IfRuleIsNotIgnore(string input, string expectedOutput)
         {
             Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(new List<RegexRule>
             {
@@ -316,7 +316,7 @@ namespace NewRelic.Agent.Core.Metrics
         [Test]
         [TestCase("/apple", null)]
         [TestCase("/banana", "/banana")]
-        public void RenameMetric_ReturnsNull_IfRuleIsIgnore(String input, String expectedOutput)
+        public void RenameMetric_ReturnsNull_IfRuleIsIgnore(string input, string expectedOutput)
         {
             Mock.Arrange(() => _configuration.MetricNameRegexRules).Returns(new List<RegexRule>
             {
@@ -353,7 +353,7 @@ namespace NewRelic.Agent.Core.Metrics
         public class WhitelistRuleTestCase
         {
             [JsonProperty(PropertyName = "testname")]
-            public String TestName { get; set; }
+            public string TestName { get; set; }
             [JsonProperty(PropertyName = "transaction_segment_terms")]
             public IEnumerable<ServerConfiguration.WhitelistRule> Rules { get; set; }
             [JsonProperty(PropertyName = "tests")]
@@ -363,7 +363,7 @@ namespace NewRelic.Agent.Core.Metrics
         public class RegexRuleTestCase
         {
             [JsonProperty(PropertyName = "testname")]
-            public String TestName { get; set; }
+            public string TestName { get; set; }
             [JsonProperty(PropertyName = "rules")]
             public IEnumerable<ServerConfiguration.RegexRule> Rules { get; set; }
             [JsonProperty(PropertyName = "tests")]
@@ -373,9 +373,9 @@ namespace NewRelic.Agent.Core.Metrics
         public class TestCase
         {
             [JsonProperty(PropertyName = "input")]
-            public String Input { get; set; }
+            public string Input { get; set; }
             [JsonProperty(PropertyName = "expected")]
-            public String Expected { get; set; }
+            public string Expected { get; set; }
         }
 
         private static IEnumerable<RegexRuleTestCase[]> CrossAgentRegexRuleTestCases
@@ -384,7 +384,7 @@ namespace NewRelic.Agent.Core.Metrics
             {
                 #region JSON
 
-                const String json = @"
+                const string json = @"
 [
   {
     ""testname"":""replace first"",
@@ -568,7 +568,7 @@ namespace NewRelic.Agent.Core.Metrics
             {
                 #region JSON
 
-                const String json = @"
+                const string json = @"
 [
   {
     ""testname"": ""basic"",

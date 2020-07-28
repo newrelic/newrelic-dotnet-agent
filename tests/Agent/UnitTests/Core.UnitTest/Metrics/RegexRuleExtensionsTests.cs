@@ -1,4 +1,3 @@
-using System;
 using NewRelic.Agent.Configuration;
 using NUnit.Framework;
 
@@ -36,7 +35,7 @@ namespace NewRelic.Agent.Core.Metrics
         [Test]
         [TestCase("WebTransaction/NormalizedUri/dude/social/rest/test/blah/blah", "WebTransaction/NormalizedUri/dude/social/rest/test/*")]
         [TestCase("WebTransaction/NormalizedUri/meet/social/rest/stop/blah/blah", "WebTransaction/NormalizedUri/meet/social/rest/stop/*")]
-        public void ApplyTo_ReturnsCorrectResult_ForComplicatedRule(String input, String expectedOutput)
+        public void ApplyTo_ReturnsCorrectResult_ForComplicatedRule(string input, string expectedOutput)
         {
             var rule = new RegexRule("(.*)/social/rest/([^/]*)/.*", "$1/social/rest/$2/*", false, 0, false, false, false);
             var output = rule.ApplyTo(input).Replacement;

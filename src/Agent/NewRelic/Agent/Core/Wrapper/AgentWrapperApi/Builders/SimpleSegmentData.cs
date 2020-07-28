@@ -2,21 +2,18 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
     public class SimpleSegmentData : AbstractSegmentData
     {
-        private readonly String _name;
+        private readonly string _name;
 
-        public String Name => _name;
+        public string Name => _name;
 
-        public SimpleSegmentData(String name)
+        public SimpleSegmentData(string name)
         {
             _name = name;
         }

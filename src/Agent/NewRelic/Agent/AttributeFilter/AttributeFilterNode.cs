@@ -1,17 +1,15 @@
-﻿using System;
-
-namespace NewRelic.Agent
+﻿namespace NewRelic.Agent
 {
     internal class AttributeFilterNode
     {
-        public readonly String Key;
+        public readonly string Key;
 
-        public readonly Boolean Wildcard;
+        public readonly bool Wildcard;
 
         public readonly AttributeDestinations DestinationIncludes;
         public readonly AttributeDestinations DestinationExcludes;
 
-        public AttributeFilterNode(String key, AttributeDestinations includes, AttributeDestinations excludes)
+        public AttributeFilterNode(string key, AttributeDestinations includes, AttributeDestinations excludes)
         {
             if (key.EndsWith("*"))
             {

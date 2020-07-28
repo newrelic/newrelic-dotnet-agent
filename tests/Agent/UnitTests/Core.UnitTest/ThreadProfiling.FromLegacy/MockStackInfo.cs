@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             CurrentIndex = functionIdentifiers.Count() - 1;
         }
 
-        public void StoreFunctionIds(IntPtr data, Int32 length)
+        public void StoreFunctionIds(IntPtr data, int length)
         {
         }
 

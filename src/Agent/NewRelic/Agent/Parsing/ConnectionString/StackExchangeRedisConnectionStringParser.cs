@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 
 namespace NewRelic.Parsing.ConnectionString
 {
     public class StackExchangeRedisConnectionStringParser : IConnectionStringParser
     {
-        private readonly String _connectionString;
+        private readonly string _connectionString;
 
-        public StackExchangeRedisConnectionStringParser(String connectionString)
+        public StackExchangeRedisConnectionStringParser(string connectionString)
         {
             _connectionString = connectionString;
         }

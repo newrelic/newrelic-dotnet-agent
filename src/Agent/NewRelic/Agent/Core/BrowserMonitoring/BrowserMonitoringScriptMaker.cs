@@ -15,7 +15,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public interface IBrowserMonitoringScriptMaker
     {
-        String GetScript(ITransaction transaction);
+        string GetScript(ITransaction transaction);
     }
 
     public class BrowserMonitoringScriptMaker : IBrowserMonitoringScriptMaker
@@ -33,9 +33,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             _attributeService = attributeService;
         }
 
-        public String GetScript(ITransaction transaction)
+        public string GetScript(ITransaction transaction)
         {
-            if (String.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
+            if (string.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
                 return null;
 
             if (_configurationService.Configuration.BrowserMonitoringJavaScriptAgentLoaderType.Equals("none", StringComparison.InvariantCultureIgnoreCase))
@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var javascriptAgent = _configurationService.Configuration.BrowserMonitoringJavaScriptAgent;
             return $"<script type=\"text/javascript\">{javascriptAgentConfiguration}</script><script type=\"text/javascript\">{javascriptAgent}</script>";
         }
-        private BrowserMonitoringConfigurationData GetBrowserConfigurationData(ITransaction transaction, TransactionMetricName transactionMetricName, String licenseKey)
+        private BrowserMonitoringConfigurationData GetBrowserConfigurationData(ITransaction transaction, TransactionMetricName transactionMetricName, string licenseKey)
         {
             var configuration = _configurationService.Configuration;
 
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             return new BrowserMonitoringConfigurationData(licenseKey, beacon, errorBeacon, browserMonitoringKey, applicationId, obfuscatedTransactionName, queueTime, applicationTime, jsAgentPayloadFile, obfuscatedFormattedAttributes, sslForHttp);
         }
-        private String GetObfuscatedFormattedAttributes(Attributes attributes, String licenseKey)
+        private string GetObfuscatedFormattedAttributes(Attributes attributes, string licenseKey)
         {
             if (attributes.Count() == 0)
                 return null;
@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             if (agentAttributes.IsEmpty() && userAttributes.IsEmpty())
                 return null;
 
-            var attributeDictionary = new Dictionary<String, IDictionary<String, Object>>();
+            var attributeDictionary = new Dictionary<string, IDictionary<string, object>>();
             if (agentAttributes.Any())
                 attributeDictionary.Add("a", filteredAttributes.GetAgentAttributesDictionary());
             if (userAttributes.Any())

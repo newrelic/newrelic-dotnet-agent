@@ -11,12 +11,12 @@ namespace NewRelic.Agent.Core.ThreadProfiling
     /// </summary>
     public class ThreadProfilingBucket
     {
-        private const String NativeClassDescriptiveName = "Native";
-        private const String NativeFunctionDescriptiveName = "Function Call";
-        private const String UnknownClassName = "UnknownClass";
-        private const String UnknownMethodName = "UnknownMethod";
+        private const string NativeClassDescriptiveName = "Native";
+        private const string NativeFunctionDescriptiveName = "Function Call";
+        private const string UnknownClassName = "UnknownClass";
+        private const string UnknownMethodName = "UnknownMethod";
         public readonly BucketProfile Tree;
-        private readonly Object _syncObj = new Object();
+        private readonly object _syncObj = new object();
         private readonly IThreadProfilingProcessing _service;
 
         public ThreadProfilingBucket(IThreadProfilingProcessing service)
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
         }
 
-        public void UpdateTree(IStackInfo stackInfo, UInt32 depth)
+        public void UpdateTree(IStackInfo stackInfo, uint depth)
         {
             if (stackInfo == null)
             {
@@ -54,7 +54,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             }
         }
 
-        private void UpdateTree(ProfileNode parent, IStackInfo stackInfo, UInt32 depth)
+        private void UpdateTree(ProfileNode parent, IStackInfo stackInfo, uint depth)
         {
             if (stackInfo.CurrentIndex < 0)
                 return;
@@ -83,7 +83,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             UpdateTree(child, stackInfo, ++depth);
         }
 
-        public Int32 GetNodeCount()
+        public int GetNodeCount()
         {
             var totalNodeCount = Tree.Root
                 .Flatten(node => node != null ? node.Children : Enumerable.Empty<ProfileNode>())
@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             return totalNodeCount - 1;
         }
 
-        public Int32 GetDepth()
+        public int GetDepth()
         {
             var treeDepth = GetDepth(Tree.Root, 0);
 
@@ -101,7 +101,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
             return treeDepth - 1;
         }
 
-        private static Int32 GetDepth(ProfileNode node, Int32 currentDepth)
+        private static int GetDepth(ProfileNode node, int currentDepth)
         {
             currentDepth++;
 

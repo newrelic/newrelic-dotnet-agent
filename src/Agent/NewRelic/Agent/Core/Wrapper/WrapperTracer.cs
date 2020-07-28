@@ -1,7 +1,5 @@
 ﻿using System;
 using NewRelic.Agent.Core.Tracer;
-using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
@@ -18,7 +16,7 @@ namespace NewRelic.Agent.Core.Wrapper
             _afterWrappedMethodDelegate = afterWrappedMethodDelegate;
         }
 
-        public void Finish(Object returnValue, Exception exception)
+        public void Finish(object returnValue, Exception exception)
         {
             _afterWrappedMethodDelegate(returnValue, exception);
         }

@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -22,16 +20,16 @@ namespace NewRelic.Agent.Core.WireModels
     {
         private SqlTraceWireModel _sqlTraceWireModel;
 
-        private const String TransactionName = "WebTransaction/ASP/post.aspx";
-        private const String Uri = "http://localhost:8080/post.aspx";
-        private const Int32 SqlId = 1530282818;
-        private const String Sql = "Select * from meh";
-        private const String DatabaseMetricName = "Database/be_datastoresettings/delete";
-        private const UInt32 CallCount = 1;
+        private const string TransactionName = "WebTransaction/ASP/post.aspx";
+        private const string Uri = "http://localhost:8080/post.aspx";
+        private const int SqlId = 1530282818;
+        private const string Sql = "Select * from meh";
+        private const string DatabaseMetricName = "Database/be_datastoresettings/delete";
+        private const uint CallCount = 1;
         private static readonly TimeSpan TotalCallTime = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan MinCallTime = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan MaxCallTime = TimeSpan.FromSeconds(1);
-        private readonly Dictionary<String, Object> _parameterData = new Dictionary<String, Object>();
+        private readonly Dictionary<string, object> _parameterData = new Dictionary<string, object>();
 
         [SetUp]
         public void SetUp()
@@ -42,7 +40,7 @@ namespace NewRelic.Agent.Core.WireModels
         [Test]
         public void when_default_fixture_values_are_used_then_serializes_correctly()
         {
-            const String expectedResult = "[\"WebTransaction/ASP/post.aspx\",\"http://localhost:8080/post.aspx\",1530282818,\"Select * from meh\",\"Database/be_datastoresettings/delete\",1,1000.0,1000.0,1000.0,{}]";
+            const string expectedResult = "[\"WebTransaction/ASP/post.aspx\",\"http://localhost:8080/post.aspx\",1530282818,\"Select * from meh\",\"Database/be_datastoresettings/delete\",1,1000.0,1000.0,1000.0,{}]";
 
             var actualResult = JsonConvert.SerializeObject(_sqlTraceWireModel);
             Assert.AreEqual(expectedResult, actualResult);
@@ -59,14 +57,14 @@ namespace NewRelic.Agent.Core.WireModels
             var transactionMetricName = new TransactionMetricName("WebTransaction", "Name");
             var databaseService = new DatabaseService();
             var configurationService = Mock.Create<ConfigurationService>();
-            String[] queries = {Sql, "Select * from someTable", "Insert x into anotherTable", "another random string",
+            string[] queries = {Sql, "Select * from someTable", "Insert x into anotherTable", "another random string",
                 "1234567890!@#$%^&*()", "fjdksalfjdkla;fjdla;", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "NNNNNNNNNNNUUUUUUUUUUUUUUUUTTTTTTTTTTTTTTTHHHHHHHHHHHHHIIIIIIIIIIIIIIIIIIIINNNNNNNNNNNNNNNNNNNN",
-                Double.MaxValue.ToString()};
+                double.MaxValue.ToString()};
             var sqlTraceMaker = new SqlTraceMaker(configurationService);
             var traceDatas = new List<SqlTraceWireModel>();
 
-            foreach (String query in queries)
+            foreach (string query in queries)
             {
                 var data = new DatastoreSegmentData()
                 {

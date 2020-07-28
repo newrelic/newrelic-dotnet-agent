@@ -4,7 +4,6 @@ using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
@@ -18,27 +17,27 @@ namespace NewRelic.Agent.Core.AgentHealth
     public interface IAgentHealthReporter
     {
         void ReportDotnetVersion();
-        void ReportAgentVersion(String agentVersion, String hostName);
-        void ReportTransactionEventReservoirResized(UInt32 newSize);
+        void ReportAgentVersion(string agentVersion, string hostName);
+        void ReportTransactionEventReservoirResized(uint newSize);
         void ReportTransactionEventCollected();
-        void ReportTransactionEventsRecollected(Int32 count);
-        void ReportTransactionEventsSent(Int32 count);
-        void ReportCustomEventReservoirResized(UInt32 newSize);
+        void ReportTransactionEventsRecollected(int count);
+        void ReportTransactionEventsSent(int count);
+        void ReportCustomEventReservoirResized(uint newSize);
         void ReportCustomEventCollected();
-        void ReportCustomEventsRecollected(Int32 count);
-        void ReportCustomEventsSent(Int32 count);
+        void ReportCustomEventsRecollected(int count);
+        void ReportCustomEventsSent(int count);
         void ReportErrorTraceCollected();
-        void ReportErrorTracesRecollected(Int32 count);
-        void ReportErrorTracesSent(Int32 count);
+        void ReportErrorTracesRecollected(int count);
+        void ReportErrorTracesSent(int count);
         void ReportErrorEventSeen();
-        void ReportErrorEventsSent(Int32 count);
-        void ReportSqlTracesRecollected(Int32 count);
-        void ReportSqlTracesSent(Int32 count);
+        void ReportErrorEventsSent(int count);
+        void ReportSqlTracesRecollected(int count);
+        void ReportSqlTracesSent(int count);
 
-        void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, String lastStartedSegmentName, String lastFinishedSegmentName);
+        void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName);
 
         void ReportWrapperShutdown(IWrapper wrapper, Method method);
-        void ReportAgentApiMethodCalled(String methodName);
+        void ReportAgentApiMethodCalled(string methodName);
         void ReportIfHostIsLinuxOs();
         void ReportBootIdError();
     }
@@ -93,7 +92,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             TrySend(metric);
         }
 
-        public void ReportAgentVersion(String agentVersion, String hostName)
+        public void ReportAgentVersion(string agentVersion, string hostName)
         {
             var metrics = new[]
             {
@@ -106,7 +105,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #region TransactionEvents
 
-        public void ReportTransactionEventReservoirResized(UInt32 newSize)
+        public void ReportTransactionEventReservoirResized(uint newSize)
         {
             var metrics = new[]
             {
@@ -131,7 +130,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportTransactionEventsRecollected(Int32 count)
+        public void ReportTransactionEventsRecollected(int count)
         {
             var metrics = new[]
             {
@@ -141,7 +140,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportTransactionEventsSent(Int32 count)
+        public void ReportTransactionEventsSent(int count)
         {
             var metrics = new[]
             {
@@ -156,7 +155,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #region CustomEvents
 
-        public void ReportCustomEventReservoirResized(UInt32 newSize)
+        public void ReportCustomEventReservoirResized(uint newSize)
         {
             var metrics = new[]
             {
@@ -181,7 +180,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportCustomEventsRecollected(Int32 count)
+        public void ReportCustomEventsRecollected(int count)
         {
             var metrics = new[]
             {
@@ -191,7 +190,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportCustomEventsSent(Int32 count)
+        public void ReportCustomEventsSent(int count)
         {
             var metrics = new[]
             {
@@ -216,7 +215,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportErrorTracesRecollected(Int32 count)
+        public void ReportErrorTracesRecollected(int count)
         {
             var metrics = new[]
             {
@@ -226,7 +225,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportErrorTracesSent(Int32 count)
+        public void ReportErrorTracesSent(int count)
         {
             var metrics = new[]
             {
@@ -250,7 +249,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportErrorEventsSent(Int32 count)
+        public void ReportErrorEventsSent(int count)
         {
             var metrics = new[]
             {
@@ -263,7 +262,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #region SqlTraces
 
-        public void ReportSqlTracesRecollected(Int32 count)
+        public void ReportSqlTracesRecollected(int count)
         {
             var metrics = new[]
             {
@@ -273,7 +272,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             metrics.ForEach(TrySend);
         }
 
-        public void ReportSqlTracesSent(Int32 count)
+        public void ReportSqlTracesSent(int count)
         {
             var metrics = new[]
             {
@@ -285,7 +284,7 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         #endregion ErrorTraces
 
-        public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, String lastStartedSegmentName, String lastFinishedSegmentName)
+        public void ReportTransactionGarbageCollected(TransactionMetricName transactionMetricName, string lastStartedSegmentName, string lastFinishedSegmentName)
         {
             var transactionName = transactionMetricName.PrefixedName;
             Log.Debug($"Transaction was garbage collected without ever ending.\nTransaction Name: {transactionName}\nLast Started Segment: {lastStartedSegmentName}\nLast Finished Segment: {lastFinishedSegmentName}");
@@ -312,7 +311,7 @@ namespace NewRelic.Agent.Core.AgentHealth
             _recurringLogDatas.Add(new RecurringLogData(Log.Debug, $"Wrapper {wrapperName} was disabled for {method.MethodName} at {DateTime.Now} due to too many consecutive exceptions. All other methods using this wrapper will continue to be instrumented. This will reduce the functionality of the agent until the agent is restarted."));
         }
 
-        public void ReportAgentApiMethodCalled(String methodName)
+        public void ReportAgentApiMethodCalled(string methodName)
         {
             var metrics = new[]
             {
@@ -378,10 +377,10 @@ namespace NewRelic.Agent.Core.AgentHealth
 
         private class RecurringLogData
         {
-            public readonly Action<String> LogAction;
-            public readonly String Message;
+            public readonly Action<string> LogAction;
+            public readonly string Message;
 
-            public RecurringLogData(Action<String> logAction, String message)
+            public RecurringLogData(Action<string> logAction, string message)
             {
                 LogAction = logAction;
                 Message = message;

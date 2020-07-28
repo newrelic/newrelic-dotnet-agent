@@ -286,7 +286,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportErrorEventSeen(), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportErrorEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportErrorEventsSent(Arg.IsAny<int>()), Occurs.Never());
         }
 
         [Test]

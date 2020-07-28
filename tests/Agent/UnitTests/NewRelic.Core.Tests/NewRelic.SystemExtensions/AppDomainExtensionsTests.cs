@@ -31,8 +31,8 @@ namespace NewRelic.SystemExtensions.UnitTests
             // arrange
             var simpleAssemblyName = Guid.NewGuid().ToString("N");
             var fullAssemblyPath = Path.Combine(Path.GetTempPath(), simpleAssemblyName);
-            var assembly1 = GenerateAssembly(String.Format(@"[assembly: System.Reflection.AssemblyVersion(""1.2.3.4"")]"), fullAssemblyPath);
-            var assembly2 = GenerateAssembly(String.Format(@"[assembly: System.Reflection.AssemblyVersion(""2.0.0.0"")]"), fullAssemblyPath);
+            var assembly1 = GenerateAssembly(string.Format(@"[assembly: System.Reflection.AssemblyVersion(""1.2.3.4"")]"), fullAssemblyPath);
+            var assembly2 = GenerateAssembly(string.Format(@"[assembly: System.Reflection.AssemblyVersion(""2.0.0.0"")]"), fullAssemblyPath);
 
             // act
             var complexName = AppDomain.CurrentDomain.GetLoadedAssemblyFullNamesBySimpleName(simpleAssemblyName);
@@ -52,9 +52,9 @@ namespace NewRelic.SystemExtensions.UnitTests
             Assert.IsEmpty(complexName);
         }
 
-        private static readonly String[] References = { "System.dll" };
+        private static readonly string[] References = { "System.dll" };
 
-        private static Assembly GenerateAssembly(String source, String assemblyName)
+        private static Assembly GenerateAssembly(string source, string assemblyName)
         {
             using (var provider = new CSharpCodeProvider())
             {
@@ -95,7 +95,7 @@ namespace NewRelic.SystemExtensions.UnitTests
         [Test]
         public void when_func_is_passed_then_output_is_returned()
         {
-            Func<Object> func = () => "Foo";
+            Func<object> func = () => "Foo";
             var result = AppDomainExtensions.IsolateMethodInAppDomain(func, AssemblyResolver);
             Assert.AreEqual("Foo", result);
         }
@@ -110,7 +110,7 @@ namespace NewRelic.SystemExtensions.UnitTests
         [Test]
         public void when_func_throws_exception_then_exception_bubbles_out()
         {
-            Func<Object> func = () => { throw new ArgumentOutOfRangeException(); };
+            Func<object> func = () => { throw new ArgumentOutOfRangeException(); };
             Assert.Throws<ArgumentOutOfRangeException>(() => AppDomainExtensions.IsolateMethodInAppDomain(func, AssemblyResolver));
         }
 
@@ -118,16 +118,16 @@ namespace NewRelic.SystemExtensions.UnitTests
         public void when_static_is_set_outside_isolation_then_default_value_is_read_in_isolation()
         {
             Foo.StaticString = "Bar";
-            Func<Object> func = () => Foo.StaticString;
+            Func<object> func = () => Foo.StaticString;
             var result = AppDomainExtensions.IsolateMethodInAppDomain(func, AssemblyResolver);
-            Assert.AreEqual(String.Empty, result);
+            Assert.AreEqual(string.Empty, result);
         }
 
         [Test]
         public void when_static_is_set_inside_isolation_then_the_change_is_not_seen_outside_of_isolation()
         {
             Foo.StaticString = "Bar";
-            Func<Object> func = () => Foo.StaticString = "Zab";
+            Func<object> func = () => Foo.StaticString = "Zab";
             AppDomainExtensions.IsolateMethodInAppDomain(func, AssemblyResolver);
             Assert.AreEqual("Bar", Foo.StaticString);
         }
@@ -135,7 +135,7 @@ namespace NewRelic.SystemExtensions.UnitTests
         [Test]
         public void when_static_is_set_and_read_in_isolation_then_correct_value_is_read()
         {
-            Func<Object> func = () =>
+            Func<object> func = () =>
             {
                 Foo.StaticString = "Zab";
                 return Foo.StaticString;
@@ -149,15 +149,15 @@ namespace NewRelic.SystemExtensions.UnitTests
         {
             Action action = () => Foo.StaticString = "Zab";
             AppDomainExtensions.IsolateMethodInAppDomain(action, AssemblyResolver);
-            Func<Object> func = () => Foo.StaticString;
+            Func<object> func = () => Foo.StaticString;
             var result = AppDomainExtensions.IsolateMethodInAppDomain(func, AssemblyResolver);
-            Assert.AreEqual(String.Empty, result);
+            Assert.AreEqual(string.Empty, result);
         }
 
         [Test]
         public void when_input_data_is_passed_in_then_it_is_accessible_from_inside_isolation()
         {
-            Func<Object, Object> func = inputData => inputData + ":Bar";
+            Func<object, object> func = inputData => inputData + ":Bar";
             var result = AppDomainExtensions.IsolateMethodInAppDomain(func, AssemblyResolver, "Foo");
             Assert.AreEqual("Foo:Bar", result);
         }
@@ -165,7 +165,7 @@ namespace NewRelic.SystemExtensions.UnitTests
         [Test]
         public void when_input_data_is_passed_in_with_action_then_it_is_accessible_from_inside_isolation()
         {
-            Action<Object> action = inputData => { throw new Exception(inputData + ":Foo"); };
+            Action<object> action = inputData => { throw new Exception(inputData + ":Foo"); };
             var exception = Assert.Throws<Exception>(() => AppDomainExtensions.IsolateMethodInAppDomain(action, AssemblyResolver, "Bar"));
             Assert.AreEqual("Bar:Foo", exception.Message);
         }
@@ -173,7 +173,7 @@ namespace NewRelic.SystemExtensions.UnitTests
         [Test]
         public void when_input_data_is_not_serializable_then_serialization_exception_is_thrown()
         {
-            Func<Object, Object> func = inputData => (inputData as Foo).LocalString + ":Bar";
+            Func<object, object> func = inputData => (inputData as Foo).LocalString + ":Bar";
             Assert.Throws<SerializationException>(() => AppDomainExtensions.IsolateMethodInAppDomain(func, AssemblyResolver, new Foo()));
         }
 
@@ -202,7 +202,7 @@ namespace NewRelic.SystemExtensions.UnitTests
                 host.EnumDomains(out enumHandle);
                 while (true)
                 {
-                    Object domain;
+                    object domain;
                     host.NextDomain(enumHandle, out domain);
                     if (domain == null)
                         break;
@@ -223,12 +223,12 @@ namespace NewRelic.SystemExtensions.UnitTests
             }
         }
 
-        private static Assembly AssemblyResolver(Object sender, ResolveEventArgs args)
+        private static Assembly AssemblyResolver(object sender, ResolveEventArgs args)
         {
             var shortAssemblyName = GetShortAssemblyName(args.Name);
 
             return GetAllAssemblyLocations()
-                .Where(location => String.Equals(Path.GetFileNameWithoutExtension(location), shortAssemblyName, StringComparison.InvariantCultureIgnoreCase))
+                .Where(location => string.Equals(Path.GetFileNameWithoutExtension(location), shortAssemblyName, StringComparison.InvariantCultureIgnoreCase))
                 .Select(location => Assembly.LoadFrom(location))
                 .FirstOrDefault();
         }
@@ -242,7 +242,7 @@ namespace NewRelic.SystemExtensions.UnitTests
             return dependencies.Split(';');
         }
 
-        private static string GetShortAssemblyName(String assemblyName)
+        private static string GetShortAssemblyName(string assemblyName)
         {
 #if NCRUNCH
             if (assemblyName.Contains(","))
@@ -263,8 +263,8 @@ namespace NewRelic.SystemExtensions.UnitTests
 
         private class Foo
         {
-            public static String StaticString = String.Empty;
-            public readonly String LocalString = "Zab";
+            public static string StaticString = string.Empty;
+            public readonly string LocalString = "Zab";
         }
     }
 }

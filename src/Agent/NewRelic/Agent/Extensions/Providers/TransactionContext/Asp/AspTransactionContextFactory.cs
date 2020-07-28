@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Extensions.Providers.TransactionContext
 
         ContextStorageType IContextStorageFactory.Type => ContextStorageType.HttpContext;
 
-        IContextStorage<T> IContextStorageFactory.CreateContext<T>(String key)
+        IContextStorage<T> IContextStorageFactory.CreateContext<T>(string key)
         {
             return new AspTransactionContext<T>(key);
         }

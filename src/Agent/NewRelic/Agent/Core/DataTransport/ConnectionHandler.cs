@@ -22,7 +22,7 @@ namespace NewRelic.Agent.Core.DataTransport
     /// </summary>
     public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
     {
-        private static readonly Dictionary<String, Action<String>> ServerLogLevelMap = new Dictionary<String, Action<String>>
+        private static readonly Dictionary<string, Action<string>> ServerLogLevelMap = new Dictionary<string, Action<string>>
         {
             {"INFO", Log.Info},
             {"WARN", Log.Warn},
@@ -87,12 +87,12 @@ namespace NewRelic.Agent.Core.DataTransport
             Disable();
         }
 
-        private Object SendDataRequest(String method, params Object[] data)
+        private object SendDataRequest(string method, params object[] data)
         {
-            return SendDataOverWire<Object>(_dataRequestWire, method, data);
+            return SendDataOverWire<object>(_dataRequestWire, method, data);
         }
 
-        public T SendDataRequest<T>(String method, params Object[] data)
+        public T SendDataRequest<T>(string method, params object[] data)
         {
             return SendDataOverWire<T>(_dataRequestWire, method, data);
         }
@@ -103,13 +103,13 @@ namespace NewRelic.Agent.Core.DataTransport
         private ConnectionInfo SendRedirectHostRequest()
         {
             _connectionInfo = new ConnectionInfo(_configuration);
-            var redirectHost = SendNonDataRequest<String>("get_redirect_host");
+            var redirectHost = SendNonDataRequest<string>("get_redirect_host");
             return new ConnectionInfo(_configuration, redirectHost);
         }
         private ServerConfiguration SendConnectRequest()
         {
             var connectParameters = GetConnectParameters();
-            var responseMap = SendNonDataRequest<Dictionary<String, Object>>("connect", connectParameters);
+            var responseMap = SendNonDataRequest<Dictionary<string, object>>("connect", connectParameters);
             if (responseMap == null)
                 throw new Exception("Empty connect result payload");
 
@@ -131,9 +131,9 @@ namespace NewRelic.Agent.Core.DataTransport
 
             foreach (var message in serverConfiguration.Messages)
             {
-                if (String.IsNullOrEmpty(message?.Level))
+                if (string.IsNullOrEmpty(message?.Level))
                     continue;
-                if (String.IsNullOrEmpty(message.Text))
+                if (string.IsNullOrEmpty(message.Text))
                     continue;
 
                 var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? Log.Info;
@@ -147,7 +147,7 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!appNames.Any())
                 appNames.Add(identifier);
 
-            Log.InfoFormat("Your New Relic Application Name(s): {0}", String.Join(":", appNames.ToArray()));
+            Log.InfoFormat("Your New Relic Application Name(s): {0}", string.Join(":", appNames.ToArray()));
 
             return new ConnectModel(
                 _processStatic.GetCurrentProcess().Id,
@@ -174,9 +174,9 @@ namespace NewRelic.Agent.Core.DataTransport
             var timestamp = AgentInstallConfiguration.AgentVersionTimestamp.ToUnixTimeMilliseconds();
             return timestamp;
         }
-        private String GetIdentifier()
+        private string GetIdentifier()
         {
-            var appNames = String.Join(":", _configuration.ApplicationNames.ToArray());
+            var appNames = string.Join(":", _configuration.ApplicationNames.ToArray());
 
 #if NETSTANDARD2_0
             return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
@@ -260,17 +260,17 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Data transfer helper methods
 
-        private T SendNonDataRequest<T>(String method, params Object[] data)
+        private T SendNonDataRequest<T>(string method, params object[] data)
         {
             var wire = _collectorWireFactory.GetCollectorWire(_configuration);
             return SendDataOverWire<T>(wire, method, data);
         }
 
-        private void SendNonDataRequest(String method, params Object[] data)
+        private void SendNonDataRequest(string method, params object[] data)
         {
-            SendNonDataRequest<Object>(method, data);
+            SendNonDataRequest<object>(method, data);
         }
-        private T SendDataOverWire<T>(ICollectorWire wire, String method, params Object[] data)
+        private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
             try
             {
@@ -294,7 +294,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 throw;
             }
         }
-        private T ParseResponse<T>(String responseBody)
+        private T ParseResponse<T>(string responseBody)
         {
             var responseEnvelope = _serializer.Deserialize<CollectorResponseEnvelope<T>>(responseBody);
             if (responseEnvelope.CollectorExceptionEnvelope != null)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -39,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests
         {
             var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributesKeyNull";
 
-            var unexpectedTransactionEventAttributes = new List<String>
+            var unexpectedTransactionEventAttributes = new List<string>
             {
                 "keywithnullvalue"
             };

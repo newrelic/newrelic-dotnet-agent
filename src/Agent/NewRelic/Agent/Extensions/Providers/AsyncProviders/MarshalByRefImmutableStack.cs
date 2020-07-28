@@ -72,7 +72,7 @@ namespace NewRelic.Providers.AsyncProviders
             return _stack.Peek();
         }
 
-        public Boolean IsEmpty => _stack.IsEmpty;
+        public bool IsEmpty => _stack.IsEmpty;
 
         #endregion IImmutableStack<T> implementations
     }

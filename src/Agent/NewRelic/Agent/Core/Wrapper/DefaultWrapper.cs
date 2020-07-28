@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Agent.Core.Wrapper
@@ -34,11 +33,11 @@ namespace NewRelic.Agent.Core.Wrapper
         {
             var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "<unknown>";
             var methodName = instrumentedMethodCall.MethodCall.Method.MethodName;
-            var segment = !String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+            var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
                 ? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
                 : transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 
-            if (!String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
+            if (!string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
             {
                 transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
             }

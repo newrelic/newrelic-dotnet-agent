@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return response.ReturnValue;
         }
 
-        public void SendCommandResults(IDictionary<String, Object> commandResults)
+        public void SendCommandResults(IDictionary<string, object> commandResults)
         {
             TrySendDataRequest("agent_command_results", _configuration.AgentRunId, commandResults);
         }
@@ -111,12 +111,12 @@ namespace NewRelic.Agent.Core.DataTransport
         #region Private helpers
 
 
-        private DataTransportResponse<Object> TrySendDataRequest(String method, params Object[] data)
+        private DataTransportResponse<object> TrySendDataRequest(string method, params object[] data)
         {
-            return TrySendDataRequest<Object>(method, data);
+            return TrySendDataRequest<object>(method, data);
         }
 
-        private DataTransportResponse<T> TrySendDataRequest<T>(String method, params Object[] data)
+        private DataTransportResponse<T> TrySendDataRequest<T>(string method, params object[] data)
         {
             try
             {
@@ -154,7 +154,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private static DataTransportResponse<T> Shutdown<T>(String message)
+        private static DataTransportResponse<T> Shutdown<T>(string message)
         {
             Log.InfoFormat("Shutting down: {0}", message);
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());

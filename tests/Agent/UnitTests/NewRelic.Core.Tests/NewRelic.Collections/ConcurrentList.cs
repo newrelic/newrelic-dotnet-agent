@@ -9,18 +9,18 @@ namespace NewRelic.Collections.UnitTests
 {
     public class Class_ConcurrentList
     {
-        private readonly ConcurrentList<Int32> _concurrentList;
+        private readonly ConcurrentList<int> _concurrentList;
 
         public Class_ConcurrentList()
         {
-            _concurrentList = new ConcurrentList<Int32>();
+            _concurrentList = new ConcurrentList<int>();
         }
 
 
         [TestCase(new[] { 1 })]
         [TestCase(new[] { 1, 1 })]
         [TestCase(new[] { 1, 1, 2 })]
-        public void ConcurrentList_FunctionsAsNormalList_ForSingleThreadedAccess(params Int32[] numbersToAdd)
+        public void ConcurrentList_FunctionsAsNormalList_ForSingleThreadedAccess(params int[] numbersToAdd)
         {
             // Because we're not doing anything interesting with the list itself, it seems reasonable to just wrap all of the basic list API tests into one test
 
@@ -46,7 +46,7 @@ namespace NewRelic.Collections.UnitTests
             Assert.AreEqual(_concurrentList.Count, numbersToAdd.Length);
 
             // CopyTo
-            var destinationArray = new Int32[numbersToAdd.Length];
+            var destinationArray = new int[numbersToAdd.Length];
             _concurrentList.CopyTo(destinationArray, 0);
             Assert.True(numbersToAdd.SequenceEqual(destinationArray));
 
@@ -103,7 +103,7 @@ namespace NewRelic.Collections.UnitTests
             tasks.ForEach(task => task.Wait());
         }
 
-        private static void ExerciseFullApi(IList<Int32> concurrentList, Int32[] numbersToAdd)
+        private static void ExerciseFullApi(IList<int> concurrentList, int[] numbersToAdd)
         {
             dynamic _;
 
@@ -127,7 +127,7 @@ namespace NewRelic.Collections.UnitTests
 
             _ = concurrentList.Count;
 
-            var destinationArray = new Int32[500];
+            var destinationArray = new int[500];
             concurrentList.CopyTo(destinationArray, 0);
             _ = concurrentList.Contains(numbersToAdd.First());
             concurrentList.Remove(numbersToAdd.First());

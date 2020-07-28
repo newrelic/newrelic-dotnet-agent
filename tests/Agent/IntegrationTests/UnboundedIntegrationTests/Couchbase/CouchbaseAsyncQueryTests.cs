@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -77,7 +76,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
                 }
             };
 
-            var expectedTransactionEventIntrinsicAttributes = new List<String>
+            var expectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "databaseDuration"
             };

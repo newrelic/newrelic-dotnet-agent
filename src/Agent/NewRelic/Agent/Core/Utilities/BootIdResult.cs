@@ -1,10 +1,4 @@
-﻿using System;
-using System.IO;
-using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Logging;
-using NewRelic.SystemExtensions;
-
-namespace NewRelic.Agent.Core.Utilization
+﻿namespace NewRelic.Agent.Core.Utilization
 {
     public class BootIdResult
     {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Core.Logging;
-using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.SystemExtensions.Collections.Generic;

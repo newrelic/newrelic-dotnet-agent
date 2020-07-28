@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
 {
@@ -7,7 +6,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
     {
         public const string WcfServiceGetStringResponse = "Response string.";
 
-        public String GetString()
+        public string GetString()
         {
             NewRelic.Api.Agent.NewRelic.AddCustomParameter("custom key", "custom value");
             NewRelic.Api.Agent.NewRelic.AddCustomParameter("custom foo", "custom bar");
@@ -15,7 +14,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
             return WcfServiceGetStringResponse;
         }
 
-        public String ReturnString(String input)
+        public string ReturnString(string input)
         {
             return input;
         }
@@ -25,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
             throw new Exception("ExceptionMessage");
         }
 
-        public String IgnoredTransaction(String input)
+        public string IgnoredTransaction(string input)
         {
             NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
             return input;

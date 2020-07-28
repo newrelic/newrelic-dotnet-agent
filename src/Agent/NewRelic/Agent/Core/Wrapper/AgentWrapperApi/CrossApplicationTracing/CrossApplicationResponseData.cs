@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Core.JsonConverters;
+﻿using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
@@ -9,22 +8,22 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
     public class CrossApplicationResponseData
     {
         [JsonArrayIndex(Index = 0)]
-        public readonly String CrossProcessId;
+        public readonly string CrossProcessId;
         [JsonArrayIndex(Index = 1)]
-        public readonly String TransactionName;
+        public readonly string TransactionName;
         [JsonArrayIndex(Index = 2)]
-        public readonly Single QueueTimeInSeconds;
+        public readonly float QueueTimeInSeconds;
         [JsonArrayIndex(Index = 3)]
-        public readonly Single ResponseTimeInSeconds;
+        public readonly float ResponseTimeInSeconds;
         [JsonArrayIndex(Index = 4)]
         public readonly long ContentLength;
         [JsonArrayIndex(Index = 5)]
-        public readonly String TransactionGuid;
+        public readonly string TransactionGuid;
         [JsonArrayIndex(Index = 6)]
-        public readonly Boolean Unused;
+        public readonly bool Unused;
 
         // For backwards compatibility we need to support deserializing AppData that is missing fields 5 and 6
-        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength)
+        public CrossApplicationResponseData(string crossProcessId, string transactionName, float queueTimeInSeconds, float responseTimeInSeconds, long contentLength)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -34,7 +33,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         }
 
         // For backwards compatibility we need to support deserializing AppData that is missing field 6
-        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid)
+        public CrossApplicationResponseData(string crossProcessId, string transactionName, float queueTimeInSeconds, float responseTimeInSeconds, long contentLength, string transactionGuid)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -44,7 +43,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             TransactionGuid = transactionGuid;
         }
 
-        public CrossApplicationResponseData(String crossProcessId, String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, long contentLength, String transactionGuid, Boolean unused)
+        public CrossApplicationResponseData(string crossProcessId, string transactionName, float queueTimeInSeconds, float responseTimeInSeconds, long contentLength, string transactionGuid, bool unused)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;

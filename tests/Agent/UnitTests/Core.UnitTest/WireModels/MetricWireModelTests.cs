@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -21,7 +20,7 @@ namespace NewRelic.Agent.Core.WireModels
         {
             _metricBuilder = Utilities.GetSimpleMetricBuilder();
             _metricNameService = Mock.Create<IMetricNameService>();
-            Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
+            Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 
         }
 
@@ -44,8 +43,8 @@ namespace NewRelic.Agent.Core.WireModels
             var actual = engine.ConvertToJsonForSending(_metricNameService);
             var unscopedCount = 0;
             var scopedCount = 0;
-            String theScope = "";
-            String metricName = "";
+            string theScope = "";
+            string metricName = "";
             MetricDataWireModel scopedData = null;
             foreach (var current in actual)
             {
@@ -267,7 +266,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var serializedMetric = JsonConvert.SerializeObject(metric1);
 
-            const String expectedJson = @"[{""name"":""DotNet/name"",""scope"":""scope1""},[1,3.0,1.0,3.0,3.0,9.0]]";
+            const string expectedJson = @"[{""name"":""DotNet/name"",""scope"":""scope1""},[1,3.0,1.0,3.0,3.0,9.0]]";
             Assert.AreEqual(expectedJson, serializedMetric);
         }
 
@@ -277,7 +276,7 @@ namespace NewRelic.Agent.Core.WireModels
 
             var serializedMetric = JsonConvert.SerializeObject(metric1);
 
-            const String expectedJson = @"[{""name"":""DotNet/name""},[1,3.0,1.0,3.0,3.0,9.0]]";
+            const string expectedJson = @"[{""name"":""DotNet/name""},[1,3.0,1.0,3.0,3.0,9.0]]";
             Assert.AreEqual(expectedJson, serializedMetric);
         }
 

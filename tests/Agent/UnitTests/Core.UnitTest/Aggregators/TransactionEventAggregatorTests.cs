@@ -11,10 +11,8 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
@@ -310,9 +308,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventCollected(), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<UInt32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(Arg.IsAny<int>()), Occurs.Never());
         }
 
         [Test]

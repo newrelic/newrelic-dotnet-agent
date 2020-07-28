@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -10,9 +9,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class BasicWebApi : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = @"BasicWebApi";
-        private const String ExecutableName = @"BasicWebApi.exe";
-        private const String TargetFramework = "net451";
+        private const string ApplicationDirectoryName = @"BasicWebApi";
+        private const string ExecutableName = @"BasicWebApi.exe";
+        private const string TargetFramework = "net451";
 
         public BasicWebApi() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))
         {
@@ -20,12 +19,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get()
         {
-            var address = String.Format("http://{0}:{1}/api/Values", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/Values", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<List<String>>(resultJson);
+            var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
 
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get404()
         {
-            var address = String.Format(@"http://{0}:{1}/api/404/", DestinationServerName, Port);
+            var address = string.Format(@"http://{0}:{1}/api/404/", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
@@ -55,12 +54,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetId()
         {
             const string id = "5";
-            var address = String.Format("http://{0}:{1}/api/Values/{2}", DestinationServerName, Port, id);
+            var address = string.Format("http://{0}:{1}/api/Values/{2}", DestinationServerName, Port, id);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.NotNull(result);
             Assert.Equal(id, result);
@@ -69,12 +68,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void GetData()
         {
             const string expected = "mything";
-            var address = String.Format("http://{0}:{1}/api/Values?data={2}", DestinationServerName, Port, expected);
+            var address = string.Format("http://{0}:{1}/api/Values?data={2}", DestinationServerName, Port, expected);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.NotNull(result);
             Assert.Equal(expected, result);
@@ -83,7 +82,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Post()
         {
             const string body = "stuff";
-            var address = String.Format("http://{0}:{1}/api/Values/", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/Values/", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
             webClient.Headers.Add("content-type", "application/json");
@@ -91,7 +90,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var serializedBody = JsonConvert.SerializeObject(body);
             Contract.Assert(serializedBody != null);
             var resultJson = webClient.UploadString(address, serializedBody);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.NotNull(result);
             Assert.Equal(body, result);
@@ -99,7 +98,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ThrowException()
         {
-            var address = String.Format(@"http://{0}:{1}/api/ThrowException/", DestinationServerName, Port);
+            var address = string.Format(@"http://{0}:{1}/api/ThrowException/", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
             Assert.Throws<System.Net.WebException>(() => webClient.DownloadString(address));
@@ -107,12 +106,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Async()
         {
-            var address = String.Format("http://{0}:{1}/api/Async", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/Async", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<List<String>>(resultJson);
+            var result = JsonConvert.DeserializeObject<List<string>>(resultJson);
 
             Assert.NotNull(result);
             Assert.Equal(2, result.Count);

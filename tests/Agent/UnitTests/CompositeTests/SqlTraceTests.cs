@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -134,22 +133,22 @@ namespace CompositeTests
             );
         }
 
-        private Object AllocateResources(IDbCommand command)
+        private object AllocateResources(IDbCommand command)
         {
             return command;
         }
 
-        private ExplainPlan GenerateExplainPlan(Object resources)
+        private ExplainPlan GenerateExplainPlan(object resources)
         {
             if (!(resources is IDbCommand))
                 return null;
 
             var dbCommand = (IDbCommand)resources;
-            var explainPlanHeaders = new List<String>(new String[] { "StmtText", "Type" });
-            var explainPlanDatas = new List<List<Object>>();
-            var explainPlan = new List<Object>(new Object[] { dbCommand.CommandText, "SELECT" });
+            var explainPlanHeaders = new List<string>(new string[] { "StmtText", "Type" });
+            var explainPlanDatas = new List<List<object>>();
+            var explainPlan = new List<object>(new object[] { dbCommand.CommandText, "SELECT" });
             explainPlanDatas.Add(explainPlan);
-            var obfuscatedHeaders = new List<Int32>(new Int32[] { 0, 1 });
+            var obfuscatedHeaders = new List<int>(new int[] { 0, 1 });
             return new ExplainPlan(explainPlanHeaders, explainPlanDatas, obfuscatedHeaders);
         }
     }

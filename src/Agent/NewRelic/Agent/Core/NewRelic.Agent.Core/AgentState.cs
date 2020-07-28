@@ -16,7 +16,7 @@ namespace NewRelic.Agent.Core
         public static void CheckTransition(AgentState from, AgentState to)
         {
             if (from + 1 != to)
-                throw new AgentStateException(String.Format("Invalid agent state transition from {0} to  {1}", from, to));
+                throw new AgentStateException(string.Format("Invalid agent state transition from {0} to  {1}", from, to));
         }
 
         public static AgentState Transition(AgentState from, AgentState to)
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core
     /// </summary>
     public class AgentStateException : Exception
     {
-        public AgentStateException(String message)
+        public AgentStateException(string message)
             : base(message)
         {
         }

@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 
             return Delegates.GetDelegateFor(segment);
         }
-        private String GetRemoveOperationName(MethodCall methodCall)
+        private string GetRemoveOperationName(MethodCall methodCall)
         {
             try
             {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -80,7 +79,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/insert", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2Query" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/delete", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2Query" }
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 "Datastore/statement/IBMDB2/employee/select"
             };
@@ -93,7 +92,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
             };
 
-            var expectedTransactionEventIntrinsicAttributes = new List<String>
+            var expectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "databaseDuration"
             };

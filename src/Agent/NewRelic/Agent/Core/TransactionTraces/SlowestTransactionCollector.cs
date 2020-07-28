@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.TransactionTraces
 {

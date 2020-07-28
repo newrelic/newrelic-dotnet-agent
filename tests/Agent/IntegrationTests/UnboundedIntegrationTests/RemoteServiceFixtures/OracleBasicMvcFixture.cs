@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -10,14 +9,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
     public class OracleBasicMvcFixture : RemoteApplicationFixture
     {
-        private const String CreateHotelTableOracleSql = "CREATE TABLE {0} (HOTEL_ID INT NOT NULL, BOOKING_DATE DATE NOT NULL, " +
+        private const string CreateHotelTableOracleSql = "CREATE TABLE {0} (HOTEL_ID INT NOT NULL, BOOKING_DATE DATE NOT NULL, " +
                                                          "ROOMS_TAKEN INT DEFAULT 0, PRIMARY KEY (HOTEL_ID, BOOKING_DATE))";
-        private const String DropHotelTableOracleSql = "DROP TABLE {0}";
+        private const string DropHotelTableOracleSql = "DROP TABLE {0}";
 
-        private readonly String _connectionString = $@"Data Source={OracleConfiguration.OracleServer}:{OracleConfiguration.OraclePort}/XE;User Id=SYSTEM;Password=!4maline!;";
+        private readonly string _connectionString = $@"Data Source={OracleConfiguration.OracleServer}:{OracleConfiguration.OraclePort}/XE;User Id=SYSTEM;Password=!4maline!;";
 
-        private readonly String _tableName;
-        public String TableName
+        private readonly string _tableName;
+        public string TableName
         {
             get { return _tableName; }
         }
@@ -61,7 +60,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             }
         }
 
-        private static String GenerateTableName()
+        private static string GenerateTableName()
         {
             //Oracle tables must start w/ character and be <= 30 length. Table name = H{tableId}
             var tableId = Guid.NewGuid().ToString("N").Substring(2, 29).ToLower();
@@ -70,7 +69,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         private void CreateTable()
         {
-            var createTable = String.Format(CreateHotelTableOracleSql, TableName);
+            var createTable = string.Format(CreateHotelTableOracleSql, TableName);
             using (var connection = new OracleConnection(_connectionString))
             {
                 connection.Open();
@@ -84,7 +83,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         private void DropTable()
         {
-            var dropTableSql = String.Format(DropHotelTableOracleSql, TableName);
+            var dropTableSql = string.Format(DropHotelTableOracleSql, TableName);
 
             using (var connection = new OracleConnection(_connectionString))
             {

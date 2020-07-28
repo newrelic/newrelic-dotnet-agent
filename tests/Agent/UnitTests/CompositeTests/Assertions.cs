@@ -95,7 +95,7 @@ namespace CompositeTests
             Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
         }
 
-        public static void DoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, TransactionEventWireModel transactionEvent)
+        public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, TransactionEventWireModel transactionEvent)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = transactionEvent.GetAttributes(attributeClassification);
@@ -136,7 +136,7 @@ namespace CompositeTests
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void DoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, CustomEventWireModel customEvent)
+        public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, CustomEventWireModel customEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -166,7 +166,7 @@ namespace CompositeTests
             Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
         }
 
-        public static void DoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, TransactionTraceWireModel trace)
+        public static void DoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, TransactionTraceWireModel trace)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = trace.GetAttributes(attributeClassification);
@@ -175,7 +175,7 @@ namespace CompositeTests
             Assert.True(allAttributesNotFound, errorMessageBuilder.ToString());
         }
 
-        public static void SegmentsExist(IEnumerable<String> expectedTraceSegmentNames, TransactionTraceWireModel trace, Boolean areRegexNames = false)
+        public static void SegmentsExist(IEnumerable<string> expectedTraceSegmentNames, TransactionTraceWireModel trace, bool areRegexNames = false)
         {
             var allSegments = trace.TransactionTraceData.RootSegment.Flatten(node => node.Children);
 
@@ -197,7 +197,7 @@ namespace CompositeTests
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void SegmentsDoNotExist(IEnumerable<String> unexpectedTraceSegmentNames, TransactionTraceWireModel trace, Boolean areRegexNames = false)
+        public static void SegmentsDoNotExist(IEnumerable<string> unexpectedTraceSegmentNames, TransactionTraceWireModel trace, bool areRegexNames = false)
         {
             var allSegments = trace.TransactionTraceData.RootSegment.Flatten(node => node.Children);
 
@@ -231,7 +231,7 @@ namespace CompositeTests
             Assert.True(allAttributesMatch, errorMessageBuilder.ToString());
         }
 
-        public static void ErrorTraceDoesNotHaveAttributes(IEnumerable<String> unexpectedAttributes, AttributeClassification attributeClassification, ErrorTraceWireModel errorTrace)
+        public static void ErrorTraceDoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, AttributeClassification attributeClassification, ErrorTraceWireModel errorTrace)
         {
             var errorMessageBuilder = new StringBuilder();
             var actualAttributes = errorTrace.GetAttributes(attributeClassification);
@@ -243,53 +243,53 @@ namespace CompositeTests
 
     internal class ExpectedMetric
     {
-        public String Name;
-        public String Scope;
-        public Boolean IsRegexName = false;
-        public Int32? Value0 = null;
-        public Single? Value1 = null;
-        public Single? Value2 = null;
-        public Single? Value3 = null;
-        public Single? Value4 = null;
-        public Single? Value5 = null;
+        public string Name;
+        public string Scope;
+        public bool IsRegexName = false;
+        public int? Value0 = null;
+        public float? Value1 = null;
+        public float? Value2 = null;
+        public float? Value3 = null;
+        public float? Value4 = null;
+        public float? Value5 = null;
     }
 
     internal class ExpectedApdexMetric : ExpectedMetric
     {
-        public Int32? SatisfyingCount { get { return Value0; } set { Value0 = value; } }
-        public Single? ToleratingCount { get { return Value1; } set { Value1 = value; } }
-        public Single? FrustratingCount { get { return Value2; } set { Value2 = value; } }
-        public Single? Min { get { return Value3; } set { Value3 = value; } }
-        public Single? Max { get { return Value4; } set { Value4 = value; } }
-        public Single? Unused { get { return Value5; } set { Value5 = value; } }
+        public int? SatisfyingCount { get { return Value0; } set { Value0 = value; } }
+        public float? ToleratingCount { get { return Value1; } set { Value1 = value; } }
+        public float? FrustratingCount { get { return Value2; } set { Value2 = value; } }
+        public float? Min { get { return Value3; } set { Value3 = value; } }
+        public float? Max { get { return Value4; } set { Value4 = value; } }
+        public float? Unused { get { return Value5; } set { Value5 = value; } }
     }
 
     internal class ExpectedCountMetric : ExpectedMetric
     {
-        public Int32? CallCount { get { return Value0; } set { Value0 = value; } }
-        public Single? Total { get { return Value1; } set { Value1 = value; } }
-        public Single? TotalExclusive { get { return Value2; } set { Value2 = value; } }
-        public Single? Min { get { return Value3; } set { Value3 = value; } }
-        public Single? Max { get { return Value4; } set { Value4 = value; } }
-        public Single? SumOfSquares { get { return Value5; } set { Value5 = value; } }
+        public int? CallCount { get { return Value0; } set { Value0 = value; } }
+        public float? Total { get { return Value1; } set { Value1 = value; } }
+        public float? TotalExclusive { get { return Value2; } set { Value2 = value; } }
+        public float? Min { get { return Value3; } set { Value3 = value; } }
+        public float? Max { get { return Value4; } set { Value4 = value; } }
+        public float? SumOfSquares { get { return Value5; } set { Value5 = value; } }
     }
 
     internal class ExpectedTimeMetric : ExpectedMetric
     {
-        public Int32? CallCount { get { return Value0; } set { Value0 = value; } }
-        public Single? Total { get { return Value1; } set { Value1 = value; } }
-        public Single? TotalExclusive { get { return Value2; } set { Value2 = value; } }
-        public Single? Min { get { return Value3; } set { Value3 = value; } }
-        public Single? Max { get { return Value4; } set { Value4 = value; } }
-        public Single? SumOfSquaresInSeconds { get { return Value5; } set { Value5 = value; } }
+        public int? CallCount { get { return Value0; } set { Value0 = value; } }
+        public float? Total { get { return Value1; } set { Value1 = value; } }
+        public float? TotalExclusive { get { return Value2; } set { Value2 = value; } }
+        public float? Min { get { return Value3; } set { Value3 = value; } }
+        public float? Max { get { return Value4; } set { Value4 = value; } }
+        public float? SumOfSquaresInSeconds { get { return Value5; } set { Value5 = value; } }
     }
 
     internal class ExpectedAttribute
     {
-        public String Key;
-        public Object Value;
+        public string Key;
+        public object Value;
 
-        public static Boolean CheckIfAllAttributesMatch(IDictionary<String, Object> actualAttributes, IEnumerable<ExpectedAttribute> expectedAttributes, StringBuilder errorMessageBuilder)
+        public static bool CheckIfAllAttributesMatch(IDictionary<string, object> actualAttributes, IEnumerable<ExpectedAttribute> expectedAttributes, StringBuilder errorMessageBuilder)
         {
             var succeeded = true;
 
@@ -317,18 +317,18 @@ namespace CompositeTests
             return succeeded;
         }
 
-        private static Boolean HaveSameValue(Object actualValue, Object expectedValue)
+        private static bool HaveSameValue(object actualValue, object expectedValue)
         {
             if (actualValue == null)
                 return expectedValue == null;
 
-            if (actualValue is String && expectedValue is String)
-                return String.Equals((String)actualValue, (String)expectedValue);
+            if (actualValue is string && expectedValue is string)
+                return string.Equals((string)actualValue, (string)expectedValue);
 
             return actualValue.Equals(expectedValue);
         }
 
-        public static Boolean CheckIfAllAttributesNotFound(IDictionary<String, Object> actualAttributes, IEnumerable<String> unexpectedAttributes, StringBuilder errorMessageBuilder)
+        public static bool CheckIfAllAttributesNotFound(IDictionary<string, object> actualAttributes, IEnumerable<string> unexpectedAttributes, StringBuilder errorMessageBuilder)
         {
             var succeeded = true;
 
@@ -348,7 +348,7 @@ namespace CompositeTests
 
     internal static class WireModelExtensions
     {
-        public static IDictionary<String, Object> GetAttributes(this TransactionEventWireModel transactionEvent, AttributeClassification attributeClassification)
+        public static IDictionary<string, object> GetAttributes(this TransactionEventWireModel transactionEvent, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {
@@ -362,7 +362,7 @@ namespace CompositeTests
                     throw new NotImplementedException();
             }
         }
-        public static IDictionary<String, Object> GetAttributes(this CustomEventWireModel customEvent, AttributeClassification attributeClassification)
+        public static IDictionary<string, object> GetAttributes(this CustomEventWireModel customEvent, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {
@@ -374,7 +374,7 @@ namespace CompositeTests
                     throw new NotImplementedException();
             }
         }
-        public static IDictionary<String, Object> GetAttributes(this TransactionTraceWireModel transactionTrace, AttributeClassification attributeClassification)
+        public static IDictionary<string, object> GetAttributes(this TransactionTraceWireModel transactionTrace, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {
@@ -388,7 +388,7 @@ namespace CompositeTests
                     throw new NotImplementedException();
             }
         }
-        public static IDictionary<String, Object> GetAttributes(this ErrorTraceWireModel errorTrace, AttributeClassification attributeClassification)
+        public static IDictionary<string, object> GetAttributes(this ErrorTraceWireModel errorTrace, AttributeClassification attributeClassification)
         {
             switch (attributeClassification)
             {

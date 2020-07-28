@@ -8,12 +8,12 @@ namespace NewRelic.Agent.Core.Metric
     [JsonConverter(typeof(JsonArrayConverter))]
     public class ApdexStats
     {
-        private const String ApdexPerfZoneSatisfying = "S";
-        private const String ApdexPerfZoneTolerating = "T";
-        private const String ApdexPerfZoneFrustrating = "F";
+        private const string ApdexPerfZoneSatisfying = "S";
+        private const string ApdexPerfZoneTolerating = "T";
+        private const string ApdexPerfZoneFrustrating = "F";
 
         private TimeSpan _apdexT = TimeSpan.Zero;
-        public static String GetApdexPerfZoneOrNull(TimeSpan? responseTime, TimeSpan? apdexT)
+        public static string GetApdexPerfZoneOrNull(TimeSpan? responseTime, TimeSpan? apdexT)
         {
             if (responseTime == null || apdexT == null)
                 return null;

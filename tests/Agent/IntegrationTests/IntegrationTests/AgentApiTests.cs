@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -22,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
 
-                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<String, String>("autoStart", "false") });
+                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<string, string>("autoStart", "false") });
                 });
             _fixture.Initialize();
         }
@@ -35,14 +34,14 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
             };
 
-            var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
+            var expectedErrorEventIntrinsicAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "error.message", "Rawr!" },
                 { "type", "TransactionError" }
             };
 
-            var expectedErrorEventCustomAttributes = new Dictionary<String, String>
+            var expectedErrorEventCustomAttributes = new Dictionary<string, string>
             {
                 {"hey", "dude"},
                 {"faz", "baz"}

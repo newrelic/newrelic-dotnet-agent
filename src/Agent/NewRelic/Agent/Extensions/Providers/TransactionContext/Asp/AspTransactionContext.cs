@@ -1,5 +1,4 @@
-﻿using System;
-using System.Web;
+﻿using System.Web;
 
 namespace NewRelic.Agent.Extensions.Providers.TransactionContext
 {
@@ -8,19 +7,19 @@ namespace NewRelic.Agent.Extensions.Providers.TransactionContext
     /// </summary>
     public class AspTransactionContext<T> : IContextStorage<T>
     {
-        private readonly String _key;
+        private readonly string _key;
 
         /// <summary>
         /// Dude.
         /// </summary>
-        public AspTransactionContext(String key)
+        public AspTransactionContext(string key)
         {
             _key = key;
         }
 
-        Byte IContextStorage<T>.Priority { get { return 10; } }
+        byte IContextStorage<T>.Priority { get { return 10; } }
 
-        Boolean IContextStorage<T>.CanProvide { get { return HttpContext.Current != null; } }
+        bool IContextStorage<T>.CanProvide { get { return HttpContext.Current != null; } }
 
         T IContextStorage<T>.GetData()
         {

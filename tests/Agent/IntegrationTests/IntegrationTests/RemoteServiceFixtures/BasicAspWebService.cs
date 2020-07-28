@@ -1,7 +1,6 @@
 ﻿using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using OpenQA.Selenium;
 using OpenQA.Selenium.IE;
-using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {

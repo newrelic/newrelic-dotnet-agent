@@ -13,13 +13,13 @@ namespace HostedWebCore
     {
         private const int ServerTimeoutShutdownMinutes = 5;
 
-        private readonly String _port;
+        private readonly string _port;
 
-        private static String AssemblyDirectory
+        private static string AssemblyDirectory
         {
             get
             {
-                Contract.Ensures(Contract.Result<String>() != null);
+                Contract.Ensures(Contract.Result<string>() != null);
 
                 var codeBase = Assembly.GetExecutingAssembly().CodeBase;
                 var uri = new UriBuilder(codeBase);
@@ -28,11 +28,11 @@ namespace HostedWebCore
             }
         }
 
-        private static String ApplicationHostConfigFilePath
+        private static string ApplicationHostConfigFilePath
         {
             get
             {
-                Contract.Ensures(Contract.Result<String>() != null);
+                Contract.Ensures(Contract.Result<string>() != null);
                 return AssemblyDirectory + @"\applicationHost.config";
             }
         }
@@ -44,7 +44,7 @@ namespace HostedWebCore
             Contract.Invariant(_port != null);
         }
 
-        public HostedWebCore(String port)
+        public HostedWebCore(string port)
         {
             Contract.Requires(port != null);
 

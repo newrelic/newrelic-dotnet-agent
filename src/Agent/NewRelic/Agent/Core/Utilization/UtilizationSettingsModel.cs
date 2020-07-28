@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -36,10 +35,10 @@ namespace NewRelic.Agent.Core.Utilization
         public readonly string Hostname;
 
         [JsonProperty("boot_id", NullValueHandling = NullValueHandling.Ignore)]
-        public readonly String BootId;
+        public readonly string BootId;
         public readonly IDictionary<string, IVendorModel> Vendors;
         [JsonProperty("vendors", NullValueHandling = NullValueHandling.Ignore)]
-        private IDictionary<String, IVendorModel> VendorsForSerialization { get { return Vendors.Any() ? Vendors : null; } }
+        private IDictionary<string, IVendorModel> VendorsForSerialization { get { return Vendors.Any() ? Vendors : null; } }
         [JsonProperty("config", NullValueHandling = NullValueHandling.Ignore)]
         public readonly UtilitizationConfig Config;
     }

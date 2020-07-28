@@ -105,7 +105,7 @@ namespace NewRelic.Agent.Core.Utilization
                 return null;
             }
 
-            if (String.IsNullOrEmpty(_configuration.UtilizationBillingHost)
+            if (string.IsNullOrEmpty(_configuration.UtilizationBillingHost)
                 && _configuration.UtilizationLogicalProcessors == null
                 && _configuration.UtilizationTotalRamMib == null)
             {

@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Aggregators
         // Note that Synthetics events must be recorded, and thus are stored in their own unique reservoir to ensure that they
         // are never pushed out by non-Synthetics events.
         private ConcurrentList<ErrorEventWireModel> _syntheticsErrorEvents = new ConcurrentList<ErrorEventWireModel>();
-        private const Double _reservoirReductionSizeMultiplier = 0.5;
+        private const double _reservoirReductionSizeMultiplier = 0.5;
 
         public ErrorEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
@@ -103,12 +103,12 @@ namespace NewRelic.Agent.Core.Aggregators
                 _errorEvents.Add(errorEvents);
         }
 
-        private UInt32 GetReservoirSize()
+        private uint GetReservoirSize()
         {
             return _errorEvents.Size;
         }
 
-        private void ReduceReservoirSize(UInt32 newSize)
+        private void ReduceReservoirSize(uint newSize)
         {
             if (newSize >= GetReservoirSize())
                 return;
@@ -125,7 +125,7 @@ namespace NewRelic.Agent.Core.Aggregators
                     RetainEvents(errorEvents);
                     break;
                 case DataTransportResponseStatus.PostTooBigError:
-                    ReduceReservoirSize((UInt32)(errorEvents.Count() * _reservoirReductionSizeMultiplier));
+                    ReduceReservoirSize((uint)(errorEvents.Count() * _reservoirReductionSizeMultiplier));
                     RetainEvents(errorEvents);
                     break;
                 case DataTransportResponseStatus.OtherError:

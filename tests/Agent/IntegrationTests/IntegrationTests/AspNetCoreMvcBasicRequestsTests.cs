@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -56,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = @"WebTransaction/MVC/Home/Index", callCount = 1 },
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"Middleware Pipeline",
                 @"DotNet/HomeController/Index"

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using NewRelic.Agent.Core.Events;
@@ -60,10 +59,10 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportWrapperShutdown_SendsExpectedMetrics_ToLegacyAgent()
         {
-            var names = new Collection<String>();
+            var names = new Collection<string>();
             using (new EventSubscription<CounterMetricEvent>(eventData => names.Add(eventData.Name)))
             {
-                _agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(String), "FooMethod", "FooParam"));
+                _agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(string), "FooMethod", "FooParam"));
             }
             Assert.AreEqual(3, names.Count);
             Assert.AreEqual("Supportability/WrapperShutdown/all", names[0]);
@@ -74,7 +73,7 @@ namespace NewRelic.Agent.Core.AgentHealth
         [Test]
         public void ReportWrapperShutdown_SendsExpectedMetrics()
         {
-            _agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(String), "FooMethod", "FooParam"));
+            _agentHealthReporter.ReportWrapperShutdown(Mock.Create<IWrapper>(), new Method(typeof(string), "FooMethod", "FooParam"));
             Assert.AreEqual(3, _publishedMetrics.Count);
             var metric0 = _publishedMetrics.ElementAt(0);
             var metric1 = _publishedMetrics.ElementAt(1);

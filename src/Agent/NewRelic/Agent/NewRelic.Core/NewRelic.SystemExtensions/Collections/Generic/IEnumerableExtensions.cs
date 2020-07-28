@@ -13,7 +13,7 @@ namespace NewRelic.SystemExtensions.Collections.Generic
         /// <param name="source"></param>
         /// <param name="predicate">A function to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
         /// <returns></returns>
-        public static IEnumerable<T> Unless<T>(this IEnumerable<T> source, Func<T, Boolean> predicate)
+        public static IEnumerable<T> Unless<T>(this IEnumerable<T> source, Func<T, bool> predicate)
         {
             return source.Where(current => !predicate(current));
         }
@@ -27,7 +27,7 @@ namespace NewRelic.SystemExtensions.Collections.Generic
         /// <param name="source"></param>
         /// <param name="predicate">A function that takes the last element and the current element (in that order) to test each element for a condition. Elements that DO meet the condition are omitted; elements that DO NOT meet the condition are included.</param>
         /// <returns></returns>
-        public static IEnumerable<T> Unless<T>(this IEnumerable<T> source, Func<T, T, Boolean> predicate)
+        public static IEnumerable<T> Unless<T>(this IEnumerable<T> source, Func<T, T, bool> predicate)
         {
             var last = default(T);
             return source.Where((current, index) =>

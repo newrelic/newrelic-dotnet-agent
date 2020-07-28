@@ -36,8 +36,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void Transform_CreatesCustomEvents_IfInputIsValid()
         {
-            const String expectedEventType = "MyEventType";
-            var expectedAttributes = new Dictionary<String, Object>
+            const string expectedEventType = "MyEventType";
+            var expectedAttributes = new Dictionary<string, object>
             {
                 {"key1", "value1"},
                 {"key2", "key2"}
@@ -63,8 +63,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void Transform_OnlyRetainsAttributes_IfValuesAreStringOrSingle()
         {
-            const String expectedEventType = "MyEventType";
-            var expectedAttributes = new Dictionary<String, Object>
+            const string expectedEventType = "MyEventType";
+            var expectedAttributes = new Dictionary<string, object>
             {
                 {"key1", "value1"},
                 {"key2", 2.0f},
@@ -91,8 +91,8 @@ namespace NewRelic.Agent.Core.Transformers
             Mock.Arrange(() => _configurationService.Configuration.CustomEventsEnabled)
                 .Returns(false);
 
-            const String expectedEventType = "MyEventType";
-            var expectedAttributes = new Dictionary<String, Object>
+            const string expectedEventType = "MyEventType";
+            var expectedAttributes = new Dictionary<string, object>
             {
                 {"key1", "value1"},
                 {"key2", "key2"}
@@ -106,8 +106,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void Transform_Throws_IfEventTypeIsTooLarge()
         {
-            var expectedEventType = new String('a', 257);
-            var expectedAttributes = new Dictionary<String, Object>
+            var expectedEventType = new string('a', 257);
+            var expectedAttributes = new Dictionary<string, object>
             {
                 {"key1", "value1"},
                 {"key2", "key2"}
@@ -119,8 +119,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void Transform_Throws_IfEventTypeIsNotAlphanumeric()
         {
-            const String expectedEventType = "This has symbols!!";
-            var expectedAttributes = new Dictionary<String, Object>
+            const string expectedEventType = "This has symbols!!";
+            var expectedAttributes = new Dictionary<string, object>
             {
                 {"key1", "value1"},
                 {"key2", "key2"}

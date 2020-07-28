@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
 
 namespace NewRelic.Agent.IntegrationTests.CatInbound
@@ -8,14 +7,14 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
     {
         #region CAT Disabled
 
-        public static readonly IEnumerable<String> UnexpectedTransactionTraceIntrinsicAttributesCatDisabled = new List<String>
+        public static readonly IEnumerable<string> UnexpectedTransactionTraceIntrinsicAttributesCatDisabled = new List<string>
         {
             "client_cross_process_id",
             "referring_transaction_guid",
             "path_hash"
         };
 
-        public static readonly IEnumerable<String> UnexpectedTransactionEventIntrinsicAttributesCatDisabled = new List<String>
+        public static readonly IEnumerable<string> UnexpectedTransactionEventIntrinsicAttributesCatDisabled = new List<string>
         {
             "nr.referringPathHash",
             "nr.referringTransactionGuid",
@@ -33,26 +32,26 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 
         #region CAT Enabled
 
-        public static readonly IEnumerable<String> ExpectedTransactionTraceIntrinsicAttributesCatEnabled = new List<String>
+        public static readonly IEnumerable<string> ExpectedTransactionTraceIntrinsicAttributesCatEnabled = new List<string>
         {
             "client_cross_process_id",
             "trip_id",
             "path_hash"
         };
 
-        public static readonly IEnumerable<String> UnexpectedTransactionTraceIntrinsicAttributesCatEnabled = new List<String>
+        public static readonly IEnumerable<string> UnexpectedTransactionTraceIntrinsicAttributesCatEnabled = new List<string>
         {
             "referring_transaction_guid"
         };
 
-        public static readonly IEnumerable<String> ExpectedTransactionEventIntrinsicAttributesCatEnabled = new List<String>
+        public static readonly IEnumerable<string> ExpectedTransactionEventIntrinsicAttributesCatEnabled = new List<string>
         {
             "nr.guid",
             "nr.tripId",
             "nr.pathHash"
         };
 
-        public static readonly IEnumerable<String> UnexpectedTransactionEventIntrinsicAttributesCatEnabled = new List<String>
+        public static readonly IEnumerable<string> UnexpectedTransactionEventIntrinsicAttributesCatEnabled = new List<string>
         {
             "nr.referringPathHash",
             "nr.referringTransactionGuid",

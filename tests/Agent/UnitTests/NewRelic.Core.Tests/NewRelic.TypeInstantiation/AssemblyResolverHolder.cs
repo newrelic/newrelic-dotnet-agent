@@ -8,7 +8,7 @@ namespace NewRelic.TypeInstantiation.UnitTests
 {
     public static class AssemblyResolverHolder
     {
-        public static Assembly AssemblyResolver(Object sender, ResolveEventArgs args)
+        public static Assembly AssemblyResolver(object sender, ResolveEventArgs args)
         {
 #if NCRUNCH
             var shortAssemblyName = GetShortAssemblyName(args.Name);
@@ -18,10 +18,10 @@ namespace NewRelic.TypeInstantiation.UnitTests
 #endif
         }
 
-        private static Assembly TryGetAssemblyFromNcrunch(String shortAssemblyName)
+        private static Assembly TryGetAssemblyFromNcrunch(string shortAssemblyName)
         {
             return GetAllAssemblyLocations()
-                .Where(location => String.Equals(Path.GetFileNameWithoutExtension(location), shortAssemblyName, StringComparison.InvariantCultureIgnoreCase))
+                .Where(location => string.Equals(Path.GetFileNameWithoutExtension(location), shortAssemblyName, StringComparison.InvariantCultureIgnoreCase))
                 .Select(location => Assembly.LoadFrom(location))
                 .FirstOrDefault();
         }
@@ -35,7 +35,7 @@ namespace NewRelic.TypeInstantiation.UnitTests
             return dependencies.Split(';');
         }
 
-        private static string GetShortAssemblyName(String assemblyName)
+        private static string GetShortAssemblyName(string assemblyName)
         {
             if (assemblyName.Contains(","))
                 return assemblyName.Substring(0, assemblyName.IndexOf(','));

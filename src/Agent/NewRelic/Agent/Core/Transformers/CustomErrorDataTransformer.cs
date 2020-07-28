@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
@@ -13,7 +12,7 @@ namespace NewRelic.Agent.Core.Transformers
 {
     public interface ICustomErrorDataTransformer
     {
-        void Transform(ErrorData errorData, IEnumerable<KeyValuePair<String, String>> customAttributes = null);
+        void Transform(ErrorData errorData, IEnumerable<KeyValuePair<string, string>> customAttributes = null);
     }
 
     public class CustomErrorDataTransformer : ICustomErrorDataTransformer
@@ -37,7 +36,7 @@ namespace NewRelic.Agent.Core.Transformers
             _errorEventAggregator = errorEventAggregator;
         }
 
-        public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<String, String>> customAttributes = null)
+        public void Transform(ErrorData errorData, IEnumerable<KeyValuePair<string, string>> customAttributes = null)
         {
             if (!_configurationService.Configuration.ErrorCollectorEnabled)
                 return;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Messaging;
+﻿using System.Messaging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Msmq

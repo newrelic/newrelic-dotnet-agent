@@ -24,12 +24,12 @@ namespace NewRelic.Agent.Core.Utilities
         /// <typeparam name="T">A type that is castable to Object (i.e., anything).</typeparam>
         /// <param name="source">The enumerable (dictionary) that you want to downcast construct.</param>
         /// <returns>A dictionary containing all of the items in the source dictionary, but cast to Objects.</returns>
-        public static IDictionary<String, Object> DowncastCopyConstruct<T>(this IEnumerable<KeyValuePair<String, T>> source)
+        public static IDictionary<string, object> DowncastCopyConstruct<T>(this IEnumerable<KeyValuePair<string, T>> source)
         {
             if (source == null)
                 throw new ArgumentNullException("source");
 
-            var destination = new Dictionary<String, Object>();
+            var destination = new Dictionary<string, object>();
             foreach (var item in source)
             {
                 if (item.Key == null)
@@ -49,15 +49,15 @@ namespace NewRelic.Agent.Core.Utilities
             }
         }
 
-        public static void AddStringIfNotNullOrEmpty<T>(this IDictionary<T, Object> dictionary, T key, String value)
+        public static void AddStringIfNotNullOrEmpty<T>(this IDictionary<T, object> dictionary, T key, string value)
         {
-            if (!String.IsNullOrEmpty(value))
+            if (!string.IsNullOrEmpty(value))
             {
                 dictionary.Add(key, value);
             }
         }
 
-        public static void AddTimespanIfNotNull<T>(this IDictionary<T, Object> dictionary, T key, TimeSpan? value, TimeUnit timeUnit)
+        public static void AddTimespanIfNotNull<T>(this IDictionary<T, object> dictionary, T key, TimeSpan? value, TimeUnit timeUnit)
         {
             if (value == null)
                 return;

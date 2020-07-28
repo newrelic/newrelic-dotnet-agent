@@ -72,7 +72,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
         public uint RunnableCount;
 
         [JsonArrayIndex(Index = 2)]
-        public readonly UInt32 Unused;
+        public readonly uint Unused;
         [JsonArrayIndex(Index = 3)]
         public readonly ProfileNodes Children = new ProfileNodes();
 

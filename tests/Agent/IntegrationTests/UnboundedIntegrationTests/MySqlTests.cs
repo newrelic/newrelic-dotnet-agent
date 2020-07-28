@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -29,7 +28,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
-                    var instrumentationFilePath = String.Format(@"{0}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml", fixture.DestinationNewRelicExtensionsDirectoryPath);
+                    var instrumentationFilePath = string.Format(@"{0}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml", fixture.DestinationNewRelicExtensionsDirectoryPath);
                     CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
                 },
                 exerciseApplication: () =>
@@ -71,7 +70,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 // The operation metric should not be scoped because the statement metric is scoped instead
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1, metricScope = "WebTransaction/MVC/DefaultController/MySql" }
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 "Datastore/statement/MySQL/dates/select"
             };
@@ -82,7 +81,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             //  new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "explain_plan"}
             //};
 
-            var expectedTransactionEventIntrinsicAttributes = new List<String>
+            var expectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "databaseDuration"
             };

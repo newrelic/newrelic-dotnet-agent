@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -45,7 +44,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusReceiver.SampleNServiceBusMessage", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusReceiver.SampleNServiceBusMessage", callCount = 1, metricScope = "WebTransaction/MVC/MessageQueueController/NServiceBus_Send"}
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusReceiver.SampleNServiceBusMessage"
             };

@@ -109,7 +109,7 @@ namespace NewRelic.Agent.Core
         private void AssertAgentEnabled(configuration config)
         {
             if (!Configuration.AgentEnabled)
-                throw new Exception(String.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
+                throw new Exception(string.Format("The New Relic agent is disabled.  Update {0}  to re-enable it.", config.AgentEnabledAt));
 
             if ("REPLACE_WITH_LICENSE_KEY".Equals(Configuration.AgentLicenseKey))
                 throw new Exception("Please set your license key.");
@@ -192,7 +192,7 @@ namespace NewRelic.Agent.Core
         /// <param name="arguments"></param>
         /// <returns>Returns an ITracer, although it is given as the much simpler Object;
         /// an Object is the preferred type because it has a trival type signature.</returns>
-        public ITracer GetTracerImpl(String tracerFactoryName, UInt32 tracerArguments, String metricName, String assemblyName, Type type, String typeName, String methodName, String argumentSignature, Object invocationTarget, Object[] arguments, UInt64 functionId)
+        public ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typeName, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId)
         {
             try
             {
@@ -213,7 +213,7 @@ namespace NewRelic.Agent.Core
             Shutdown(true);
         }
 
-        private void Shutdown(Boolean cleanShutdown)
+        private void Shutdown(bool cleanShutdown)
         {
             Singleton.SetInstance(DisabledAgent);
 

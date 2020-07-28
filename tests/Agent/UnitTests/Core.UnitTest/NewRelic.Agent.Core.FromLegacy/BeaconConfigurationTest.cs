@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Web;
-using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Fixtures;
-using NewRelic.Agent.Core.Requests;
-using NewRelic.Agent.Core.Tracer;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utilities;
 using NUnit.Framework;
 using Telerik.JustMock;
 

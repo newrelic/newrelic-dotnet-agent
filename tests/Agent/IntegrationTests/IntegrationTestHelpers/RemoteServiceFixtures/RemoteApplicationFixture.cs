@@ -13,9 +13,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         private Action _setupConfiguration;
         private Action _exerciseApplication;
 
-        private Boolean _initialized;
+        private bool _initialized;
 
-        private readonly Object _initializeLock = new Object();
+        private readonly object _initializeLock = new object();
 
         private readonly RemoteApplication _remoteApplication;
 
@@ -23,26 +23,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public AgentLogFile AgentLog { get { return _remoteApplication.AgentLog; } }
 
-        public String DestinationServerName { get { return _remoteApplication.DestinationServerName; } }
+        public string DestinationServerName { get { return _remoteApplication.DestinationServerName; } }
 
-        public String Port { get { return _remoteApplication.Port; } }
+        public string Port { get { return _remoteApplication.Port; } }
 
-        public String CommandLineArguments { get; set; }
+        public string CommandLineArguments { get; set; }
 
-        public String DestinationNewRelicConfigFilePath { get { return _remoteApplication.DestinationNewRelicConfigFilePath; } }
+        public string DestinationNewRelicConfigFilePath { get { return _remoteApplication.DestinationNewRelicConfigFilePath; } }
 
-        public String DestinationApplicationDirectoryPath { get { return _remoteApplication.DestinationApplicationDirectoryPath; } }
+        public string DestinationApplicationDirectoryPath { get { return _remoteApplication.DestinationApplicationDirectoryPath; } }
 
-        public String DestinationNewRelicExtensionsDirectoryPath => _remoteApplication.DestinationNewRelicExtensionsDirectoryPath;
+        public string DestinationNewRelicExtensionsDirectoryPath => _remoteApplication.DestinationNewRelicExtensionsDirectoryPath;
 
-        private readonly IDictionary<String, String> _initialNewRelicAppSettings = new Dictionary<String, String>();
-        public IDictionary<String, String> InitialNewRelicAppSettings { get { return _initialNewRelicAppSettings; } }
+        private readonly IDictionary<string, string> _initialNewRelicAppSettings = new Dictionary<string, string>();
+        public IDictionary<string, string> InitialNewRelicAppSettings { get { return _initialNewRelicAppSettings; } }
 
         public ITestOutputHelper TestLogger { get; set; }
 
-        public Boolean DelayKill;
+        public bool DelayKill;
 
-        public Boolean BypassAgentConnectionErrorLineRegexCheck;
+        public bool BypassAgentConnectionErrorLineRegexCheck;
 
         private const int MaxTries = 2;
 

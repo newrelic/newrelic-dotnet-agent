@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
     public class Program
     {
         [Option("port", Required = true)]
-        public String Port { get; set; }
+        public string Port { get; set; }
 
         public static void Main(string[] args)
         {
@@ -28,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.WcfAppSelfHosted
 
         private void RealMain()
         {
-            var baseAddress = new Uri(String.Format(@"http://localhost:{0}/", Port));
+            var baseAddress = new Uri(string.Format(@"http://localhost:{0}/", Port));
             var serviceHost = ServiceHostFactory(baseAddress);
             using (new ServiceHostDisposer(serviceHost))
             {

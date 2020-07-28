@@ -36,7 +36,7 @@ namespace CompositeTests
         public void Test_RecordCustomEvent()
         {
             // ACT
-            AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<String, Object> { { "key1", "val1" }, { "key2", "val2" } });
+            AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<string, object> { { "key1", "val1" }, { "key2", "val2" } });
             _compositeTestAgent.Harvest();
 
             // ASSERT
@@ -59,7 +59,7 @@ namespace CompositeTests
             _compositeTestAgent.PushConfiguration();
 
             // ACT
-            AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<String, Object> { { "key1", "val1" }, { "key2", "val2" } });
+            AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<string, object> { { "key1", "val1" }, { "key2", "val2" } });
             _compositeTestAgent.Harvest();
 
             // ASSERT
@@ -72,7 +72,7 @@ namespace CompositeTests
         public void Test_RecordCustomEvent_WithNullValuedAttribute()
         {
             // ACT
-            AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<String, Object> { { "key1", "val1" }, { "key2", null }, { "key3", "val3" } });
+            AgentApi.RecordCustomEvent("MyCustomEvent", new Dictionary<string, object> { { "key1", "val1" }, { "key2", null }, { "key3", "val3" } });
             _compositeTestAgent.Harvest();
 
             // ASSERT
@@ -280,7 +280,7 @@ namespace CompositeTests
             // ACT
             var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
             _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment").End();
-            AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String> { { "attribute1", "value1" } });
+            AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<string, string> { { "attribute1", "value1" } });
             transaction.End();
             _compositeTestAgent.Harvest();
 
@@ -289,7 +289,7 @@ namespace CompositeTests
             {
                 new ExpectedAttribute {Key = "attribute1", Value = "value1"}
             };
-            var unexpectedNonErrorAttributes = new List<String>
+            var unexpectedNonErrorAttributes = new List<string>
             {
                 "attribute1"
             };
@@ -312,7 +312,7 @@ namespace CompositeTests
         public void Test_NoticeErrorOutsideTransaction_WithExceptionAndCustomParams()
         {
             // ACT
-            AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
+            AgentApi.NoticeError(new Exception("This is a new exception."), new Dictionary<string, string>() { { "attribute1", "value1" } });
             _compositeTestAgent.Harvest();
 
             // ASSERT
@@ -338,7 +338,7 @@ namespace CompositeTests
             var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
             var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
             segment.End();
-            AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+            AgentApi.NoticeError("This is an exception string.", new Dictionary<string, string>() { { "attribute1", "value1" } });
             transaction.End();
             _compositeTestAgent.Harvest();
 
@@ -347,7 +347,7 @@ namespace CompositeTests
             {
                 new ExpectedAttribute {Key = "attribute1", Value = "value1"}
             };
-            var unexpectedNonErrorAttributes = new List<String>
+            var unexpectedNonErrorAttributes = new List<string>
             {
                 "attribute1"
             };
@@ -370,7 +370,7 @@ namespace CompositeTests
         public void Test_NoticeErrorOutsideTransaction_WithMessageAndCustomParams()
         {
             // ACT
-            AgentApi.NoticeError("This is an exception string.", new Dictionary<String, String>() { { "attribute1", "value1" } });
+            AgentApi.NoticeError("This is an exception string.", new Dictionary<string, string>() { { "attribute1", "value1" } });
             _compositeTestAgent.Harvest();
 
             // ASSERT
@@ -396,8 +396,8 @@ namespace CompositeTests
             var transaction = _compositeTestAgent.GetAgentWrapperApi().CreateWebTransaction(WebTransactionType.ASP, "TransactionName");
             var segment = _compositeTestAgent.GetAgentWrapperApi().StartTransactionSegmentOrThrow("segment");
             segment.End();
-            AgentApi.NoticeError(new Exception("This is the first exception."), new Dictionary<String, String>() { { "attribute1", "value1" } });
-            AgentApi.NoticeError(new Exception("This is the second exception."), new Dictionary<String, String>() { { "attribute2", "value2" } });
+            AgentApi.NoticeError(new Exception("This is the first exception."), new Dictionary<string, string>() { { "attribute1", "value1" } });
+            AgentApi.NoticeError(new Exception("This is the second exception."), new Dictionary<string, string>() { { "attribute2", "value2" } });
             transaction.End();
             _compositeTestAgent.Harvest();
 
@@ -500,7 +500,7 @@ namespace CompositeTests
             segment.End();
             for (var i = 1; i <= MaxNumCustomParams; i++)
             {
-                AgentApi.AddCustomParameter(String.Format("key{0}", i), i);
+                AgentApi.AddCustomParameter(string.Format("key{0}", i), i);
             }
             transaction.End();
             _compositeTestAgent.Harvest();
@@ -511,7 +511,7 @@ namespace CompositeTests
             var expectedAttributes = new List<ExpectedAttribute> { };
             for (var i = 1; i <= MaxNumCustomParams; i++)
             {
-                expectedAttributes.Add(new ExpectedAttribute { Key = String.Format("key{0}", i), Value = String.Format("{0}", i) });
+                expectedAttributes.Add(new ExpectedAttribute { Key = string.Format("key{0}", i), Value = string.Format("{0}", i) });
             }
 
             TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
@@ -531,7 +531,7 @@ namespace CompositeTests
             segment.End();
             for (var i = 1; i <= MaxNumCustomParams + 1; i++) // note the + 1
             {
-                AgentApi.AddCustomParameter(String.Format("key{0}", i), i);
+                AgentApi.AddCustomParameter(string.Format("key{0}", i), i);
             }
             transaction.End();
             _compositeTestAgent.Harvest();
@@ -542,11 +542,11 @@ namespace CompositeTests
             var expectedAttributes = new List<ExpectedAttribute> { };
             for (var i = 1; i <= MaxNumCustomParams; i++) // the + 1 does not appear here...anything over the max gets swallowed
             {
-                expectedAttributes.Add(new ExpectedAttribute { Key = String.Format("key{0}", i), Value = String.Format("{0}", i) });
+                expectedAttributes.Add(new ExpectedAttribute { Key = string.Format("key{0}", i), Value = string.Format("{0}", i) });
             }
-            var unexpectedAttributes = new List<String>
+            var unexpectedAttributes = new List<string>
             {
-                String.Format("key{0}", MaxNumCustomParams + 1)
+                string.Format("key{0}", MaxNumCustomParams + 1)
             };
 
             TransactionTraceAssertions.HasAttributes(expectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
@@ -578,7 +578,7 @@ namespace CompositeTests
             // ASSERT
             var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
             var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
-            var unexpectedAttributes = new List<String> { "key1", "key2" };
+            var unexpectedAttributes = new List<string> { "key1", "key2" };
 
             TransactionTraceAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, transactionTrace);
             TransactionEventAssertions.DoesNotHaveAttributes(unexpectedAttributes, AttributeClassification.UserAttributes, transactionEvent);
@@ -595,7 +595,7 @@ namespace CompositeTests
             var transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name");
             var segment = agentWrapperApi.StartTransactionSegmentOrThrow("segment");
             segment.End();
-            AgentApi.AddCustomParameter("key1", null as String);
+            AgentApi.AddCustomParameter("key1", null as string);
             AgentApi.AddCustomParameter("key2", null as IConvertible);
             transaction.End();
             _compositeTestAgent.Harvest();
@@ -603,7 +603,7 @@ namespace CompositeTests
             // ASSERT
             var transactionTrace = _compositeTestAgent.TransactionTraces.FirstOrDefault();
             var transactionEvent = _compositeTestAgent.TransactionEvents.FirstOrDefault();
-            var unexpectedAttributes = new List<String>
+            var unexpectedAttributes = new List<string>
             {
                 "key1",
                 "key2"
@@ -925,9 +925,9 @@ namespace CompositeTests
             transaction.End();
 
 
-            Assert.AreNotEqual(String.Empty, firstHeader);
-            Assert.AreEqual(String.Empty, secondHeader);
-            Assert.AreEqual(String.Empty, thirdHeader);
+            Assert.AreNotEqual(string.Empty, firstHeader);
+            Assert.AreEqual(string.Empty, secondHeader);
+            Assert.AreEqual(string.Empty, thirdHeader);
         }
 
         #endregion
@@ -1051,7 +1051,7 @@ namespace CompositeTests
         {
             var AppDataHttpHeader = "X-NewRelic-App-Data";
 
-            var trustedAccount = Int64.Parse(_compositeTestAgent.ServerConfiguration.CatId.Split(new[] { '#' })[0]);
+            var trustedAccount = long.Parse(_compositeTestAgent.ServerConfiguration.CatId.Split(new[] { '#' })[0]);
             _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { trustedAccount };
             _compositeTestAgent.ServerConfiguration.EncodingKey = "foo";
             _compositeTestAgent.PushConfiguration();

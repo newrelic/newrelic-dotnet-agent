@@ -10,7 +10,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.ApiAppNameChange
     public class Program
     {
         [Option("port", Required = true)]
-        public String Port { get; set; }
+        public string Port { get; set; }
 
         static void Main(string[] args)
         {

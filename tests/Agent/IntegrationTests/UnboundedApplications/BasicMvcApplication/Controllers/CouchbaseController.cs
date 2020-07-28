@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using Couchbase;
 using Couchbase.Core;
-using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTests.Shared.Couchbase;
 using ServiceStack;
 
@@ -14,8 +13,8 @@ namespace BasicMvcApplication.Controllers
 {
     public class CouchbaseController : Controller
     {
-        private readonly String[] _documentIds = new String[] { "airline_10765", "route_5639" };
-        private const String _documentId = "airline_10765";
+        private readonly string[] _documentIds = new string[] { "airline_10765", "route_5639" };
+        private const string _documentId = "airline_10765";
         private readonly CouchbaseConnection _connection;
 
         public CouchbaseController()
@@ -24,7 +23,7 @@ namespace BasicMvcApplication.Controllers
             _connection.Connect();
         }
 
-        protected override void Dispose(Boolean disposing)
+        protected override void Dispose(bool disposing)
         {
             _connection.Dispose();
             base.Dispose(disposing);
@@ -33,7 +32,7 @@ namespace BasicMvcApplication.Controllers
         #region Get Methods
 
         [HttpGet]
-        public String Couchbase_Get()
+        public string Couchbase_Get()
         {
             var bucket = _connection.Bucket;
             var doc = bucket.Get<dynamic>(_documentId).Value.ToString();
@@ -41,7 +40,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_GetMultiple()
+        public string Couchbase_GetMultiple()
         {
             var bucket = _connection.Bucket;
             var docCount = bucket.Get<dynamic>(_documentIds).Values.Count;
@@ -49,7 +48,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_GetMultipleParallelOptions()
+        public string Couchbase_GetMultipleParallelOptions()
         {
             var bucket = _connection.Bucket;
             var parallelOptions = new ParallelOptions()
@@ -64,7 +63,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_GetMultipleParallelOptionsWithRangeSize()
+        public string Couchbase_GetMultipleParallelOptionsWithRangeSize()
         {
             var bucket = _connection.Bucket;
 
@@ -80,7 +79,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_GetAndTouch(String documentId)
+        public string Couchbase_GetAndTouch(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -95,7 +94,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_GetWithLock()
+        public string Couchbase_GetWithLock()
         {
             var bucket = _connection.Bucket;
             var doc = bucket.GetAndLock<dynamic>(_documentId, 5).ToJson();
@@ -103,7 +102,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_GetDocument()
+        public string Couchbase_GetDocument()
         {
             var bucket = _connection.Bucket;
             var doc = bucket.GetDocument<dynamic>(_documentId).ToJson();
@@ -111,7 +110,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_GetFromReplica()
+        public string Couchbase_GetFromReplica()
         {
             var bucket = _connection.Bucket;
             var doc = bucket.GetFromReplica<dynamic>(_documentId).ToJson();
@@ -119,7 +118,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> Couchbase_GetAsync()
+        public async Task<string> Couchbase_GetAsync()
         {
             var bucket = _connection.Bucket;
             var doc = await bucket.GetAsync<dynamic>(_documentId);
@@ -127,7 +126,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> Couchbase_GetAndTouchAsync(String documentId)
+        public async Task<string> Couchbase_GetAndTouchAsync(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -142,7 +141,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> Couchbase_GetDocumentAsync()
+        public async Task<string> Couchbase_GetDocumentAsync()
         {
             var bucket = _connection.Bucket;
             var doc = await bucket.GetDocumentAsync<dynamic>(_documentId);
@@ -151,7 +150,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> Couchbase_GetFromReplicaAsync()
+        public async Task<string> Couchbase_GetFromReplicaAsync()
         {
             var bucket = _connection.Bucket;
             var doc = await bucket.GetFromReplicaAsync<dynamic>(_documentId);
@@ -159,7 +158,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> Couchbase_GetWithLockAsync()
+        public async Task<string> Couchbase_GetWithLockAsync()
         {
             var bucket = _connection.Bucket;
             var doc = await bucket.GetAndLockAsync<dynamic>(_documentId, TimeSpan.FromSeconds(5));
@@ -170,7 +169,7 @@ namespace BasicMvcApplication.Controllers
 
         #region Insert Methods
         [HttpGet]
-        public String Couchbase_Insert(String documentId)
+        public string Couchbase_Insert(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -185,7 +184,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_InsertDocument(String documentId)
+        public string Couchbase_InsertDocument(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -200,7 +199,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_InsertWithExpiration(String documentId)
+        public string Couchbase_InsertWithExpiration(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -215,7 +214,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_InsertReplicatePersist(String documentId)
+        public string Couchbase_InsertReplicatePersist(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -230,7 +229,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_InsertReplicatePersistWithExpiration(String documentId)
+        public string Couchbase_InsertReplicatePersistWithExpiration(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -245,7 +244,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> Couchbase_InsertAsync(String documentId)
+        public async Task<string> Couchbase_InsertAsync(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -260,7 +259,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public async Task<String> Couchbase_InsertReplicatePersistAsync(String documentId)
+        public async Task<string> Couchbase_InsertReplicatePersistAsync(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -275,7 +274,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public async Task<String> Couchbase_InsertWithExpirationAsync(String documentId)
+        public async Task<string> Couchbase_InsertWithExpirationAsync(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -290,7 +289,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public async Task<String> Couchbase_InsertReplicatePersistWithExpirationAsync(String documentId)
+        public async Task<string> Couchbase_InsertReplicatePersistWithExpirationAsync(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -309,7 +308,7 @@ namespace BasicMvcApplication.Controllers
 
         #region Upsert Methods
 
-        public String Couchbase_Upsert()
+        public string Couchbase_Upsert()
         {
             var bucket = _connection.Bucket;
 
@@ -323,7 +322,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_UpsertDocument()
+        public string Couchbase_UpsertDocument()
         {
             var bucket = _connection.Bucket;
 
@@ -337,7 +336,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_UpsertCASWithExpiration()
+        public string Couchbase_UpsertCASWithExpiration()
         {
             var bucket = _connection.Bucket;
 
@@ -351,7 +350,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_UpsertReplicatePersist()
+        public string Couchbase_UpsertReplicatePersist()
         {
             var bucket = _connection.Bucket;
 
@@ -365,7 +364,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_UpsertReplicatePersistWithExpiration()
+        public string Couchbase_UpsertReplicatePersistWithExpiration()
         {
             var bucket = _connection.Bucket;
 
@@ -379,7 +378,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_UpsertCASReplicatePersistWithExpiration()
+        public string Couchbase_UpsertCASReplicatePersistWithExpiration()
         {
             var bucket = _connection.Bucket;
 
@@ -393,7 +392,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_UpsertMultiple()
+        public string Couchbase_UpsertMultiple()
         {
             var bucket = _connection.Bucket;
             var testObject = new CouchbaseTestObject() { Name = "New Relic" };
@@ -408,7 +407,7 @@ namespace BasicMvcApplication.Controllers
             return result.Count.ToString();
         }
 
-        public String Couchbase_UpsertMultipleParallelOptions()
+        public string Couchbase_UpsertMultipleParallelOptions()
         {
             var bucket = _connection.Bucket;
             var testObject = new CouchbaseTestObject() { Name = "New Relic" };
@@ -423,7 +422,7 @@ namespace BasicMvcApplication.Controllers
             return result.Count.ToString();
         }
 
-        public String Couchbase_UpsertMultipleParallelOptionsWithRangeSize()
+        public string Couchbase_UpsertMultipleParallelOptionsWithRangeSize()
         {
             var bucket = _connection.Bucket;
             var testObject = new CouchbaseTestObject() { Name = "New Relic" };
@@ -438,7 +437,7 @@ namespace BasicMvcApplication.Controllers
             return result.Count.ToString();
         }
 
-        public async Task<String> Couchbase_UpsertAsync()
+        public async Task<string> Couchbase_UpsertAsync()
         {
             var bucket = _connection.Bucket;
 
@@ -452,7 +451,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public async Task<String> Couchbase_UpsertCASWithExpirationAsync()
+        public async Task<string> Couchbase_UpsertCASWithExpirationAsync()
         {
             var bucket = _connection.Bucket;
 
@@ -466,7 +465,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public async Task<String> Couchbase_UpsertCASReplicatePersistWithExpirationAsync()
+        public async Task<string> Couchbase_UpsertCASReplicatePersistWithExpirationAsync()
         {
             var bucket = _connection.Bucket;
 
@@ -484,7 +483,7 @@ namespace BasicMvcApplication.Controllers
 
         #region Remove Methods
 
-        public String Couchbase_RemoveCAS(String documentId)
+        public string Couchbase_RemoveCAS(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -498,7 +497,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_RemoveDocument(String documentId)
+        public string Couchbase_RemoveDocument(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -512,7 +511,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_RemoveReplicatePersist(String documentId)
+        public string Couchbase_RemoveReplicatePersist(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -526,7 +525,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_RemoveCASReplicatePersist(String documentId)
+        public string Couchbase_RemoveCASReplicatePersist(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -540,34 +539,34 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_RemoveMultiple(String documentId)
+        public string Couchbase_RemoveMultiple(string documentId)
         {
             var bucket = _connection.Bucket;
 
-            var result = bucket.Remove(new List<String> { documentId });
+            var result = bucket.Remove(new List<string> { documentId });
 
             return result.Count.ToString();
         }
 
-        public String Couchbase_RemoveMultipleWithParallelOptions(String documentId)
+        public string Couchbase_RemoveMultipleWithParallelOptions(string documentId)
         {
             var bucket = _connection.Bucket;
 
-            var result = bucket.Remove(new List<String> { documentId }, new ParallelOptions() { CancellationToken = CancellationToken.None, MaxDegreeOfParallelism = 4, TaskScheduler = TaskScheduler.Current });
+            var result = bucket.Remove(new List<string> { documentId }, new ParallelOptions() { CancellationToken = CancellationToken.None, MaxDegreeOfParallelism = 4, TaskScheduler = TaskScheduler.Current });
 
             return result.Count.ToString();
         }
 
-        public String Couchbase_RemoveMultipleWithParallelOptionsWithRangeSize(String documentId)
+        public string Couchbase_RemoveMultipleWithParallelOptionsWithRangeSize(string documentId)
         {
             var bucket = _connection.Bucket;
 
-            var result = bucket.Remove(new List<String> { documentId }, new ParallelOptions() { CancellationToken = CancellationToken.None, MaxDegreeOfParallelism = 4, TaskScheduler = TaskScheduler.Current }, 10);
+            var result = bucket.Remove(new List<string> { documentId }, new ParallelOptions() { CancellationToken = CancellationToken.None, MaxDegreeOfParallelism = 4, TaskScheduler = TaskScheduler.Current }, 10);
 
             return result.Count.ToString();
         }
 
-        public async Task<String> Couchbase_RemoveAsync(String documentId)
+        public async Task<string> Couchbase_RemoveAsync(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -586,7 +585,7 @@ namespace BasicMvcApplication.Controllers
 
         #region Replace Methods 
 
-        public String Couchbase_Replace(String documentId)
+        public string Couchbase_Replace(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -601,7 +600,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_ReplaceDocument(String documentId)
+        public string Couchbase_ReplaceDocument(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -616,7 +615,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_ReplaceCAS(String documentId)
+        public string Couchbase_ReplaceCAS(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -631,7 +630,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_ReplaceWithExpiration(String documentId)
+        public string Couchbase_ReplaceWithExpiration(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -646,7 +645,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_ReplaceCASWithExpiration(String documentId)
+        public string Couchbase_ReplaceCASWithExpiration(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -661,7 +660,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_ReplaceReplicatePersist(String documentId)
+        public string Couchbase_ReplaceReplicatePersist(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -676,7 +675,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_ReplaceCASReplicatePersist(String documentId)
+        public string Couchbase_ReplaceCASReplicatePersist(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -691,7 +690,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public String Couchbase_ReplaceCASReplicatePersistWithExpiration(String documentId)
+        public string Couchbase_ReplaceCASReplicatePersistWithExpiration(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -706,7 +705,7 @@ namespace BasicMvcApplication.Controllers
             return result.Success.ToString();
         }
 
-        public async Task<String> Couchbase_ReplaceAsync(String documentId)
+        public async Task<string> Couchbase_ReplaceAsync(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -725,7 +724,7 @@ namespace BasicMvcApplication.Controllers
 
         #region Query Methods
 
-        public String Couchbase_Query()
+        public string Couchbase_Query()
         {
             var bucketName = CouchbaseTestObject.CouchbaseTestBucket;
             var bucket = _connection.Bucket;
@@ -735,7 +734,7 @@ namespace BasicMvcApplication.Controllers
             return result.Rows.Count().ToString();
         }
 
-        public async Task<String> Couchbase_QueryAsync()
+        public async Task<string> Couchbase_QueryAsync()
         {
             var bucketName = CouchbaseTestObject.CouchbaseTestBucket;
             var bucket = _connection.Bucket;
@@ -750,7 +749,7 @@ namespace BasicMvcApplication.Controllers
         #region Misc Methods
 
         [HttpGet]
-        public String Couchbase_Append()
+        public string Couchbase_Append()
         {
             var bucket = _connection.Bucket;
             var result = bucket.Append("New Relic", "New Relic Append");
@@ -758,7 +757,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_Prepend()
+        public string Couchbase_Prepend()
         {
             var bucket = _connection.Bucket;
             var result = bucket.Prepend("New Relic", "New Relic Perpend");
@@ -766,7 +765,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_Decrement()
+        public string Couchbase_Decrement()
         {
             var bucket = _connection.Bucket;
             var result = bucket.Decrement("New Relic");
@@ -774,7 +773,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_Increment()
+        public string Couchbase_Increment()
         {
             var bucket = _connection.Bucket;
             var result = bucket.Increment("New Relic");
@@ -783,7 +782,7 @@ namespace BasicMvcApplication.Controllers
 
 
         [HttpGet]
-        public String Couchbase_Observe(String documentId)
+        public string Couchbase_Observe(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -805,7 +804,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_Touch(String documentId)
+        public string Couchbase_Touch(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -815,7 +814,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String Couchbase_Unlock(String documentId)
+        public string Couchbase_Unlock(string documentId)
         {
             var bucket = _connection.Bucket;
 
@@ -832,7 +831,7 @@ namespace BasicMvcApplication.Controllers
         //Invoke
 
         [HttpGet]
-        public String Couchbase_Invoke()
+        public string Couchbase_Invoke()
         {
             var bucket = _connection.Bucket as CouchbaseBucket;
             bool result = true;
@@ -853,7 +852,7 @@ namespace BasicMvcApplication.Controllers
             return result.ToString();
         }
 
-        public async Task<String> Couchbase_InvokeAsync()
+        public async Task<string> Couchbase_InvokeAsync()
         {
             var bucket = _connection.Bucket as CouchbaseBucket;
             bool result = true;
@@ -876,7 +875,7 @@ namespace BasicMvcApplication.Controllers
 
         //Exists
         [HttpGet]
-        public String Couchbase_Exists()
+        public string Couchbase_Exists()
         {
             var bucket = _connection.Bucket;
             var result = bucket.Exists(_documentId);
@@ -884,7 +883,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> Couchbase_ExistsAsync()
+        public async Task<string> Couchbase_ExistsAsync()
         {
             var bucket = _connection.Bucket;
             var result = await bucket.ExistsAsync(_documentId);

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -28,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTests
                 exerciseApplication: () =>
                 {
                     // Make a request with an invalid query string to ensure that the agent handles it safely
-                    var queryStringParams = new Dictionary<String, String> { { "a", "<b>" } };
+                    var queryStringParams = new Dictionary<string, string> { { "a", "<b>" } };
                     _fixture.GetWithQueryString(queryStringParams, true);
                 }
             );
@@ -67,7 +66,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/Transactions/allOther" },
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"AuthenticateRequest",
                 @"AuthorizeRequest",
@@ -81,15 +80,15 @@ namespace NewRelic.Agent.IntegrationTests
 
                 @"EndRequest",
             };
-            var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "500" }
             };
-            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
                 {"type", "Transaction"}
             };
-            var expectedTransactionEventIntrinsicAttributes2 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
                 "timestamp",
                 "duration",
@@ -97,7 +96,7 @@ namespace NewRelic.Agent.IntegrationTests
                 "queueDuration",
                 "totalTime"
             };
-            var expectedTransactionEventAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "500"}
             };

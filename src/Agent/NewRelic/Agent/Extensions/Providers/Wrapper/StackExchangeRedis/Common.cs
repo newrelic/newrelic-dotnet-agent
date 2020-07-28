@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Reflection;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
 namespace NewRelic.Providers.Wrapper.StackExchangeRedis
 {
     public static class Common
     {
-        private const String MessageTypeName = "StackExchange.Redis.Message";
-        private const String CommandPropertyName = "Command";
+        private const string MessageTypeName = "StackExchange.Redis.Message";
+        private const string CommandPropertyName = "Command";
 
-        public const String RedisAssemblyName = "StackExchange.Redis";
-        public const String RedisAssemblyStrongName = "StackExchange.Redis.StrongName";
+        public const string RedisAssemblyName = "StackExchange.Redis";
+        public const string RedisAssemblyStrongName = "StackExchange.Redis.StrongName";
 
-        private static Func<Object, Enum> _redisMessageCommandAccessor;
-        private static Func<Object, Enum> _strongNameMessageCommandAccessor;
+        private static Func<object, Enum> _redisMessageCommandAccessor;
+        private static Func<object, Enum> _strongNameMessageCommandAccessor;
 
-        public static Func<Object, Enum> GetMessageCommandAccessor(Assembly assembly)
+        public static Func<object, Enum> GetMessageCommandAccessor(Assembly assembly)
         {
             var assemblyName = assembly.GetName().Name;
             switch (assemblyName)
@@ -30,7 +29,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
             throw new NotSupportedException($"The assembly provided does not have a command accessor implemented: {assemblyName}");
         }
 
-        private static Func<Object, Enum> GetRedisMessageCommandAccessor()
+        private static Func<object, Enum> GetRedisMessageCommandAccessor()
         {
             if (_redisMessageCommandAccessor == null)
             {
@@ -40,7 +39,7 @@ namespace NewRelic.Providers.Wrapper.StackExchangeRedis
             return _redisMessageCommandAccessor;
         }
 
-        private static Func<Object, Enum> GetStrongNameMessageCommandAccessor()
+        private static Func<object, Enum> GetStrongNameMessageCommandAccessor()
         {
             if (_strongNameMessageCommandAccessor == null)
             {

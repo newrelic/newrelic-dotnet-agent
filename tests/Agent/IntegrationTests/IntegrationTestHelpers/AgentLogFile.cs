@@ -58,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             throw new Exception("No agent log file found.");
         }
 
-        public String GetAccountId(TimeSpan? timeoutOrZero = null)
+        public string GetAccountId(TimeSpan? timeoutOrZero = null)
         {
             var reportingAppLink = GetReportingAppLink(timeoutOrZero);
             var reportingAppUri = new Uri(reportingAppLink);
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return accountId.TrimEnd('/');
         }
 
-        public String GetApplicationId(TimeSpan? timeoutOrZero = null)
+        public string GetApplicationId(TimeSpan? timeoutOrZero = null)
         {
             var reportingAppLink = GetReportingAppLink(timeoutOrZero);
             var reportingAppUri = new Uri(reportingAppLink);
@@ -78,7 +78,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return applicationId.TrimEnd('/');
         }
 
-        public String GetReportingAppLink(TimeSpan? timeoutOrZero = null)
+        public string GetReportingAppLink(TimeSpan? timeoutOrZero = null)
         {
             var match = WaitForLogLine(AgentReportingToLogLineRegex, timeoutOrZero);
             return match.Groups[1].Value;
@@ -91,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Log Lines
 
-        public IEnumerable<Match> WaitForLogLines(String regularExpression, TimeSpan? timeoutOrZero = null)
+        public IEnumerable<Match> WaitForLogLines(string regularExpression, TimeSpan? timeoutOrZero = null)
         {
             Contract.Assert(regularExpression != null);
 
@@ -106,16 +106,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
             } while (timeTaken.Elapsed < timeout);
 
-            var message = String.Format("Log line did not appear within {0} seconds.  Expected line expression: {1}", timeout.TotalSeconds, regularExpression);
+            var message = string.Format("Log line did not appear within {0} seconds.  Expected line expression: {1}", timeout.TotalSeconds, regularExpression);
             throw new Exception(message);
         }
 
-        public Match WaitForLogLine(String regularExpression, TimeSpan? timeoutOrZero = null)
+        public Match WaitForLogLine(string regularExpression, TimeSpan? timeoutOrZero = null)
         {
             return WaitForLogLines(regularExpression, timeoutOrZero).First();
         }
 
-        public IEnumerable<Match> TryGetLogLines(String regularExpression)
+        public IEnumerable<Match> TryGetLogLines(string regularExpression)
         {
             var regex = new Regex(regularExpression);
             return GetFileLines()
@@ -125,14 +125,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(match => match.Success);
         }
 
-        public Match TryGetLogLine(String regularExpression)
+        public Match TryGetLogLine(string regularExpression)
         {
             return TryGetLogLines(regularExpression).LastOrDefault();
         }
 
-        public IEnumerable<String> GetFileLines()
+        public IEnumerable<string> GetFileLines()
         {
-            String line;
+            string line;
             using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))
                 while ((line = streamReader.ReadLine()) != null)
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
         }
 
-        public String GetFullLogAsString()
+        public string GetFullLogAsString()
         {
             using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))
@@ -154,7 +154,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region JSON helpers
 
-        private static String TryExtractJson(Match match, Int32 captureGroupIndex)
+        private static string TryExtractJson(Match match, int captureGroupIndex)
         {
             if (match == null || match.Groups.Count < (captureGroupIndex + 1))
                 return null;
@@ -162,7 +162,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return match.Groups[captureGroupIndex].Value;
         }
 
-        private static IEnumerable<T> TryExtractFromJsonArray<T>(String json, Int32 arrayIndex)
+        private static IEnumerable<T> TryExtractFromJsonArray<T>(string json, int arrayIndex)
         {
             if (json == null)
                 return Enumerable.Empty<T>();
@@ -193,14 +193,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(transactionSample => transactionSample != null);
         }
 
-        public TransactionSample TryGetTransactionSample(String transactionName)
+        public TransactionSample TryGetTransactionSample(string transactionName)
         {
             return GetTransactionSamples()
                 .Where(sample => sample?.Path == transactionName)
                 .FirstOrDefault();
         }
 
-        public T GetTransactionTraceAttribute<T>(String transactionName, TransactionTraceAttributeType attributeType, String parameterName)
+        public T GetTransactionTraceAttribute<T>(string transactionName, TransactionTraceAttributeType attributeType, string parameterName)
         {
             return GetTransactionSamples()
                 .Where(trace => trace != null)
@@ -227,7 +227,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(transactionEvent => transactionEvent != null);
         }
 
-        public TransactionEvent TryGetTransactionEvent(String transactionName)
+        public TransactionEvent TryGetTransactionEvent(string transactionName)
         {
             return GetTransactionEvents()
                 .Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == transactionName)
@@ -258,14 +258,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(errorTrace => errorTrace != null);
         }
 
-        public ErrorTrace TryGetErrorTrace(String transactionName)
+        public ErrorTrace TryGetErrorTrace(string transactionName)
         {
             return GetErrorTraces()
                 .Where(trace => trace?.Path == transactionName)
                 .FirstOrDefault();
         }
 
-        public T GetErrorTraceAttribute<T>(String transactionName, TransactionTraceAttributeType attributeType, String parameterName)
+        public T GetErrorTraceAttribute<T>(string transactionName, TransactionTraceAttributeType attributeType, string parameterName)
         {
             return GetErrorTraces()
                 .Where(trace => trace != null)
@@ -279,12 +279,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .FirstOrDefault();
         }
 
-        private static IEnumerable<KeyValuePair<String, Object>> FilterAttributesByType(ErrorTraceAttributes attributesCollection, TransactionTraceAttributeType attributeType)
+        private static IEnumerable<KeyValuePair<string, object>> FilterAttributesByType(ErrorTraceAttributes attributesCollection, TransactionTraceAttributeType attributeType)
         {
             if (attributesCollection == null)
-                return new Dictionary<String, Object>();
+                return new Dictionary<string, object>();
 
-            IDictionary<String, Object> attributes;
+            IDictionary<string, object> attributes;
             switch (attributeType)
             {
                 case TransactionTraceAttributeType.Intrinsic:
@@ -300,7 +300,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     throw new NotImplementedException();
             }
 
-            return attributes ?? new Dictionary<String, Object>();
+            return attributes ?? new Dictionary<string, object>();
         }
 
         #endregion ErrorTraces
@@ -342,7 +342,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(metric => metric != null);
         }
 
-        public Metric GetMetricByName(String name, String scope = null)
+        public Metric GetMetricByName(string name, string scope = null)
         {
             return GetMetrics()
                 .Where(metric => metric != null)

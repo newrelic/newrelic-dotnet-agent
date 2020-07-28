@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -45,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric {metricName = @"DotNet/BasicWebService.TestWebService.HelloWorld", metricScope = "WebTransaction/WebService/BasicWebService.TestWebService.HelloWorld", callCount = 2}
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"DotNet/System.Web.Services.Protocols.SyncSessionlessHandler/ProcessRequest",
                 @"BasicWebService.TestWebService.HelloWorld"

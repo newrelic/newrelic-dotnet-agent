@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NewRelic.Agent.Extensions.Providers
+﻿namespace NewRelic.Agent.Extensions.Providers
 {
     /// <summary>
     /// Any class that implements this interface will be instantiated using the default constructor during application startup.  A default constructor is required for this context factory to work.
@@ -12,7 +10,7 @@ namespace NewRelic.Agent.Extensions.Providers
         /// </summary>
         /// <returns>An IContextStorage or null if this factory cannot provide context for this application.</returns>
         /// <remarks>This method will be called once during application startup.  It is safe to do expensive operations here such as class loading or reflection in order to create the context.</remarks>
-        IContextStorage<T> CreateContext<T>(String key);
+        IContextStorage<T> CreateContext<T>(string key);
 
         /// <summary>
         /// Returns true if this context will persist for async execution flow

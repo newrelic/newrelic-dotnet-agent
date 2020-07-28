@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
-using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -65,7 +63,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Supportability/Transactions/allOther" },
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"AuthenticateRequest",
                 @"AuthorizeRequest",
@@ -80,17 +78,17 @@ namespace NewRelic.Agent.IntegrationTests
                 @"EndRequest"
             };
 
-            var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200" }
             };
 
-            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
                 {"type", "Transaction"}
             };
 
-            var expectedTransactionEventIntrinsicAttributes2 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
                 "timestamp",
                 "duration",
@@ -99,7 +97,7 @@ namespace NewRelic.Agent.IntegrationTests
                 "totalTime"
             };
 
-            var expectedTransactionEventAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200"}
             };

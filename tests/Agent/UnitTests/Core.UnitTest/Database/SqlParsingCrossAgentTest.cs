@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Parsing;
 using Newtonsoft.Json;
@@ -26,12 +23,12 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
         }
 
         [TestCaseSource("GetSqlParsingTestCases")]
-        public void SqlParsingTest(String inputSql, String expectedOperation, String expectedTable)
+        public void SqlParsingTest(string inputSql, string expectedOperation, string expectedTable)
         {
             var parsed = SqlParser.GetParsedDatabaseStatement(CommandType.Text, inputSql);
 
-            Assert.AreEqual(expectedOperation.ToLower(), parsed.Operation, String.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
-            Assert.AreEqual(expectedTable?.ToLower(), parsed.Model, String.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
+            Assert.AreEqual(expectedOperation.ToLower(), parsed.Operation, string.Format("Expected operation {0} but was {1}", expectedOperation, parsed.Operation));
+            Assert.AreEqual(expectedTable?.ToLower(), parsed.Model, string.Format("Expected table {0} but was {1}", expectedTable, parsed.Model));
         }
 
 
@@ -92,10 +89,10 @@ namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Database
         public class SqlParsingTestCase
         {
             [JsonProperty(PropertyName = "input")]
-            public String Input;
+            public string Input;
 
             [JsonProperty(PropertyName = "operation")]
-            public String ExpectedOperation;
+            public string ExpectedOperation;
 
             [JsonProperty(PropertyName = "table")]
             public string ExpectedTable;

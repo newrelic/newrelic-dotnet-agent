@@ -11,8 +11,8 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 {
     public static class HttpContextActions
     {
-        public const String HttpContextSegmentKey = "NewRelic.Asp.HttpContextSegmentKey";
-        public const String HttpContextSegmentTypeKey = "NewRelic.Asp.HttpContextSegmentTypeKey";
+        public const string HttpContextSegmentKey = "NewRelic.Asp.HttpContextSegmentKey";
+        public const string HttpContextSegmentTypeKey = "NewRelic.Asp.HttpContextSegmentTypeKey";
 
         // System.Web.HttpResponseStreamFilterSink is an internal type so we cannot reference it directly
         public static readonly Type HttpResponseStreamFilterSinkType = typeof(HttpResponse).Assembly.GetType("System.Web.HttpResponseStreamFilterSink");
@@ -114,7 +114,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
         private static void StoreRequestParameters(IAgentWrapperApi agentWrapperApi, HttpContext httpContext)
         {
             var parameters = QueryStringRetriever.TryGetQueryStringAsDictionary(httpContext.Request, agentWrapperApi)
-                ?? Enumerable.Empty<KeyValuePair<String, String>>();
+                ?? Enumerable.Empty<KeyValuePair<string, string>>();
             agentWrapperApi.CurrentTransaction.SetRequestParameters(parameters, RequestParameterBucket.RequestParameters);
         }
 
@@ -161,7 +161,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
             var subStatusCode = TryGetSubStatusCode(httpContext);
             agentWrapperApi.CurrentTransaction.SetHttpResponseStatusCode(statusCode, subStatusCode);
         }
-        private static Int32? TryGetSubStatusCode(HttpContext httpContext)
+        private static int? TryGetSubStatusCode(HttpContext httpContext)
         {
             // Oddly, SubStatusCode will throw in classic pipeline mode
             if (!HttpRuntime.UsingIntegratedPipeline)

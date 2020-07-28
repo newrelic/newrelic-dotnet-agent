@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Wcf3
 {
@@ -29,22 +28,22 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             return Delegates.NoOp;
         }
 
-        private static Boolean ShouldIgnoreTransaction(MethodCall methodCall)
+        private static bool ShouldIgnoreTransaction(MethodCall methodCall)
         {
             // WCF 4
             if (methodCall.MethodArguments.Length == 6
-                && methodCall.MethodArguments[2] is Boolean)
+                && methodCall.MethodArguments[2] is bool)
             {
                 // return !flowContext
-                return !(Boolean)methodCall.MethodArguments[2];
+                return !(bool)methodCall.MethodArguments[2];
             }
 
             // WCF 3
             if (methodCall.MethodArguments.Length == 4
-                && methodCall.MethodArguments[1] is Boolean)
+                && methodCall.MethodArguments[1] is bool)
             {
                 // return !flowContext
-                return !(Boolean)methodCall.MethodArguments[1];
+                return !(bool)methodCall.MethodArguments[1];
             }
 
             // if we couldn't find the flow context (bug, new version of WCF, etc.) then don't ignore

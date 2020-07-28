@@ -33,7 +33,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
         }
 
-        private static Single GetCurrentlyAllocatedMemoryBytes()
+        private static float GetCurrentlyAllocatedMemoryBytes()
         {
             return Process.GetCurrentProcess().PrivateMemorySize64;
         }
@@ -41,9 +41,9 @@ namespace NewRelic.Agent.Core.Samplers
 
     public class ImmutableMemorySample
     {
-        public readonly Single MemoryPhysical;
+        public readonly float MemoryPhysical;
 
-        public ImmutableMemorySample(Single memoryPhysical)
+        public ImmutableMemorySample(float memoryPhysical)
         {
             MemoryPhysical = memoryPhysical;
         }

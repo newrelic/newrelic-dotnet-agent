@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NUnit.Framework;
@@ -49,7 +48,7 @@ namespace ParsingTests
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", null, null, null, "localhost,password=NOPERS")]
         [TestCase(DatastoreVendor.Redis, "hostname_of_localhost", null, null, null, "127.0.0.1,password=NOPERS")]
 
-        public void TestConnectionStringParsing(DatastoreVendor vendor, String expectedHost, String expectedPathPortOrId, String expectedDatabaseName, String expectedInstanceName, String connectionString)
+        public void TestConnectionStringParsing(DatastoreVendor vendor, string expectedHost, string expectedPathPortOrId, string expectedDatabaseName, string expectedInstanceName, string connectionString)
         {
             if (expectedHost == "hostname_of_localhost")
             {

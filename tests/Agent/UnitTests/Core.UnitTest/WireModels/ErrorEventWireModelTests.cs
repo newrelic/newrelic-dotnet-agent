@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -12,17 +11,17 @@ namespace NewRelic.Agent.Core.WireModels
         public void all_attribute_value_types_in_an_event_do_serialize_correctly()
         {
             // ARRANGE
-            var userAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+            var userAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
                 {
                     {"identity.user", "samw"},
                     {"identity.product", "product"}
                 });
-            var agentAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+            var agentAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
                 {
                     {"Foo", "Bar"},
                     {"Baz", 42},
                 });
-            var intrinsicAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+            var intrinsicAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
                 {
                     {"databaseCallCount", 10 },
                     {"errormessage", "This is the error message"},
@@ -47,9 +46,9 @@ namespace NewRelic.Agent.Core.WireModels
         public void is_synthetics_set_correctly()
         {
             // Arrange
-            var userAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
-            var agentAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
-            var intrinsicAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
+            var userAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+            var agentAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+            var intrinsicAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
             var isSyntheticsEvent = true;
 
             // Act

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -47,7 +46,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Consume/Named/private$\nrtestqueue", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Consume/Named/private$\nrtestqueue", callCount = 1, metricScope = "WebTransaction/MVC/MSMQController/Msmq_Receive"}
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MessageBroker/Msmq/Queue/Consume/Named/private$\nrtestqueue"
             };

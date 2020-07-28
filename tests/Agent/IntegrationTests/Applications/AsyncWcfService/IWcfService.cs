@@ -7,10 +7,10 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService
     public interface IWcfService
     {
         [OperationContract(AsyncPattern = true)]
-        IAsyncResult BeginServiceMethod(String value, String otherValue, AsyncCallback callback, Object asyncState);
-        String EndServiceMethod(IAsyncResult result);
+        IAsyncResult BeginServiceMethod(string value, string otherValue, AsyncCallback callback, object asyncState);
+        string EndServiceMethod(IAsyncResult result);
 
         [OperationContract]
-        String ReturnInputIgnored(String input);
+        string ReturnInputIgnored(string input);
     }
 }

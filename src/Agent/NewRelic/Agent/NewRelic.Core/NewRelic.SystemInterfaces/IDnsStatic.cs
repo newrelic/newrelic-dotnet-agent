@@ -1,22 +1,21 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 
 namespace NewRelic.SystemInterfaces
 {
     public interface IDnsStatic
     {
-        String GetHostName();
-        IPHostEntry GetHostEntry(String hostNameOrAddres);
+        string GetHostName();
+        IPHostEntry GetHostEntry(string hostNameOrAddres);
     }
 
     public class DnsStatic : IDnsStatic
     {
-        public String GetHostName()
+        public string GetHostName()
         {
             return Dns.GetHostName();
         }
 
-        public IPHostEntry GetHostEntry(String hostNameOrAddres)
+        public IPHostEntry GetHostEntry(string hostNameOrAddres)
         {
             return Dns.GetHostEntry(hostNameOrAddres);
         }

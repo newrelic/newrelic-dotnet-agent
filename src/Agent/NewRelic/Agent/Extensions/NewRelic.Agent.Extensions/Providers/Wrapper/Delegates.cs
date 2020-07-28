@@ -5,7 +5,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
     /// <summary>
     /// A delegate that is returned by a wrapper and will be called when the wrapped method completes.
     /// </summary>
-    public delegate void AfterWrappedMethodDelegate(Object result, Exception exception);
+    public delegate void AfterWrappedMethodDelegate(object result, Exception exception);
 
     public static class Delegates
     {

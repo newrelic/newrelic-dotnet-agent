@@ -1,13 +1,12 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
 {
     public class RabbitMqHelper
     {
-        public static String VendorName = "RabbitMQ";
+        public static string VendorName = "RabbitMQ";
 
-        public static MessageBrokerDestinationType GetBrokerDestinationType(String queueNameOrRoutingKey)
+        public static MessageBrokerDestinationType GetBrokerDestinationType(string queueNameOrRoutingKey)
         {
             if (queueNameOrRoutingKey.StartsWith("amq."))
                 return MessageBrokerDestinationType.TempQueue;
@@ -15,7 +14,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
             return queueNameOrRoutingKey.Contains(".") ? MessageBrokerDestinationType.Topic : MessageBrokerDestinationType.Queue;
         }
 
-        public static String ResolveDestinationName(MessageBrokerDestinationType destinationType, String queueNameOrRoutingKey)
+        public static string ResolveDestinationName(MessageBrokerDestinationType destinationType, string queueNameOrRoutingKey)
         {
             return (destinationType == MessageBrokerDestinationType.TempQueue || destinationType == MessageBrokerDestinationType.TempTopic)
                 ? null

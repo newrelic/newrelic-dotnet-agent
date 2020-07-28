@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -52,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "custom key", "custom value" },
                 { "custom foo", "custom bar" },

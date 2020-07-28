@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -8,15 +7,15 @@ namespace NewRelic.Parsing.ConnectionString
 {
     public static class ConnectionStringParserHelper
     {
-        public static KeyValuePair<String, String>? GetKeyValuePair(DbConnectionStringBuilder connectionStringBuilder, List<String> possibleKeys)
+        public static KeyValuePair<string, string>? GetKeyValuePair(DbConnectionStringBuilder connectionStringBuilder, List<string> possibleKeys)
         {
             var key = possibleKeys.FirstOrDefault(k => connectionStringBuilder.ContainsKey(k));
             if (key == null) return null;
             var value = connectionStringBuilder[key].ToString();
-            return new KeyValuePair<String, String>(key, value);
+            return new KeyValuePair<string, string>(key, value);
         }
 
-        public static String NormalizeHostname(String host)
+        public static string NormalizeHostname(string host)
         {
             var localhost = new[] { ".", "localhost" };
             var hostIsLocalhost = localhost.Contains(host);

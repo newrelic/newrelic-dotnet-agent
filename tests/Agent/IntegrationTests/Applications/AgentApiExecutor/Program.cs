@@ -11,7 +11,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor
     public class Program
     {
         [Option("port", Required = true)]
-        public String Port { get; set; }
+        public string Port { get; set; }
 
         static void Main(string[] args)
         {

@@ -9,18 +9,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     public class MetricData
     {
         // index 0
-        public readonly String Unknown1;
+        public readonly string Unknown1;
 
         // index 1
-        public readonly Double Unknown2;
+        public readonly double Unknown2;
 
         // index 2
-        public readonly Double Unknown3;
+        public readonly double Unknown3;
 
         // index 3
         public readonly IEnumerable<Metric> Metrics;
 
-        public MetricData(String unknown1, Double unknown2, Double unknown3, IEnumerable<Metric> metrics)
+        public MetricData(string unknown1, double unknown2, double unknown3, IEnumerable<Metric> metrics)
         {
             Unknown1 = unknown1;
             Unknown2 = unknown2;
@@ -41,9 +41,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var unknown1 = (jArray[0] ?? new JObject()).ToObject<String>(serializer);
-                var unknown2 = (jArray[1] ?? new JObject()).ToObject<Double>(serializer);
-                var unknown3 = (jArray[2] ?? new JObject()).ToObject<Double>(serializer);
+                var unknown1 = (jArray[0] ?? new JObject()).ToObject<string>(serializer);
+                var unknown2 = (jArray[1] ?? new JObject()).ToObject<double>(serializer);
+                var unknown3 = (jArray[2] ?? new JObject()).ToObject<double>(serializer);
                 var metrics = (jArray[3] ?? new JObject()).ToObject<IEnumerable<Metric>>(serializer);
 
                 return new MetricData(unknown1, unknown2, unknown3, metrics);
@@ -96,7 +96,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             }
         }
 
-        public override String ToString()
+        public override string ToString()
         {
             return $"{MetricSpec.Name} ({MetricSpec.Scope}): {Values.CallCount}, {Values.Total}, {Values.TotalExclusive}, {Values.Min}, {Values.Max}, {Values.SumOfSquares}";
         }
@@ -105,12 +105,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     public class MetricSpec
     {
         [JsonProperty(PropertyName = "name")]
-        public readonly String Name;
+        public readonly string Name;
 
         [JsonProperty(PropertyName = "scope")]
-        public readonly String Scope;
+        public readonly string Scope;
 
-        public MetricSpec(String name, String scope)
+        public MetricSpec(string name, string scope)
         {
             Name = name;
             Scope = scope;
@@ -121,24 +121,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     public class MetricValues
     {
         // index 0
-        public readonly UInt64 CallCount;
+        public readonly ulong CallCount;
 
         // index 1
-        public readonly Double Total;
+        public readonly double Total;
 
         // index 2
-        public readonly Double TotalExclusive;
+        public readonly double TotalExclusive;
 
         // index 3
-        public readonly Double Min;
+        public readonly double Min;
 
         // index 4
-        public readonly Double Max;
+        public readonly double Max;
 
         // index 5
-        public readonly Double SumOfSquares;
+        public readonly double SumOfSquares;
 
-        public MetricValues(UInt64 callCount, Double total, Double totalExclusive, Double min, Double max, Double sumOfSquares)
+        public MetricValues(ulong callCount, double total, double totalExclusive, double min, double max, double sumOfSquares)
         {
             CallCount = callCount;
             Total = total;
@@ -161,12 +161,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var callCount = (jArray[0] ?? new JObject()).ToObject<UInt64>(serializer);
-                var total = (jArray[1] ?? new JObject()).ToObject<Double>(serializer);
-                var totalExclusive = (jArray[2] ?? new JObject()).ToObject<Double>(serializer);
-                var min = (jArray[3] ?? new JObject()).ToObject<Double>(serializer);
-                var max = (jArray[4] ?? new JObject()).ToObject<Double>(serializer);
-                var sumOfSquares = (jArray[5] ?? new JObject()).ToObject<Double>(serializer);
+                var callCount = (jArray[0] ?? new JObject()).ToObject<ulong>(serializer);
+                var total = (jArray[1] ?? new JObject()).ToObject<double>(serializer);
+                var totalExclusive = (jArray[2] ?? new JObject()).ToObject<double>(serializer);
+                var min = (jArray[3] ?? new JObject()).ToObject<double>(serializer);
+                var max = (jArray[4] ?? new JObject()).ToObject<double>(serializer);
+                var sumOfSquares = (jArray[5] ?? new JObject()).ToObject<double>(serializer);
 
                 return new MetricValues(callCount, total, totalExclusive, min, max, sumOfSquares);
             }

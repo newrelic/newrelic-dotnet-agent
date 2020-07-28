@@ -85,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        private static String SerializeTransactionTraceData(TransactionTraceWireModel transactionTraceWireModel)
+        private static string SerializeTransactionTraceData(TransactionTraceWireModel transactionTraceWireModel)
         {
             try
             {

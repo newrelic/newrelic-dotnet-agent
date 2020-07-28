@@ -13,17 +13,17 @@ namespace NewRelic.Providers.Wrapper.Wcf3
         // these must be lazily instatiated when the wrapper is actually used, not when the wrapper is first instantiated, so they sit in a nested class
         private static class Statics
         {
-            public static readonly Func<Object, MethodInfo> GetSyncMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, SyncTypeName, "method");
-            public static Func<Object, MethodInfo> GetAsyncBeginMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, AsyncTypeName, "beginMethod");
-            public static Func<Object, MethodInfo> GetAsyncEndMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, AsyncTypeName, "endMethod");
+            public static readonly Func<object, MethodInfo> GetSyncMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, SyncTypeName, "method");
+            public static Func<object, MethodInfo> GetAsyncBeginMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, AsyncTypeName, "beginMethod");
+            public static Func<object, MethodInfo> GetAsyncEndMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<MethodInfo>(AssemblyName, AsyncTypeName, "endMethod");
         }
 
-        private const String AssemblyName = "System.ServiceModel";
-        private const String SyncTypeName = "System.ServiceModel.Dispatcher.SyncMethodInvoker";
-        private const String AsyncTypeName = "System.ServiceModel.Dispatcher.AsyncMethodInvoker";
-        private const String SyncMethodName = "Invoke";
-        private const String AsyncBeginMethodName = "InvokeBegin";
-        private const String AsyncEndMethodName = "InvokeEnd";
+        private const string AssemblyName = "System.ServiceModel";
+        private const string SyncTypeName = "System.ServiceModel.Dispatcher.SyncMethodInvoker";
+        private const string AsyncTypeName = "System.ServiceModel.Dispatcher.AsyncMethodInvoker";
+        private const string SyncMethodName = "Invoke";
+        private const string AsyncBeginMethodName = "InvokeBegin";
+        private const string AsyncEndMethodName = "InvokeEnd";
 
         public bool IsTransactionRequired => false;
 
@@ -48,7 +48,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             var typeName = GetTypeName(methodInfo);
             var methodName = GetMethodName(methodInfo);
 
-            var name = String.Format("{0}.{1}", typeName, methodName);
+            var name = string.Format("{0}.{1}", typeName, methodName);
             var parameters = GetParameters(instrumentedMethodCall.MethodCall, methodInfo, instrumentedMethodCall.MethodCall.MethodArguments, agentWrapperApi);
 
             transaction = agentWrapperApi.CreateWebTransaction(WebTransactionType.WCF, "Windows Communication Foundation", false);
@@ -67,7 +67,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                     transaction.End();
                 });
         }
-        private MethodInfo TryGetMethodInfo(String methodName, Object invocationTarget)
+        private MethodInfo TryGetMethodInfo(string methodName, object invocationTarget)
         {
             if (methodName == SyncMethodName)
                 return Statics.GetSyncMethodInfo(invocationTarget);
@@ -78,7 +78,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             throw new Exception("Unexpected instrumented method in wrapper: " + methodName);
         }
-        private String GetTypeName(MethodInfo methodInfo)
+        private string GetTypeName(MethodInfo methodInfo)
         {
             var type = methodInfo.DeclaringType;
             if (type == null)
@@ -90,7 +90,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             return name;
         }
-        private String GetMethodName(MethodInfo methodInfo)
+        private string GetMethodName(MethodInfo methodInfo)
         {
             var name = methodInfo.Name;
             if (name == null)
@@ -98,14 +98,14 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             return name;
         }
-        private IEnumerable<KeyValuePair<String, String>> GetParameters(MethodCall methodCall, MethodInfo methodInfo, Object[] arguments, IAgentWrapperApi agentWrapperApi)
+        private IEnumerable<KeyValuePair<string, string>> GetParameters(MethodCall methodCall, MethodInfo methodInfo, object[] arguments, IAgentWrapperApi agentWrapperApi)
         {
             // only the begin methods will have parameters, end won't
             if (methodCall.Method.MethodName != SyncMethodName
                 && methodCall.Method.MethodName != AsyncBeginMethodName)
-                return Enumerable.Empty<KeyValuePair<String, String>>();
+                return Enumerable.Empty<KeyValuePair<string, string>>();
 
-            var parameters = arguments.ExtractNotNullAs<Object[]>(1);
+            var parameters = arguments.ExtractNotNullAs<object[]>(1);
 
             var parameterInfos = methodInfo.GetParameters();
             if (parameterInfos == null)
@@ -113,9 +113,9 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
             // if this occurs their app will throw an exception as well, which we will hopefully notice
             if (parameters.Length > parameterInfos.Length)
-                return Enumerable.Empty<KeyValuePair<String, String>>();
+                return Enumerable.Empty<KeyValuePair<string, string>>();
 
-            var result = new Dictionary<String, String>();
+            var result = new Dictionary<string, string>();
             for (var i = 0; i < parameters.Length; ++i)
             {
                 var parameterInfo = parameterInfos[i];

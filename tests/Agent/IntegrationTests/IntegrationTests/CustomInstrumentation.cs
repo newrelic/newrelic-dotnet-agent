@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
@@ -92,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionTracerFactory", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction/Custom/MyCustomMetricNameIgnoredByIgnoreTransactionWrapperAsync", callCount = 1 }
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MyCustomMetricName",
                 @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodDefaultTracer",
@@ -101,7 +100,7 @@ namespace NewRelic.Agent.IntegrationTests
                 @"AlternateCustomSegmentName",
                 @"CustomSegmentNameFromTracer"
             };
-            var unexpectedTransactionTraceSegments = new List<String>
+            var unexpectedTransactionTraceSegments = new List<string>
             {
                 // An unrecognized wrapperName will result in no tracer being selected.
                 @"DotNet/BasicMvcApplication.Controllers.CustomInstrumentationController/CustomMethodUnknownWrapperName"

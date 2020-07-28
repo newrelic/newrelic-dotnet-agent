@@ -10,12 +10,12 @@ namespace NewRelic.Agent.Core.Wrapper
 {
     public interface IWrapperService
     {
-        AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, String methodName, String argumentSignature, Object invocationTarget, Object[] methodArguments, String tracerFactoryName, String metricName, uint tracerArguments, UInt64 functionId);
+        AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature, object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName, uint tracerArguments, ulong functionId);
     }
 
     public class WrapperService : IWrapperService
     {
-        private readonly Int32 _maxConsecutiveFailures;
+        private readonly int _maxConsecutiveFailures;
 
         private readonly IConfigurationService _configurationService;
 
@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.Wrapper
             }
         }
 
-        private readonly ConcurrentDictionary<UInt64, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
+        private readonly ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper> _functionIdToWrapper;
 
         public WrapperService(IConfigurationService configurationService, IWrapperMap wrapperMap,
             IAgentWrapperApi agentWrapperApi, IAgentHealthReporter agentHealthReporter)
@@ -50,9 +50,9 @@ namespace NewRelic.Agent.Core.Wrapper
             _functionIdToWrapper = new ConcurrentDictionary<ulong, InstrumentedMethodInfoWrapper>();
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, String methodName, String argumentSignature,
-            Object invocationTarget, Object[] methodArguments, String tracerFactoryName, String metricName,
-            uint tracerArguments, UInt64 functionId)
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(Type type, string methodName, string argumentSignature,
+            object invocationTarget, object[] methodArguments, string tracerFactoryName, string metricName,
+            uint tracerArguments, ulong functionId)
         {
             InstrumentedMethodInfo instrumentedMethodInfo = default(InstrumentedMethodInfo);
             TrackedWrapper trackedWrapper;
@@ -151,7 +151,7 @@ namespace NewRelic.Agent.Core.Wrapper
             return tracerFactoryName;
         }
 
-        private void HandleBeforeWrappedMethodException(UInt64 functionId, TrackedWrapper trackedWrapper, InstrumentedMethodCall instrumentedMethodCall, InstrumentedMethodInfo instrumetedMethodInfo)
+        private void HandleBeforeWrappedMethodException(ulong functionId, TrackedWrapper trackedWrapper, InstrumentedMethodCall instrumentedMethodCall, InstrumentedMethodInfo instrumetedMethodInfo)
         {
             trackedWrapper.NoticeFailure();
 

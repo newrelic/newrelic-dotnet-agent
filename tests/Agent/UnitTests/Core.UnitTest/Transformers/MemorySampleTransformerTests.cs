@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Core.Aggregators;
+﻿using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Samplers;
 using NewRelic.Agent.Core.WireModels;
 using NUnit.Framework;

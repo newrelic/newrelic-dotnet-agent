@@ -1,5 +1,4 @@
-﻿using System;
-using System.Web.Routing;
+﻿using System.Web.Routing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.Asp35.Shared

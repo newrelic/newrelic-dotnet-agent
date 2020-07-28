@@ -1,5 +1,3 @@
-using System;
-
 namespace NewRelic.Agent.Core.Exceptions
 {
 
@@ -8,7 +6,7 @@ namespace NewRelic.Agent.Core.Exceptions
     /// </summary>
     public class ForceDisconnectException : InstructionException
     {
-        public ForceDisconnectException(String message) : base(message)
+        public ForceDisconnectException(string message) : base(message)
         {
         }
     }

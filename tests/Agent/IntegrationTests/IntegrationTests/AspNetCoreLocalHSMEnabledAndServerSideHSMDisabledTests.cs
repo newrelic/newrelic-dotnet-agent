@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.IntegrationTestHelpers;
+﻿using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -7,7 +6,7 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
-        private const String QueryStringParameterValue = @"my thing";
+        private const string QueryStringParameterValue = @"my thing";
 
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 

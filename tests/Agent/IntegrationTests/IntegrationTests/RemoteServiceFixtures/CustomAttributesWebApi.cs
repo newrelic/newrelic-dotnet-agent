@@ -13,13 +13,13 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class CustomAttributesWebApi : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = "CustomAttributesWebApi";
-        private const String ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi.exe";
-        private const String TargetFramework = "net451";
+        private const string ApplicationDirectoryName = "CustomAttributesWebApi";
+        private const string ExecutableName = "NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi.exe";
+        private const string TargetFramework = "net451";
 
-        public readonly String ExpectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
-        public readonly String ExpectedTracedErrorPathLegacy = @"DotNet/Microsoft.Owin.Host.HttpListener.OwinHttpListener/StartProcessingRequest";
-        public readonly String ExpectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
+        public readonly string ExpectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
+        public readonly string ExpectedTracedErrorPathLegacy = @"DotNet/Microsoft.Owin.Host.HttpListener.OwinHttpListener/StartProcessingRequest";
+        public readonly string ExpectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
 
         public CustomAttributesWebApi() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))
         {
@@ -27,10 +27,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void SpinupRequest()
         {
-            var address = String.Format("http://{0}:{1}/api/IgnoreTransaction", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/IgnoreTransaction", DestinationServerName, Port);
             var webClient = new WebClient();
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("success", result);
         }
@@ -45,7 +45,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
                 try
                 {
                     var httpClient = new HttpClient();
-                    var address = String.Format("http://{0}:{1}/api/IgnoreTransaction", DestinationServerName, Port);
+                    var address = string.Format("http://{0}:{1}/api/IgnoreTransaction", DestinationServerName, Port);
                     httpClient.Timeout = TimeSpan.FromSeconds(1);
                     Task.Run(() => httpClient.GetStringAsync(address)).Wait();
                     return;
@@ -62,60 +62,60 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Get()
         {
-            var address = String.Format("http://{0}:{1}/api/CustomAttributes", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/CustomAttributes", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("success", result);
         }
 
         public void GetCustomErrorAttributes()
         {
-            var address = String.Format("http://{0}:{1}/api/CustomErrorAttributes", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/CustomErrorAttributes", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("success", result);
         }
 
         public void Get404()
         {
-            var address = String.Format("http://{0}:{1}/api/CustomErrorAttributes", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/CustomErrorAttributes", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("success", result);
         }
 
         public void GetKeyNull()
         {
-            var address = String.Format("http://{0}:{1}/api/CustomAttributesKeyNull", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/CustomAttributesKeyNull", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("success", result);
         }
 
         public void GetValueNull()
         {
-            var address = String.Format("http://{0}:{1}/api/CustomAttributesValueNull", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/CustomAttributesValueNull", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("success", result);
         }

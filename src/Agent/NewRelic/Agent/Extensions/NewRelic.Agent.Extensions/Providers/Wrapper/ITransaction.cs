@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="databaseName">The name of database where the current query is being executed.</param>
         /// <exception cref="System.ArgumentNullException">Is thrown if <paramref name="operation"/> is null.</exception>
         /// <returns>An opaque object that will be needed when you want to end the segment.</returns>
-        ISegment StartDatastoreSegment(MethodCall methodCall, String operation, DatastoreVendor datastoreVendorName, String model = null, String commandText = null, String host = null, String portPathOrId = null, String databaseName = null);
+        ISegment StartDatastoreSegment(MethodCall methodCall, string operation, DatastoreVendor datastoreVendorName, string model = null, string commandText = null, string host = null, string portPathOrId = null, string databaseName = null);
 
         /// <summary>
         /// Creates a segment for an external request operation.
@@ -46,7 +46,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="method">The method of the request, such as an HTTP verb (e.g. GET or POST)</param>
         /// <exception cref="System.ArgumentNullException">Is thrown if <paramref name="destinationUri"/> or <paramref name="method"/> is null.</exception>
         /// <returns>An opaque object that will be needed when you want to end the segment.</returns>
-        ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, String method);
+        ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method);
 
 
 
@@ -58,7 +58,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="methodName">The name of the method. Must not be null.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
-        ISegment StartMethodSegment(MethodCall methodCall, String typeName, String methodName);
+        ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName);
 
         /// <summary>
         /// Creates a segment with the &apos;Custom&apos; prefix for a method call.
@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="segmentName">The name of the custom segment. Must not be null and will be truncated to 255 characters.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
-        ISegment StartCustomSegment(MethodCall methodCall, String segmentName);
+        ISegment StartCustomSegment(MethodCall methodCall, string segmentName);
 
         /// <summary>
         /// Creates a segment for sending to or receiving from a message brokering system.
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="destinationName">Can be null.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed when you want to end the segment.</returns>
-        ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, String brokerVendorName, String destinationName = null);
+        ISegment StartMessageBrokerSegment(MethodCall methodCall, MessageBrokerDestinationType destinationType, MessageBrokerAction operation, string brokerVendorName, string destinationName = null);
 
         /// <summary>
         /// Starts a transaction segment. Does nothing if there is no current transaction.
@@ -88,19 +88,19 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="segmentName">The name of the segment that will be created. Must not be null.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <returns>an opaque object that will be needed if you want to end the segment.</returns>
-        ISegment StartTransactionSegment(MethodCall methodCall, String segmentName);
+        ISegment StartTransactionSegment(MethodCall methodCall, string segmentName);
 
         /// <summary>
         /// Returns metadata that the agent wants to be attached to outbound requests.
         /// </summary>
         /// <returns></returns>
-        IEnumerable<KeyValuePair<String, String>> GetRequestMetadata();
+        IEnumerable<KeyValuePair<string, string>> GetRequestMetadata();
 
         /// <summary>
         /// Returns metadata that the agent wants to be attached to outbound responses.
         /// </summary>
         /// <returns>Collection of key value pairs representing the response metadata</returns>
-        IEnumerable<KeyValuePair<String, String>> GetResponseMetadata();
+        IEnumerable<KeyValuePair<string, string>> GetResponseMetadata();
 
         /// <summary>
         /// Tell the agent about an error that just occurred in the instrumented application.  If there is a transaction running the transaction will be flagged as an error transaction.

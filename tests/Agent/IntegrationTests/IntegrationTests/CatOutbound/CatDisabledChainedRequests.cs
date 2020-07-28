@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -70,7 +69,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
                 new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{expectedCrossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Chained" },
                 new Assertions.ExpectedMetric { metricName = @"ClientApplication/[^/]+/all", IsRegexName = true }
             };
-            var expectedCallerTraceSegmentRegexes = new List<String>
+            var expectedCallerTraceSegmentRegexes = new List<string>
             {
                 "External/[^/]+/Stream/GET"
             };

@@ -12,7 +12,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
 
         private static class Statics
         {
-            public static readonly Func<HttpWriter, Boolean> IgnoringFurtherWrites = VisibilityBypasser.Instance.GeneratePropertyAccessor<HttpWriter, Boolean>("IgnoringFurtherWrites");
+            public static readonly Func<HttpWriter, bool> IgnoringFurtherWrites = VisibilityBypasser.Instance.GeneratePropertyAccessor<HttpWriter, bool>("IgnoringFurtherWrites");
         }
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)

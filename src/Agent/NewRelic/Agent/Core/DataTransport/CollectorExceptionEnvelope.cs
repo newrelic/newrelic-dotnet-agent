@@ -20,12 +20,12 @@ namespace NewRelic.Agent.Core.DataTransport
 
     public class CollectorExceptionEnvelopeConverter : JsonConverter
     {
-        public override void WriteJson(JsonWriter writer, Object value, Newtonsoft.Json.JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
         {
             throw new NotImplementedException();
         }
 
-        public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
         {
             var jToken = JToken.Load(reader);
             if (jToken == null)
@@ -39,7 +39,7 @@ namespace NewRelic.Agent.Core.DataTransport
             if (jToken.Type != JTokenType.Object)
                 return new Exception(jToken.ToString());
 
-            var dictionary = jToken.ToObject<IDictionary<String, Object>>();
+            var dictionary = jToken.ToObject<IDictionary<string, object>>();
             var message = dictionary.GetValueOrDefault("message") ?? jToken.ToString();
 
             var type = dictionary.GetValueOrDefault("error_type");
@@ -49,7 +49,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return new Exception(message.ToString());
         }
 
-        public override Boolean CanConvert(Type objectType)
+        public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(CollectorExceptionEnvelope);
         }

@@ -1,9 +1,7 @@
 ﻿using System;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -30,9 +28,9 @@ namespace NewRelic.Agent.Core.Transformers
         public void TransformSegment_NullStats()
         {
 
-            const String host = "www.foo.com";
+            const string host = "www.foo.com";
             var uri = $"http://{host}/bar";
-            const String method = "GET";
+            const string method = "GET";
 
             var segment = GetSegment(uri, method);
 
@@ -45,9 +43,9 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesWebSegmentMetrics()
         {
-            const String host = "www.foo.com";
+            const string host = "www.foo.com";
             var uri = $"http://{host}/bar";
-            const String method = "GET";
+            const string method = "GET";
 
             var segment = GetSegment(uri, method, 5);
 
@@ -62,7 +60,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(4, unscoped.Count);
 
-            const String segmentMetric = "External/www.foo.com/Stream/GET";
+            const string segmentMetric = "External/www.foo.com/Stream/GET";
             Assert.IsTrue(unscoped.ContainsKey("External/all"));
             Assert.IsTrue(unscoped.ContainsKey("External/allWeb"));
             Assert.IsTrue(unscoped.ContainsKey("External/www.foo.com/all"));
@@ -77,7 +75,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(5, data.Value3);
             Assert.AreEqual(5, data.Value4);
 
-            var unscopedMetricsUsingDurationOnly = new String[] { "External/all", "External/allWeb", "External/www.foo.com/all" };
+            var unscopedMetricsUsingDurationOnly = new string[] { "External/all", "External/allWeb", "External/www.foo.com/all" };
 
             foreach (var current in unscopedMetricsUsingDurationOnly)
             {
@@ -89,7 +87,7 @@ namespace NewRelic.Agent.Core.Transformers
                 Assert.AreEqual(5, data.Value4);
             }
 
-            var unscopedMetricsUsingExclusive = new String[] { segmentMetric };
+            var unscopedMetricsUsingExclusive = new string[] { segmentMetric };
 
             foreach (var current in unscopedMetricsUsingExclusive)
             {
@@ -105,9 +103,9 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesOtherSegmentMetrics()
         {
-            const String host = "www.foo.com";
+            const string host = "www.foo.com";
             var uri = $"http://{host}/bar";
-            const String method = "GET";
+            const string method = "GET";
 
             var segment = GetSegment(uri, method, 5);
 
@@ -122,7 +120,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(4, unscoped.Count);
 
-            const String segmentMetric = "External/www.foo.com/Stream/GET";
+            const string segmentMetric = "External/www.foo.com/Stream/GET";
             Assert.IsTrue(unscoped.ContainsKey("External/all"));
             Assert.IsTrue(unscoped.ContainsKey("External/allOther"));
             Assert.IsTrue(unscoped.ContainsKey("External/www.foo.com/all"));
@@ -137,7 +135,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(5, data.Value3);
             Assert.AreEqual(5, data.Value4);
 
-            var unscopedMetricsUsingDurationOnly = new String[] { "External/all", "External/allOther", "External/www.foo.com/all" };
+            var unscopedMetricsUsingDurationOnly = new string[] { "External/all", "External/allOther", "External/www.foo.com/all" };
 
             foreach (var current in unscopedMetricsUsingDurationOnly)
             {
@@ -149,7 +147,7 @@ namespace NewRelic.Agent.Core.Transformers
                 Assert.AreEqual(5, data.Value4);
             }
 
-            var unscopedMetricsUsingExclusive = new String[] { segmentMetric };
+            var unscopedMetricsUsingExclusive = new string[] { segmentMetric };
 
             foreach (var current in unscopedMetricsUsingExclusive)
             {
@@ -165,9 +163,9 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesOtherWithCat()
         {
-            const String host = "www.bar.com";
+            const string host = "www.bar.com";
             var uri = $"http://{host}/foo";
-            const String method = "GET";
+            const string method = "GET";
             var externalCrossProcessId = "cpId";
             var externalTransactionName = "name";
             var catResponseData = new CrossApplicationResponseData(externalCrossProcessId, externalTransactionName, 1.1f, 2.2f, 3, "guid", false);
@@ -185,8 +183,8 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(6, unscoped.Count);
 
-            const String segmentMetric = "External/www.bar.com/Stream/GET";
-            const String txMetric = "ExternalTransaction/www.bar.com/cpId/name";
+            const string segmentMetric = "External/www.bar.com/Stream/GET";
+            const string txMetric = "ExternalTransaction/www.bar.com/cpId/name";
 
             Assert.IsTrue(unscoped.ContainsKey("External/all"));
             Assert.IsTrue(unscoped.ContainsKey("External/allOther"));
@@ -205,7 +203,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(5, data.Value3);
             Assert.AreEqual(5, data.Value4);
 
-            var unscopedMetricsUsingDurationOnly = new String[] { "External/all", "External/allOther", "External/www.bar.com/all" };
+            var unscopedMetricsUsingDurationOnly = new string[] { "External/all", "External/allOther", "External/www.bar.com/all" };
 
             foreach (var current in unscopedMetricsUsingDurationOnly)
             {
@@ -217,7 +215,7 @@ namespace NewRelic.Agent.Core.Transformers
                 Assert.AreEqual(5, data.Value4);
             }
 
-            var unscopedMetricsUsingExclusive = new String[] { segmentMetric, txMetric };
+            var unscopedMetricsUsingExclusive = new string[] { segmentMetric, txMetric };
 
             foreach (var current in unscopedMetricsUsingExclusive)
             {
@@ -240,9 +238,9 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesWebWithCat()
         {
-            const String host = "www.bar.com";
+            const string host = "www.bar.com";
             var uri = $"http://{host}/foo";
-            const String method = "GET";
+            const string method = "GET";
             var externalCrossProcessId = "cpId";
             var externalTransactionName = "otherTxName";
             var catResponseData = new CrossApplicationResponseData(externalCrossProcessId, externalTransactionName, 1.1f, 2.2f, 3, "guid", false);
@@ -260,8 +258,8 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(6, unscoped.Count);
 
-            const String segmentMetric = "External/www.bar.com/Stream/GET";
-            const String txMetric = "ExternalTransaction/www.bar.com/cpId/otherTxName";
+            const string segmentMetric = "External/www.bar.com/Stream/GET";
+            const string txMetric = "ExternalTransaction/www.bar.com/cpId/otherTxName";
 
             Assert.IsTrue(unscoped.ContainsKey("External/all"));
             Assert.IsTrue(unscoped.ContainsKey("External/allWeb"));
@@ -288,9 +286,9 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void GetTransactionTraceName_ReturnsCorrectName_IfNoCatResponse()
         {
-            const String host = "www.foo.com";
+            const string host = "www.foo.com";
             var uri = $"http://{host}/bar";
-            const String method = "GET";
+            const string method = "GET";
             var segment = GetSegment(uri, method, null);
 
             var transactionTraceName = segment.GetTransactionTraceName();
@@ -301,9 +299,9 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void GetTransactionTraceName_ReturnsCorrectName_IfCatResponse()
         {
-            const String host = "www.foo.com";
+            const string host = "www.foo.com";
             var uri = $"http://{host}/bar";
-            const String method = "GET";
+            const string method = "GET";
             var catResponseData = new CrossApplicationResponseData("cpId", "trxName", 1.1f, 2.2f, 3, "guid", false);
             var segment = GetSegment(uri, method, catResponseData);
 
@@ -313,7 +311,7 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-        private static Segment GetSegment(String uri, String method, CrossApplicationResponseData catResponseData = null)
+        private static Segment GetSegment(string uri, string method, CrossApplicationResponseData catResponseData = null)
         {
             var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
             var builder = new TypedSegment<ExternalSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), data);
@@ -321,10 +319,10 @@ namespace NewRelic.Agent.Core.Transformers
             return builder;
         }
 
-        private static TypedSegment<ExternalSegmentData> GetSegment(String uri, String method, double duration, CrossApplicationResponseData catResponseData = null)
+        private static TypedSegment<ExternalSegmentData> GetSegment(string uri, string method, double duration, CrossApplicationResponseData catResponseData = null)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            var parameters = (new ConcurrentDictionary<String, Object>());
+            var parameters = (new ConcurrentDictionary<string, object>());
             var myUri = new Uri(uri);
 
             var data = new ExternalSegmentData(new Uri(uri), method, catResponseData);
