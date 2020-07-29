@@ -5,7 +5,7 @@
 #### .NET Agent
 New Relic's .NET agent monitors your .NET app, giving you an end-to-end view of your app's performance. It works with all .NET compatible languages, such as C#, VB.NET and CLI.
 
-Note: this branch, `net35/main`, is maintained for backwards compatibility with .NET Framework 3.5 and corresponds to the 6.x versions of the New Relic .NET agent.  It primarily only recieves security patches and critical bug fixes.
+Note: this branch, `net35/main`, is maintained for backwards compatibility with .NET Framework 3.5 and corresponds to the 6.x versions of the New Relic .NET agent.  It primarily receives security patches and critical bug fixes.
 
 ## Support
 
