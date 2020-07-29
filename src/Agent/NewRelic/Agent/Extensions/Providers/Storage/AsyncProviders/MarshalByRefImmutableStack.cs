@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace NewRelic.Providers.AsyncProviders
+namespace NewRelic.Providers.Storage.AsyncProviders
 {
     /// <summary>
     /// A thin wrapper around ImmutableStack that implements ISerialize and returns null when serialized. This type is used to allow us to store data inside CallContext and meet the serializability contract. We don't need to make this data truly serializable because the only time the stack is ever serialized is when we are crossing an app domain boundary, in which case we don't care about having the stack come out on the other end.

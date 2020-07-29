@@ -1,5 +1,6 @@
-﻿
-namespace NewRelic.Agent.Extensions.Providers.TransactionContext
+﻿using NewRelic.Agent.Extensions.Providers;
+
+namespace NewRelic.Providers.Storage.TransactionContext
 {
     /// <summary>
     /// ITransactionContext implementation for version 3 of WCF.
@@ -24,7 +25,7 @@ namespace NewRelic.Agent.Extensions.Providers.TransactionContext
         {
             var currentWcf3OperationContext = Wcf3OperationContextExtension.Current;
             if (currentWcf3OperationContext == null)
-                return default(T);
+                return default;
 
             return (T)currentWcf3OperationContext.Items[_key];
         }

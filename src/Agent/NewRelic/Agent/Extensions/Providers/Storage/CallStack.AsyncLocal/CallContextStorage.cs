@@ -1,5 +1,4 @@
-﻿
-namespace NewRelic.Providers.CallStack.AsyncLocal
+﻿namespace NewRelic.Providers.Storage.CallStack.AsyncLocal
 {
     public class CallContextStorage<T> : CallContextStorageBase<T>
     {
@@ -22,7 +21,7 @@ namespace NewRelic.Providers.CallStack.AsyncLocal
 
         public override void Clear()
         {
-            _storage.Value = default(T);
+            _storage.Value = default;
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿
-namespace NewRelic.Providers.CallStack.AsyncLocal
+﻿namespace NewRelic.Providers.Storage.CallStack.AsyncLocal
 {
     public class CallContextWrappedStorage<T> : CallContextStorageBase<T>
     {
@@ -12,7 +11,7 @@ namespace NewRelic.Providers.CallStack.AsyncLocal
 
         public override T GetData()
         {
-            return (_storage.Value == null) ? default(T) : (T)_storage.Value.GetValue();
+            return _storage.Value == null ? default : (T)_storage.Value.GetValue();
         }
 
         public override void SetData(T value)
