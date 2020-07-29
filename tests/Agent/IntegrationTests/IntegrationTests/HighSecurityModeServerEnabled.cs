@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.IntegrationTestHelpers;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
