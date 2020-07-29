@@ -24,15 +24,13 @@ SPDX-License-Identifier: Apache-2.0
   <?define RootSourcePath = "$(var.SolutionDir)..\..\.."?>
   <?define AgentSourcePath = "$(var.RootSourcePath)\src\Agent"?>
 
-  <?ifdef "$(env.NR_DEV_HOMEROOT)"?>
-		<?define HomeRootPath = "$(env.NR_DEV_HOMEROOT)"?>
-  <?else?>
-		<?define HomeRootPath = "$(var.AgentSourcePath)"?>
+  <?ifdef "$(env.NR_DEV_HOMEROOT)"?> <?define HomeRootPath = "$(env.NR_DEV_HOMEROOT)"?>
+    <?else?> <?define HomeRootPath = "$(var.AgentSourcePath)"?>
   <?endif?>
 
-  <?define HomeFolderPath = "$(var.HomeRootPath)\New Relic Home $(var.Platform)"?>
-  <?define HomeFolderPathx86 = "$(var.HomeRootPath)\New Relic Home x86"?>
-  <?define HomeFolderPathx64 = "$(var.HomeRootPath)\New Relic Home x64"?>
+  <?define HomeFolderPath = "$(var.HomeRootPath)\newrelichome_$(var.Platform)"?>
+  <?define HomeFolderPathx86 = "$(var.HomeRootPath)\newrelichome_x86"?>
+  <?define HomeFolderPathx64 = "$(var.HomeRootPath)\newrelichome_x64"?>
 
 	<Product Id="*" Name="$(var.ProductName)" Language="1033" Version="!(bind.FileVersion.NewRelic.Agent.Core.dll)" Manufacturer="New Relic" UpgradeCode="{5AECDCE4-3892-4C79-BA1B-88EEF252BB25}">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Comments="Version: !(bind.FileVersion.NewRelic.Agent.Core.dll)" />
