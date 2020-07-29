@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System;
 using System.Net;
 using IBM.Data.DB2;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;

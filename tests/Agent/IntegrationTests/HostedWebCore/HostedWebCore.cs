@@ -1,8 +1,4 @@
-﻿/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Globalization;
