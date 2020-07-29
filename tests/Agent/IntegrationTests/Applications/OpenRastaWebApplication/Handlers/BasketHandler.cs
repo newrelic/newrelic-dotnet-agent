@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using OpenRastaSite.Resources;
+﻿using OpenRastaSite.Resources;
 
 namespace OpenRastaSite.Handlers
 {

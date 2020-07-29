@@ -1,10 +1,8 @@
-﻿using JetBrains.Annotations;
-
+﻿
 namespace NewRelic.Providers.CallStack.AsyncLocal
 {
     public class CallContextStorage<T> : CallContextStorageBase<T>
     {
-        [NotNull]
         private readonly AsyncLocal<T> _storage;
 
         public CallContextStorage(string key)

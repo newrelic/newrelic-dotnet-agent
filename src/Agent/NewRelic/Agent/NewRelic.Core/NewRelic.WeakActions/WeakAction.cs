@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace NewRelic.WeakActions
 {
     public class WeakAction
     {
-        [NotNull]
         protected readonly WeakReference WeakReference;
-        [NotNull]
         protected readonly MethodInfo MethodInfo;
 
-        protected WeakAction(Object target, MethodInfo methodInfo)
+        protected WeakAction(object target, MethodInfo methodInfo)
         {
             if (methodInfo == null)
                 throw new ArgumentException("action.Method is null.", "methodInfo");
@@ -25,12 +22,10 @@ namespace NewRelic.WeakActions
     public class WeakAction<TTarget, T> : WeakAction, IWeakAction<T> where TTarget : class
     {
         private delegate void OpenDelegate(TTarget @this, T type);
-
-        [NotNull]
         private readonly OpenDelegate _openDelegate;
         private Action<Action<T>> _actionWasGarbageCollectedCallback;
 
-        public WeakAction([NotNull] Action<T> action, Action<Action<T>> actionWasGarbageCollectedCallback) :
+        public WeakAction(Action<T> action, Action<Action<T>> actionWasGarbageCollectedCallback) :
             base(action.Target, action.Method)
         {
             // create an open delegate to the action
@@ -65,12 +60,10 @@ namespace NewRelic.WeakActions
     public class WeakAction<TTarget, T1, T2> : WeakAction, IWeakAction<T1, T2> where TTarget : class
     {
         private delegate void OpenDelegate(TTarget @this, T1 type1, T2 type2);
-
-        [NotNull]
         private readonly OpenDelegate _openDelegate;
         private Action<Action<T1, T2>> _actionWasGarbageCollectedCallback;
 
-        public WeakAction([NotNull] Action<T1, T2> action, Action<Action<T1, T2>> actionWasGarbageCollectedCallback) :
+        public WeakAction(Action<T1, T2> action, Action<Action<T1, T2>> actionWasGarbageCollectedCallback) :
             base(action.Target, action.Method)
         {
             // save off the delegate we should call should the target of this action be destroyed

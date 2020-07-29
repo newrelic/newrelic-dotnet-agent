@@ -5,7 +5,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
@@ -19,72 +18,55 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
     {
         #region Constant/Static
 
-        [NotNull]
-        private static readonly String AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+        private static readonly string AssemblyBinPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
-        [NotNull]
-        private static readonly String RepositoryRootPath = Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..", "..", "..");
+        private static readonly string RepositoryRootPath = Path.Combine(AssemblyBinPath, "..", "..", "..", "..", "..", "..", "..");
 
-        [NotNull]
-        protected static readonly String SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
+        protected static readonly string SourceIntegrationTestsSolutionDirectoryPath = Path.Combine(RepositoryRootPath, "tests", "Agent", "IntegrationTests");
 
-        [NotNull]
-        protected readonly String SourceApplicationsDirectoryPath;
+        protected readonly string SourceApplicationsDirectoryPath;
 
-        [NotNull]
-        private static readonly String SourceNewRelicHomeDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64");
+        private static readonly string SourceNewRelicHomeDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64");
 
-        [NotNull]
-        private static readonly String SourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64 CoreClr");
+        private static readonly string SourceNewRelicHomeCoreClrDirectoryPath = Path.Combine(RepositoryRootPath, "src", "Agent", "New Relic Home x64 CoreClr");
 
-        [NotNull]
-        private static readonly String SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
+        private static readonly string SourceApplicationLauncherProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "ApplicationLauncher");
 
-        [NotNull]
-        private static readonly String SourceApplicationLauncherDirectoryPath = Path.Combine(SourceApplicationLauncherProjectDirectoryPath, "bin", Utilities.Configuration);
+        private static readonly string SourceApplicationLauncherDirectoryPath = Path.Combine(SourceApplicationLauncherProjectDirectoryPath, "bin", Utilities.Configuration);
 
-        [NotNull]
-        private static String DestinationWorkingDirectoryRemotePath { get { return EnvironmentVariables.DestinationWorkingDirectoryRemotePath ?? DestinationWorkingDirectoryRemoteDefault; } }
+        private static string DestinationWorkingDirectoryRemotePath { get { return EnvironmentVariables.DestinationWorkingDirectoryRemotePath ?? DestinationWorkingDirectoryRemoteDefault; } }
 
-        [NotNull]
-        private static readonly String DestinationWorkingDirectoryRemoteDefault = Path.Combine(@"\\", Dns.GetHostName(), "C$", "IntegrationTestWorkingDirectory");
+        private static readonly string DestinationWorkingDirectoryRemoteDefault = Path.Combine(@"\\", Dns.GetHostName(), "C$", "IntegrationTestWorkingDirectory");
 
         #endregion
 
         #region Private
 
-        [CanBeNull]
-        private String _port;
+        private string _port;
 
-        [NotNull]
-        private String DestinationNewRelicLogFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Logs"); } }
+        private string DestinationNewRelicLogFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Logs"); } }
 
         #endregion
 
         #region Abstract/Virtual
 
-        [NotNull]
-        protected abstract String ApplicationDirectoryName { get; }
+        protected abstract string ApplicationDirectoryName { get; }
 
-        [NotNull]
-        protected abstract String SourceApplicationDirectoryPath { get; }
+        protected abstract string SourceApplicationDirectoryPath { get; }
 
         public abstract void CopyToRemote();
 
-        public abstract Process Start(String commandLineArguments, bool captureStandardOutput = false, bool doProfile = true);
+        public abstract Process Start(string commandLineArguments, bool captureStandardOutput = false, bool doProfile = true);
 
         public bool CaptureStandardOutputRequired { get; set; }
 
         #endregion
 
-        [NotNull]
-        public const String AppName = "IntegrationTestAppName";
+        public const string AppName = "IntegrationTestAppName";
 
-        [NotNull]
-        private readonly String _uniqueFolderName = Guid.NewGuid().ToString();
+        private readonly string _uniqueFolderName = Guid.NewGuid().ToString();
 
-        [CanBeNull]
-        protected UInt32? RemoteProcessId
+        protected uint? RemoteProcessId
         {
             get
             {
@@ -95,40 +77,30 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 _remoteProcessId = value;
             }
         }
-        private UInt32? _remoteProcessId;
+        private uint? _remoteProcessId;
 
-        protected const String HostedWebCoreTargetFramework = "net451";
+        protected const string HostedWebCoreTargetFramework = "net451";
 
         public bool KeepWorkingDirectory { get; set; } = false;
 
-        [NotNull]
-        protected String DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, _uniqueFolderName); } }
+        protected string DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, _uniqueFolderName); } }
 
-        [NotNull]
-        protected String DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "New Relic Home"); } }
+        protected string DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "New Relic Home"); } }
 
-        [NotNull]
-        public String DestinationApplicationDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName); } }
+        public string DestinationApplicationDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName); } }
 
-        [NotNull]
-        protected String DestinationLauncherDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "ApplicationLauncher"); } }
+        protected string DestinationLauncherDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "ApplicationLauncher"); } }
 
-        [NotNull]
-        protected String DestinationApplicationLauncherExecutablePath { get { return Path.Combine(DestinationLauncherDirectoryPath, HostedWebCoreTargetFramework, "ApplicationLauncher.exe"); } }
+        protected string DestinationApplicationLauncherExecutablePath { get { return Path.Combine(DestinationLauncherDirectoryPath, HostedWebCoreTargetFramework, "ApplicationLauncher.exe"); } }
 
-        [NotNull]
-        public String Port { get { return _port ?? (_port = _port = RandomPortGenerator.NextPortString()); } }
+        public string Port { get { return _port ?? (_port = _port = RandomPortGenerator.NextPortString()); } }
 
-        [NotNull]
-        public readonly String DestinationServerName = new Uri(DestinationWorkingDirectoryRemotePath).Host;
+        public readonly string DestinationServerName = new Uri(DestinationWorkingDirectoryRemotePath).Host;
 
-        [NotNull]
-        public String DestinationNewRelicConfigFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "newrelic.config"); } }
+        public string DestinationNewRelicConfigFilePath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "newrelic.config"); } }
 
-        [NotNull]
-        public String DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Extensions"); } }
+        public string DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Extensions"); } }
 
-        [NotNull]
         public AgentLogFile AgentLog { get { return new AgentLogFile(DestinationNewRelicLogFilePath, Timing.TimeToConnect); } }
 
         protected bool _isCoreApp;
@@ -236,9 +208,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "completeTransactionsOnThread", "true");
         }
 
-        public void AddInstrumentationPoint(String extensionFileName, String assemblyName, String className, String methodName, String tracerFactoryName = null)
+        public void AddInstrumentationPoint(string extensionFileName, string assemblyName, string className, string methodName, string tracerFactoryName = null)
         {
-            const String extensionFileContentsTemplate =
+            const string extensionFileContentsTemplate =
 @"<?xml version=""1.0"" encoding=""utf-8""?>
 <extension xmlns=""urn:newrelic-extension"">
     <instrumentation>
@@ -249,17 +221,17 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         </tracerFactory>
     </instrumentation>
 </extension>";
-            var extensionFileContents = String.Format(extensionFileContentsTemplate, tracerFactoryName, assemblyName, className, methodName);
+            var extensionFileContents = string.Format(extensionFileContentsTemplate, tracerFactoryName, assemblyName, className, methodName);
             var extensionFilePath = Path.Combine(DestinationNewRelicExtensionsDirectoryPath, extensionFileName);
             File.WriteAllText(extensionFilePath, extensionFileContents);
         }
 
-        public void AddAppSetting([CanBeNull] String key, [CanBeNull] String value)
+        public void AddAppSetting(string key, string value)
         {
             if (key == null || value == null)
                 return;
 
-            var attributes = new Dictionary<String, String> { { "key", key }, { "value", value } };
+            var attributes = new Dictionary<string, string> { { "key", key }, { "value", value } };
             CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "appSettings", "add" }, attributes);
         }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -20,22 +19,11 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     public class CustomEventAggregatorTests
     {
-        [NotNull]
         private IDataTransportService _dataTransportService;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private CustomEventAggregator _customEventAggregator;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private ConfigurationAutoResponder _configurationAutoResponder;
-
-        [NotNull]
         private Action _harvestAction;
 
         [SetUp]
@@ -320,9 +308,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportCustomEventCollected(), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<UInt32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportCustomEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportCustomEventsSent(Arg.IsAny<int>()), Occurs.Never());
         }
 
         [Test]
@@ -351,8 +339,6 @@ namespace NewRelic.Agent.Core.Aggregators
         }
 
         #region Helpers
-
-        [NotNull]
         private static IConfiguration GetDefaultConfiguration(int? versionNumber = null)
         {
             var configuration = Mock.Create<IConfiguration>();

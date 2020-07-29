@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using System.Web.Mvc;
 using NewRelic.Agent.IntegrationTests.Shared;
 using RabbitMQ.Client;
@@ -11,10 +10,10 @@ namespace RabbitMqBasicMvcApplication.Controllers
         private static readonly ConnectionFactory Factory = new ConnectionFactory() { HostName = RabbitMqConfiguration.RabbitMqServerIp };
 
         [HttpGet]
-        public String RabbitMQ_SendReceive(String queueName, String message)
+        public string RabbitMQ_SendReceive(string queueName, string message)
         {
-            var receiveMessage = String.Empty;
-            if (String.IsNullOrEmpty(message)) { message = "Caller provided no message."; }
+            var receiveMessage = string.Empty;
+            if (string.IsNullOrEmpty(message)) { message = "Caller provided no message."; }
 
             using (var connection = Factory.CreateConnection())
             using (var channel = connection.CreateModel())
@@ -37,11 +36,11 @@ namespace RabbitMqBasicMvcApplication.Controllers
                 receiveMessage = Encoding.UTF8.GetString(basicGetResult.Body);
             }
 
-            return String.Format("method=Send,message={0},queueName={1}", receiveMessage, queueName);
+            return string.Format("method=Send,message={0},queueName={1}", receiveMessage, queueName);
         }
 
         [HttpGet]
-        public String RabbitMQ_SendReceiveTopic(String exchangeName, String topicName, String message)
+        public string RabbitMQ_SendReceiveTopic(string exchangeName, string topicName, string message)
         {
             using (var connection = Factory.CreateConnection())
             using (var channel = connection.CreateModel())
@@ -71,10 +70,10 @@ namespace RabbitMqBasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String RabbitMQ_SendReceiveTempQueue(String message)
+        public string RabbitMQ_SendReceiveTempQueue(string message)
         {
-            var resultMessage = String.Empty;
-            var queueName = String.Empty;
+            var resultMessage = string.Empty;
+            var queueName = string.Empty;
 
             using (var connection = Factory.CreateConnection())
             using (var channel = connection.CreateModel())
@@ -98,7 +97,7 @@ namespace RabbitMqBasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String RabbitMQ_QueuePurge(string queueName)
+        public string RabbitMQ_QueuePurge(string queueName)
         {
             using (var connection = Factory.CreateConnection())
             using (var channel = connection.CreateModel())

@@ -9,7 +9,7 @@ namespace BasicMvcApplication.Controllers
     public class CustomInstrumentationController : Controller
     {
         [HttpGet]
-        public String Get()
+        public string Get()
         {
             // Call various methods which have been custom instrumented
             CustomMethodDefaultWrapper();
@@ -48,7 +48,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String GetIgnoredByIgnoreTransactionWrapper()
+        public string GetIgnoredByIgnoreTransactionWrapper()
         {
             // Call various methods which have been custom instrumented
             CustomMethodIgnoreTransactionWrapper();
@@ -63,7 +63,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public String GetIgnoredByIgnoreTransactionTracerFactory()
+        public string GetIgnoredByIgnoreTransactionTracerFactory()
         {
             // Call various methods which have been custom instrumented
             CustomMethodIgnoreTransactionTracerFactory();
@@ -78,7 +78,7 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<String> GetIgnoredByIgnoreTransactionWrapperAsync()
+        public async Task<string> GetIgnoredByIgnoreTransactionWrapperAsync()
         {
             // Call various methods which have been custom instrumented
             await CustomMethodIgnoreTransactionWrapperAsync();
@@ -93,20 +93,20 @@ namespace BasicMvcApplication.Controllers
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static String CustomSegmentTransactionSegmentWrapper(String segmentName)
+        private static string CustomSegmentTransactionSegmentWrapper(string segmentName)
         {
             return segmentName;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static String CustomSegmentAlternateParameterNamingTheSegment(int x, String segmentName)
+        private static string CustomSegmentAlternateParameterNamingTheSegment(int x, string segmentName)
         {
             x++;
             return segmentName;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static String CustomSegmentTracer(String segmentName)
+        private static string CustomSegmentTracer(string segmentName)
         {
             return segmentName;
         }

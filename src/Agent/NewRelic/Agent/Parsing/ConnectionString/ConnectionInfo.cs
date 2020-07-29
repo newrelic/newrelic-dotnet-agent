@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Parsing.ConnectionString
 {
@@ -9,7 +8,7 @@ namespace NewRelic.Parsing.ConnectionString
         {
         }
 
-        public ConnectionInfo(String host, String portPathOrId, String databaseName, String instanceName = null)
+        public ConnectionInfo(string host, string portPathOrId, string databaseName, string instanceName = null)
         {
             Host = host;
             PortPathOrId = portPathOrId;
@@ -17,12 +16,12 @@ namespace NewRelic.Parsing.ConnectionString
             InstanceName = instanceName;
         }
 
-        public String Host { get; private set; }
-        public String PortPathOrId { get; private set; }
-        public String DatabaseName { get; private set; }
-        public String InstanceName { get; private set; }
+        public string Host { get; private set; }
+        public string PortPathOrId { get; private set; }
+        public string DatabaseName { get; private set; }
+        public string InstanceName { get; private set; }
 
-        public static ConnectionInfo FromConnectionString(DatastoreVendor vendor, String connectionString)
+        public static ConnectionInfo FromConnectionString(DatastoreVendor vendor, string connectionString)
         {
             IConnectionStringParser parser;
 

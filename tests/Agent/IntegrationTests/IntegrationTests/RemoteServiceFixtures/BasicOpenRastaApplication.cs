@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
+﻿using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -18,8 +7,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     public class BasicOpenRastaApplication : RemoteApplicationFixture
     {
 
-        [CanBeNull]
-        public String ResponseBody { get; private set; }
+        public string ResponseBody { get; private set; }
 
         public BasicOpenRastaApplication() : base(new RemoteWebApplication("OpenRastaWebApplication", ApplicationType.Bounded))
         {

@@ -18,7 +18,7 @@ namespace AspNetCoreMvcBasicRequestsApplication
         {
 
 
-            var commandLine = String.Join(" ", args);
+            var commandLine = string.Join(" ", args);
 
             var result = CommandLineParser.SplitCommandLineIntoArguments(commandLine, true);
 
@@ -55,7 +55,7 @@ namespace AspNetCoreMvcBasicRequestsApplication
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls(String.Format(@"http://localhost:{0}/", Port))
+                .UseUrls(string.Format(@"http://localhost:{0}/", Port))
                 .Build();
     }
 }

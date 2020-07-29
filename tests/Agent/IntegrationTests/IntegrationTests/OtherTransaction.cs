@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class OtherTransaction : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
-        public OtherTransaction([NotNull] RemoteServiceFixtures.AgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
+        public OtherTransaction(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -53,7 +50,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"DotNet/NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor.Program/SomeSlowMethod", metricScope = "OtherTransaction/Custom/MyCustomMetricName",  callCount = 1 }
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MyCustomMetricName",
                 @"NewRelic.Agent.IntegrationTests.Applications.AgentApiExecutor.Program/SomeSlowMethod"

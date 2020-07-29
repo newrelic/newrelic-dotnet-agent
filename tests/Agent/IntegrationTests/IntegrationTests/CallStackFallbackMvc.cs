@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class CallStackFallbackMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public CallStackFallbackMvc([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public CallStackFallbackMvc(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -74,7 +71,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"AuthenticateRequest",
                 @"AuthorizeRequest",
@@ -87,15 +84,15 @@ namespace NewRelic.Agent.IntegrationTests
                 @"UpdateRequestCache",
                 @"EndRequest",
             };
-            var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200" }
             };
-            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
                 {"type", "Transaction"}
             };
-            var expectedTransactionEventIntrinsicAttributes2 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
                 "timestamp",
                 "duration",
@@ -104,7 +101,7 @@ namespace NewRelic.Agent.IntegrationTests
                 "totalTime",
                 "nr.apdexPerfZone"
             };
-            var expectedTransactionEventAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200"}
             };

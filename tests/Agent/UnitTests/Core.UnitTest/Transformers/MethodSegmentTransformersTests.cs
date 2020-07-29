@@ -1,11 +1,8 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Collections;
@@ -17,7 +14,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class MethodSegmentTransformersTests
     {
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -31,8 +27,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_NullStats()
         {
-            const String type = "type";
-            const String method = "method";
+            const string type = "type";
+            const string method = "method";
             var segment = GetSegment(type, method);
 
             //make sure it does not throw
@@ -44,8 +40,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesCustomSegmentMetrics()
         {
-            const String type = "type";
-            const String method = "method";
+            const string type = "type";
+            const string method = "method";
             var segment = GetSegment(type, method, 5);
             segment.ChildFinished(GetSegment("kid", "method", 2));
 
@@ -60,7 +56,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(1, unscoped.Count);
 
-            const String metricName = "DotNet/type/method";
+            const string metricName = "DotNet/type/method";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -82,8 +78,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_TwoTransformCallsSame()
         {
-            const String type = "type";
-            const String method = "method";
+            const string type = "type";
+            const string method = "method";
             var segment = GetSegment(type, method); ;
 
             var txName = new TransactionMetricName("WebTransaction", "Test", false);
@@ -97,7 +93,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(1, unscoped.Count);
 
-            const String metricName = "DotNet/type/method";
+            const string metricName = "DotNet/type/method";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -111,12 +107,12 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_TwoTransformCallsDifferent()
         {
-            const String type = "type";
-            const String method = "method";
+            const string type = "type";
+            const string method = "method";
             var segment = GetSegment(type, method);
 
-            const String type1 = "type1";
-            const String method1 = "method1";
+            const string type1 = "type1";
+            const string method1 = "method1";
             var segment1 = GetSegment(type1, method1);
 
             var txName = new TransactionMetricName("WebTransaction", "Test", false);
@@ -131,7 +127,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(2, scoped.Count);
             Assert.AreEqual(2, unscoped.Count);
 
-            const String metricName = "DotNet/type/method";
+            const string metricName = "DotNet/type/method";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -141,7 +137,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, nameScoped.Value0);
             Assert.AreEqual(1, nameUnscoped.Value0);
 
-            const String metricName1 = "DotNet/type1/method1";
+            const string metricName1 = "DotNet/type1/method1";
             Assert.IsTrue(scoped.ContainsKey(metricName1));
             Assert.IsTrue(unscoped.ContainsKey(metricName1));
 
@@ -159,8 +155,8 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void GetTransactionTraceName_ReturnsCorrectName()
         {
-            const String type = "type";
-            const String method = "method";
+            const string type = "type";
+            const string method = "method";
             var segment = GetSegment(type, method);
 
             var transactionTraceName = segment.GetTransactionTraceName();
@@ -169,9 +165,7 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-
-        [NotNull]
-        private static Segment GetSegment([NotNull] String type, [NotNull] String method)
+        private static Segment GetSegment(string type, string method)
         {
             var timerFactory = Mock.Create<ITimerFactory>();
             var builder = new TypedSegment<MethodSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new MethodSegmentData(type, method));
@@ -179,10 +173,10 @@ namespace NewRelic.Agent.Core.Transformers
             return builder;
         }
 
-        private static TypedSegment<MethodSegmentData> GetSegment([NotNull] String type, [NotNull] String method, double duration)
+        private static TypedSegment<MethodSegmentData> GetSegment(string type, string method, double duration)
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
-            var parameters = (new ConcurrentDictionary<String, Object>());
+            var parameters = (new ConcurrentDictionary<string, object>());
             return MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(duration), 2, 1, methodCallData, parameters, type, method, false);
         }
     }

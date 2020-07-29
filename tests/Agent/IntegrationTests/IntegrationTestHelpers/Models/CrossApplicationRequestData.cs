@@ -1,18 +1,17 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.Models
 {
     // Note: this data is referred to as "TransactionData" in the CAT spec.
-    [JsonConverter(typeof(CrossApplicationRequestDataConverter)), UsedImplicitly]
+    [JsonConverter(typeof(CrossApplicationRequestDataConverter))]
     public class CrossApplicationRequestData
     {
-        public readonly String TransactionGuid;
-        public readonly Boolean Unused;
-        public readonly String TripId;
-        public readonly String PathHash;
+        public readonly string TransactionGuid;
+        public readonly bool Unused;
+        public readonly string TripId;
+        public readonly string PathHash;
 
         // For backwards compatibility we need to support deserializing transactionData that may be missing any number of fields
         public CrossApplicationRequestData()
@@ -20,25 +19,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         }
 
-        public CrossApplicationRequestData(String transactionGuid)
+        public CrossApplicationRequestData(string transactionGuid)
         {
             TransactionGuid = transactionGuid;
         }
 
-        public CrossApplicationRequestData(String transactionGuid, Boolean unused)
+        public CrossApplicationRequestData(string transactionGuid, bool unused)
         {
             TransactionGuid = transactionGuid;
             Unused = unused;
         }
 
-        public CrossApplicationRequestData(String transactionGuid, Boolean unused, String tripId)
+        public CrossApplicationRequestData(string transactionGuid, bool unused, string tripId)
         {
             TransactionGuid = transactionGuid;
             Unused = unused;
             TripId = tripId;
         }
 
-        public CrossApplicationRequestData(String transactionGuid, Boolean unused, String tripId, String pathHash)
+        public CrossApplicationRequestData(string transactionGuid, bool unused, string tripId, string pathHash)
         {
             TransactionGuid = transactionGuid;
             Unused = unused;
@@ -58,10 +57,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var transactionGuid = jArray[0].ToObject<String>();
-                var unused = (jArray[1] ?? new JObject()).ToObject<Boolean>();
-                var tripId = (jArray[2] ?? new JObject()).ToObject<String>();
-                var pathHash = (jArray[3] ?? new JObject()).ToObject<String>();
+                var transactionGuid = jArray[0].ToObject<string>();
+                var unused = (jArray[1] ?? new JObject()).ToObject<bool>();
+                var tripId = (jArray[2] ?? new JObject()).ToObject<string>();
+                var pathHash = (jArray[3] ?? new JObject()).ToObject<string>();
 
                 return new CrossApplicationRequestData(transactionGuid, unused, tripId, pathHash);
             }

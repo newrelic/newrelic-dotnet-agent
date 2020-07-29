@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reflection;
-using JetBrains.Annotations;
+﻿using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NUnit.Framework;
 using Telerik.JustMock;
@@ -10,13 +8,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
     [TestFixture]
     public class PathHashMakerTests
     {
-        private const String AppName = "appName";
-        private const String ReferringPathHash = "12345678";
-
-        [NotNull]
+        private const string AppName = "appName";
+        private const string ReferringPathHash = "12345678";
         private PathHashMaker _pathHashMaker;
-
-        [NotNull]
         private IConfiguration _configuration;
 
         [SetUp]
@@ -54,11 +48,11 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             Assert.AreEqual(ReferringPathHash, reversedPathHash);
         }
 
-        private static String ReversePathHash(String transactionName, String appName, String pathHash)
+        private static string ReversePathHash(string transactionName, string appName, string pathHash)
         {
-            var parameters = new Object[] { transactionName, appName, pathHash };
+            var parameters = new object[] { transactionName, appName, pathHash };
             var result = typeof(PathHashMaker).InvokeMember("ReversePathHash", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod, null, null, parameters);
-            return (String)result;
+            return (string)result;
         }
     }
 }

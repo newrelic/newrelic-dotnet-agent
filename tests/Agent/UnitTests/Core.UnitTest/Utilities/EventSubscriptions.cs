@@ -1,8 +1,5 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Utilities.UnitTest
 {
     [TestFixture]
@@ -14,10 +11,10 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
             var wasCalled = false;
             using (var subscriptions = new Subscriptions())
             {
-                subscriptions.Add<Object>(_ => wasCalled = true);
+                subscriptions.Add<object>(_ => wasCalled = true);
             }
 
-            EventBus<Object>.Publish(new Object());
+            EventBus<object>.Publish(new object());
 
             Assert.IsFalse(wasCalled);
         }
@@ -30,11 +27,11 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
 
             using (var subscriptions = new Subscriptions())
             {
-                subscriptions.Add<Object>(_ => wasCalled1 = true);
-                subscriptions.Add<Object>(_ => wasCalled2 = true);
+                subscriptions.Add<object>(_ => wasCalled1 = true);
+                subscriptions.Add<object>(_ => wasCalled2 = true);
             }
 
-            EventBus<Object>.Publish(new Object());
+            EventBus<object>.Publish(new object());
 
             Assert.IsFalse(wasCalled1);
             Assert.IsFalse(wasCalled2);
@@ -48,9 +45,9 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
 
             using (var subscriptions = new Subscriptions())
             {
-                subscriptions.Add<Object>(_ => wasCalled1 = true);
-                subscriptions.Add<Object>(_ => wasCalled2 = true);
-                EventBus<Object>.Publish(new Object());
+                subscriptions.Add<object>(_ => wasCalled1 = true);
+                subscriptions.Add<object>(_ => wasCalled2 = true);
+                EventBus<object>.Publish(new object());
             }
 
             Assert.IsTrue(wasCalled1);
@@ -62,8 +59,8 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
         {
             using (var subscriptions = new Subscriptions())
             {
-                subscriptions.Add<Object>(null);
-                EventBus<Object>.Publish(new Object());
+                subscriptions.Add<object>(null);
+                EventBus<object>.Publish(new object());
             }
         }
 

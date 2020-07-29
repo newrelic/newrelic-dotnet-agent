@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 namespace NewRelic.Agent.IntegrationTestHelpers.JsonConverters
 {
     public enum TimeUnit
@@ -17,12 +16,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.JsonConverters
     {
         private readonly static DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public static Double ToUnixTime(this DateTime dateTime)
+        public static double ToUnixTime(this DateTime dateTime)
         {
             return (dateTime - Epoch).TotalSeconds;
         }
 
-        public static DateTime ToDateTime(this Double secondsSinceEpoch)
+        public static DateTime ToDateTime(this double secondsSinceEpoch)
         {
             return Epoch.AddSeconds(secondsSinceEpoch);
         }

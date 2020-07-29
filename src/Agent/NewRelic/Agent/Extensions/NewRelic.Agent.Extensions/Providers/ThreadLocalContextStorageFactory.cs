@@ -1,8 +1,4 @@
-﻿
-
-using System;
-
-namespace NewRelic.Agent.Extensions.Providers
+﻿namespace NewRelic.Agent.Extensions.Providers
 {
     /// <summary>
     /// Factory for creating an IContextStorage instance.

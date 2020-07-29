@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using NewRelic.SystemInterfaces;
+﻿using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -9,7 +8,7 @@ namespace NewRelic.Agent.Core.Configuration
     /// </summary>
     internal class InternalConfiguration : DefaultConfiguration
     {
-        public InternalConfiguration([NotNull] IEnvironment environment, Config.configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic) :
+        public InternalConfiguration(IEnvironment environment, Config.configuration localConfiguration, ServerConfiguration serverConfiguration, RunTimeConfiguration runTimeConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic) :
             base(environment, localConfiguration, serverConfiguration, runTimeConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic)
         { }
     }

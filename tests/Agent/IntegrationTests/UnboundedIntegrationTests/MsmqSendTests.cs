@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class MsmqSendTests : IClassFixture<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.MSMQBasicMVCApplicationFixture _fixture;
 
-        public MsmqSendTests([NotNull] RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, [NotNull] ITestOutputHelper output)
+        public MsmqSendTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -41,7 +38,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Produce/Named/private$\nrtestqueue", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/Msmq/Queue/Produce/Named/private$\nrtestqueue", callCount = 1, metricScope = "WebTransaction/MVC/MSMQController/Msmq_Send"},
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MessageBroker/Msmq/Queue/Produce/Named/private$\nrtestqueue"
             };

@@ -1,5 +1,4 @@
-﻿using System;
-using DotNet_Msmq_Shared;
+﻿using DotNet_Msmq_Shared;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures

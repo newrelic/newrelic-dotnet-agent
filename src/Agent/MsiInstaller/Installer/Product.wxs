@@ -215,9 +215,12 @@ SPDX-License-Identifier: Apache-2.0
 		<!-- Main Product -->
 		<ComponentGroup Id="ProductComponents" Directory="NETAGENTFOLDER">
 			<!-- Text -->
-			<Component Id="LicenseComponent" Guid="{47114807-F20A-478D-9F4F-4B3D6CF195BE}">
-				<File Id="LicenseFile" Name="License.txt" KeyPath="yes" Source="$(var.AgentSourcePath)\Miscellaneous\License.txt" />
-			</Component>
+      <Component Id="LicenseComponent" Guid="{47114807-F20A-478D-9F4F-4B3D6CF195BE}">
+        <File Id="LicenseFile" Name="LICENSE.txt" KeyPath="yes" Source="$(var.RootSourcePath)\licenses\LICENSE.txt" />
+      </Component>
+      <Component Id="ThirdPartyNoticesComponent" Guid="{AE9FF10E-629E-49FB-957D-672CBC8AD6E3}">
+        <File Id="ThirdPartyNoticesFile" Name="THIRD_PARTY_NOTICES.txt" KeyPath="yes" Source="$(var.RootSourcePath)\licenses\THIRD_PARTY_NOTICES.txt" />
+      </Component>
 
 			<!-- Libraries -->
 			<?ifdef IsWin64?>
@@ -263,11 +266,6 @@ SPDX-License-Identifier: Apache-2.0
 		<?endif?>
 
 		<ComponentGroup Id="NewRelic.Agent.Extensions" Directory="ProgramFilesExtensionsFolder">
-			<!-- JetBrains. Note: We copy JetBrains Annotations to the output extension folder because many of the extensions use it. Even though it does not need to be there for the extensions to work, sometimes our customers will use frameworks that do assembly scanning (such as EpiServer) that will panic when references are unresolved.-->
-			<Component Id="JetBrainsAnnotationsComponent" Guid="{12C77711-1BF1-42B8-A884-B25D57B467B3}">
-				<File Id="JetBrainsAnnotationsFile" Name="JetBrains.Annotations.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\JetBrains.Annotations.dll"/>
-			</Component>
-			
 			<!-- Call stack trackers -->
 			<Component Id="AsyncLocalCallStackTrackerComponent" Guid="{2C25F20D-113E-4314-940F-9B54469F184D}">
 				<File Id="AsyncLocalCallStackTrackerFile" Name="NewRelic.Providers.CallStack.AsyncLocal.dll" KeyPath="yes" Source="$(var.HomeFolderPath)\Extensions\NewRelic.Providers.CallStack.AsyncLocal.dll"/>

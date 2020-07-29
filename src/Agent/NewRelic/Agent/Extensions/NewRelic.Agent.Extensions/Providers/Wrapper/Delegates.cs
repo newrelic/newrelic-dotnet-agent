@@ -1,19 +1,17 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
     /// <summary>
     /// A delegate that is returned by a wrapper and will be called when the wrapped method completes.
     /// </summary>
-    public delegate void AfterWrappedMethodDelegate([CanBeNull] Object result, [CanBeNull] Exception exception);
+    public delegate void AfterWrappedMethodDelegate(object result, Exception exception);
 
     public static class Delegates
     {
         /// <summary>
         /// A delegate that does nothing after a wrapped method completes.
         /// </summary>
-        [NotNull]
         public static readonly AfterWrappedMethodDelegate NoOp = (_, __) => { };
 
         /// <summary>
@@ -24,8 +22,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="onSuccess">Called when the wrapped method finishes successfully.</param>
         /// <param name="onFailure">Called when the wrapped method finishes unsuccessfully.</param>
         /// <returns>A delegate that will call the provided actions after the wrapped method call is finished.</returns>
-        [NotNull]
-        public static AfterWrappedMethodDelegate GetDelegateFor<T>([CanBeNull] Action onComplete = null, [CanBeNull] Action<T> onSuccess = null, [CanBeNull] Action<Exception> onFailure = null)
+        public static AfterWrappedMethodDelegate GetDelegateFor<T>(Action onComplete = null, Action<T> onSuccess = null, Action<Exception> onFailure = null)
         {
             return (result, exception) =>
             {
@@ -49,8 +46,7 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// <param name="onSuccess">Called when the wrapped method finishes successfully.</param>
         /// <param name="onFailure">Called when the wrapped method finishes unsuccessfully.</param>
         /// <returns>A delegate that will call the provided actions after the wrapped method call is finished.</returns>
-        [NotNull]
-        public static AfterWrappedMethodDelegate GetDelegateFor([CanBeNull] Action onComplete = null, [CanBeNull] Action onSuccess = null, [CanBeNull] Action<Exception> onFailure = null)
+        public static AfterWrappedMethodDelegate GetDelegateFor(Action onComplete = null, Action onSuccess = null, Action<Exception> onFailure = null)
         {
             return (result, exception) =>
             {
@@ -69,7 +65,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         /// Returns a delegate that calls Segment.End() onComplete.
         /// </summary>
         /// <param name="segment"></param>
-        [NotNull]
         public static AfterWrappedMethodDelegate GetDelegateFor(ISegment segment)
         {
             return segment.IsValid ? GetDelegateFor(segment.End) : NoOp;

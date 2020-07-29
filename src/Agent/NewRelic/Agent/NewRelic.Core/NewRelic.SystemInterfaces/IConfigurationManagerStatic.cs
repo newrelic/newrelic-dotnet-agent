@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 #if NETSTANDARD2_0
 using Microsoft.Extensions.Configuration;
@@ -10,23 +9,20 @@ namespace NewRelic.SystemInterfaces
 {
     public interface IConfigurationManagerStatic
     {
-        [CanBeNull]
-        string GetAppSetting([CanBeNull] string key);
-        int? GetAppSettingInt([CanBeNull] string key);
+        string GetAppSetting(string key);
+        int? GetAppSettingInt(string key);
     }
 
-    // sdaubin : Why do we have a mock in the agent code?  This is a code smell.
     public class ConfigurationManagerStaticMock : IConfigurationManagerStatic
     {
-        [NotNull]
-        private readonly Func<String, String> _getAppSetting;
+        private readonly Func<string, string> _getAppSetting;
 
-        public ConfigurationManagerStaticMock([CanBeNull] Func<String, String> getAppSetting = null)
+        public ConfigurationManagerStaticMock(Func<string, string> getAppSetting = null)
         {
             _getAppSetting = getAppSetting ?? (variable => null);
         }
 
-        public String GetAppSetting(String variable)
+        public string GetAppSetting(string variable)
         {
             return _getAppSetting(variable);
         }
@@ -64,7 +60,7 @@ namespace NewRelic.SystemInterfaces
 #else
     public class ConfigurationManagerStatic : IConfigurationManagerStatic
     {
-        public string GetAppSetting([CanBeNull] string key)
+        public string GetAppSetting(string key)
         {
             if (key == null)
             {
@@ -84,7 +80,7 @@ namespace NewRelic.SystemInterfaces
 
         }
 
-        public int? GetAppSettingInt([CanBeNull] string key)
+        public int? GetAppSettingInt(string key)
         {
             if (int.TryParse(GetAppSetting(key), out var value))
             {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.DependencyInjection
 {
@@ -23,11 +22,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
 
         void ReplaceRegistration<TInterface>(TInterface instance)
             where TInterface : class;
-
-        [NotNull]
         T Resolve<T>();
-
-        [NotNull]
         IEnumerable<T> ResolveAll<T>();
 
         void Build();

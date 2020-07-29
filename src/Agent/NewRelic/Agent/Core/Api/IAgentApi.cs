@@ -5,26 +5,26 @@ namespace NewRelic.Agent.Core.Api
 {
     public interface IAgentApi
     {
-        void RecordCustomEvent(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes);
-        void RecordMetric(String name, Single value);
-        void RecordResponseTimeMetric(String name, Int64 millis);
-        void IncrementCounter(String name);
-        void NoticeError(Exception exception, IDictionary<String, String> customAttributes);
+        void RecordCustomEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes);
+        void RecordMetric(string name, float value);
+        void RecordResponseTimeMetric(string name, long millis);
+        void IncrementCounter(string name);
+        void NoticeError(Exception exception, IDictionary<string, string> customAttributes);
         void NoticeError(Exception exception);
-        void NoticeError(String message, IDictionary<String, String> customAttributes);
-        void AddCustomParameter(String key, IConvertible value);
-        void AddCustomParameter(String key, String value);
-        void SetTransactionName(String category, String name);
+        void NoticeError(string message, IDictionary<string, string> customAttributes);
+        void AddCustomParameter(string key, IConvertible value);
+        void AddCustomParameter(string key, string value);
+        void SetTransactionName(string category, string name);
         void SetTransactionUri(Uri uri);
-        void SetUserParameters(String userName, String accountName, String productName);
+        void SetUserParameters(string userName, string accountName, string productName);
         void IgnoreTransaction();
         void IgnoreApdex();
-        String GetBrowserTimingHeader();
-        String GetBrowserTimingFooter();
-        void DisableBrowserMonitoring(Boolean overrideManual = false);
+        string GetBrowserTimingHeader();
+        string GetBrowserTimingFooter();
+        void DisableBrowserMonitoring(bool overrideManual = false);
         void StartAgent();
-        void SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null);
-        IEnumerable<KeyValuePair<String, String>> GetRequestMetadata();
-        IEnumerable<KeyValuePair<String, String>> GetResponseMetadata();
+        void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null);
+        IEnumerable<KeyValuePair<string, string>> GetRequestMetadata();
+        IEnumerable<KeyValuePair<string, string>> GetResponseMetadata();
     }
 }

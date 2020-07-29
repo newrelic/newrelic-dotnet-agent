@@ -28,7 +28,7 @@ namespace NewRelic.Providers.Wrapper.WebServices
             var declaringType = logicalMethodInfo.DeclaringType;
             var methodName = logicalMethodInfo.Name;
 
-            var name = String.Format("{0}.{1}", declaringType.FullName, methodName);
+            var name = string.Format("{0}.{1}", declaringType.FullName, methodName);
 
             transaction.SetWebTransactionName(WebTransactionType.WebService, name, 5);
             var segment = transaction.StartTransactionSegment(instrumentedMethodCall.MethodCall, name);

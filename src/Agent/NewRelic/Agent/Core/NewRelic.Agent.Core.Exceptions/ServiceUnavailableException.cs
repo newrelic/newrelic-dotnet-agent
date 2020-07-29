@@ -7,7 +7,7 @@ namespace NewRelic.Agent.Core.Exceptions
     /// </summary>
     public class ServiceUnavailableException : Exception
     {
-        public ServiceUnavailableException(String message)
+        public ServiceUnavailableException(string message)
             : base(message)
         {
         }

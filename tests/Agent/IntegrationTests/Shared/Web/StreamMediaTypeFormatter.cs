@@ -14,23 +14,23 @@ namespace NewRelic.Agent.IntegrationTests.Shared.Web
             this.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/octet-stream"));
         }
 
-        public override Boolean CanReadType(Type type)
+        public override bool CanReadType(Type type)
         {
             return typeof(Stream) == type;
         }
 
-        public override Boolean CanWriteType(Type type)
+        public override bool CanWriteType(Type type)
         {
             return false;
         }
 
-        public override Task<Object> ReadFromStreamAsync(Type type,
+        public override Task<object> ReadFromStreamAsync(Type type,
             Stream readStream, HttpContent content, IFormatterLogger formatterLogger)
         {
-            return Task.FromResult((Object)readStream);
+            return Task.FromResult((object)readStream);
         }
 
-        public override Task<Object> ReadFromStreamAsync(Type type, Stream readStream,
+        public override Task<object> ReadFromStreamAsync(Type type, Stream readStream,
             HttpContent content, IFormatterLogger formatterLogger, System.Threading.CancellationToken cancellationToken)
         {
             return ReadFromStreamAsync(type, readStream, content, formatterLogger);

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Time;
 using Newtonsoft.Json;
@@ -12,7 +10,6 @@ namespace NewRelic.Agent.Core.Commands
     [TestFixture]
     public class CommandServiceTests
     {
-        [NotNull]
         private IDataTransportService _dataTransportService;
 
         [SetUp]
@@ -91,16 +88,14 @@ namespace NewRelic.Agent.Core.Commands
     public class MockCommand : AbstractCommand
     {
         public int Attempts = 0;
+        public List<string> RequiredArguments = new List<string>();
 
-        [NotNull]
-        public List<String> RequiredArguments = new List<String>();
-
-        public MockCommand(String commandName)
+        public MockCommand(string commandName)
         {
             Name = commandName;
         }
 
-        public override object Process(IDictionary<String, Object> arguments)
+        public override object Process(IDictionary<string, object> arguments)
         {
             Attempts++;
             return null;
@@ -109,7 +104,7 @@ namespace NewRelic.Agent.Core.Commands
 
     public class PingCommand : AbstractCommand
     {
-        public Int32 Count { get; private set; }
+        public int Count { get; private set; }
 
         public PingCommand()
         {
@@ -117,7 +112,7 @@ namespace NewRelic.Agent.Core.Commands
             Name = "ping";
         }
 
-        public override object Process(IDictionary<String, Object> arguments)
+        public override object Process(IDictionary<string, object> arguments)
         {
             Count++;
             return null;

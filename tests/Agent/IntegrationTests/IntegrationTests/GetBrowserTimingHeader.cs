@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -10,12 +8,11 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class GetBrowserTimingHeader : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        private String _browserTimingHeader;
+        private string _browserTimingHeader;
 
-        public GetBrowserTimingHeader([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public GetBrowserTimingHeader(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -56,9 +53,9 @@ namespace NewRelic.Agent.IntegrationTests
                 () => Assert.Contains("atts", browserMonitoringConfig.Keys)
             );
 
-            var attrsDict = HeaderEncoder.DecodeAndDeserialize<Dictionary<string, IDictionary<String, Object>>>(browserMonitoringConfig["atts"], _fixture.TestConfiguration.LicenseKey, 13);
+            var attrsDict = HeaderEncoder.DecodeAndDeserialize<Dictionary<string, IDictionary<string, object>>>(browserMonitoringConfig["atts"], _fixture.TestConfiguration.LicenseKey, 13);
             Assert.Contains("a", attrsDict.Keys);
-            IDictionary<string, Object> agentAttrsDict = attrsDict["a"];
+            IDictionary<string, object> agentAttrsDict = attrsDict["a"];
             Assert.Contains("nr.tripId", agentAttrsDict.Keys);
 
             NrAssert.Multiple(

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions.Collections
 {
@@ -14,14 +13,13 @@ namespace NewRelic.SystemExtensions.Collections
         /// <param name="nameValueCollection"></param>
         /// <param name="equalityComparer"></param>
         /// <returns></returns>
-        [NotNull]
-        public static IDictionary<String, String> ToDictionary([NotNull] this NameValueCollection nameValueCollection, IEqualityComparer<String> equalityComparer = null)
+        public static IDictionary<string, string> ToDictionary(this NameValueCollection nameValueCollection, IEqualityComparer<string> equalityComparer = null)
         {
             equalityComparer = equalityComparer ?? StringComparer.CurrentCultureIgnoreCase;
 
             return nameValueCollection
                 .Keys
-                .Cast<String>()
+                .Cast<string>()
                 .Where(key => key != null)
                 .ToDictionary(key => key, key => nameValueCollection[key], equalityComparer);
         }

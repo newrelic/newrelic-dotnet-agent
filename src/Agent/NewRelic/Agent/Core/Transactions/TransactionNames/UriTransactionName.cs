@@ -1,18 +1,14 @@
-﻿using System;
-using JetBrains.Annotations;
-
-namespace NewRelic.Agent.Core.Transactions.TransactionNames
+﻿namespace NewRelic.Agent.Core.Transactions.TransactionNames
 {
     public class UriTransactionName : ITransactionName
     {
-        [NotNull]
-        public readonly String Uri;
+        public readonly string Uri;
 
-        public UriTransactionName([NotNull] String uri)
+        public UriTransactionName(string uri)
         {
             Uri = uri;
         }
 
-        public Boolean IsWeb { get { return true; } }
+        public bool IsWeb { get { return true; } }
     }
 }

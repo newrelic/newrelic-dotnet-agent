@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
-using NewRelic.Agent.Core.Fixtures;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
-
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
-// ReSharper disable ClassNeverInstantiated.Global
 
 namespace NewRelic.Agent.Core.Errors.UnitTest
 {
@@ -24,25 +17,23 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
         [TestFixture, Category("ErrorTraces")]
         public class Method_ToJsonObjectArray
         {
-            [NotNull] private static readonly IDictionary<String, Object> EmptyDictionary = new Dictionary<String, Object>();
+            private static readonly IDictionary<string, object> EmptyDictionary = new Dictionary<string, object>();
 
-            [NotNull] private DisposableCollection _disposables;
-            [NotNull] private Core.UnitTest.Fixtures.Logging _logging;
-            [NotNull] private Attributes _attributes;
+            private DisposableCollection _disposables;
+            private Core.UnitTest.Fixtures.Logging _logging;
+            private Attributes _attributes;
 
-            [NotNull] String _requestUri = "http://localhost/post.aspx";
-            [NotNull] private IList<String> _stackTrace;
+            string _requestUri = "http://localhost/post.aspx";
+            private IList<string> _stackTrace;
             private DateTime _timestamp;
-            [NotNull] private String _path;
-            [NotNull] private String _message;
-            [NotNull] private String _exceptionClassName;
-            [NotNull] private String _guid;
-            [NotNull] private IDataTransportService _dataTransportService;
-
-            [NotNull]
-            private static IList<String> CreateStackTrace()
+            private string _path;
+            private string _message;
+            private string _exceptionClassName;
+            private string _guid;
+            private IDataTransportService _dataTransportService;
+            private static IList<string> CreateStackTrace()
             {
-                var stackTrace = new List<String>
+                var stackTrace = new List<string>
                 {
                     "System.Exception: Inner Exception",
                     @"at WebApplication.Contact.Baz() in c:\code\dotnet_agent\Agent\NewRelic\Profiler\WebApplication1\Contact.aspx.cs:line 50",
@@ -69,15 +60,13 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 return stackTrace;
 
             }
-
-            [NotNull]
             private static IConfiguration CreateMockConfiguration()
             {
                 var configuration = Mock.Create<IConfiguration>();
                 Mock.Arrange(() => configuration.CaptureCustomParameters).Returns(true);
                 Mock.Arrange(() => configuration.CaptureAttributes).Returns(true);
                 Mock.Arrange(() => configuration.CaptureAttributesExcludes)
-                    .Returns(new List<String>() { "identity.*", "request.headers.*", "response.headers.*" });
+                    .Returns(new List<string>() { "identity.*", "request.headers.*", "response.headers.*" });
                 //Mock.Arrange(() => configuration.CaptureIdentityParameters).Returns(true);
                 Mock.Arrange(() => configuration.CaptureRequestParameters).Returns(true);
                 //Mock.Arrange(() => configuration.CaptureRequestHeaders).Returns(true);
@@ -241,7 +230,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             public void when_agentAttributes_are_supplied_then_they_show_up_in_json()
             {
                 // ARRANGE
-                var agentAttributes = new Dictionary<String, Object> { { "Foo", "Bar" } };
+                var agentAttributes = new Dictionary<string, object> { { "Foo", "Bar" } };
 
                 // ACT
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, agentAttributes, EmptyDictionary,
@@ -257,7 +246,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             public void when_intrinsicAttributes_are_supplied_then_they_show_up_in_json()
             {
                 // ARRANGE
-                var agentAttributes = new Dictionary<String, Object> { { "Foo", "Bar" } };
+                var agentAttributes = new Dictionary<string, object> { { "Foo", "Bar" } };
 
                 // ACT
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, agentAttributes,
@@ -273,7 +262,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
             public void when_userAttributes_are_supplied_then_they_show_up_in_json()
             {
                 // ARRANGE
-                var userAttributes = new Dictionary<String, Object> { { "Foo", "Bar" } };
+                var userAttributes = new Dictionary<string, object> { { "Foo", "Bar" } };
 
                 // ACT
                 var attributes = new ErrorTraceWireModel.ErrorTraceAttributesWireModel(_requestUri, EmptyDictionary, EmptyDictionary,
@@ -306,7 +295,7 @@ namespace NewRelic.Agent.Core.Errors.UnitTest
                 // ACT
                 Assert.DoesNotThrow(
                     () =>
-                        new ErrorTraceWireModel.ErrorTraceAttributesWireModel(String.Empty, EmptyDictionary, EmptyDictionary,
+                        new ErrorTraceWireModel.ErrorTraceAttributesWireModel(string.Empty, EmptyDictionary, EmptyDictionary,
                             EmptyDictionary, null));
             }
         }

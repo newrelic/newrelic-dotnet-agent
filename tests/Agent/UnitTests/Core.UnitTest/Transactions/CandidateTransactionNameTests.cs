@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Transactions.TransactionNames;
+﻿using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -10,10 +8,7 @@ namespace NewRelic.Agent.Core.Transactions
     [TestFixture]
     public class CandidateTransactionNameTests
     {
-        [NotNull]
         private WebTransactionName _initialTransactionName;
-
-        [NotNull]
         private CandidateTransactionName _candidateTransactionName;
 
         [SetUp]

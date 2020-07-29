@@ -6,7 +6,7 @@ namespace NewRelic.Agent.Core
 {
     public sealed class DisabledAgent : IAgent
     {
-        public ITracer GetTracerImpl(string tracerFactoryName, UInt32 tracerArguments, string metricName, String assemblyName, Type type, String typename, String methodName, string argumentSignature, object invocationTarget, object[] arguments, UInt64 functionId)
+        public ITracer GetTracerImpl(string tracerFactoryName, uint tracerArguments, string metricName, string assemblyName, Type type, string typename, string methodName, string argumentSignature, object invocationTarget, object[] arguments, ulong functionId)
         {
             return null;
         }

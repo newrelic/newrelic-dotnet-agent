@@ -1,8 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Utilities.UnitTest
 {
     [TestFixture]
@@ -12,11 +10,11 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
         public void publishing_outside_using_statement_results_in_no_callback()
         {
             var wasCalled = false;
-            using (new EventSubscription<Object>(_ => wasCalled = true))
+            using (new EventSubscription<object>(_ => wasCalled = true))
             {
             }
 
-            EventBus<Object>.Publish(new Object());
+            EventBus<object>.Publish(new object());
 
             Assert.IsFalse(wasCalled);
         }
@@ -25,9 +23,9 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
         public void publishing_inside_using_statement_results_in_callback()
         {
             var wasCalled = false;
-            using (new EventSubscription<Object>(_ => wasCalled = true))
+            using (new EventSubscription<object>(_ => wasCalled = true))
             {
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
             }
 
             Assert.IsTrue(wasCalled);
@@ -37,11 +35,11 @@ namespace NewRelic.Agent.Core.Utilities.UnitTest
         public void two_disposables_with_same_callback_are_called_once()
         {
             var callCount = 0;
-            Action<Object> callback = _ => ++callCount;
-            using (new EventSubscription<Object>(callback))
-            using (new EventSubscription<Object>(callback))
+            Action<object> callback = _ => ++callCount;
+            using (new EventSubscription<object>(callback))
+            using (new EventSubscription<object>(callback))
             {
-                EventBus<Object>.Publish(new Object());
+                EventBus<object>.Publish(new object());
             }
 
             Assert.AreEqual(1, callCount);

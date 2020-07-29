@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -19,27 +17,18 @@ namespace NewRelic.Agent.Core.Aggregators
 {
     public interface IMetricAggregator
     {
-        void Collect([NotNull] IAllMetricStatsCollection metric);
+        void Collect(IAllMetricStatsCollection metric);
     }
     public class MetricAggregator : AbstractAggregator<IAllMetricStatsCollection>, IMetricAggregator
     {
-        [NotNull]
         private MetricStatsEngineQueue _metricStatsEngineQueue;
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private readonly IDnsStatic _dnsStatic;
-
-        [NotNull]
         private readonly IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private readonly IMetricNameService _metricNameService;
 
 
-        public MetricAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricNameService metricNameService, [NotNull] IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] IDnsStatic dnsStatic, [NotNull] IProcessStatic processStatic, [NotNull] IScheduler scheduler) : base(dataTransportService, scheduler, processStatic)
+        public MetricAggregator(IDataTransportService dataTransportService, IMetricBuilder metricBuilder, IMetricNameService metricNameService, IEnumerable<IOutOfBandMetricSource> outOfBandMetricSources, IAgentHealthReporter agentHealthReporter, IDnsStatic dnsStatic, IProcessStatic processStatic, IScheduler scheduler) : base(dataTransportService, scheduler, processStatic)
         {
             _metricBuilder = metricBuilder;
             _metricNameService = metricNameService;
@@ -59,7 +48,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public override void Collect(IAllMetricStatsCollection metric)
         {
-            Boolean done = false;
+            bool done = false;
             while (!done)
             {
                 done = _metricStatsEngineQueue.MergeMetric(metric);
@@ -140,20 +129,20 @@ namespace NewRelic.Agent.Core.Aggregators
         /// </summary>
         public class MetricStatsEngineQueue
         {
-            private Int32 _statsEngineCount;
+            private int _statsEngineCount;
 
             private Queue<MetricStatsCollection> _statsEngineQueue;
             // at harvest time readers drain and a write lock allows the entire queue to be swapped out
             private readonly ReaderWriterLockSlim _lock;
             // this lock is to ensure that only one reader at a time can dequeue/enqueue stats engines from/to the queue,
             // since Queue is not threadsafe an ConcurrentQueue was not available until .NET 4.0
-            private readonly Object _queueReadersLock;
+            private readonly object _queueReadersLock;
 
             internal MetricStatsEngineQueue()
             {
                 _statsEngineQueue = new Queue<MetricStatsCollection>();
                 _lock = new ReaderWriterLockSlim();
-                _queueReadersLock = new Object();
+                _queueReadersLock = new object();
             }
 
             public int StatsEngineCount => _statsEngineCount;
@@ -167,7 +156,7 @@ namespace NewRelic.Agent.Core.Aggregators
             /// </summary>
             /// <param name="metric"></param>
             /// <returns></returns>
-            public Boolean MergeMetric(IAllMetricStatsCollection metric)
+            public bool MergeMetric(IAllMetricStatsCollection metric)
             {
                 if (_lock.TryEnterReadLock(50))
                 {

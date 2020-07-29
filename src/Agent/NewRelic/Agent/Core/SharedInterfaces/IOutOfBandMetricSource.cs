@@ -1,12 +1,11 @@
-﻿using JetBrains.Annotations;
-using NewRelic.Agent.Core.WireModels;
+﻿using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.SharedInterfaces
 {
-    public delegate void PublishMetricDelegate([NotNull] MetricWireModel metric);
+    public delegate void PublishMetricDelegate(MetricWireModel metric);
 
     public interface IOutOfBandMetricSource
     {
-        void RegisterPublishMetricHandler([NotNull] PublishMetricDelegate publishMetricDelegate);
+        void RegisterPublishMetricHandler(PublishMetricDelegate publishMetricDelegate);
     }
 }

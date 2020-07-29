@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace NewRelic.TypeInstantiation
 {
@@ -23,7 +22,7 @@ namespace NewRelic.TypeInstantiation
             };
         }
 
-        private static Assembly AssemblyFromPath(String path)
+        private static Assembly AssemblyFromPath(string path)
         {
             if (path == null)
                 return null;
@@ -37,8 +36,6 @@ namespace NewRelic.TypeInstantiation
                 return null;
             }
         }
-
-        [NotNull]
         private static IEnumerable<Type> ExportedTypesFromAssembly(Assembly assembly)
         {
             if (assembly == null)
@@ -62,7 +59,7 @@ namespace NewRelic.TypeInstantiation
             }
         }
 
-        private static Boolean TypeIsInstantiatable(Type type)
+        private static bool TypeIsInstantiatable(Type type)
         {
             if (type == null)
                 return false;
@@ -75,13 +72,13 @@ namespace NewRelic.TypeInstantiation
             return true;
         }
 
-        private static Boolean TypeImplements<T>(Type type)
+        private static bool TypeImplements<T>(Type type)
         {
             return type != null
                 && typeof(T).IsAssignableFrom(type);
         }
 
-        private static T InstanceFromType<T>([NotNull] Type type)
+        private static T InstanceFromType<T>(Type type)
         {
             try
             {
@@ -89,13 +86,11 @@ namespace NewRelic.TypeInstantiation
             }
             catch (Exception ex)
             {
-                var message = String.Format("An exception was thrown while constructing an instance of type {0}", type.FullName);
+                var message = string.Format("An exception was thrown while constructing an instance of type {0}", type.FullName);
                 throw new Exception(message, ex);
             }
         }
-
-        [NotNull]
-        private static GetTypesResult GetExportedTypes([NotNull] IEnumerable<Assembly> assemblies)
+        private static GetTypesResult GetExportedTypes(IEnumerable<Assembly> assemblies)
         {
             var types = new List<Type>();
             var exceptions = new List<Exception>();
@@ -115,9 +110,7 @@ namespace NewRelic.TypeInstantiation
 
             return new GetTypesResult(types, exceptions);
         }
-
-        [NotNull]
-        public static TypeInstantiatorResult<T> ExportedInstancesFromDirectory<T>(String directoryPath, Boolean recursive = false)
+        public static TypeInstantiatorResult<T> ExportedInstancesFromDirectory<T>(string directoryPath, bool recursive = false)
         {
             if (directoryPath == null)
                 return new TypeInstantiatorResult<T>();
@@ -128,8 +121,6 @@ namespace NewRelic.TypeInstantiation
             var assemblies = assemblyPaths.Select(AssemblyFromPath);
             return ExportedInstancesFromAssemblies<T>(assemblies);
         }
-
-        [NotNull]
         public static TypeInstantiatorResult<T> ExportedInstancesFromAssemblies<T>(IEnumerable<Assembly> assemblies)
         {
             if (assemblies == null)
@@ -143,8 +134,6 @@ namespace NewRelic.TypeInstantiation
 
             return new TypeInstantiatorResult<T>(instances, exceptions);
         }
-
-        [NotNull]
         public static TypeInstantiatorResult<T> InstancesFromTypes<T>(IEnumerable<Type> types)
         {
             if (types == null)
@@ -177,13 +166,10 @@ namespace NewRelic.TypeInstantiation
 
         private class GetTypesResult
         {
-            [NotNull]
             public readonly IEnumerable<Type> Types;
-
-            [NotNull]
             public readonly IEnumerable<Exception> Exceptions;
 
-            public GetTypesResult([NotNull] IEnumerable<Type> instances, [NotNull] IEnumerable<Exception> exceptions)
+            public GetTypesResult(IEnumerable<Type> instances, IEnumerable<Exception> exceptions)
             {
                 Types = instances;
                 Exceptions = exceptions;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -7,7 +6,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 {
     public class BasicMvcApplication : RemoteApplicationFixture
     {
-        public const String ExpectedTransactionName = @"WebTransaction/MVC/DefaultController/Index";
+        public const string ExpectedTransactionName = @"WebTransaction/MVC/DefaultController/Index";
 
         public BasicMvcApplication() : base(new RemoteWebApplication("BasicMvcApplication", ApplicationType.Unbounded))
         {

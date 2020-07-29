@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Net.Http.Headers;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -11,13 +10,11 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
     public class CatEnabledHeaderPresent : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        [NotNull]
         private HttpResponseHeaders _responseHeaders;
 
-        public CatEnabledHeaderPresent([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public CatEnabledHeaderPresent(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

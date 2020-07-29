@@ -33,7 +33,7 @@ namespace NewRelic.Parsing
         }
 
 
-        public static ExplainPlan GenerateExplainPlan(Object resources)
+        public static ExplainPlan GenerateExplainPlan(object resources)
         {
             if (!(resources is IDbCommand))
                 return null;
@@ -59,12 +59,12 @@ namespace NewRelic.Parsing
                     var headers = GetReaderHeaders(reader);
                     // Decide which headers should be obfuscated based on the Vendor (this is only SQL)
                     var obfuscatedHeaders = GetObfuscatedIndexes(headers);
-                    explainPlan = new ExplainPlan(headers, new List<List<Object>>(), obfuscatedHeaders);
+                    explainPlan = new ExplainPlan(headers, new List<List<object>>(), obfuscatedHeaders);
 
-                    var explainPlanDatas = new List<List<Object>>();
+                    var explainPlanDatas = new List<List<object>>();
                     while (reader.Read())
                     {
-                        Object[] values = new Object[reader.FieldCount];
+                        object[] values = new object[reader.FieldCount];
                         reader.GetValues(values);
                         explainPlanDatas.Add(values.ToList());
                     }
@@ -78,7 +78,7 @@ namespace NewRelic.Parsing
             return explainPlan;
         }
 
-        public static Object AllocateResources(IDbCommand command)
+        public static object AllocateResources(IDbCommand command)
         {
             if (!(command is ICloneable))
                 return null;
@@ -92,9 +92,9 @@ namespace NewRelic.Parsing
             return clonedCommand;
         }
 
-        public static List<Int32> GetObfuscatedIndexes(List<String> headers)
+        public static List<int> GetObfuscatedIndexes(List<string> headers)
         {
-            var indexes = new List<Int32>(ObfuscateFieldNames().Length);
+            var indexes = new List<int>(ObfuscateFieldNames().Length);
             foreach (var field in ObfuscateFieldNames())
             {
                 var index = headers.FindIndex(field.Equals);
@@ -107,19 +107,19 @@ namespace NewRelic.Parsing
             return indexes;
         }
 
-        private static List<String> GetReaderHeaders(IDataReader reader)
+        private static List<string> GetReaderHeaders(IDataReader reader)
         {
-            List<String> headers = new List<String>(reader.FieldCount);
-            for (Int32 i = 0; i < reader.FieldCount; i++)
+            List<string> headers = new List<string>(reader.FieldCount);
+            for (int i = 0; i < reader.FieldCount; i++)
             {
                 headers.Add(reader.GetName(i));
             }
             return headers;
         }
 
-        private static String[] ObfuscateFieldNames()
+        private static string[] ObfuscateFieldNames()
         {
-            return new String[0];
+            return new string[0];
         }
     }
 }

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -13,10 +11,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class EnterpriseLibraryOracleTests : IClassFixture<RemoteServiceFixtures.OracleBasicMvcFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;
 
-        public EnterpriseLibraryOracleTests([NotNull] RemoteServiceFixtures.OracleBasicMvcFixture fixture, [NotNull] ITestOutputHelper output)
+        public EnterpriseLibraryOracleTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -84,12 +81,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/insert", metricScope = "WebTransaction/MVC/DefaultController/EnterpriseLibraryOracle" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Oracle/delete", metricScope = "WebTransaction/MVC/DefaultController/EnterpriseLibraryOracle" }
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 "Datastore/statement/Oracle/user_tables/select"
             };
 
-            var expectedTransactionEventIntrinsicAttributes = new List<String>
+            var expectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "databaseDuration"
             };

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -12,10 +10,7 @@ namespace CompositeTests
 {
     internal class CrossApplicationTracingTests
     {
-        [NotNull]
         private static CompositeTestAgent _compositeTestAgent;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]
@@ -41,12 +36,12 @@ namespace CompositeTests
             var clientTransactionGuid = "transaction guid";
             var clientTripId = "trip id";
             var clientPathHash = "path hash";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
-            var newRelicIdHeader = new KeyValuePair<String, String>("X-NewRelic-ID", Strings.Base64Encode(crossProcessId, encodingKey));
-            var newRelicTransactionHeader = new KeyValuePair<String, String>("X-NewRelic-Transaction", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
+            var newRelicIdHeader = new KeyValuePair<string, string>("X-NewRelic-ID", Strings.Base64Encode(crossProcessId, encodingKey));
+            var newRelicTransactionHeader = new KeyValuePair<string, string>("X-NewRelic-Transaction", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
             var requestHeaders = new[] { newRelicIdHeader, newRelicTransactionHeader };
 
 
@@ -62,7 +57,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            var unexpectedEventAttributes = new List<String>
+            var unexpectedEventAttributes = new List<string>
             {
                 "nr.alternatePathHashes"
             };
@@ -100,12 +95,12 @@ namespace CompositeTests
             var clientTransactionGuid = "transaction guid";
             var clientTripId = "trip id";
             var clientPathHash = "path hash";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
-            var newRelicIdHeader = new KeyValuePair<String, String>("x-NeWrElIc-Id", Strings.Base64Encode(crossProcessId, encodingKey));
-            var newRelicTransactionHeader = new KeyValuePair<String, String>("X-NeWrElIc-TranSACTion", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
+            var newRelicIdHeader = new KeyValuePair<string, string>("x-NeWrElIc-Id", Strings.Base64Encode(crossProcessId, encodingKey));
+            var newRelicTransactionHeader = new KeyValuePair<string, string>("X-NeWrElIc-TranSACTion", Strings.Base64Encode($@"[""{clientTransactionGuid}"", ""{false}"", ""{clientTripId}"", ""{clientPathHash}""]", encodingKey));
             var requestHeaders = new[] { newRelicIdHeader, newRelicTransactionHeader };
 
 
@@ -120,7 +115,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            var unexpectedEventAttributes = new List<String>
+            var unexpectedEventAttributes = new List<string>
             {
                 "nr.alternatePathHashes"
             };
@@ -153,7 +148,7 @@ namespace CompositeTests
         {
             // ARRANGE
             var encodingKey = "foo";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { 123 };
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
@@ -161,7 +156,7 @@ namespace CompositeTests
             // ==== ACT ====
             using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
             {
-                _agentWrapperApi.ProcessInboundRequest(new KeyValuePair<String, String>[0]);
+                _agentWrapperApi.ProcessInboundRequest(new KeyValuePair<string, string>[0]);
                 var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
                 segment.End();
             }
@@ -170,7 +165,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            var unexpectedEventAttributes = new List<String>
+            var unexpectedEventAttributes = new List<string>
             {
                 "nr.referringPathHash",
                 "nr.referringTransactionGuid",
@@ -178,7 +173,7 @@ namespace CompositeTests
                 "nr.guid",
                 "nr.pathHash"
             };
-            var unexpectedTraceAttributes = new List<String>
+            var unexpectedTraceAttributes = new List<string>
             {
                 "client_cross_process_id",
                 "referring_transaction_guid",
@@ -197,7 +192,7 @@ namespace CompositeTests
         {
             // ARRANGE
             var encodingKey = "foo";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { 123 };
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
@@ -213,7 +208,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            var unexpectedEventAttributes = new List<String>
+            var unexpectedEventAttributes = new List<string>
             {
                 "nr.referringPathHash",
                 "nr.referringTransactionGuid",
@@ -221,7 +216,7 @@ namespace CompositeTests
                 "nr.guid",
                 "nr.pathHash"
             };
-            var unexpectedTraceAttributes = new List<String>
+            var unexpectedTraceAttributes = new List<string>
             {
                 "client_cross_process_id",
                 "referring_transaction_guid",

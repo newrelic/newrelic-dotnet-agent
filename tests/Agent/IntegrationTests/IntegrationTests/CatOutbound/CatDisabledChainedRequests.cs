@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.CatInbound;
@@ -14,13 +12,11 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
 {
     public class CatDisabledChainedRequests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        [NotNull]
         private HttpResponseHeaders _responseHeaders;
 
-        public CatDisabledChainedRequests([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public CatDisabledChainedRequests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -73,7 +69,7 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
                 new Assertions.ExpectedMetric { metricName = $@"ExternalTransaction/{_fixture.RemoteApplication.DestinationServerName}/{expectedCrossProcessId}/WebTransaction/MVC/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Chained" },
                 new Assertions.ExpectedMetric { metricName = @"ClientApplication/[^/]+/all", IsRegexName = true }
             };
-            var expectedCallerTraceSegmentRegexes = new List<String>
+            var expectedCallerTraceSegmentRegexes = new List<string>
             {
                 "External/[^/]+/Stream/GET"
             };

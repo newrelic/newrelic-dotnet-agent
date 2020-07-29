@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
-using NewRelic.Agent.Core;
 using NewRelic.Agent.Core.AgentHealth;
-using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Fixtures;
@@ -22,17 +19,17 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     public class ErrorTraceAggregatorTests
     {
-        [NotNull] private ErrorTraceAggregator _errorTraceAggregator;
+        private ErrorTraceAggregator _errorTraceAggregator;
 
-        [NotNull] private IDataTransportService _dataTransportService;
+        private IDataTransportService _dataTransportService;
 
-        [NotNull] private IAgentHealthReporter _agentHealthReporter;
+        private IAgentHealthReporter _agentHealthReporter;
 
-        [NotNull] private IProcessStatic _processStatic;
+        private IProcessStatic _processStatic;
 
-        [NotNull] private ConfigurationAutoResponder _configurationAutoResponder;
+        private ConfigurationAutoResponder _configurationAutoResponder;
 
-        [NotNull] private Action _harvestAction;
+        private Action _harvestAction;
 
         [SetUp]
         public void SetUp()
@@ -300,15 +297,13 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportErrorTraceCollected(), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesSent(Arg.IsAny<Int32>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesRecollected(Arg.IsAny<int>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportErrorTracesSent(Arg.IsAny<int>()), Occurs.Never());
         }
 
         #endregion
 
         #region Helpers
-
-        [NotNull]
         private static IConfiguration GetDefaultConfiguration(int? versionNumber = null)
         {
             var configuration = Mock.Create<IConfiguration>();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utils;
 
@@ -9,28 +8,23 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public class BrowserMonitoringStreamInjector : Stream
     {
-        [NotNull]
         private readonly BrowserMonitoringWriter _jsWriter;
-
-        [NotNull]
         private readonly Encoding _contentEncoding;
+        private Action<byte[], int, int> _streamWriter;
 
-        [CanBeNull]
-        private Action<Byte[], Int32, Int32> _streamWriter;
-
-        public BrowserMonitoringStreamInjector([NotNull] Func<String> getJavascriptAgentScript, [NotNull] Stream output, [NotNull] Encoding contentEncoding)
+        public BrowserMonitoringStreamInjector(Func<string> getJavascriptAgentScript, Stream output, Encoding contentEncoding)
         {
             _jsWriter = new BrowserMonitoringWriter(getJavascriptAgentScript);
             OutputStream = output;
             _contentEncoding = contentEncoding;
         }
 
-        public override Boolean CanRead => OutputStream.CanRead;
-        public override Boolean CanSeek => OutputStream.CanSeek;
-        public override Boolean CanWrite => OutputStream.CanWrite;
-        public override Int64 Length => OutputStream.Length;
+        public override bool CanRead => OutputStream.CanRead;
+        public override bool CanSeek => OutputStream.CanSeek;
+        public override bool CanWrite => OutputStream.CanWrite;
+        public override long Length => OutputStream.Length;
 
-        public override Int64 Position
+        public override long Position
         {
             get { return OutputStream.Position; }
             set { OutputStream.Position = value; }
@@ -41,8 +35,6 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             OutputStream.Close();
             base.Close();
         }
-
-        [NotNull]
         private Stream OutputStream { get; }
 
         public override void Flush()
@@ -50,22 +42,22 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             OutputStream.Flush();
         }
 
-        public override Int64 Seek(Int64 offset, SeekOrigin origin)
+        public override long Seek(long offset, SeekOrigin origin)
         {
             return OutputStream.Seek(offset, origin);
         }
 
-        public override void SetLength(Int64 value)
+        public override void SetLength(long value)
         {
             OutputStream.SetLength(value);
         }
 
-        public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count)
+        public override int Read(byte[] buffer, int offset, int count)
         {
             return OutputStream.Read(buffer, offset, count);
         }
 
-        public override void Write(Byte[] buffer, Int32 offset, Int32 count)
+        public override void Write(byte[] buffer, int offset, int count)
         {
             // BEWARE: There is no try/catch between this method and the users application!  Anything that can throw *must* be wrapped in a try/catch block!  We cannot wrap this in a try/catch block because we should not catch exceptions thrown by the underlying stream.
 
@@ -75,9 +67,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             _streamWriter(buffer, offset, count);
         }
-
-        [NotNull]
-        private Action<Byte[], Int32, Int32> GetStreamWriter()
+        private Action<byte[], int, int> GetStreamWriter()
         {
             try
             {
@@ -91,13 +81,11 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             }
         }
 
-        private void PassThroughStreamWriter([NotNull] Byte[] buffer, Int32 offset, Int32 count)
+        private void PassThroughStreamWriter(byte[] buffer, int offset, int count)
         {
             OutputStream.Write(buffer, offset, count);
         }
-
-        [NotNull]
-        private Action<Byte[], Int32, Int32> GetInjectingStreamWriter([NotNull] Encoding contentEncoding)
+        private Action<byte[], int, int> GetInjectingStreamWriter(Encoding contentEncoding)
         {
             return (buffer, offset, count) =>
             {
@@ -143,23 +131,19 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
                 }
             };
         }
-
-        [CanBeNull]
-        private Byte[] TryGetInjectedBytes([NotNull] Encoding contentEncoding, [NotNull] Byte[] buffer, Int32 offset, Int32 count)
+        private byte[] TryGetInjectedBytes(Encoding contentEncoding, byte[] buffer, int offset, int count)
         {
             var decoder = _contentEncoding.GetDecoder();
             var decodedBuffer = Strings.GetStringBufferFromBytes(decoder, buffer, offset, count);
-            if (String.IsNullOrEmpty(decodedBuffer))
+            if (string.IsNullOrEmpty(decodedBuffer))
                 return null;
 
             return TryGetBrowserMonitoringHeaders(contentEncoding, decodedBuffer);
         }
-
-        [CanBeNull]
-        private Byte[] TryGetBrowserMonitoringHeaders([NotNull] Encoding contentEncoding, [NotNull] String content)
+        private byte[] TryGetBrowserMonitoringHeaders(Encoding contentEncoding, string content)
         {
             var contentWithBrowserMonitoringHeaders = _jsWriter.WriteScriptHeaders(content);
-            if (String.IsNullOrEmpty(contentWithBrowserMonitoringHeaders))
+            if (string.IsNullOrEmpty(contentWithBrowserMonitoringHeaders))
             {
                 Log.Finest("RUM: Could not find a place to inject JS Agent.");
                 return null;

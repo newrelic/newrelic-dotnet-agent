@@ -71,7 +71,7 @@ namespace HttpCollector.Controllers
             var collectedRequest = new CollectedRequest();
             using (var br = new BinaryReader(body))
             {
-                collectedRequest.RequestBody = br.ReadBytes((Int32)body.Length);
+                collectedRequest.RequestBody = br.ReadBytes((int)body.Length);
             }
             collectedRequest.Method = Request.Method.Method;
             collectedRequest.Querystring = Request.GetQueryNameValuePairs();

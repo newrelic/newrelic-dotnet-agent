@@ -1,5 +1,3 @@
-using System;
-
 namespace NewRelic.Agent.Core.Exceptions
 {
 
@@ -8,7 +6,7 @@ namespace NewRelic.Agent.Core.Exceptions
     /// </summary>
     public class DisconnectedException : RPMException
     {
-        public DisconnectedException(String message) : base(message)
+        public DisconnectedException(string message) : base(message)
         {
         }
     }

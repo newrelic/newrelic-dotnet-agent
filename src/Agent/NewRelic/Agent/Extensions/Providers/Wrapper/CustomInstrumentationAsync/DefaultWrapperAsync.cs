@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
+﻿using System.Linq;
 using NewRelic.Agent.Core.Wrapper;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
@@ -11,7 +7,6 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 {
     public class DefaultWrapperAsync : IDefaultWrapper
     {
-        [NotNull]
         private static readonly string[] PossibleWrapperNames = {
             "NewRelic.Agent.Core.Wrapper.DefaultWrapper",
             "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync",
@@ -38,7 +33,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
                         new CanWrapResponse(true);
         }
 
-        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, [NotNull] IAgentWrapperApi agentWrapperApi, ITransaction transaction)
+        public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
             if (instrumentedMethodCall.IsAsync)
             {
@@ -47,11 +42,11 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 
             var typeName = instrumentedMethodCall.MethodCall.Method.Type.FullName ?? "<unknown>";
             var methodName = instrumentedMethodCall.MethodCall.Method.MethodName;
-            var segment = !String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+            var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
                 ? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
                 : transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 
-            if (!String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
+            if (!string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
             {
                 transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
             }

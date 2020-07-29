@@ -30,7 +30,7 @@ namespace NewRelic.Providers.Wrapper.Sql
                 if (odbcCommand == null)
                     return Delegates.NoOp;
 
-                var sql = odbcCommand.CommandText ?? String.Empty;
+                var sql = odbcCommand.CommandText ?? string.Empty;
                 var vendor = SqlWrapperHelper.GetVendorName(odbcCommand);
 
                 var parsedStatement = transaction.GetParsedDatabaseStatement(odbcCommand.CommandType, sql);

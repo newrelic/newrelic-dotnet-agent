@@ -209,14 +209,14 @@ namespace NewRelic.Agent.Core.AgentAttributes
             [Test]
             public void ShouldIncludeExternalDurationInHighSecurityMode()
             {
-                var attribute = Transactions.Attribute.BuildExternalDurationAttribute((Single)TimeSpan.FromMinutes(2).TotalSeconds);
+                var attribute = Transactions.Attribute.BuildExternalDurationAttribute((float)TimeSpan.FromMinutes(2).TotalSeconds);
                 Assert.IsFalse(attribute.ExcludeForHighSecurity);
             }
 
             [Test]
             public void ShouldIncludeDatabaseDurationInHighSecurityMode()
             {
-                var attribute = Transactions.Attribute.BuildDatabaseDurationAttribute((Single)TimeSpan.FromMinutes(2).TotalSeconds);
+                var attribute = Transactions.Attribute.BuildDatabaseDurationAttribute((float)TimeSpan.FromMinutes(2).TotalSeconds);
                 Assert.IsFalse(attribute.ExcludeForHighSecurity);
             }
 

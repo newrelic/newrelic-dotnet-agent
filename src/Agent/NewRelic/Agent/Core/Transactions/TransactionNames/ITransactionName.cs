@@ -1,9 +1,7 @@
-﻿using System;
-
-namespace NewRelic.Agent.Core.Transactions.TransactionNames
+﻿namespace NewRelic.Agent.Core.Transactions.TransactionNames
 {
     public interface ITransactionName
     {
-        Boolean IsWeb { get; }
+        bool IsWeb { get; }
     }
 }

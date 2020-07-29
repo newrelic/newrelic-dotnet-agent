@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Samplers;
@@ -9,18 +8,15 @@ namespace NewRelic.Agent.Core.Transformers
 {
     public interface ICpuSampleTransformer
     {
-        void Transform([NotNull] ImmutableCpuSample sample);
+        void Transform(ImmutableCpuSample sample);
     }
 
     public class CpuSampleTransformer : ICpuSampleTransformer
     {
-        [NotNull]
         protected readonly IMetricBuilder MetricBuilder;
-
-        [NotNull]
         private readonly IMetricAggregator _metricAggregator;
 
-        public CpuSampleTransformer([NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator)
+        public CpuSampleTransformer(IMetricBuilder metricBuilder, IMetricAggregator metricAggregator)
         {
             MetricBuilder = metricBuilder;
             _metricAggregator = metricAggregator;
@@ -45,7 +41,7 @@ namespace NewRelic.Agent.Core.Transformers
             }
         }
 
-        private void RecordMetric([CanBeNull] MetricWireModel metric)
+        private void RecordMetric(MetricWireModel metric)
         {
             if (metric == null)
                 return;
@@ -62,12 +58,12 @@ namespace NewRelic.Agent.Core.Transformers
             return cpuUserTime;
         }
 
-        private Single GetCpuUserUtilization(TimeSpan cpuUserTime, DateTime currentSampleTime, DateTime lastSampleTime, Int32 processorCount)
+        private float GetCpuUserUtilization(TimeSpan cpuUserTime, DateTime currentSampleTime, DateTime lastSampleTime, int processorCount)
         {
             var wallClockTimeMs = (currentSampleTime - lastSampleTime).TotalMilliseconds;
             var cpuUserTimeMs = cpuUserTime.TotalMilliseconds;
-            var cpuUserUtilizationMs = (Single)(cpuUserTimeMs / (wallClockTimeMs * processorCount));
-            if (Single.IsNaN(cpuUserUtilizationMs) || Single.IsInfinity(cpuUserUtilizationMs))
+            var cpuUserUtilizationMs = (float)(cpuUserTimeMs / (wallClockTimeMs * processorCount));
+            if (float.IsNaN(cpuUserUtilizationMs) || float.IsInfinity(cpuUserUtilizationMs))
                 throw new Exception($"Invalid CPU Utilization. CPU time: {cpuUserTimeMs} (ms), Real time: {wallClockTimeMs} (ms)");
 
             return cpuUserUtilizationMs;

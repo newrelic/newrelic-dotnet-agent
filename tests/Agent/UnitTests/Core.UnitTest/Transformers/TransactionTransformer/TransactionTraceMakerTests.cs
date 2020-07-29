@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -19,23 +17,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     [TestFixture]
     public class TransactionTraceMakerTests
     {
-        [NotNull]
         private TransactionTraceMaker _transactionTraceMaker;
-
-        [NotNull]
         private IAttributeService _attributeService;
-
-        [NotNull]
         private IDatabaseService _databaseService;
-
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
         public void SetUp()
         {
             _databaseService = Mock.Create<IDatabaseService>();
-            Mock.Arrange(() => _databaseService.SqlObfuscator.GetObfuscatedSql(Arg.IsAny<String>(), Arg.IsAny<DatastoreVendor>())).Returns((string sql) => "Obfuscated " + sql);
+            Mock.Arrange(() => _databaseService.SqlObfuscator.GetObfuscatedSql(Arg.IsAny<string>(), Arg.IsAny<DatastoreVendor>())).Returns((string sql) => "Obfuscated " + sql);
 
             _configurationService = Mock.Create<IConfigurationService>();
             Mock.Arrange(() => _configurationService.Configuration.DatabaseNameReportingEnabled).Returns(true);
@@ -126,7 +117,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         [Test]
         public void GetTransactionTrace_CreatesTraceWithCorrectUri()
         {
-            const String inputUrl = "http://www.google.com/test?param=value";
+            const string inputUrl = "http://www.google.com/test?param=value";
             var transaction = BuildTestTransaction(uri: inputUrl);
             var segments = new[] { BuildNode() };
             var transactionMetricName = new TransactionMetricName("WebTranasction", "TrxName");
@@ -135,7 +126,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var trace = _transactionTraceMaker.GetTransactionTrace(transaction, segments, transactionMetricName, attributes);
 
             // Query parameters should be stripped out
-            const String expectedUri = "http://www.google.com/test";
+            const string expectedUri = "http://www.google.com/test";
             Assert.AreEqual(expectedUri, trace.Uri);
         }
 
@@ -201,8 +192,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var expectedStartTimeDifference = TimeSpan.FromSeconds(1);
             var segmentDuration = TimeSpan.FromSeconds(10);
             var expectedEndTimeDifference = expectedStartTimeDifference + segmentDuration;
-            const String expectedName = "some segment name";
-            var expectedParameters = new Dictionary<String, Object> { { "foo", "bar" } };
+            const string expectedName = "some segment name";
+            var expectedParameters = new Dictionary<string, object> { { "foo", "bar" } };
             var expectedClassName = "foo";
             var expectedMethodName = "bar";
             var methodCallData = new MethodCallData(expectedClassName, expectedMethodName, 1);
@@ -290,18 +281,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 () => Assert.AreEqual("1.2.1", segment121.Name)
                 );
         }
-
-        [NotNull]
-        private static ImmutableSegmentTreeNode BuildNode(ImmutableTransaction transaction = null, DateTime? startTime = null, TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null)
+        private static ImmutableSegmentTreeNode BuildNode(ImmutableTransaction transaction = null, DateTime? startTime = null, TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null)
         {
             startTime = startTime ?? DateTime.Now;
             var relativeStart = startTime.Value - (transaction?.StartTime ?? startTime.Value);
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(relativeStart, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<String, Object>(), name, false))
+            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(relativeStart, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false))
                 .Build();
         }
 
-        private static ImmutableSegmentTreeNode BuildDataStoreSegmentNode(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null)
+        private static ImmutableSegmentTreeNode BuildDataStoreSegmentNode(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null)
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
@@ -318,7 +307,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 .Build();
         }
 
-        private static ImmutableSegmentTreeNode BuildDataStoreSegmentNodeWithInstanceData(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null)
+        private static ImmutableSegmentTreeNode BuildDataStoreSegmentNodeWithInstanceData(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null)
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
 
@@ -336,15 +325,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 new TypedSegment<DatastoreSegmentData>(Mock.Create<ITransactionSegmentState>(), methodCallData, data, false)))
                 .Build();
         }
-
-        [NotNull]
-        private static SegmentTreeNodeBuilder GetNodeBuilder(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, String name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<String, Object>> parameters = null)
+        private static SegmentTreeNodeBuilder GetNodeBuilder(TimeSpan startTime = new TimeSpan(), TimeSpan? duration = null, string name = "", MethodCallData methodCallData = null, IEnumerable<KeyValuePair<string, object>> parameters = null)
         {
             methodCallData = methodCallData ?? new MethodCallData("typeName", "methodName", 1);
-            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<String, Object>(), name, false));
+            return new SegmentTreeNodeBuilder(SimpleSegmentDataTests.createSimpleSegmentBuilder(startTime, duration ?? TimeSpan.Zero, 2, 1, methodCallData, parameters ?? new Dictionary<string, object>(), name, false));
         }
 
-        private ImmutableTransaction BuildTestTransaction(DateTime? startTime = null, TimeSpan? duration = null, String uri = null, String guid = null)
+        private ImmutableTransaction BuildTestTransaction(DateTime? startTime = null, TimeSpan? duration = null, string uri = null, string guid = null)
         {
             var transactionMetadata = new TransactionMetadata();
             if (uri != null)

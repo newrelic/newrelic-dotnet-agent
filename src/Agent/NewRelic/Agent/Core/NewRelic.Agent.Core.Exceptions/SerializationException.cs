@@ -1,10 +1,8 @@
-using System;
-
 namespace NewRelic.Agent.Core.Exceptions
 {
     public class SerializationException : RPMException
     {
-        public SerializationException(String message)
+        public SerializationException(string message)
             : base(message)
         {
         }

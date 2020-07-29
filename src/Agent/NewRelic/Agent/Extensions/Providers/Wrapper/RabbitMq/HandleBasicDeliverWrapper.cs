@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
@@ -18,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
             // (IBasicConsumer) void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
-            var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<String>(4);
+            var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(4);
             var destType = RabbitMqHelper.GetBrokerDestinationType(routingKey);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, routingKey);
 

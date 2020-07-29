@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class CallStackFallbackWcfAppIisHosted : IClassFixture<RemoteServiceFixtures.WcfAppIisHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppIisHosted _fixture;
 
-        public CallStackFallbackWcfAppIisHosted([NotNull] RemoteServiceFixtures.WcfAppIisHosted fixture, [NotNull] ITestOutputHelper output)
+        public CallStackFallbackWcfAppIisHosted(RemoteServiceFixtures.WcfAppIisHosted fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -62,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
 
-            var expectedTraceAttributes = new Dictionary<String, String>
+            var expectedTraceAttributes = new Dictionary<string, string>
             {
                 { "service.request.value", "42" },
             };

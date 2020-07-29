@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.SystemExtensions.Collections.Generic;
 using Newtonsoft.Json;
@@ -12,28 +11,25 @@ namespace NewRelic.Agent.Core.WireModels
     public class TransactionEventWireModel
     {
         [JsonArrayIndex(Index = 0)]
-        [NotNull]
-        public readonly ReadOnlyDictionary<String, Object> IntrinsicAttributes;
+        public readonly ReadOnlyDictionary<string, object> IntrinsicAttributes;
 
         [JsonArrayIndex(Index = 1)]
-        [NotNull]
-        public readonly ReadOnlyDictionary<String, Object> UserAttributes;
+        public readonly ReadOnlyDictionary<string, object> UserAttributes;
 
         [JsonArrayIndex(Index = 2)]
-        [NotNull]
-        public readonly ReadOnlyDictionary<String, Object> AgentAttributes;
+        public readonly ReadOnlyDictionary<string, object> AgentAttributes;
 
         private readonly bool _isSynthetics;
 
-        public TransactionEventWireModel([NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, bool isSynthetics)
+        public TransactionEventWireModel(IEnumerable<KeyValuePair<string, object>> userAttributes, IEnumerable<KeyValuePair<string, object>> agentAttributes, IEnumerable<KeyValuePair<string, object>> intrinsicAttributes, bool isSynthetics)
         {
-            IntrinsicAttributes = new ReadOnlyDictionary<String, Object>(intrinsicAttributes.ToDictionary<String, Object>());
-            UserAttributes = new ReadOnlyDictionary<String, Object>(userAttributes.ToDictionary<String, Object>());
-            AgentAttributes = new ReadOnlyDictionary<String, Object>(agentAttributes.ToDictionary<String, Object>());
+            IntrinsicAttributes = new ReadOnlyDictionary<string, object>(intrinsicAttributes.ToDictionary<String, Object>());
+            UserAttributes = new ReadOnlyDictionary<string, object>(userAttributes.ToDictionary<String, Object>());
+            AgentAttributes = new ReadOnlyDictionary<string, object>(agentAttributes.ToDictionary<String, Object>());
             _isSynthetics = isSynthetics;
         }
 
-        public Boolean IsSynthetics()
+        public bool IsSynthetics()
         {
             // An event will always contain either all of the synthetics keys or none of them.
             // There is no need to check for the presence of each synthetics key.

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -18,7 +16,6 @@ using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using ITransaction = NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders.ITransaction;
 
@@ -27,37 +24,20 @@ namespace NewRelic.Agent.Core.Api
 {
     public class AgentApiImplementation : IAgentApi
     {
-        private const String CustomMetricNamePrefixAndSeparator = MetricNames.Custom + MetricNames.PathSeparator;
-        [NotNull]
+        private const string CustomMetricNamePrefixAndSeparator = MetricNames.Custom + MetricNames.PathSeparator;
         private readonly ITransactionService _transactionService;
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private readonly ICustomEventTransformer _customEventTransformer;
-
-        [NotNull]
         private readonly IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private readonly IMetricAggregator _metricAggregator;
-
-        [NotNull]
         private readonly ICustomErrorDataTransformer _customErrorDataTransformer;
-
-        [NotNull]
         private readonly IBrowserMonitoringPrereqChecker _browserMonitoringPrereqChecker;
-
-        [NotNull]
         private readonly IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
 
-        [NotNull] private readonly IAgentWrapperApi _agentWrapperApi;
+        private readonly IAgentWrapperApi _agentWrapperApi;
 
-        public AgentApiImplementation([NotNull] ITransactionService transactionService, [NotNull] IAgentHealthReporter agentHealthReporter, [NotNull] ICustomEventTransformer customEventTransformer, [NotNull] IMetricBuilder metricBuilder, [NotNull] IMetricAggregator metricAggregator, [NotNull] ICustomErrorDataTransformer customErrorDataTransformer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, [NotNull] IConfigurationService configurationService, [NotNull] IAgentWrapperApi agentWrapperApi)
+        public AgentApiImplementation(ITransactionService transactionService, IAgentHealthReporter agentHealthReporter, ICustomEventTransformer customEventTransformer, IMetricBuilder metricBuilder, IMetricAggregator metricAggregator, ICustomErrorDataTransformer customErrorDataTransformer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentWrapperApi agentWrapperApi)
         {
             _transactionService = transactionService;
             _agentHealthReporter = agentHealthReporter;
@@ -71,7 +51,7 @@ namespace NewRelic.Agent.Core.Api
             _agentWrapperApi = agentWrapperApi;
         }
 
-        public void RecordCustomEvent(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
+        public void RecordCustomEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
         {
             try
             {
@@ -93,7 +73,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void RecordMetric(String name, Single value)
+        public void RecordMetric(string name, float value)
         {
             try
             {
@@ -115,7 +95,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void RecordResponseTimeMetric(String name, Int64 millis)
+        public void RecordResponseTimeMetric(string name, long millis)
         {
             try
             {
@@ -137,7 +117,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void IncrementCounter(String name)
+        public void IncrementCounter(string name)
         {
             try
             {
@@ -163,7 +143,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void NoticeError(Exception exception, IDictionary<String, String> customAttributes)
+        public void NoticeError(Exception exception, IDictionary<string, string> customAttributes)
         {
             try
             {
@@ -229,7 +209,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void NoticeError(String message, IDictionary<String, String> customAttributes)
+        public void NoticeError(string message, IDictionary<string, string> customAttributes)
         {
             try
             {
@@ -264,7 +244,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void AddCustomParameter(String key, IConvertible value)
+        public void AddCustomParameter(string key, IConvertible value)
         {
             try
             {
@@ -278,7 +258,7 @@ namespace NewRelic.Agent.Core.Api
                     _agentHealthReporter.ReportAgentApiMethodCalled(nameof(AddCustomParameter));
 
                     // Single (32-bit) precision numbers are specially handled and actually stored as floating point numbers. Everything else is stored as a string. This is for historical reasons -- in the past Dirac only stored single-precision numbers, so integers and doubles had to be stored as strings to avoid losing precision. Now Dirac DOES support integers and doubles, but we can't just blindly start passing up integers and doubles where we used to pass strings because it could break customer queries.
-                    var normalizedValue = value is Single
+                    var normalizedValue = value is float
                         ? value
                         : value.ToString(CultureInfo.InvariantCulture);
 
@@ -292,7 +272,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void AddCustomParameter(String key, String value)
+        public void AddCustomParameter(string key, string value)
         {
             try
             {
@@ -315,7 +295,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void SetTransactionName(String category, String name)
+        public void SetTransactionName(string category, string name)
         {
             try
             {
@@ -327,7 +307,7 @@ namespace NewRelic.Agent.Core.Api
                         throw new ArgumentNullException(nameof(name));
 
                     // Default to "Custom" category if none provided
-                    if (String.IsNullOrEmpty(category?.Trim()))
+                    if (string.IsNullOrEmpty(category?.Trim()))
                         category = MetricNames.Custom;
 
                     // Get rid of any slashes
@@ -367,7 +347,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void SetUserParameters(String userName, String accountName, String productName)
+        public void SetUserParameters(string userName, string accountName, string productName)
         {
             try
             {
@@ -377,13 +357,13 @@ namespace NewRelic.Agent.Core.Api
 
                     var transaction = GetCurrentInternalTransaction();
 
-                    if (!String.IsNullOrEmpty(userName))
+                    if (!string.IsNullOrEmpty(userName))
                         transaction.TransactionMetadata.AddUserAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
 
-                    if (!String.IsNullOrEmpty(accountName))
+                    if (!string.IsNullOrEmpty(accountName))
                         transaction.TransactionMetadata.AddUserAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
 
-                    if (!String.IsNullOrEmpty(productName))
+                    if (!string.IsNullOrEmpty(productName))
                         transaction.TransactionMetadata.AddUserAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
                 }
             }
@@ -428,7 +408,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public String GetBrowserTimingHeader()
+        public string GetBrowserTimingHeader()
         {
             try
             {
@@ -438,11 +418,11 @@ namespace NewRelic.Agent.Core.Api
 
                     var transaction = TryGetCurrentInternalTransaction();
                     if (transaction == null)
-                        return String.Empty;
+                        return string.Empty;
 
                     var shouldInject = _browserMonitoringPrereqChecker.ShouldManuallyInject(transaction);
                     if (!shouldInject)
-                        return String.Empty;
+                        return string.Empty;
 
                     transaction.IgnoreAllBrowserMonitoringForThisTx();
 
@@ -455,12 +435,12 @@ namespace NewRelic.Agent.Core.Api
             catch (Exception ex)
             {
                 LogApiError(nameof(GetBrowserTimingHeader), ex);
-                return String.Empty;
+                return string.Empty;
             }
         }
 
         [Obsolete]
-        public String GetBrowserTimingFooter()
+        public string GetBrowserTimingFooter()
         {
             try
             {
@@ -469,17 +449,17 @@ namespace NewRelic.Agent.Core.Api
                     _agentHealthReporter.ReportAgentApiMethodCalled(nameof(GetBrowserTimingFooter));
 
                     // This method is deprecated.
-                    return String.Empty;
+                    return string.Empty;
                 }
             }
             catch (Exception ex)
             {
                 LogApiError(nameof(GetBrowserTimingFooter), ex);
-                return String.Empty;
+                return string.Empty;
             }
         }
 
-        public void DisableBrowserMonitoring(Boolean overrideManual = false)
+        public void DisableBrowserMonitoring(bool overrideManual = false)
         {
             try
             {
@@ -518,7 +498,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)
+        public void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
         {
             try
             {
@@ -529,7 +509,7 @@ namespace NewRelic.Agent.Core.Api
 
                     _agentHealthReporter.ReportAgentApiMethodCalled(nameof(SetApplicationName));
 
-                    var appNames = new List<String> { applicationName, applicationName2, applicationName3 }
+                    var appNames = new List<string> { applicationName, applicationName2, applicationName3 }
                         .Where(name => name != null);
 
                     EventBus<AppNameUpdateEvent>.Publish(new AppNameUpdateEvent(appNames));
@@ -552,7 +532,6 @@ namespace NewRelic.Agent.Core.Api
         /// </summary>
         /// <returns>A transaction.</returns>
         /// <exception cref="InvalidOperationException"/>
-        [NotNull]
         private ITransaction GetCurrentInternalTransaction()
         {
             var transaction = TryGetCurrentInternalTransaction();
@@ -565,7 +544,7 @@ namespace NewRelic.Agent.Core.Api
             return transaction;
         }
 
-        private static void LogApiError(String methodName, Exception ex)
+        private static void LogApiError(string methodName, Exception ex)
         {
             try
             {
@@ -576,11 +555,9 @@ namespace NewRelic.Agent.Core.Api
                 // swallow errors
             }
         }
-
-        [NotNull]
-        private static String GetCustomMetricSuffix(String name)
+        private static string GetCustomMetricSuffix(string name)
         {
-            if (String.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("The Name parameter must have a value that is not null or empty.");
 
             name = Clamper.ClampLength(name);
@@ -592,12 +569,12 @@ namespace NewRelic.Agent.Core.Api
             return name;
         }
 
-        public IEnumerable<KeyValuePair<String, String>> GetRequestMetadata()
+        public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
         {
             return _agentWrapperApi.CurrentTransaction.GetRequestMetadata();
         }
 
-        public IEnumerable<KeyValuePair<String, String>> GetResponseMetadata()
+        public IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
             return _agentWrapperApi.CurrentTransaction.GetResponseMetadata();
         }

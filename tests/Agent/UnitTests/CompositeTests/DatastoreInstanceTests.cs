@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using JetBrains.Annotations;
+﻿using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -10,10 +8,7 @@ namespace CompositeTests
     [TestFixture]
     public class DatastoreInstanceTests
     {
-        [NotNull]
         private static CompositeTestAgent _compositeTestAgent;
-
-        [NotNull]
         private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]
@@ -167,7 +162,7 @@ namespace CompositeTests
             );
         }
 
-        private void CreateATransactionWithDatastoreSegmentAndHarvest(Boolean instanceReportingEnabled, Boolean databaseNameReportingEnabled, DatastoreVendor vendor = DatastoreVendor.MSSQL, String host = "myhost", String portPathOrId = "myport", String databaseName = "mydatabase")
+        private void CreateATransactionWithDatastoreSegmentAndHarvest(bool instanceReportingEnabled, bool databaseNameReportingEnabled, DatastoreVendor vendor = DatastoreVendor.MSSQL, string host = "myhost", string portPathOrId = "myport", string databaseName = "mydatabase")
         {
             _compositeTestAgent.LocalConfiguration.transactionTracer.explainThreshold = 0;
             _compositeTestAgent.LocalConfiguration.datastoreTracer.instanceReporting.enabled = instanceReportingEnabled;

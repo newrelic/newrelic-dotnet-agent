@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class Owin3WebApiAsync : IClassFixture<RemoteServiceFixtures.Owin3WebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.Owin3WebApi _fixture;
 
-        public Owin3WebApiAsync([NotNull] RemoteServiceFixtures.Owin3WebApi fixture, [NotNull] ITestOutputHelper output)
+        public Owin3WebApiAsync(RemoteServiceFixtures.Owin3WebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

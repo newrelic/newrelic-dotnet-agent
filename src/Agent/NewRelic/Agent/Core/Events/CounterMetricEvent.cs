@@ -1,21 +1,18 @@
-﻿using System;
-using JetBrains.Annotations;
-
-namespace NewRelic.Agent.Core.Events
+﻿namespace NewRelic.Agent.Core.Events
 {
     public class CounterMetricEvent
     {
-        [NotNull] public readonly String Namespace;
-        [NotNull] public readonly String Name;
-        [NotNull] public readonly Int32 Count;
+        public readonly string Namespace;
+        public readonly string Name;
+        public readonly int Count;
 
-        public CounterMetricEvent([NotNull] String @namespace, [NotNull] String name, Int32 count = 1)
+        public CounterMetricEvent(string @namespace, string name, int count = 1)
         {
             Namespace = @namespace;
             Name = name;
             Count = count;
         }
-        public CounterMetricEvent([NotNull] String name, Int32 count = 1)
+        public CounterMetricEvent(string name, int count = 1)
         {
             Namespace = "";
             Name = name;

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Messaging;
-using System.Runtime.Remoting.Messaging;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using MethodCall = NewRelic.Agent.Extensions.Providers.Wrapper.MethodCall;
 
 namespace NewRelic.Providers.Wrapper.Msmq
 {

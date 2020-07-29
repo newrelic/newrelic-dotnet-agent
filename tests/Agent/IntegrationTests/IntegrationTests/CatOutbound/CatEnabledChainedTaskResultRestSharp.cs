@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,13 +11,11 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
 {
     public class CatEnabledChainedTaskResultRestSharp : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        [NotNull]
         private HttpResponseHeaders _responseHeaders;
 
-        public CatEnabledChainedTaskResultRestSharp([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public CatEnabledChainedTaskResultRestSharp(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -78,14 +74,14 @@ namespace NewRelic.Agent.IntegrationTests.CatOutbound
             };
 
             // Note: we are checking the attributes attached to the *Callee's* transaction, not the caller's transaction. The attributes attached to the caller's transaction are already fully vetted in the CatInbound tests.
-            var expectedTransactionEventIntrinsicAttributes1 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes1 = new List<string>
             {
                 "nr.guid",
                 "nr.pathHash",
                 "nr.referringPathHash",
                 "nr.referringTransactionGuid"
             };
-            var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes2 = new Dictionary<string, string>
             {
                 // This value comes from what we send to the application (see parameter passed to GetWithCatHeader above)
                 {"nr.tripId", "tripId"}

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.IO;
-using System.Reflection;
 using System.Threading;
-using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Tracer;
 
 namespace NewRelic.Agent.Core
@@ -27,17 +24,17 @@ namespace NewRelic.Agent.Core
         /// This method is reflectively invoked from the injected bytecode if the CLR is greater than 2.0.
         /// </summary>
         public static Action<object, Exception> GetFinishTracerDelegate(
-            String tracerFactoryName,
-            UInt32 tracerArguments,
-            String metricName,
-            String assemblyName,
+            string tracerFactoryName,
+            uint tracerArguments,
+            string metricName,
+            string assemblyName,
             Type type,
-            String typeName,
-            String methodName,
-            String argumentSignature,
-            Object invocationTarget,
-            Object[] args,
-            UInt64 functionId)
+            string typeName,
+            string methodName,
+            string argumentSignature,
+            object invocationTarget,
+            object[] args,
+            ulong functionId)
         {
             var tracer = GetTracer(
                 tracerFactoryName,
@@ -87,17 +84,17 @@ namespace NewRelic.Agent.Core
         /// <paramref name="typeName"/>, <paramref name="methodName"/>, <paramref name="argumentSignature"/> or <paramref name="args"/> is null. 
         /// This function is only called from the injected managed byte-code</exception>
         public static ITracer GetTracer(
-            String tracerFactoryName,
-            UInt32 tracerArguments,
-            String metricName,
-            String assemblyName,
+            string tracerFactoryName,
+            uint tracerArguments,
+            string metricName,
+            string assemblyName,
             Type type,
-            String typeName,
-            String methodName,
-            String argumentSignature,
-            Object invocationTarget,
-            Object[] args,
-            UInt64 functionId)
+            string typeName,
+            string methodName,
+            string argumentSignature,
+            object invocationTarget,
+            object[] args,
+            ulong functionId)
         {
             try
             {
@@ -170,7 +167,7 @@ namespace NewRelic.Agent.Core
         /// <param name="tracerObject"></param>
         /// <param name="returnValue"></param>
         /// <param name="exceptionObject"></param>
-        public static void FinishTracer(Object tracerObject, Object returnValue, Object exceptionObject)
+        public static void FinishTracer(object tracerObject, object returnValue, object exceptionObject)
         {
             try
             {
@@ -252,7 +249,7 @@ namespace NewRelic.Agent.Core
     public class IgnoreWork : IDisposable
     {
         [ThreadStatic]
-        public static UInt32 AgentDepth = 0;
+        public static uint AgentDepth = 0;
 
         public IgnoreWork()
         {

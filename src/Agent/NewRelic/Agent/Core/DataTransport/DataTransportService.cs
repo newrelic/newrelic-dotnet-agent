@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Commands;
 using NewRelic.Agent.Core.Events;
@@ -16,15 +15,12 @@ namespace NewRelic.Agent.Core.DataTransport
 {
     public class DataTransportService : ConfigurationBasedService, IDataTransportService
     {
-        [NotNull]
         private readonly IConnectionManager _connectionManager;
-
-        [NotNull]
         private readonly IDateTimeStatic _dateTimeStatic;
 
         private DateTime _lastMetricSendTime;
 
-        public DataTransportService([NotNull] IConnectionManager connectionManager, [NotNull] IDateTimeStatic dateTimeStatic)
+        public DataTransportService(IConnectionManager connectionManager, IDateTimeStatic dateTimeStatic)
         {
             _connectionManager = connectionManager;
             _dateTimeStatic = dateTimeStatic;
@@ -42,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return response.ReturnValue;
         }
 
-        public void SendCommandResults(IDictionary<String, Object> commandResults)
+        public void SendCommandResults(IDictionary<string, object> commandResults)
         {
             TrySendDataRequest("agent_command_results", _configuration.AgentRunId, commandResults);
         }
@@ -115,12 +111,12 @@ namespace NewRelic.Agent.Core.DataTransport
         #region Private helpers
 
 
-        private DataTransportResponse<Object> TrySendDataRequest([NotNull] String method, [NotNull] params Object[] data)
+        private DataTransportResponse<object> TrySendDataRequest(string method, params object[] data)
         {
-            return TrySendDataRequest<Object>(method, data);
+            return TrySendDataRequest<object>(method, data);
         }
 
-        private DataTransportResponse<T> TrySendDataRequest<T>([NotNull] String method, [NotNull] params Object[] data)
+        private DataTransportResponse<T> TrySendDataRequest<T>(string method, params object[] data)
         {
             try
             {
@@ -158,7 +154,7 @@ namespace NewRelic.Agent.Core.DataTransport
             }
         }
 
-        private static DataTransportResponse<T> Shutdown<T>(String message)
+        private static DataTransportResponse<T> Shutdown<T>(string message)
         {
             Log.InfoFormat("Shutting down: {0}", message);
             EventBus<KillAgentEvent>.Publish(new KillAgentEvent());
@@ -171,7 +167,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return new DataTransportResponse<T>(DataTransportResponseStatus.OtherError);
         }
 
-        private static DataTransportResponse<T> GetErrorResponse<T>([NotNull] Exception exception, DataTransportResponseStatus errorStatus)
+        private static DataTransportResponse<T> GetErrorResponse<T>(Exception exception, DataTransportResponseStatus errorStatus)
         {
             Log.Error(exception);
             return new DataTransportResponse<T>(errorStatus);

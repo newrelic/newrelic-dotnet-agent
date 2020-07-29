@@ -20,9 +20,9 @@ namespace NewRelic.Agent.Core.DataTransport
         [TestCase("PostTooBigException", typeof(PostTooBigException))]
         [TestCase("RuntimeError", typeof(RuntimeException))]
         [TestCase("unknown", typeof(ExceptionFactories.UnknownRPMException))]
-        public void deserializes_from_object_exception(String errorType, Type expectedExceptionType)
+        public void deserializes_from_object_exception(string errorType, Type expectedExceptionType)
         {
-            var json = String.Format(@"{{""error_type"": ""{0}"", ""message"": ""foo""}}", errorType);
+            var json = string.Format(@"{{""error_type"": ""{0}"", ""message"": ""foo""}}", errorType);
 
             var result = JsonConvert.DeserializeObject<CollectorExceptionEnvelope>(json);
 
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.Core.DataTransport
         [Test]
         public void deserializes_from_string_exception()
         {
-            const String json = @"""banana""";
+            const string json = @"""banana""";
 
             var result = JsonConvert.DeserializeObject<CollectorExceptionEnvelope>(json);
 

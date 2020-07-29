@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Collections.Generic;
 using System.Web.Http;
 
 namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
@@ -9,7 +7,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
     {
         [HttpGet]
         [Route("api/CustomAttributes")]
-        public String CustomAttributes()
+        public string CustomAttributes()
         {
             NewRelic.Api.Agent.NewRelic.AddCustomParameter("key", "value");
             NewRelic.Api.Agent.NewRelic.AddCustomParameter("foo", "bar");
@@ -19,9 +17,9 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
 
         [HttpGet]
         [Route("api/CustomErrorAttributes")]
-        public String CustomErrorAttributes()
+        public string CustomErrorAttributes()
         {
-            var errorAttributes = new Dictionary<String, String>
+            var errorAttributes = new Dictionary<string, string>
             {
                 {"hey", "dude"},
                 {"faz", "baz"},
@@ -33,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
 
         [HttpGet]
         [Route("api/IgnoreTransaction")]
-        public String IgnoreTransaction()
+        public string IgnoreTransaction()
         {
             NewRelic.Api.Agent.NewRelic.IgnoreTransaction();
 
@@ -42,7 +40,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
 
         [HttpGet]
         [Route("api/CustomAttributesKeyNull")]
-        public String CustomAttributesKeyNull()
+        public string CustomAttributesKeyNull()
         {
             NewRelic.Api.Agent.NewRelic.AddCustomParameter(null, "valuewithnullkey");
             return "success";
@@ -50,7 +48,7 @@ namespace NewRelic.Agent.IntegrationTests.Applications.CustomAttributesWebApi
 
         [HttpGet]
         [Route("api/CustomAttributesValueNull")]
-        public String CustomAttributesValueNull()
+        public string CustomAttributesValueNull()
         {
             NewRelic.Api.Agent.NewRelic.AddCustomParameter("keywithnullvalue", null);
             return "success";

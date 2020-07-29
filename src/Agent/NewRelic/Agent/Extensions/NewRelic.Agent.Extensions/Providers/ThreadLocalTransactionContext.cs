@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Threading;
-using JetBrains.Annotations;
-
-namespace NewRelic.Agent.Extensions.Providers
+﻿namespace NewRelic.Agent.Extensions.Providers
 {
     /// <summary>
     /// A general use transaction context backed by a thread static variable.  Will work well whenever transactions are single threaded and and uninterupted.
@@ -23,13 +16,12 @@ namespace NewRelic.Agent.Extensions.Providers
         /// those), there will be almost no contention on the locks for the call stacks, since
         /// an instance of this storage type will be created for each transaction.
         /// </summary>
-        [NotNull]
         private readonly IThreadLocal<T> _threadLocal;
 
         /// <summary>
         /// 
         /// </summary>
-        public ThreadLocalTransactionContext(String key, IThreadLocal<T> threadLocal)
+        public ThreadLocalTransactionContext(string key, IThreadLocal<T> threadLocal)
         {
             _threadLocal = threadLocal;
         }

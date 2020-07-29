@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Events;
@@ -11,8 +9,6 @@ using NewRelic.SystemInterfaces.Web;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     public class Class_ConfigurationService
@@ -79,7 +75,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestFixture, Category("Configuration")]
         public class Request_GetCurrentConfiguration
         {
-            [NotNull]
             private ConfigurationService _configurationService;
 
             [SetUp]

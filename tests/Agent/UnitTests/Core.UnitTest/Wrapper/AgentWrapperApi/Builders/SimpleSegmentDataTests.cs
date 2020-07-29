@@ -50,8 +50,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void ExclusiveDuration_Synchronous()
         {
-            var parent = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 0, null, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true, 666);
-            var child = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(1), 1, 0, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true, 666);
+            var parent = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 0, null, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true, 666);
+            var child = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(1), 1, 0, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true, 666);
             parent.ChildFinished(child);
 
             Assert.AreEqual(1, parent.ExclusiveDurationOrZero.TotalSeconds);
@@ -65,8 +65,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentCombinable()
         {
-            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
-            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", false);
+            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", false);
 
             Assert.IsFalse(segment1.IsCombinableWith(segment2));
         }
@@ -74,8 +74,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfBothNotCombinable()
         {
-            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", false);
-            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", false);
+            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", false);
+            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", false);
 
             Assert.IsFalse(segment1.IsCombinableWith(segment2));
         }
@@ -83,8 +83,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentHashCode()
         {
-            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
-            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 2), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
+            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 2), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
 
             Assert.IsFalse(segment1.IsCombinableWith(segment2));
         }
@@ -92,8 +92,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentTypeName()
         {
-            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
-            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type2", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
+            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type2", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
 
             Assert.IsFalse(segment1.IsCombinableWith(segment2));
         }
@@ -101,8 +101,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentMethodName()
         {
-            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
-            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method2", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
+            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method2", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
 
             Assert.IsFalse(segment1.IsCombinableWith(segment2));
         }
@@ -110,8 +110,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentName()
         {
-            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
-            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name2", true);
+            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment2 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name2", true);
 
             Assert.IsFalse(segment1.IsCombinableWith(segment2));
         }
@@ -119,8 +119,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         [Test]
         public void IsCombinableWith_ReturnsFalse_IfDifferentSegmentType()
         {
-            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "name", true);
-            var segment2 = MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<String, Object>>(), "type", "method", true);
+            var segment1 = createSimpleSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "name", true);
+            var segment2 = MethodSegmentDataTests.createMethodSegmentBuilder(new TimeSpan(), TimeSpan.FromSeconds(2), 2, 1, new MethodCallData("type", "method", 1), Enumerable.Empty<KeyValuePair<string, object>>(), "type", "method", true);
 
             Assert.IsFalse(segment1.IsCombinableWith(segment2));
         }
@@ -134,12 +134,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         {
             var oldStartTime = DateTime.Now;
             var oldDuration = TimeSpan.FromSeconds(2);
-            var oldParameters = new Dictionary<String, Object> { { "flim", "flam" } };
+            var oldParameters = new Dictionary<string, object> { { "flim", "flam" } };
             var oldSegment = createSimpleSegmentBuilder(new TimeSpan(), oldDuration, 2, 1, new MethodCallData("type", "method", 1), oldParameters, "name", true);
 
             var newStartTime = TimeSpan.FromSeconds(5);
             var newDuration = TimeSpan.FromSeconds(5);
-            var newParameters = new Dictionary<String, Object> { { "foo", "bar" }, { "zip", "zap" } };
+            var newParameters = new Dictionary<string, object> { { "foo", "bar" }, { "zip", "zap" } };
             var newSegment = oldSegment.CreateSimilar(newStartTime, newDuration, newParameters);
 
             var newTypedSegment = newSegment as TypedSegment<SimpleSegmentData>;

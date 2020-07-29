@@ -7,7 +7,7 @@ namespace NewRelic.Agent.Core.Exceptions
     /// </summary>
     public class ConnectionException : Exception
     {
-        public ConnectionException(String message) : base(message)
+        public ConnectionException(string message) : base(message)
         {
         }
     }

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -14,24 +12,17 @@ using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Attribute = NewRelic.Agent.Core.Transactions.Attribute;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
     [TestFixture]
     public class TransactionAttributeMakerTests
     {
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private TransactionAttributeMaker _transactionAttributeMaker;
 
         [SetUp]

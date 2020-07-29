@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent;
 using NewRelic.Agent.Configuration;
 using Newtonsoft.Json;
@@ -15,7 +12,7 @@ namespace Tests.NewRelic.Agent
     public class LabelsServiceTests
     {
         [TestCase(null)]
-        public void empty_collection(String labelsConfigurationString)
+        public void empty_collection(string labelsConfigurationString)
         {
             // arrange
             var configurationService = Mock.Create<IConfigurationService>();
@@ -31,20 +28,20 @@ namespace Tests.NewRelic.Agent
         public class TestCase
         {
             [JsonProperty(PropertyName = "name")]
-            public readonly String Name;
+            public readonly string Name;
             [JsonProperty(PropertyName = "labelString")]
-            public readonly String LabelConfigurationString;
+            public readonly string LabelConfigurationString;
             [JsonProperty(PropertyName = "warning")]
-            public readonly Boolean Warning;
+            public readonly bool Warning;
             [JsonProperty(PropertyName = "expected")]
             public readonly IEnumerable<Label> Expected;
 
             public class Label
             {
                 [JsonProperty(PropertyName = "label_type")]
-                public readonly String LabelType;
+                public readonly string LabelType;
                 [JsonProperty(PropertyName = "label_value")]
-                public readonly String LabelValue;
+                public readonly string LabelValue;
             }
 
             public override string ToString()

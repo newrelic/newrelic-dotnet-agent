@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Agent.Core.Utilities;
 using Newtonsoft.Json;
@@ -25,42 +23,36 @@ namespace NewRelic.Agent.Core.WireModels
         public virtual TimeSpan Duration { get; }
 
         [JsonArrayIndex(Index = 2)]
-        [NotNull]
-        public virtual String TransactionMetricName { get; }
+        public virtual string TransactionMetricName { get; }
 
         [JsonArrayIndex(Index = 3)]
-        [NotNull]
-        public virtual String Uri { get; }
+        public virtual string Uri { get; }
 
         [JsonArrayIndex(Index = 4)]
-        [NotNull]
         public virtual TransactionTraceData TransactionTraceData { get; }
 
         [JsonArrayIndex(Index = 5)]
-        [NotNull]
-        public virtual String Guid { get; }
+        public virtual string Guid { get; }
 
         [JsonArrayIndex(Index = 6)]
-        public virtual Object Unused1 { get; } = null;
+        public virtual object Unused1 { get; } = null;
 
         // Deprecated (used to be called ForcePersist and was related to RUM)
         [JsonArrayIndex(Index = 7)]
-        public virtual Boolean Unused2 { get; } = false;
+        public virtual bool Unused2 { get; } = false;
 
         // Not used by the .NET agent (because we don't support xray sessions)
         [JsonArrayIndex(Index = 8)]
-        [CanBeNull]
-        public virtual UInt64? XraySessionId { get; }
+        public virtual ulong? XraySessionId { get; }
 
         // Set if X-NewRelic-Synthetics header is present
         [JsonArrayIndex(Index = 9)]
-        [CanBeNull]
-        public virtual String SyntheticsResourceId { get; }
+        public virtual string SyntheticsResourceId { get; }
 
         [JsonIgnore]
-        public Boolean IsSynthetics { get; }
+        public bool IsSynthetics { get; }
 
-        public TransactionTraceWireModel(DateTime startTime, TimeSpan duration, [NotNull] String transactionMetricName, [NotNull] String uri, [NotNull] TransactionTraceData transactionTraceData, [NotNull] String guid, [CanBeNull] UInt64? xraySessionId, [CanBeNull] String syntheticsResourceId, Boolean isSynthetics)
+        public TransactionTraceWireModel(DateTime startTime, TimeSpan duration, string transactionMetricName, string uri, TransactionTraceData transactionTraceData, string guid, ulong? xraySessionId, string syntheticsResourceId, bool isSynthetics)
         {
             StartTime = startTime;
             Duration = duration;
@@ -83,37 +75,30 @@ namespace NewRelic.Agent.Core.WireModels
         public virtual DateTime StartTime { get; }
 
         [JsonArrayIndex(Index = 1)]
-        [NotNull]
-        public virtual Object UnusedArray1 { get; } = new Object();
+        public virtual object UnusedArray1 { get; } = new object();
 
         [JsonArrayIndex(Index = 2)]
-        [NotNull]
-        public virtual Object UnusedArray2 { get; } = new Object();
+        public virtual object UnusedArray2 { get; } = new object();
 
         [JsonArrayIndex(Index = 3)]
-        [NotNull]
         public virtual TransactionTraceSegment RootSegment { get; }
 
         [JsonArrayIndex(Index = 4)]
-        [NotNull]
         public virtual TransactionTraceAttributes Attributes { get; }
 
         [JsonObject(MemberSerialization.OptIn)]
         public class TransactionTraceAttributes
         {
             [JsonProperty("agentAttributes")]
-            [NotNull]
-            public virtual ReadOnlyDictionary<String, Object> AgentAttributes { get; }
+            public virtual ReadOnlyDictionary<string, object> AgentAttributes { get; }
 
             [JsonProperty("userAttributes")]
-            [NotNull]
-            public virtual ReadOnlyDictionary<String, Object> UserAttributes { get; }
+            public virtual ReadOnlyDictionary<string, object> UserAttributes { get; }
 
             [JsonProperty("intrinsics")]
-            [NotNull]
-            public virtual ReadOnlyDictionary<String, Object> Intrinsics { get; }
+            public virtual ReadOnlyDictionary<string, object> Intrinsics { get; }
 
-            public TransactionTraceAttributes([NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes)
+            public TransactionTraceAttributes(IEnumerable<KeyValuePair<string, object>> agentAttributes, IEnumerable<KeyValuePair<string, object>> intrinsicAttributes, IEnumerable<KeyValuePair<string, object>> userAttributes)
             {
                 AgentAttributes = agentAttributes.ToReadOnlyDictionary();
                 Intrinsics = intrinsicAttributes.ToReadOnlyDictionary();
@@ -121,7 +106,7 @@ namespace NewRelic.Agent.Core.WireModels
             }
         }
 
-        public TransactionTraceData(DateTime startTime, [NotNull] TransactionTraceSegment rootSegment, [NotNull] IEnumerable<KeyValuePair<String, Object>> agentAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> intrinsicAttributes, [NotNull] IEnumerable<KeyValuePair<String, Object>> userAttributes)
+        public TransactionTraceData(DateTime startTime, TransactionTraceSegment rootSegment, IEnumerable<KeyValuePair<string, object>> agentAttributes, IEnumerable<KeyValuePair<string, object>> intrinsicAttributes, IEnumerable<KeyValuePair<string, object>> userAttributes)
         {
             StartTime = startTime;
             RootSegment = rootSegment;
@@ -141,32 +126,27 @@ namespace NewRelic.Agent.Core.WireModels
         public TimeSpan TimeBetweenTransactionStartAndSegmentEnd { get; }
 
         [JsonArrayIndex(Index = 2)]
-        [NotNull]
-        public String Name { get; }
+        public string Name { get; }
 
         [JsonArrayIndex(Index = 3)]
-        [NotNull]
-        public IDictionary<String, Object> Parameters { get; }
+        public IDictionary<string, object> Parameters { get; }
 
         [JsonArrayIndex(Index = 4)]
-        [NotNull]
         public IList<TransactionTraceSegment> Children { get; }
 
         [JsonArrayIndex(Index = 5)]
-        [CanBeNull]
-        public String ClassName { get; }
+        public string ClassName { get; }
 
         [JsonArrayIndex(Index = 6)]
-        [CanBeNull]
-        public String MethodName { get; }
+        public string MethodName { get; }
 
 
-        public TransactionTraceSegment(TimeSpan timeBetweenTransactionStartAndSegmentStart, TimeSpan timeBetweenTransactionStartAndSegmentEnd, [NotNull] String name, [NotNull] IDictionary<String, Object> parameters, [NotNull] IEnumerable<TransactionTraceSegment> children, String className, String methodName)
+        public TransactionTraceSegment(TimeSpan timeBetweenTransactionStartAndSegmentStart, TimeSpan timeBetweenTransactionStartAndSegmentEnd, string name, IDictionary<string, object> parameters, IEnumerable<TransactionTraceSegment> children, string className, string methodName)
         {
             TimeBetweenTransactionStartAndSegmentStart = timeBetweenTransactionStartAndSegmentStart;
             TimeBetweenTransactionStartAndSegmentEnd = timeBetweenTransactionStartAndSegmentEnd;
             Name = name;
-            Parameters = new Dictionary<String, Object>(parameters);
+            Parameters = new Dictionary<string, object>(parameters);
             Children = new List<TransactionTraceSegment>(children);
             ClassName = className;
             MethodName = methodName;

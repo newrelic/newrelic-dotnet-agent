@@ -1,11 +1,7 @@
-﻿using System;
-using System.Configuration;
-using System.Net.Http;
-using System.Runtime.Versioning;
+﻿using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.SystemExtensions;
@@ -14,7 +10,7 @@ namespace NewRelic.Providers.Wrapper.WebApi1
 {
     public class AsyncApiControllerActionInvoker : IWrapper
     {
-        private const String DotNet40BugMessage = "WebAPI v1 is not supported on .NET 4.0 unless you opt in to a .NET Framework bug fix. For details see: https://docs.newrelic.com/docs/agents/net-agent/troubleshooting/missing-async-metrics";
+        private const string DotNet40BugMessage = "WebAPI v1 is not supported on .NET 4.0 unless you opt in to a .NET Framework bug fix. For details see: https://docs.newrelic.com/docs/agents/net-agent/troubleshooting/missing-async-metrics";
 
         public bool IsTransactionRequired => true;
 
@@ -46,7 +42,7 @@ namespace NewRelic.Providers.Wrapper.WebApi1
             var controllerName = TryGetControllerName(httpActionContext) ?? "Unknown Controller";
             var actionName = TryGetActionName(httpActionContext) ?? "Unknown Action";
 
-            var transactionName = String.Format("{0}/{1}", controllerName, actionName);
+            var transactionName = string.Format("{0}/{1}", controllerName, actionName);
             transaction.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, 6);
 
             var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
@@ -73,9 +69,7 @@ namespace NewRelic.Providers.Wrapper.WebApi1
                     }
                 });
         }
-
-        [CanBeNull]
-        private static String TryGetControllerName([NotNull] HttpActionContext httpActionContext)
+        private static string TryGetControllerName(HttpActionContext httpActionContext)
         {
             var controllerContext = httpActionContext.ControllerContext;
             if (controllerContext == null)
@@ -87,9 +81,7 @@ namespace NewRelic.Providers.Wrapper.WebApi1
 
             return controllerDescriptor.ControllerName;
         }
-
-        [CanBeNull]
-        private static String TryGetActionName([NotNull] HttpActionContext httpActionContext)
+        private static string TryGetActionName(HttpActionContext httpActionContext)
         {
             var actionDescriptor = httpActionContext.ActionDescriptor;
             if (actionDescriptor == null)

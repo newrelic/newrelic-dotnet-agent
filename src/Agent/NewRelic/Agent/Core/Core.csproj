@@ -8,15 +8,16 @@
         <AssemblyOriginatorKeyFile>$(SolutionDir)build\keys\NewRelicStrongNameKey.snk</AssemblyOriginatorKeyFile>
         <IntermediateOutputPath>$(SolutionDir)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
         <OutputPath>$(SolutionDir)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DebugType>full</DebugType>
         <DebugSymbols>True</DebugSymbols>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
         <PackageReference Include="MoreLinq" Version="2.4.0" />
         <PackageReference Include="log4net" Version="2.0.8" />
+        <PackageReference Include="ILRepack" Version="2.0.16" />
     </ItemGroup>
 
   <PropertyGroup>
@@ -142,4 +143,62 @@
         <LastGenOutput>$(SolutionDir)src\Agent\NewRelic\Agent\Core\AgentInstallConfiguration_Generated.cs</LastGenOutput>
       </None>
     </ItemGroup>
+
+        <Target Name="ILRepack" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+        <ItemGroup>
+            <PossibleRefsForILRepack Include="$(OutputPath)*.dll" />
+        </ItemGroup>
+
+        <ItemGroup>
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Core'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Parsing'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Memory'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.Runtime.CompilerServices.Unsafe'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.AttributeFilter'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.Configuration'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Trie'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Dongle'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'NewRelic.Agent.LabelsService'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'log4net'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Newtonsoft.Json'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'MoreLinq'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'ICSharpCode.SharpZipLib'" />
+        </ItemGroup>
+
+        <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Castle.Core'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Castle.Windsor'" />
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'System.ValueTuple'" />
+        </ItemGroup>
+
+        <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+            <ILRepackInclude Include="@(PossibleRefsForILRepack)" Condition="'%(FileName)' == 'Autofac'" />
+        </ItemGroup>
+
+        <PropertyGroup>
+            <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'net35'">13</ILRepackIncludeCount>
+            <ILRepackIncludeCount Condition="'$(TargetFramework)' == 'netstandard2.0'">13</ILRepackIncludeCount>
+        </PropertyGroup>
+
+        <Error Text="ILRepack of $(AssemblyName) ($(TargetFramework)) failed. A dependency is missing. Expected $(ILRepackIncludeCount) dependencies but found @(ILRepackInclude-&gt;Count())." Condition="@(ILRepackInclude-&gt;Count()) != $(ILRepackIncludeCount)" />
+
+        <ItemGroup>
+            <ILRepackExclude Include="@(PossibleRefsForILRepack)" Exclude="@(ILRepackInclude)" />
+        </ItemGroup>
+
+        <Message Importance="High" Text="ILRepack Include: %(ILRepackInclude.FullPath)" />
+        <Message Importance="High" Text="ILRepack Exclude: %(ILRepackExclude.FullPath)" />
+
+        <PropertyGroup>
+            <ILRepackSearchDirOutputPath>$([System.String]::new("$(OutputPath)").Trim('\'))</ILRepackSearchDirOutputPath>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <ILRepackCommand>"$(ILRepack)" --parallel --internalize --norepackres --keepotherversionreferences --keyfile:"$(AssemblyOriginatorKeyFile)" --lib:"$(ILRepackSearchDirOutputPath)" --out:"$(OutputPath)..\$(TargetFramework)-ILRepacked\$(AssemblyName).dll" "$(TargetPath)" "@(ILRepackInclude, '" "')"</ILRepackCommand>
+        </PropertyGroup>
+
+        <Message Importance="High" Text="Executing ILRepack.exe for $(TargetFramework) build: $(ILRepackCommand)" />
+        <Exec Command="$(ILRepackCommand)" />
+    </Target>
+
 </Project>

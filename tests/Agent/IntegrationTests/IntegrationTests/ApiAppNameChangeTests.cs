@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ApiAppNameChangeTests : IClassFixture<RemoteServiceFixtures.ApiAppNameChangeFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.ApiAppNameChangeFixture _fixture;
 
-        public ApiAppNameChangeTests([NotNull] RemoteServiceFixtures.ApiAppNameChangeFixture fixture, [NotNull] ITestOutputHelper output)
+        public ApiAppNameChangeTests(RemoteServiceFixtures.ApiAppNameChangeFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -23,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
 
-                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<String, String>("autoStart", "false") });
+                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<string, string>("autoStart", "false") });
                 });
             _fixture.Initialize();
         }

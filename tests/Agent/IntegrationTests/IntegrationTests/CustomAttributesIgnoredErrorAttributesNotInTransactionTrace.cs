@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
@@ -14,10 +12,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class CustomAttributesIgnoredErrorAttributesNotInTransactionTrace : IClassFixture<CustomAttributesWebApi>
     {
-        [NotNull]
         private readonly CustomAttributesWebApi _fixture;
 
-        public CustomAttributesIgnoredErrorAttributesNotInTransactionTrace([NotNull] CustomAttributesWebApi fixture, ITestOutputHelper output)
+        public CustomAttributesIgnoredErrorAttributesNotInTransactionTrace(CustomAttributesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -44,14 +41,14 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var unexpectedTransactionTraceAttributes = new List<String>
+            var unexpectedTransactionTraceAttributes = new List<string>
             {
                 "key",
                 "foo",
                 "hey",
                 "faz",
             };
-            var unexpectedTranscationEventAttributes = new List<String>
+            var unexpectedTranscationEventAttributes = new List<string>
             {
                 "key",
                 "foo",

@@ -1,13 +1,12 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utils
 {
     public static class Strings
     {
-        public static String FixDatabaseObjectName(String s)
+        public static string FixDatabaseObjectName(string s)
         {
             int index = s.IndexOf('.');
             if (index > 0)
@@ -29,7 +28,7 @@ namespace NewRelic.Agent.Core.Utils
         /// </summary>
         /// <param name="name">The file name to sanitize.</param>
         /// <returns>The sanitized file name.</returns>
-        public static String SafeFileName(String name)
+        public static string SafeFileName(string name)
         {
             foreach (char c in System.IO.Path.GetInvalidPathChars())
             {
@@ -46,16 +45,16 @@ namespace NewRelic.Agent.Core.Utils
         /// Unbracket and unquote a database object name.
         /// </summary>
         /// <param name="s">
-        /// A <see cref="String"/>
+        /// A <see cref="string"/>
         /// </param>
         /// <returns>
-        /// A <see cref="String"/>
+        /// A <see cref="string"/>
         /// </returns>
-        private static String FixDatabaseName(String s)
+        private static string FixDatabaseName(string s)
         {
             StringBuilder sb = new StringBuilder(s.Length);
             bool first = true;
-            foreach (String segment in s.Split('.'))
+            foreach (string segment in s.Split('.'))
             {
                 if (!first)
                 {
@@ -70,7 +69,7 @@ namespace NewRelic.Agent.Core.Utils
             return sb.ToString();
         }
 
-        public static String SafeMethodName(String name)
+        public static string SafeMethodName(string name)
         {
             if (name[0] < '\u0021')
             {
@@ -79,7 +78,7 @@ namespace NewRelic.Agent.Core.Utils
             return name;
         }
 
-        public static String ToRubyName(String name)
+        public static string ToRubyName(string name)
         {
             StringBuilder stringBuilder = new StringBuilder((int)(name.Length * 1.2));
             foreach (char c in name.ToCharArray())
@@ -101,13 +100,12 @@ namespace NewRelic.Agent.Core.Utils
         /// Unquote a string.
         /// </summary>
         /// <param name="value">
-        /// A <see cref="String"/>
+        /// A <see cref="string"/>
         /// </param>
         /// <returns>
-        /// A <see cref="String"/>
+        /// A <see cref="string"/>
         /// </returns>
-        [NotNull]
-        public static String Unquote([NotNull] String value)
+        public static string Unquote(string value)
         {
             if (value.Length < 3)
                 return value;
@@ -119,9 +117,7 @@ namespace NewRelic.Agent.Core.Utils
 
             return value.Substring(1, value.Length - 2);
         }
-
-        [NotNull]
-        public static String Unbracket([NotNull] String value)
+        public static string Unbracket(string value)
         {
             if (value.Length < 3)
                 return value;
@@ -137,9 +133,7 @@ namespace NewRelic.Agent.Core.Utils
 
             return value;
         }
-
-        [NotNull]
-        public static String Unparenthesize([NotNull] String value)
+        public static string Unparenthesize(string value)
         {
             if (value.Length < 3)
                 return value;
@@ -155,12 +149,10 @@ namespace NewRelic.Agent.Core.Utils
 
             return value;
         }
-
-        [NotNull]
-        public static String CleanUri(String uri)
+        public static string CleanUri(string uri)
         {
             if (uri == null)
-                return String.Empty;
+                return string.Empty;
 
             var index = uri.IndexOf('?');
             return (index > 0)
@@ -168,10 +160,10 @@ namespace NewRelic.Agent.Core.Utils
                 : uri;
         }
 
-        public static String CleanUri(Uri uri)
+        public static string CleanUri(Uri uri)
         {
             if (uri == null)
-                return String.Empty;
+                return string.Empty;
 
             // Can't clean up relative URIs (Uri.GetComponents will throw an exception for relative URIs)
             if (!uri.IsAbsoluteUri)
@@ -183,9 +175,7 @@ namespace NewRelic.Agent.Core.Utils
                     UriComponents.Path,
                     UriFormat.UriEscaped);
         }
-
-        [CanBeNull]
-        public static String TryBase64Decode([CanBeNull] String val, String encodingKey = null)
+        public static string TryBase64Decode(string val, string encodingKey = null)
         {
             if (val == null)
                 return null;
@@ -199,20 +189,16 @@ namespace NewRelic.Agent.Core.Utils
                 return null;
             }
         }
-
-        [NotNull]
-        public static String Base64Decode([NotNull] String val, String encodingKey = null)
+        public static string Base64Decode(string val, string encodingKey = null)
         {
             var bytes = Convert.FromBase64String(val);
 
-            if (!String.IsNullOrEmpty(encodingKey))
+            if (!string.IsNullOrEmpty(encodingKey))
                 bytes = EncodeWithKey(bytes, encodingKey);
 
             return Encoding.UTF8.GetString(bytes);
         }
-
-        [CanBeNull]
-        public static String TryBase64Encode([CanBeNull] String val, String encodingKey = null)
+        public static string TryBase64Encode(string val, string encodingKey = null)
         {
             if (val == null)
                 return null;
@@ -226,20 +212,16 @@ namespace NewRelic.Agent.Core.Utils
                 return null;
             }
         }
-
-        [NotNull]
-        public static String Base64Encode([NotNull] String val, String encodingKey = null)
+        public static string Base64Encode(string val, string encodingKey = null)
         {
             var encodedBytes = Encoding.UTF8.GetBytes(val);
 
-            if (!String.IsNullOrEmpty(encodingKey))
+            if (!string.IsNullOrEmpty(encodingKey))
                 encodedBytes = EncodeWithKey(encodedBytes, encodingKey);
 
             return Convert.ToBase64String(encodedBytes);
         }
-
-        [NotNull]
-        private static Byte[] EncodeWithKey([NotNull] Byte[] bytes, [NotNull] String key)
+        private static byte[] EncodeWithKey(byte[] bytes, string key)
         {
             var keyBytes = Encoding.UTF8.GetBytes(key);
 
@@ -249,16 +231,14 @@ namespace NewRelic.Agent.Core.Utils
                 if (keyIdx == keyBytes.Length)
                     keyIdx = 0;
 
-                bytes[i] = (Byte)(bytes[i] ^ keyBytes[keyIdx]);
+                bytes[i] = (byte)(bytes[i] ^ keyBytes[keyIdx]);
                 keyIdx++;
             }
 
             return bytes;
 
         }
-
-        [NotNull]
-        public static String ObfuscateStringWithKey([NotNull] String val, [NotNull] String key, String defaultValue = null)
+        public static string ObfuscateStringWithKey(string val, string key, string defaultValue = null)
         {
             var returnVal = defaultValue;
             if (val == null)
@@ -280,7 +260,7 @@ namespace NewRelic.Agent.Core.Utils
                     var c = bytes[i] ^ key[keyIdx];
                     keyIdx++;
 
-                    bytes[i] = (Byte)c;
+                    bytes[i] = (byte)c;
                 }
             }
             returnVal = Convert.ToBase64String(bytes);
@@ -404,7 +384,7 @@ namespace NewRelic.Agent.Core.Utils
         }
 
         // Must use Encoder/Decoder and not Encoding.GetString.  See: http://msdn.microsoft.com/en-us/library/ms404377(v=vs.110).aspx
-        public static string GetStringBufferFromBytes([NotNull] Decoder decoder, [NotNull] byte[] buffer, int offset, int count)
+        public static string GetStringBufferFromBytes(Decoder decoder, byte[] buffer, int offset, int count)
         {
             var length = decoder.GetCharCount(buffer, offset, count);
             var chars = new char[length];

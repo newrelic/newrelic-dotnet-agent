@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.JsonConverters;
 using Newtonsoft.Json;
 
@@ -48,28 +47,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     [JsonConverter(typeof(JsonArrayConverter))]
     public class ErrorEventEvents
     {
-        [JsonArrayIndex(Index = 0)] public readonly IDictionary<String, Object> IntrinsicAttributes;
+        [JsonArrayIndex(Index = 0)] public readonly IDictionary<string, object> IntrinsicAttributes;
 
-        [JsonArrayIndex(Index = 1)] public readonly IDictionary<String, Object> UserAttributes;
+        [JsonArrayIndex(Index = 1)] public readonly IDictionary<string, object> UserAttributes;
 
-        [JsonArrayIndex(Index = 2)] public readonly IDictionary<String, Object> AgentAttributes;
+        [JsonArrayIndex(Index = 2)] public readonly IDictionary<string, object> AgentAttributes;
 
         public ErrorEventEvents()
         {
 
         }
 
-        public ErrorEventEvents(IDictionary<String, Object> intrinsicAttributes, IDictionary<String, Object> userAttributes, IDictionary<String, Object> agentAttributes)
+        public ErrorEventEvents(IDictionary<string, object> intrinsicAttributes, IDictionary<string, object> userAttributes, IDictionary<string, object> agentAttributes)
         {
             IntrinsicAttributes = intrinsicAttributes;
             UserAttributes = userAttributes;
             AgentAttributes = agentAttributes;
         }
 
-        [NotNull]
-        public IDictionary<String, Object> GetByType(EventAttributeType attributeType)
+        public IDictionary<string, object> GetByType(EventAttributeType attributeType)
         {
-            IDictionary<String, Object> attributes;
+            IDictionary<string, object> attributes;
             switch (attributeType)
             {
                 case EventAttributeType.Intrinsic:
@@ -85,7 +83,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                     throw new NotImplementedException();
             }
 
-            return attributes ?? new Dictionary<String, Object>();
+            return attributes ?? new Dictionary<string, object>();
         }
     }
 }

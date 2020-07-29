@@ -14,27 +14,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public readonly TimeSpan Duration;
 
         // index 2
-        public readonly String Path;
+        public readonly string Path;
 
         // index 3
-        public readonly String Uri;
+        public readonly string Uri;
 
         // index 4
         public readonly TransactionTrace TraceData;
 
         // index 5
-        public readonly String Guid;
+        public readonly string Guid;
 
         // index 6
-        public readonly Object Unused1 = null;
+        public readonly object Unused1 = null;
 
         // index 7
-        public readonly Boolean ForcePersist;
+        public readonly bool ForcePersist;
 
         // index 8
-        public readonly UInt64? XRaySessionId;
+        public readonly ulong? XRaySessionId;
 
-        public TransactionSample(DateTime timestamp, TimeSpan duration, String path, String uri, TransactionTrace traceData, String guid, Boolean forcePersist, UInt64? xRaySessionId)
+        public TransactionSample(DateTime timestamp, TimeSpan duration, string path, string uri, TransactionTrace traceData, string guid, bool forcePersist, ulong? xRaySessionId)
         {
             Timestamp = timestamp;
             Duration = duration;
@@ -59,14 +59,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var timestamp = new DateTime(1970, 01, 01) + TimeSpan.FromSeconds((Double)(jArray[0] ?? 0));
-                var duration = TimeSpan.FromMilliseconds((Double)(jArray[1] ?? 0));
-                var path = (jArray[2] ?? new JObject()).ToObject<String>();
-                var uri = (jArray[3] ?? new JObject()).ToObject<String>();
+                var timestamp = new DateTime(1970, 01, 01) + TimeSpan.FromSeconds((double)(jArray[0] ?? 0));
+                var duration = TimeSpan.FromMilliseconds((double)(jArray[1] ?? 0));
+                var path = (jArray[2] ?? new JObject()).ToObject<string>();
+                var uri = (jArray[3] ?? new JObject()).ToObject<string>();
                 var traceData = (jArray[4] ?? new JObject()).ToObject<TransactionTrace>();
-                var guid = (jArray[5] ?? new JObject()).ToObject<String>();
-                var forcePersist = (jArray[7] ?? new JObject()).ToObject<Boolean>();
-                var xRaySessionId = (jArray[8] ?? new JObject()).ToObject<UInt64?>();
+                var guid = (jArray[5] ?? new JObject()).ToObject<string>();
+                var forcePersist = (jArray[7] ?? new JObject()).ToObject<bool>();
+                var xRaySessionId = (jArray[8] ?? new JObject()).ToObject<ulong?>();
 
                 return new TransactionSample(timestamp, duration, path, uri, traceData, guid, forcePersist, xRaySessionId);
             }

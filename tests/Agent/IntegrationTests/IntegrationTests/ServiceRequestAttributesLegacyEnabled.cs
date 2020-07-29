@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ServiceRequestAttributesLegacyEnabled : IClassFixture<RemoteServiceFixtures.WcfAppSelfHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppSelfHosted _fixture;
 
-        public ServiceRequestAttributesLegacyEnabled([NotNull] RemoteServiceFixtures.WcfAppSelfHosted fixture, [NotNull] ITestOutputHelper output)
+        public ServiceRequestAttributesLegacyEnabled(RemoteServiceFixtures.WcfAppSelfHosted fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -36,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedTransactionTraceAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAttributes = new Dictionary<string, string>
             {
                 { "service.request.input", "foo" },
             };

@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using MongoDB.Driver;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
@@ -24,9 +23,7 @@ namespace NewRelic.Providers.Wrapper.MongoDb
 
             return Delegates.GetDelegateFor(segment);
         }
-
-        [NotNull]
-        private String GetRemoveOperationName(MethodCall methodCall)
+        private string GetRemoveOperationName(MethodCall methodCall)
         {
             try
             {

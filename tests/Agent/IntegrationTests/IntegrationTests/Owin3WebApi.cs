@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class Owin3WebApi : IClassFixture<RemoteServiceFixtures.Owin3WebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.Owin3WebApi _fixture;
 
-        public Owin3WebApi([NotNull] RemoteServiceFixtures.Owin3WebApi fixture, [NotNull] ITestOutputHelper output)
+        public Owin3WebApi(RemoteServiceFixtures.Owin3WebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -68,12 +66,12 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric {metricName = @"OtherTransaction/all", callCount = 5},
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 // self-hosted applications don't support request parameter capturing
                 // { "request.parameters.data", "mything" },
             };
-            var unexpectedAttributes = new List<String>
+            var unexpectedAttributes = new List<string>
             {
                 "service.request.otherValue",
             };
@@ -107,17 +105,17 @@ namespace NewRelic.Agent.IntegrationTests
 
             // check the transaction trace samples
             TransactionSample traceToCheck = null;
-            List<String> expectedTransactionTraceSegments = null;
-            List<String> doNotExistTraceSegments = null;
+            List<string> expectedTransactionTraceSegments = null;
+            List<string> doNotExistTraceSegments = null;
             if (getTransactionSample != null)
             {
                 traceToCheck = getTransactionSample;
-                expectedTransactionTraceSegments = new List<String>
+                expectedTransactionTraceSegments = new List<string>
                 {
                     @"DotNet/Microsoft.Owin.Host.HttpListener.OwinHttpListener/ProcessRequestAsync",
                     @"DotNet/Values/Get"
                 };
-                doNotExistTraceSegments = new List<String>
+                doNotExistTraceSegments = new List<string>
                 {
                     @"DotNet/Values/Get404",
                     @"DotNet/Values/Post"
@@ -126,12 +124,12 @@ namespace NewRelic.Agent.IntegrationTests
             else if (get404TransactionSample != null)
             {
                 traceToCheck = get404TransactionSample;
-                expectedTransactionTraceSegments = new List<String>
+                expectedTransactionTraceSegments = new List<string>
                 {
                     @"DotNet/Microsoft.Owin.Host.HttpListener.OwinHttpListener/ProcessRequestAsync",
                     @"DotNet/Values/Get404"
                 };
-                doNotExistTraceSegments = new List<String>
+                doNotExistTraceSegments = new List<string>
                 {
                     @"External/www.google.com/Stream/GET",
                     @"DotNet/Values/Get",
@@ -141,12 +139,12 @@ namespace NewRelic.Agent.IntegrationTests
             else if (postTransactionSample != null)
             {
                 traceToCheck = postTransactionSample;
-                expectedTransactionTraceSegments = new List<String>
+                expectedTransactionTraceSegments = new List<string>
                 {
                     @"DotNet/Microsoft.Owin.Host.HttpListener.OwinHttpListener/ProcessRequestAsync",
                     @"DotNet/Values/Post"
                 };
-                doNotExistTraceSegments = new List<String>
+                doNotExistTraceSegments = new List<string>
                 {
                     @"External/www.google.com/Stream/GET",
                     @"DotNet/Values/Get404",

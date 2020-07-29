@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Testing.Assertions;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
 namespace NewRelic.Agent.Core.Utilities
 {
     [TestFixture]
@@ -16,9 +13,9 @@ namespace NewRelic.Agent.Core.Utilities
         private class SimpleProperties
         {
             [JsonArrayIndex(Index = 0)]
-            public Boolean MyBoolean { get; set; }
+            public bool MyBoolean { get; set; }
             [JsonArrayIndex(Index = 1)]
-            public UInt32 MyUInt32 { get; set; }
+            public uint MyUInt32 { get; set; }
         }
 
         [Test]
@@ -44,9 +41,9 @@ namespace NewRelic.Agent.Core.Utilities
         private class OutOfOrderProperties
         {
             [JsonArrayIndex(Index = 1)]
-            public Boolean MyBoolean { get; set; }
+            public bool MyBoolean { get; set; }
             [JsonArrayIndex(Index = 0)]
-            public UInt32 MyUInt32 { get; set; }
+            public uint MyUInt32 { get; set; }
         }
 
         [Test]
@@ -72,9 +69,9 @@ namespace NewRelic.Agent.Core.Utilities
         private class SparseProperties
         {
             [JsonArrayIndex(Index = 3)]
-            public Boolean MyBoolean { get; set; }
+            public bool MyBoolean { get; set; }
             [JsonArrayIndex(Index = 0)]
-            public UInt32 MyUInt32 { get; set; }
+            public uint MyUInt32 { get; set; }
         }
 
         [Test]
@@ -100,10 +97,10 @@ namespace NewRelic.Agent.Core.Utilities
         private class PartiallySerializedProperties
         {
             [JsonArrayIndex(Index = 1)]
-            public Boolean MyBoolean { get; set; }
-            public String MyString { get { return "Foo"; } }
+            public bool MyBoolean { get; set; }
+            public string MyString { get { return "Foo"; } }
             [JsonArrayIndex(Index = 0)]
-            public UInt32 MyUInt32 { get; set; }
+            public uint MyUInt32 { get; set; }
         }
 
         [Test]
@@ -130,7 +127,7 @@ namespace NewRelic.Agent.Core.Utilities
         private class PostProcessedProperties
         {
             [JsonArrayIndex(Index = 0)]
-            public Boolean MyBoolean { get; set; }
+            public bool MyBoolean { get; set; }
             [SerializationStandIn]
             public PostProcessedProperties PostProcessedThis { get { return new PostProcessedProperties { MyBoolean = true }; } }
         }
@@ -197,10 +194,10 @@ namespace NewRelic.Agent.Core.Utilities
         private class SimpleFields
         {
             [JsonArrayIndex(Index = 0)]
-            public Boolean MyBoolean = false;
+            public bool MyBoolean = false;
 
             [JsonArrayIndex(Index = 1)]
-            public UInt32 MyUInt32 = 0;
+            public uint MyUInt32 = 0;
         }
 
         [Test]
@@ -226,10 +223,10 @@ namespace NewRelic.Agent.Core.Utilities
         public class OutOfOrderFields
         {
             [JsonArrayIndex(Index = 1)]
-            public Boolean MyBoolean = false;
+            public bool MyBoolean = false;
 
             [JsonArrayIndex(Index = 0)]
-            public UInt32 MyUInt32 = 0;
+            public uint MyUInt32 = 0;
         }
 
         [Test]
@@ -255,10 +252,10 @@ namespace NewRelic.Agent.Core.Utilities
         private class SparseFields
         {
             [JsonArrayIndex(Index = 3)]
-            public Boolean MyBoolean = false;
+            public bool MyBoolean = false;
 
             [JsonArrayIndex(Index = 0)]
-            public UInt32 MyUInt32 = 0;
+            public uint MyUInt32 = 0;
         }
 
         [Test]
@@ -284,12 +281,12 @@ namespace NewRelic.Agent.Core.Utilities
         private class PartiallySerializedFields
         {
             [JsonArrayIndex(Index = 1)]
-            public Boolean MyBoolean = false;
+            public bool MyBoolean = false;
 
-            public String MyString = "Foo";
+            public string MyString = "Foo";
 
             [JsonArrayIndex(Index = 0)]
-            public UInt32 MyUInt32 = 0;
+            public uint MyUInt32 = 0;
         }
 
         [Test]
@@ -315,19 +312,19 @@ namespace NewRelic.Agent.Core.Utilities
         private class PartiallySerializedOutOfOrderFieldsAndProperties
         {
             [JsonArrayIndex(Index = 2)]
-            public Boolean MyBooleanField = false;
+            public bool MyBooleanField = false;
 
             private string _myStringProperty = "Bar";
             [JsonArrayIndex(Index = 3)]
-            public String MyStringProperty { get { return _myStringProperty; } set { _myStringProperty = value; } }
+            public string MyStringProperty { get { return _myStringProperty; } set { _myStringProperty = value; } }
 
-            public String MyStringField = "Foo";
+            public string MyStringField = "Foo";
 
             [JsonArrayIndex(Index = 0)]
-            public UInt32 MyUInt32Field = 0;
+            public uint MyUInt32Field = 0;
 
             [JsonArrayIndex(Index = 1)]
-            public UInt32 MyUInt32Property { get; set; }
+            public uint MyUInt32Property { get; set; }
         }
 
         [Test]

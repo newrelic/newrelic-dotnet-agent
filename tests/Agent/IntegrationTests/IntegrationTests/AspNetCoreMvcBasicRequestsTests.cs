@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AspNetCoreMvcBasicRequestsTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public AspNetCoreMvcBasicRequestsTests([NotNull] RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, [NotNull] ITestOutputHelper output)
+        public AspNetCoreMvcBasicRequestsTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -58,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/Index", metricScope = @"WebTransaction/MVC/Home/Index", callCount = 1 },
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"Middleware Pipeline",
                 @"DotNet/HomeController/Index"

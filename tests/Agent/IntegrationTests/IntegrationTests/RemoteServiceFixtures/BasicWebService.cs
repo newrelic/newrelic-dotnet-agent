@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Xml.Linq;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -9,7 +8,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class BasicWebService : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = "BasicWebService";
+        private const string ApplicationDirectoryName = "BasicWebService";
 
         public BasicWebService() : base(new RemoteWebApplication(ApplicationDirectoryName, ApplicationType.Bounded))
         {
@@ -35,7 +34,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void InvokeServiceSoap()
         {
-            const String soapEnvelope =
+            const string soapEnvelope =
             @"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
                 xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
@@ -81,7 +80,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void ThrowExceptionSoap()
         {
-            const String soapEnvelope =
+            const string soapEnvelope =
             @"<?xml version=""1.0"" encoding=""utf-8""?>
             <soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
                 xmlns:xsd=""http://www.w3.org/2001/XMLSchema""

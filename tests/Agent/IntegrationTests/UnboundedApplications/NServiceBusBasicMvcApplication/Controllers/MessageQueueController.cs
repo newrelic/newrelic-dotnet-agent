@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Messaging;
-using System.Threading;
 using System.Web.Mvc;
 using NServiceBusReceiver;
 
@@ -9,7 +7,7 @@ namespace NServiceBusBasicMvcApplication.Controllers
     public class MessageQueueController : Controller
     {
         [HttpGet]
-        public String NServiceBus_Send()
+        public string NServiceBus_Send()
         {
             // Build a message to send. Any object can be a message that implements NServiceBus.ICommand -- NSB will serialize it for you
             var message = new SampleNServiceBusMessage(new Random().Next(), "Foo bar");
@@ -17,11 +15,11 @@ namespace NServiceBusBasicMvcApplication.Controllers
             // Send the message. In this case we've hardcoded the recipient, but we could also use the web config to specify implicit recipients
             MvcApplication.Bus.Send("NServiceBusReceiver", message);
 
-            return String.Format("Message with ID={0} sent via NServiceBus", message.Id);
+            return string.Format("Message with ID={0} sent via NServiceBus", message.Id);
         }
 
         [HttpGet]
-        public String NServiceBus_SendValid()
+        public string NServiceBus_SendValid()
         {
             // Build a message to send. Any object can be a message that implements NServiceBus.ICommand -- NSB will serialize it for you
             var message = new SampleNServiceBusMessage2(new Random().Next(), "Valid");
@@ -29,11 +27,11 @@ namespace NServiceBusBasicMvcApplication.Controllers
             // Send the message. In this case we've hardcoded the recipient, but we could also use the web config to specify implicit recipients
             MvcApplication.Bus.Send("NServiceBusReceiverHost", message);
 
-            return String.Format("Message with ID={0} sent via NServiceBus", message.Id);
+            return string.Format("Message with ID={0} sent via NServiceBus", message.Id);
         }
 
         [HttpGet]
-        public String NServiceBus_SendInvalid()
+        public string NServiceBus_SendInvalid()
         {
             // Build a message to send. Any object can be a message that implements NServiceBus.ICommand -- NSB will serialize it for you
             var message = new SampleNServiceBusMessage2(new Random().Next(), "Invalid", false);
@@ -41,7 +39,7 @@ namespace NServiceBusBasicMvcApplication.Controllers
             // Send the message. In this case we've hardcoded the recipient, but we could also use the web config to specify implicit recipients
             MvcApplication.Bus.Send("NServiceBusReceiverHost", message);
 
-            return String.Format("Message with ID={0} sent via NServiceBus", message.Id);
+            return string.Format("Message with ID={0} sent via NServiceBus", message.Id);
         }
     }
 }

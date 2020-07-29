@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,10 +17,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public readonly DateTime Timestamp;
 
         // index 1
-        public readonly Object Unknown1;
+        public readonly object Unknown1;
 
         // index 2
-        public readonly Object Unknown2;
+        public readonly object Unknown2;
 
         //index 3
         public readonly TransactionTraceSegment RootSegment;
@@ -29,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         // index 4
         public readonly TransactionTraceAttributes Attributes;
 
-        public TransactionTrace(DateTime timestamp, Object unknown1, Object unknown2, TransactionTraceSegment rootSegment, TransactionTraceAttributes attributes)
+        public TransactionTrace(DateTime timestamp, object unknown1, object unknown2, TransactionTraceSegment rootSegment, TransactionTraceAttributes attributes)
         {
             Timestamp = timestamp;
             Unknown1 = unknown1;
@@ -40,18 +39,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         public class TransactionTraceConverter : JsonConverter
         {
-            public override Boolean CanConvert(Type objectType)
+            public override bool CanConvert(Type objectType)
             {
                 return true;
             }
 
-            public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
                 var jArray = JArray.Load(reader);
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var timestamp = new DateTime(1970, 01, 01) + TimeSpan.FromSeconds((Double)(jArray[0] ?? 0));
+                var timestamp = new DateTime(1970, 01, 01) + TimeSpan.FromSeconds((double)(jArray[0] ?? 0));
                 var unknown1 = jArray[1];
                 var unknown2 = jArray[2];
                 var rootSegment = (jArray[3] ?? new JObject()).ToObject<TransactionTraceSegment>(serializer);
@@ -60,8 +59,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 return new TransactionTrace(timestamp, unknown1, unknown2, rootSegment, attributes);
             }
 
-            [CanBeNull]
-            private static JArray TryDecompress([CanBeNull] Object value)
+            private static JArray TryDecompress(object value)
             {
                 if (value == null)
                     return null;
@@ -71,8 +69,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 return JArray.Parse(traceData);
             }
 
-            [NotNull]
-            private static String Decompress([NotNull] String compressedTraceData)
+            private static string Decompress(string compressedTraceData)
             {
                 var bytes = Convert.FromBase64String(compressedTraceData);
 
@@ -87,7 +84,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 }
             }
 
-            public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -96,7 +93,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
     public static class TransactionTraceExtensions
     {
-        public static TransactionTraceSegment TryFindSegment(this TransactionTraceSegment segment, String name)
+        public static TransactionTraceSegment TryFindSegment(this TransactionTraceSegment segment, string name)
         {
             Contract.Assert(segment != null);
             Contract.Assert(name != null);
@@ -114,7 +111,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 .FirstOrDefault();
         }
 
-        public static TransactionTraceSegment TryFindSegment(this TransactionTraceSegment segment, String name, String parameterKey, String parameterValue)
+        public static TransactionTraceSegment TryFindSegment(this TransactionTraceSegment segment, string name, string parameterKey, string parameterValue)
         {
             Contract.Assert(segment != null);
             Contract.Assert(name != null);
@@ -123,7 +120,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
             if (segment.Name == name
                 && segment.Parameters != null
-                && segment.Parameters.Contains(new KeyValuePair<String, Object>(parameterKey, parameterValue)))
+                && segment.Parameters.Contains(new KeyValuePair<string, object>(parameterKey, parameterValue)))
                 return segment;
 
             if (segment.ChildSegments == null)
@@ -136,7 +133,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 .FirstOrDefault();
         }
 
-        public static Boolean ContainsSegment(this TransactionTrace trace, String name)
+        public static bool ContainsSegment(this TransactionTrace trace, string name)
         {
             Contract.Assert(trace != null);
             Contract.Assert(name != null);
@@ -145,7 +142,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             return foundSegment != null;
         }
 
-        public static TransactionTraceSegment TryFindSegment(this TransactionTrace trace, String name)
+        public static TransactionTraceSegment TryFindSegment(this TransactionTrace trace, string name)
         {
             Contract.Assert(trace != null);
             Contract.Assert(name != null);
@@ -153,7 +150,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             return trace.RootSegment.TryFindSegment(name);
         }
 
-        public static Boolean TryFindSegment(this TransactionTrace trace, String name, String parameterKey, String parameterValue)
+        public static bool TryFindSegment(this TransactionTrace trace, string name, string parameterKey, string parameterValue)
         {
             Contract.Assert(trace != null);
             Contract.Assert(name != null);
@@ -175,21 +172,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public readonly TimeSpan EndTimeOffset;
 
         // index 2
-        public readonly String Name;
+        public readonly string Name;
 
         // index 3
-        public readonly IDictionary<String, Object> Parameters;
+        public readonly IDictionary<string, object> Parameters;
 
         // index 4
         public readonly IEnumerable<TransactionTraceSegment> ChildSegments;
 
         // index 5
-        public readonly String ClassName;
+        public readonly string ClassName;
 
         // index 6
-        public readonly String MethodName;
+        public readonly string MethodName;
 
-        public TransactionTraceSegment(TimeSpan startTimeOffset, TimeSpan endTimeOffset, String name, IDictionary<String, Object> parameters, IEnumerable<TransactionTraceSegment> childSegments, String className, String methodName)
+        public TransactionTraceSegment(TimeSpan startTimeOffset, TimeSpan endTimeOffset, string name, IDictionary<string, object> parameters, IEnumerable<TransactionTraceSegment> childSegments, string className, string methodName)
         {
             StartTimeOffset = startTimeOffset;
             EndTimeOffset = endTimeOffset;
@@ -202,21 +199,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         public class TransactionTraceSegmentConverter : JsonConverter
         {
-            public override Boolean CanConvert(Type objectType)
+            public override bool CanConvert(Type objectType)
             {
                 return true;
             }
 
-            public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
                 var jArray = JArray.Load(reader);
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var startTimeOffset = TimeSpan.FromMilliseconds((Double)(jArray[0] ?? 0));
-                var endTimeOffset = TimeSpan.FromMilliseconds((Double)(jArray[1] ?? 0));
+                var startTimeOffset = TimeSpan.FromMilliseconds((double)(jArray[0] ?? 0));
+                var endTimeOffset = TimeSpan.FromMilliseconds((double)(jArray[1] ?? 0));
                 var name = (jArray[2] ?? new JObject()).ToString();
-                var parameters = (jArray[3] ?? new JObject()).ToObject<IDictionary<String, Object>>(serializer);
+                var parameters = (jArray[3] ?? new JObject()).ToObject<IDictionary<string, object>>(serializer);
                 var childSegments = (jArray[4] ?? new JObject()).ToObject<IEnumerable<TransactionTraceSegment>>() ?? new List<TransactionTraceSegment>();
                 var className = (jArray[5] ?? new JObject()).ToString();
                 var methodName = (jArray[6] ?? new JObject()).ToString();
@@ -224,7 +221,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 return new TransactionTraceSegment(startTimeOffset, endTimeOffset, name, parameters, childSegments, className, methodName);
             }
 
-            public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -234,25 +231,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     public class TransactionTraceAttributes
     {
         [JsonProperty(PropertyName = "agentAttributes")]
-        public readonly IDictionary<String, Object> AgentAttributes;
+        public readonly IDictionary<string, object> AgentAttributes;
 
         [JsonProperty(PropertyName = "intrinsics")]
-        public readonly IDictionary<String, Object> IntrinsicAttributes;
+        public readonly IDictionary<string, object> IntrinsicAttributes;
 
         [JsonProperty(PropertyName = "userAttributes")]
-        public readonly IDictionary<String, Object> UserAttributes;
+        public readonly IDictionary<string, object> UserAttributes;
 
-        public TransactionTraceAttributes(IDictionary<String, Object> agentAttributes, IDictionary<String, Object> intrinsicAttributes, IDictionary<String, Object> userAttributes)
+        public TransactionTraceAttributes(IDictionary<string, object> agentAttributes, IDictionary<string, object> intrinsicAttributes, IDictionary<string, object> userAttributes)
         {
             AgentAttributes = agentAttributes;
             IntrinsicAttributes = intrinsicAttributes;
             UserAttributes = userAttributes;
         }
 
-        [NotNull]
-        public IDictionary<String, Object> GetByType(TransactionTraceAttributeType attributeType)
+        public IDictionary<string, object> GetByType(TransactionTraceAttributeType attributeType)
         {
-            IDictionary<String, Object> attributes;
+            IDictionary<string, object> attributes;
             switch (attributeType)
             {
                 case TransactionTraceAttributeType.Intrinsic:
@@ -268,7 +264,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                     throw new NotImplementedException();
             }
 
-            return attributes ?? new Dictionary<String, Object>();
+            return attributes ?? new Dictionary<string, object>();
         }
     }
 

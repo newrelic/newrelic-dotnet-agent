@@ -3,42 +3,34 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using JetBrains.Annotations;
 using Xunit;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 {
     public class RemoteWebApplication : RemoteApplication
     {
-        [NotNull]
-        private readonly String _applicationDirectoryName;
+        private readonly string _applicationDirectoryName;
 
-        private const String HostedWebCoreProcessName = @"HostedWebCore.exe";
+        private const string HostedWebCoreProcessName = @"HostedWebCore.exe";
 
 
-        protected override String SourceApplicationDirectoryPath { get { return Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName, "Deploy"); } }
+        protected override string SourceApplicationDirectoryPath { get { return Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName, "Deploy"); } }
 
-        [NotNull]
-        private static readonly String SourceHostedWebCoreProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "HostedWebCore");
+        private static readonly string SourceHostedWebCoreProjectDirectoryPath = Path.Combine(SourceIntegrationTestsSolutionDirectoryPath, "HostedWebCore");
 
-        [NotNull]
-        private static readonly String SourceHostedWebCoreDirectoryPath = Path.Combine(SourceHostedWebCoreProjectDirectoryPath, "bin", Utilities.Configuration, HostedWebCoreTargetFramework);
+        private static readonly string SourceHostedWebCoreDirectoryPath = Path.Combine(SourceHostedWebCoreProjectDirectoryPath, "bin", Utilities.Configuration, HostedWebCoreTargetFramework);
 
-        protected override String ApplicationDirectoryName { get { return _applicationDirectoryName; } }
+        protected override string ApplicationDirectoryName { get { return _applicationDirectoryName; } }
 
-        [NotNull]
-        private String DestinationHostedWebCoreDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "HostedWebCore"); } }
+        private string DestinationHostedWebCoreDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "HostedWebCore"); } }
 
-        [NotNull]
-        private String DestinationHostedWebCoreExecutablePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, HostedWebCoreProcessName); } }
+        private string DestinationHostedWebCoreExecutablePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, HostedWebCoreProcessName); } }
 
-        [NotNull]
-        private String DestinationApplicationHostConfigFilePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, "applicationHost.config"); } }
+        private string DestinationApplicationHostConfigFilePath { get { return Path.Combine(DestinationHostedWebCoreDirectoryPath, "applicationHost.config"); } }
 
-        [NotNull]
-        private String DestinationApplicationWebConfigFilePath { get { return Path.Combine(DestinationApplicationDirectoryPath, "Web.config"); } }
+        private string DestinationApplicationWebConfigFilePath { get { return Path.Combine(DestinationApplicationDirectoryPath, "Web.config"); } }
 
-        public RemoteWebApplication([NotNull] String applicationDirectoryName, ApplicationType applicationType) : base(applicationType)
+        public RemoteWebApplication(string applicationDirectoryName, ApplicationType applicationType) : base(applicationType)
         {
             _applicationDirectoryName = applicationDirectoryName;
 
@@ -58,7 +50,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(DestinationNewRelicConfigFilePath, new[] { "configuration", "instrumentation", "applications", "application" }, "name", HostedWebCoreProcessName);
         }
 
-        public override Process Start(String commandLineArguments, bool captureStandardOutput = false, bool doProfile = true)
+        public override Process Start(string commandLineArguments, bool captureStandardOutput = false, bool doProfile = true)
         {
             var arguments = $"--port={Port} {commandLineArguments}";
             var applicationFilePath = Path.Combine(DestinationHostedWebCoreDirectoryPath, "HostedWebCore.exe");
@@ -128,10 +120,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             var attributes = new[]
             {
-                new KeyValuePair<String, String>("key", "NewRelic.AppName"),
-                new KeyValuePair<String, String>("value", AppName),
+                new KeyValuePair<string, string>("key", "NewRelic.AppName"),
+                new KeyValuePair<string, string>("value", AppName),
             };
-            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationWebConfigFilePath, String.Empty, nodes, attributes);
+            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationWebConfigFilePath, string.Empty, nodes, attributes);
         }
 
         private void SetUpApplicationHostConfig()
@@ -154,9 +146,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             var attributes = new[]
             {
-                new KeyValuePair<String, String>("physicalPath", CommonUtils.GetLocalPathFromRemotePath(DestinationApplicationDirectoryPath)),
+                new KeyValuePair<string, string>("physicalPath", CommonUtils.GetLocalPathFromRemotePath(DestinationApplicationDirectoryPath)),
             };
-            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, String.Empty, nodes, attributes);
+            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
         }
 
         private void SetSitePortInApplicationHostConfig()
@@ -172,9 +164,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             var attributes = new[]
             {
-                new KeyValuePair<String, String>("bindingInformation", String.Format(@"*:{0}:", Port)),
+                new KeyValuePair<string, string>("bindingInformation", string.Format(@"*:{0}:", Port)),
             };
-            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, String.Empty, nodes, attributes);
+            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
         }
 
         private void SetApplicationPoolInApplicationHostConfig()
@@ -190,9 +182,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             var attributes = new[]
             {
-                new KeyValuePair<String, String>("name", appPoolName),
+                new KeyValuePair<string, string>("name", appPoolName),
             };
-            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, String.Empty, nodes, attributes);
+            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
 
             nodes = new[]
             {
@@ -203,9 +195,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             };
             attributes = new[]
             {
-                new KeyValuePair<String, String>("applicationPool", appPoolName),
+                new KeyValuePair<string, string>("applicationPool", appPoolName),
             };
-            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, String.Empty, nodes, attributes);
+            CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
         }
 
         private void WaitForHostedWebCoreToStartListening()

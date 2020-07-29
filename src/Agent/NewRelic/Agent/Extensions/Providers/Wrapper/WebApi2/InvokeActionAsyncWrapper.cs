@@ -1,9 +1,7 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.SystemExtensions;
@@ -42,7 +40,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
             var controllerName = TryGetControllerName(httpActionContext) ?? "Unknown Controller";
             var actionName = TryGetActionName(httpActionContext) ?? "Unknown Action";
 
-            var transactionName = String.Format("{0}/{1}", controllerName, actionName);
+            var transactionName = string.Format("{0}/{1}", controllerName, actionName);
             transaction.SetWebTransactionName(WebTransactionType.WebAPI, transactionName, 6);
 
             var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
@@ -69,9 +67,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
                     }
                 });
         }
-
-        [CanBeNull]
-        private static String TryGetControllerName([NotNull] HttpActionContext httpActionContext)
+        private static string TryGetControllerName(HttpActionContext httpActionContext)
         {
             var controllerContext = httpActionContext.ControllerContext;
             if (controllerContext == null)
@@ -83,9 +79,7 @@ namespace NewRelic.Providers.Wrapper.WebApi2
 
             return controllerDescriptor.ControllerName;
         }
-
-        [CanBeNull]
-        private static String TryGetActionName([NotNull] HttpActionContext httpActionContext)
+        private static string TryGetActionName(HttpActionContext httpActionContext)
         {
             var actionDescriptor = httpActionContext.ActionDescriptor;
             if (actionDescriptor == null)

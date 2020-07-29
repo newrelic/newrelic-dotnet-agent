@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Extensions.Providers.TransactionContext
 
         ContextStorageType IContextStorageFactory.Type => ContextStorageType.OperationContext;
 
-        IContextStorage<T> IContextStorageFactory.CreateContext<T>(String key)
+        IContextStorage<T> IContextStorageFactory.CreateContext<T>(string key)
         {
             return new Wcf3TransactionContext<T>(key);
         }

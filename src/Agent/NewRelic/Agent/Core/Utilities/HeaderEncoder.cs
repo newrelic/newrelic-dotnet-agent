@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Utils;
 using Newtonsoft.Json;
@@ -14,8 +13,7 @@ namespace NewRelic.Agent.Core.Utilities
         /// <param name="data">The data to encode. Must not be null.</param>
         /// <param name="encodingKey">The encoding key. Can be null.</param>
         /// <returns>The serialized and encoded data.</returns>
-        [NotNull, Pure]
-        public static String SerializeAndEncode([NotNull] Object data, [CanBeNull] String encodingKey)
+        public static string SerializeAndEncode(object data, string encodingKey)
         {
             var serializedData = JsonConvert.SerializeObject(data);
             if (serializedData == null)
@@ -32,8 +30,7 @@ namespace NewRelic.Agent.Core.Utilities
         /// <param name="encodedString">The encoded string to decode. Can be null.</param>
         /// <param name="encodingKey">The encoding key. Can be null.</param>
         /// <returns>The decoded and deserialized data if possible, else null.</returns>
-        [CanBeNull, Pure]
-        public static T TryDecodeAndDeserialize<T>([CanBeNull] String encodedString, [CanBeNull] String encodingKey) where T : class
+        public static T TryDecodeAndDeserialize<T>(string encodedString, string encodingKey) where T : class
         {
             if (encodedString == null)
                 return null;

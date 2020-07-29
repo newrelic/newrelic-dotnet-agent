@@ -1,23 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Extensions.Providers.Wrapper
 {
     public class ExplainPlan
     {
-        [NotNull]
-        public List<String> ExplainPlanHeaders;
+        public List<string> ExplainPlanHeaders;
+        public List<List<object>> ExplainPlanDatas;
+        public List<int> ObfuscatedHeaders;
 
-        [NotNull]
-        public List<List<Object>> ExplainPlanDatas;
-
-        [NotNull]
-        public List<Int32> ObfuscatedHeaders;
-
-        public ExplainPlan([NotNull] List<String> explainPlanHeaders, [NotNull] List<List<Object>> explainPlanDatas, [NotNull] List<Int32> obfuscatedHeaders)
+        public ExplainPlan(List<string> explainPlanHeaders, List<List<object>> explainPlanDatas, List<int> obfuscatedHeaders)
         {
             if (explainPlanHeaders == null)
                 throw new ArgumentException();

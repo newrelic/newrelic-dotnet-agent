@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -23,46 +22,25 @@ namespace NewRelic.Agent.Core.DataTransport
     /// </summary>
     public class ConnectionHandler : ConfigurationBasedService, IConnectionHandler
     {
-        [NotNull]
-        private static readonly Dictionary<String, Action<String>> ServerLogLevelMap = new Dictionary<String, Action<String>>
+        private static readonly Dictionary<string, Action<string>> ServerLogLevelMap = new Dictionary<string, Action<string>>
         {
             {"INFO", Log.Info},
             {"WARN", Log.Warn},
             {"ERROR", Log.Error},
             {"VERBOSE", Log.Finest}
         };
-
-        [NotNull]
         private readonly ISerializer _serializer;
-
-        [NotNull]
         private readonly ICollectorWireFactory _collectorWireFactory;
-
-        [NotNull]
         private ConnectionInfo _connectionInfo;
-
-        [NotNull]
         private ICollectorWire _dataRequestWire;
-
-        [NotNull]
         private readonly IProcessStatic _processStatic;
-
-        [NotNull]
         private readonly IDnsStatic _dnsStatic;
-
-        [NotNull]
         private readonly ILabelsService _labelsService;
-
-        [NotNull]
         private readonly ISystemInfo _systemInfo;
-
-        [NotNull]
         private readonly Environment _environment;
-
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
 
-        public ConnectionHandler([NotNull] ISerializer serializer, [NotNull] ICollectorWireFactory collectorWireFactory, [NotNull] IProcessStatic processStatic, [NotNull] IDnsStatic dnsStatic, [NotNull] ILabelsService labelsService, [NotNull] Environment environment, [NotNull] ISystemInfo systemInfo, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public ConnectionHandler(ISerializer serializer, ICollectorWireFactory collectorWireFactory, IProcessStatic processStatic, IDnsStatic dnsStatic, ILabelsService labelsService, Environment environment, ISystemInfo systemInfo, IAgentHealthReporter agentHealthReporter)
         {
             _serializer = serializer;
             _collectorWireFactory = collectorWireFactory;
@@ -109,12 +87,12 @@ namespace NewRelic.Agent.Core.DataTransport
             Disable();
         }
 
-        private Object SendDataRequest([NotNull] String method, [NotNull] params Object[] data)
+        private object SendDataRequest(string method, params object[] data)
         {
-            return SendDataOverWire<Object>(_dataRequestWire, method, data);
+            return SendDataOverWire<object>(_dataRequestWire, method, data);
         }
 
-        public T SendDataRequest<T>(String method, params Object[] data)
+        public T SendDataRequest<T>(string method, params object[] data)
         {
             return SendDataOverWire<T>(_dataRequestWire, method, data);
         }
@@ -122,20 +100,16 @@ namespace NewRelic.Agent.Core.DataTransport
         #endregion Public API
 
         #region Connect helper methods
-
-        [NotNull]
         private ConnectionInfo SendRedirectHostRequest()
         {
             _connectionInfo = new ConnectionInfo(_configuration);
-            var redirectHost = SendNonDataRequest<String>("get_redirect_host");
+            var redirectHost = SendNonDataRequest<string>("get_redirect_host");
             return new ConnectionInfo(_configuration, redirectHost);
         }
-
-        [NotNull]
         private ServerConfiguration SendConnectRequest()
         {
             var connectParameters = GetConnectParameters();
-            var responseMap = SendNonDataRequest<Dictionary<String, Object>>("connect", connectParameters);
+            var responseMap = SendNonDataRequest<Dictionary<string, object>>("connect", connectParameters);
             if (responseMap == null)
                 throw new Exception("Empty connect result payload");
 
@@ -147,7 +121,7 @@ namespace NewRelic.Agent.Core.DataTransport
             return serverConfiguration;
         }
 
-        private static void LogConfigurationMessages([NotNull] ServerConfiguration serverConfiguration)
+        private static void LogConfigurationMessages(ServerConfiguration serverConfiguration)
         {
             if (serverConfiguration.HighSecurityEnabled == true)
                 Log.Info("The agent is in high security mode.  No request parameters will be collected and sql obfuscation is enabled.");
@@ -157,17 +131,15 @@ namespace NewRelic.Agent.Core.DataTransport
 
             foreach (var message in serverConfiguration.Messages)
             {
-                if (String.IsNullOrEmpty(message?.Level))
+                if (string.IsNullOrEmpty(message?.Level))
                     continue;
-                if (String.IsNullOrEmpty(message.Text))
+                if (string.IsNullOrEmpty(message.Text))
                     continue;
 
                 var logMethod = ServerLogLevelMap.GetValueOrDefault(message.Level) ?? Log.Info;
                 logMethod(message.Text);
             }
         }
-
-        [NotNull]
         private ConnectModel GetConnectParameters()
         {
             var identifier = GetIdentifier();
@@ -175,7 +147,7 @@ namespace NewRelic.Agent.Core.DataTransport
             if (!appNames.Any())
                 appNames.Add(identifier);
 
-            Log.InfoFormat("Your New Relic Application Name(s): {0}", String.Join(":", appNames.ToArray()));
+            Log.InfoFormat("Your New Relic Application Name(s): {0}", string.Join(":", appNames.ToArray()));
 
             return new ConnectModel(
                 _processStatic.GetCurrentProcess().Id,
@@ -202,11 +174,9 @@ namespace NewRelic.Agent.Core.DataTransport
             var timestamp = AgentInstallConfiguration.AgentVersionTimestamp.ToUnixTimeMilliseconds();
             return timestamp;
         }
-
-        [NotNull]
-        private String GetIdentifier()
+        private string GetIdentifier()
         {
-            var appNames = String.Join(":", _configuration.ApplicationNames.ToArray());
+            var appNames = string.Join(":", _configuration.ApplicationNames.ToArray());
 
 #if NETSTANDARD2_0
             return $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
@@ -217,8 +187,6 @@ namespace NewRelic.Agent.Core.DataTransport
                 : $"{Path.GetFileName(_processStatic.GetCurrentProcess().MainModuleFileName)}{appNames}";
 #endif
         }
-
-        [NotNull]
         private JavascriptAgentSettingsModel GetJsAgentSettings()
         {
             var loader = "rum";
@@ -292,19 +260,17 @@ namespace NewRelic.Agent.Core.DataTransport
 
         #region Data transfer helper methods
 
-        private T SendNonDataRequest<T>([NotNull] String method, [NotNull] params Object[] data)
+        private T SendNonDataRequest<T>(string method, params object[] data)
         {
             var wire = _collectorWireFactory.GetCollectorWire(_configuration);
             return SendDataOverWire<T>(wire, method, data);
         }
 
-        private void SendNonDataRequest([NotNull] String method, [NotNull] params Object[] data)
+        private void SendNonDataRequest(string method, params object[] data)
         {
-            SendNonDataRequest<Object>(method, data);
+            SendNonDataRequest<object>(method, data);
         }
-
-        [CanBeNull]
-        private T SendDataOverWire<T>([NotNull] ICollectorWire wire, [NotNull] String method, [NotNull] params Object[] data)
+        private T SendDataOverWire<T>(ICollectorWire wire, string method, params object[] data)
         {
             try
             {
@@ -328,9 +294,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 throw;
             }
         }
-
-        [CanBeNull]
-        private T ParseResponse<T>([NotNull] String responseBody)
+        private T ParseResponse<T>(string responseBody)
         {
             var responseEnvelope = _serializer.Deserialize<CollectorResponseEnvelope<T>>(responseBody);
             if (responseEnvelope.CollectorExceptionEnvelope != null)

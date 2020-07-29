@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
@@ -14,18 +13,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers
     {
         #region Transaction Traces
 
-        public static void TransactionTraceExists([NotNull] AgentLogFile agentLogFile, [NotNull] String transactionName)
+        public static void TransactionTraceExists(AgentLogFile agentLogFile, string transactionName)
         {
             var trace = agentLogFile.GetTransactionSamples()
                 .Where(sample => sample != null)
                 .Where(sample => sample.Path == transactionName)
                 .FirstOrDefault();
 
-            var failureMessage = String.Format("Transaction trace does not exist (but should).  Transaction Name: {0}", transactionName);
+            var failureMessage = string.Format("Transaction trace does not exist (but should).  Transaction Name: {0}", transactionName);
             Assert.True(trace != null, failureMessage);
         }
 
-        public static void TransactionTraceHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, TransactionTraceAttributeType attributeType, [NotNull] TransactionSample sample)
+        public static void TransactionTraceHasAttributes(IEnumerable<KeyValuePair<string, string>> expectedAttributes, TransactionTraceAttributeType attributeType, TransactionSample sample)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -40,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 }
 
-                var actualValue = actualAttributes[expectedAttribute.Key] as String;
+                var actualValue = actualAttributes[expectedAttribute.Key] as string;
                 if (actualValue != expectedAttribute.Value)
                 {
                     builder.AppendFormat("Attribute named {0} in the transaction sample had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);
@@ -53,7 +52,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionTraceHasAttributes([NotNull] IEnumerable<String> expectedAttributes, TransactionTraceAttributeType attributeType, [NotNull] TransactionSample sample)
+        public static void TransactionTraceHasAttributes(IEnumerable<string> expectedAttributes, TransactionTraceAttributeType attributeType, TransactionSample sample)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -71,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionTraceDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, TransactionTraceAttributeType attributeType, [NotNull] TransactionSample sample)
+        public static void TransactionTraceDoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, TransactionTraceAttributeType attributeType, TransactionSample sample)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -89,7 +88,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionTraceSegmentsExist(IEnumerable<String> expectedTraceSegmentNames, TransactionSample sample, Boolean areRegexNames = false)
+        public static void TransactionTraceSegmentsExist(IEnumerable<string> expectedTraceSegmentNames, TransactionSample sample, bool areRegexNames = false)
         {
             var allSegments = sample.TraceData.RootSegment.Flatten(node => node.ChildSegments);
 
@@ -111,7 +110,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionTraceSegmentsNotExist(IEnumerable<String> unexpectedTraceSegmentNames, TransactionSample sample, Boolean areRegexNames = false)
+        public static void TransactionTraceSegmentsNotExist(IEnumerable<string> unexpectedTraceSegmentNames, TransactionSample sample, bool areRegexNames = false)
         {
             var allSegments = sample.TraceData.RootSegment.Flatten(node => node.ChildSegments);
 
@@ -161,7 +160,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 }
 
-                var actualValue = segment.Parameters[expectedParameter.parameterName] as String;
+                var actualValue = segment.Parameters[expectedParameter.parameterName] as string;
                 if (expectedParameter.parameterValue != null && actualValue != expectedParameter.parameterValue)
                 {
                     builder.AppendFormat("Segment parameter {0} had the value {1} instead of {2} in segment named {3}.", expectedParameter.parameterName, actualValue, expectedParameter.parameterValue, expectedParameter.segmentName);
@@ -178,7 +177,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Error Traces
 
-        public static void ErrorTraceHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, ErrorTraceAttributeType attributeType, [NotNull] ErrorTrace errorTrace)
+        public static void ErrorTraceHasAttributes(IEnumerable<KeyValuePair<string, string>> expectedAttributes, ErrorTraceAttributeType attributeType, ErrorTrace errorTrace)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -192,7 +191,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 }
 
-                var actualValue = errorTrace.Attributes.GetByType(attributeType)[expectedAttribute.Key] as String;
+                var actualValue = errorTrace.Attributes.GetByType(attributeType)[expectedAttribute.Key] as string;
                 if (actualValue != expectedAttribute.Value)
                 {
                     builder.AppendFormat("Attribute named {0} in the error trace had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);
@@ -205,7 +204,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void ErrorTraceDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, ErrorTraceAttributeType attributeType, [NotNull] ErrorTrace errorTrace)
+        public static void ErrorTraceDoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, ErrorTraceAttributeType attributeType, ErrorTrace errorTrace)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -227,11 +226,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Error Events
 
-        public static void ErrorEventHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, EventAttributeType attributeType, [NotNull] ErrorEventEvents errorEvent)
+        public static void ErrorEventHasAttributes(IEnumerable<KeyValuePair<string, string>> expectedAttributes, EventAttributeType attributeType, ErrorEventEvents errorEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
-            IDictionary<String, Object> actualAttributes = null;
+            IDictionary<string, object> actualAttributes = null;
 
             switch (attributeType)
             {
@@ -256,7 +255,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 }
 
-                var actualValue = actualAttributes[expectedAttribute.Key] as String;
+                var actualValue = actualAttributes[expectedAttribute.Key] as string;
                 if (actualValue != expectedAttribute.Value)
                 {
                     builder.AppendFormat("Attribute named {0} in the error event had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);
@@ -269,11 +268,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void ErrorEventDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, EventAttributeType attributeType, [NotNull] ErrorEventEvents errorEvent)
+        public static void ErrorEventDoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, EventAttributeType attributeType, ErrorEventEvents errorEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
-            IDictionary<String, Object> actualAttributes = null;
+            IDictionary<string, object> actualAttributes = null;
 
             switch (attributeType)
             {
@@ -375,7 +374,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Transaction Events
 
-        public static void TransactionEventHasAttributes([NotNull] IEnumerable<KeyValuePair<String, String>> expectedAttributes, TransactionEventAttributeType attributeType, [NotNull] TransactionEvent transactionEvent)
+        public static void TransactionEventHasAttributes(IEnumerable<KeyValuePair<string, string>> expectedAttributes, TransactionEventAttributeType attributeType, TransactionEvent transactionEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -390,7 +389,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     continue;
                 }
 
-                var actualValue = actualAttributes[expectedAttribute.Key] as String;
+                var actualValue = actualAttributes[expectedAttribute.Key] as string;
                 if (actualValue != expectedAttribute.Value)
                 {
                     builder.AppendFormat("Attribute named {0} in the transaction event had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);
@@ -403,7 +402,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionEventHasAttributes([NotNull] IEnumerable<String> expectedAttributes, TransactionEventAttributeType attributeType, [NotNull] TransactionEvent transactionEvent)
+        public static void TransactionEventHasAttributes(IEnumerable<string> expectedAttributes, TransactionEventAttributeType attributeType, TransactionEvent transactionEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -421,7 +420,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             Assert.True(succeeded, builder.ToString());
         }
 
-        public static void TransactionEventDoesNotHaveAttributes([NotNull] IEnumerable<String> unexpectedAttributes, TransactionEventAttributeType attributeType, [NotNull] TransactionEvent transactionEvent)
+        public static void TransactionEventDoesNotHaveAttributes(IEnumerable<string> unexpectedAttributes, TransactionEventAttributeType attributeType, TransactionEvent transactionEvent)
         {
             var succeeded = true;
             var builder = new StringBuilder();
@@ -443,7 +442,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Sql Traces
 
-        public static void SqlTraceExists([NotNull] IEnumerable<ExpectedSqlTrace> expectedSqlTraces, [NotNull] IEnumerable<SqlTrace> actualSqlTraces)
+        public static void SqlTraceExists(IEnumerable<ExpectedSqlTrace> expectedSqlTraces, IEnumerable<SqlTrace> actualSqlTraces)
         {
             actualSqlTraces = actualSqlTraces.ToList();
 
@@ -491,7 +490,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Log lines
 
-        public static void LogLinesExist([NotNull] IEnumerable<String> expectedLogLineRegexes, [NotNull] IEnumerable<String> actualLogLines)
+        public static void LogLinesExist(IEnumerable<string> expectedLogLineRegexes, IEnumerable<string> actualLogLines)
         {
             actualLogLines = actualLogLines.ToList();
 
@@ -504,10 +503,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
 
             var errorMessages = builder.ToString();
-            Assert.True(errorMessages == String.Empty, errorMessages);
+            Assert.True(errorMessages == string.Empty, errorMessages);
         }
 
-        public static void LogLinesNotExist([NotNull] IEnumerable<String> unexpectedLogLineRegexes, [NotNull] IEnumerable<String> actualLogLines)
+        public static void LogLinesNotExist(IEnumerable<string> unexpectedLogLineRegexes, IEnumerable<string> actualLogLines)
         {
             actualLogLines = actualLogLines.ToList();
 
@@ -520,12 +519,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             }
 
             var errorMessages = builder.ToString();
-            Assert.True(errorMessages == String.Empty, errorMessages);
+            Assert.True(errorMessages == string.Empty, errorMessages);
         }
 
         #endregion Log lines
 
-        private static Boolean IsNullOrEqual(String expectedValue, String actualValue)
+        private static bool IsNullOrEqual(string expectedValue, string actualValue)
         {
             if (expectedValue == null)
                 return true;
@@ -535,26 +534,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public class ExpectedMetric
         {
-            public String metricName = null;
-            public String metricScope = null;
-            public Decimal? callCount = null;
-            public Boolean IsRegexName = false;
+            public string metricName = null;
+            public string metricScope = null;
+            public decimal? callCount = null;
+            public bool IsRegexName = false;
         }
 
         public class ExpectedSegmentParameter
         {
-            public String segmentName = null;
-            public String parameterName = null;
-            public String parameterValue = null;
-            public Boolean IsRegexSegmentName = false;
+            public string segmentName = null;
+            public string parameterName = null;
+            public string parameterValue = null;
+            public bool IsRegexSegmentName = false;
         }
 
         public class ExpectedSqlTrace
         {
-            public String TransactionName = null;
-            public String Sql = null;
-            public String DatastoreMetricName = null;
-            public Boolean? HasExplainPlan = null;
+            public string TransactionName = null;
+            public string Sql = null;
+            public string DatastoreMetricName = null;
+            public bool? HasExplainPlan = null;
         }
     }
 }

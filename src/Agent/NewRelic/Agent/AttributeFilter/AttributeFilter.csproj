@@ -17,7 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="10.4.0" />
     <PackageReference Include="MoreLinq" Version="2.4.0" />
   </ItemGroup>
 

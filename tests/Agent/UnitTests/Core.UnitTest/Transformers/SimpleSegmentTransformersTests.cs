@@ -1,14 +1,9 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metrics;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
-using NewRelic.Collections;
 using NUnit.Framework;
 using Telerik.JustMock;
 
@@ -17,7 +12,6 @@ namespace NewRelic.Agent.Core.Transformers
     [TestFixture]
     public class SimpleSegmentTransformersTests
     {
-        [NotNull]
         private IConfigurationService _configurationService;
 
         [SetUp]
@@ -31,7 +25,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_NullStats()
         {
-            const String name = "myname";
+            const string name = "myname";
             var segment = GetSegment(name);
 
             //make sure it does not throw
@@ -40,7 +34,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         public void TransformSegment_AddParameter()
         {
-            const String name = "myname";
+            const string name = "myname";
             var segment = GetSegment(name);
 
             //make sure it does not throw
@@ -50,7 +44,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_CreatesSegmentMetrics()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name, 5);
             segment.ChildFinished(GetSegment("kid", 2));
 
@@ -64,7 +58,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(1, unscoped.Count);
 
-            const String metricName = "DotNet/name";
+            const string metricName = "DotNet/name";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -86,7 +80,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_TwoTransformCallsSame()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name);
 
             var txName = new TransactionMetricName("WebTransaction", "Test", false);
@@ -100,7 +94,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, scoped.Count);
             Assert.AreEqual(1, unscoped.Count);
 
-            const String metricName = "DotNet/name";
+            const string metricName = "DotNet/name";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -114,10 +108,10 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void TransformSegment_TwoTransformCallsDifferent()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name);
 
-            const String name1 = "otherName";
+            const string name1 = "otherName";
             var segment1 = GetSegment(name1);
 
             var txName = new TransactionMetricName("WebTransaction", "Test", false);
@@ -131,7 +125,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(2, scoped.Count);
             Assert.AreEqual(2, unscoped.Count);
 
-            const String metricName = "DotNet/name";
+            const string metricName = "DotNet/name";
             Assert.IsTrue(scoped.ContainsKey(metricName));
             Assert.IsTrue(unscoped.ContainsKey(metricName));
 
@@ -141,7 +135,7 @@ namespace NewRelic.Agent.Core.Transformers
             Assert.AreEqual(1, nameScoped.Value0);
             Assert.AreEqual(1, nameUnscoped.Value0);
 
-            const String metricName1 = "DotNet/otherName";
+            const string metricName1 = "DotNet/otherName";
             Assert.IsTrue(scoped.ContainsKey(metricName1));
             Assert.IsTrue(unscoped.ContainsKey(metricName1));
 
@@ -159,7 +153,7 @@ namespace NewRelic.Agent.Core.Transformers
         [Test]
         public void GetTransactionTraceName_ReturnsCorrectName()
         {
-            const String name = "name";
+            const string name = "name";
             var segment = GetSegment(name);
 
             var transactionTraceName = segment.GetTransactionTraceName();
@@ -168,16 +162,14 @@ namespace NewRelic.Agent.Core.Transformers
         }
 
         #endregion GetTransactionTraceName
-
-        [NotNull]
-        private static Segment GetSegment([NotNull] String name)
+        private static Segment GetSegment(string name)
         {
             var builder = new TypedSegment<SimpleSegmentData>(Mock.Create<ITransactionSegmentState>(), new MethodCallData("foo", "bar", 1), new SimpleSegmentData(name));
             builder.End();
             return builder;
         }
 
-        public static TypedSegment<SimpleSegmentData> GetSegment([NotNull] String name, double duration, TimeSpan start = new TimeSpan())
+        public static TypedSegment<SimpleSegmentData> GetSegment(string name, double duration, TimeSpan start = new TimeSpan())
         {
             var methodCallData = new MethodCallData("foo", "bar", 1);
             return new TypedSegment<SimpleSegmentData>(start, TimeSpan.FromSeconds(duration), GetSegment(name));

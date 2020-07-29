@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Events
 {
     public class CustomEventEvent
     {
-        [NotNull]
-        public readonly String EventType;
+        public readonly string EventType;
+        public readonly IEnumerable<KeyValuePair<string, object>> Attributes;
 
-        [NotNull]
-        public readonly IEnumerable<KeyValuePair<String, Object>> Attributes;
-
-        public CustomEventEvent([NotNull] string eventType, [NotNull] IEnumerable<KeyValuePair<String, Object>> attributes)
+        public CustomEventEvent(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
         {
             EventType = eventType;
             Attributes = attributes;

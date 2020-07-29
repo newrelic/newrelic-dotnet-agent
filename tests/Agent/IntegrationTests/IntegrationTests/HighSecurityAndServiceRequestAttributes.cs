@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class HighSecurityAndServiceRequestAttributes : IClassFixture<RemoteServiceFixtures.HSMWcfAppSelfHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.HSMWcfAppSelfHosted _fixture;
 
-        public HighSecurityAndServiceRequestAttributes([NotNull] RemoteServiceFixtures.HSMWcfAppSelfHosted fixture, ITestOutputHelper output)
+        public HighSecurityAndServiceRequestAttributes(RemoteServiceFixtures.HSMWcfAppSelfHosted fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -38,7 +35,7 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var unexpectedTransactionTraceAttributes = new List<String>
+            var unexpectedTransactionTraceAttributes = new List<string>
             {
                 "service.request.custom key",
                 "service.request.custom foo"

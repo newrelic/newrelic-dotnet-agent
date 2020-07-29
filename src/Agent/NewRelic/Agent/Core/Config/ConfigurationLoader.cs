@@ -6,7 +6,6 @@ using System.Web;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
 using Microsoft.Win32;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Events;
@@ -23,10 +22,10 @@ namespace NewRelic.Agent.Core.Config
     /// </summary>
     public static class ConfigurationLoader
     {
-        private const String NewRelicConfigFileName = "newrelic.config";
+        private const string NewRelicConfigFileName = "newrelic.config";
 
 
-        public static String NewRelicHome
+        public static string NewRelicHome
         {
             get
             {
@@ -42,7 +41,7 @@ namespace NewRelic.Agent.Core.Config
 #else
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\New Relic\.NET Agent");
                 if (key == null) return null;
-                return (String)key.GetValue("NewRelicHome");
+                return (string)key.GetValue("NewRelicHome");
 #endif
             }
         }
@@ -54,8 +53,7 @@ namespace NewRelic.Agent.Core.Config
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        [NotNull]
-        public static ValueWithProvenance<String> GetWebConfigAppSetting(String key)
+        public static ValueWithProvenance<string> GetWebConfigAppSetting(string key)
         {
 #if NETSTANDARD2_0
             return null;
@@ -64,31 +62,29 @@ namespace NewRelic.Agent.Core.Config
             {
                 if (HttpRuntime.AppDomainAppId != null)
                 {
-                    String appVirtualPath = HttpRuntime.AppDomainAppVirtualPath;
+                    string appVirtualPath = HttpRuntime.AppDomainAppVirtualPath;
                     // String appDomainAppPath = HttpRuntime.AppDomainAppPath;
                     var webConfiguration = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration(appVirtualPath);
                     var setting = webConfiguration.AppSettings.Settings[key];
                     if (setting != null)
-                        return new ValueWithProvenance<String>(setting.Value, webConfiguration.FilePath);
+                        return new ValueWithProvenance<string>(setting.Value, webConfiguration.FilePath);
                 }
             }
             catch (Exception)
             {
                 // logger hasn't been created yet.
             }
-            return new ValueWithProvenance<String>(System.Web.Configuration.WebConfigurationManager.AppSettings[key],
+            return new ValueWithProvenance<string>(System.Web.Configuration.WebConfigurationManager.AppSettings[key],
                 "WebConfigurationManager default app settings");
 #endif
         }
-
-        [NotNull]
-        public static ValueWithProvenance<String> GetConfigSetting(String key)
+        public static ValueWithProvenance<string> GetConfigSetting(string key)
         {
-            ValueWithProvenance<String> value = GetWebConfigAppSetting(key);
+            ValueWithProvenance<string> value = GetWebConfigAppSetting(key);
 #if NET35
             if (value.Value == null)
             {
-                value = new ValueWithProvenance<String>(ConfigurationManager.AppSettings[key],
+                value = new ValueWithProvenance<string>(ConfigurationManager.AppSettings[key],
                     "ConfigurationManager app setting");
             }
 #endif
@@ -99,7 +95,7 @@ namespace NewRelic.Agent.Core.Config
         /// Returns the agent configuration file name.
         /// </summary>
         /// <returns>The name of the agent configuration file name, such as "newrelic.config".</returns>
-        public static String GetAgentConfigFileName()
+        public static string GetAgentConfigFileName()
         {
             var fileName = TryGetAgentConfigFileFromAppConfig()
                 ?? TryGetAgentConfigFileFromAppRoot()
@@ -110,10 +106,10 @@ namespace NewRelic.Agent.Core.Config
             if (fileName != null)
                 return fileName;
 
-            throw new Exception(String.Format("Could not find {0} in NewRelic.ConfigFile path, application root, New Relic home directory, or working directory.", NewRelicConfigFileName));
+            throw new Exception(string.Format("Could not find {0} in NewRelic.ConfigFile path, application root, New Relic home directory, or working directory.", NewRelicConfigFileName));
         }
 
-        private static String TryGetAgentConfigFileFromAppConfig()
+        private static string TryGetAgentConfigFileFromAppConfig()
         {
 
 #if NETSTANDARD2_0
@@ -153,12 +149,12 @@ namespace NewRelic.Agent.Core.Config
 #endif
         }
 
-        private static String TryGetAgentConfigFileFromAppRoot()
+        private static string TryGetAgentConfigFileFromAppRoot()
         {
 #if NETSTANDARD2_0
             try
             {
-                var filename = String.Empty;
+                var filename = string.Empty;
 
                 var entryAssembly = Assembly.GetEntryAssembly();
                 if (entryAssembly != null)
@@ -209,7 +205,7 @@ namespace NewRelic.Agent.Core.Config
 #endif
         }
 
-        private static String TryGetAgentConfigFileFromExecutionPath()
+        private static string TryGetAgentConfigFileFromExecutionPath()
         {
             try
             {
@@ -231,7 +227,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
 
-        private static String TryGetAgentConfigFileFromNewRelicHome()
+        private static string TryGetAgentConfigFileFromNewRelicHome()
         {
             try
             {
@@ -252,7 +248,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
 
-        private static String TryGetAgentConfigFileFromCurrentDirectory()
+        private static string TryGetAgentConfigFileFromCurrentDirectory()
         {
             try
             {
@@ -273,7 +269,7 @@ namespace NewRelic.Agent.Core.Config
             var fileName = Path.Combine(homeDirectory, NewRelicConfigFileName);
             if (!File.Exists(fileName))
             {
-                throw new Exception(String.Format("Could not find the config file in the new relic home directory. Check New Relic home directory for {0}.", NewRelicConfigFileName));
+                throw new Exception(string.Format("Could not find the config file in the new relic home directory. Check New Relic home directory for {0}.", NewRelicConfigFileName));
             }
             return fileName;
         }
@@ -282,34 +278,33 @@ namespace NewRelic.Agent.Core.Config
         /// Initialize and return a BootstrapConfig, from a fixed, well-known file name.
         /// </summary>
         /// <returns></returns>
-        [NotNull]
         public static configuration Initialize()
         {
-            var fileName = String.Empty;
+            var fileName = string.Empty;
             try
             {
                 fileName = GetAgentConfigFileName();
                 if (!File.Exists(fileName))
                 {
-                    throw new ConfigurationLoaderException(String.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
+                    throw new ConfigurationLoaderException(string.Format("The New Relic Agent configuration file does not exist: {0}", fileName));
                 }
                 return Initialize(fileName);
             }
             catch (FileNotFoundException ex)
             {
-                throw HandleConfigError(String.Format("Unable to find the New Relic Agent configuration file {0}", fileName), ex);
+                throw HandleConfigError(string.Format("Unable to find the New Relic Agent configuration file {0}", fileName), ex);
             }
             catch (UnauthorizedAccessException ex)
             {
-                throw HandleConfigError(String.Format("Unable to access the New Relic Agent configuration file {0}", fileName), ex);
+                throw HandleConfigError(string.Format("Unable to access the New Relic Agent configuration file {0}", fileName), ex);
             }
             catch (Exception ex)
             {
-                throw HandleConfigError(String.Format("An error occurred reading the New Relic Agent configuration file {0} - {1}", fileName, ex.Message), ex);
+                throw HandleConfigError(string.Format("An error occurred reading the New Relic Agent configuration file {0} - {1}", fileName, ex.Message), ex);
             }
         }
 
-        private static Exception HandleConfigError(String message, Exception originalException)
+        private static Exception HandleConfigError(string message, Exception originalException)
         {
             Log.Error(message);
             return new ConfigurationLoaderException(message, originalException);
@@ -321,7 +316,6 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="fileName"></param>
         /// <exception cref="">System.UnauthorizedAccessException</exception>
         /// <returns>The configuration.</returns>
-        [NotNull]
         public static configuration Initialize(string fileName)
         {
             using (StreamReader stream = new StreamReader(fileName))
@@ -352,7 +346,7 @@ namespace NewRelic.Agent.Core.Config
         /// <param name="xml"></param>
         /// <param name="provenance">The file name or other user-friendly locus where the xml came from.</param>
         /// <returns>The configuration.</returns>
-        public static configuration InitializeFromXml([NotNull] String xml, String provenance = "unknown")
+        public static configuration InitializeFromXml(string xml, string provenance = "unknown")
         {
             configuration config;
 
@@ -366,7 +360,7 @@ namespace NewRelic.Agent.Core.Config
             {
                 config = serializer.Deserialize(reader) as configuration;
                 if (config == null)
-                    throw new InvalidDataException(String.Format("Unable to deserialize the provided xml: {0}", xml));
+                    throw new InvalidDataException(string.Format("Unable to deserialize the provided xml: {0}", xml));
                 config.Initialize(xml, provenance);
             }
 
@@ -451,7 +445,7 @@ namespace NewRelic.Agent.Core.Config
         public string GetFullLogFileName()
         {
             System.Text.StringBuilder fileName = new System.Text.StringBuilder();
-            String logDirectory = directory;
+            string logDirectory = directory;
             if (logDirectory == null)
             {
                 if (ConfigurationLoader.NewRelicHome != null)
@@ -473,9 +467,9 @@ namespace NewRelic.Agent.Core.Config
             return fileName.ToString();
         }
 
-        private String GetLogFileName()
+        private string GetLogFileName()
         {
-            String name = fileName;
+            string name = fileName;
             if (name != null)
             {
                 return Strings.SafeFileName(name);
@@ -546,13 +540,12 @@ namespace NewRelic.Agent.Core.Config
     // Property names such as "AgentEnabled" are added in here or inherited from BootstrapConfig.
     public partial class configuration : IBootstrapConfig
     {
-        [NotNull]
-        public String Xml { get; set; }
+        public string Xml { get; set; }
 
         [XmlIgnore]
-        public String ConfigurationFileName { get; set; }
+        public string ConfigurationFileName { get; set; }
 
-        public configuration Initialize([NotNull] String xml, String provenance)
+        public configuration Initialize(string xml, string provenance)
         {
             Xml = xml;
 
@@ -560,7 +553,7 @@ namespace NewRelic.Agent.Core.Config
                 log = new configurationLog();
 
             var enabledProvenance = ConfigurationLoader.GetConfigSetting("NewRelic.AgentEnabled");
-            if (enabledProvenance != null && enabledProvenance.Value != null && Boolean.Parse(enabledProvenance.Value) == false)
+            if (enabledProvenance != null && enabledProvenance.Value != null && bool.Parse(enabledProvenance.Value) == false)
             {
                 agentEnabled = false;
                 AgentEnabledAt = enabledProvenance.Provenance;
@@ -581,12 +574,12 @@ namespace NewRelic.Agent.Core.Config
     /// </summary>
     public class ConfigurationLoaderException : Exception
     {
-        public ConfigurationLoaderException(String message)
+        public ConfigurationLoaderException(string message)
             : base(message)
         {
         }
 
-        public ConfigurationLoaderException(String message, Exception original)
+        public ConfigurationLoaderException(string message, Exception original)
             : base(message, original)
         {
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,21 +12,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         public readonly DateTime Timestamp;
 
         // index 1
-        public readonly String Path;
+        public readonly string Path;
 
         // index 2
-        public readonly String Message;
+        public readonly string Message;
 
         // index 3
-        public readonly String ExceptionClassName;
+        public readonly string ExceptionClassName;
 
         // index 4
         public readonly ErrorTraceAttributes Attributes;
 
         // index 5
-        public readonly String Guid;
+        public readonly string Guid;
 
-        public ErrorTrace(DateTime timestamp, String path, String message, String exceptionClassName, ErrorTraceAttributes attributes, String guid)
+        public ErrorTrace(DateTime timestamp, string path, string message, string exceptionClassName, ErrorTraceAttributes attributes, string guid)
         {
             Timestamp = timestamp;
             Path = path;
@@ -39,18 +38,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
 
         public class ErrorTraceConverter : JsonConverter
         {
-            public override Boolean CanConvert(Type objectType)
+            public override bool CanConvert(Type objectType)
             {
                 return true;
             }
 
-            public override Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
                 var jArray = JArray.Load(reader);
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var timestamp = new DateTime(1970, 01, 01) + TimeSpan.FromSeconds((Double)(jArray[0] ?? 0));
+                var timestamp = new DateTime(1970, 01, 01) + TimeSpan.FromSeconds((double)(jArray[0] ?? 0));
                 var path = (jArray[1] ?? new JObject()).ToString();
                 var message = (jArray[2] ?? new JObject()).ToString();
                 var exceptionClassName = (jArray[3] ?? new JObject()).ToString();
@@ -60,7 +59,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 return new ErrorTrace(timestamp, path, message, exceptionClassName, attributes, guid);
             }
 
-            public override void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
                 throw new NotImplementedException();
             }
@@ -70,21 +69,21 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
     public class ErrorTraceAttributes
     {
         [JsonProperty(PropertyName = "agentAttributes")]
-        public readonly IDictionary<String, Object> AgentAttributes;
+        public readonly IDictionary<string, object> AgentAttributes;
 
         [JsonProperty(PropertyName = "intrinsics")]
-        public readonly IDictionary<String, Object> IntrinsicAttributes;
+        public readonly IDictionary<string, object> IntrinsicAttributes;
 
         [JsonProperty(PropertyName = "userAttributes")]
-        public readonly IDictionary<String, Object> UserAttributes;
+        public readonly IDictionary<string, object> UserAttributes;
 
         [JsonProperty(PropertyName = "stack_trace")]
-        public readonly IEnumerable<String> StackTrace;
+        public readonly IEnumerable<string> StackTrace;
 
         [JsonProperty(PropertyName = "request_uri")]
-        public readonly String RequestUri;
+        public readonly string RequestUri;
 
-        public ErrorTraceAttributes(IDictionary<String, Object> agentAttributes, IDictionary<String, Object> intrinsicAttributes, IDictionary<String, Object> userAttributes, IEnumerable<String> stackTrace, String requestUri)
+        public ErrorTraceAttributes(IDictionary<string, object> agentAttributes, IDictionary<string, object> intrinsicAttributes, IDictionary<string, object> userAttributes, IEnumerable<string> stackTrace, string requestUri)
         {
             AgentAttributes = agentAttributes;
             IntrinsicAttributes = intrinsicAttributes;
@@ -93,10 +92,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             RequestUri = requestUri;
         }
 
-        [NotNull]
-        public IDictionary<String, Object> GetByType(ErrorTraceAttributeType attributeType)
+        public IDictionary<string, object> GetByType(ErrorTraceAttributeType attributeType)
         {
-            IDictionary<String, Object> attributes;
+            IDictionary<string, object> attributes;
             switch (attributeType)
             {
                 case ErrorTraceAttributeType.Intrinsic:
@@ -112,7 +110,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                     throw new NotImplementedException();
             }
 
-            return attributes ?? new Dictionary<String, Object>();
+            return attributes ?? new Dictionary<string, object>();
         }
     }
 

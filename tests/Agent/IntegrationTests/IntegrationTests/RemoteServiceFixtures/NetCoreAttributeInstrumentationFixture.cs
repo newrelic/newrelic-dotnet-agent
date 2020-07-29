@@ -1,15 +1,11 @@
-﻿using System;
-using System.Net;
-using JetBrains.Annotations;
-using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using Xunit;
+﻿using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class NetCoreAttributeInstrumentationFixture : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = @"NetCoreAttributeInstrumentationApplication";
-        private const String ExecutableName = @"NetCoreAttributeInstrumentationApplication.exe";
+        private const string ApplicationDirectoryName = @"NetCoreAttributeInstrumentationApplication";
+        private const string ExecutableName = @"NetCoreAttributeInstrumentationApplication.exe";
         public NetCoreAttributeInstrumentationFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true))
         {
         }

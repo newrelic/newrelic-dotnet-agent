@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Core.Config;
 using Telerik.JustMock;
 
@@ -40,7 +39,7 @@ namespace NewRelic.Agent.Core.Fixtures
             config.log = new configurationLog();
             config.log.level = "DEBUG";
             config.application = new configurationApplication();
-            config.application.name = new List<String> { "FryTests" };
+            config.application.name = new List<string> { "FryTests" };
             config.service = new configurationService();
             config.requestParameters = new configurationRequestParameters { enabled = false };
             config.transactionTracer = new configurationTransactionTracer { recordSql = configurationTransactionTracerRecordSql.obfuscated };

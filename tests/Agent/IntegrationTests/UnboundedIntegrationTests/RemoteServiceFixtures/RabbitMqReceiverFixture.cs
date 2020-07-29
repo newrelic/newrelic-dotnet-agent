@@ -9,12 +9,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
     public class RabbitMqReceiverFixture : RemoteApplicationFixture
     {
         private readonly ConnectionFactory _factory = new ConnectionFactory() { HostName = RabbitMqConfiguration.RabbitMqServerIp };
-        private const String Message = "Hello, Spaceman.";
-        private const String ApplicationDirectoryName = "RabbitMqReceiverHost";
-        private const String ExecutableName = "RabbitMqReceiverHost.exe";
-        private const String TargetFramework = "net452";
+        private const string Message = "Hello, Spaceman.";
+        private const string ApplicationDirectoryName = "RabbitMqReceiverHost";
+        private const string ExecutableName = "RabbitMqReceiverHost.exe";
+        private const string TargetFramework = "net452";
 
-        public String QueueName { get; }
+        public string QueueName { get; }
 
         public RabbitMqReceiverFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Unbounded))
         {

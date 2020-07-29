@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Extensions.Providers;
 using NewRelic.Collections;
@@ -39,7 +37,7 @@ namespace NewRelic.Agent.Core.CallStack
         bool AttachToAsync();
     }
 
-    public delegate void CallStackPop(Object uniqueObject, Object uniqueParent);
+    public delegate void CallStackPop(object uniqueObject, object uniqueParent);
 
     public interface ICallStackManagerFactory
     {
@@ -97,7 +95,6 @@ namespace NewRelic.Agent.Core.CallStack
 
         private class ConcurrentDictionaryThreadLocal<T> : IThreadLocal<T>
         {
-            [NotNull]
             private readonly IDictionary<int, T> _threadToItem = new ConcurrentDictionary<int, T>();
 
             public T Value
@@ -221,7 +218,6 @@ namespace NewRelic.Agent.Core.CallStack
 
     public class CallStackManager : BaseCallStackManager
     {
-        [NotNull]
         private readonly IEnumerable<IContextStorage<int?>> _parentTrackers;
 
         public CallStackManager(List<IContextStorage<int?>> parentTrackers)

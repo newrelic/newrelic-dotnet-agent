@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
-using NewRelic.Agent.Core.WireModels;
-using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.TransactionTraces
 {
@@ -13,8 +10,6 @@ namespace NewRelic.Agent.Core.TransactionTraces
     {
         private volatile TransactionTraceWireModelComponents _slowTransaction;
         private double _score = 0.0;
-
-        [NotNull]
         protected ConfigurationSubscriber ConfigurationSubscription = new ConfigurationSubscriber();
 
         public void Collect(TransactionTraceWireModelComponents transactionTraceWireModelComponents)

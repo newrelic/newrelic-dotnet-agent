@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using JetBrains.Annotations;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
 using log4net.Filter;
 using log4net.Layout;
 using NewRelic.Agent.Core.Config;
-using NewRelic.Agent.Core.Logging;
 using log4netLogger = log4net.Repository.Hierarchy.Logger;
 
 namespace NewRelic.Agent.Core
@@ -86,7 +84,7 @@ namespace NewRelic.Agent.Core
         /// Configures the agent logger.
         /// </summary>
         /// <param name="debug">
-        /// A <see cref="System.Boolean"/>
+        /// A <see cref="bool"/>
         /// </param>
         /// <param name="config">
         /// A <see cref="ILogConfig"/>
@@ -123,7 +121,6 @@ namespace NewRelic.Agent.Core
         /// Gets the log4net Level of the "Audit" log level.
         /// </summary>
         /// <returns>The "Audit" log4net Level.</returns>
-        [NotNull]
         public static Level GetAuditLevel()
         {
             return LogManager.GetRepository(Assembly.GetCallingAssembly()).LevelMap[AuditLogName];
@@ -320,7 +317,7 @@ namespace NewRelic.Agent.Core
         /// to handle output.</exception>
         private static void SetupFileLogAppender(log4netLogger logger, ILogConfig config)
         {
-            String logFileName = config.GetFullLogFileName();
+            string logFileName = config.GetFullLogFileName();
 
             try
             {
@@ -345,7 +342,7 @@ namespace NewRelic.Agent.Core
         {
             if (!config.IsAuditLogEnabled) return;
 
-            String logFileName = config.GetFullLogFileName().Replace(".log", "_audit.log");
+            string logFileName = config.GetFullLogFileName().Replace(".log", "_audit.log");
 
             try
             {
@@ -366,7 +363,7 @@ namespace NewRelic.Agent.Core
         /// <param name="fileName">The name of the file this appender will write to.</param>
         /// <param name="appenderName">The name of this appender.</param>
         /// <remarks>This does not call appender.ActivateOptions or add the appender to the logger.</remarks>
-        private static RollingFileAppender SetupRollingFileAppender(ILogConfig config, String fileName, String appenderName)
+        private static RollingFileAppender SetupRollingFileAppender(ILogConfig config, string fileName, string appenderName)
         {
             var log = log4net.LogManager.GetLogger(typeof(Agent));
 

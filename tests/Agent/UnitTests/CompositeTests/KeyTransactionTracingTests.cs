@@ -1,23 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Transactions;
-using NewRelic.Agent.Core.Utils;
+﻿using System.Linq;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Collections;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 
 namespace CompositeTests
 {
     internal class KeyTransactionTracingTests
     {
-        [NotNull] private static CompositeTestAgent _compositeTestAgent;
+        private static CompositeTestAgent _compositeTestAgent;
 
-        [NotNull] private IAgentWrapperApi _agentWrapperApi;
+        private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]
         public void SetUp()

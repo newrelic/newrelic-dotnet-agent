@@ -1,15 +1,12 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 {
     public class OtherTransactionWrapperAsync : IWrapper
     {
-        [NotNull]
         private static readonly string[] PossibleWrapperNames = {
             "NewRelic.Agent.Core.Tracer.Factories.BackgroundThreadTracerFactory",
             "NewRelic.Providers.Wrapper.CustomInstrumentation.OtherTransactionWrapper",
@@ -48,11 +45,11 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
                 transaction.AttachToAsync();
             }
 
-            var segment = !String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
+            var segment = !string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName)
                 ? transaction.StartCustomSegment(instrumentedMethodCall.MethodCall, instrumentedMethodCall.RequestedMetricName)
                 : transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, typeName, methodName);
 
-            if (!String.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
+            if (!string.IsNullOrEmpty(instrumentedMethodCall.RequestedMetricName) && instrumentedMethodCall.RequestedTransactionNamePriority.HasValue)
             {
                 transaction.SetCustomTransactionName(instrumentedMethodCall.RequestedMetricName, instrumentedMethodCall.RequestedTransactionNamePriority.Value);
             }

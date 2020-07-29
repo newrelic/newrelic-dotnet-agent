@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -14,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests
     {
         private readonly RemoteServiceFixtures.HSMAgentApiExecutor _fixture;
 
-        public HighSecurityModeNoTransactionAgentApiTests(RemoteServiceFixtures.HSMAgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
+        public HighSecurityModeNoTransactionAgentApiTests(RemoteServiceFixtures.HSMAgentApiExecutor fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -41,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
             };
 
-            var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
+            var expectedErrorEventIntrinsicAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "type", "TransactionError" }

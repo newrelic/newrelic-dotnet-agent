@@ -2,18 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.SystemExtensions.Threading;
 
 namespace NewRelic.Collections
 {
     public class ConcurrentHashSet<T> : ICollection<T>
     {
-        [NotNull]
         private readonly HashSet<T> _hashSet = new HashSet<T>();
-        [NotNull]
         private readonly Func<IDisposable> _readLock;
-        [NotNull]
         private readonly Func<IDisposable> _writeLock;
 
         public ConcurrentHashSet()

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
@@ -10,13 +9,10 @@ namespace NewRelic.Agent.Core.Samplers
 {
     public class MemorySampler : AbstractSampler
     {
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private readonly IMemorySampleTransformer _memorySampleTransformer;
 
-        public MemorySampler([NotNull] IScheduler scheduler, [NotNull] IMemorySampleTransformer memorySampleTransformer, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public MemorySampler(IScheduler scheduler, IMemorySampleTransformer memorySampleTransformer, IAgentHealthReporter agentHealthReporter)
             : base(scheduler, TimeSpan.FromSeconds(10))
         {
             _agentHealthReporter = agentHealthReporter;
@@ -37,7 +33,7 @@ namespace NewRelic.Agent.Core.Samplers
             }
         }
 
-        private static Single GetCurrentlyAllocatedMemoryBytes()
+        private static float GetCurrentlyAllocatedMemoryBytes()
         {
             return Process.GetCurrentProcess().PrivateMemorySize64;
         }
@@ -45,9 +41,9 @@ namespace NewRelic.Agent.Core.Samplers
 
     public class ImmutableMemorySample
     {
-        public readonly Single MemoryPhysical;
+        public readonly float MemoryPhysical;
 
-        public ImmutableMemorySample(Single memoryPhysical)
+        public ImmutableMemorySample(float memoryPhysical)
         {
             MemoryPhysical = memoryPhysical;
         }

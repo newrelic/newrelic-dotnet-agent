@@ -1,13 +1,11 @@
 ﻿using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 
 namespace CompositeTests
 {
     public static class AgentWrapperApiExtensions
     {
-        [NotNull]
-        public static ISegment StartTransactionSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String segmentName, MethodCall methodCall = null)
+        public static ISegment StartTransactionSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, string segmentName, MethodCall methodCall = null)
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
             var segment = agentWrapperApi.CurrentTransaction.StartTransactionSegment(methodCall, segmentName);
@@ -16,9 +14,7 @@ namespace CompositeTests
 
             return segment;
         }
-
-        [NotNull]
-        public static ISegment StartCustomSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String segmentName, MethodCall methodCall = null)
+        public static ISegment StartCustomSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, string segmentName, MethodCall methodCall = null)
         {
             methodCall = methodCall ?? GetCustomSegmentMethodCall(agentWrapperApi);
             var segment = agentWrapperApi.CurrentTransaction.StartCustomSegment(methodCall, segmentName);
@@ -27,9 +23,7 @@ namespace CompositeTests
 
             return segment;
         }
-
-        [NotNull]
-        public static ISegment StartMethodSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String typeName, [NotNull] String methodName, MethodCall methodCall = null)
+        public static ISegment StartMethodSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, string typeName, string methodName, MethodCall methodCall = null)
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
             var segment = agentWrapperApi.CurrentTransaction.StartMethodSegment(methodCall, typeName, methodName);
@@ -38,9 +32,7 @@ namespace CompositeTests
 
             return segment;
         }
-
-        [NotNull]
-        public static ISegment StartExternalRequestSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] Uri uri, [NotNull] String httpVerb, MethodCall methodCall = null)
+        public static ISegment StartExternalRequestSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, Uri uri, string httpVerb, MethodCall methodCall = null)
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
             var segment = agentWrapperApi.CurrentTransaction.StartExternalRequestSegment(methodCall, uri, httpVerb);
@@ -49,9 +41,7 @@ namespace CompositeTests
 
             return segment;
         }
-
-        [NotNull]
-        public static ISegment StartDatastoreRequestSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, String operation, DatastoreVendor vendor, String model, String commandText = null, MethodCall methodCall = null, String host = null, String portPathOrId = null, String databaseName = null)
+        public static ISegment StartDatastoreRequestSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, string operation, DatastoreVendor vendor, string model, string commandText = null, MethodCall methodCall = null, string host = null, string portPathOrId = null, string databaseName = null)
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
             var segment = agentWrapperApi.CurrentTransaction.StartDatastoreSegment(methodCall, operation, vendor, model, commandText, host, portPathOrId, databaseName);
@@ -60,9 +50,7 @@ namespace CompositeTests
 
             return segment;
         }
-
-        [NotNull]
-        public static ISegment StartMessageBrokerSegmentOrThrow([NotNull] this IAgentWrapperApi agentWrapperApi, [NotNull] String vendor, MessageBrokerDestinationType destinationType, String destination, MessageBrokerAction action, MethodCall methodCall = null)
+        public static ISegment StartMessageBrokerSegmentOrThrow(this IAgentWrapperApi agentWrapperApi, string vendor, MessageBrokerDestinationType destinationType, string destination, MessageBrokerAction action, MethodCall methodCall = null)
         {
             methodCall = methodCall ?? GetDefaultMethodCall(agentWrapperApi);
             var segment = agentWrapperApi.CurrentTransaction.StartMessageBrokerSegment(methodCall, destinationType, action, vendor, destination);
@@ -72,21 +60,21 @@ namespace CompositeTests
             return segment;
         }
 
-        private static MethodCall GetDefaultMethodCall([NotNull] IAgentWrapperApi agentWrapperApi)
+        private static MethodCall GetDefaultMethodCall(IAgentWrapperApi agentWrapperApi)
         {
             return new MethodCall(
                 new Method(agentWrapperApi.GetType(), "methodName", "parameterTypeNames"),
                 agentWrapperApi,
-                new Object[0]
+                new object[0]
                 );
         }
 
-        private static MethodCall GetCustomSegmentMethodCall([NotNull] IAgentWrapperApi agentWrapperApi)
+        private static MethodCall GetCustomSegmentMethodCall(IAgentWrapperApi agentWrapperApi)
         {
             return new MethodCall(
                 new Method(agentWrapperApi.GetType(), "methodName", "parameterTypeNames"),
                 agentWrapperApi,
-                new Object[1] { "customName" }
+                new object[1] { "customName" }
                 );
         }
     }

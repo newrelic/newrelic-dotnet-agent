@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -13,9 +12,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     /// </summary>
     public class RulesWebApi : RemoteApplicationFixture
     {
-        private const String ApplicationDirectoryName = @"BasicWebApi";
-        private const String ExecutableName = @"BasicWebApi.exe";
-        private const String TargetFramework = "net451";
+        private const string ApplicationDirectoryName = @"BasicWebApi";
+        private const string ExecutableName = @"BasicWebApi.exe";
+        private const string TargetFramework = "net451";
 
         public RulesWebApi()
             : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Bounded))
@@ -44,36 +43,36 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void Sleep()
         {
-            var address = String.Format("http://{0}:{1}/api/Sleep", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/Sleep", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("Great success", result);
         }
 
         public void SegmentTerm()
         {
-            var address = String.Format("http://{0}:{1}/api/SegmentTerm", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/SegmentTerm", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("Great success", result);
         }
 
         public void UrlRule()
         {
-            var address = String.Format("http://{0}:{1}/api/UrlRule", DestinationServerName, Port);
+            var address = string.Format("http://{0}:{1}/api/UrlRule", DestinationServerName, Port);
             var webClient = new WebClient();
             webClient.Headers.Add("accept", "application/json");
 
             var resultJson = webClient.DownloadString(address);
-            var result = JsonConvert.DeserializeObject<String>(resultJson);
+            var result = JsonConvert.DeserializeObject<string>(resultJson);
 
             Assert.Equal("Great success", result);
         }

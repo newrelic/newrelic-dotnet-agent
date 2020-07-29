@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Exceptions;
 
 namespace NewRelic.Agent.Core
@@ -9,12 +8,12 @@ namespace NewRelic.Agent.Core
 
     public class ExceptionFactories
     {
-        private readonly static IDictionary<String, IExceptionFactory> rubyClassToType;
+        private readonly static IDictionary<string, IExceptionFactory> rubyClassToType;
         private readonly static IDictionary<HttpStatusCode, IExceptionFactory> statusCodeToType;
 
         static ExceptionFactories()
         {
-            rubyClassToType = new Dictionary<String, IExceptionFactory>();
+            rubyClassToType = new Dictionary<string, IExceptionFactory>();
             statusCodeToType = new Dictionary<HttpStatusCode, IExceptionFactory>();
 
             rubyClassToType.Add("NewRelic::Agent::ForceDisconnectException",
@@ -46,9 +45,7 @@ namespace NewRelic.Agent.Core
         private ExceptionFactories()
         {
         }
-
-        [NotNull]
-        public static Exception NewException(HttpStatusCode statusCode, String statusDescription)
+        public static Exception NewException(HttpStatusCode statusCode, string statusDescription)
         {
             IExceptionFactory factory;
             if (statusCodeToType.TryGetValue(statusCode, out factory))
@@ -64,8 +61,7 @@ namespace NewRelic.Agent.Core
         /// <param name="type">Type of the exception, as given in some well-known RPM/collector space.</param>
         /// <param name="message">Message payload for the constructed exception.</param>
         /// <returns>A created exception</returns>
-        [NotNull]
-        public static Exception NewException(String type, String message)
+        public static Exception NewException(string type, string message)
         {
             IExceptionFactory factory;
             if (rubyClassToType.TryGetValue(type, out factory))
@@ -80,7 +76,7 @@ namespace NewRelic.Agent.Core
         /// </summary>
         public class UnknownRPMException : Exception
         {
-            public UnknownRPMException(String message) : base(message)
+            public UnknownRPMException(string message) : base(message)
             {
             }
         }
@@ -95,7 +91,7 @@ namespace NewRelic.Agent.Core
 
         private class RuntimeExceptionFactory : IExceptionFactory
         {
-            public Exception CreateException(String message)
+            public Exception CreateException(string message)
             {
                 return new RuntimeException(message);
             }
@@ -127,7 +123,7 @@ namespace NewRelic.Agent.Core
 
         private class LicenseExceptionFactory : IExceptionFactory
         {
-            public Exception CreateException(String message)
+            public Exception CreateException(string message)
             {
                 return new LicenseException(message);
             }
@@ -135,7 +131,7 @@ namespace NewRelic.Agent.Core
 
         private class ForceDisconnectExceptionFactory : IExceptionFactory
         {
-            public Exception CreateException(String message)
+            public Exception CreateException(string message)
             {
                 return new ForceDisconnectException(message);
             }
@@ -143,7 +139,7 @@ namespace NewRelic.Agent.Core
 
         private class ForceRestartExceptionFactory : IExceptionFactory
         {
-            public Exception CreateException(String message)
+            public Exception CreateException(string message)
             {
                 return new ForceRestartException(message);
             }
@@ -151,7 +147,7 @@ namespace NewRelic.Agent.Core
 
         private class PostTooBigExceptionFactory : IExceptionFactory
         {
-            public Exception CreateException(String message)
+            public Exception CreateException(string message)
             {
                 return new PostTooBigException(message);
             }
@@ -159,8 +155,7 @@ namespace NewRelic.Agent.Core
 
         private interface IExceptionFactory
         {
-            [NotNull]
-            Exception CreateException(String message);
+            Exception CreateException(string message);
         }
 
     }

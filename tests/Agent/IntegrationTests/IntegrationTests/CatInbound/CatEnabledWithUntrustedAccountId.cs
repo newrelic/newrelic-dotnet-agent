@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Headers;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -10,13 +9,11 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
     public class CatEnabledWithUntrustedAccountId : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        [NotNull]
         private HttpResponseHeaders _responseHeaders;
 
-        public CatEnabledWithUntrustedAccountId([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper output)
+        public CatEnabledWithUntrustedAccountId(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

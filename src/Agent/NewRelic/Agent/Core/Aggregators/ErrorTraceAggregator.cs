@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -14,20 +13,16 @@ namespace NewRelic.Agent.Core.Aggregators
 {
     public interface IErrorTraceAggregator
     {
-        void Collect([NotNull] ErrorTraceWireModel errorTraceWireModel);
+        void Collect(ErrorTraceWireModel errorTraceWireModel);
     }
 
     public class ErrorTraceAggregator : AbstractAggregator<ErrorTraceWireModel>, IErrorTraceAggregator
     {
-        [NotNull]
         private ICollection<ErrorTraceWireModel> _errorTraceWireModels = new ConcurrentList<ErrorTraceWireModel>();
-
-        [NotNull]
         private uint _errorTraceCollectionMaximum = 0;
-        [NotNull]
         private readonly IAgentHealthReporter _agentHealthReporter;
 
-        public ErrorTraceAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public ErrorTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
             : base(dataTransportService, scheduler, processStatic)
         {
             _agentHealthReporter = agentHealthReporter;
@@ -76,7 +71,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _errorTraceWireModels.Add(errorTraceWireModel);
         }
 
-        private void Retain([NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
+        private void Retain(IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
         {
             errorTraceWireModels = errorTraceWireModels.ToList();
             _agentHealthReporter.ReportErrorTracesRecollected(errorTraceWireModels.Count());
@@ -94,7 +89,7 @@ namespace NewRelic.Agent.Core.Aggregators
                 .ForEach(AddToCollection);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, IEnumerable<ErrorTraceWireModel> errorTraceWireModels)
         {
             switch (responseStatus)
             {

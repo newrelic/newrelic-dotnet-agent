@@ -1,18 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.CallStack;
-using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
-using NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
-using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 {
@@ -23,7 +16,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         /// of the segment parameters or null if none are applicable.
         /// </summary>
         /// <returns></returns>
-        internal virtual IEnumerable<KeyValuePair<String, Object>> Finish()
+        internal virtual IEnumerable<KeyValuePair<string, object>> Finish()
         {
             return null;
         }
@@ -33,7 +26,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         public abstract void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService);
 
-        public abstract Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<String, Object>> newParameters);
+        public abstract Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters);
 
         internal virtual void AddTransactionTraceParameters(IConfigurationService configurationService, Segment segment, IDictionary<string, object> segmentParameters, ImmutableTransaction immutableTransaction)
         {
@@ -43,18 +36,14 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
     public class Segment : ISegment
     {
-        protected readonly static IEnumerable<KeyValuePair<String, Object>> EmptyImmutableParameters =
-            new KeyValuePair<String, Object>[0];
+        protected readonly static IEnumerable<KeyValuePair<string, object>> EmptyImmutableParameters =
+            new KeyValuePair<string, object>[0];
         private const long NoEndTime = -1;
 
         public int UniqueId { get; }
         public int? ParentUniqueId { get; }
-
-        [NotNull]
         protected readonly MethodCallData _methodCallData;
         public MethodCallData MethodCallData => _methodCallData;
-
-        [NotNull]
         private readonly ITransactionSegmentState _transactionSegmentState;
         protected readonly TimeSpan _relativeStartTime;
 
@@ -112,12 +101,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             }
         }
 
-        public Boolean Combinable { get; set; }
+        public bool Combinable { get; set; }
+        public IEnumerable<KeyValuePair<string, object>> Parameters => _parameters ?? EmptyImmutableParameters;
 
-        [NotNull]
-        public IEnumerable<KeyValuePair<String, Object>> Parameters => _parameters ?? EmptyImmutableParameters;
-
-        protected IEnumerable<KeyValuePair<String, Object>> _parameters = EmptyImmutableParameters;
+        protected IEnumerable<KeyValuePair<string, object>> _parameters = EmptyImmutableParameters;
         private readonly int _threadId;
         private volatile bool _parentNotified;
 
@@ -131,7 +118,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         public AbstractSegmentData Data { get; }
 
-        protected Segment([NotNull] ITransactionSegmentState transactionSegmentState, [NotNull] MethodCallData methodCallData, AbstractSegmentData segmentData, bool combinable)
+        protected Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData, AbstractSegmentData segmentData, bool combinable)
         {
             _threadId = transactionSegmentState.CurrentManagedThreadId;
             _relativeStartTime = transactionSegmentState.GetRelativeTime();
@@ -143,7 +130,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             Combinable = combinable;
         }
 
-        protected Segment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<String, Object>> parameters)
+        protected Segment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<string, object>> parameters)
         {
             Data = segment.Data;
             _relativeStartTime = relativeStartTime;
@@ -210,7 +197,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
         public bool IsValid => true;
 
-        public bool IsCombinableWith([NotNull] Segment otherSegment)
+        public bool IsCombinableWith(Segment otherSegment)
         {
             if (!Combinable || !otherSegment.Combinable)
                 return false;
@@ -231,12 +218,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             Data.AddMetricStats(this, TotalChildDuration, txStats, configService);
         }
 
-        public String GetTransactionTraceName()
+        public string GetTransactionTraceName()
         {
             return Data.GetTransactionTraceName();
         }
 
-        public Segment CreateSimilar(TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<String, Object>> newParameters)
+        public Segment CreateSimilar(TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
         {
             return Data.CreateSimilar(this, newRelativeStartTime, newDuration, newParameters);
         }
@@ -244,13 +231,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
     public sealed class TypedSegment<T> : Segment where T : AbstractSegmentData
     {
-        public TypedSegment([NotNull] ITransactionSegmentState transactionSegmentState, [NotNull] MethodCallData methodCallData, T segmentData, bool combinable = false) :
+        public TypedSegment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData, T segmentData, bool combinable = false) :
             base(transactionSegmentState, methodCallData, segmentData, combinable)
         {
             TypedData = segmentData;
         }
 
-        public TypedSegment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<String, Object>> parameters = null) :
+        public TypedSegment(TimeSpan relativeStartTime, TimeSpan? duration, Segment segment, IEnumerable<KeyValuePair<string, object>> parameters = null) :
             base(relativeStartTime, duration, segment, parameters)
         {
             TypedData = (T)segment.Data;

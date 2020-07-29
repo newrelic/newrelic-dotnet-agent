@@ -17,7 +17,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             var json = JsonConvert.SerializeObject(profileNode);
 
-            const String expectedJson = @"[[""myClass"",""myMethod"",4],2,0,[]]";
+            const string expectedJson = @"[[""myClass"",""myMethod"",4],2,0,[]]";
             Assert.AreEqual(expectedJson, json);
         }
 
@@ -37,7 +37,7 @@ namespace NewRelic.Agent.Core.ThreadProfiling
 
             var json = JsonConvert.SerializeObject(profileNode1);
 
-            const String expectedJson = @"[[""myClass1"",""myMethod1"",4],2,0,[[[""myClass2"",""myMethod2"",14],12,0,[]]]]";
+            const string expectedJson = @"[[""myClass1"",""myMethod1"",4],2,0,[[[""myClass2"",""myMethod2"",14],12,0,[]]]]";
             Assert.AreEqual(expectedJson, json);
         }
     }

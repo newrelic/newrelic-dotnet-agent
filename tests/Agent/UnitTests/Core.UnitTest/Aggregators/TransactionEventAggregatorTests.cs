@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -12,32 +11,19 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.SystemInterfaces;
-using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.Aggregators
 {
     [TestFixture]
     public class TransactionEventAggregatorTests
     {
-        [NotNull]
         private IDataTransportService _dataTransportService;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private TransactionEventAggregator _transactionEventAggregator;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private ConfigurationAutoResponder _configurationAutoResponder;
-
-        [NotNull]
         private Action _harvestAction;
 
         [SetUp]
@@ -322,9 +308,9 @@ namespace NewRelic.Agent.Core.Aggregators
 
             // Assert
             Mock.Assert(() => _agentHealthReporter.ReportTransactionEventCollected(), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(Arg.IsAny<Int32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<UInt32>()), Occurs.Never());
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(Arg.IsAny<Int32>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsRecollected(Arg.IsAny<int>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventReservoirResized(Arg.IsAny<uint>()), Occurs.Never());
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionEventsSent(Arg.IsAny<int>()), Occurs.Never());
         }
 
         [Test]
@@ -353,8 +339,6 @@ namespace NewRelic.Agent.Core.Aggregators
         }
 
         #region Helpers
-
-        [NotNull]
         private static IConfiguration GetDefaultConfiguration(int? versionNumber = null)
         {
             var configuration = Mock.Create<IConfiguration>();

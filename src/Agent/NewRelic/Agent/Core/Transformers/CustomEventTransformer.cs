@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.Logging;
@@ -12,31 +11,25 @@ namespace NewRelic.Agent.Core.Transformers
 {
     public interface ICustomEventTransformer
     {
-        void Transform([NotNull] String eventType, [NotNull] IEnumerable<KeyValuePair<String, Object>> attributes);
+        void Transform(string eventType, IEnumerable<KeyValuePair<string, object>> attributes);
     }
 
     public class CustomEventTransformer : ICustomEventTransformer
     {
-        private const Int32 EventTypeValueLengthLimit = 256;
-        private const Int32 CustomAttributeLengthLimit = 256;
-        private const String EventTypeRegexText = @"^[a-zA-Z0-9:_ ]{1,256}$";
-
-        [NotNull]
+        private const int EventTypeValueLengthLimit = 256;
+        private const int CustomAttributeLengthLimit = 256;
+        private const string EventTypeRegexText = @"^[a-zA-Z0-9:_ ]{1,256}$";
         private static readonly Regex EventTypeRegex = new Regex(EventTypeRegexText, RegexOptions.Compiled);
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
-
-        [NotNull]
         private readonly ICustomEventAggregator _customEventAggregator;
 
-        public CustomEventTransformer([NotNull] IConfigurationService configurationService, [NotNull] ICustomEventAggregator customEventAggregator)
+        public CustomEventTransformer(IConfigurationService configurationService, ICustomEventAggregator customEventAggregator)
         {
             _configurationService = configurationService;
             _customEventAggregator = customEventAggregator;
         }
 
-        public void Transform(String eventType, IEnumerable<KeyValuePair<String, Object>> attributes)
+        public void Transform(string eventType, IEnumerable<KeyValuePair<string, object>> attributes)
         {
             if (!_configurationService.Configuration.CustomEventsEnabled)
                 return;
@@ -46,25 +39,25 @@ namespace NewRelic.Agent.Core.Transformers
             if (!EventTypeRegex.Match(eventType).Success)
                 throw new Exception($"CustomEvent dropped because eventType string did not conform to the following regex: {EventTypeRegexText}");
 
-            attributes = attributes as IList<KeyValuePair<String, Object>> ?? attributes.ToList();
+            attributes = attributes as IList<KeyValuePair<string, object>> ?? attributes.ToList();
 
             LogNullValuedAttributes(attributes);
 
             var filteredUserAttributes = attributes
-                .Where(attribute => attribute.Value is String || attribute.Value is Single)
+                .Where(attribute => attribute.Value is string || attribute.Value is float)
                 .Where(attribute => attribute.Value?.ToString().Length < CustomAttributeLengthLimit);
 
             var customEvent = new CustomEventWireModel(eventType, DateTime.UtcNow, filteredUserAttributes);
             _customEventAggregator.Collect(customEvent);
         }
 
-        private static void LogNullValuedAttributes([NotNull] IEnumerable<KeyValuePair<String, Object>> attributes)
+        private static void LogNullValuedAttributes(IEnumerable<KeyValuePair<string, object>> attributes)
         {
             var nullValuedAttributeNames = attributes.Where(attribute => attribute.Value == null).Select(attribute => attribute.Key).ToArray();
             if (!nullValuedAttributeNames.Any())
                 return;
 
-            Log.Debug($"CUSTOM EVENT: The following attributes had null values and will be ignored: {String.Join(",", nullValuedAttributeNames)}");
+            Log.Debug($"CUSTOM EVENT: The following attributes had null values and will be ignored: {string.Join(",", nullValuedAttributeNames)}");
         }
     }
 }

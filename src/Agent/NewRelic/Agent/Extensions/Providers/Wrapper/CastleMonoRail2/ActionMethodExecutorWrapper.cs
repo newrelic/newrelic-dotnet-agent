@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -8,33 +6,29 @@ namespace NewRelic.Providers.Wrapper.CastleMonoRail2
 {
     public class ActionMethodExecutorWrapper : IWrapper
     {
-        private const String AssemblyName = "Castle.MonoRail.Framework";
-        private const String TypeName = "Castle.MonoRail.Framework.ControllerContext";
-        private const String PropertyControllerName = "Name";
-        private const String PropertyAction = "Action";
+        private const string AssemblyName = "Castle.MonoRail.Framework";
+        private const string TypeName = "Castle.MonoRail.Framework.ControllerContext";
+        private const string PropertyControllerName = "Name";
+        private const string PropertyAction = "Action";
 
         public bool IsTransactionRequired => true;
 
         // these must be lazily instantiated when the wrapper is actually used, not when the wrapper is first instantiated, so they sit in a nested class
         private static class Statics
         {
-            private static Func<Object, String> _propertyControllerName;
-            private static Func<Object, String> _propertyActionName;
+            private static Func<object, string> _propertyControllerName;
+            private static Func<object, string> _propertyActionName;
+            public static readonly Func<object, string> GetPropertyControllerName = AssignPropertyControllerName();
+            public static readonly Func<object, string> GetPropertyAction = AssignPropertyAction();
 
-            [NotNull]
-            public static readonly Func<Object, String> GetPropertyControllerName = AssignPropertyControllerName();
-
-            [NotNull]
-            public static readonly Func<Object, String> GetPropertyAction = AssignPropertyAction();
-
-            private static Func<Object, String> AssignPropertyControllerName()
+            private static Func<object, string> AssignPropertyControllerName()
             {
-                return _propertyControllerName ?? (_propertyControllerName = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>(AssemblyName, TypeName, PropertyControllerName));
+                return _propertyControllerName ?? (_propertyControllerName = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(AssemblyName, TypeName, PropertyControllerName));
             }
 
-            private static Func<Object, String> AssignPropertyAction()
+            private static Func<object, string> AssignPropertyAction()
             {
-                return _propertyActionName ?? (_propertyActionName = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>(AssemblyName, TypeName, PropertyAction));
+                return _propertyActionName ?? (_propertyActionName = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>(AssemblyName, TypeName, PropertyAction));
             }
         }
 
@@ -65,8 +59,7 @@ namespace NewRelic.Providers.Wrapper.CastleMonoRail2
             return Delegates.GetDelegateFor(segment);
         }
 
-        [CanBeNull]
-        private static String TryGetPropertyName([NotNull] String propertyName, [NotNull] Object contextObject)
+        private static string TryGetPropertyName(string propertyName, object contextObject)
         {
             if (propertyName == PropertyControllerName)
                 return Statics.GetPropertyControllerName(contextObject);

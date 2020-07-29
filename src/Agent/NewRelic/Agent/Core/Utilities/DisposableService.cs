@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utilities
 {
@@ -11,7 +10,6 @@ namespace NewRelic.Agent.Core.Utilities
         /// <summary>
         /// Subscriptions that will be disposed when service is disposed.
         /// </summary>
-        [NotNull]
         protected Subscriptions _subscriptions { get; private set; }
 
         protected DisposableService()

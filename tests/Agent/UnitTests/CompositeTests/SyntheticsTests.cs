@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Utils;
@@ -16,9 +14,9 @@ namespace CompositeTests
 {
     internal class SyntheticsTests
     {
-        [NotNull] private static CompositeTestAgent _compositeTestAgent;
+        private static CompositeTestAgent _compositeTestAgent;
 
-        [NotNull] private IAgentWrapperApi _agentWrapperApi;
+        private IAgentWrapperApi _agentWrapperApi;
 
         [SetUp]
         public void SetUp()
@@ -43,13 +41,13 @@ namespace CompositeTests
             var resourceId = "resourceId";
             var jobId = "jobId";
             var monitorId = "monitorId";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
-            var syntheticsHeader = new KeyValuePair<String, String>("X-NewRelic-Synthetics",
+            var syntheticsHeader = new KeyValuePair<string, string>("X-NewRelic-Synthetics",
                 Strings.Base64Encode(
-                    String.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
+                    string.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
                         monitorId), encodingKey));
             var requestHeaders = new[] { syntheticsHeader };
 
@@ -66,7 +64,7 @@ namespace CompositeTests
 
 
             // ASSERT
-            var unexpectedEventAttributes = new List<String>
+            var unexpectedEventAttributes = new List<string>
             {
                 "nr.alternatePathHashes"
             };
@@ -103,7 +101,7 @@ namespace CompositeTests
         {
             // ARRANGE
             var encodingKey = "foo";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { 123 };
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
@@ -111,7 +109,7 @@ namespace CompositeTests
             // ==== ACT ====
             using (var tx = _agentWrapperApi.CreateWebTransaction(WebTransactionType.Action, "name"))
             {
-                _agentWrapperApi.ProcessInboundRequest(new KeyValuePair<String, String>[0]);
+                _agentWrapperApi.ProcessInboundRequest(new KeyValuePair<string, string>[0]);
                 var segment = _agentWrapperApi.StartTransactionSegmentOrThrow("segmentName");
                 segment.End();
             }
@@ -120,14 +118,14 @@ namespace CompositeTests
 
 
             // ASSERT
-            var unexpectedEventAttributes = new List<String>
+            var unexpectedEventAttributes = new List<string>
             {
                 "nr.guid",
                 "nr.syntheticsResourceId",
                 "nr.syntheticsJobId",
                 "nr.syntheticsMonitorId"
             };
-            var unexpectedTraceAttributes = new List<String>
+            var unexpectedTraceAttributes = new List<string>
             {
                 "synthetics_resource_id",
                 "synthetics_job_id",
@@ -146,7 +144,7 @@ namespace CompositeTests
         {
             // ARRANGE
             var encodingKey = "foo";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { 123 };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { 123 };
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
@@ -161,14 +159,14 @@ namespace CompositeTests
 
 
             // ASSERT
-            var unexpectedEventAttributes = new List<String>
+            var unexpectedEventAttributes = new List<string>
             {
                 "nr.guid",
                 "nr.syntheticsResourceId",
                 "nr.syntheticsJobId",
                 "nr.syntheticsMonitorId"
             };
-            var unexpectedTraceAttributes = new List<String>
+            var unexpectedTraceAttributes = new List<string>
             {
                 "synthetics_resource_id",
                 "synthetics_job_id",
@@ -192,14 +190,14 @@ namespace CompositeTests
             var resourceId = "resourceId";
             var jobId = "jobId";
             var monitorId = "monitorId";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
             _compositeTestAgent.ServerConfiguration.CatId = "123#456";
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
-            var syntheticsHeader = new KeyValuePair<String, String>("X-NewRelic-Synthetics",
+            var syntheticsHeader = new KeyValuePair<string, string>("X-NewRelic-Synthetics",
                 Strings.Base64Encode(
-                    String.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
+                    string.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
                         monitorId), encodingKey));
             var requestHeaders = new[] { syntheticsHeader };
 
@@ -225,14 +223,14 @@ namespace CompositeTests
             var resourceId = "resourceId";
             var jobId = "jobId";
             var monitorId = "monitorId";
-            _compositeTestAgent.ServerConfiguration.TrustedIds = new Int64[] { clientAccountId };
+            _compositeTestAgent.ServerConfiguration.TrustedIds = new long[] { clientAccountId };
             _compositeTestAgent.ServerConfiguration.CatId = "123#456";
             _compositeTestAgent.ServerConfiguration.EncodingKey = encodingKey;
             _compositeTestAgent.PushConfiguration();
 
-            var syntheticsHeader = new KeyValuePair<String, String>("X-NewRelic-Synthetics",
+            var syntheticsHeader = new KeyValuePair<string, string>("X-NewRelic-Synthetics",
                 Strings.Base64Encode(
-                    String.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
+                    string.Format(@"[{0}, {1}, ""{2}"", ""{3}"", ""{4}""]", version, clientAccountId, resourceId, jobId,
                         monitorId), encodingKey));
             var requestHeaders = new[] { syntheticsHeader };
 

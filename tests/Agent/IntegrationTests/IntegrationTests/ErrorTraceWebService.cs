@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ErrorTraceWebService : IClassFixture<RemoteServiceFixtures.BasicWebService>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebService _fixture;
 
-        public ErrorTraceWebService([NotNull] RemoteServiceFixtures.BasicWebService fixture, [NotNull] ITestOutputHelper output)
+        public ErrorTraceWebService(RemoteServiceFixtures.BasicWebService fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -66,13 +63,13 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "errorType", "System.Reflection.TargetInvocationException" },
                 { "errorMessage", "Oh no!" },
             };
 
-            var expectedErrorEventAttributes = new Dictionary<String, String>
+            var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Reflection.TargetInvocationException" },
                 { "error.message", "Oh no!" },

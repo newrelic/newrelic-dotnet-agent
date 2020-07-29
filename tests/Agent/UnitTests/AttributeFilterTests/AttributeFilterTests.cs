@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using AttributeFilterTests.Models;
-using JetBrains.Annotations;
 using NewRelic.Agent;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -12,7 +10,7 @@ namespace AttributeFilterTests
 {
     public class AttributeFilterTests
     {
-        private static String TestCaseData
+        private static string TestCaseData
         {
             get
             {
@@ -379,7 +377,7 @@ namespace AttributeFilterTests
         }
 
         [TestCaseSource(typeof(AttributeFilterTests), "TestCases")]
-        public void when([NotNull] TestCase testCase)
+        public void when(TestCase testCase)
         {
             // Arrange
             var attributeFilterSettings = testCase.Configuration.ToAttributeFilterSettings();

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class BasicWebApplication : IClassFixture<RemoteServiceFixtures.BasicWebApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicWebApplication _fixture;
 
-        public BasicWebApplication([NotNull] RemoteServiceFixtures.BasicWebApplication fixture, [NotNull] ITestOutputHelper output)
+        public BasicWebApplication(RemoteServiceFixtures.BasicWebApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -36,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric {metricName = @"DotNet/default.aspx", metricScope = "WebTransaction/ASP/default.aspx", callCount = 1},
             };
 
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"AuthenticateRequest",
                 @"AuthorizeRequest",

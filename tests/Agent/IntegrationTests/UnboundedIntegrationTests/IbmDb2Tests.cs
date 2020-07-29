@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.Shared;
@@ -13,10 +11,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class IbmDb2Tests : IClassFixture<RemoteServiceFixtures.IbmDb2BasicMvcFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.IbmDb2BasicMvcFixture _fixture;
 
-        public IbmDb2Tests([NotNull] RemoteServiceFixtures.IbmDb2BasicMvcFixture fixture, [NotNull] ITestOutputHelper output)
+        public IbmDb2Tests(RemoteServiceFixtures.IbmDb2BasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -82,7 +79,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/insert", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2Query" },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/delete", metricScope = "WebTransaction/MVC/DefaultController/InvokeIbmDb2Query" }
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 "Datastore/statement/IBMDB2/employee/select"
             };
@@ -95,7 +92,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
             };
 
-            var expectedTransactionEventIntrinsicAttributes = new List<String>
+            var expectedTransactionEventIntrinsicAttributes = new List<string>
             {
                 "databaseDuration"
             };

@@ -12,11 +12,11 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         #region Unless(Func<T,bool>)
 
 
-        [TestCase(new Int32[0], new Int32[0])]
+        [TestCase(new int[0], new int[0])]
         [TestCase(new[] { 1 }, new[] { 1 })]
-        [TestCase(new[] { 9 }, new Int32[0])]
+        [TestCase(new[] { 9 }, new int[0])]
         [TestCase(new[] { 1, 9, 2 }, new[] { 1, 2 })]
-        public void UnlessT_ReturnsCorrectResults_WhenExcludingSpecificValues(Int32[] input, Int32[] expectedOutput)
+        public void UnlessT_ReturnsCorrectResults_WhenExcludingSpecificValues(int[] input, int[] expectedOutput)
         {
             // The Unless(Func<T,bool>) method is very simple and thus needs only a few very simple tests
             var result = input.Unless(item => item == 9);
@@ -27,8 +27,8 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
 
         #region Unless(Func<T,T,bool>)
 
-        [TestCase(new Int32[0], new Int32[0])]
-        [TestCase(new[] { default(Int32) }, new[] { default(Int32) })]
+        [TestCase(new int[0], new int[0])]
+        [TestCase(new[] { default(int) }, new[] { default(int) })]
         [TestCase(new[] { 1 }, new[] { 1 })]
         [TestCase(new[] { 1, 1 }, new[] { 1 })]
         [TestCase(new[] { 1, 1, 1 }, new[] { 1 })]
@@ -36,7 +36,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [TestCase(new[] { 1, 1, 2 }, new[] { 1, 2 })]
         [TestCase(new[] { 1, 2, 1 }, new[] { 1, 2, 1 })]
         [TestCase(new[] { 1, 1, 2, 2, 1, 1 }, new[] { 1, 2, 1 })]
-        public void UnlessTT_ReturnsCorrectResults_WhenCheckingForDuplicates(Int32[] input, Int32[] expectedOutput)
+        public void UnlessTT_ReturnsCorrectResults_WhenCheckingForDuplicates(int[] input, int[] expectedOutput)
         {
             // The Unless(Func<T,T,bool>) method is a little more complicated and thus deserves a few more tests
             var result = input.Unless((last, current) => last == current);
@@ -48,16 +48,16 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         #region ToDictionary(DuplicateKeyBehavior)
 
 
-        [TestCase(new Int32[0])]
+        [TestCase(new int[0])]
         [TestCase(new[] { 1, 2 })]
         [TestCase(new[] { 1, 2, 3, 4 })]
-        public void ToDictionary_ReturnsCorrectResults_IfThereAreNoDuplicates(Int32[] input)
+        public void ToDictionary_ReturnsCorrectResults_IfThereAreNoDuplicates(int[] input)
         {
             if (input.Length % 2 != 0)
                 throw new Exception("Input must contain pairs (key, value, key, value, ...)");
 
             var pairCount = 0;
-            var kvps = new List<KeyValuePair<Int32, Int32>>();
+            var kvps = new List<KeyValuePair<int, int>>();
             for (var index = 0; index < input.Length; index += 2)
             {
                 var key = input[index];
@@ -82,20 +82,19 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void ToDictionary_Throws_IfDuplicateKeyBehaviorIsThrow()
         {
-            var kvps = new List<KeyValuePair<Int32, Int32>>
+            var kvps = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(1, 2),
                 new KeyValuePair<int, int>(1, 3)
             };
 
-            // ReSharper disable once RedundantArgumentDefaultValue
             Assert.Throws<ArgumentException>(() => kvps.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.Throw));
         }
 
         [Test]
         public void ToDictionary_ReturnsFirstValue_IfDuplicateKeyBehaviorIsKeepFirst()
         {
-            var kvps = new List<KeyValuePair<Int32, Int32>>
+            var kvps = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(1, 2),
                 new KeyValuePair<int, int>(1, 3)
@@ -111,7 +110,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void ToDictionary_ReturnsLastValue_IfDuplicateKeyBehaviorIsKeepLast()
         {
-            var kvps = new List<KeyValuePair<Int32, Int32>>
+            var kvps = new List<KeyValuePair<int, int>>
             {
                 new KeyValuePair<int, int>(1, 2),
                 new KeyValuePair<int, int>(1, 3)
@@ -127,10 +126,10 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void ToDictionary_UsesSuppliedEqualityComparer()
         {
-            var kvps = new List<KeyValuePair<String, Int32>>
+            var kvps = new List<KeyValuePair<string, int>>
             {
-                new KeyValuePair<String, Int32>("foo", 1),
-                new KeyValuePair<String, Int32>("BAR", 2)
+                new KeyValuePair<string, int>("foo", 1),
+                new KeyValuePair<string, int>("BAR", 2)
             };
 
             var dictionary = kvps.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepLast, StringComparer.OrdinalIgnoreCase);
@@ -151,7 +150,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void when_enumeration_is_empty_then_returns_empty_enumeration()
         {
-            var items = new List<Object>();
+            var items = new List<object>();
             var notNullItems = items.NotNull();
             Assert.AreEqual(0, notNullItems.Count());
         }
@@ -159,7 +158,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void when_enumeration_contains_null_only_then_returns_empty_enumeration()
         {
-            var items = new List<Object> { null, null };
+            var items = new List<object> { null, null };
             var notNullItems = items.NotNull();
             Assert.AreEqual(0, notNullItems.Count());
         }
@@ -167,7 +166,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void when_enumeration_contains_null_and_value_then_returns_enumeration_with_value()
         {
-            var items = new List<Object> { null, new Object() };
+            var items = new List<object> { null, new object() };
             var notNullItems = items.NotNull();
             Assert.AreEqual(1, notNullItems.Count());
         }
@@ -175,7 +174,7 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void when_enumeration_contains_only_not_null_values_then_original_enumeration_is_returned()
         {
-            var items = new List<Object> { new Object(), new Object() };
+            var items = new List<object> { new object(), new object() };
             var notNullItems = items.NotNull();
             Assert.AreEqual(2, notNullItems.Count());
         }
@@ -183,23 +182,23 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void when_only_item_in_enumeration_throws_exception_then_empty_enumeration_is_returned()
         {
-            var items = new List<Object> { new Object() };
-            var selector = items.Select<Object, Object>(item => { throw new Exception(); }).Swallow();
+            var items = new List<object> { new object() };
+            var selector = items.Select<object, object>(item => { throw new Exception(); }).Swallow();
             Assert.AreEqual(0, selector.Count());
         }
 
         [Test]
         public void when_all_items_in_enumeration_throw_exceptions_then_empty_enumeration_is_returned()
         {
-            var items = new List<Object> { new Object(), new Object() };
-            var selector = items.Select<Object, Object>(item => { throw new Exception(); }).Swallow();
+            var items = new List<object> { new object(), new object() };
+            var selector = items.Select<object, object>(item => { throw new Exception(); }).Swallow();
             Assert.AreEqual(0, selector.Count());
         }
 
         [Test]
         public void when_one_item_in_enumeration_throws_exception_then_other_results_are_returned()
         {
-            var items = new List<Boolean> { false, true, false };
+            var items = new List<bool> { false, true, false };
             var selector = items.Select(item => { if (item) throw new Exception(); return item; }).Swallow();
             Assert.AreEqual(2, selector.Count());
         }
@@ -207,12 +206,12 @@ namespace NewRelic.SystemExtensions.UnitTests.Collections.Generic
         [Test]
         public void when_exception_does_not_match_exception_type_then_exception_is_not_swallowed()
         {
-            var items = new List<Object> { new Object() };
-            var selector = items.Select<Object, Object>(item => { throw new InvalidOperationException(); }).Swallow<Object, InvalidCastException>();
+            var items = new List<object> { new object() };
+            var selector = items.Select<object, object>(item => { throw new InvalidOperationException(); }).Swallow<object, InvalidCastException>();
             Assert.Throws<InvalidOperationException>(() => selector.ToList());
         }
 
-        private class Foo { public Boolean Bar; }
+        private class Foo { public bool Bar; }
 
         [Test]
         public void when_swallow_is_in_chain_enumeration_is_not_iterated_over_automatically()

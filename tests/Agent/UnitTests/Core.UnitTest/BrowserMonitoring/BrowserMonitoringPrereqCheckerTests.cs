@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Database;
 using NewRelic.Agent.Core.Transactions;
@@ -10,23 +9,15 @@ using NewRelic.Agent.Core.Transactions.TransactionNames;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NUnit.Framework;
 using Telerik.JustMock;
-using Telerik.JustMock.Helpers;
 
 namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     [TestFixture, Category("BrowserMonitoring")]
     public class BrowserMonitoringPrereqCheckerTests
     {
-        [NotNull]
         private BrowserMonitoringPrereqChecker _checker;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private ITransaction _internalTransaction;
-
-        [NotNull]
         private ImmutableTransaction _immutableTransaction;
 
         [SetUp]
@@ -49,8 +40,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldInjectWhenDefaultSettings()
             {
-                const String path = "my/path";
-                const String contentType = "text/html";
+                const string path = "my/path";
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction();
 
                 Assert.IsTrue(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
@@ -59,8 +50,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldNotInjectWhenAutoInstrumentRumDisabled()
             {
-                const String path = "my/path";
-                const String contentType = "text/html";
+                const string path = "my/path";
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction();
                 Mock.Arrange(() => _configuration.BrowserMonitoringAutoInstrument).Returns(false);
 
@@ -70,8 +61,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldNotInjectWhenJavascriptLoaderTypeIsNone()
             {
-                const String path = "my/path";
-                const String contentType = "text/html";
+                const string path = "my/path";
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction();
                 Mock.Arrange(() => _configuration.BrowserMonitoringJavaScriptAgentLoaderType).Returns("none");
 
@@ -81,8 +72,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldNotInjectWhenTransactionSetToIgnoreAutoBrowserMonitoring()
             {
-                const String path = "my/path";
-                const String contentType = "text/html";
+                const string path = "my/path";
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction(ignoreAutoBrowserMonitoring: true);
 
                 Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
@@ -91,8 +82,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldNotInjectWhenTransactionSetToIgnoreAllBrowserMonitoring()
             {
-                const String path = "my/path";
-                const String contentType = "text/html";
+                const string path = "my/path";
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction(ignoreAllBrowserMonitoring: true);
 
                 Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
@@ -101,8 +92,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldNotInjectWhenNonHtmlContentType()
             {
-                const String path = "my/path";
-                const String contentType = "text/css";
+                const string path = "my/path";
+                const string contentType = "text/css";
                 _immutableTransaction = BuildTestTransaction();
 
                 Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
@@ -111,8 +102,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldNotInjectWhenEmptyContentType()
             {
-                const String path = "my/path";
-                const String contentType = "";
+                const string path = "my/path";
+                const string contentType = "";
                 _immutableTransaction = BuildTestTransaction();
 
                 Assert.IsFalse(_checker.ShouldAutomaticallyInject(_internalTransaction, path, contentType));
@@ -121,8 +112,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldInjectWhenPathIsNullOrEmpty()
             {
-                const String path = null;
-                const String contentType = "text/html";
+                const string path = null;
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction();
                 var exclusions = new List<Regex>
                 {
@@ -137,8 +128,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldNotInjectWhenPathBlacklisted()
             {
-                const String path = @"http://localhost/BlogEngineWeb/Posts/default.aspx";
-                const String contentType = "text/html";
+                const string path = @"http://localhost/BlogEngineWeb/Posts/default.aspx";
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction();
                 var exclusions = new List<Regex>
                 {
@@ -154,8 +145,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             [Test]
             public void ShouldInjectWhenPathNotBlacklisted()
             {
-                const String path = @"http://localhost/BlogEngineWeb/Posts/default.aspx";
-                const String contentType = "text/html";
+                const string path = @"http://localhost/BlogEngineWeb/Posts/default.aspx";
+                const string contentType = "text/html";
                 _immutableTransaction = BuildTestTransaction();
                 var exclusions = new List<Regex>
                 {
@@ -220,9 +211,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             }
 
         }
-
-        [NotNull]
-        private ImmutableTransaction BuildTestTransaction(Boolean ignoreAutoBrowserMonitoring = false, Boolean ignoreAllBrowserMonitoring = false)
+        private ImmutableTransaction BuildTestTransaction(bool ignoreAutoBrowserMonitoring = false, bool ignoreAllBrowserMonitoring = false)
         {
             var name = new WebTransactionName("foo", "bar");
             var segments = Enumerable.Empty<Segment>();

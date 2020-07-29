@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
-using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 
@@ -12,19 +7,17 @@ namespace NewRelic.Providers.Wrapper.WebServices
     public class WebServiceMethodWrapper : IWrapper
     {
 
-        public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<String>("System.Web.Extensions", "System.Web.Script.Services.WebServiceMethodData", "_methodName"));
-        public Func<Object, Object> GetMethodOwner => _getMethodOwner ?? (_getMethodOwner = VisibilityBypasser.Instance.GeneratePropertyAccessor<Object>("System.Web.Extensions", "System.Web.Script.Services.WebServiceMethodData", "Owner"));
-        public Func<Object, Object> GetMethodTypeData => _getMethodTypeData ?? (_getMethodTypeData = VisibilityBypasser.Instance.GeneratePropertyAccessor<Object>("System.Web.Extensions", "System.Web.Script.Services.WebServiceData", "TypeData"));
-        public Func<Object, Type> GetMethodType => _getMethodType ?? (_getMethodType = VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>("System.Web.Extensions", "System.Web.Script.Services.WebServiceTypeData", "Type"));
+        public Func<object, string> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GenerateFieldAccessor<string>("System.Web.Extensions", "System.Web.Script.Services.WebServiceMethodData", "_methodName"));
+        public Func<object, object> GetMethodOwner => _getMethodOwner ?? (_getMethodOwner = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("System.Web.Extensions", "System.Web.Script.Services.WebServiceMethodData", "Owner"));
+        public Func<object, object> GetMethodTypeData => _getMethodTypeData ?? (_getMethodTypeData = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("System.Web.Extensions", "System.Web.Script.Services.WebServiceData", "TypeData"));
+        public Func<object, Type> GetMethodType => _getMethodType ?? (_getMethodType = VisibilityBypasser.Instance.GeneratePropertyAccessor<Type>("System.Web.Extensions", "System.Web.Script.Services.WebServiceTypeData", "Type"));
 
 
         public bool IsTransactionRequired => true;
-
-        [CanBeNull]
-        private Func<Object, String> _getMethodInfo;
-        private Func<Object, Object> _getMethodOwner;
-        private Func<Object, Object> _getMethodTypeData;
-        private Func<Object, Type> _getMethodType;
+        private Func<object, string> _getMethodInfo;
+        private Func<object, object> _getMethodOwner;
+        private Func<object, object> _getMethodTypeData;
+        private Func<object, Type> _getMethodType;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {

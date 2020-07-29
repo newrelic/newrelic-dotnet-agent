@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AgentApiTests : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
-        public AgentApiTests([NotNull] RemoteServiceFixtures.AgentApiExecutor fixture, [NotNull] ITestOutputHelper output)
+        public AgentApiTests(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -24,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
 
-                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<String, String>("autoStart", "false") });
+                    CommonUtils.ModifyOrCreateXmlAttributesInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, new[] { new KeyValuePair<string, string>("autoStart", "false") });
                 });
             _fixture.Initialize();
         }
@@ -37,14 +34,14 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric{ metricName = "Custom/MyMetric", callCount = 1}
             };
 
-            var expectedErrorEventIntrinsicAttributes = new Dictionary<String, String>
+            var expectedErrorEventIntrinsicAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "error.message", "Rawr!" },
                 { "type", "TransactionError" }
             };
 
-            var expectedErrorEventCustomAttributes = new Dictionary<String, String>
+            var expectedErrorEventCustomAttributes = new Dictionary<string, string>
             {
                 {"hey", "dude"},
                 {"faz", "baz"}

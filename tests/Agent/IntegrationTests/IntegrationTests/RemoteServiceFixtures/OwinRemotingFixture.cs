@@ -1,27 +1,26 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class OwinRemotingFixture : RemoteApplicationFixture
     {
-        private const String ServerApplicationDirectoryName = @"OwinRemotingServer";
-        private const String ServerExecutableName = @"OwinRemotingServer.exe";
-        private const String ClientApplicationDirectoryName = @"OwinRemotingClient";
-        private const String ClientExecutableName = @"OwinRemotingClient.exe";
+        private const string ServerApplicationDirectoryName = @"OwinRemotingServer";
+        private const string ServerExecutableName = @"OwinRemotingServer.exe";
+        private const string ClientApplicationDirectoryName = @"OwinRemotingClient";
+        private const string ClientExecutableName = @"OwinRemotingClient.exe";
         internal RemoteService OwinRemotingServerApplication { get; set; }
 
         public OwinRemotingFixture() : base(new RemoteService(ClientApplicationDirectoryName, ClientExecutableName, ApplicationType.Bounded, createsPidFile: false))
         {
             OwinRemotingServerApplication = new RemoteService(ServerApplicationDirectoryName, ServerExecutableName, ApplicationType.Bounded, createsPidFile: false);
             OwinRemotingServerApplication.CopyToRemote();
-            OwinRemotingServerApplication.Start(String.Empty, captureStandardOutput: false, doProfile: false);
+            OwinRemotingServerApplication.Start(string.Empty, captureStandardOutput: false, doProfile: false);
         }
 
         public string GetObjectTcp()
         {
-            var address = String.Format(@"http://{0}:{1}/Remote/GetObjectTcp", DestinationServerName, Port);
+            var address = string.Format(@"http://{0}:{1}/Remote/GetObjectTcp", DestinationServerName, Port);
             var webClient = new WebClient();
             var result = webClient.DownloadString(address);
             return result;
@@ -29,7 +28,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public string GetObjectHttp()
         {
-            var address = String.Format(@"http://{0}:{1}/Remote/GetObjectHttp", DestinationServerName, Port);
+            var address = string.Format(@"http://{0}:{1}/Remote/GetObjectHttp", DestinationServerName, Port);
             var webClient = new WebClient();
             var result = webClient.DownloadString(address);
             return result;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.Configuration;
 using NewRelic.Agent.Core.Logging;
@@ -15,7 +14,6 @@ namespace NewRelic.Agent.Core.Utilities
 {
     public class ExtensionsLoader
     {
-        [NotNull]
         public static IEnumerable<T> LoadExtensions<T>()
         {
             var extensionsDirectoryPath = GetExtensionsDirectoryPath();
@@ -25,8 +23,6 @@ namespace NewRelic.Agent.Core.Utilities
 
             return result.Instances;
         }
-
-        [NotNull]
         public static IEnumerable<IWrapper> LoadWrappers()
         {
             try

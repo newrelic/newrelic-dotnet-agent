@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class WcfAppSelfHosted : IClassFixture<RemoteServiceFixtures.WcfAppSelfHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppSelfHosted _fixture;
 
-        public WcfAppSelfHosted([NotNull] RemoteServiceFixtures.WcfAppSelfHosted fixture, [NotNull] ITestOutputHelper testLogger)
+        public WcfAppSelfHosted(RemoteServiceFixtures.WcfAppSelfHosted fixture, ITestOutputHelper testLogger)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;
@@ -54,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "custom key", "custom value" },
                 { "custom foo", "custom bar" },

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Config;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
@@ -11,40 +10,23 @@ using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 using Telerik.JustMock;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.Configuration.UnitTest
 {
     internal class DefaultConfigurationTest : DefaultConfiguration
     {
-        public DefaultConfigurationTest([NotNull] IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, [NotNull] IProcessStatic processStatic, [NotNull] IHttpRuntimeStatic httpRuntimeStatic, [NotNull] IConfigurationManagerStatic configurationManagerStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic) { }
+        public DefaultConfigurationTest(IEnvironment environment, configuration localConfig, ServerConfiguration serverConfig, RunTimeConfiguration runTimeConfiguration, IProcessStatic processStatic, IHttpRuntimeStatic httpRuntimeStatic, IConfigurationManagerStatic configurationManagerStatic) : base(environment, localConfig, serverConfig, runTimeConfiguration, processStatic, httpRuntimeStatic, configurationManagerStatic) { }
     }
 
     [TestFixture, Category("Configuration")]
     public class Class_DefaultConfiguration
     {
-        [NotNull]
         private IEnvironment _environment;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private IHttpRuntimeStatic _httpRuntimeStatic;
-
-        [NotNull]
         private IConfigurationManagerStatic _configurationManagerStatic;
-
-        [NotNull]
         private configuration _localConfig;
-
-        [NotNull]
         private ServerConfiguration _serverConfig;
-
-        [NotNull]
         private RunTimeConfiguration _runTimeConfig;
-
-        [NotNull]
         private DefaultConfiguration _defaultConfig;
 
         [SetUp]
@@ -97,12 +79,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(false, false, null, ExpectedResult = false)]
         [TestCase(false, false, true, ExpectedResult = false)]
         [TestCase(false, false, false, ExpectedResult = false)]
-        public Boolean Property__TransactionEvents_server_can_disable(Boolean? server, Boolean? legacyLocal, Boolean? local)
+        public bool Property__TransactionEvents_server_can_disable(bool? server, bool? legacyLocal, bool? local)
         {
-            _localConfig.transactionEvents.enabled = (local != null) ? local.Value : default(Boolean);
+            _localConfig.transactionEvents.enabled = (local != null) ? local.Value : default(bool);
             _localConfig.transactionEvents.enabledSpecified = local.HasValue;
 
-            _localConfig.analyticsEvents.enabled = (legacyLocal != null) ? legacyLocal.Value : default(Boolean);
+            _localConfig.analyticsEvents.enabled = (legacyLocal != null) ? legacyLocal.Value : default(bool);
             _localConfig.analyticsEvents.enabledSpecified = legacyLocal.HasValue;
 
             _serverConfig.AnalyticsEventCollectionEnabled = server;
@@ -205,7 +187,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(false, true, false, ExpectedResult = false)]
         [TestCase(false, false, null, ExpectedResult = false)]
         [TestCase(false, true, null, ExpectedResult = false)]
-        public Boolean Property__ErrorCollectorEnabled_featue_with_rpm_collector_enabled_server_overrides(Boolean local, Boolean? server, Boolean? rpmConfigServer)
+        public bool Property__ErrorCollectorEnabled_featue_with_rpm_collector_enabled_server_overrides(bool local, bool? server, bool? rpmConfigServer)
         {
             _localConfig.errorCollector.enabled = local;
             _serverConfig.ErrorCollectionEnabled = server;
@@ -274,7 +256,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_InstrumentationLoggingEnabled_set_from_local(Boolean local)
+        public bool Property_InstrumentationLoggingEnabled_set_from_local(bool local)
         {
             _localConfig.instrumentation.log = local;
 
@@ -297,7 +279,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(false, true, false, ExpectedResult = false)]
         [TestCase(false, false, null, ExpectedResult = false)]
         [TestCase(false, true, null, ExpectedResult = false)]
-        public Boolean Property__TransactionTracerEnabled_feature_with_rpm_collector_enabled_server_overrides(Boolean local, Boolean? server, Boolean? rpmConfigServer)
+        public bool Property__TransactionTracerEnabled_feature_with_rpm_collector_enabled_server_overrides(bool local, bool? server, bool? rpmConfigServer)
         {
             _localConfig.transactionTracer.enabled = local;
             _serverConfig.TraceCollectionEnabled = server;
@@ -308,7 +290,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_TransactionTracerCaptureAttributes_set_from_local(Boolean local)
+        public bool Property_TransactionTracerCaptureAttributes_set_from_local(bool local)
         {
             _localConfig.transactionTracer.captureAttributes = local;
 
@@ -317,7 +299,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_DataTransmissionPutForDataSend_set_from_local(Boolean local)
+        public bool Property_DataTransmissionPutForDataSend_set_from_local(bool local)
         {
             _localConfig.dataTransmission.putForDataSend = local;
 
@@ -326,7 +308,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_DatastoreTracerInstanceReportingEnabled_set_from_local(Boolean local)
+        public bool Property_DatastoreTracerInstanceReportingEnabled_set_from_local(bool local)
         {
             _localConfig.datastoreTracer.instanceReporting.enabled = local;
 
@@ -335,7 +317,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_DatastoreTracerDatabaseNameReportingEnabled_set_from_local(Boolean local)
+        public bool Property_DatastoreTracerDatabaseNameReportingEnabled_set_from_local(bool local)
         {
             _localConfig.datastoreTracer.databaseNameReporting.enabled = local;
 
@@ -344,7 +326,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(configurationDataTransmissionCompressedContentEncoding.deflate, ExpectedResult = "deflate")]
         [TestCase(configurationDataTransmissionCompressedContentEncoding.gzip, ExpectedResult = "gzip")]
-        public String CompressedContentEncodingShouldSetFromLocalConfiguration(configurationDataTransmissionCompressedContentEncoding local)
+        public string CompressedContentEncodingShouldSetFromLocalConfiguration(configurationDataTransmissionCompressedContentEncoding local)
         {
             _localConfig.dataTransmission.compressedContentEncoding = local;
             return _defaultConfig.CompressedContentEncoding;
@@ -353,7 +335,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_ErrorCollectorCatpureEvents_set_from_local(Boolean local)
+        public bool Property_ErrorCollectorCatpureEvents_set_from_local(bool local)
         {
             _localConfig.errorCollector.captureEvents = local;
             return _defaultConfig.ErrorCollectorCaptureEvents;
@@ -361,7 +343,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = true)]
-        public Boolean Property_ErrorCollectorCatpureEvents_set_from_server(Boolean local, Boolean server)
+        public bool Property_ErrorCollectorCatpureEvents_set_from_server(bool local, bool server)
         {
             _localConfig.errorCollector.captureEvents = local;
             _serverConfig.RpmConfig.ErrorCollectorCaptureEvents = server;
@@ -372,7 +354,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(false, true, ExpectedResult = false)]
         [TestCase(true, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
-        public Boolean Property_ErrorCollectorCaptureEvents_conditional_override_from_server(Boolean local, Boolean server)
+        public bool Property_ErrorCollectorCaptureEvents_conditional_override_from_server(bool local, bool server)
         {
             _localConfig.errorCollector.captureEvents = local;
             _serverConfig.RpmConfig.CollectErrorEvents = server;
@@ -380,29 +362,29 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [TestCase(50, ExpectedResult = 50)]
-        public UInt32 Property_ErrorCollectorMaxNumberEventSamples_set_from_local(Int32 local)
+        public uint Property_ErrorCollectorMaxNumberEventSamples_set_from_local(int local)
         {
             _localConfig.errorCollector.maxEventSamplesStored = local;
             return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
         }
 
         [TestCase(50, 75, ExpectedResult = 75)]
-        public UInt32 Property_ErrorCollectorMaxNumberEventSamples_set_from_server(Int32 local, Int32 server)
+        public uint Property_ErrorCollectorMaxNumberEventSamples_set_from_server(int local, int server)
         {
             _localConfig.errorCollector.maxEventSamplesStored = Property_InstrumentationLevel_server_overrides_default(local);
-            _serverConfig.RpmConfig.ErrorCollectorMaxEventSamplesStored = (UInt32?)server;
+            _serverConfig.RpmConfig.ErrorCollectorMaxEventSamplesStored = (uint?)server;
             return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
         }
 
         [TestCase(ExpectedResult = 100)]
-        public UInt32 Property_ErrorCollectorMaxNumberEventSamples_default_from_local()
+        public uint Property_ErrorCollectorMaxNumberEventSamples_default_from_local()
         {
             return _defaultConfig.ErrorCollectorMaxEventSamplesStored;
         }
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_BrowserMonitoringCaptureAttributes_set_from_local(Boolean local)
+        public bool Property_BrowserMonitoringCaptureAttributes_set_from_local(bool local)
         {
             _localConfig.browserMonitoring.captureAttributes = local;
 
@@ -411,7 +393,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(null, ExpectedResult = 3)]
         [TestCase(42, ExpectedResult = 42)]
-        public Int32 Property_InstrumentationLevel_server_overrides_default(Int32? server)
+        public int Property_InstrumentationLevel_server_overrides_default(int? server)
         {
             _serverConfig.RpmConfig.InstrumentationLevel = server;
 
@@ -424,7 +406,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
-        public Boolean Property_SqlExplainPlansEnabled__server_overrides_local(Boolean local, Boolean? server)
+        public bool Property_SqlExplainPlansEnabled__server_overrides_local(bool local, bool? server)
         {
             _localConfig.transactionTracer.explainEnabled = local;
             _serverConfig.RpmConfig.TransactionTracerExplainEnabled = server;
@@ -508,7 +490,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void Property_RequestParametersToIgnore_set_from_local_and_server_ServerOverrides(string[] local, string[] server, string expected)
         {
             _serverConfig.RpmConfig.ParametersToIgnore = server;
-            _localConfig.requestParameters.ignore = new List<String>(local);
+            _localConfig.requestParameters.ignore = new List<string>(local);
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains(expected));
         }
@@ -528,7 +510,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, configurationTransactionTracerRecordSql.off, "foo", ExpectedResult = "obfuscated")]
         [TestCase(true, configurationTransactionTracerRecordSql.obfuscated, "foo", ExpectedResult = "obfuscated")]
         [TestCase(true, configurationTransactionTracerRecordSql.raw, "foo", ExpectedResult = "obfuscated")]
-        public String Property__TransactionTracerRecordSql__set_from_local_and_server_HighSecurityOverridesServerOverrides(Boolean highSecurity, configurationTransactionTracerRecordSql local, String server)
+        public string Property__TransactionTracerRecordSql__set_from_local_and_server_HighSecurityOverridesServerOverrides(bool highSecurity, configurationTransactionTracerRecordSql local, string server)
         {
             _localConfig.highSecurity.enabled = highSecurity;
             _localConfig.transactionTracer.recordSql = local;
@@ -598,7 +580,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("apdex_f", "foo", 5, ExpectedResult = 20000)]
         [TestCase(null, null, 5, ExpectedResult = 20000)]
         [TestCase(null, 2, 5, ExpectedResult = 2000)]
-        public Double Property_TransactionTraceThreshold_set_from_server_overrides_local(String local, Object server, Double apdexT)
+        public double Property_TransactionTraceThreshold_set_from_server_overrides_local(string local, object server, double apdexT)
         {
             _serverConfig.ApdexT = apdexT;
             _serverConfig.RpmConfig.TransactionTracerThreshold = server;
@@ -618,7 +600,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_CaptureCustomParameters_set_from_local(Boolean isEnabled)
+        public bool Property_CaptureCustomParameters_set_from_local(bool isEnabled)
         {
             _localConfig.parameterGroups.customParameters.enabled = isEnabled;
             return _defaultConfig.CaptureCustomParameters;
@@ -633,14 +615,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_CustomParametersToIgnore_set_from_local()
         {
-            _localConfig.parameterGroups.customParameters.ignore = new List<String>() { "local" };
+            _localConfig.parameterGroups.customParameters.ignore = new List<string>() { "local" };
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("local"));
         }
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public Boolean Property_CaptureIdentityParameters_set_from_local(Boolean isEnabled)
+        public bool Property_CaptureIdentityParameters_set_from_local(bool isEnabled)
         {
             _localConfig.parameterGroups.identityParameters.enabled = isEnabled;
             return _defaultConfig.CaptureErrorCollectorAttributesIncludes.Contains("identity.*");
@@ -656,14 +638,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public void Property_IdentityParametersToIgnore_set_from_local()
         {
 
-            _localConfig.parameterGroups.identityParameters.ignore = new List<String>() { "local" };
+            _localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "local" };
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.local"));
         }
 
         [TestCase(true, ExpectedResult = false)]
         [TestCase(false, ExpectedResult = true)]
-        public Boolean Property_CaptureResponseHeaderParameters_set_from_local(Boolean isEnabled)
+        public bool Property_CaptureResponseHeaderParameters_set_from_local(bool isEnabled)
         {
             _localConfig.parameterGroups.responseHeaderParameters.enabled = isEnabled;
             return _defaultConfig.CaptureAttributesExcludes.Contains("response.headers.*");
@@ -677,7 +659,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = false)]
         [TestCase(false, ExpectedResult = true)]
-        public Boolean Property_CaptureServiceRequestParameters_set_from_local(Boolean isEnabled)
+        public bool Property_CaptureServiceRequestParameters_set_from_local(bool isEnabled)
         {
             _localConfig.parameterGroups.serviceRequestParameters.enabled = isEnabled;
             return _defaultConfig.CaptureAttributesExcludes.Contains("service.request.*");
@@ -692,7 +674,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_ResponseHeaderParametersToIgnore_set_from_local()
         {
-            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<String>() { "local" };
+            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "local" };
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.local"));
         }
@@ -700,7 +682,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_ServiceRequestParametersToIgnore_set_from_local()
         {
-            _localConfig.parameterGroups.serviceRequestParameters.ignore = new List<String>() { "local" };
+            _localConfig.parameterGroups.serviceRequestParameters.ignore = new List<string>() { "local" };
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("service.request.local"));
         }
@@ -710,7 +692,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         public string Property_ExceptionsToIgnore_set_from_local_and_server_ServerOverrides(string[] local, string[] server)
         {
             _serverConfig.RpmConfig.ErrorCollectorErrorsToIgnore = server;
-            _localConfig.errorCollector.ignoreErrors.exception = new List<String>(local);
+            _localConfig.errorCollector.ignoreErrors.exception = new List<string>(local);
 
             return _defaultConfig.ExceptionsToIgnore.FirstOrDefault();
         }
@@ -843,7 +825,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = false)]
-        public bool Property_BrowserMonitoring_overrides_deprecated_value(Boolean propertyEnabled, Boolean deprecatedEnabled)
+        public bool Property_BrowserMonitoring_overrides_deprecated_value(bool propertyEnabled, bool deprecatedEnabled)
         {
             _localConfig.browserMonitoring.captureAttributes = deprecatedEnabled;
             _localConfig.browserMonitoring.attributes.enabled = propertyEnabled;
@@ -853,7 +835,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public bool Property_BrowserMonitoring_deprecated_value_overrides_default(Boolean deprecatedEnabled)
+        public bool Property_BrowserMonitoring_deprecated_value_overrides_default(bool deprecatedEnabled)
         {
             _localConfig.browserMonitoring.captureAttributesSpecified = false;
             _localConfig.browserMonitoring.attributes.enabled = deprecatedEnabled;
@@ -874,7 +856,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = false)]
-        public bool Property_ErrorCollector_overrides_deprecated_value(Boolean propertyEnabled, Boolean deprecatedEnabled)
+        public bool Property_ErrorCollector_overrides_deprecated_value(bool propertyEnabled, bool deprecatedEnabled)
         {
             _localConfig.errorCollector.captureAttributes = deprecatedEnabled;
             _localConfig.errorCollector.attributes.enabled = propertyEnabled;
@@ -884,7 +866,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public bool Property_ErrorCollector_deprecated_value_overrides_default(Boolean deprecatedEnabled)
+        public bool Property_ErrorCollector_deprecated_value_overrides_default(bool deprecatedEnabled)
         {
             _localConfig.errorCollector.captureAttributesSpecified = false;
             _localConfig.errorCollector.attributes.enabled = deprecatedEnabled;
@@ -905,7 +887,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = false)]
-        public bool Property_TransactionTracer_overrides_deprecated_value(Boolean propertyEnabled, Boolean deprecatedEnabled)
+        public bool Property_TransactionTracer_overrides_deprecated_value(bool propertyEnabled, bool deprecatedEnabled)
         {
             _localConfig.transactionTracer.captureAttributes = deprecatedEnabled;
             _localConfig.transactionTracer.attributes.enabled = propertyEnabled;
@@ -915,7 +897,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public bool Property_TransactionTracer_deprecated_value_overrides_default(Boolean deprecatedEnabled)
+        public bool Property_TransactionTracer_deprecated_value_overrides_default(bool deprecatedEnabled)
         {
             _localConfig.transactionTracer.captureAttributesSpecified = false;
             _localConfig.transactionTracer.attributes.enabled = deprecatedEnabled;
@@ -936,7 +918,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(true, true, ExpectedResult = true)]
         [TestCase(false, false, ExpectedResult = false)]
         [TestCase(false, true, ExpectedResult = false)]
-        public bool Property_TransactionEvent_overrides_deprecated_value(Boolean propertyEnabled, Boolean deprecatedEnabled)
+        public bool Property_TransactionEvent_overrides_deprecated_value(bool propertyEnabled, bool deprecatedEnabled)
         {
             _localConfig.analyticsEvents.captureAttributes = deprecatedEnabled;
             _localConfig.transactionEvents.attributes.enabled = propertyEnabled;
@@ -946,7 +928,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(true, ExpectedResult = true)]
         [TestCase(false, ExpectedResult = false)]
-        public bool Property_AnalyticsEvent_deprecated_value_overrides_default(Boolean deprecatedEnabled)
+        public bool Property_AnalyticsEvent_deprecated_value_overrides_default(bool deprecatedEnabled)
         {
             _localConfig.analyticsEvents.captureAttributesSpecified = false;
             _localConfig.transactionEvents.attributes.enabled = deprecatedEnabled;
@@ -966,7 +948,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_deprecated_ignore_identityParameters_value_becomes_exclude()
         {
-            _localConfig.parameterGroups.identityParameters.ignore = new List<String>() { "foo" };
+            _localConfig.parameterGroups.identityParameters.ignore = new List<string>() { "foo" };
             _localConfig.transactionEvents.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("identity.foo"));
@@ -975,7 +957,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_deprecated_ignore_customParameters_value_becomes_exclude()
         {
-            _localConfig.parameterGroups.customParameters.ignore = new List<String>() { "foo" };
+            _localConfig.parameterGroups.customParameters.ignore = new List<string>() { "foo" };
             _localConfig.transactionEvents.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("foo"));
@@ -984,7 +966,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_deprecated_ignore_responseHeaderParameters_value_becomes_exclude()
         {
-            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<String>() { "foo" };
+            _localConfig.parameterGroups.responseHeaderParameters.ignore = new List<string>() { "foo" };
             _localConfig.transactionEvents.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("response.headers.foo"));
@@ -993,7 +975,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_deprecated_ignore_requestHeaderParameters_value_becomes_exclude()
         {
-            _localConfig.parameterGroups.requestHeaderParameters.ignore = new List<String>() { "foo" };
+            _localConfig.parameterGroups.requestHeaderParameters.ignore = new List<string>() { "foo" };
             _localConfig.transactionEvents.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.headers.foo"));
@@ -1002,7 +984,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_deprecated_ignore_serviceRequestParameters_value_becomes_exclude()
         {
-            _localConfig.parameterGroups.serviceRequestParameters.ignore = new List<String>() { "foo" };
+            _localConfig.parameterGroups.serviceRequestParameters.ignore = new List<string>() { "foo" };
             _localConfig.transactionEvents.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("service.request.foo"));
@@ -1011,7 +993,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property_deprecated_ignore_requestParameters_value_becomes_exclude()
         {
-            _localConfig.requestParameters.ignore = new List<String>() { "foo" };
+            _localConfig.requestParameters.ignore = new List<string>() { "foo" };
             _localConfig.transactionEvents.attributes.enabledSpecified = false;
 
             Assert.IsTrue(_defaultConfig.CaptureAttributesExcludes.Contains("request.parameters.foo"));
@@ -1021,7 +1003,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "Foo", ExpectedResult = "Foo")]
         [TestCase("Foo", null, ExpectedResult = "Foo")]
         [TestCase("Foo", "Bar", ExpectedResult = "Foo")]
-        public String Property__Labels__environment_overrides_local(String environment, String local)
+        public string Property__Labels__environment_overrides_local(string environment, string local)
         {
             _localConfig.labels = local;
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LABELS")).Returns(environment);
@@ -1033,7 +1015,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase(null, "Foo", ExpectedResult = "Foo")]
         [TestCase("Foo", null, ExpectedResult = "Foo")]
         [TestCase("Foo", "Bar", ExpectedResult = "Foo")]
-        public String Property__CustomHost__environment_overrides_local(String environment, String local)
+        public string Property__CustomHost__environment_overrides_local(string environment, string local)
         {
             _localConfig.service.host = local;
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_HOST")).Returns(environment);
@@ -1057,7 +1039,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("foo", "foo", null, "bar", ExpectedResult = "foo")]
         [TestCase("foo", "foo", "bar", null, ExpectedResult = "foo")]
         [TestCase("foo", "foo", "bar", "baz", ExpectedResult = "foo")]
-        public String Property__LicenseKey__environment_overrides_local(String appSettingEnvironmentName, String newEnvironmentName, String legacyEnvironmentName, String local)
+        public string Property__LicenseKey__environment_overrides_local(string appSettingEnvironmentName, string newEnvironmentName, string legacyEnvironmentName, string local)
         {
             _localConfig.service.licenseKey = local;
             Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_LICENSE_KEY")).Returns(newEnvironmentName);
@@ -1117,7 +1099,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("\\1\\2", "$1$2")]
         [TestCase("\\2banana\\1", "$2banana$1")]
         [TestCase("\\s", "\\s")]
-        public void Property__UrlRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] String input, [NotNull] String expectedOutput)
+        public void Property__UrlRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle(string input, string expectedOutput)
         {
             _serverConfig.UrlRegexRules = new List<ServerConfiguration.RegexRule>
             {
@@ -1181,7 +1163,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("\\1\\2", "$1$2")]
         [TestCase("\\2banana\\1", "$2banana$1")]
         [TestCase("\\s", "\\s")]
-        public void Property__MetricNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] String input, [NotNull] String expectedOutput)
+        public void Property__MetricNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle(string input, string expectedOutput)
         {
             _serverConfig.MetricNameRegexRules = new List<ServerConfiguration.RegexRule>
             {
@@ -1245,7 +1227,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("\\1\\2", "$1$2")]
         [TestCase("\\2banana\\1", "$2banana$1")]
         [TestCase("\\s", "\\s")]
-        public void Property__TransactionNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle([NotNull] String input, [NotNull] String expectedOutput)
+        public void Property__TransactionNameRegexRules__UpdatesReplaceRegexBackreferencesToDotNetStyle(string input, string expectedOutput)
         {
             _serverConfig.TransactionNameRegexRules = new List<ServerConfiguration.RegexRule>
             {
@@ -1262,7 +1244,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property__WebTransactionsApdex__PullsValueFromServerConfiguration()
         {
-            _serverConfig.WebTransactionsApdex = new Dictionary<String, Double>
+            _serverConfig.WebTransactionsApdex = new Dictionary<string, double>
             {
                 {"apple", 0.2},
                 {"banana", 0.1}
@@ -1285,16 +1267,15 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 new ServerConfiguration.WhitelistRule
                 {
                     Prefix = "apple/banana",
-                    Terms = new List<String> {"pie", "cake"}
+                    Terms = new List<string> {"pie", "cake"}
                 },
                 new ServerConfiguration.WhitelistRule
                 {
                     Prefix = "mango/peach/",
-                    Terms = new List<String>()
+                    Terms = new List<string>()
                 }
             };
 
-            // ReSharper disable AssignNullToNotNullAttribute
             NrAssert.Multiple(
                 () => Assert.AreEqual(2, _defaultConfig.TransactionNameWhitelistRules.Count()),
 
@@ -1310,7 +1291,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 () => Assert.NotNull(_defaultConfig.TransactionNameWhitelistRules["mango/peach"]),
                 () => Assert.AreEqual(0, _defaultConfig.TransactionNameWhitelistRules["mango/peach"].Count())
                 );
-            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         #region ApplicationNames
@@ -1336,12 +1316,12 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property__ApplicationNames__PullsNamesFrom_RuntimeConfig()
         {
-            _runTimeConfig.ApplicationNames = new List<String> { "MyAppName1", "MyAppName2" };
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((String)null);
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((String)null);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns((String)null);
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns((String)null);
-            _localConfig.application.name = new List<String>();
+            _runTimeConfig.ApplicationNames = new List<string> { "MyAppName1", "MyAppName2" };
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns((string)null);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns((string)null);
+            _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("OtherAppName");
             Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
@@ -1356,11 +1336,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property__ApplicationNames__PullsSingleNameFrom_AppSettings()
         {
-            _runTimeConfig.ApplicationNames = new List<String>();
+            _runTimeConfig.ApplicationNames = new List<string>();
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns("MyAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("OtherAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
-            _localConfig.application.name = new List<String>();
+            _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("OtherAppName");
             Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
@@ -1374,11 +1354,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property__ApplicationNames__PullsMultipleNamesFrom_AppSettings()
         {
-            _runTimeConfig.ApplicationNames = new List<String>();
+            _runTimeConfig.ApplicationNames = new List<string>();
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns("MyAppName1,MyAppName2");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("OtherAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
-            _localConfig.application.name = new List<String>();
+            _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("OtherAppName");
             Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
@@ -1393,11 +1373,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property__ApplicationNames__PullsSingleNameFrom_IISExpressSitenameEnvironmentVariaible()
         {
-            _runTimeConfig.ApplicationNames = new List<String>();
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((String)null);
+            _runTimeConfig.ApplicationNames = new List<string>();
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("MyAppName");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
-            _localConfig.application.name = new List<String>();
+            _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("OtherAppName");
             Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
@@ -1411,11 +1391,11 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void Property__ApplicationNames__PullsMultipleNamesFrom_IISExpressSitenameEnvironmentVariaible()
         {
-            _runTimeConfig.ApplicationNames = new List<String>();
-            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((String)null);
+            _runTimeConfig.ApplicationNames = new List<string>();
+            Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns((string)null);
             Mock.Arrange(() => _environment.GetEnvironmentVariable("IISEXPRESS_SITENAME")).Returns("MyAppName1,MyAppName2");
             Mock.Arrange(() => _environment.GetEnvironmentVariable("RoleName")).Returns("OtherAppName");
-            _localConfig.application.name = new List<String>();
+            _localConfig.application.name = new List<string>();
             Mock.Arrange(() => _environment.GetEnvironmentVariable("APP_POOL_ID")).Returns("OtherAppName");
             Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns("NotNull");
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("OtherAppName");
@@ -1547,7 +1527,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             Mock.Arrange(() => _configurationManagerStatic.GetAppSetting("NewRelic.AppName")).Returns<string>(null);
 
-            _localConfig.application.name = new List<String>();
+            _localConfig.application.name = new List<string>();
 
             Mock.Arrange(() => _httpRuntimeStatic.AppDomainAppVirtualPath).Returns<string>(null);
             Mock.Arrange(() => _processStatic.GetCurrentProcess().ProcessName).Returns("MyAppName");

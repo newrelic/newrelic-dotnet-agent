@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Database;
-using NewRelic.Agent.Core.DependencyInjection;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Transformers;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
@@ -22,19 +19,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
     [TestFixture]
     public class TransactionFinalizerTests
     {
-        [NotNull]
         private TransactionFinalizer _transactionFinalizer;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private IPathHashMaker _pathHashMaker;
-
-        [NotNull]
         private ITransactionTransformer _transactionTransformer;
 
         [SetUp]
@@ -204,7 +192,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             EventBus<TransactionFinalizedEvent>.Publish(new TransactionFinalizedEvent(mockedTransaction));
 
-            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, Arg.IsAny<String>(), Arg.IsAny<String>()));
+            Mock.Assert(() => _agentHealthReporter.ReportTransactionGarbageCollected(transactionMetricName, Arg.IsAny<string>(), Arg.IsAny<string>()));
         }
 
         #endregion OnTransactionFinalized

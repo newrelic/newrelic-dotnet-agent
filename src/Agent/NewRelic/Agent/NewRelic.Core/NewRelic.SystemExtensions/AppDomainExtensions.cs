@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions
 {
     public static class AppDomainExtensions
     {
-        [NotNull]
-        public static IEnumerable<AssemblyName> GetLoadedAssemblyNamesBySimpleName([CanBeNull] this AppDomain appDomain, [CanBeNull] String simpleName)
+        public static IEnumerable<AssemblyName> GetLoadedAssemblyNamesBySimpleName(this AppDomain appDomain, string simpleName)
         {
             if (appDomain == null)
                 return Enumerable.Empty<AssemblyName>();
@@ -23,8 +21,7 @@ namespace NewRelic.SystemExtensions
                 .Where(assemblyName => assemblyName.Name == simpleName);
         }
 #if NET35
-        [NotNull]
-        public static IEnumerable<String> GetLoadedAssemblyFullNamesBySimpleName([CanBeNull] this AppDomain appDomain, [CanBeNull] String simpleName)
+        public static IEnumerable<string> GetLoadedAssemblyFullNamesBySimpleName(this AppDomain appDomain, string simpleName)
         {
             return appDomain.GetLoadedAssemblyNamesBySimpleName(simpleName)
                 .Where(assemblyName => assemblyName != null)
@@ -43,7 +40,7 @@ namespace NewRelic.SystemExtensions
         /// <param name="assemblyResolver">Can be null. A static ResolveEventHandler that will be used to resolve assembly load failures.</param>
         /// <param name="inputData">The parameter to be passed to the action if it takes a parameter.</param>
         /// <returns>The return value from the function or null if the function doesn't return anything.</returns>
-        public static Object IsolateMethodInAppDomain(Delegate method, ResolveEventHandler assemblyResolver, params Object[] inputData)
+        public static object IsolateMethodInAppDomain(Delegate method, ResolveEventHandler assemblyResolver, params object[] inputData)
         {
             var appDomain = CreateIsolatedDomain(assemblyResolver);
             var crossAppDomainObject = CreateCrossAppDomainObject(appDomain);
@@ -79,7 +76,7 @@ namespace NewRelic.SystemExtensions
         }
 
 
-        private static Object ExecuteAction(CrossAppDomainObject crossAppDomainObject, Delegate method, params Object[] input)
+        private static object ExecuteAction(CrossAppDomainObject crossAppDomainObject, Delegate method, params object[] input)
         {
             crossAppDomainObject.Execute(method, input);
 
@@ -93,9 +90,9 @@ namespace NewRelic.SystemExtensions
 #endif
         private class CrossAppDomainObject : MarshalByRefObject
         {
-            public Object Result { get; private set; }
+            public object Result { get; private set; }
 
-            public void Execute(Delegate action, params Object[] input)
+            public void Execute(Delegate action, params object[] input)
             {
                 try
                 {

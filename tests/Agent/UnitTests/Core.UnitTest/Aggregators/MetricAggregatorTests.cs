@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.DataTransport;
@@ -15,7 +14,6 @@ using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Transformers.TransactionTransformer;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
-using NewRelic.SystemExtensions.Collections.Generic;
 using NewRelic.SystemInterfaces;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
@@ -27,34 +25,15 @@ namespace NewRelic.Agent.Core.Aggregators
     [TestFixture]
     public class MetricAggregatorTests
     {
-        [NotNull]
         private IDataTransportService _dataTransportService;
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IOutOfBandMetricSource _outOfBandMetricSource;
-
-        [NotNull]
         private IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
-
-        [NotNull]
         private MetricAggregator _metricAggregator;
-
-        [NotNull]
         private IDnsStatic _dnsStatic;
-
-        [NotNull]
         private IProcessStatic _processStatic;
-
-        [NotNull]
         private Action _harvestAction;
-
-        [NotNull]
         private ConfigurationAutoResponder _configurationAutoResponder;
 
         [SetUp]
@@ -72,7 +51,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _dnsStatic = Mock.Create<IDnsStatic>();
             _processStatic = Mock.Create<IProcessStatic>();
             _metricNameService = Mock.Create<IMetricNameService>();
-            Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
+            Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
 
             var scheduler = Mock.Create<IScheduler>();
             Mock.Arrange(() => scheduler.ExecuteEvery(Arg.IsAny<Action>(), Arg.IsAny<TimeSpan>(), Arg.IsAny<TimeSpan?>()))
@@ -203,7 +182,7 @@ namespace NewRelic.Agent.Core.Aggregators
             //Check the number of metrics being sent up.
             Assert.IsTrue(sentMetrics.Count() == 3, "Count was " + sentMetrics.Count());
             // there should be one supportability and two DotNet (one scoped and one unscoped)
-            String[] names = new String[] { "Supportability/MetricHarvest/transmit", "DotNet/test_metric" };
+            string[] names = new string[] { "Supportability/MetricHarvest/transmit", "DotNet/test_metric" };
             foreach (MetricWireModel current in sentMetrics)
             {
                 Assert.IsTrue(names.Contains(current.MetricName.Name), "Name is not present: " + current.MetricName.Name);

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-// ReSharper disable InconsistentNaming
-// ReSharper disable CheckNamespace
 namespace NewRelic.Agent.Core.WireModels.UnitTest
 {
     public class TransactionEventWireModelTests
@@ -16,17 +13,17 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
             public void all_fields_serializes_correctly()
             {
                 // ARRANGE
-                var userAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+                var userAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
                 {
                     {"identity.user", "user"},
                     {"identity.product", "product"},
                 });
-                var agentAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+                var agentAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
                 {
                     {"Foo", "Bar"},
                     {"Baz", 42},
                 });
-                var intrinsicAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>
+                var intrinsicAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
                 {
                     {"nr.tripId", "1234ABCD1234ABCD"},
                     {"nr.pathHash", "DCBA4321"},
@@ -49,9 +46,9 @@ namespace NewRelic.Agent.Core.WireModels.UnitTest
             public void only_required_fields_serialize_correctly()
             {
                 // Arrange
-                var userAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
-                var agentAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
-                var intrinsicAttributes = new ReadOnlyDictionary<String, Object>(new Dictionary<String, Object>());
+                var userAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+                var agentAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+                var intrinsicAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
                 var isSytheticsEvent = false;
 
                 // Act

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 
@@ -9,40 +8,21 @@ namespace NewRelic.Agent.Core.Transactions
 {
     public class ImmutableTransactionMetadata : ITransactionAttributeMetadata
     {
-        [NotNull]
         public IEnumerable<KeyValuePair<string, string>> RequestParameters { get; }
-
-        [NotNull]
         public IEnumerable<KeyValuePair<string, string>> ServiceParameters { get; }
-
-        [NotNull]
-        public IEnumerable<KeyValuePair<string, Object>> UserAttributes { get; }
-
-        [NotNull]
-        public IEnumerable<KeyValuePair<string, Object>> UserErrorAttributes { get; }
+        public IEnumerable<KeyValuePair<string, object>> UserAttributes { get; }
+        public IEnumerable<KeyValuePair<string, object>> UserErrorAttributes { get; }
 
         public string Uri { get; }
         public string OriginalUri { get; }
         public string ReferrerUri { get; }
         public TimeSpan? QueueTime { get; }
         public int? HttpResponseStatusCode { get; }
-
-        [NotNull]
         public IEnumerable<ErrorData> TransactionExceptionDatas { get; }
-
-        [NotNull]
         public IEnumerable<ErrorData> CustomErrorDatas { get; }
-
-        [NotNull]
         public IEnumerable<string> CrossApplicationAlternatePathHashes { get; }
-
-        [CanBeNull]
         public string CrossApplicationReferrerTransactionGuid { get; }
-
-        [CanBeNull]
         public string CrossApplicationReferrerPathHash { get; }
-
-        [CanBeNull]
         public string CrossApplicationPathHash { get; }
         public string Path { get; }
 
@@ -57,13 +37,13 @@ namespace NewRelic.Agent.Core.Transactions
         public bool HasCatResponseHeaders { get; }
 
         public ImmutableTransactionMetadata(string uri, string originalUri, string path, string referrerUri,
-            TimeSpan? queueTime, [NotNull] IEnumerable<KeyValuePair<string, string>> requestParameters,
-            [NotNull] IEnumerable<KeyValuePair<string, String>> serviceParameters,
-            [NotNull] IEnumerable<KeyValuePair<string, Object>> userAttributes,
-            [NotNull] IEnumerable<KeyValuePair<string, Object>> userErrorAttributes, int? httpResponseStatusCode,
-            Int32? httpResponseSubStatusCode, [NotNull] IEnumerable<ErrorData> transactionExceptionDatas,
-            [NotNull] IEnumerable<ErrorData> customErrorDatas, string crossApplicationReferrerPathHash, string crossApplicationPathHash,
-            [NotNull] IEnumerable<string> crossApplicationPathHashes, string crossApplicationReferrerTransactionGuid,
+            TimeSpan? queueTime, IEnumerable<KeyValuePair<string, string>> requestParameters,
+            IEnumerable<KeyValuePair<string, string>> serviceParameters,
+            IEnumerable<KeyValuePair<string, object>> userAttributes,
+            IEnumerable<KeyValuePair<string, object>> userErrorAttributes, int? httpResponseStatusCode,
+            int? httpResponseSubStatusCode, IEnumerable<ErrorData> transactionExceptionDatas,
+            IEnumerable<ErrorData> customErrorDatas, string crossApplicationReferrerPathHash, string crossApplicationPathHash,
+            IEnumerable<string> crossApplicationPathHashes, string crossApplicationReferrerTransactionGuid,
             string crossApplicationReferrerProcessId, string crossApplicationReferrerTripId, string syntheticsResourceId,
             string syntheticsJobId, string syntheticsMonitorId, bool isSynthetics, bool hasCatResponseHeaders)
         {

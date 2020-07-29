@@ -7,7 +7,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
@@ -17,10 +16,9 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class BasicMvcApplication : RemoteApplicationFixture
     {
-        public const String ExpectedTransactionName = @"WebTransaction/MVC/DefaultController/Index";
+        public const string ExpectedTransactionName = @"WebTransaction/MVC/DefaultController/Index";
 
-        [CanBeNull]
-        public String ResponseBody { get; private set; }
+        public string ResponseBody { get; private set; }
 
         public BasicMvcApplication() : base(new RemoteWebApplication("BasicMvcApplication", ApplicationType.Bounded))
         {
@@ -43,7 +41,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.NotNull(result);
             Assert.Equal("Great success", result);
         }
-        public void GetRestSharpSyncClient(String method, Boolean generic)
+        public void GetRestSharpSyncClient(string method, bool generic)
         {
             var address = $"http://{DestinationServerName}:{Port}/RestSharp/SyncClient?method={method}&generic={generic}";
             var result = new WebClient().DownloadString(address);
@@ -51,7 +49,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.NotNull(result);
             Assert.Equal("Huge Success", result);
         }
-        public void GetRestSharpAsyncAwaitClient(String method, Boolean generic, Boolean cancelable)
+        public void GetRestSharpAsyncAwaitClient(string method, bool generic, bool cancelable)
         {
             var address = $"http://{DestinationServerName}:{Port}/RestSharp/AsyncAwaitClient?method={method}&generic={generic}&cancelable={cancelable}";
             var result = new WebClient().DownloadString(address);
@@ -60,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.Equal("Huge Success", result);
         }
 
-        public HttpResponseHeaders GetRestSharpAsyncAwaitClientWithHeaders(String method, Boolean generic, Boolean cancelable)
+        public HttpResponseHeaders GetRestSharpAsyncAwaitClientWithHeaders(string method, bool generic, bool cancelable)
         {
             var address = $"http://{DestinationServerName}:{Port}/RestSharp/AsyncAwaitClient?method={method}&generic={generic}&cancelable={cancelable}";
 
@@ -68,10 +66,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             {
                 var requestData = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-                var headers = new List<KeyValuePair<String, String>>
+                var headers = new List<KeyValuePair<string, string>>
                 {
-                    new KeyValuePair<String, String>("X-NewRelic-ID", GetXNewRelicId()),
-                    new KeyValuePair<String, String>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
+                    new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId()),
+                    new KeyValuePair<string, string>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
                 };
 
                 var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = HttpMethod.Get };
@@ -83,7 +81,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         }
 
-        public void GetRestSharpTaskResultClient(String method, Boolean generic, Boolean cancelable)
+        public void GetRestSharpTaskResultClient(string method, bool generic, bool cancelable)
         {
             var address = $"http://{DestinationServerName}:{Port}/RestSharp/TaskResultClient?method={method}&generic={generic}&cancelable={cancelable}";
 
@@ -93,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.Equal("Huge Success", result);
         }
 
-        public HttpResponseHeaders GetRestSharpTaskResultClientWithHeaders(String method, Boolean generic, Boolean cancelable)
+        public HttpResponseHeaders GetRestSharpTaskResultClientWithHeaders(string method, bool generic, bool cancelable)
         {
             var address = $"http://{DestinationServerName}:{Port}/RestSharp/TaskResultClient?method={method}&generic={generic}&cancelable={cancelable}";
 
@@ -101,10 +99,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             {
                 var requestData = new CrossApplicationRequestData("guid", false, "tripId", "pathHash");
 
-                var headers = new List<KeyValuePair<String, String>>
+                var headers = new List<KeyValuePair<string, string>>
                 {
-                    new KeyValuePair<String, String>("X-NewRelic-ID", GetXNewRelicId()),
-                    new KeyValuePair<String, String>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
+                    new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId()),
+                    new KeyValuePair<string, string>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
                 };
 
                 var httpRequestMessage = new HttpRequestMessage { RequestUri = new Uri(address), Method = HttpMethod.Get };
@@ -185,8 +183,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.True(false, @"Did not receive a stable response (less than 1 second) after 5 minutes of attempts every 6 seconds.");
         }
 
-        [NotNull]
-        public String Get()
+        public string Get()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default";
             var webClient = new WebClient();
@@ -199,8 +196,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return ResponseBody;
         }
 
-        [NotNull]
-        public String GetWithAsyncDisabled()
+        public string GetWithAsyncDisabled()
         {
             var address = $"http://{DestinationServerName}:{Port}/DisableAsyncSupport";
             var webClient = new WebClient();
@@ -213,7 +209,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return ResponseBody;
         }
 
-        public String GetWithData(String requestParameter)
+        public string GetWithData(string requestParameter)
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/Query?data={requestParameter}";
             var webClient = new WebClient();
@@ -226,8 +222,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return result;
         }
 
-        [NotNull]
-        public String GetNotHtmlContentType()
+        public string GetNotHtmlContentType()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/NotHtmlContentType";
             var webClient = new WebClient();
@@ -240,8 +235,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return result;
         }
 
-        [NotNull]
-        public HttpResponseHeaders GetWithHeaders([NotNull] IEnumerable<KeyValuePair<String, String>> headers, [CanBeNull] String action = null, String queryString = null)
+        public HttpResponseHeaders GetWithHeaders(IEnumerable<KeyValuePair<string, string>> headers, string action = null, string queryString = null)
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/{action}{queryString}";
 
@@ -255,25 +249,23 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             }
         }
 
-        [NotNull]
-        public HttpResponseHeaders GetWithCatHeader(Boolean includeCrossProcessIdHeader = true, CrossApplicationRequestData requestData = null)
+        public HttpResponseHeaders GetWithCatHeader(bool includeCrossProcessIdHeader = true, CrossApplicationRequestData requestData = null)
         {
-            var headers = new List<KeyValuePair<String, String>>();
+            var headers = new List<KeyValuePair<string, string>>();
 
             if (includeCrossProcessIdHeader)
-                headers.Add(new KeyValuePair<String, String>("X-NewRelic-ID", GetXNewRelicId()));
+                headers.Add(new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId()));
             if (requestData != null)
-                headers.Add(new KeyValuePair<String, String>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData)));
+                headers.Add(new KeyValuePair<string, string>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData)));
 
             return GetWithHeaders(headers, "Index");
         }
 
-        [NotNull]
         public HttpResponseHeaders GetWithCatHeaderWithRedirect()
         {
-            var headers = new List<KeyValuePair<String, String>>
+            var headers = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<String, String>("X-NewRelic-ID", GetXNewRelicId())
+                new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId())
             };
 
             return GetWithHeaders(headers, "DoRedirect");
@@ -282,16 +274,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         /// <summary>
         /// Makes a request, optionally including CAT headers, to the "Chained" endpoint (which will itself make a request).
         /// </summary>
-        [NotNull]
-        public HttpResponseHeaders GetWithCatHeaderChained([NotNull] CrossApplicationRequestData requestData)
+        public HttpResponseHeaders GetWithCatHeaderChained(CrossApplicationRequestData requestData)
         {
-            var headers = new List<KeyValuePair<String, String>>
+            var headers = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<String, String>("X-NewRelic-ID", GetXNewRelicId()),
-                new KeyValuePair<String, String>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
+                new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId()),
+                new KeyValuePair<string, string>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
             };
 
-            const String action = "Index";
+            const string action = "Index";
             var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={Port}&chainedAction={action}";
             return GetWithHeaders(headers, "Chained", queryString);
         }
@@ -299,29 +290,27 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         /// <summary>
         /// Makes a request, optionally including CAT headers, to the "Chained" endpoint (which will itself make a request).
         /// </summary>
-        [NotNull]
-        public HttpResponseHeaders GetWithCatHeaderChainedHttpClient([NotNull] CrossApplicationRequestData requestData)
+        public HttpResponseHeaders GetWithCatHeaderChainedHttpClient(CrossApplicationRequestData requestData)
         {
-            var headers = new List<KeyValuePair<String, String>>
+            var headers = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<String, String>("X-NewRelic-ID", GetXNewRelicId()),
-                new KeyValuePair<String, String>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
+                new KeyValuePair<string, string>("X-NewRelic-ID", GetXNewRelicId()),
+                new KeyValuePair<string, string>("X-NewRelic-Transaction", GetXNewRelicRequestData(requestData))
             };
 
-            const String action = "Index";
+            const string action = "Index";
             var queryString = $"?chainedServerName={DestinationServerName}&chainedPortNumber={Port}&chainedAction={action}";
             return GetWithHeaders(headers, "ChainedHttpClient", queryString);
         }
 
-        [NotNull]
         public HttpResponseHeaders GetWithUntrustedCatHeader()
         {
-            var headers = new List<KeyValuePair<String, String>>();
-            headers.Add(new KeyValuePair<String, String>("X-NewRelic-ID", GetUntrustedXNewRelicId()));
+            var headers = new List<KeyValuePair<string, string>>();
+            headers.Add(new KeyValuePair<string, string>("X-NewRelic-ID", GetUntrustedXNewRelicId()));
             return GetWithHeaders(headers, "Index");
         }
 
-        public void GetCustomAttributes(String key1, String value1, String key2, String value2)
+        public void GetCustomAttributes(string key1, string value1, string key2, string value2)
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/CustomParameters?key1={key1}&value1={value1}&key2={key2}&value2={value2}";
             var webClient = new WebClient();
@@ -343,7 +332,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.Contains("<html>", ResponseBody);
         }
 
-        private String GetXNewRelicId()
+        private string GetXNewRelicId()
         {
             var accountId = AgentLog.GetAccountId();
             var applicationId = AgentLog.GetApplicationId();
@@ -352,7 +341,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return HeaderEncoder.Base64Encode(accountAndApp, HeaderEncoder.IntegrationTestEncodingKey);
         }
 
-        private String GetUntrustedXNewRelicId()
+        private string GetUntrustedXNewRelicId()
         {
             var invalidAccountId = "999999";
             var applicationId = AgentLog.GetApplicationId();
@@ -361,7 +350,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return HeaderEncoder.Base64Encode(accountAndApp, HeaderEncoder.IntegrationTestEncodingKey);
         }
 
-        private String GetXNewRelicRequestData([NotNull] CrossApplicationRequestData requestData)
+        private string GetXNewRelicRequestData(CrossApplicationRequestData requestData)
         {
             return HeaderEncoder.SerializeAndEncode(requestData, HeaderEncoder.IntegrationTestEncodingKey);
         }
@@ -373,8 +362,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             webClient.DownloadString(address);
         }
 
-        [NotNull]
-        private static Byte[] EncodeWithKey([NotNull] String value, [NotNull] String key)
+        private static byte[] EncodeWithKey(string value, string key)
         {
             var bytes = Encoding.UTF8.GetBytes(value);
             var keyBytes = Encoding.UTF8.GetBytes(key);
@@ -495,7 +483,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.Equal("Async is working", result);
         }
 
-        public String GetBrowserTimingHeader()
+        public string GetBrowserTimingHeader()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/GetBrowserTimingHeader";
             var webClient = new WebClient();
@@ -506,8 +494,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             return response;
         }
 
-        [NotNull]
-        public String GetHtmlWithCallToGetBrowserTimingHeader()
+        public string GetHtmlWithCallToGetBrowserTimingHeader()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/GetHtmlWithCallToGetBrowserTimingHeader";
             var webClient = new WebClient();

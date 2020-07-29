@@ -1,5 +1,4 @@
-﻿using System;
-using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.RabbitMq
@@ -18,7 +17,7 @@ namespace NewRelic.Providers.Wrapper.RabbitMq
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgentWrapperApi agentWrapperApi, ITransaction transaction)
         {
             // (IModel)void BasicPublish(string exchange, string routingKey, bool mandatory, bool immediate, IBasicProperties basicProperties, byte[] body)
-            var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<String>(1);
+            var routingKey = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<string>(1);
             var destType = RabbitMqHelper.GetBrokerDestinationType(routingKey);
             var destName = RabbitMqHelper.ResolveDestinationName(destType, routingKey);
 

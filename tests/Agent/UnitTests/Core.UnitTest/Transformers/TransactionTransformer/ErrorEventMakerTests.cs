@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.CallStack;
@@ -11,7 +10,6 @@ using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
@@ -276,15 +274,13 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var attributes = new List<Attribute>();
 
             attributes.Add(Attribute.BuildDatabaseCallCountAttribute(10));
-            attributes.Add(Attribute.BuildDatabaseDurationAttribute((Single)TimeSpan.FromSeconds(10).TotalSeconds));
+            attributes.Add(Attribute.BuildDatabaseDurationAttribute((float)TimeSpan.FromSeconds(10).TotalSeconds));
             attributes.Add(Attribute.BuildExternalCallCountAttribute(10));
-            attributes.Add(Attribute.BuildExternalDurationAttribute((Single)TimeSpan.FromSeconds(10).TotalSeconds));
+            attributes.Add(Attribute.BuildExternalDurationAttribute((float)TimeSpan.FromSeconds(10).TotalSeconds));
 
             return attributes.ToArray();
         }
-
-        [NotNull]
-        private static ITransaction BuildTestTransaction(Boolean isWebTransaction = true, String uri = null, String referrerUri = null, String guid = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, String transactionCategory = "defaultTxCategory", String transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, Boolean includeServiceRequest = false, Boolean includeUserAttributes = false)
+        private static ITransaction BuildTestTransaction(bool isWebTransaction = true, string uri = null, string referrerUri = null, string guid = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, string transactionCategory = "defaultTxCategory", string transactionName = "defaultTxName", ErrorData? exceptionData = null, ErrorData? customErrorData = null, bool isSynthetics = true, bool isCAT = true, bool includeServiceRequest = false, bool includeUserAttributes = false)
         {
             var name = isWebTransaction
                 ? new WebTransactionName(transactionCategory, transactionName)
@@ -303,7 +299,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             return internalTransaction;
         }
 
-        private static void PopulateTransactionMetadataBuilder([NotNull] ITransactionMetadata metadata, String uri = null, Int32? statusCode = null, Int32? subStatusCode = null, String referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, Boolean isSynthetics = true, Boolean isCAT = true, String referrerUri = null, Boolean includeServiceRequest = false, Boolean includeUserAttributes = false)
+        private static void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData? exceptionData = null, ErrorData? customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeServiceRequest = false, bool includeUserAttributes = false)
         {
             if (uri != null)
                 metadata.SetUri(uri);
@@ -347,8 +343,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
                 metadata.SetSyntheticsMonitorId("syntheticsMonitorId");
             }
         }
-
-        [NotNull]
         private static ImmutableSegmentTreeNode BuildNode(TimeSpan relativeStart = new TimeSpan(), TimeSpan? duration = null)
         {
             var methodCallData = new MethodCallData("typeName", "methodName", 1);

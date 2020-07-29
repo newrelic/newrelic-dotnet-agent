@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ErrorTraceMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public ErrorTraceMvc([NotNull] RemoteServiceFixtures.BasicMvcApplication fixture, [NotNull] ITestOutputHelper testLogger)
+        public ErrorTraceMvc(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper testLogger)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;
@@ -80,13 +77,13 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Supportability/Transactions/allOther" },
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "errorType", "System.Exception" },
                 { "errorMessage", "ExceptionMessage" },
             };
 
-            var expectedErrorEventAttributes = new Dictionary<String, String>
+            var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "error.class", "System.Exception" },
                 { "error.message", "ExceptionMessage" },

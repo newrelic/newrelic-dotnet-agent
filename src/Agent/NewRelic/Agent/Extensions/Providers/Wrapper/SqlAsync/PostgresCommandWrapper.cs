@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Parsing.ConnectionString;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
@@ -50,7 +49,7 @@ namespace NewRelic.Providers.Wrapper.SqlAsync
             if (sqlCommand == null)
                 return Delegates.NoOp;
 
-            var sql = sqlCommand.CommandText ?? String.Empty;
+            var sql = sqlCommand.CommandText ?? string.Empty;
 
             // NOTE: this wrapper currently only supports NpgsqlCommand. If support for other commands is added to this wrapper then the vendor will need to be determined dynamically.
             const DatastoreVendor vendor = DatastoreVendor.Postgres;

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions;
@@ -17,24 +15,17 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 {
     public interface IBrowserMonitoringScriptMaker
     {
-        String GetScript([NotNull] ITransaction transaction);
+        string GetScript(ITransaction transaction);
     }
 
     public class BrowserMonitoringScriptMaker : IBrowserMonitoringScriptMaker
     {
-        [NotNull]
         private readonly IConfigurationService _configurationService;
-
-        [NotNull]
         private readonly ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private readonly ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private readonly IAttributeService _attributeService;
 
-        public BrowserMonitoringScriptMaker([NotNull] IConfigurationService configurationService, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] ITransactionAttributeMaker transactionAttributeMaker, [NotNull] IAttributeService attributeService)
+        public BrowserMonitoringScriptMaker(IConfigurationService configurationService, ITransactionMetricNameMaker transactionMetricNameMaker, ITransactionAttributeMaker transactionAttributeMaker, IAttributeService attributeService)
         {
             _configurationService = configurationService;
             _transactionMetricNameMaker = transactionMetricNameMaker;
@@ -42,9 +33,9 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             _attributeService = attributeService;
         }
 
-        public String GetScript(ITransaction transaction)
+        public string GetScript(ITransaction transaction)
         {
-            if (String.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
+            if (string.IsNullOrEmpty(_configurationService.Configuration.BrowserMonitoringJavaScriptAgent))
                 return null;
 
             if (_configurationService.Configuration.BrowserMonitoringJavaScriptAgentLoaderType.Equals("none", StringComparison.InvariantCultureIgnoreCase))
@@ -81,9 +72,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var javascriptAgent = _configurationService.Configuration.BrowserMonitoringJavaScriptAgent;
             return $"<script type=\"text/javascript\">{javascriptAgentConfiguration}</script><script type=\"text/javascript\">{javascriptAgent}</script>";
         }
-
-        [NotNull]
-        private BrowserMonitoringConfigurationData GetBrowserConfigurationData([NotNull] ITransaction transaction, TransactionMetricName transactionMetricName, [NotNull] String licenseKey)
+        private BrowserMonitoringConfigurationData GetBrowserConfigurationData(ITransaction transaction, TransactionMetricName transactionMetricName, string licenseKey)
         {
             var configuration = _configurationService.Configuration;
 
@@ -122,9 +111,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
 
             return new BrowserMonitoringConfigurationData(licenseKey, beacon, errorBeacon, browserMonitoringKey, applicationId, obfuscatedTransactionName, queueTime, applicationTime, jsAgentPayloadFile, obfuscatedFormattedAttributes, sslForHttp);
         }
-
-        [CanBeNull]
-        private String GetObfuscatedFormattedAttributes([NotNull] Attributes attributes, [NotNull] String licenseKey)
+        private string GetObfuscatedFormattedAttributes(Attributes attributes, string licenseKey)
         {
             if (attributes.Count() == 0)
                 return null;
@@ -136,7 +123,7 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             if (agentAttributes.IsEmpty() && userAttributes.IsEmpty())
                 return null;
 
-            var attributeDictionary = new Dictionary<String, IDictionary<String, Object>>();
+            var attributeDictionary = new Dictionary<string, IDictionary<string, object>>();
             if (agentAttributes.Any())
                 attributeDictionary.Add("a", filteredAttributes.GetAgentAttributesDictionary());
             if (userAttributes.Any())

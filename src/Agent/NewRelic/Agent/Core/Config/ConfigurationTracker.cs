@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
@@ -19,7 +18,7 @@ namespace NewRelic.Agent.Core.Config
 
         private DateTime _lastWriteTime;
 
-        public ConfigurationTracker([NotNull] IConfigurationService configurationService)
+        public ConfigurationTracker(IConfigurationService configurationService)
         {
             var fileName = configurationService.Configuration.NewRelicConfigFilePath;
             if (fileName == null)

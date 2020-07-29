@@ -7,21 +7,21 @@ namespace HostedWebCore
 {
     static class Program
     {
-        private static void Log(String format, params object[] values)
+        private static void Log(string format, params object[] values)
         {
-            String prefix = String.Format("[{0} {1}-{2}] HostedWebCore: ", DateTime.Now,
+            string prefix = string.Format("[{0} {1}-{2}] HostedWebCore: ", DateTime.Now,
                     System.Diagnostics.Process.GetCurrentProcess().Id,
                     System.Threading.Thread.CurrentThread.ManagedThreadId);
-            Console.WriteLine(String.Format(prefix + format, values));
+            Console.WriteLine(string.Format(prefix + format, values));
         }
 
-        private static void Main(String[] args)
+        private static void Main(string[] args)
         {
             string msg = "Firing up...args: " + string.Join(", ", args);
             // Must replace curlies else e.g. '{0}' will cause an exception in Log()
             Log(msg.Replace('{', '[').Replace('}', ']'));
             Log("Starting directory: " + Directory.GetCurrentDirectory());
-            Log("Environment Variables: " + String.Join(";", Environment.GetEnvironmentVariables()));
+            Log("Environment Variables: " + string.Join(";", Environment.GetEnvironmentVariables()));
 
             if (Parser.Default == null)
                 throw new NullReferenceException("CommandLine.Parser.Default");

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
@@ -9,22 +8,19 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 {
     public interface ISqlTraceMaker
     {
-        [CanBeNull]
         SqlTraceWireModel TryGetSqlTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TypedSegment<DatastoreSegmentData> segment);
     }
 
 
     public class SqlTraceMaker : ISqlTraceMaker
     {
-        [NotNull] private readonly IConfigurationService _configurationService;
+        private readonly IConfigurationService _configurationService;
 
         public SqlTraceMaker(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
-
-        [CanBeNull]
-        public SqlTraceWireModel TryGetSqlTrace([NotNull] ImmutableTransaction immutableTransaction, [NotNull] TransactionMetricName transactionMetricName, [NotNull] TypedSegment<DatastoreSegmentData> segment)
+        public SqlTraceWireModel TryGetSqlTrace(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TypedSegment<DatastoreSegmentData> segment)
         {
             if (segment.Duration == null)
                 return null;

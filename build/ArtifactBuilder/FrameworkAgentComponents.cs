@@ -26,7 +26,6 @@ namespace ArtifactBuilder
         {
             var agentDllsForExtensionDirectory = new List<string>()
             {
-                $@"{SourceHomeBuilderPath}\Extensions\JetBrains.Annotations.dll",
                 $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Core.dll",
                 $@"{SourceHomeBuilderPath}\Extensions\NewRelic.Parsing.dll"
             };
@@ -101,13 +100,18 @@ namespace ArtifactBuilder
             NewRelicXsd = $@"{SourceHomeBuilderPath}\newrelic.xsd";
             NewRelicConfig = $@"{SourceHomeBuilderPath}\newrelic.config";
 
+            NewRelicLicenseFile = $@"{SourceHomeBuilderPath}\LICENSE.txt";
+            NewRelicThirdPartyNoticesFile = $@"{SourceHomeBuilderPath}\THIRD_PARTY_NOTICES.txt";
+            
             var root = new List<string>()
             {
                 $@"{SourceHomeBuilderPath}\NewRelic.Agent.Core.dll",
                 $@"{SourceHomeBuilderPath}\NewRelic.Agent.Extensions.dll",
                 NewRelicConfig,
                 $@"{SourceHomeBuilderPath}\NewRelic.Profiler.dll",
-                NewRelicXsd
+                NewRelicXsd,
+                NewRelicLicenseFile,
+                NewRelicThirdPartyNoticesFile
             };
 
             ExtensionDirectoryComponents = new List<string>();

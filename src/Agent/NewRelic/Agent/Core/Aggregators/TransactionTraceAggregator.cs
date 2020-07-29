@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Events;
@@ -17,15 +16,14 @@ namespace NewRelic.Agent.Core.Aggregators
 {
     public interface ITransactionTraceAggregator
     {
-        void Collect([NotNull] TransactionTraceWireModelComponents transactionTraceWireModel);
+        void Collect(TransactionTraceWireModelComponents transactionTraceWireModel);
     }
 
     public class TransactionTraceAggregator : AbstractAggregator<TransactionTraceWireModelComponents>, ITransactionTraceAggregator
     {
-        [NotNull]
         private readonly IEnumerable<ITransactionCollector> _transactionCollectors;
 
-        public TransactionTraceAggregator([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler, [NotNull] IProcessStatic processStatic, [NotNull] IEnumerable<ITransactionCollector> transactionCollectors)
+        public TransactionTraceAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IEnumerable<ITransactionCollector> transactionCollectors)
             : base(dataTransportService, scheduler, processStatic)
         {
             _transactionCollectors = transactionCollectors;
@@ -54,7 +52,7 @@ namespace NewRelic.Agent.Core.Aggregators
             HandleResponse(responseStatus, traces);
         }
 
-        private void HandleResponse(DataTransportResponseStatus responseStatus, [NotNull] ICollection<TransactionTraceWireModel> traces)
+        private void HandleResponse(DataTransportResponseStatus responseStatus, ICollection<TransactionTraceWireModel> traces)
         {
             switch (responseStatus)
             {
@@ -76,7 +74,7 @@ namespace NewRelic.Agent.Core.Aggregators
             _transactionCollectors.ForEach(collector => collector?.GetAndClearCollectedSamples());
         }
 
-        private void LogUnencodedTraceData([NotNull] IEnumerable<TransactionTraceWireModel> samples)
+        private void LogUnencodedTraceData(IEnumerable<TransactionTraceWireModel> samples)
         {
             if (Log.IsDebugEnabled)
             {
@@ -87,7 +85,7 @@ namespace NewRelic.Agent.Core.Aggregators
             }
         }
 
-        private static String SerializeTransactionTraceData([NotNull] TransactionTraceWireModel transactionTraceWireModel)
+        private static string SerializeTransactionTraceData(TransactionTraceWireModel transactionTraceWireModel)
         {
             try
             {

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
-using JetBrains.Annotations;
 
 namespace NewRelic.Parsing
 {
     public static class StringsHelper
     {
-        [NotNull]
-        public static String FixDatabaseObjectName(String s)
+        public static string FixDatabaseObjectName(string s)
         {
             int index = s.IndexOf('.');
             if (index > 0)
@@ -32,13 +29,11 @@ namespace NewRelic.Parsing
         {
             return RemoveBracketsQuotesParenthesis(s).ToLower();
         }
-
-        [NotNull]
-        private static String FixDatabaseName(String s)
+        private static string FixDatabaseName(string s)
         {
             StringBuilder sb = new StringBuilder(s.Length);
             bool first = true;
-            foreach (String segment in s.Split('.'))
+            foreach (string segment in s.Split('.'))
             {
                 if (!first)
                 {
@@ -59,9 +54,7 @@ namespace NewRelic.Parsing
             new KeyValuePair<char, char>('\'','\''),
             new KeyValuePair<char, char>('(',')')
         };
-
-        [NotNull]
-        public static String RemoveBracketsQuotesParenthesis([NotNull] String value)
+        public static string RemoveBracketsQuotesParenthesis(string value)
         {
             if (value.Length < 3)
                 return value;

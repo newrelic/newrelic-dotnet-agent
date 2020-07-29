@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-
-namespace NewRelic.Agent.IntegrationTestHelpers
+﻿namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public class WebConfigModifier
     {
-        private readonly String _configFilePath;
+        private readonly string _configFilePath;
 
-        public WebConfigModifier([NotNull] String configFilePath)
+        public WebConfigModifier(string configFilePath)
         {
             _configFilePath = configFilePath;
         }

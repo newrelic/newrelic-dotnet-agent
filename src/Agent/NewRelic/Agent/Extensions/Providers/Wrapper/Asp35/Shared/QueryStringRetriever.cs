@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions.Collections;
@@ -22,10 +21,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
     /// </summary>
     public static class QueryStringRetriever
     {
-        [CanBeNull]
         private static readonly Func<HttpRequest, NameValueCollection> EnsureQueryString;
-
-        [CanBeNull]
         private static readonly Func<HttpRequest, NameValueCollection> GetQueryStringBackingField;
 
         static QueryStringRetriever()
@@ -48,9 +44,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
                 // Every known version of ASP.NET has a _queryString field, but we wrap this in a try/catch anyway so help future-proof ourselves.
             }
         }
-
-        [CanBeNull]
-        private static NameValueCollection TryGetQueryString([NotNull] HttpRequest request, [NotNull] IAgentWrapperApi agentWrapperApi)
+        private static NameValueCollection TryGetQueryString(HttpRequest request, IAgentWrapperApi agentWrapperApi)
         {
             if (EnsureQueryString != null)
                 return EnsureQueryString(request);
@@ -63,9 +57,7 @@ namespace NewRelic.Providers.Wrapper.Asp35.Shared
             agentWrapperApi.HandleWrapperException(new NullReferenceException(nameof(GetQueryStringBackingField)));
             return null;
         }
-
-        [CanBeNull]
-        public static IDictionary<String, String> TryGetQueryStringAsDictionary([NotNull] HttpRequest request, [NotNull] IAgentWrapperApi agentWrapperApi)
+        public static IDictionary<string, string> TryGetQueryStringAsDictionary(HttpRequest request, IAgentWrapperApi agentWrapperApi)
         {
             try
             {

@@ -2,29 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Core.DataTransport;
 using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Time;
 using NewRelic.Agent.Core.Utilities;
-using NewRelic.Agent.Core.Utils;
 using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Agent.Core.Commands
 {
     public class CommandService : DisposableService
     {
-        [NotNull]
-        private readonly IDictionary<String, ICommand> _knownCommands = new Dictionary<String, ICommand>();
-
-        [NotNull]
+        private readonly IDictionary<string, ICommand> _knownCommands = new Dictionary<string, ICommand>();
         private readonly IDataTransportService _dataTransportService;
-
-        [NotNull]
         private readonly IScheduler _scheduler;
 
-        public CommandService([NotNull] IDataTransportService dataTransportService, [NotNull] IScheduler scheduler)
+        public CommandService(IDataTransportService dataTransportService, IScheduler scheduler)
         {
             _dataTransportService = dataTransportService;
             _scheduler = scheduler;
@@ -37,7 +30,7 @@ namespace NewRelic.Agent.Core.Commands
             _scheduler.StopExecuting(GetAndExecuteAgentCommands);
         }
 
-        public void AddCommands([NotNull] params ICommand[] commands)
+        public void AddCommands(params ICommand[] commands)
         {
             commands.Where(command => command != null).ForEach(command => _knownCommands.Add(command.Name, command));
         }
@@ -51,11 +44,9 @@ namespace NewRelic.Agent.Core.Commands
 
             _dataTransportService.SendCommandResults(commandResults);
         }
-
-        [NotNull]
-        public IDictionary<String, Object> ProcessCommands([CanBeNull] IEnumerable<CommandModel> commandModels)
+        public IDictionary<string, object> ProcessCommands(IEnumerable<CommandModel> commandModels)
         {
-            var results = new Dictionary<String, Object>();
+            var results = new Dictionary<string, object>();
 
             if (commandModels == null)
                 return results;

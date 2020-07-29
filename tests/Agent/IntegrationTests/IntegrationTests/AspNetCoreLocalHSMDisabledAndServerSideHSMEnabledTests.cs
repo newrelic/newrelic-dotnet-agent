@@ -1,6 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
-using NewRelic.Agent.IntegrationTestHelpers;
+﻿using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -8,12 +6,11 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : IClassFixture<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
     {
-        private const String QueryStringParameterValue = @"my thing";
+        private const string QueryStringParameterValue = @"my thing";
 
-        [NotNull]
         private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests([NotNull] RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, [NotNull] ITestOutputHelper output)
+        public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.BypassAgentConnectionErrorLineRegexCheck = true;

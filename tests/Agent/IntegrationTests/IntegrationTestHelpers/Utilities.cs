@@ -1,17 +1,16 @@
 ﻿using System;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public static class Utilities
     {
 #if DEBUG
-        [NotNull] public static String Configuration = "Debug";
+        public static string Configuration = "Debug";
 #else
-        [NotNull] public static String Configuration = "Release";
+        public static String Configuration = "Release";
 #endif
 
-        public static T ThrowIfNull<T>(T value, String valueName)
+        public static T ThrowIfNull<T>(T value, string valueName)
         {
             if (value == null)
                 throw new ArgumentNullException(valueName);

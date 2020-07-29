@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class CustomAttributes : IClassFixture<RemoteServiceFixtures.CustomAttributesWebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributes([NotNull] RemoteServiceFixtures.CustomAttributesWebApi fixture, [NotNull] ITestOutputHelper output)
+        public CustomAttributes(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -45,22 +43,22 @@ namespace NewRelic.Agent.IntegrationTests
             var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
             var expectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
 
-            var expectedTransactionTraceAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAttributes = new Dictionary<string, string>
             {
                 { "key", "value" },
                 { "foo", "bar" },
             };
-            var expectedErrorTraceAttributes = new Dictionary<String, String>
+            var expectedErrorTraceAttributes = new Dictionary<string, string>
             {
                 { "hey", "dude" },
                 { "faz", "baz" }
             };
-            var expectedErrorEventAttributes = new Dictionary<String, String>
+            var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "hey", "dude" },
                 { "faz", "baz" }
             };
-            var expectedTransactionEventAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAttributes = new Dictionary<string, string>
             {
                 { "key", "value" },
                 { "foo", "bar" }

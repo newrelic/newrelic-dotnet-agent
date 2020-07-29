@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Dongle.Cryptography;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
@@ -14,25 +13,22 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
         /// Calculates and returns a path hash based on the given parameters.
         /// </summary>
         /// <returns>Returns a path hash based on the given parameters.</returns>
-        [NotNull]
-        String CalculatePathHash([NotNull] String transactionName, [CanBeNull] String referringPathHash);
+        string CalculatePathHash(string transactionName, string referringPathHash);
     }
 
     public class PathHashMaker : IPathHashMaker
     {
-        private const Int32 TotalBits = 32;
-        private const String PathHashSeparator = ";";
-        public const Int32 AlternatePathHashMaxSize = 10;
-
-        [NotNull]
+        private const int TotalBits = 32;
+        private const string PathHashSeparator = ";";
+        public const int AlternatePathHashMaxSize = 10;
         private readonly IConfigurationService _configurationService;
 
-        public PathHashMaker([NotNull] IConfigurationService configurationService)
+        public PathHashMaker(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
         }
 
-        public String CalculatePathHash(String transactionName, String referringPathHash)
+        public string CalculatePathHash(string transactionName, string referringPathHash)
         {
             // The logic of this method is specced here: https://source.datanerd.us/agents/agent-specs/blob/master/Cross-Application-Tracing-PORTED.md#pathhash
 
@@ -41,29 +37,28 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
                 throw new NullReferenceException(nameof(appName));
 
             var referringPathHashInt = HexToIntOrZero(referringPathHash);
-            var leftShift = (UInt32)referringPathHashInt << 1;
-            var rightShift = (UInt32)referringPathHashInt >> (TotalBits - 1);
+            var leftShift = (uint)referringPathHashInt << 1;
+            var rightShift = (uint)referringPathHashInt >> (TotalBits - 1);
             var hash = GetHash(appName, transactionName);
 
             var rotatedReferringPathHash = (leftShift) | (rightShift);
-            var pathHashInt = (Int32)(rotatedReferringPathHash ^ hash);
+            var pathHashInt = (int)(rotatedReferringPathHash ^ hash);
             return IntToHex(pathHashInt);
         }
 
         // Though currently unused, this function is left in place as a reference in case it is needed in the future.
-        [NotNull, UsedImplicitly]
-        private static String ReversePathHash([NotNull] String transactionName, [NotNull] String appName, [NotNull] String pathHash)
+        private static string ReversePathHash(string transactionName, string appName, string pathHash)
         {
             var pathHashInt = HexToInt(pathHash);
             var rotatedReferringPathHash = pathHashInt ^ GetHash(appName, transactionName);
-            var rightShift = (UInt32)rotatedReferringPathHash >> 1;
-            var leftShift = (UInt32)rotatedReferringPathHash << (TotalBits - 1);
+            var rightShift = (uint)rotatedReferringPathHash >> 1;
+            var leftShift = (uint)rotatedReferringPathHash << (TotalBits - 1);
 
-            var reversedPathHashInt = (Int32)((rightShift) | (leftShift));
+            var reversedPathHashInt = (int)((rightShift) | (leftShift));
             return IntToHex(reversedPathHashInt);
         }
 
-        private static Int32 GetHash([NotNull] String appName, [NotNull] String txName)
+        private static int GetHash(string appName, string txName)
         {
             var md5Hash = new MD5();
             var formattedInput = appName + PathHashSeparator + txName;
@@ -73,7 +68,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             return fromBytes;
         }
 
-        private static Int32 HexToIntOrZero([CanBeNull] String val)
+        private static int HexToIntOrZero(string val)
         {
             if (val == null)
                 return 0;
@@ -81,17 +76,15 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.CrossApplicationTracing
             return HexToInt(val);
         }
 
-        private static Int32 HexToInt([NotNull] String val)
+        private static int HexToInt(string val)
         {
-            Int32 result;
-            if (Int32.TryParse(val, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
+            int result;
+            if (int.TryParse(val, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
                 return result;
 
             return 0;
         }
-
-        [NotNull]
-        private static String IntToHex(Int32 val)
+        private static string IntToHex(int val)
         {
             var hex = val.ToString("x8");
             if (hex == null)

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Transactions;
 
@@ -10,20 +9,15 @@ namespace NewRelic.Agent.Core.Errors
 {
     public struct ErrorData
     {
-        [NotNull]
         public readonly string ErrorMessage;
-
-        [CanBeNull]
         public readonly string ErrorTypeName;
-
-        [CanBeNull]
         public readonly string StackTrace;
 
         public readonly DateTime NoticedAt;
 
         public readonly bool IsAnError;
 
-        private ErrorData([NotNull] string errorMessage, [CanBeNull] string errorTypeName, [CanBeNull] string stackTrace, DateTime noticedAt)
+        private ErrorData(string errorMessage, string errorTypeName, string stackTrace, DateTime noticedAt)
         {
             NoticedAt = noticedAt;
             StackTrace = stackTrace;
@@ -32,13 +26,13 @@ namespace NewRelic.Agent.Core.Errors
             IsAnError = true;
         }
 
-        public static ErrorData FromParts([NotNull] string errorMessage, [CanBeNull] string errorTypeName, DateTime noticedAt, bool stripErrorMessage)
+        public static ErrorData FromParts(string errorMessage, string errorTypeName, DateTime noticedAt, bool stripErrorMessage)
         {
             var message = stripErrorMessage ? string.Empty : errorMessage;
             return new ErrorData(message, errorTypeName, null, noticedAt);
         }
 
-        public static ErrorData FromException([NotNull] Exception exception, bool stripErrorMessage)
+        public static ErrorData FromException(Exception exception, bool stripErrorMessage)
         {
             var message = stripErrorMessage ? string.Empty : exception.GetBaseException().Message;
             var exceptionTypeName = exception.GetType().FullName;
@@ -47,7 +41,7 @@ namespace NewRelic.Agent.Core.Errors
             return new ErrorData(message, exceptionTypeName, stackTrace, noticedAt);
         }
 
-        public static ErrorData TryGetErrorData([NotNull] ImmutableTransaction immutableTransaction, [NotNull] IConfigurationService configurationService)
+        public static ErrorData TryGetErrorData(ImmutableTransaction immutableTransaction, IConfigurationService configurationService)
         {
             // *Any* ignored custom error noticed by the agent should result in no error trace
             var customErrors = immutableTransaction.TransactionMetadata.CustomErrorDatas.ToList();
@@ -79,18 +73,18 @@ namespace NewRelic.Agent.Core.Errors
             return TryCreateHttpErrorData(immutableTransaction);
         }
 
-        private static Boolean ShouldIgnoreAnyError([NotNull] IEnumerable<ErrorData> errorData, [NotNull] IConfigurationService configurationService)
+        private static bool ShouldIgnoreAnyError(IEnumerable<ErrorData> errorData, IConfigurationService configurationService)
         {
             var errorTypeNames = errorData.Select(data => data.ErrorTypeName);
             return ShouldIgnoreAnyError(errorTypeNames, configurationService);
         }
 
-        private static Boolean ShouldIgnoreError(String errorTypeName, IConfigurationService configurationService)
+        private static bool ShouldIgnoreError(string errorTypeName, IConfigurationService configurationService)
         {
             return ShouldIgnoreAnyError(new[] { errorTypeName }, configurationService);
         }
 
-        private static Boolean ShouldIgnoreAnyError([NotNull] IEnumerable<String> errorTypeNames, IConfigurationService configurationService)
+        private static bool ShouldIgnoreAnyError(IEnumerable<string> errorTypeNames, IConfigurationService configurationService)
         {
             foreach (var errorClassName in errorTypeNames)
             {
@@ -112,9 +106,7 @@ namespace NewRelic.Agent.Core.Errors
 
             return false;
         }
-
-        [CanBeNull]
-        private static String TryGetFormattedStatusCode([NotNull] ImmutableTransaction immutableTransaction)
+        private static string TryGetFormattedStatusCode(ImmutableTransaction immutableTransaction)
         {
             if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
                 return null;
@@ -126,9 +118,7 @@ namespace NewRelic.Agent.Core.Errors
                 ? $"{statusCode}"
                 : $"{statusCode}.{subStatusCode}";
         }
-
-        [CanBeNull]
-        private static ErrorData TryCreateHttpErrorData([NotNull] ImmutableTransaction immutableTransaction)
+        private static ErrorData TryCreateHttpErrorData(ImmutableTransaction immutableTransaction)
         {
             if (immutableTransaction.TransactionMetadata.HttpResponseStatusCode == null)
                 return new ErrorData();
@@ -152,11 +142,9 @@ namespace NewRelic.Agent.Core.Errors
 
             return new ErrorData(errorMessage, errorTypeName, null, noticedAt);
         }
-
-        [NotNull]
-        private static String GetFriendlyExceptionTypeName(String exceptionTypeName)
+        private static string GetFriendlyExceptionTypeName(string exceptionTypeName)
         {
-            return exceptionTypeName?.Split(new[] { '`' }, 2)[0] ?? String.Empty;
+            return exceptionTypeName?.Split(new[] { '`' }, 2)[0] ?? string.Empty;
         }
     }
 }

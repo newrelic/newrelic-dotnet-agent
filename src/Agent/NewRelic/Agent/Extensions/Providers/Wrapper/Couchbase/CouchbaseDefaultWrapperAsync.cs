@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 using NewRelic.Reflection;
@@ -9,9 +8,8 @@ namespace NewRelic.Providers.Wrapper.Couchbase
 {
     public class CouchbaseDefaultWrapperAsync : IWrapper
     {
-        [CanBeNull]
-        private Func<Object, String> _getMethodInfo;
-        public Func<Object, String> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GeneratePropertyAccessor<String>("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "Name"));
+        private Func<object, string> _getMethodInfo;
+        public Func<object, string> GetMethodInfo => _getMethodInfo ?? (_getMethodInfo = VisibilityBypasser.Instance.GeneratePropertyAccessor<string>("Couchbase.NetClient", "Couchbase.CouchbaseBucket", "Name"));
 
         public bool IsTransactionRequired => true;
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
@@ -14,10 +12,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class CustomAttributesIgnored : IClassFixture<CustomAttributesWebApi>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributesIgnored([NotNull] RemoteServiceFixtures.CustomAttributesWebApi fixture, [NotNull] ITestOutputHelper output)
+        public CustomAttributesIgnored(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -53,43 +50,43 @@ namespace NewRelic.Agent.IntegrationTests
             var expectedTransactionName = @"WebTransaction/WebAPI/My/CustomAttributes";
             var expectedTracedErrorPathAsync = @"WebTransaction/WebAPI/My/CustomErrorAttributes";
 
-            var expectedTransactionTraceAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAttributes = new Dictionary<string, string>
             {
                 { "foo", "bar" },
             };
-            var unexpectedTransactionTraceAttributes = new List<String>
+            var unexpectedTransactionTraceAttributes = new List<string>
             {
                 "key",
                 "hey",
                 "faz",
             };
-            var expectedErrorTraceAttributes = new Dictionary<String, String>
+            var expectedErrorTraceAttributes = new Dictionary<string, string>
             {
                 { "hey", "dude" },
             };
-            var unexpectedErrorTraceAttributes = new List<String>
+            var unexpectedErrorTraceAttributes = new List<string>
             {
                 "faz",
                 "foo",
                 "key",
             };
 
-            var expectedErrorEventAttributes = new Dictionary<String, String>
+            var expectedErrorEventAttributes = new Dictionary<string, string>
             {
                 { "hey", "dude" },
             };
-            var unexpectedErrorEventAttributes = new List<String>
+            var unexpectedErrorEventAttributes = new List<string>
             {
                 "faz",
                 "foo",
                 "key",
             };
 
-            var expectedTransactionEventAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAttributes = new Dictionary<string, string>
             {
                 { "foo", "bar" }
             };
-            var unexpectedTranscationEventAttributes = new List<String>
+            var unexpectedTranscationEventAttributes = new List<string>
             {
                 "key",
                 "faz",

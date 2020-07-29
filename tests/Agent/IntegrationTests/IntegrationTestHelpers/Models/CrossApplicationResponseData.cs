@@ -1,24 +1,23 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.Models
 {
     // Note: this data is referred to as "AppData" in the CAT spec.
-    [JsonConverter(typeof(CrossApplicationResponseDataConverter)), UsedImplicitly]
+    [JsonConverter(typeof(CrossApplicationResponseDataConverter))]
     public class CrossApplicationResponseData
     {
-        public readonly String CrossProcessId;
-        public readonly String TransactionName;
-        public readonly Single QueueTimeInSeconds;
-        public readonly Single ResponseTimeInSeconds;
-        public readonly Int32 ContentLength;
-        public readonly String TransactionGuid;
-        public readonly Boolean Unused;
+        public readonly string CrossProcessId;
+        public readonly string TransactionName;
+        public readonly float QueueTimeInSeconds;
+        public readonly float ResponseTimeInSeconds;
+        public readonly int ContentLength;
+        public readonly string TransactionGuid;
+        public readonly bool Unused;
 
         // For backwards compatibility we need to support deserializing AppData that is missing fields 5 and 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength)
+        public CrossApplicationResponseData(string crossProcessId, string transactionName, float queueTimeInSeconds, float responseTimeInSeconds, int contentLength)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -28,7 +27,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
         }
 
         // For backwards compatibility we need to support deserializing AppData that is missing field 6
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength, String transactionGuid)
+        public CrossApplicationResponseData(string crossProcessId, string transactionName, float queueTimeInSeconds, float responseTimeInSeconds, int contentLength, string transactionGuid)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -38,7 +37,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
             TransactionGuid = transactionGuid;
         }
 
-        public CrossApplicationResponseData([NotNull] String crossProcessId, [NotNull] String transactionName, Single queueTimeInSeconds, Single responseTimeInSeconds, Int32 contentLength, String transactionGuid, Boolean unused)
+        public CrossApplicationResponseData(string crossProcessId, string transactionName, float queueTimeInSeconds, float responseTimeInSeconds, int contentLength, string transactionGuid, bool unused)
         {
             CrossProcessId = crossProcessId;
             TransactionName = transactionName;
@@ -62,13 +61,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.Models
                 if (jArray == null)
                     throw new JsonSerializationException("Unable to create a jObject from reader.");
 
-                var crossProcessId = jArray[0].ToObject<String>();
-                var transactionname = jArray[1].ToObject<String>();
-                var queueTimeInSeconds = jArray[2].ToObject<Single>();
-                var responseTimeInSeconds = jArray[3].ToObject<Single>();
-                var contentLength = jArray[4].ToObject<Int32>();
-                var transactionGuid = (jArray[5] ?? new JObject()).ToObject<String>();
-                var unused = (jArray[6] ?? new JObject()).ToObject<Boolean>();
+                var crossProcessId = jArray[0].ToObject<string>();
+                var transactionname = jArray[1].ToObject<string>();
+                var queueTimeInSeconds = jArray[2].ToObject<float>();
+                var responseTimeInSeconds = jArray[3].ToObject<float>();
+                var contentLength = jArray[4].ToObject<int>();
+                var transactionGuid = (jArray[5] ?? new JObject()).ToObject<string>();
+                var unused = (jArray[6] ?? new JObject()).ToObject<bool>();
 
                 return new CrossApplicationResponseData(crossProcessId, transactionname, queueTimeInSeconds, responseTimeInSeconds, contentLength, transactionGuid, unused);
             }

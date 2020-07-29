@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 using NewRelic.Agent.Core.Events;
 using NewRelic.Agent.Core.Utilities;
 
@@ -11,7 +10,6 @@ namespace NewRelic.Agent.Core.Database
     }
     public class DatabaseService : ConfigurationBasedService, IDatabaseService
     {
-        [NotNull]
         public SqlObfuscator SqlObfuscator { get; private set; }
 
         public DatabaseService()

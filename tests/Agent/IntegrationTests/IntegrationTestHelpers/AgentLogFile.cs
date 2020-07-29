@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -32,10 +31,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string ThreadProfileStartingLogLineRegex = @"^.*? NewRelic INFO: Starting a thread profiling session";
         public const string ThreadProfileDataLogLineRegex = @"^.*? NewRelic DEBUG: Invoking ""profile_data"" with : (.*)";
 
-        [NotNull]
         private readonly string _filePath;
 
-        public AgentLogFile([NotNull] string logDirectoryPath, TimeSpan? timeoutOrZero = null)
+        public AgentLogFile(string logDirectoryPath, TimeSpan? timeoutOrZero = null)
         {
             Contract.Assert(logDirectoryPath != null);
 
@@ -60,8 +58,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             throw new Exception("No agent log file found.");
         }
 
-        [NotNull]
-        public String GetAccountId(TimeSpan? timeoutOrZero = null)
+        public string GetAccountId(TimeSpan? timeoutOrZero = null)
         {
             var reportingAppLink = GetReportingAppLink(timeoutOrZero);
             var reportingAppUri = new Uri(reportingAppLink);
@@ -71,8 +68,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return accountId.TrimEnd('/');
         }
 
-        [NotNull]
-        public String GetApplicationId(TimeSpan? timeoutOrZero = null)
+        public string GetApplicationId(TimeSpan? timeoutOrZero = null)
         {
             var reportingAppLink = GetReportingAppLink(timeoutOrZero);
             var reportingAppUri = new Uri(reportingAppLink);
@@ -82,8 +78,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return applicationId.TrimEnd('/');
         }
 
-        [NotNull]
-        public String GetReportingAppLink(TimeSpan? timeoutOrZero = null)
+        public string GetReportingAppLink(TimeSpan? timeoutOrZero = null)
         {
             var match = WaitForLogLine(AgentReportingToLogLineRegex, timeoutOrZero);
             return match.Groups[1].Value;
@@ -96,8 +91,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Log Lines
 
-        [NotNull]
-        public IEnumerable<Match> WaitForLogLines([NotNull] String regularExpression, TimeSpan? timeoutOrZero = null)
+        public IEnumerable<Match> WaitForLogLines(string regularExpression, TimeSpan? timeoutOrZero = null)
         {
             Contract.Assert(regularExpression != null);
 
@@ -112,18 +106,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
             } while (timeTaken.Elapsed < timeout);
 
-            var message = String.Format("Log line did not appear within {0} seconds.  Expected line expression: {1}", timeout.TotalSeconds, regularExpression);
+            var message = string.Format("Log line did not appear within {0} seconds.  Expected line expression: {1}", timeout.TotalSeconds, regularExpression);
             throw new Exception(message);
         }
 
-        [NotNull]
-        public Match WaitForLogLine([NotNull] String regularExpression, TimeSpan? timeoutOrZero = null)
+        public Match WaitForLogLine(string regularExpression, TimeSpan? timeoutOrZero = null)
         {
             return WaitForLogLines(regularExpression, timeoutOrZero).First();
         }
 
-        [NotNull]
-        public IEnumerable<Match> TryGetLogLines([NotNull] String regularExpression)
+        public IEnumerable<Match> TryGetLogLines(string regularExpression)
         {
             var regex = new Regex(regularExpression);
             return GetFileLines()
@@ -133,16 +125,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(match => match.Success);
         }
 
-        [CanBeNull]
-        public Match TryGetLogLine([NotNull] String regularExpression)
+        public Match TryGetLogLine(string regularExpression)
         {
             return TryGetLogLines(regularExpression).LastOrDefault();
         }
 
-        [NotNull]
-        public IEnumerable<String> GetFileLines()
+        public IEnumerable<string> GetFileLines()
         {
-            String line;
+            string line;
             using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))
                 while ((line = streamReader.ReadLine()) != null)
@@ -151,8 +141,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
         }
 
-        [NotNull]
-        public String GetFullLogAsString()
+        public string GetFullLogAsString()
         {
             using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var streamReader = new StreamReader(fileStream))
@@ -165,7 +154,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region JSON helpers
 
-        private static String TryExtractJson([CanBeNull] Match match, Int32 captureGroupIndex)
+        private static string TryExtractJson(Match match, int captureGroupIndex)
         {
             if (match == null || match.Groups.Count < (captureGroupIndex + 1))
                 return null;
@@ -173,7 +162,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             return match.Groups[captureGroupIndex].Value;
         }
 
-        private static IEnumerable<T> TryExtractFromJsonArray<T>([CanBeNull] String json, Int32 arrayIndex)
+        private static IEnumerable<T> TryExtractFromJsonArray<T>(string json, int arrayIndex)
         {
             if (json == null)
                 return Enumerable.Empty<T>();
@@ -196,7 +185,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region TransactionSamples
 
-        [NotNull]
         public IEnumerable<TransactionSample> GetTransactionSamples()
         {
             return TryGetLogLines(TransactionSampleLogLineRegex)
@@ -205,15 +193,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(transactionSample => transactionSample != null);
         }
 
-        [CanBeNull]
-        public TransactionSample TryGetTransactionSample(String transactionName)
+        public TransactionSample TryGetTransactionSample(string transactionName)
         {
             return GetTransactionSamples()
                 .Where(sample => sample?.Path == transactionName)
                 .FirstOrDefault();
         }
 
-        public T GetTransactionTraceAttribute<T>([CanBeNull] String transactionName, TransactionTraceAttributeType attributeType, [NotNull] String parameterName)
+        public T GetTransactionTraceAttribute<T>(string transactionName, TransactionTraceAttributeType attributeType, string parameterName)
         {
             return GetTransactionSamples()
                 .Where(trace => trace != null)
@@ -232,7 +219,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region TransactionEvents
 
-        [NotNull]
         public IEnumerable<TransactionEvent> GetTransactionEvents()
         {
             return TryGetLogLines(AnalyticsEventDataLogLineRegex)
@@ -241,8 +227,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(transactionEvent => transactionEvent != null);
         }
 
-        [CanBeNull]
-        public TransactionEvent TryGetTransactionEvent(String transactionName)
+        public TransactionEvent TryGetTransactionEvent(string transactionName)
         {
             return GetTransactionEvents()
                 .Where(@event => @event?.IntrinsicAttributes?["name"]?.ToString() == transactionName)
@@ -253,7 +238,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region ErrorEvents
 
-        [NotNull]
         public IEnumerable<ErrorEventPayload> GetErrorEvents()
         {
             return TryGetLogLines(ErrorEventDataLogLineRegex)
@@ -266,7 +250,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region ErrorTraces
 
-        [NotNull]
         public IEnumerable<ErrorTrace> GetErrorTraces()
         {
             return TryGetLogLines(ErrorTraceDataLogLineRegex)
@@ -275,15 +258,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(errorTrace => errorTrace != null);
         }
 
-        [CanBeNull]
-        public ErrorTrace TryGetErrorTrace(String transactionName)
+        public ErrorTrace TryGetErrorTrace(string transactionName)
         {
             return GetErrorTraces()
                 .Where(trace => trace?.Path == transactionName)
                 .FirstOrDefault();
         }
 
-        public T GetErrorTraceAttribute<T>([CanBeNull] String transactionName, TransactionTraceAttributeType attributeType, [NotNull] String parameterName)
+        public T GetErrorTraceAttribute<T>(string transactionName, TransactionTraceAttributeType attributeType, string parameterName)
         {
             return GetErrorTraces()
                 .Where(trace => trace != null)
@@ -297,13 +279,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .FirstOrDefault();
         }
 
-        [NotNull]
-        private static IEnumerable<KeyValuePair<String, Object>> FilterAttributesByType([CanBeNull] ErrorTraceAttributes attributesCollection, TransactionTraceAttributeType attributeType)
+        private static IEnumerable<KeyValuePair<string, object>> FilterAttributesByType(ErrorTraceAttributes attributesCollection, TransactionTraceAttributeType attributeType)
         {
             if (attributesCollection == null)
-                return new Dictionary<String, Object>();
+                return new Dictionary<string, object>();
 
-            IDictionary<String, Object> attributes;
+            IDictionary<string, object> attributes;
             switch (attributeType)
             {
                 case TransactionTraceAttributeType.Intrinsic:
@@ -319,14 +300,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     throw new NotImplementedException();
             }
 
-            return attributes ?? new Dictionary<String, Object>();
+            return attributes ?? new Dictionary<string, object>();
         }
 
         #endregion ErrorTraces
 
         #region SqlTraces
 
-        [NotNull]
         public IEnumerable<SqlTrace> GetSqlTraces()
         {
             return TryGetLogLines(SqlTraceDataLogLineRegex)
@@ -337,7 +317,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #endregion ErrorTraces
 
-        [NotNull]
         public ConnectData GetConnectData()
         {
             var json = TryGetLogLines(ConnectLogLineRegex)
@@ -352,7 +331,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         #region Metrics
 
-        [NotNull]
         public IEnumerable<Metric> GetMetrics()
         {
             return TryGetLogLines(MetricDataLogLineRegex)
@@ -364,8 +342,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(metric => metric != null);
         }
 
-        [CanBeNull]
-        public Metric GetMetricByName([NotNull] String name, [CanBeNull] String scope = null)
+        public Metric GetMetricByName(string name, string scope = null)
         {
             return GetMetrics()
                 .Where(metric => metric != null)

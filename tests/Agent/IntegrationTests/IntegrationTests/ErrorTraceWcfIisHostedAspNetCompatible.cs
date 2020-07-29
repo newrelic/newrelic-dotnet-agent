@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -13,10 +11,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class ErrorTraceWcfIisHostedAspNetCompatible : IClassFixture<RemoteServiceFixtures.WcfAppIisHosted>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.WcfAppIisHosted _fixture;
 
-        public ErrorTraceWcfIisHostedAspNetCompatible([NotNull] RemoteServiceFixtures.WcfAppIisHosted fixture, [NotNull] ITestOutputHelper testLogger)
+        public ErrorTraceWcfIisHostedAspNetCompatible(RemoteServiceFixtures.WcfAppIisHosted fixture, ITestOutputHelper testLogger)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;
@@ -74,7 +71,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
             };
 
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "errorType", "System.Exception" },
                 { "errorMessage", "ExceptionMessage" },

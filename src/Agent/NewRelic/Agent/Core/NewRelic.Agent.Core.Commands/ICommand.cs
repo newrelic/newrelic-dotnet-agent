@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Commands
 {
@@ -12,8 +10,7 @@ namespace NewRelic.Agent.Core.Commands
         /// <summary>
         /// The name of this command.
         /// </summary>
-        [NotNull]
-        String Name { get; }
+        string Name { get; }
 
         /// <summary>
         /// Executes this command.  This is called from the CommandService
@@ -21,6 +18,6 @@ namespace NewRelic.Agent.Core.Commands
         /// </summary>
         /// <param name="arguments"></param>
         /// <returns></returns>
-        Object Process(IDictionary<String, object> arguments); // throws CommandException;
+        object Process(IDictionary<string, object> arguments); // throws CommandException;
     }
 }

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace NewRelic.Agent.Core.Utilities
 {
-    // ReSharper disable StaticFieldInGenericType
     /// <summary>
     /// A global request bus for publishing requests that need a response.
     /// </summary>
@@ -14,21 +12,21 @@ namespace NewRelic.Agent.Core.Utilities
     /// Responders are not required to answer and there may not be a responder setup for any given request so you must be prepared to handle either no callback, an empty enumeration or default(TResponse), depending on which Post overload you use.</remarks>
     public static class RequestBus<TRequest, TResponse>
     {
-        [NotNull] private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(RequestBus<TRequest, TResponse>));
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(RequestBus<TRequest, TResponse>));
 
-        public delegate void ResponsesCallback([NotNull] IEnumerable<TResponse> responses);
+        public delegate void ResponsesCallback(IEnumerable<TResponse> responses);
 
-        public delegate void ResponseCallback([NotNull] TResponse response);
+        public delegate void ResponseCallback(TResponse response);
 
-        public delegate void RequestHandler([NotNull] TRequest request, [NotNull] ResponseCallback callback);
+        public delegate void RequestHandler(TRequest request, ResponseCallback callback);
 
-        [NotNull] private static readonly IList<RequestHandler> RequestHandlers = new List<RequestHandler>();
+        private static readonly IList<RequestHandler> RequestHandlers = new List<RequestHandler>();
 
-        [NotNull] private static readonly ReaderWriterLock Lock = new ReaderWriterLock();
-        [NotNull] private static readonly ReaderLockGuard ReaderLockGuard = new ReaderLockGuard(Lock);
-        [NotNull] private static readonly WriterLockGuard WriterLockGuard = new WriterLockGuard(Lock);
+        private static readonly ReaderWriterLock Lock = new ReaderWriterLock();
+        private static readonly ReaderLockGuard ReaderLockGuard = new ReaderLockGuard(Lock);
+        private static readonly WriterLockGuard WriterLockGuard = new WriterLockGuard(Lock);
 
-        public static void AddResponder([NotNull] RequestHandler requestHandler)
+        public static void AddResponder(RequestHandler requestHandler)
         {
             ValidateTResponse();
 
@@ -39,7 +37,7 @@ namespace NewRelic.Agent.Core.Utilities
             }
         }
 
-        public static void RemoveResponder([NotNull] RequestHandler requestHandler)
+        public static void RemoveResponder(RequestHandler requestHandler)
         {
             ValidateTResponse();
 
@@ -52,7 +50,7 @@ namespace NewRelic.Agent.Core.Utilities
         /// <summary>
         /// Post a request to this bus and receive an enumeration of responses from all available responders.  Enumeration may be empty.
         /// </summary>
-        public static void Post([NotNull] TRequest request, [NotNull] ResponsesCallback responsesCallback)
+        public static void Post(TRequest request, ResponsesCallback responsesCallback)
         {
             ValidateTResponse();
 
@@ -82,7 +80,7 @@ namespace NewRelic.Agent.Core.Utilities
         /// <summary>
         /// Post a request to this bus and receive a callback from the first responder.  Callback is not guaranteed to be called.
         /// </summary>
-        public static void Post([NotNull] TRequest request, [NotNull] ResponseCallback responseCallback)
+        public static void Post(TRequest request, ResponseCallback responseCallback)
         {
             ValidateTResponse();
 
@@ -91,7 +89,6 @@ namespace NewRelic.Agent.Core.Utilities
             if (responses == null) return;
             foreach (var response in responses)
             {
-                // ReSharper disable once AssignNullToNotNullAttribute : The enumeration returned here cannot have null elements.
                 responseCallback(response);
                 return;
             }
@@ -109,7 +106,7 @@ namespace NewRelic.Agent.Core.Utilities
         /// if (!(RequestBus<Object, Boolean?>.Post(myRequest) ?? false)) Console.WriteLine("Either no one is listening or someone returned false.");
         /// ]]>
         /// </example>
-        public static TResponse Post([NotNull] TRequest request)
+        public static TResponse Post(TRequest request)
         {
             ValidateTResponse();
 

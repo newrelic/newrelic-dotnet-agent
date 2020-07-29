@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -7,11 +6,11 @@ namespace NewRelic.Parsing.ConnectionString
 {
     public class OracleConnectionStringParser : IConnectionStringParser
     {
-        private static readonly List<String> _hostKeys = new List<String> { "server", "data source", "host", "dbq" };
+        private static readonly List<string> _hostKeys = new List<string> { "server", "data source", "host", "dbq" };
 
         private readonly DbConnectionStringBuilder _connectionStringBuilder;
 
-        public OracleConnectionStringParser(String connectionString)
+        public OracleConnectionStringParser(string connectionString)
         {
             _connectionStringBuilder = new DbConnectionStringBuilder { ConnectionString = connectionString };
         }
@@ -23,7 +22,7 @@ namespace NewRelic.Parsing.ConnectionString
             return new ConnectionInfo(host, portPathOrId, null);
         }
 
-        private String ParseHost()
+        private string ParseHost()
         {
             // Example of want we would need to process:
             // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=MyHost)(PORT=MyPort)))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=MyOracleSID)))
@@ -43,7 +42,7 @@ namespace NewRelic.Parsing.ConnectionString
                     if (!section.ToLowerInvariant().Contains("host=")) continue;
 
                     var startOfValue = section.IndexOf('=') + 1;
-                    return section.Substring(startOfValue).Replace(")", String.Empty);
+                    return section.Substring(startOfValue).Replace(")", string.Empty);
                 }
             }
             else if (host.Contains("@"))
@@ -53,7 +52,7 @@ namespace NewRelic.Parsing.ConnectionString
                 var secondaryHostSection = sections[3];
 
                 var possibleHost = initialHostSection.Substring(initialHostSection.IndexOf('@') + 1);
-                if (!String.IsNullOrEmpty(possibleHost))
+                if (!string.IsNullOrEmpty(possibleHost))
                 {
                     var colonLocation = possibleHost.IndexOf(':');
                     return colonLocation == -1 ? possibleHost : possibleHost.Substring(0, colonLocation);
@@ -61,7 +60,7 @@ namespace NewRelic.Parsing.ConnectionString
 
                 var endOfValue = secondaryHostSection.IndexOf(':');
                 possibleHost = (endOfValue > -1) ? secondaryHostSection.Substring(0, secondaryHostSection.IndexOf(':')) : secondaryHostSection;
-                if (!String.IsNullOrEmpty(possibleHost)) return possibleHost;
+                if (!string.IsNullOrEmpty(possibleHost)) return possibleHost;
 
                 return null;
             }
@@ -75,7 +74,7 @@ namespace NewRelic.Parsing.ConnectionString
             return null;
         }
 
-        private String ParsePortPathOrId()
+        private string ParsePortPathOrId()
         {
             var host = ConnectionStringParserHelper.GetKeyValuePair(_connectionStringBuilder, _hostKeys)?.Value;
             if (host == null) return null;
@@ -88,7 +87,7 @@ namespace NewRelic.Parsing.ConnectionString
                     if (!section.ToLowerInvariant().Contains("port=")) continue;
 
                     var startOfValue = section.IndexOf('=') + 1;
-                    return section.Substring(startOfValue).Replace(")", String.Empty);
+                    return section.Substring(startOfValue).Replace(")", string.Empty);
                 }
             }
 

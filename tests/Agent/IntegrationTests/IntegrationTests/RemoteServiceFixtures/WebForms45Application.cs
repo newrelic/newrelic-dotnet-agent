@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
@@ -22,10 +20,10 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             Assert.NotNull(result);
         }
 
-        public void GetWithQueryString([NotNull] IEnumerable<KeyValuePair<String, String>> parameters, Boolean expectException)
+        public void GetWithQueryString(IEnumerable<KeyValuePair<string, string>> parameters, bool expectException)
         {
             var parametersAsStrings = parameters.Select(param => $"{param.Key}={param.Value}");
-            var parametersAsString = String.Join("&", parametersAsStrings);
+            var parametersAsString = string.Join("&", parametersAsStrings);
             var address = $"http://{DestinationServerName}:{Port}/Default?{parametersAsString}";
 
             var exceptionOccurred = false;

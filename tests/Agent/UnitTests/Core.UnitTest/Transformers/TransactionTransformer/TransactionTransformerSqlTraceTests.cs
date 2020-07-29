@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Core.Metrics;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
-using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
@@ -20,61 +17,24 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     [TestFixture]
     public class TransactionTransformerSqlTraceTests
     {
-        [NotNull]
         private TransactionTransformer _transactionTransformer;
-
-        [NotNull]
         private ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private ISegmentTreeMaker _segmentTreeMaker;
-
-        [NotNull]
         private IMetricBuilder _metricBuilder;
-
-        [NotNull]
         private IMetricNameService _metricNameService;
-
-        [NotNull]
         private IMetricAggregator _metricAggregator;
-
-        [NotNull]
         private IConfigurationService _configurationService;
-
-        [NotNull]
         private IConfiguration _configuration;
-
-        [NotNull]
         private ITransactionTraceAggregator _transactionTraceAggregator;
-
-        [NotNull]
         private ITransactionTraceMaker _transactionTraceMaker;
-
-        [NotNull]
         private ITransactionEventAggregator _transactionEventAggregator;
-
-        [NotNull]
         private ITransactionEventMaker _transactionEventMaker;
-
-        [NotNull]
         private ITransactionAttributeMaker _transactionAttributeMaker;
-
-        [NotNull]
         private IErrorTraceAggregator _errorTraceAggregator;
-
-        [NotNull]
         private IErrorTraceMaker _errorTraceMaker;
-
-        [NotNull]
         private IErrorEventAggregator _errorEventAggregator;
-
-        [NotNull]
         private IErrorEventMaker _errorEventMaker;
-
-        [NotNull]
         private ISqlTraceAggregator _sqlTraceAggregator;
-
-        [NotNull]
         private ISqlTraceMaker _sqlTraceMaker;
 
         // TransactionTransformerSqlTraceTests is modelled after TransactionTransformerTests, but more real (non-mock) objects are required so that appropriate segment trees get generated.
@@ -122,12 +82,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             // create TransactionTransformer
             _transactionTransformer = new TransactionTransformer(_transactionMetricNameMaker, _segmentTreeMaker, _metricNameService, _metricAggregator, _configurationService, _transactionTraceAggregator, _transactionTraceMaker, _transactionEventAggregator, _transactionEventMaker, _transactionAttributeMaker, _errorTraceAggregator, _errorTraceMaker, _errorEventAggregator, _errorEventMaker, _sqlTraceAggregator, _sqlTraceMaker);
         }
-
-        [NotNull]
         public IMetricBuilder GetSimpleMetricBuilder()
         {
             _metricNameService = Mock.Create<IMetricNameService>();
-            Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<String>())).Returns<String>(name => name);
+            Mock.Arrange(() => _metricNameService.RenameMetric(Arg.IsAny<string>())).Returns<string>(name => name);
             return new MetricWireModel.MetricBuilder(_metricNameService);
         }
 
@@ -150,14 +108,14 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             var privateSqlTraceStatsInAggregator = new PrivateAccessor(_sqlTraceAggregator).GetField("_sqlTraceStats");
             var privateSqlTraceStatsCollection = (SqlTraceStatsCollection)privateSqlTraceStatsInAggregator;
-            var tracesCount = ((IDictionary<Int64, SqlTraceWireModel>)privateSqlTraceStatsCollection.Collection).Count;
+            var tracesCount = ((IDictionary<long, SqlTraceWireModel>)privateSqlTraceStatsCollection.Collection).Count;
             Assert.AreEqual(tracesCount, 1);
         }
 
         [Test]
         public void SqlTracesCollectedMetricIsAccurate()
         {
-            var generatedMetrics = new MetricStatsDictionary<String, MetricDataWireModel>();
+            var generatedMetrics = new MetricStatsDictionary<string, MetricDataWireModel>();
 
             Mock.Arrange(() => _metricAggregator.Collect(Arg.IsAny<TransactionMetricStatsCollection>())).DoInstead<TransactionMetricStatsCollection>(txStats => generatedMetrics = txStats.GetUnscopedForTesting());
 
@@ -192,14 +150,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             var args = new object[] { transaction };
             privateTransactionTransformer.CallMethod("Transform", args);
 
-            String sqlTracesCollectedMetricName = "Supportability/SqlTraces/TotalSqlTracesCollected";
+            string sqlTracesCollectedMetricName = "Supportability/SqlTraces/TotalSqlTracesCollected";
             Assert.IsTrue(generatedMetrics.TryGetValue(sqlTracesCollectedMetricName, out MetricDataWireModel data));
             Assert.AreEqual(3, data.Value0);
         }
 
         #region Helpers
-
-        [NotNull]
         private static IConfiguration GetDefaultConfiguration()
         {
             var configuration = Mock.Create<IConfiguration>();

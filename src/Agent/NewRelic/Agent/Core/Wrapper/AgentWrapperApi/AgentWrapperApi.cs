@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using JetBrains.Annotations;
 using MoreLinq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
@@ -34,53 +33,25 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 {
     public class AgentWrapperApi : IAgentWrapperApi // any changes to api, update the interface in extensions and re-import, then implement in legacy api as NotImplementedException
     {
-        internal static readonly Int32 MaxSegmentLength = 255;
-
-        [NotNull]
+        internal static readonly int MaxSegmentLength = 255;
         private readonly ITransactionService _transactionService;
-
-        [NotNull]
         private readonly ITimerFactory _timerFactory;
-
-        [NotNull]
         private readonly ITransactionTransformer _transactionTransformer;
-
-        [NotNull]
         private readonly IThreadPoolStatic _threadPoolStatic;
-
-        [NotNull]
         private readonly ITransactionMetricNameMaker _transactionMetricNameMaker;
-
-        [NotNull]
         private readonly IPathHashMaker _pathHashMaker;
-
-        [NotNull]
         private readonly ICatHeaderHandler _catHeaderHandler;
-
-        [NotNull]
         private readonly ISyntheticsHeaderHandler _syntheticsHeaderHandler;
-
-        [NotNull]
         private readonly ITransactionFinalizer _transactionFinalizer;
-
-        [NotNull]
         private readonly IBrowserMonitoringPrereqChecker _browserMonitoringPrereqChecker;
-
-        [NotNull]
         private readonly IBrowserMonitoringScriptMaker _browserMonitoringScriptMaker;
-
-        [NotNull]
         private readonly IConfigurationService _configurationService;
 
         private readonly IAgentHealthReporter _agentHealthReporter;
-
-        [NotNull]
         private static readonly Extensions.Providers.Wrapper.ITransaction _noOpTransaction = new NoTransactionImpl();
-
-        [NotNull]
         private static readonly ISegment _noOpSegment = new NoTransactionImpl();
 
-        public AgentWrapperApi([NotNull] ITransactionService transactionService, [NotNull] ITimerFactory timerFactory, [NotNull] ITransactionTransformer transactionTransformer, [NotNull] IThreadPoolStatic threadPoolStatic, [NotNull] ITransactionMetricNameMaker transactionMetricNameMaker, [NotNull] IPathHashMaker pathHashMaker, [NotNull] ICatHeaderHandler catHeaderHandler, [NotNull] ISyntheticsHeaderHandler syntheticsHeaderHandler, [NotNull] ITransactionFinalizer transactionFinalizer, [NotNull] IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, [NotNull] IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, [NotNull] IAgentHealthReporter agentHealthReporter)
+        public AgentWrapperApi(ITransactionService transactionService, ITimerFactory timerFactory, ITransactionTransformer transactionTransformer, IThreadPoolStatic threadPoolStatic, ITransactionMetricNameMaker transactionMetricNameMaker, IPathHashMaker pathHashMaker, ICatHeaderHandler catHeaderHandler, ISyntheticsHeaderHandler syntheticsHeaderHandler, ITransactionFinalizer transactionFinalizer, IBrowserMonitoringPrereqChecker browserMonitoringPrereqChecker, IBrowserMonitoringScriptMaker browserMonitoringScriptMaker, IConfigurationService configurationService, IAgentHealthReporter agentHealthReporter)
         {
             _transactionService = transactionService;
             _timerFactory = timerFactory;
@@ -113,7 +84,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             return new Transaction(this, _transactionService.GetOrCreateInternalTransaction(initialTransactionName, onCreate, mustBeRootTransaction));
         }
 
-        public Extensions.Providers.Wrapper.ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, String brokerVendorName, String destination, Action wrapperOnCreate)
+        public Extensions.Providers.Wrapper.ITransaction CreateMessageBrokerTransaction(MessageBrokerDestinationType destinationType, string brokerVendorName, string destination, Action wrapperOnCreate)
         {
             if (brokerVendorName == null)
                 throw new ArgumentNullException("brokerVendorName");
@@ -181,14 +152,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         #endregion Transaction management
 
         #region Transaction Mutation
-
-        [NotNull]
-        private static String GetTransactionName([NotNull] String path)
+        private static string GetTransactionName(string path)
         {
             if (path.StartsWith("/"))
                 path = path.Substring(1);
 
-            if (path == String.Empty)
+            if (path == string.Empty)
                 path = "Root";
 
             return path;
@@ -198,7 +167,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         #region Transaction segment managements
 
-        public ISegment CastAsSegment(Object segment)
+        public ISegment CastAsSegment(object segment)
         {
             return segment as ISegment ?? _noOpSegment;
         }
@@ -258,9 +227,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         #region outbound CAT request, inbound CAT response
 
-        private IEnumerable<KeyValuePair<String, String>> GetOutboundRequestHeaders([NotNull] ITransaction transaction)
+        private IEnumerable<KeyValuePair<string, string>> GetOutboundRequestHeaders(ITransaction transaction)
         {
-            var headers = Enumerable.Empty<KeyValuePair<String, String>>();
+            var headers = Enumerable.Empty<KeyValuePair<string, string>>();
 
             var currentTransactionName = transaction.CandidateTransactionName.CurrentTransactionName;
             var currentTransactionMetricName = _transactionMetricNameMaker.GetTransactionMetricName(currentTransactionName);
@@ -276,7 +245,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         #region inbound CAT request, outbound CAT response
 
-        public void ProcessInboundRequest(IEnumerable<KeyValuePair<String, String>> headers, long? contentLength)
+        public void ProcessInboundRequest(IEnumerable<KeyValuePair<string, string>> headers, long? contentLength)
         {
             if (headers == null)
                 throw new ArgumentNullException(nameof(headers));
@@ -293,7 +262,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         }
 
-        private void TryProcessCatRequestData([NotNull] ITransaction transaction, [NotNull] IDictionary<String, String> headers, long? contentLength)
+        private void TryProcessCatRequestData(ITransaction transaction, IDictionary<string, string> headers, long? contentLength)
         {
             var referrerCrossApplicationProcessId = GetReferrerCrossApplicationProcessId(transaction, headers);
             if (referrerCrossApplicationProcessId == null)
@@ -308,7 +277,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             UpdateTransactionMetadata(transaction, crossApplicationRequestData, contentLength);
         }
 
-        private void TryProcessSyntheticsData([NotNull] ITransaction transaction, [NotNull] IDictionary<String, String> headers)
+        private void TryProcessSyntheticsData(ITransaction transaction, IDictionary<string, string> headers)
         {
             var syntheticsRequestData = _syntheticsHeaderHandler.TryDecodeInboundRequestHeaders(headers);
             if (syntheticsRequestData == null)
@@ -317,9 +286,9 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             UpdateTransactionMetaData(transaction, syntheticsRequestData);
         }
 
-        private IEnumerable<KeyValuePair<String, String>> GetOutboundResponseHeaders([NotNull] ITransaction transaction)
+        private IEnumerable<KeyValuePair<string, string>> GetOutboundResponseHeaders(ITransaction transaction)
         {
-            var headers = Enumerable.Empty<KeyValuePair<String, String>>();
+            var headers = Enumerable.Empty<KeyValuePair<string, string>>();
 
             // A CAT response header should only be sent if we had a valid CAT inbound request
             if (transaction.TransactionMetadata.CrossApplicationReferrerProcessId == null)
@@ -347,8 +316,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
         public void HandleWrapperException(Exception exception)
         {
             // This method should never throw
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            // ReSharper disable once HeuristicUnreachableCode
             if (exception == null)
                 return;
 
@@ -359,7 +326,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         #region Stream manipulation
 
-        public Stream TryGetStreamInjector(Stream stream, Encoding encoding, String contentType, String requestPath)
+        public Stream TryGetStreamInjector(Stream stream, Encoding encoding, string contentType, string requestPath)
         {
             if (stream == null)
                 return null;
@@ -400,12 +367,12 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
         #region Helpers
 
-        private void ExecuteOffRequestThread([NotNull] Action action)
+        private void ExecuteOffRequestThread(Action action)
         {
             _threadPoolStatic.QueueUserWorkItem(_ => action.CatchAndLog());
         }
 
-        private String GetReferrerCrossApplicationProcessId([NotNull] ITransaction transaction, [NotNull] IDictionary<String, String> headers)
+        private string GetReferrerCrossApplicationProcessId(ITransaction transaction, IDictionary<string, string> headers)
         {
             var existingReferrerProcessId = transaction.TransactionMetadata.CrossApplicationReferrerProcessId;
             if (existingReferrerProcessId != null)
@@ -417,18 +384,18 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             return _catHeaderHandler?.TryDecodeInboundRequestHeadersForCrossProcessId(headers);
         }
 
-        private void UpdatePathHash([NotNull] ITransaction transaction, TransactionMetricName transactionMetricName)
+        private void UpdatePathHash(ITransaction transaction, TransactionMetricName transactionMetricName)
         {
             var pathHash = _pathHashMaker.CalculatePathHash(transactionMetricName.PrefixedName, transaction.TransactionMetadata.CrossApplicationReferrerPathHash);
             transaction.TransactionMetadata.SetCrossApplicationPathHash(pathHash);
         }
 
-        private void UpdateReferrerCrossApplicationProcessId([NotNull] ITransaction transaction, [NotNull] String referrerCrossApplicationProcessId)
+        private void UpdateReferrerCrossApplicationProcessId(ITransaction transaction, string referrerCrossApplicationProcessId)
         {
             transaction.TransactionMetadata.SetCrossApplicationReferrerProcessId(referrerCrossApplicationProcessId);
         }
 
-        private void UpdateTransactionMetadata([NotNull] ITransaction transaction, [NotNull] CrossApplicationRequestData crossApplicationRequestData, long? contentLength)
+        private void UpdateTransactionMetadata(ITransaction transaction, CrossApplicationRequestData crossApplicationRequestData, long? contentLength)
         {
             if (crossApplicationRequestData.TripId != null)
                 transaction.TransactionMetadata.SetCrossApplicationReferrerTripId(crossApplicationRequestData.TripId);
@@ -440,7 +407,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 transaction.TransactionMetadata.SetCrossApplicationReferrerTransactionGuid(crossApplicationRequestData.TransactionGuid);
         }
 
-        private void UpdateTransactionMetaData([NotNull] ITransaction transaction, [NotNull] SyntheticsHeader syntheticsHeader)
+        private void UpdateTransactionMetaData(ITransaction transaction, SyntheticsHeader syntheticsHeader)
         {
             transaction.TransactionMetadata.SetSyntheticsResourceId(syntheticsHeader.ResourceId);
             transaction.TransactionMetadata.SetSyntheticsJobId(syntheticsHeader.JobId);
@@ -563,7 +530,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                     new MessageBrokerSegmentData(brokerVendorName, destinationName, destType, action));
             }
 
-            public ISegment StartDatastoreSegment(MethodCall methodCall, [CanBeNull] String operation, DatastoreVendor datastoreVendorName, [CanBeNull] String model, [CanBeNull] String commandText, String host = null, String portPathOrId = null, String databaseName = null)
+            public ISegment StartDatastoreSegment(MethodCall methodCall, string operation, DatastoreVendor datastoreVendorName, string model, string commandText, string host = null, string portPathOrId = null, string databaseName = null)
             {
                 if (transaction.Ignored)
                     return _noOpSegment;
@@ -584,7 +551,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             }
 
 
-            public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, String method)
+            public ISegment StartExternalRequestSegment(MethodCall methodCall, Uri destinationUri, string method)
             {
                 if (transaction.Ignored)
                     return _noOpSegment;
@@ -600,7 +567,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                     new ExternalSegmentData(destinationUri, method));
             }
 
-            public ISegment StartMethodSegment(MethodCall methodCall, String typeName, String methodName)
+            public ISegment StartMethodSegment(MethodCall methodCall, string typeName, string methodName)
             {
                 if (transaction.Ignored)
                     return _noOpSegment;
@@ -613,7 +580,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 return new TypedSegment<MethodSegmentData>(transaction.TransactionSegmentState, methodCallData, new MethodSegmentData(typeName, methodName));
             }
 
-            public ISegment StartTransactionSegment(MethodCall methodCall, String segmentDisplayName)
+            public ISegment StartTransactionSegment(MethodCall methodCall, string segmentDisplayName)
             {
                 if (transaction.Ignored)
                     return _noOpSegment;
@@ -874,7 +841,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 return this;
             }
 
-            public ISegment StartDatastoreSegment(MethodCall methodCall, [CanBeNull] string operation, DatastoreVendor datastoreVendorName, [CanBeNull] string model, [CanBeNull] string commandText, string host = null, string portPathOrId = null, string databaseName = null)
+            public ISegment StartDatastoreSegment(MethodCall methodCall, string operation, DatastoreVendor datastoreVendorName, string model, string commandText, string host = null, string portPathOrId = null, string databaseName = null)
             {
 #if DEBUG
                 Log.Finest("Skipping StartDatastoreSegment outside of a transaction");
@@ -936,7 +903,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
                 return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
-            public void NoticeError([NotNull] Exception exception)
+            public void NoticeError(Exception exception)
             {
                 Log.Debug($"Ignoring application error because it occurred outside of a transaction: {exception}");
             }

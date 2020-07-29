@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.Providers.Wrapper.WrapperUtilities;
 
@@ -8,8 +7,7 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
 {
     public class CustomSegmentWrapperAsync : IWrapper
     {
-        [NotNull]
-        private static readonly String[] PossibleWrapperNames = {
+        private static readonly string[] PossibleWrapperNames = {
             "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.CustomSegmentWrapperAsync",
         };
 
@@ -38,10 +36,10 @@ namespace NewRelic.Providers.Wrapper.CustomInstrumentationAsync
             }
 
             // find the first string argument
-            String segmentName = null;
+            string segmentName = null;
             foreach (var argument in instrumentedMethodCall.MethodCall.MethodArguments)
             {
-                segmentName = argument as String;
+                segmentName = argument as string;
                 if (segmentName != null)
                     break;
             }

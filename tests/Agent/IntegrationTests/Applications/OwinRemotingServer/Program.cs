@@ -5,7 +5,6 @@ using System.Runtime.Remoting.Channels.Http;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Threading;
 using CommandLine;
-using JetBrains.Annotations;
 using OwinRemotingShared;
 
 namespace OwinRemotingServer
@@ -13,8 +12,7 @@ namespace OwinRemotingServer
     class Program
     {
         [Option("port", Required = true)]
-        [NotNull]
-        public String Port { get; set; }
+        public string Port { get; set; }
 
         static void Main(string[] args)
         {

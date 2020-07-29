@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using System.Collections.Generic;
 using NewRelic.Agent.Core.JsonConverters;
 using Newtonsoft.Json;
 
@@ -10,12 +8,12 @@ namespace NewRelic.Agent.Core.Commands
     public class CommandModel
     {
         [JsonArrayIndex(Index = 0)]
-        public readonly Int32 CommandId;
+        public readonly int CommandId;
 
         [JsonArrayIndex(Index = 1)]
         public readonly CommandDetails Details;
 
-        public CommandModel(Int32 commandId, [CanBeNull] CommandDetails details)
+        public CommandModel(int commandId, CommandDetails details)
         {
             CommandId = commandId;
             Details = details;
@@ -25,12 +23,12 @@ namespace NewRelic.Agent.Core.Commands
     public class CommandDetails
     {
         [JsonProperty("name")]
-        public readonly String Name;
+        public readonly string Name;
 
         [JsonProperty("arguments")]
-        public readonly IDictionary<String, Object> Arguments;
+        public readonly IDictionary<string, object> Arguments;
 
-        public CommandDetails(String name, IDictionary<String, Object> arguments)
+        public CommandDetails(string name, IDictionary<string, object> arguments)
         {
             Name = name;
             Arguments = arguments;

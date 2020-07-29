@@ -2,19 +2,17 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace NewRelic.SystemExtensions
 {
     public static class StringExtensions
     {
-        [NotNull]
-        public static String TruncateUnicode([NotNull] this String value, Int32 maxLength)
+        public static string TruncateUnicode(this string value, int maxLength)
         {
             if (value == null)
                 throw new ArgumentNullException("value");
             if (maxLength < 0)
-                throw new ArgumentOutOfRangeException(String.Format("maxLength must be positive.  value: {0}  maxLength: {1}", value, maxLength));
+                throw new ArgumentOutOfRangeException(string.Format("maxLength must be positive.  value: {0}  maxLength: {1}", value, maxLength));
 
             var textElements = new StringInfo(value);
             if (textElements.LengthInTextElements <= maxLength)
@@ -23,7 +21,7 @@ namespace NewRelic.SystemExtensions
             return textElements.SubstringByTextElements(0, maxLength);
         }
 
-        public static Boolean ContainsAny(this String source, IEnumerable<String> searchTargets, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
+        public static bool ContainsAny(this string source, IEnumerable<string> searchTargets, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
         {
             if (source == null)
                 return false;
@@ -32,9 +30,7 @@ namespace NewRelic.SystemExtensions
 
             return searchTargets.Any(target => target != null && source.IndexOf(target, comparison) > -1);
         }
-
-        [NotNull]
-        public static String TrimAfter([NotNull] this String source, [NotNull] String token)
+        public static string TrimAfter(this string source, string token)
         {
             if (source == null)
                 throw new ArgumentNullException("source");
@@ -44,9 +40,7 @@ namespace NewRelic.SystemExtensions
             var result = source.Split(new[] { token }, 2, StringSplitOptions.None)[0];
             return result ?? source;
         }
-
-        [NotNull]
-        public static String TrimEnd([NotNull] this String source, Char trimChar, Int32 maxCharactersToTrim)
+        public static string TrimEnd(this string source, char trimChar, int maxCharactersToTrim)
         {
             // Traverse backward through string skipping trimChars until maxCharactersToTrim is hit
             var index = source.Length - 1;
@@ -58,9 +52,7 @@ namespace NewRelic.SystemExtensions
 
             return source.Substring(0, index + 1);
         }
-
-        [NotNull]
-        public static String EnsureLeading([NotNull] this String source, String leading)
+        public static string EnsureLeading(this string source, string leading)
         {
             if (leading == null)
                 return source;
@@ -70,9 +62,7 @@ namespace NewRelic.SystemExtensions
 
             return leading + source;
         }
-
-        [NotNull]
-        public static String EnsureTrailing([NotNull] this String source, String trailing)
+        public static string EnsureTrailing(this string source, string trailing)
         {
             if (trailing == null)
                 return source;

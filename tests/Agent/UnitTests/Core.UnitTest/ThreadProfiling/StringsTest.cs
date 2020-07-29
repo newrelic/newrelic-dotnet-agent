@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using JetBrains.Annotations;
-using NewRelic.Agent.Core.Config;
 using NUnit.Framework;
 namespace NewRelic.Agent.Core.Utils
 {
@@ -205,14 +203,14 @@ namespace NewRelic.Agent.Core.Utils
         }
 
         [TestCaseSource("ConvertBytesToStringTestData")]
-        public void when_byte_array_is_decoded_into_string_one_byte_at_a_time_then_result_string_is_correct([NotNull] Encoding encoding, [NotNull] String content)
+        public void when_byte_array_is_decoded_into_string_one_byte_at_a_time_then_result_string_is_correct(Encoding encoding, string content)
         {
             var bytes = encoding.GetBytes(content);
             var decoder = encoding.GetDecoder();
-            var result = String.Empty;
+            var result = string.Empty;
             foreach (var @byte in bytes)
             {
-                result += Strings.GetStringBufferFromBytes(decoder, new Byte[] { @byte }, 0, 1);
+                result += Strings.GetStringBufferFromBytes(decoder, new byte[] { @byte }, 0, 1);
             }
             Assert.AreEqual(content, result);
         }
@@ -226,42 +224,42 @@ namespace NewRelic.Agent.Core.Utils
         [TestCase("http://testsite.com?auth=http://verifyme.com%3Fxlxl=x1", "http://testsite.com")]
         [TestCase("", "")]
         [TestCase(null, "")]
-        public void validate_CleanUri_String_Version(String uri, [NotNull] String expected)
+        public void validate_CleanUri_String_Version(string uri, string expected)
         {
             var actual = Strings.CleanUri(uri);
             Assert.AreEqual(expected, actual);
         }
 
-        private static IEnumerable<Object[]> ConvertBytesToStringTestData()
+        private static IEnumerable<object[]> ConvertBytesToStringTestData()
         {
             var encodings = new Encoding[] { Encoding.Unicode, Encoding.UTF8, Encoding.ASCII };
             foreach (var encoding in encodings)
             {
-                yield return new Object[] { encoding, "abcdefghijklmnop" }; // ascii
+                yield return new object[] { encoding, "abcdefghijklmnop" }; // ascii
             }
 
             encodings = new Encoding[] { Encoding.Unicode, Encoding.UTF8 };
             foreach (var encoding in encodings)
             {
-                yield return new Object[] { encoding, "\u000000" };
-                yield return new Object[] { encoding, "\u00007F" };
-                yield return new Object[] { encoding, "\u000080" };
-                yield return new Object[] { encoding, "\u00009F" };
-                yield return new Object[] { encoding, "\u0000A0" };
-                yield return new Object[] { encoding, "\u0003FF" };
-                yield return new Object[] { encoding, "\u000400" };
-                yield return new Object[] { encoding, "\u0007FF" };
-                yield return new Object[] { encoding, "\u000800" };
-                yield return new Object[] { encoding, "\u003FFF" };
-                yield return new Object[] { encoding, "\u004000" };
-                yield return new Object[] { encoding, "\u00FFFF" };
-                yield return new Object[] { encoding, "\u010000" };
-                yield return new Object[] { encoding, "\u03FFFF" };
-                yield return new Object[] { encoding, "\u040000" };
-                yield return new Object[] { encoding, "\u10FFFF" };
-                yield return new Object[] { encoding, "\uD800\udc05" }; // surrogate characters
-                yield return new Object[] { encoding, "\u000000\u00007F\u000080\u00009F\u0000A0\u0000A0\u0003FF\u000400\u0007FF\u000800\u003FFF\u004000\u00FFFF\u010000\u03FFFF\u040000\u10FFFF\uD800\udc05" }; // mixed
-                yield return new Object[] { encoding, "AB YZ 19 \uD800\udc05" }; // just to make sure
+                yield return new object[] { encoding, "\u000000" };
+                yield return new object[] { encoding, "\u00007F" };
+                yield return new object[] { encoding, "\u000080" };
+                yield return new object[] { encoding, "\u00009F" };
+                yield return new object[] { encoding, "\u0000A0" };
+                yield return new object[] { encoding, "\u0003FF" };
+                yield return new object[] { encoding, "\u000400" };
+                yield return new object[] { encoding, "\u0007FF" };
+                yield return new object[] { encoding, "\u000800" };
+                yield return new object[] { encoding, "\u003FFF" };
+                yield return new object[] { encoding, "\u004000" };
+                yield return new object[] { encoding, "\u00FFFF" };
+                yield return new object[] { encoding, "\u010000" };
+                yield return new object[] { encoding, "\u03FFFF" };
+                yield return new object[] { encoding, "\u040000" };
+                yield return new object[] { encoding, "\u10FFFF" };
+                yield return new object[] { encoding, "\uD800\udc05" }; // surrogate characters
+                yield return new object[] { encoding, "\u000000\u00007F\u000080\u00009F\u0000A0\u0000A0\u0003FF\u000400\u0007FF\u000800\u003FFF\u004000\u00FFFF\u010000\u03FFFF\u040000\u10FFFF\uD800\udc05" }; // mixed
+                yield return new object[] { encoding, "AB YZ 19 \uD800\udc05" }; // just to make sure
             }
         }
 

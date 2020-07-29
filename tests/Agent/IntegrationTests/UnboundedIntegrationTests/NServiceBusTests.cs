@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -11,10 +9,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 {
     public class NServiceBusTests : IClassFixture<RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture _fixture;
 
-        public NServiceBusTests([NotNull] RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture fixture, [NotNull] ITestOutputHelper output)
+        public NServiceBusTests(RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -47,7 +44,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusReceiver.SampleNServiceBusMessage", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusReceiver.SampleNServiceBusMessage", callCount = 1, metricScope = "WebTransaction/MVC/MessageQueueController/NServiceBus_Send"}
             };
-            var expectedTransactionTraceSegments = new List<String>
+            var expectedTransactionTraceSegments = new List<string>
             {
                 @"MessageBroker/NServiceBus/Queue/Produce/Named/NServiceBusReceiver.SampleNServiceBusMessage"
             };

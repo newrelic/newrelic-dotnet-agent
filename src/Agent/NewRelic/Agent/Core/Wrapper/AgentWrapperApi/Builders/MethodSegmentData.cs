@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
-using NewRelic.Agent.Core.CallStack;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Timing;
 using NewRelic.Agent.Core.Time;
-using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Data;
 using static NewRelic.Agent.Core.WireModels.MetricWireModel;
 
 namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
@@ -15,15 +11,13 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
 
     public class MethodSegmentData : AbstractSegmentData
     {
-        [NotNull]
-        private readonly String _typeName;
-        [NotNull]
-        private readonly String _methodName;
+        private readonly string _typeName;
+        private readonly string _methodName;
 
-        public String Type => _typeName;
-        public String Method => _methodName;
+        public string Type => _typeName;
+        public string Method => _methodName;
 
-        public MethodSegmentData(String typeName, String methodName)
+        public MethodSegmentData(string typeName, string methodName)
         {
             _typeName = typeName;
             _methodName = methodName;
@@ -56,7 +50,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
             MetricBuilder.TryBuildMethodSegmentMetric(Type, Method, duration, exclusiveDuration, txStats);
         }
 
-        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, [NotNull] IEnumerable<KeyValuePair<string, object>> newParameters)
+        public override Segment CreateSimilar(Segment segment, TimeSpan newRelativeStartTime, TimeSpan newDuration, IEnumerable<KeyValuePair<string, object>> newParameters)
         {
             return new TypedSegment<MethodSegmentData>(newRelativeStartTime, newDuration, segment, newParameters);
         }

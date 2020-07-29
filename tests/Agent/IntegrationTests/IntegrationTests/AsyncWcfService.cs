@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,10 +10,9 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AsyncWcfService : IClassFixture<RemoteServiceFixtures.AsyncWcfService>
     {
-        [NotNull]
         private readonly RemoteServiceFixtures.AsyncWcfService _fixture;
 
-        public AsyncWcfService([NotNull] RemoteServiceFixtures.AsyncWcfService fixture, [NotNull] ITestOutputHelper output)
+        public AsyncWcfService(RemoteServiceFixtures.AsyncWcfService fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -59,7 +56,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric {metricName = @"OtherTransaction/all"}
             };
 
-            var expectedTraceSegmentNames = new List<String>
+            var expectedTraceSegmentNames = new List<string>
             {
                 @"NewRelic.Agent.IntegrationTests.Applications.AsyncWcfService.IWcfService.BeginServiceMethod",
                 @"External/www.google.com/Stream/GET"
@@ -68,11 +65,11 @@ namespace NewRelic.Agent.IntegrationTests
             {
                 new Assertions.ExpectedSegmentParameter { segmentName = @"External/www.google.com/Stream/GET", parameterName = @"uri", parameterValue = @"https://www.google.com:443/" },
             };
-            var expectedTraceAttributes = new Dictionary<String, String>
+            var expectedTraceAttributes = new Dictionary<string, string>
             {
                 {"service.request.value", "foo"},
             };
-            var unexpectedTraceAttributes = new List<String>
+            var unexpectedTraceAttributes = new List<string>
             {
                 "service.request.otherValue",
             };

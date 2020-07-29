@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
@@ -12,12 +10,11 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class HighSecurityModeEnabled : IClassFixture<RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture>
     {
-        private const String QueryStringParameterValue = @"my thing";
+        private const string QueryStringParameterValue = @"my thing";
 
-        [NotNull]
         private readonly RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture _fixture;
 
-        public HighSecurityModeEnabled([NotNull] RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture fixture, [NotNull] ITestOutputHelper output)
+        public HighSecurityModeEnabled(RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -47,20 +44,20 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var unexpectedAgentAttributes = new List<String>
+            var unexpectedAgentAttributes = new List<string>
             {
                 @"request.parameters.data",
             };
 
-            var expectedTransactionTraceAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionTraceAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200" }
             };
-            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<String, String>
+            var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
                 {"type", "Transaction"}
             };
-            var expectedTransactionEventIntrinsicAttributes2 = new List<String>
+            var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
                 "timestamp",
                 "duration",
@@ -70,7 +67,7 @@ namespace NewRelic.Agent.IntegrationTests
                 "name",
                 "nr.apdexPerfZone"
             };
-            var expectedTransactionEventAgentAttributes = new Dictionary<String, String>
+            var expectedTransactionEventAgentAttributes = new Dictionary<string, string>
             {
                 { "response.status", "200"}
             };
@@ -78,12 +75,12 @@ namespace NewRelic.Agent.IntegrationTests
 
             var unexpectedErrorTraceMessage = "ExceptionMessage";
 
-            var unexpectedErrorTransactionEventAttributes = new List<String>
+            var unexpectedErrorTransactionEventAttributes = new List<string>
             {
                 "errorMessage"
             };
 
-            var expectedErrorTransactionEventAttributes = new List<String>
+            var expectedErrorTransactionEventAttributes = new List<string>
             {
                 "errorType"
             };

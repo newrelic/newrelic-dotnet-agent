@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
@@ -11,12 +9,11 @@ namespace NewRelic.Agent.IntegrationTests
 {
     public class AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
-        private const String QueryStringParameterValue = @"my thing";
+        private const string QueryStringParameterValue = @"my thing";
 
-        [NotNull]
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests([NotNull] RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, [NotNull] ITestOutputHelper output)
+        public AspNetCoreLocalHSMDisabledAndServerSideHSMDisabledTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -42,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedAttributes = new Dictionary<String, String>
+            var expectedAttributes = new Dictionary<string, string>
             {
                 { "request.parameters.data", QueryStringParameterValue },
             };
