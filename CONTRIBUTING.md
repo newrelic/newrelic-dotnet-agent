@@ -24,7 +24,7 @@ Before submitting an Issue, please search for similar ones in the
 
 ### Version Support
 
-When contributing, please keep in mind that New Relic customers (that's you!) are running many different versions of .NET, some of them pretty old. Changes that depend on the newest version of .NET Framework or Core will probably be rejected, especially if they replace something backwards compatible.  Code in `src/Agent` or `src/NewRelic.Core` needs to be compatible with .NET Framework 3.5.  Backwards compatibility is less important for code that lives in `tests`, but still should not gratuitously require features only available in the latest .NET Framework or Core.
+When contributing, please keep in mind that New Relic customers (that's you!) are running many different versions of .NET, some of them pretty old. Changes that depend on the newest version of .NET Framework or Core will probably be rejected, especially if they replace something backwards compatible.  Code in `src/Agent` needs to be compatible with .NET Framework 3.5.  Backwards compatibility is less important for code that lives in `tests`, but still should not gratuitously require features only available in the latest .NET Framework or Core.
 
 Be aware that the instrumentation needs to work with a wide range of versions of the instrumented modules, and that code that looks nonsensical or overcomplicated may be that way for compatibility-related reasons. Read all the comments and check the related tests before deciding whether existing code is incorrect.
 
@@ -38,7 +38,7 @@ This project is licensed under the Apache-2.0 license.  Any third party librarie
 
 ### Coding Style Guidelines
 
-Our repository includes an [.editorconfig](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/.editorconfig) which will be used automatically by Visual Studio to maintain consistent code formatting.
+Our repository includes an [.editorconfig](/.editorconfig) which will be used automatically by Visual Studio to maintain consistent code formatting.
 
 #### Variable naming conventions
 
