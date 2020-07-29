@@ -32,7 +32,7 @@ namespace NewRelic.Build.RepackAssemblies
 
         private static void RepackAsyncLocal()
         {
-            var asyncLocalDirectory = Path.Combine(ExtensionsDirectoryPath, "Providers", "CallStack", "AsyncLocal");
+            var asyncLocalDirectory = Path.Combine(ExtensionsDirectoryPath, "Providers", "Storage", "CallStack.AsyncLocal");
             var binConfigurationPath = Path.Combine(asyncLocalDirectory, "bin", Configuration);
             var frameworkBuildDirectories = Directory.EnumerateDirectories(binConfigurationPath, "*net*", SearchOption.AllDirectories);
 

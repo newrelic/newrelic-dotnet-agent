@@ -1,6 +1,6 @@
 ﻿using NewRelic.Agent.Extensions.Providers;
 
-namespace NewRelic.Providers.CallStack.AsyncLocal
+namespace NewRelic.Providers.Storage.CallStack.AsyncLocal
 {
     public class CallContextStorageFactory : IContextStorageFactory
     {

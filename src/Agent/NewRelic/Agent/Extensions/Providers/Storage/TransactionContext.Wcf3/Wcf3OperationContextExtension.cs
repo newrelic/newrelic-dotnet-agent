@@ -1,17 +1,17 @@
 ﻿using System.Collections;
 using System.ServiceModel;
 
-namespace NewRelic.Agent.Extensions.Providers.TransactionContext
+namespace NewRelic.Providers.Storage.TransactionContext
 {
     ///<summary>
-    /// This class is an extension of <see cref="System.ServiceModel.InstanceContext"/>.
+    /// This class is an extension of <see cref="InstanceContext"/>.
     ///</summary>
     /// <remarks>
     /// This extension's purpose is to provide a way to store agent context information in
-    /// a WCF service's context. The <see cref="System.ServiceModel.InstanceContext"/> exists
-    /// within the  <see cref="System.ServiceModel.OperationContext"/>.
+    /// a WCF service's context. The <see cref="InstanceContext"/> exists
+    /// within the  <see cref="OperationContext"/>.
     /// 
-    /// The <see cref="System.ServiceModel.InstanceContext"/> keeps an internal list of all
+    /// The <see cref="InstanceContext"/> keeps an internal list of all
     /// extensions. 
     /// </remarks>
     public class Wcf3OperationContextExtension : IExtension<OperationContext>

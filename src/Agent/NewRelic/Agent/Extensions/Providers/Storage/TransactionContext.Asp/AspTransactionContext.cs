@@ -1,6 +1,7 @@
 ﻿using System.Web;
+using NewRelic.Agent.Extensions.Providers;
 
-namespace NewRelic.Agent.Extensions.Providers.TransactionContext
+namespace NewRelic.Providers.Storage.TransactionContext
 {
     /// <summary>
     /// ASP.NET transaction context backed by HttpContext.  Will correctly follow web requests across threads and deal with mid-thread interuption.
@@ -26,7 +27,7 @@ namespace NewRelic.Agent.Extensions.Providers.TransactionContext
 
             var httpContext = HttpContext.Current;
             if (httpContext == null)
-                return default(T);
+                return default;
 
             return (T)httpContext.Items[_key];
         }

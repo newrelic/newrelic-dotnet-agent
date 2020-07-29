@@ -1,4 +1,4 @@
-﻿using NewRelic.Providers.CallStack.AsyncLocal;
+﻿using NewRelic.Providers.Storage.CallStack.AsyncLocal;
 using NUnit.Framework;
 
 namespace NewRelic.Providers.CallStack.AsyncLocalTests

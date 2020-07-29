@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Remoting.Messaging;
 
-namespace NewRelic.Providers.CallStack.AsyncLocal
+namespace NewRelic.Providers.Storage.CallStack.AsyncLocal
 {
     /// <summary>
     /// A simple implementation of AsyncLocal that works in .NET 4.5.
@@ -12,14 +12,14 @@ namespace NewRelic.Providers.CallStack.AsyncLocal
 
         public AsyncLocal(string key)
         {
-            this._key = key;
+            _key = key;
         }
         public T Value
         {
             get
             {
                 var obj = CallContext.LogicalGetData(_key);
-                return obj == null ? default(T) : (T)obj;
+                return obj == null ? default : (T)obj;
             }
             set
             {

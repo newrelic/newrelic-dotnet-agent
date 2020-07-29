@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.ServiceModel;
+using NewRelic.Agent.Extensions.Providers;
 
-namespace NewRelic.Agent.Extensions.Providers.TransactionContext
+namespace NewRelic.Providers.Storage.TransactionContext
 {
     /// <summary>
     /// ITransactionContextFactory implementation for version 3 of WCF.

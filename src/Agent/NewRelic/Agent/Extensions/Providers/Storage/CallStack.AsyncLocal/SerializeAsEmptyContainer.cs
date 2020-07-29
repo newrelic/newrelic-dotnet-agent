@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NewRelic.Providers.CallStack.AsyncLocal
+namespace NewRelic.Providers.Storage.CallStack.AsyncLocal
 {
     public class MarshalByRefContainer : MarshalByRefObject
     {

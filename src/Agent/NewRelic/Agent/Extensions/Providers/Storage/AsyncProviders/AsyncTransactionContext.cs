@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using NewRelic.Agent.Extensions.Providers;
 
-namespace NewRelic.Providers.AsyncProviders
+namespace NewRelic.Providers.Storage.AsyncProviders
 {
     /// <summary>
     /// Multiple instances of this class will share state per type T because we use a
@@ -28,7 +28,7 @@ namespace NewRelic.Providers.AsyncProviders
 
         public void Clear()
         {
-            _context.Value = default(T);
+            _context.Value = default;
         }
     }
 }

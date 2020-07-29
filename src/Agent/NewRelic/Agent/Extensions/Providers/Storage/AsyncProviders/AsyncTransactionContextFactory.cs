@@ -1,6 +1,6 @@
 ﻿using NewRelic.Agent.Extensions.Providers;
 
-namespace NewRelic.Providers.AsyncProviders
+namespace NewRelic.Providers.Storage.AsyncProviders
 {
     public class AsyncTransactionContextFactory : IContextStorageFactory
     {
