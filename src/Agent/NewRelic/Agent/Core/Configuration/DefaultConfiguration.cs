@@ -33,6 +33,7 @@ namespace NewRelic.Agent.Core.Configuration
         public static readonly string RawStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.raw);
         public static readonly string ObfuscatedStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
         public static readonly string OffStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.off);
+        private static readonly char HyphenChar = '-';
 
         private const string HighSecurityConfigSource = "High Security Mode";
         private const string SecurityPolicyConfigSource = "Security Policy";
@@ -46,10 +47,10 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
         private readonly IDnsStatic _dnsStatic;
 
-        /// <summary>
-        /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
-        /// </summary>
-        public static readonly DefaultConfiguration Instance = new DefaultConfiguration();
+    /// <summary>
+    /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
+    /// </summary>
+    public static readonly DefaultConfiguration Instance = new DefaultConfiguration();
         private readonly configuration _localConfiguration = new configuration();
         private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
@@ -141,12 +142,6 @@ namespace NewRelic.Agent.Core.Configuration
         {
             return _newRelicAppSettings.TryGetValue(key, out var valueStr) ? valueStr : null;
         }
-
-        private float TryGetAppSettingAsFloatWithDefault(string key, float defaultValue)
-        {
-            return TryGetAppSettingAsFloat(key).GetValueOrDefault(defaultValue);
-        }
-
 
         private float? TryGetAppSettingAsFloat(string key)
         {
@@ -1173,12 +1168,55 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            var expectedStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
+            var expectedStatusCodesString = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
+
+            ParseExpectedStatusCodesString(expectedStatusCodesString, expectedErrorInfo);
 
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
             ExpectedErrorClassesForAgentSettings = expectedClasses;
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodes;
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesString;
+        }
+
+        private void ParseExpectedStatusCodesString(string expectedStatusCodesString, Dictionary<string, IEnumerable<string>> expectedErrorInfo)
+        {
+            var expectedStatusCodeArray = expectedStatusCodesString.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var singleCodeOrRange in expectedStatusCodeArray)
+            {
+                var index = singleCodeOrRange.IndexOf(HyphenChar);
+                if (index != -1)
+                {
+                    var lowerBoundString = singleCodeOrRange.Substring(0, index).Trim();
+                    var upperBoundString = singleCodeOrRange.Substring(index + 1, singleCodeOrRange.Length - index - 1).Trim();
+
+                    if (int.TryParse(lowerBoundString, out int lower) && int.TryParse(upperBoundString, out int upper))
+                    {
+                        for (var i = lower; i <= upper; i++)
+                        {
+                            var statusCodeString = i.ToString();
+                            if (!expectedErrorInfo.ContainsKey(statusCodeString))
+                            {
+                                expectedErrorInfo.Add(statusCodeString, Enumerable.Empty<string>());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Log.Warn($"Cannot parse {singleCodeOrRange} status code. This status code format is not supported.");
+                    }
+                }
+                else
+                {
+                    if (int.TryParse(singleCodeOrRange, out _))
+                    {
+                        expectedErrorInfo.Add(singleCodeOrRange.Trim(), Enumerable.Empty<string>());
+                    }
+                    else
+                    {
+                        Log.Warn($"Cannot parse {singleCodeOrRange} status code format. This status code format is not supported.");
+                    }
+                }
+            }
         }
 
         public IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; private set; }

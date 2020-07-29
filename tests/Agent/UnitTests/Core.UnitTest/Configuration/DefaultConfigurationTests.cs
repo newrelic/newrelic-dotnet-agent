@@ -959,6 +959,24 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings;
         }
 
+        [TestCase("400,401,404", ExpectedResult = "400,401,404")]
+        [TestCase("400, 401 ,404", ExpectedResult = "400,401,404")]
+        [TestCase("400, 401,404, ", ExpectedResult = "400,401,404")]
+        [TestCase("400,401-404", ExpectedResult = "400,401,402,403,404")]
+        [TestCase("402,401-404", ExpectedResult = "402,401,403,404")]
+        [TestCase("401.4", ExpectedResult = "")] //does not support full status codes
+        [TestCase("404,401.4", ExpectedResult = "404")]
+        [TestCase("401.4-404.5", ExpectedResult = "")] //does not support full status codes
+
+        public string ExpectedStatusCodesParserTests(string local)
+        {
+            _localConfig.errorCollector.expectedStatusCodes = local;
+
+            CreateDefaultConfiguration();
+
+            return string.Join(",",_defaultConfig.ExpectedErrorsConfiguration.Keys);
+        }
+
         [TestCase(true, ExpectedResult = "server")]
         [TestCase(false, ExpectedResult = "local")]
         public string ExpectedMessagesSetFromLocalAndServerOverrides(bool server)
