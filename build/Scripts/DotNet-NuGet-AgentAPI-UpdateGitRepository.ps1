@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 $packageName = "NewRelic.Agent.Api"
 $packageContentTestsPath = "nuget-test\tests\package_content.Tests.ps1"
 $packageLibTestsPath = "nuget-test\tests\package_lib.Tests.ps1"

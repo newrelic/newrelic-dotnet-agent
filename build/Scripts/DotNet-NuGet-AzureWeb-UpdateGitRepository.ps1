@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 if ($env:Repository -eq "nuget-azure-web-sites.git")
 {
     $packageName = "NewRelic.Azure.WebSites"
