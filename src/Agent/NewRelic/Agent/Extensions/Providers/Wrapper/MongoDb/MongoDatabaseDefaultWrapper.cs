@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Extensions.Providers.Wrapper;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.MongoDb

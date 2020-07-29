@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Core.Logging;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Core.Logging;
 using NewRelic.Agent.Core.Transactions.TransactionNames;
 using Newtonsoft.Json;
 

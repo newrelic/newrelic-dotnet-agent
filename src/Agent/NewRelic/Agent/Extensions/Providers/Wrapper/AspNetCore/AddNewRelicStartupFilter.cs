@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using NewRelic.Agent.Extensions.Providers.Wrapper;

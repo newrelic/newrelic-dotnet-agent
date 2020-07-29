@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System.Threading.Tasks;
 using NewRelic.Agent.Core.CallStack;
 using NewRelic.Providers.CallStack.AsyncLocal;
 using NewRelic.Testing.Assertions;

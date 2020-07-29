@@ -1,4 +1,8 @@
-﻿namespace NewRelic.Agent.Extensions.Providers
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+namespace NewRelic.Agent.Extensions.Providers
 {
     /// <summary>
     /// Any class that implements this interface will be instantiated using the default constructor during application startup.  A default constructor is required for this context factory to work.

@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Core.Timing;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Core.Timing;
 
 namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Timing
 {
