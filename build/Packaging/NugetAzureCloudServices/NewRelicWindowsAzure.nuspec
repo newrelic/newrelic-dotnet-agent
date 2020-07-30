@@ -6,7 +6,7 @@
     <title>New Relic x64 for Windows Azure</title>
     <authors>New Relic</authors>
     <owners>New Relic</owners>
-    <licenseUrl>http://newrelic.com/terms</licenseUrl>
+    <license type="expression">Apache-2.0</license>
     <projectUrl>https://github.com/newrelic/nuget-azure-cloud-services</projectUrl>
     <iconUrl>http://newrelic.com/images/avatar-newrelic.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
