@@ -1,4 +1,8 @@
-﻿using NewRelic.SystemInterfaces;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 
 namespace NewRelic.Agent.Core.Configuration

@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using NewRelic.Agent.Core.Events;

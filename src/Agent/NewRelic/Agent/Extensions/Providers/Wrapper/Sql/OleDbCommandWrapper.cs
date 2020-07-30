@@ -1,4 +1,8 @@
-﻿#if NET35
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+#if NET35
 using System;
 using System.Data.OleDb;
 using NewRelic.Agent.Extensions.Providers.Wrapper;

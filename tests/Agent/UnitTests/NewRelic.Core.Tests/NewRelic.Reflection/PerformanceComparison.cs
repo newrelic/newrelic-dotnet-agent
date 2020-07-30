@@ -1,4 +1,8 @@
-﻿using System.Diagnostics;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using NUnit.Framework;

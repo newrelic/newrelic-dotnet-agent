@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 $username = $env:Username
 $password = $env:Password
 . .\windows\common\powershell\jiraAPI.ps1

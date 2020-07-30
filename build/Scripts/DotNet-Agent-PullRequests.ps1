@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Update the chat room
 . .\agent-build-scripts\windows\common\powershell\chatRoomAPI.ps1
 

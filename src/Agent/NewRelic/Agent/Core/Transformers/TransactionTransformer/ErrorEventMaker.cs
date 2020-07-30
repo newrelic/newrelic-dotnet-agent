@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Core.Errors;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Core.Errors;
 using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 using Attribute = NewRelic.Agent.Core.Transactions.Attribute;

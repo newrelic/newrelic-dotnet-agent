@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 Write-Host "Finding files for NUnit tests"
 $fileNames = (Get-ChildItem -Recurse -Path 'Tests\' -Include @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll') | Where { !$_.FullName.Contains('obj\Release') -and !$_.FullName.Contains('NewRelicStatusMonitor') } | Select Name -Unique)
 $files = (Get-ChildItem -Recurse -Path 'Tests\' -Include @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll') | Where { !$_.FullName.Contains('obj\Release') -and !$_.FullName.Contains('NewRelicStatusMonitor') })

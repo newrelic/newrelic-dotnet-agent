@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System.Reflection;
 using NewRelic.Agent.Configuration;
 using NUnit.Framework;
 using Telerik.JustMock;

@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 $ErrorActionPreference = "SilentlyContinue"
 
 # Make request to the controller action to self-modify the config
