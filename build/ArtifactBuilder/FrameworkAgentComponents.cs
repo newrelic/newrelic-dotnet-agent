@@ -4,10 +4,10 @@ namespace ArtifactBuilder
 {
     public class FrameworkAgentComponents : AgentComponents
     {
-        public FrameworkAgentComponents(string configuration, string platform, string sourcePath)
-            : base(configuration, platform, sourcePath) { }
+        public FrameworkAgentComponents(string configuration, string platform, string repoRootDirectory, string homeRootPath)
+            : base(configuration, platform, repoRootDirectory, homeRootPath) { }
 
-        protected override string SourceHomeBuilderPath => $@"{SourcePath}\Agent\newrelichome_{Platform}";
+        protected override string SourceHomeBuilderPath => $@"{HomeRootPath}\newrelichome_{Platform}";
 
         protected override List<string> IgnoredHomeBuilderFiles => new List<string>() {
             $@"{SourceHomeBuilderPath}\extensions\NewRelic.Agent.AttributeFilter.dll",
@@ -126,7 +126,7 @@ namespace ArtifactBuilder
             RootInstallDirectoryComponents = new List<string>();
             RootInstallDirectoryComponents.AddRange(root);
 
-            AgentApiDll = $@"{SourcePath}\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll";
+            AgentApiDll = $@"{SourcePath}\..\_build\AnyCPU-{Configuration}\NewRelic.Api.Agent\net35\NewRelic.Api.Agent.dll";
         }
     }
 }

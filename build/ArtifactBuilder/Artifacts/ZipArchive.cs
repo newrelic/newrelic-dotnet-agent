@@ -5,13 +5,13 @@ namespace ArtifactBuilder.Artifacts
 
     public class ZipArchive : Artifact
     {
-        public ZipArchive(AgentType agentType, string platform, string configuration, string sourceDirectory) : base(sourceDirectory, nameof(ZipArchive) + agentType)
+        public ZipArchive(AgentType agentType, string platform, string configuration) : base(nameof(ZipArchive) + agentType)
         {
             AgentType = agentType;
             Platform = platform;
             Configuration = configuration;
-            StagingDirectory = $@"{SourceDirectory}\build\_staging\{Name}-{Platform}";
-            OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}-{Platform}";
+            StagingDirectory = $@"{RepoRootDirectory}\build\_staging\{Name}-{Platform}";
+            OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}-{Platform}";
         }
 
         public AgentType AgentType { get; }
@@ -20,7 +20,7 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            var agentComponents = AgentComponents.GetAgentComponents(AgentType, Configuration, Platform, SourceDirectory);
+            var agentComponents = AgentComponents.GetAgentComponents(AgentType, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             agentComponents.ValidateComponents();
             agentComponents.CopyComponents(StagingDirectory);
 
@@ -35,7 +35,7 @@ namespace ArtifactBuilder.Artifacts
             // At some point we should change the job to pull from the new location under the Build\BuildArtifacts directory
             if (AgentType == AgentType.Core)
             {
-                FileHelpers.CopyFile(zipFilePath, $@"{SourceDirectory}\src\_build\CoreArtifacts");
+                FileHelpers.CopyFile(zipFilePath, $@"{RepoRootDirectory}\src\_build\CoreArtifacts");
             }
         }
     }

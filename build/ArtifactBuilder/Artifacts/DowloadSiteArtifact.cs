@@ -4,18 +4,18 @@ using System.Linq;
 
 namespace ArtifactBuilder.Artifacts
 {
-    public class DowloadSiteArtifact : Artifact
+    public class DownloadSiteArtifact : Artifact
     {
         private const string SourceShaFileName = "checksum.sha256";
 
         public string Version { get; }
         public string ShaDirectory { get; }
 
-        public DowloadSiteArtifact(string sourceDirectory, string configuration) : base(sourceDirectory, "DownloadSite")
+        public DownloadSiteArtifact(string configuration) : base("DownloadSite")
         {
-            OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}";
+            OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}";
             ShaDirectory = OutputDirectory + @"\SHA256";
-            var agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, configuration, "x64", SourceDirectory);
+            var agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, configuration, "x64", RepoRootDirectory, HomeRootDirectory);
             Version = agentComponents.Version;
         }
 
@@ -33,17 +33,17 @@ namespace ArtifactBuilder.Artifacts
             //Msi Installer
             foreach (var platform in platforms)
             {
-                CopyFileAndChecksum($@"{SourceDirectory}\build\BuildArtifacts\MsiInstaller-{platform}", "*.msi", OutputDirectory,
+                CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\MsiInstaller-{platform}", "*.msi", OutputDirectory,
                     $@"newrelic-agent-win-{platform}-{Version}.msi");
             }
 
             //Scriptable Installer
-            CopyFileAndChecksum($@"{SourceDirectory}\build\BuildArtifacts\ScriptableInstaller", "*.zip", OutputDirectory, $@"newrelic-agent-win-{Version}-scriptable-installer.zip");
+            CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ScriptableInstaller", "*.zip", OutputDirectory, $@"newrelic-agent-win-{Version}-scriptable-installer.zip");
 
             //Framework Zip files
             foreach (var platform in platforms)
             {
-                CopyFileAndChecksum($@"{SourceDirectory}\build\BuildArtifacts\ZipArchiveFramework-{platform}", "*.zip", OutputDirectory, $@"newrelic-agent-win-{platform}-{Version}.zip");
+                CopyFileAndChecksum($@"{RepoRootDirectory}\build\BuildArtifacts\ZipArchiveFramework-{platform}", "*.zip", OutputDirectory, $@"newrelic-agent-win-{platform}-{Version}.zip");
             }
 
             //Copying Readme.txt file
