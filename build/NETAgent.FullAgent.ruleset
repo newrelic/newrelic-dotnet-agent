@@ -5,6 +5,7 @@
     <Description Resource="NewRelicNETAgentRules_Description" />
   </Localization>
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <Rule Id="CS1591" Action="None" />
     <Rule Id="SA1000" Action="None" />
     <Rule Id="SA1001" Action="None" />
     <Rule Id="SA1002" Action="None" />
@@ -159,20 +160,19 @@
     <Rule Id="SA1626" Action="None" />
     <Rule Id="SA1627" Action="None" />
     <Rule Id="SA1629" Action="None" />
-    <Rule Id="SA1633" Action="Warning" />
-    <Rule Id="SA1634" Action="Warning" />
-    <Rule Id="SA1635" Action="Warning" />
-    <Rule Id="SA1636" Action="Warning" />
+    <Rule Id="SA1633" Action="Error" />
+    <Rule Id="SA1634" Action="Error" />
+    <Rule Id="SA1635" Action="Error" />
+    <Rule Id="SA1636" Action="Error" />
     <Rule Id="SA1637" Action="None" />
     <Rule Id="SA1638" Action="None" />
-    <Rule Id="SA1640" Action="Warning" />
-    <Rule Id="SA1641" Action="Warning" />
+    <Rule Id="SA1640" Action="Error" />
+    <Rule Id="SA1641" Action="Error" />
     <Rule Id="SA1642" Action="None" />
     <Rule Id="SA1643" Action="None" />
     <Rule Id="SA1648" Action="None" />
     <Rule Id="SA1649" Action="None" />
     <Rule Id="SA1651" Action="None" />
     <Rule Id="SA1652" Action="None" />
-    <Rule Id="CS1591" Action="None" />
- </Rules>
+  </Rules>
 </RuleSet>
