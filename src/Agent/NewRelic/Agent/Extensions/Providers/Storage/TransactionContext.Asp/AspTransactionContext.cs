@@ -1,4 +1,8 @@
-﻿using System.Web;
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System.Web;
 using NewRelic.Agent.Extensions.Providers;
 
 namespace NewRelic.Providers.Storage.TransactionContext

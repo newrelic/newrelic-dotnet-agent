@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Core.AgentHealth;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Core.AgentHealth;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.SystemInterfaces;
 using NUnit.Framework;

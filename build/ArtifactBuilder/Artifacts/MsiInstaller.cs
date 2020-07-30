@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,12 +22,12 @@ namespace ArtifactBuilder.Artifacts
             "extension.xsd"
         };
 
-        public MsiInstaller(string sourceDirectory, string platform, string configuration) : base(sourceDirectory, "MsiInstaller")
+        public MsiInstaller(string platform, string configuration) : base("MsiInstaller")
         {
             Platform = platform;
             Configuration = configuration;
-            MsiDirectory = $@"{sourceDirectory}\src\_build\{Platform}-{Configuration}\Installer";
-            OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}-{Platform}";
+            MsiDirectory = $@"{RepoRootDirectory}\src\_build\{Platform}-{Configuration}\Installer";
+            OutputDirectory = $@"{RepoRootDirectory}\build\BuildArtifacts\{Name}-{Platform}";
         }
 
         protected override void InternalBuild()
@@ -52,7 +56,7 @@ namespace ArtifactBuilder.Artifacts
         private void ValidateWxsDefinitionFileForInstaller()
         {
             //Verify that the expected agent components are in the homebuilder for the installer
-            var agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, SourceDirectory);
+            var agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             agentComponents.ValidateComponents();
 
             var productWxs = GetParsedProductWxsData();
@@ -73,7 +77,7 @@ namespace ArtifactBuilder.Artifacts
 
         private Wix GetParsedProductWxsData()
         {
-            using (var xmlReader = XmlReader.Create($@"{SourceDirectory}\src\Agent\MsiInstaller\Installer\Product.wxs"))
+            using (var xmlReader = XmlReader.Create($@"{RepoRootDirectory}\src\Agent\MsiInstaller\Installer\Product.wxs"))
             {
                 var serializer = new XmlSerializer(typeof(Wix));
                 return (Wix)serializer.Deserialize(xmlReader);

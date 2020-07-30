@@ -1,4 +1,8 @@
-﻿#if NETSTANDARD2_0
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+#if NETSTANDARD2_0
 using System;
 
 namespace NewRelic.SystemInterfaces.Web

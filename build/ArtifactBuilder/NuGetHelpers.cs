@@ -1,11 +1,16 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace ArtifactBuilder
 {
     public static class NuGetHelpers
     {
-        private const string _nugetPath = @"Tools\nuget.exe";
+        private static string _nugetPath = Path.Combine(FileHelpers.GetRepoRootDirectory(), @"Build\Tools\nuget.exe");
 
         public static void Pack(string nuspecFilePath, string outputDirectory)
         {

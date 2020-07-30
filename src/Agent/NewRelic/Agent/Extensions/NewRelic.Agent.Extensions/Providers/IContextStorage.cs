@@ -1,4 +1,8 @@
-﻿namespace NewRelic.Agent.Extensions.Providers
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+namespace NewRelic.Agent.Extensions.Providers
 {
     /// <summary>
     /// Classes that implement this interface provide storage mechanism for object instances within the context

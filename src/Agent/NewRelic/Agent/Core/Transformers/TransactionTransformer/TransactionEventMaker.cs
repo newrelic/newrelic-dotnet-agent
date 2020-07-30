@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Core.Transactions;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Core.Transactions;
 using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Transformers.TransactionTransformer

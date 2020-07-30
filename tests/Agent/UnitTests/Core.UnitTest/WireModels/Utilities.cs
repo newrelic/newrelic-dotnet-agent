@@ -1,4 +1,8 @@
-﻿using NewRelic.Agent.Core.Metrics;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using NewRelic.Agent.Core.Metrics;
 using Telerik.JustMock;
 
 namespace NewRelic.Agent.Core.WireModels

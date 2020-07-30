@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -62,6 +66,25 @@ namespace ArtifactBuilder
                 contents = contents.Replace(item.Key, item.Value);
             }
             File.WriteAllText(path, contents);
+        }
+
+        public static string GetRepoRootDirectory()
+        {
+            var exe = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var exeDirectory = Path.GetDirectoryName(exe);
+            var sourceDirectory = new DirectoryInfo(Path.Combine(exeDirectory, @"..\..\..\..\.."));
+            return sourceDirectory.FullName;
+        }
+
+        public static string GetHomeRootDirectory()
+        {
+            var homeRootEnvVar = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
+            if (!string.IsNullOrWhiteSpace(homeRootEnvVar) && Directory.Exists(homeRootEnvVar))
+            {
+                return homeRootEnvVar;
+            }
+
+            return GetRepoRootDirectory() + @"\src\Agent";
         }
     }
 }

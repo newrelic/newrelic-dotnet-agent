@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 ### copy core agent files to S3 ###
 $parentDir = "core_20"
 $betaPath = "beta"

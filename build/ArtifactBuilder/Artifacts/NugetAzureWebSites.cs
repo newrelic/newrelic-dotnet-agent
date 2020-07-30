@@ -1,3 +1,7 @@
+/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,14 +11,11 @@ namespace ArtifactBuilder.Artifacts
 {
     public class NugetAzureWebSites : Artifact
     {
-        public NugetAzureWebSites(string platform, string configuration, string sourceDirectory)
-            : base(sourceDirectory, nameof(NugetAzureWebSites) + "-" + platform)
+        public NugetAzureWebSites(string platform, string configuration)
+            : base(nameof(NugetAzureWebSites) + "-" + platform)
         {
             Platform = platform;
             Configuration = configuration;
-            StagingDirectory = $@"{SourceDirectory}\build\_staging\{Name}";
-            PackageDirectory = $@"{SourceDirectory}\build\Packaging\{Name}";
-            OutputDirectory = $@"{SourceDirectory}\build\BuildArtifacts\{Name}";
         }
 
         public string Configuration { get; }
@@ -25,7 +26,7 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            _agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, SourceDirectory);
+            _agentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, Platform, RepoRootDirectory, HomeRootDirectory);
             _agentComponents.ValidateComponents();
 
             var package = new NugetPackage(StagingDirectory, OutputDirectory);

@@ -1,4 +1,8 @@
-﻿namespace NewRelic.Agent.Extensions.Providers
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+namespace NewRelic.Agent.Extensions.Providers
 {
     /// <summary>
     /// A general use transaction context backed by a thread static variable.  Will work well whenever transactions are single threaded and and uninterupted.

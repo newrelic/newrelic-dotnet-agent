@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿/*
+* Copyright 2020 New Relic Corporation. All rights reserved.
+* SPDX-License-Identifier: Apache-2.0
+*/
+using Newtonsoft.Json;
 
 namespace NewRelic.Agent.IntegrationTests.Shared.Models
 {

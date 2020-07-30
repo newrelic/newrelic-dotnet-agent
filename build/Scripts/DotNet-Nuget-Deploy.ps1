@@ -1,3 +1,6 @@
+# Copyright 2020 New Relic Corporation. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 $ErrorActionPreference = "Stop"
 . $env:WORKSPACE\Build\Scripts\chatRoomAPI.ps1
 
