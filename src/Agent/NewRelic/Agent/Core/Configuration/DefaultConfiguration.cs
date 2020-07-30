@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.Configuration
     /// <summary>
     /// Default implementation of IConfiguration.  This should only be used by ConfigurationService.  If you need configuration, get it from the ConfigurationService, not here.
     /// </summary>
-    public partial class DefaultConfiguration : IConfiguration
+    public class DefaultConfiguration : IConfiguration
     {
         private const int DefaultSslPort = 443;
         private const int DefaultSqlStatementCacheCapacity = 1000;
@@ -47,10 +47,10 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly IConfigurationManagerStatic _configurationManagerStatic = new ConfigurationManagerStaticMock();
         private readonly IDnsStatic _dnsStatic;
 
-    /// <summary>
-    /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
-    /// </summary>
-    public static readonly DefaultConfiguration Instance = new DefaultConfiguration();
+        /// <summary>
+        /// Default configuration.  It will contain reasonable default values for everything and never anything more.  Useful when you don't have configuration off disk or a collector response yet.
+        /// </summary>
+        public static readonly DefaultConfiguration Instance = new DefaultConfiguration();
         private readonly configuration _localConfiguration = new configuration();
         private readonly ServerConfiguration _serverConfiguration = ServerConfiguration.GetDefault();
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
