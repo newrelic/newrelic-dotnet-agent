@@ -67,5 +67,24 @@ namespace ArtifactBuilder
             }
             File.WriteAllText(path, contents);
         }
+
+        public static string GetRepoRootDirectory()
+        {
+            var exe = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var exeDirectory = Path.GetDirectoryName(exe);
+            var sourceDirectory = new DirectoryInfo(Path.Combine(exeDirectory, @"..\..\..\..\.."));
+            return sourceDirectory.FullName;
+        }
+
+        public static string GetHomeRootDirectory()
+        {
+            var homeRootEnvVar = Environment.GetEnvironmentVariable("NR_DEV_HOMEROOT");
+            if (!string.IsNullOrWhiteSpace(homeRootEnvVar) && Directory.Exists(homeRootEnvVar))
+            {
+                return homeRootEnvVar;
+            }
+
+            return GetRepoRootDirectory() + @"\src\Agent";
+        }
     }
 }

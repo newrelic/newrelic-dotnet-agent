@@ -14,31 +14,30 @@ namespace ArtifactBuilder
         {
             try
             {
-                var sourceDirectory = GetSourceDirectory();
                 var package = args[0].ToLower();
 
                 switch (package)
                 {
                     case "ziparchives":
-                        BuildZipArchives(sourceDirectory, args);
+                        BuildZipArchives(args);
                         break;
                     case "scriptableinstaller":
-                        BuildScriptableInstaller(sourceDirectory, args);
+                        BuildScriptableInstaller(args);
                         break;
                     case "nugetazurewebsites":
-                        BuildNugetAzureWebsites(sourceDirectory, args);
+                        BuildNugetAzureWebsites(args);
                         break;
                     case "nugetagentapi":
-                        BuildNugetAgentApi(sourceDirectory, args);
+                        BuildNugetAgentApi(args);
                         break;
                     case "nugetazurecloudservices":
-                        BuildNugetAzureCloudServices(sourceDirectory, args);
+                        BuildNugetAzureCloudServices(args);
                         break;
                     case "msiinstaller":
-                        BuildMsiInstaller(sourceDirectory, args);
+                        BuildMsiInstaller(args);
                         break;
                     case "downloadsite":
-                        BuildDownloadSite(sourceDirectory, args);
+                        BuildDownloadSite(args);
                         break;
                     default:
                         throw new Exception($"Unknown package type: {args[0]}");
@@ -58,17 +57,17 @@ namespace ArtifactBuilder
             return 0;
         }
 
-        private static void BuildDownloadSite(string sourceDirectory, string[] args)
+        private static void BuildDownloadSite(string[] args)
         {
             var configuration = args[1];
-            new DowloadSiteArtifact(sourceDirectory, configuration).Build();
+            new DownloadSiteArtifact(configuration).Build();
         }
 
-        private static void BuildMsiInstaller(string sourceDirectory, string[] args)
+        private static void BuildMsiInstaller(string[] args)
         {
             var configuration = args[1];
-            new MsiInstaller(sourceDirectory, "x86", configuration).Build();
-            new MsiInstaller(sourceDirectory, "x64", configuration).Build();
+            new MsiInstaller("x86", configuration).Build();
+            new MsiInstaller("x64", configuration).Build();
         }
 
         private static string GetSourceDirectory()
@@ -77,39 +76,39 @@ namespace ArtifactBuilder
             return dirInfo.Parent.FullName;
         }
 
-        private static void BuildNugetAzureWebsites(string sourceDirectory, string[] args)
+        private static void BuildNugetAzureWebsites(string[] args)
         {
             var configuration = args[1];
             var platform = args[2];
-            var c = new NugetAzureWebSites(platform, configuration, sourceDirectory);
+            var c = new NugetAzureWebSites(platform, configuration);
             c.Build();
         }
 
-        private static void BuildNugetAgentApi(string sourceDirectory, string[] args)
+        private static void BuildNugetAgentApi(string[] args)
         {
             var configuration = args[1];
-            var c = new NugetAgentApi(configuration, sourceDirectory);
+            var c = new NugetAgentApi(configuration);
             c.Build();
         }
 
-        private static void BuildNugetAzureCloudServices(string sourceDirectory, string[] args)
+        private static void BuildNugetAzureCloudServices(string[] args)
         {
             var configuration = args[1];
-            var c = new NugetAzureCloudServices(configuration, sourceDirectory);
+            var c = new NugetAzureCloudServices(configuration);
             c.Build();
         }
 
-        private static void BuildZipArchives(string sourceDirectory, string[] args)
+        private static void BuildZipArchives(string[] args)
         {
             var configuration = args[1];
-            new ZipArchive(AgentType.Framework, "x64", configuration, sourceDirectory).Build();
-            new ZipArchive(AgentType.Framework, "x86", configuration, sourceDirectory).Build();
+            new ZipArchive(AgentType.Framework, "x64", configuration).Build();
+            new ZipArchive(AgentType.Framework, "x86", configuration).Build();
         }
 
-        private static void BuildScriptableInstaller(string sourceDirectory, string[] args)
+        private static void BuildScriptableInstaller(string[] args)
         {
             var configuration = args[1];
-            new ScriptableInstaller(configuration, sourceDirectory).Build();
+            new ScriptableInstaller(configuration).Build();
         }
 
     }

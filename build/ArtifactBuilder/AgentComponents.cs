@@ -11,22 +11,24 @@ namespace ArtifactBuilder
 {
     public abstract class AgentComponents
     {
-        public AgentComponents(string configuration, string platform, string sourcePath)
+        public AgentComponents(string configuration, string platform, string repoRootDirectory, string homeRootPath)
         {
             Configuration = configuration;
             Platform = platform;
-            SourcePath = $@"{sourcePath}\src";
+            SourcePath = $@"{repoRootDirectory}\src\Agent";
+            HomeRootPath = homeRootPath;
         }
+
 
         public string Configuration { get; }
 
-        public static AgentComponents GetAgentComponents(AgentType agentType, string configuration, string platform, string sourceDirectory)
+        public static AgentComponents GetAgentComponents(AgentType agentType, string configuration, string platform, string repoRootDirectory, string homeRootPath)
         {
             AgentComponents agentComponents;
             switch (agentType)
             {
                 case AgentType.Framework:
-                    agentComponents = new FrameworkAgentComponents(configuration, platform, sourceDirectory);
+                    agentComponents = new FrameworkAgentComponents(configuration, platform, repoRootDirectory, homeRootPath);
                     break;
                 default:
                     throw new Exception("Invalid AgentType");
@@ -37,6 +39,7 @@ namespace ArtifactBuilder
 
         public string Platform { get; }
         public string SourcePath { get; }
+        public string HomeRootPath { get; }
         public List<string> ExtensionDirectoryComponents { get; set; }
         public List<string> WrapperXmlFiles { get; set; }
         public List<string> RootInstallDirectoryComponents { get; set; }

@@ -6,8 +6,8 @@ namespace ArtifactBuilder.Artifacts
 {
     public class NugetAgentApi : Artifact
     {
-        public NugetAgentApi(string configuration, string sourceDirectory)
-            : base(sourceDirectory, nameof(NugetAgentApi))
+        public NugetAgentApi(string configuration)
+            : base(nameof(NugetAgentApi))
         {
             Configuration = configuration;
         }
@@ -16,7 +16,7 @@ namespace ArtifactBuilder.Artifacts
 
         protected override void InternalBuild()
         {
-            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", SourceDirectory);
+            var frameworkAgentComponents = AgentComponents.GetAgentComponents(AgentType.Framework, Configuration, "x64", RepoRootDirectory, HomeRootDirectory);
             frameworkAgentComponents.ValidateComponents();
 
             var package = new NugetPackage(StagingDirectory, OutputDirectory);
