@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <TargetFrameworks>netstandard2.0</TargetFrameworks>
+      <AssemblyName>NewRelic.Providers.AsyncProviders</AssemblyName>
+      <RootNamespace>NewRelic.Providers.AsyncProviders</RootNamespace>
+      <Description>Async call stack and transaction tracking for New Relic .NET Agent</Description>
+      <SignAssembly>true</SignAssembly>
+      <AssemblyOriginatorKeyFile>$(SolutionDir)build/keys/KeyFile.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <DebugType>full</DebugType>
+      <DebugSymbols>True</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Core\Core.csproj" />
+  </ItemGroup>
+  
+
+
+</Project>

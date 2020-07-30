@@ -1,8 +1,9 @@
-﻿/*
+/*
 * Copyright 2020 New Relic Corporation. All rights reserved.
 * SPDX-License-Identifier: Apache-2.0
 */
-using NewRelic.Providers.CallStack.AsyncLocal;
+
+using NewRelic.Providers.Storage.CallStack.AsyncLocal;
 using NUnit.Framework;
 
 namespace NewRelic.Providers.CallStack.AsyncLocalTests

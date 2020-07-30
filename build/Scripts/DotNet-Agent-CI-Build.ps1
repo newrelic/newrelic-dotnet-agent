@@ -19,7 +19,11 @@ foreach ($sln in $solutions) {
 # Build #
 #######
 
-$msBuildPath = "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
+$vsWhere = (Resolve-Path "build\Tools\vswhere.exe").Path
+$msBuildPath = & "$vsWhere" -products 'Microsoft.VisualStudio.Product.BuildTools' -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
+if (!$msBuildPath) {
+    $msBuildPath = & "$vsWhere" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
+}
 
 $solutions = [Ordered]@{
     "FullAgent.sln"                                    = @("Configuration=Release;AllowUnsafeBlocks=true");

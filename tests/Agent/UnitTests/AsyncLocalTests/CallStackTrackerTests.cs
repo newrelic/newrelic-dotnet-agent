@@ -4,7 +4,7 @@
 */
 using System.Threading.Tasks;
 using NewRelic.Agent.Core.CallStack;
-using NewRelic.Providers.CallStack.AsyncLocal;
+using NewRelic.Providers.Storage.CallStack.AsyncLocal;
 using NewRelic.Testing.Assertions;
 using NUnit.Framework;
 
