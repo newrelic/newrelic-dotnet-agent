@@ -33,6 +33,7 @@ namespace NewRelic.Agent.Core.Configuration
         public static readonly string RawStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.raw);
         public static readonly string ObfuscatedStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
         public static readonly string OffStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.off);
+        private static readonly char HyphenChar = '-';
 
         private const string HighSecurityConfigSource = "High Security Mode";
         private const string SecurityPolicyConfigSource = "Security Policy";
@@ -141,12 +142,6 @@ namespace NewRelic.Agent.Core.Configuration
         {
             return _newRelicAppSettings.TryGetValue(key, out var valueStr) ? valueStr : null;
         }
-
-        private float TryGetAppSettingAsFloatWithDefault(string key, float defaultValue)
-        {
-            return TryGetAppSettingAsFloat(key).GetValueOrDefault(defaultValue);
-        }
-
 
         private float? TryGetAppSettingAsFloat(string key)
         {
@@ -1173,15 +1168,53 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            var expectedStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
+            var expectedStatusCodesString = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
 
+            ExpectedStatusCodes = ParseExpectedStatusCodesString(expectedStatusCodesString);
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
             ExpectedErrorClassesForAgentSettings = expectedClasses;
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodes;
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesString;
+        }
+
+        private IEnumerable<MatchRule> ParseExpectedStatusCodesString(string expectedStatusCodesString)
+        {
+            var expectedStatusCodes = new List<MatchRule>();
+
+            var expectedStatusCodeArray = expectedStatusCodesString.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var singleCodeOrRange in expectedStatusCodeArray)
+            {
+                var index = singleCodeOrRange.IndexOf(HyphenChar);
+                if (index != -1)
+                {
+                    var lowerBoundString = singleCodeOrRange.Substring(0, index).Trim();
+                    var upperBoundString = singleCodeOrRange.Substring(index + 1, singleCodeOrRange.Length - index - 1).Trim();
+
+                    AddRule(StatusCodeInRangeMatchRule.GenerateRule(lowerBoundString, upperBoundString), singleCodeOrRange);
+                }
+                else
+                {
+                    AddRule(StatusCodeExactMatchRule.GenerateRule(singleCodeOrRange), singleCodeOrRange);
+                }
+            }
+
+            return expectedStatusCodes;
+
+            void AddRule(MatchRule rule, string statusCode)
+            {
+                if (rule != null)
+                {
+                    expectedStatusCodes.Add(rule);
+                }
+                else
+                {
+                    Log.Warn($"Cannot parse {statusCode} status code. This status code format is not supported.");
+                }
+            }
         }
 
         public IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; private set; }
+        public IEnumerable<MatchRule> ExpectedStatusCodes { get; private set; }
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public string ExpectedErrorStatusCodesForAgentSettings { get; private set; }
