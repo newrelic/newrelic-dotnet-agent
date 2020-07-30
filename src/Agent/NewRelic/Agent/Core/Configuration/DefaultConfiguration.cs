@@ -39,6 +39,8 @@ namespace NewRelic.Agent.Core.Configuration
         private const string SecurityPolicyConfigSource = "Security Policy";
         private const string LocalConfigSource = "Local Configuration";
         private const string ServerConfigSource = "Server Configuration";
+        private const int MaxExptectedErrorConfigEntries = 50;
+
         private static long _currentConfigurationVersion;
         private const int DefaultSpanEventsMaxSamplesStored = 1000;
         private readonly IEnvironment _environment = new EnvironmentMock();
@@ -1154,6 +1156,8 @@ namespace NewRelic.Agent.Core.Configuration
 
             var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
 
+            var count = expectedErrorInfo.Count;
+
             foreach (var className in expectedClasses)
             {
                 if (expectedErrorInfo.ContainsKey(className))
@@ -1162,9 +1166,10 @@ namespace NewRelic.Agent.Core.Configuration
                     Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
                     expectedMessages.Remove(className);
                 }
-                else
+                else if (count < MaxExptectedErrorConfigEntries)
                 {
                     expectedErrorInfo.Add(className, Enumerable.Empty<string>());
+                    count++;
                 }
             }
 
@@ -1803,6 +1808,7 @@ namespace NewRelic.Agent.Core.Configuration
         public string UtilizationFullHostName => _utilizationFullHostName.Value;
 
         private readonly Lazy<string> _utilizationHostName;
+
         public string UtilizationHostName => _utilizationHostName.Value;
 
         #endregion

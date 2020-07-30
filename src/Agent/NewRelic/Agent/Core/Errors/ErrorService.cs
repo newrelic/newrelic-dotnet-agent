@@ -31,10 +31,31 @@ namespace NewRelic.Agent.Core.Errors
         private const string CustomErrorTypeName = "Custom Error";
         private static ReadOnlyDictionary<string, object> _emptyCustomAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
         private IConfigurationService _configurationService;
+        private static Func<Exception, bool> _isExpectedFunc;
 
         public ErrorService(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
+
+            _isExpectedFunc = new Func<Exception, bool>(exception =>
+            {
+                var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
+                var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsConfiguration;
+
+                if (expectedErrorInfo.TryGetValue(exceptionTypeName, out var expectedMessages))
+                {
+                    if (expectedMessages != Enumerable.Empty<string>())
+                    {
+                        return ContainsSubstring(expectedMessages, exception.Message);
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
         }
 
         public bool ShouldCollectErrors => _configurationService.Configuration.ErrorCollectorEnabled;
@@ -94,7 +115,9 @@ namespace NewRelic.Agent.Core.Errors
             var errorTypeName = GetFormattedHttpStatusCode(statusCode, subStatusCode);
             var errorMessage = statusDescription ?? $"Http Error {errorTypeName}";
 
-            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null);
+            var isExpected = _configurationService.Configuration.ExpectedStatusCodes.Any(rule => rule.IsMatch(statusCode.ToString()));
+
+            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected);
         }
 
         private bool ShouldIgnoreError(string errorTypeName)
@@ -136,40 +159,20 @@ namespace NewRelic.Agent.Core.Errors
             var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
             var noticedAt = DateTime.UtcNow;
 
-            var isExpected = IsErrorExpected(exception);
-            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
-        }
-
-        private bool IsErrorExpected(Exception exception)
-        {
             var isExpected = IsExceptionExpected(exception);
-
-            if (!isExpected)
-            {
-                var baseException = exception.GetBaseException();
-                return IsExceptionExpected(baseException);
-            }
-            return isExpected;
+            return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
         }
 
         private bool IsExceptionExpected(Exception exception)
         {
-            var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
-            var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsConfiguration;
+            var isExpected = _isExpectedFunc(exception);
 
-            if (expectedErrorInfo.TryGetValue(exceptionTypeName, out var expectedMessages))
+            if (!isExpected)
             {
-                if (expectedMessages != Enumerable.Empty<string>())
-                {
-                    return ContainsSubstring(expectedMessages, exception.Message);
-                }
-                else
-                {
-                    return true;
-                }
+                var baseException = exception.GetBaseException();
+                return _isExpectedFunc(baseException);
             }
-
-            return false;
+            return isExpected;
         }
 
         private bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)

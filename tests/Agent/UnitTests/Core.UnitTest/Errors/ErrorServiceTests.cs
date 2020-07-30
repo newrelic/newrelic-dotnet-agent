@@ -53,7 +53,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldCollectErrors_MatchesErrorCollectorEnabledConfig([Values(true, false)]bool errorCollectorEnabledSetting)
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, errorCollectorEnabled: errorCollectorEnabledSetting);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: errorCollectorEnabledSetting);
 
             Assert.AreEqual(errorCollectorEnabledSetting, _errorService.ShouldCollectErrors);
         }
@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsFalse_IfExceptionIsNotIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, errorCollectorEnabled: true);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: true);
 
             var exception = new Exception();
             Assert.IsFalse(_errorService.ShouldIgnoreException(exception));
@@ -70,7 +70,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfExceptionIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, errorCollectorEnabled: true);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: true);
 
             var exception = new ArithmeticException();
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -79,7 +79,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfInnerExceptionIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, errorCollectorEnabled: true);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, null, errorCollectorEnabled: true);
 
             var exception = new Exception("OuterException", new ArithmeticException("InnerException"));
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -88,7 +88,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfOuterExceptionIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, true);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, null, true);
 
             var exception = new ArithmeticException("OuterException", new Exception("InnerException"));
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -97,7 +97,7 @@ namespace NewRelic.Agent.Core.Errors
         [Test]
         public void ShouldIgnoreException_ReturnsTrue_IfExceptionWithTypeParameterIsIgnored()
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, true);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, null, true);
 
             var exception = new ExceptionWithTypeParameter<string>();
             Assert.IsTrue(_errorService.ShouldIgnoreException(exception));
@@ -110,7 +110,7 @@ namespace NewRelic.Agent.Core.Errors
         [TestCase(500, null, ExpectedResult = false)]
         public bool ShouldIgnoreHttpStatusCode_ReturnsExpectedResult(int statusCode, int? subStatusCode)
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, true);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, false, null, null, null, true);
 
             return _errorService.ShouldIgnoreHttpStatusCode(statusCode, subStatusCode);
         }
@@ -119,7 +119,7 @@ namespace NewRelic.Agent.Core.Errors
         [TestCase(false)]
         public void FromException_ReturnsExpectedErrorData(bool stripExceptionMessages)
         {
-            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages, null, null, true);
+            SetupConfiguration(_exceptionsToIgnore, _statusCodesToIgnore, stripExceptionMessages, null, null, null, true);
 
             var exception = new Exception();
             var errorData = _errorService.FromException(exception);
@@ -152,7 +152,7 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasExpectedError)
             {
-                SetupConfiguration(null, null, false, expectedClasses, null, true);
+                SetupConfiguration(null, null, false, expectedClasses, null, null, true);
             }
 
             var expectedExceptionRoot = new IOException("Root Exception", new DirectoryNotFoundException());
@@ -184,7 +184,7 @@ namespace NewRelic.Agent.Core.Errors
 
             if (hasExpectedError)
             {
-                SetupConfiguration(null, null, false, null, expectedMessages, errorCollectorEnabled: true);
+                SetupConfiguration(null, null, false, null, expectedMessages, null, errorCollectorEnabled: true);
             }
 
             var expectedException1 = new DirectoryNotFoundException("this is error message 1 ");
@@ -205,6 +205,38 @@ namespace NewRelic.Agent.Core.Errors
             }
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FromErrorHttpStatusCode_MarkErrorDataAsExpected_ExpectedStatusCodes(bool hasExpectedError)
+        {
+
+            if (hasExpectedError)
+            {
+                var expectedStatusCodes = "400,401,404-415";
+                SetupConfiguration(null, null, false, null, null, expectedStatusCodes, errorCollectorEnabled: true);
+            }
+
+            var errorData1 = _errorService.FromErrorHttpStatusCode(400, null, DateTime.Now);
+            var errorData2 = _errorService.FromErrorHttpStatusCode(401, 4, DateTime.Now);
+            var errorData3 = _errorService.FromErrorHttpStatusCode(405, null, DateTime.Now);
+            var errorData4 = _errorService.FromErrorHttpStatusCode(500, null, DateTime.Now);
+
+            if (hasExpectedError)
+            {
+                Assert.IsTrue(errorData1.IsExpected);
+                Assert.IsTrue(errorData2.IsExpected);
+                Assert.IsTrue(errorData3.IsExpected);
+                Assert.IsFalse(errorData4.IsExpected);
+            }
+            else
+            {
+                Assert.IsFalse(errorData1.IsExpected);
+                Assert.IsFalse(errorData2.IsExpected);
+                Assert.IsFalse(errorData3.IsExpected);
+                Assert.IsFalse(errorData4.IsExpected);
+            }
+        }
+
         [Test]
         public void FromException_MarkErrorDataAsExpected_SameErrorClass_In_ExpectedClasses_ExpectedErrorMessages()
         {
@@ -218,7 +250,7 @@ namespace NewRelic.Agent.Core.Errors
                 "System.IO.DirectoryNotFoundException",
             };
 
-            SetupConfiguration(null, null, false, expectedClasses, expectedMessages, true);
+            SetupConfiguration(null, null, false, expectedClasses, expectedMessages, null, true);
             var expectedException = new DirectoryNotFoundException("any error messages");
 
             var errorData = _errorService.FromException(expectedException);
@@ -229,7 +261,7 @@ namespace NewRelic.Agent.Core.Errors
 
         private void SetupConfiguration(List<string> exceptionsToIgnore, List<float> statusCodesToIgnore,
             bool stripExceptionMessages, List<string> errorClassesToBeExpected,
-            IEnumerable<KeyValuePair<string, IEnumerable<string>>> errorMessagesToBeExpected, bool errorCollectorEnabled)
+            IEnumerable<KeyValuePair<string, IEnumerable<string>>> errorMessagesToBeExpected, string expectedStatusCodes, bool errorCollectorEnabled)
         {
             var config = new configuration();
 
@@ -263,6 +295,11 @@ namespace NewRelic.Agent.Core.Errors
 
                     config.errorCollector.expectedMessages.Add(x);
                 }
+            }
+
+            if (!string.IsNullOrEmpty(expectedStatusCodes))
+            {
+                config.errorCollector.expectedStatusCodes = expectedStatusCodes;
             }
 
             EventBus<ConfigurationDeserializedEvent>.Publish(new ConfigurationDeserializedEvent(config));
