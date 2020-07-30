@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.Configuration
     /// <summary>
     /// Default implementation of IConfiguration.  This should only be used by ConfigurationService.  If you need configuration, get it from the ConfigurationService, not here.
     /// </summary>
-    public class DefaultConfiguration : IConfiguration
+    public partial class DefaultConfiguration : IConfiguration
     {
         private const int DefaultSslPort = 443;
         private const int DefaultSqlStatementCacheCapacity = 1000;
@@ -1170,16 +1170,17 @@ namespace NewRelic.Agent.Core.Configuration
 
             var expectedStatusCodesString = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
 
-            ParseExpectedStatusCodesString(expectedStatusCodesString, expectedErrorInfo);
-
+            ExpectedStatusCodes = ParseExpectedStatusCodesString(expectedStatusCodesString);
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
             ExpectedErrorClassesForAgentSettings = expectedClasses;
             ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesString;
         }
 
-        private void ParseExpectedStatusCodesString(string expectedStatusCodesString, Dictionary<string, IEnumerable<string>> expectedErrorInfo)
+        private IEnumerable<MatchRule> ParseExpectedStatusCodesString(string expectedStatusCodesString)
         {
+            var expectedStatusCodes = new List<MatchRule>();
+
             var expectedStatusCodeArray = expectedStatusCodesString.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
             foreach (var singleCodeOrRange in expectedStatusCodeArray)
             {
@@ -1189,37 +1190,31 @@ namespace NewRelic.Agent.Core.Configuration
                     var lowerBoundString = singleCodeOrRange.Substring(0, index).Trim();
                     var upperBoundString = singleCodeOrRange.Substring(index + 1, singleCodeOrRange.Length - index - 1).Trim();
 
-                    if (int.TryParse(lowerBoundString, out int lower) && int.TryParse(upperBoundString, out int upper))
-                    {
-                        for (var i = lower; i <= upper; i++)
-                        {
-                            var statusCodeString = i.ToString();
-                            if (!expectedErrorInfo.ContainsKey(statusCodeString))
-                            {
-                                expectedErrorInfo.Add(statusCodeString, Enumerable.Empty<string>());
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Log.Warn($"Cannot parse {singleCodeOrRange} status code. This status code format is not supported.");
-                    }
+                    AddRule(StatusCodeInRangeMatchRule.GenerateRule(lowerBoundString, upperBoundString), singleCodeOrRange);
                 }
                 else
                 {
-                    if (int.TryParse(singleCodeOrRange, out _))
-                    {
-                        expectedErrorInfo.Add(singleCodeOrRange.Trim(), Enumerable.Empty<string>());
-                    }
-                    else
-                    {
-                        Log.Warn($"Cannot parse {singleCodeOrRange} status code format. This status code format is not supported.");
-                    }
+                    AddRule(StatusCodeExactMatchRule.GenerateRule(singleCodeOrRange), singleCodeOrRange);
+                }
+            }
+
+            return expectedStatusCodes;
+
+            void AddRule(MatchRule rule, string statusCode)
+            {
+                if (rule != null)
+                {
+                    expectedStatusCodes.Add(rule);
+                }
+                else
+                {
+                    Log.Warn($"Cannot parse {statusCode} status code. This status code format is not supported.");
                 }
             }
         }
 
         public IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; private set; }
+        public IEnumerable<MatchRule> ExpectedStatusCodes { get; private set; }
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public string ExpectedErrorStatusCodesForAgentSettings { get; private set; }
