@@ -104,5 +104,11 @@
       </Code>
     </Task>
   </UsingTask>
-
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(SolutionDir)build\NETAgent.FullAgent.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
+    <AdditionalFiles Include="$(SolutionDir)build\stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
 </Project>
