@@ -34,5 +34,5 @@ foreach ($pkg in $packagesToBuild) {
 
 if ($IncludeDownloadSite) {
     #The download site should be built after the other artifacts are built, because it depends on the other artifacts
-    dotnet run --project '$artifactBuilderCsproj' DownloadSite $configuration
+    dotnet run --project "$artifactBuilderCsproj" DownloadSite $configuration
 }
