@@ -94,7 +94,9 @@ namespace NewRelic.Agent.Core.Errors
             var errorTypeName = GetFormattedHttpStatusCode(statusCode, subStatusCode);
             var errorMessage = statusDescription ?? $"Http Error {errorTypeName}";
 
-            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null);
+            var isExpected = _configurationService.Configuration.ExpectedStatusCodes.Any(rule => rule.IsMatch(statusCode.ToString()));
+
+            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected);
         }
 
         private bool ShouldIgnoreError(string errorTypeName)
@@ -136,11 +138,11 @@ namespace NewRelic.Agent.Core.Errors
             var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
             var noticedAt = DateTime.UtcNow;
 
-            var isExpected = IsErrorExpected(exception);
+            var isExpected = IsErrorFromExceptionExpected(exception);
             return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
         }
 
-        private bool IsErrorExpected(Exception exception)
+        private bool IsErrorFromExceptionExpected(Exception exception)
         {
             var isExpected = IsExceptionExpected(exception);
 
