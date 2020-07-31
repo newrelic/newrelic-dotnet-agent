@@ -39,7 +39,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-#%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+%config(noreplace) %{_install}/newrelic.config
 %{_install}/*
 
 %post
