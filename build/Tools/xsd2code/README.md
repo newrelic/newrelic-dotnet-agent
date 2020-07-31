@@ -1,6 +1,6 @@
 # Using Xsd2Code to generate Configuration.cs or Extension.cs
 
-When either of the following two XSD files are changed, `xsd2code` will need to be ran manually to regenerate the class files.
+When either of the following two XSD files are changed, `xsd2code` will need to be run manually to regenerate the class files.
 
 - src\Agent\NewRelic\Agent\Core\Config\Configuration.xsd
 - src\Agent\NewRelic\Agent\Core\NewRelic.Agent.Core.Extension\Extension.xsd
