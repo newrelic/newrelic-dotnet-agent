@@ -140,7 +140,7 @@
     <ItemGroup>
       <None Update="$(SolutionDir)src\Agent\NewRelic\Agent\Core\AgentInstallConfiguration_Generated.tt">
         <Generator>TextTemplatingFileGenerator</Generator>
-        <LastGenOutput>$(SolutionDir)src\Agent\NewRelic\Agent\Core\AgentInstallConfiguration_Generated.cs</LastGenOutput>
+        <LastGenOutput>AgentInstallConfiguration_Generated.cs</LastGenOutput>
       </None>
     </ItemGroup>
 

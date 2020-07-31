@@ -1,7 +1,6 @@
-﻿/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 
 // This file is used by Code Analysis to maintain SuppressMessage 
 // attributes that are applied to this project.
