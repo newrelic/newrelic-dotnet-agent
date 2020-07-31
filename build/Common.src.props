@@ -36,4 +36,7 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)\Common.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
 </Project>
