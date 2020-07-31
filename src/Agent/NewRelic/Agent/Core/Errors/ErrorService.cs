@@ -31,31 +31,10 @@ namespace NewRelic.Agent.Core.Errors
         private const string CustomErrorTypeName = "Custom Error";
         private static ReadOnlyDictionary<string, object> _emptyCustomAttributes = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
         private IConfigurationService _configurationService;
-        private static Func<Exception, bool> _isExpectedFunc;
 
         public ErrorService(IConfigurationService configurationService)
         {
             _configurationService = configurationService;
-
-            _isExpectedFunc = new Func<Exception, bool>(exception =>
-            {
-                var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
-                var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsConfiguration;
-
-                if (expectedErrorInfo.TryGetValue(exceptionTypeName, out var expectedMessages))
-                {
-                    if (expectedMessages != Enumerable.Empty<string>())
-                    {
-                        return ContainsSubstring(expectedMessages, exception.Message);
-                    }
-                    else
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            });
         }
 
         public bool ShouldCollectErrors => _configurationService.Configuration.ErrorCollectorEnabled;
@@ -159,20 +138,40 @@ namespace NewRelic.Agent.Core.Errors
             var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
             var noticedAt = DateTime.UtcNow;
 
-            var isExpected = IsExceptionExpected(exception);
+            var isExpected = IsErrorFromExceptionExpected(exception);
             return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
         }
 
-        private bool IsExceptionExpected(Exception exception)
+        private bool IsErrorFromExceptionExpected(Exception exception)
         {
-            var isExpected = _isExpectedFunc(exception);
+            var isExpected = IsExceptionExpected(exception);
 
             if (!isExpected)
             {
                 var baseException = exception.GetBaseException();
-                return _isExpectedFunc(baseException);
+                return IsExceptionExpected(baseException);
             }
             return isExpected;
+        }
+
+        private bool IsExceptionExpected(Exception exception)
+        {
+            var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
+            var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsConfiguration;
+
+            if (expectedErrorInfo.TryGetValue(exceptionTypeName, out var expectedMessages))
+            {
+                if (expectedMessages != Enumerable.Empty<string>())
+                {
+                    return ContainsSubstring(expectedMessages, exception.Message);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
