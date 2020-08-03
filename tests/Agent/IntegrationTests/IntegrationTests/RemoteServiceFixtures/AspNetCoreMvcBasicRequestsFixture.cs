@@ -39,7 +39,29 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         {
             var address = $"http://localhost:{Port}/Home/ThrowException";
             var webClient = new WebClient();
-            Assert.Throws<System.Net.WebException>(() => webClient.DownloadString(address));
+            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+        }
+
+        public void ThrowExceptionWithMessage(string exceptionMessage)
+        {
+            var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowExceptionWithMessage?exceptionMessage={exceptionMessage}";
+            var webClient = new WebClient();
+            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+        }
+
+        public void ReturnADesiredStatusCode(int statusCode)
+        {
+            var address = $"http://localhost:{Port}/ExpectedErrorTest/ReturnADesiredStatusCode?statusCode={statusCode}";
+            var webClient = new WebClient();
+            Assert.Throws<WebException>(() => webClient.DownloadString(address));
+        }
+        
+
+        public void ThrowCustomException()
+        {
+            var address = $"http://localhost:{Port}/ExpectedErrorTest/ThrowCustomException";
+            var webClient = new WebClient();
+            Assert.Throws<WebException>(() => webClient.DownloadString(address));
         }
 
         public void GetWithData(string requestParameter)

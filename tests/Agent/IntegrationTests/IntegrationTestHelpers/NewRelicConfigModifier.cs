@@ -5,6 +5,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Messaging;
+using Couchbase.N1QL;
 
 namespace NewRelic.Agent.IntegrationTestHelpers
 {
@@ -76,6 +78,32 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         {
             CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "transactionTracer" },
                 "transactionThreshold", "1");
+            return this;
+        }
+
+        public NewRelicConfigModifier AddExpectedErrorMessages(string errorClassName, IEnumerable<string> messages)
+        {
+            CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_configFilePath, new[] { "configuration", "errorCollector", "expectedMessages", "errorClass" }, "name", errorClassName);
+
+            foreach (var message in messages)
+            {
+                CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "errorCollector", "expectedMessages", "errorClass" }, "message", message);
+            }
+            return this;
+        }
+
+        public NewRelicConfigModifier AddExpectedErrorClasses(IEnumerable<string> errorClasses)
+        {
+            foreach (var className in errorClasses)
+            {
+                CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "errorCollector", "expectedClasses" }, "errorClass", className);
+            }
+            return this;
+        }
+
+        public NewRelicConfigModifier AddExpectedStatusCodes(string statusCodes)
+        {
+            CommonUtils.AddXmlNodeInNewRelicConfig(_configFilePath, new[] { "configuration", "errorCollector"}, "expectedStatusCodes", statusCodes );
             return this;
         }
 
