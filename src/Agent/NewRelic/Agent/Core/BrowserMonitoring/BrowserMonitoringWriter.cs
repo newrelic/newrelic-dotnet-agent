@@ -1,7 +1,6 @@
-﻿/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using System;
 using System.Text.RegularExpressions;
 using NewRelic.Agent.Core.Utils;
