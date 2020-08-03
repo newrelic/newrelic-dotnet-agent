@@ -72,20 +72,19 @@ namespace NewRelic.Parsing
         /// <returns></returns>
         private static DatastoreVendor ExtractVendorNameFromString(string text)
         {
-            text = text.ToLowerInvariant();
-            if (text.Contains("SQL Server".ToLowerInvariant()) || text.Contains("SQLServer".ToLowerInvariant()))
+            if (text.IndexOf("SQL Server", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("SQLServer", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.MSSQL;
 
-            if (text.Contains("MySql".ToLowerInvariant()))
+            if (text.IndexOf("MySql", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.MySQL;
 
-            if (text.Contains("Oracle".ToLowerInvariant()))
+            if (text.IndexOf("Oracle", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.Oracle;
 
-            if (text.Contains("PgSql".ToLowerInvariant()) || text.Contains("Postgres".ToLowerInvariant()))
+            if (text.IndexOf("PgSql", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("Postgres", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.Postgres;
 
-            if (text.Contains("DB2".ToLowerInvariant()) || text.Contains("IBM".ToLowerInvariant()))
+            if (text.IndexOf("DB2", StringComparison.OrdinalIgnoreCase) != -1 || text.IndexOf("IBM", StringComparison.OrdinalIgnoreCase) != -1)
                 return DatastoreVendor.IBMDB2;
 
             return DatastoreVendor.Other;
