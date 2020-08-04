@@ -312,6 +312,92 @@ namespace NewRelic.Api.Agent
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
         }
 
+        /// <summary>
+        /// Notice an error identified by a simple message and report it to the New Relic service.
+        /// If this method is called within a transaction,
+        /// the exception will be reported with the transaction when it finishes.  
+        /// If it is invoked outside of a transaction, a traced error will be created and reported to the New Relic service.
+        /// Only the string/parameter pair for the first call to NoticeError during the course of a transaction is retained.
+        /// Supports web applications only.
+        /// </summary>
+        /// <param name="message">The message to be displayed in the traced error.
+        /// Only the first 1000 characters are retained.
+        /// </param>
+        /// <param name="parameters">Custom parameters to include in the traced error.
+        /// May be null.
+        /// Only 10,000 characters of combbined key/value data is retained.
+        /// </param>
+        /// <param name="isExpected">
+        /// Mark an error as expected.
+        /// </param>>
+        /// <example>
+        /// <code>
+        ///  try
+        /// {
+        ///    var ImNotABool = "43";
+        ///    bool.Parse(ImNotABool);
+        /// }
+        /// catch (Exception ex)
+        /// {
+        ///    var quotes = new Dictionary&lt;string,string&gt;();
+        ///    quotes.Add("1", "They had a large chunk of the garbage file? How much do they know?");
+        ///    quotes.Add("2", "I'll hack the Gibson.");
+        ///    quotes.Add("3", "Zero Cool? Crashed fifteen hundred and seven systems in one day?");
+        ///    quotes.Add("4", "Turn on your laptop. Set it to receive a file.");
+        ///    quotes.Add("5", "Listen you guys, help yourself to anything in the fridge. Cereal has.");
+        ///    NewRelic.Api.Agent.NewRelic.NoticeError(ex.Message, quotes, true);
+        /// }
+        /// </code>
+        /// </example>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void NoticeError(string message, IDictionary<string, string> parameters, bool isExpected)
+        {
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
+        }
+
+        /// <summary>
+        /// Notice an error identified by a simple message and report it to the New Relic service.
+        /// If this method is called within a transaction,
+        /// the exception will be reported with the transaction when it finishes.  
+        /// If it is invoked outside of a transaction, a traced error will be created and reported to the New Relic service.
+        /// Only the string/parameter pair for the first call to NoticeError during the course of a transaction is retained.
+        /// Supports web applications only.
+        /// </summary>
+        /// <param name="message">The message to be displayed in the traced error.
+        /// Only the first 1000 characters are retained.
+        /// </param>
+        /// <param name="parameters">Custom parameters to include in the traced error.
+        /// May be null.
+        /// Only 10,000 characters of combbined key/value data is retained.
+        /// </param>
+        /// <param name="isExpected">
+        /// Mark an error as expected.
+        /// </param>>
+        /// <example>
+        /// <code>
+        ///  try
+        /// {
+        ///    var ImNotABool = "43";
+        ///    bool.Parse(ImNotABool);
+        /// }
+        /// catch (Exception ex)
+        /// {
+        ///    var quotes = new Dictionary&lt;string,string&gt;();
+        ///    quotes.Add("1", "They had a large chunk of the garbage file? How much do they know?");
+        ///    quotes.Add("2", "I'll hack the Gibson.");
+        ///    quotes.Add("3", "Zero Cool? Crashed fifteen hundred and seven systems in one day?");
+        ///    quotes.Add("4", "Turn on your laptop. Set it to receive a file.");
+        ///    quotes.Add("5", "Listen you guys, help yourself to anything in the fridge. Cereal has.");
+        ///    NewRelic.Api.Agent.NewRelic.NoticeError(ex.Message, quotes, true);
+        /// }
+        /// </code>
+        /// </example>
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        public static void NoticeError(string message, IDictionary<string, object> parameters, bool isExpected)
+        {
+            System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
+        }
+
         #endregion
 
         #region Transaction APIs
