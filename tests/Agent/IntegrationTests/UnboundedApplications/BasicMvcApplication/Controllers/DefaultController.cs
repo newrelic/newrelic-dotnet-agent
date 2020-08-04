@@ -1,4 +1,7 @@
-﻿extern alias StackExchangeStrongNameAlias;
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+extern alias StackExchangeStrongNameAlias;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;

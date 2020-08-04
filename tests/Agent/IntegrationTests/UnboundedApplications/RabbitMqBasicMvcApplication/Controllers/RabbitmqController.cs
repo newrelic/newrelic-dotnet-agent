@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System.Text;
 using System.Web.Mvc;
 using NewRelic.Agent.IntegrationTests.Shared;
 using RabbitMQ.Client;
