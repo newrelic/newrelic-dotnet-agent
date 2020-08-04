@@ -36,6 +36,9 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("cross_application_tracer.enabled")]
         public bool CrossApplicationTracerEnabled { get; set; }
 
+        [JsonProperty("distributed_tracing.enabled")]
+        public bool DistributedTracingEnabled { get; set; }
+
         [JsonProperty("error_collector.enabled")]
         public bool ErrorCollectorEnabled { get; set; }
 

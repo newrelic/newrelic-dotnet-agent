@@ -323,6 +323,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 UsingServerSideConfig = _configuration.UsingServerSideConfig,
                 ThreadProfilerEnabled = _configuration.ThreadProfilingEnabled,
                 CrossApplicationTracerEnabled = _configuration.CrossApplicationTracingEnabled,
+                DistributedTracingEnabled = _configuration.DistributedTracingEnabled,
                 ErrorCollectorEnabled = _configuration.ErrorCollectorEnabled,
                 ErrorCollectorIgnoreStatusCodes = _configuration.HttpStatusCodesToIgnore.ToList(),
                 ErrorCollectorIgnoreErrors = _configuration.ExceptionsToIgnore.ToList(),
