@@ -137,6 +137,11 @@ namespace NewRelic.Agent.Api
             _agentApiImplementation?.NoticeError(message, customAttributes);
         }
 
+        public static void NoticeError(string message, IDictionary<string, string> customAttributes, bool isExpected)
+        {
+            _agentApiImplementation?.NoticeError(message, customAttributes, isExpected);
+        }
+
         /// <summary> Notice an error identified by a simple message and report it to the New Relic
         /// service. If this method is called within a transaction, the exception will be reported with
         /// the transaction when it finishes. If it is invoked outside of a transaction, a traced error
@@ -153,6 +158,11 @@ namespace NewRelic.Agent.Api
         public static void NoticeError(string message, IDictionary<string, object> customAttributes)
         {
             _agentApiImplementation?.NoticeError(message, customAttributes);
+        }
+
+        public static void NoticeError(string message, IDictionary<string, object> customAttributes, bool isExpected)
+        {
+            _agentApiImplementation?.NoticeError(message, customAttributes, isExpected);
         }
 
         /// <summary> Add a key/value pair to the current transaction.  These are reported in errors and
