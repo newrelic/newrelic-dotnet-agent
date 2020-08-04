@@ -245,7 +245,7 @@ namespace NewRelic.Api.Agent
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.
-        /// Only 10,000 characters of combbined key/value data is retained.
+        /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
         /// <example>
         /// <code>
@@ -285,7 +285,7 @@ namespace NewRelic.Api.Agent
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.
-        /// Only 10,000 characters of combbined key/value data is retained.
+        /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
         /// <example>
         /// <code>
@@ -325,7 +325,7 @@ namespace NewRelic.Api.Agent
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.
-        /// Only 10,000 characters of combbined key/value data is retained.
+        /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
         /// <param name="isExpected">
         /// Mark an error as expected.
@@ -368,7 +368,7 @@ namespace NewRelic.Api.Agent
         /// </param>
         /// <param name="parameters">Custom parameters to include in the traced error.
         /// May be null.
-        /// Only 10,000 characters of combbined key/value data is retained.
+        /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
         /// <param name="isExpected">
         /// Mark an error as expected.
