@@ -250,18 +250,10 @@ namespace NewRelic.Agent.Core.Api
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
         public void NoticeError(string message, IDictionary<string, string> customAttributes)
         {
-            message = message ?? throw new ArgumentNullException(nameof(message));
-
-            using (new IgnoreWork())
-            {
-                var transaction = TryGetCurrentInternalTransaction();
-                if (IsErrorMessageIgnored(message)) return;
-                var errorData = _errorService.FromMessage(message, customAttributes);
-                ProcessNoticedError(errorData, transaction);
-            }
+            NoticeError(message, customAttributes, false);
         }
 
-        public void NoticeError(string message, IDictionary<string, object> customAttributes)
+        public void NoticeError(string message, IDictionary<string, string> customAttributes, bool isExpected)
         {
             message = message ?? throw new ArgumentNullException(nameof(message));
 
@@ -269,7 +261,25 @@ namespace NewRelic.Agent.Core.Api
             {
                 var transaction = TryGetCurrentInternalTransaction();
                 if (IsErrorMessageIgnored(message)) return;
-                var errorData = _errorService.FromMessage(message, customAttributes);
+                var errorData = _errorService.FromMessage(message, customAttributes, isExpected);
+                ProcessNoticedError(errorData, transaction);
+            }
+        }
+
+        public void NoticeError(string message, IDictionary<string, object> customAttributes)
+        {
+            NoticeError(message, customAttributes, false);
+        }
+
+        public void NoticeError(string message, IDictionary<string, object> customAttributes, bool isExpected)
+        {
+            message = message ?? throw new ArgumentNullException(nameof(message));
+
+            using (new IgnoreWork())
+            {
+                var transaction = TryGetCurrentInternalTransaction();
+                if (IsErrorMessageIgnored(message)) return;
+                var errorData = _errorService.FromMessage(message, customAttributes, isExpected);
                 ProcessNoticedError(errorData, transaction);
             }
         }

@@ -278,6 +278,17 @@ namespace NewRelic.Agent.Core
             TryInvoke(work, apiName, apiMetric);
         }
 
+        public static void NoticeError(string message, IDictionary<string, string> customAttributes, bool isExpected)
+        {
+            const ApiMethod apiMetric = ApiMethod.NoticeError;
+            const string apiName = nameof(NoticeError);
+            void work()
+            {
+                InternalApi.NoticeError(message, customAttributes, isExpected);
+            }
+            TryInvoke(work, apiName, apiMetric);
+        }
+
         /// <summary>
         /// Notice an error identified by a simple message and report it to the New Relic service.
         /// If this method is called within a transaction,
@@ -300,6 +311,17 @@ namespace NewRelic.Agent.Core
             void work()
             {
                 InternalApi.NoticeError(message, customAttributes);
+            }
+            TryInvoke(work, apiName, apiMetric);
+        }
+
+        public static void NoticeError(string message, IDictionary<string, object> customAttributes, bool isExpected)
+        {
+            const ApiMethod apiMetric = ApiMethod.NoticeError;
+            const string apiName = nameof(NoticeError);
+            void work()
+            {
+                InternalApi.NoticeError(message, customAttributes, isExpected);
             }
             TryInvoke(work, apiName, apiMetric);
         }

@@ -21,8 +21,8 @@ namespace NewRelic.Agent.Core.Errors
         ErrorData FromException(Exception exception);
         ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes);
         ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes);
-        ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes);
-        ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes);
+        ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected);
+        ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected);
         ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt);
     }
 
@@ -69,16 +69,16 @@ namespace NewRelic.Agent.Core.Errors
             return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
         }
 
-        public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes)
+        public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected)
         {
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes));
+            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected);
         }
 
-        public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes)
+        public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected)
         {
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes));
+            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected);
         }
 
         public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
