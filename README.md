@@ -59,7 +59,7 @@ As noted in our [security policy](https://github.com/newrelic/.github/blob/maste
 
 If you believe you have found a security vulnerability in this project or any of New Relic's products or websites, we welcome and greatly appreciate you reporting it to New Relic through [HackerOne](https://hackerone.com/newrelic).
 
-If you would like to contribute to this project, please review [these guidelines](https://github.com/newrelic/newrelic-dotnet-agent/blob/main/CONTRIBUTING.md).
+If you would like to contribute to this project, please review [these guidelines](/CONTRIBUTING.md).
 
 To [all contributors](https://github.com/newrelic/newrelic-dotnet-agent/graphs/contributors), we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to
 the [New Relic .NET agent](https://opensource.newrelic.com/projects/newrelic/newrelic-dotnet-agent).
