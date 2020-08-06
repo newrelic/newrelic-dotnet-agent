@@ -1,7 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The documentation in here must be kept up to date with that embedded in comments in newrelic.config -->
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:newrelic-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nr="Configuration.xsd">
-  <xs:element name="configuration">
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:tns="urn:newrelic-config" targetNamespace="urn:newrelic-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nr="Configuration.xsd">
+
+    <xs:complexType name="ErrorClassType">
+        <xs:annotation>
+            <xs:documentation>
+                A list of fully qualified error class names to be marked as ignored/expected.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="errorClass" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>
+                        Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ErrorMessagesType">
+        <xs:annotation>
+            <xs:documentation>
+                An optional map of fully qualified error class name to list of strings matching a substring of the message of an error to be ignored/expected.
+            </xs:documentation>
+        </xs:annotation>
+
+        <xs:sequence>
+            <xs:element name="errorClass" minOccurs="0" maxOccurs="unbounded" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="message" minOccurs="0" maxOccurs="unbounded" type="xs:string" />
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>
+                                Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
+                            </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="configuration">
     <xs:complexType>
       <xs:all>
         <xs:element name="service" minOccurs="1" maxOccurs="1">
@@ -1222,7 +1265,13 @@
                 </xs:complexType>
               </xs:element>
 
-              <xs:element name="ignoreStatusCodes">
+              <xs:element name="ignoreClasses" type="tns:ErrorClassType" minOccurs="0" maxOccurs="1">
+              </xs:element>
+
+              <xs:element name="ignoreMessages" type="tns:ErrorMessagesType" minOccurs="0" maxOccurs="1" >
+              </xs:element>
+
+              <xs:element name="ignoreStatusCodes" >
                 <xs:complexType>
                   <xs:annotation>
                     <xs:documentation>
@@ -1243,52 +1292,10 @@
                 </xs:complexType>
               </xs:element>
 
-              <xs:element name="expectedClasses">
-                <xs:complexType>
-                  <xs:annotation>
-                    <xs:documentation>
-                      A list of fully qualified error class names to be marked as expected.
-                    </xs:documentation>
-                  </xs:annotation>
-
-                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
-                    <xs:element name="errorClass" type="xs:string">
-                      <xs:annotation>
-                        <xs:documentation>
-                            Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
-                        </xs:documentation>
-                      </xs:annotation>
-                    </xs:element>
-                  </xs:sequence>
-
-                </xs:complexType>
+              <xs:element name="expectedClasses" type="tns:ErrorClassType" minOccurs="0" maxOccurs="1">
               </xs:element>
 
-              <xs:element name="expectedMessages" minOccurs="0" maxOccurs="1" >
-                  <xs:complexType>
-                      <xs:annotation>
-                          <xs:documentation>
-                              An optional map of fully qualified error class name to list of strings matching a substring of the message of an error to be expected.
-                          </xs:documentation>
-                      </xs:annotation>
-
-                      <xs:sequence>
-                          <xs:element name="errorClass" minOccurs="0" maxOccurs="unbounded" >
-                              <xs:complexType>
-                                  <xs:sequence>
-                                      <xs:element name="message" minOccurs="0" maxOccurs="unbounded" type="xs:string" />
-                                  </xs:sequence>
-                                  <xs:attribute name="name" type="xs:string">
-                                      <xs:annotation>
-                                          <xs:documentation>
-                                              Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
-                                          </xs:documentation>
-                                      </xs:annotation>
-                                  </xs:attribute>
-                              </xs:complexType>
-                          </xs:element>
-                      </xs:sequence>
-                  </xs:complexType>
+              <xs:element name="expectedMessages" type="tns:ErrorMessagesType" minOccurs="0" maxOccurs="1" >
               </xs:element>
 
               <xs:element name="expectedStatusCodes" minOccurs="0" maxOccurs="1" type="xs:string">
