@@ -64,6 +64,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpCollector", "Applicatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicMvcApplication", "Applications\BasicMvcApplication\BasicMvcApplication.csproj", "{53CEF5BC-4E46-4D09-8A02-C3C43F93BCA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicWebApplication", "Applications\BasicWebApplication\BasicWebApplication.csproj", "{C00ED122-0E93-4E5C-8D81-D2357DEE8099}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -166,6 +168,10 @@ Global
 		{53CEF5BC-4E46-4D09-8A02-C3C43F93BCA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53CEF5BC-4E46-4D09-8A02-C3C43F93BCA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53CEF5BC-4E46-4D09-8A02-C3C43F93BCA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C00ED122-0E93-4E5C-8D81-D2357DEE8099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C00ED122-0E93-4E5C-8D81-D2357DEE8099}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C00ED122-0E93-4E5C-8D81-D2357DEE8099}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C00ED122-0E93-4E5C-8D81-D2357DEE8099}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -189,6 +195,7 @@ Global
 		{C003B026-7090-499A-B5F9-ECAD479DB8A7} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{F7B921BC-172C-4191-873B-7C832156976D} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{53CEF5BC-4E46-4D09-8A02-C3C43F93BCA9} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
+		{C00ED122-0E93-4E5C-8D81-D2357DEE8099} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}
