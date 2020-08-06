@@ -91,7 +91,7 @@ namespace NewRelic.Agent.Core.Transformers
             var errorType = "ErrorType";
             var stackTrace = "StackTrace";
 
-            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters);
+            var errorData = new ErrorData(errorMsg, errorType, stackTrace, errorNoticedAt, errorCustomParameters, false);
 
             // ACT
             var errorTrace = _errorTraceMaker.GetErrorTrace( attribValues, errorData);
@@ -126,7 +126,7 @@ namespace NewRelic.Agent.Core.Transformers
 
         private ErrorData MakeError(ReadOnlyDictionary<string, object> attributes = null)
         {
-            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes);
+            return new ErrorData("error message", "error.type", null, System.DateTime.UtcNow, attributes, false);
         }
     }
 }
