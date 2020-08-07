@@ -22,6 +22,7 @@
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
+    <UpgradeBackupLocation>C:\git\newrelic-dotnet-agent\tests\Agent\IntegrationTests\Backup\</UpgradeBackupLocation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -69,6 +70,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Properties\PublishProfiles\LocalDeploy.pubxml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\RemoteController.cs" />
