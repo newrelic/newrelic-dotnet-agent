@@ -44,9 +44,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.QualityTools.Testing.Fakes, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -79,7 +76,7 @@
     <PackageReference Include="EnterpriseLibrary.Data">
       <Version>6.0.1304</Version>
     </PackageReference>
-    <PackageReference Include="IBM.Data.DB2" ExcludeAssets="runtime" >
+    <PackageReference Include="IBM.Data.DB2" ExcludeAssets="runtime">
       <Version>9.7.4.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Web.Infrastructure">
@@ -114,7 +111,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Fakes Include="Fakes\StackExchange.Redis.StrongName.fakes" />
     <None Include="Properties\PublishProfiles\LocalDeploy.pubxml" />
     <Content Include="Web.config" />
     <None Include="Web.Debug.config">
