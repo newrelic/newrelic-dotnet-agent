@@ -79,7 +79,7 @@
     <PackageReference Include="EnterpriseLibrary.Data">
       <Version>6.0.1304</Version>
     </PackageReference>
-    <PackageReference Include="IBM.Data.DB2">
+    <PackageReference Include="IBM.Data.DB2" ExcludeAssets="runtime" >
       <Version>9.7.4.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Web.Infrastructure">
