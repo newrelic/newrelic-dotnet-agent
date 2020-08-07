@@ -885,12 +885,25 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
 
         [Test]
-        public void Decodes_ExpectedClasses_ExpectedMessages_ExpectedStatusCodes_Configurations_Successfully()
+        public void Decodes_IngoreAndExpectedClasses_IgnoreAndExpectedMessages_ExpectedStatusCodes_Configurations_Successfully()
         {
             const string xmlString = @"<?xml version=""1.0""?>
 <configuration xmlns=""urn:newrelic-config"" agentEnabled=""true"">
   <service licenseKey=""REPLACE_WITH_LICENSE_KEY"" ssl=""true"" />
   <errorCollector enabled=""true"" captureEvents=""true"" maxEventSamplesStored=""100"">
+    <ignoreClasses>
+        <errorClass>ErrorClass1</errorClass>
+        <errorClass>ErrorClass2</errorClass>
+    </ignoreClasses>
+    <ignoreMessages>
+        <errorClass name=""ErrorClass2"">
+            <message>error message 1 in ErrorClass2</message>
+        </errorClass>
+        <errorClass name=""ErrorClass3"">
+            <message>error message 1 in ErrorClass3</message>
+            <message>error message 2 in ErrorClass3</message>
+        </errorClass>
+    </ignoreMessages>
     <expectedClasses>
         <errorClass>ErrorClass1</errorClass>
         <errorClass>ErrorClass2</errorClass>
@@ -924,27 +937,42 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             Assert.That(expectedMessages.ContainsKey("ErrorClass1"));
 
-            var errorClass2 = expectedMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
-            Assert.NotNull(errorClass2);
-            Assert.IsFalse(errorClass2.Value.Any());
+            var expectedErrorClass2 = expectedMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
+            Assert.NotNull(expectedErrorClass2);
+            Assert.IsFalse(expectedErrorClass2.Value.Any());
 
-            var errorClass3 = expectedMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
-            Assert.NotNull(errorClass3);
-            Assert.That(errorClass3.Value.Contains("error message 1 in ErrorClass3"));
-            Assert.That(errorClass3.Value.Contains("error message 2 in ErrorClass3"));
+            var expectedErrorClass3 = expectedMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
+            Assert.NotNull(expectedErrorClass3);
+            Assert.That(expectedErrorClass3.Value.Contains("error message 1 in ErrorClass3"));
+            Assert.That(expectedErrorClass3.Value.Contains("error message 2 in ErrorClass3"));
 
+            var ignoreMessages = _defaultConfig.IgnoreErrorsConfiguration;
+
+            Assert.That(ignoreMessages.ContainsKey("ErrorClass1"));
+
+            var ignoreErrorClass2 = ignoreMessages.Where(x => x.Key == "ErrorClass2").FirstOrDefault();
+            Assert.NotNull(ignoreErrorClass2);
+            Assert.IsFalse(ignoreErrorClass2.Value.Any());
+
+            var ignoreErrorClass3 = ignoreMessages.Where(x => x.Key == "ErrorClass3").FirstOrDefault();
+            Assert.NotNull(ignoreErrorClass3);
+            Assert.That(ignoreErrorClass3.Value.Contains("error message 1 in ErrorClass3"));
+            Assert.That(ignoreErrorClass3.Value.Contains("error message 2 in ErrorClass3"));
         }
 
-        [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server")]
-        [TestCase(new[] { "local" }, null, ExpectedResult = "local")]
-        public string ExpectedClassesSetFromLocalAndServerOverrides(string[] local, string[] server)
+        [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server,server")]
+        [TestCase(new[] { "local" }, null, ExpectedResult = "local,local")]
+        public string IgnoreAndExpectedClassesSetFromLocalAndServerOverrides(string[] local, string[] server)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedClasses = server;
             _localConfig.errorCollector.expectedClasses.errorClass = new List<string>(local);
 
+            _serverConfig.RpmConfig.ErrorCollectorIgnoreClasses = server;
+            _localConfig.errorCollector.ignoreClasses.errorClass = new List<string>(local);
+
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key;
+            return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key + "," + _defaultConfig.IgnoreErrorsConfiguration.FirstOrDefault().Key;
         }
 
         [TestCase("401", "405", ExpectedResult = "405")]
@@ -983,13 +1011,18 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             
         }
 
-        [TestCase(true, ExpectedResult = "server")]
-        [TestCase(false, ExpectedResult = "local")]
-        public string ExpectedMessagesSetFromLocalAndServerOverrides(bool server)
+        [TestCase(true, ExpectedResult = "server,server")]
+        [TestCase(false, ExpectedResult = "local,local")]
+        public string IgnoreAndExpectedMessagesSetFromLocalAndServerOverrides(bool server)
         {
             if (server)
             {
                 _serverConfig.RpmConfig.ErrorCollectorExpectedMessages = new List<KeyValuePair<string, IEnumerable<string>>>
+                {
+                    new KeyValuePair<string, IEnumerable<string>> ("server", new List<string>())
+                };
+
+                _serverConfig.RpmConfig.ErrorCollectorIgnoreMessages = new List<KeyValuePair<string, IEnumerable<string>>>
                 {
                     new KeyValuePair<string, IEnumerable<string>> ("server", new List<string>())
                 };
@@ -1000,9 +1033,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 new ErrorMessagesTypeErrorClass() {name = "local"}
             };
 
+            _localConfig.errorCollector.ignoreMessages = new List<ErrorMessagesTypeErrorClass>()
+            {
+                new ErrorMessagesTypeErrorClass() {name = "local"}
+            };
+
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key;
+            return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key + "," + _defaultConfig.IgnoreErrorsConfiguration.FirstOrDefault().Key;
         }
 
         [Test]
