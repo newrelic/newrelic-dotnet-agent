@@ -882,6 +882,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             _serverConfig.RpmConfig.ErrorCollectorErrorsToIgnore = server;
             _localConfig.errorCollector.ignoreErrors.exception = new List<string>(local);
 
+            CreateDefaultConfiguration();
+
             return _defaultConfig.ExceptionsToIgnore.FirstOrDefault();
         }
 
