@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.ServiceModel.Description;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport;
@@ -973,6 +974,17 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             CreateDefaultConfiguration();
 
             return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key + "," + _defaultConfig.IgnoreErrorsConfiguration.FirstOrDefault().Key;
+        }
+
+        [TestCase(new[] { "Class1", "Class2" }, new[] { "Class1" }, ExpectedResult = "Class1,Class2")]
+        [TestCase(new[] { "Class1" }, new[] { "Class2" }, ExpectedResult = "Class1,Class2")]
+        public string IgnoreErrorsAndIgnoreClassesCombineTests(string[] ignoreClasses, string[] ignoreErrors)
+        {
+            _localConfig.errorCollector.ignoreClasses.errorClass = new List<string>(ignoreClasses);
+            _localConfig.errorCollector.ignoreErrors.exception = new List<string>(ignoreErrors);
+
+            CreateDefaultConfiguration();
+            return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
         [TestCase("401", "405", ExpectedResult = "405")]

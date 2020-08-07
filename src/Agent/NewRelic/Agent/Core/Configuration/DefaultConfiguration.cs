@@ -1137,7 +1137,20 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
-        public virtual IEnumerable<string> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
+
+        private IEnumerable<string> _exceptionsToIgnore;
+        public virtual IEnumerable<string> ExceptionsToIgnore
+        {
+            get
+            {
+                if (_exceptionsToIgnore == null)
+                {
+                    _exceptionsToIgnore = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
+                }
+
+                return _exceptionsToIgnore;
+            }
+        }
 
         public IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; private set; }
         public IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; private set; }
@@ -2070,7 +2083,8 @@ namespace NewRelic.Agent.Core.Configuration
 
             var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
-            var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass);
+            var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass)
+                .Concat(ExceptionsToIgnore);
 
             var count = ignoreErrorInfo.Count;
 
@@ -2079,7 +2093,7 @@ namespace NewRelic.Agent.Core.Configuration
                 if (ignoreErrorInfo.ContainsKey(className))
                 {
                     ignoreErrorInfo[className] = Enumerable.Empty<string>();
-                    Log.Warn($"{className} class is specified in both errorCollector.ignoreClasses and errorCollector.ingoreMessages configurations. Any errors of this class will be marked as expected.");
+                    Log.Warn($"{className} class is specified in both errorCollector.ignoreClasses and errorCollector.ingoreMessages configurations. Any errors of this class will be ignored.");
                     ignoreMessages.Remove(className);
                 }
                 else if (count < MaxIgnoreErrorConfigEntries)
