@@ -1,4 +1,7 @@
-﻿using OpenRasta.Configuration;
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using OpenRasta.Configuration;
 using OpenRastaSite.Handlers;
 using OpenRastaSite.Resources;
 

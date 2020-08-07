@@ -1,4 +1,7 @@
-﻿using System.Web.Mvc;
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+using System.Web.Mvc;
 using System.Web.Routing;
 
 namespace BasicMvcApplication
@@ -14,7 +17,7 @@ namespace BasicMvcApplication
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { action = "Index", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
             );
         }
     }
