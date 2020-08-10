@@ -13,16 +13,6 @@
     <RootNamespace>OwinRemotingServer</RootNamespace>
     <AssemblyName>OwinRemotingServer</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
-    <FileUpgradeFlags>40</FileUpgradeFlags>
-    <OldToolsVersion>15.0</OldToolsVersion>
-    <UseIISExpress>true</UseIISExpress>
-    <UpgradeBackupLocation>C:\git\newrelic-dotnet-agent\tests\Agent\IntegrationTests\Backup\</UpgradeBackupLocation>
-    <Use64BitIISExpress />
-    <IISExpressSSLPort>44369</IISExpressSSLPort>
-    <IISExpressAnonymousAuthentication />
-    <IISExpressWindowsAuthentication />
-    <IISExpressUseClassicPipelineMode />
-    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
