@@ -907,6 +907,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             <message>error message 2 in ErrorClass3</message>
         </errorClass>
     </ignoreMessages>
+    <ignoreStatusCodes>
+        <code>404</code>
+        <code>500</code>
+    </ignoreStatusCodes>
     <expectedClasses>
         <errorClass>ErrorClass1</errorClass>
         <errorClass>ErrorClass2</errorClass>
@@ -961,6 +965,9 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             Assert.NotNull(ignoreErrorClass3);
             Assert.That(ignoreErrorClass3.Value.Contains("error message 1 in ErrorClass3"));
             Assert.That(ignoreErrorClass3.Value.Contains("error message 2 in ErrorClass3"));
+
+            Assert.That(_defaultConfig.IgnoreErrorsConfiguration.ContainsKey("404"));
+            Assert.That(_defaultConfig.IgnoreErrorsConfiguration.ContainsKey("500"));
         }
 
         [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server,server")]
@@ -1109,7 +1116,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _serverConfig.RpmConfig.ErrorCollectorStatusCodesToIgnore = server;
             _localConfig.errorCollector.ignoreStatusCodes.code = new List<float>(local);
-
+            CreateDefaultConfiguration();
             return _defaultConfig.HttpStatusCodesToIgnore.FirstOrDefault();
         }
 

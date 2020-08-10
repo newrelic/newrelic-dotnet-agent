@@ -1381,18 +1381,8 @@ namespace NewRelic.Agent.Core.Configuration
         #endregion
 
         public virtual int StackTraceMaximumFrames { get { return _localConfiguration.maxStackTraceLines; } }
-        public virtual IEnumerable<string> HttpStatusCodesToIgnore
-        {
-            get
-            {
-                var localStatusCodesToIgnore = new List<string>();
-                foreach (var localCode in _localConfiguration.errorCollector.ignoreStatusCodes.code)
-                {
-                    localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
-                }
-                return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, localStatusCodesToIgnore);
-            }
-        }
+        public virtual IEnumerable<string> HttpStatusCodesToIgnore { get; private set; }
+
         public virtual IEnumerable<string> ThreadProfilingIgnoreMethods { get { return _localConfiguration.threadProfiling ?? new List<string>(); } }
 
         #region Custom Events
@@ -2103,9 +2093,26 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
+            var localStatusCodesToIgnore = new List<string>();
+            foreach (var localCode in _localConfiguration.errorCollector.ignoreStatusCodes.code)
+            {
+                localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
+            }
+
+            var ignoreStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, localStatusCodesToIgnore);
+
+            foreach (var code in ignoreStatusCodes)
+            {
+                if (!ignoreErrorInfo.ContainsKey(code))
+                {
+                    ignoreErrorInfo.Add(code, Enumerable.Empty<string>());
+                }
+            }
+
             IgnoreErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreErrorInfo);
             IgnoreErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreMessages);
             IgnoreErrorClassesForAgentSettings = ignoreClasses;
+            HttpStatusCodesToIgnore = ignoreStatusCodes;
         }
 
         private static string TryGetValidPrefix(string prefix)
