@@ -38,6 +38,7 @@ dos2unix *.x* extensions/*.x* *.sh
 
 cp /deb/control ${INSTALL_ROOT}/DEBIAN
 cp /deb/postinst ${INSTALL_ROOT}/DEBIAN
+cp /deb/conffiles ${INSTALL_ROOT}/DEBIAN
 
 dos2unix ${INSTALL_ROOT}/DEBIAN/*
 
