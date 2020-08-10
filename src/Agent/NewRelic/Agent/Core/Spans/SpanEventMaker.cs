@@ -71,6 +71,10 @@ namespace NewRelic.Agent.Core.Spans
             {
                 _attribDefs.SpanErrorClass.TrySetValue(spanAttributes, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.ErrorTypeName);
                 _attribDefs.SpanErrorMessage.TrySetValue(spanAttributes, immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.ErrorMessage);
+                if (immutableTransaction.TransactionMetadata.ReadOnlyTransactionErrorState.ErrorData.IsExpected)
+                {
+                    _attribDefs.SpanIsErrorExpected.TrySetValue(spanAttributes, true);
+                }
             }
 
             _attribDefs.Guid.TrySetValue(spanAttributes, rootSpanId);

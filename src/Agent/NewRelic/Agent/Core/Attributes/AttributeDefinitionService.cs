@@ -45,6 +45,8 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> DbStatement { get; }
         AttributeDefinition<string, string> DistributedTraceId { get; }
         AttributeDefinition<TimeSpan, double> Duration { get; }
+        AttributeDefinition<bool, bool> IsErrorExpected { get;}
+        AttributeDefinition<bool, bool> SpanIsErrorExpected { get; }
         AttributeDefinition<string, string> ErrorClass { get; }
         AttributeDefinition<string, string> ErrorDotMessage { get; }
         AttributeDefinition<string, string> ErrorMessage { get; }
@@ -503,10 +505,22 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .Build(_attribFilter));
 
-        private AttributeDefinition<bool, bool> _isError;       //Error Attribute				
+        private AttributeDefinition<bool, bool> _isError;       //Error Attribute
         public AttributeDefinition<bool, bool> IsError => _isError ?? (_isError =
             AttributeDefinitionBuilder.CreateBool("error", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<bool, bool> _isErrorExpected;
+        public AttributeDefinition<bool, bool> IsErrorExpected => _isErrorExpected ?? (_isErrorExpected =
+            AttributeDefinitionBuilder.CreateBool("error.expected", AttributeClassification.Intrinsics)
+                .AppliesTo(AttributeDestinations.ErrorTrace, AttributeDestinations.ErrorEvent)
+                .Build(_attribFilter));
+
+        private AttributeDefinition<bool, bool> _spanIsErrorExpected;
+        public AttributeDefinition<bool, bool> SpanIsErrorExpected => _spanIsErrorExpected ?? (_spanIsErrorExpected =
+            AttributeDefinitionBuilder.CreateBool("error.expected", AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.SpanEvent)
                 .Build(_attribFilter));
 
         private AttributeDefinition<DateTime, long> _timestamp;

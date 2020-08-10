@@ -9,7 +9,6 @@ namespace NewRelic.SystemInterfaces
 {
     public interface IProcessStatic
     {
-
         IProcess GetCurrentProcess();
     }
 

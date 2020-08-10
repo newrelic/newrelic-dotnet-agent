@@ -236,8 +236,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     succeeded = false;
                     continue;
                 }
+                var attribute = errorTrace.Attributes.GetByType(attributeType)[expectedAttribute.Key];
+                var actualValue = attribute as string;
 
-                var actualValue = errorTrace.Attributes.GetByType(attributeType)[expectedAttribute.Key] as string;
+                if (actualValue == null && attribute.GetType() == typeof(bool))
+                {
+                    actualValue = attribute.ToString().ToLowerInvariant();
+                }
+
                 if (actualValue != expectedAttribute.Value)
                 {
                     builder.AppendFormat("Attribute named {0} in the error trace had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);
@@ -320,6 +326,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
 
                 var actualValue = actualAttributes[expectedAttribute.Key] as string;
+
+                if (actualValue == null && actualAttributes[expectedAttribute.Key].GetType() == typeof(bool))
+                {
+                    actualValue = actualAttributes[expectedAttribute.Key].ToString().ToLowerInvariant();
+                }
+
                 if (actualValue != expectedAttribute.Value)
                 {
                     builder.AppendFormat("Attribute named {0} in the error event had an unexpected value.  Expected: {1}, Actual: {2}", expectedAttribute.Key, expectedAttribute.Value, actualValue);

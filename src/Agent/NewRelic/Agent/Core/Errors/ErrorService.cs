@@ -21,8 +21,8 @@ namespace NewRelic.Agent.Core.Errors
         ErrorData FromException(Exception exception);
         ErrorData FromException(Exception exception, IDictionary<string, string> customAttributes);
         ErrorData FromException(Exception exception, IDictionary<string, object> customAttributes);
-        ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes);
-        ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes);
+        ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected);
+        ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected);
         ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt);
     }
 
@@ -69,16 +69,16 @@ namespace NewRelic.Agent.Core.Errors
             return FromExceptionInternal(exception, CaptureAttributes(customAttributes));
         }
 
-        public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes)
+        public ErrorData FromMessage(string errorMessage, IDictionary<string, string> customAttributes, bool isExpected)
         {
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes));
+            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected);
         }
 
-        public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes)
+        public ErrorData FromMessage(string errorMessage, IDictionary<string, object> customAttributes, bool isExpected)
         {
             var message = _configurationService.Configuration.StripExceptionMessages ? ErrorData.StripExceptionMessagesMessage : errorMessage;
-            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes));
+            return new ErrorData(message, CustomErrorTypeName, null, DateTime.UtcNow, CaptureAttributes(customAttributes), isExpected);
         }
 
         public ErrorData FromErrorHttpStatusCode(int statusCode, int? subStatusCode, DateTime noticedAt)
@@ -94,7 +94,9 @@ namespace NewRelic.Agent.Core.Errors
             var errorTypeName = GetFormattedHttpStatusCode(statusCode, subStatusCode);
             var errorMessage = statusDescription ?? $"Http Error {errorTypeName}";
 
-            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null);
+            var isExpected = _configurationService.Configuration.ExpectedStatusCodes.Any(rule => rule.IsMatch(statusCode.ToString()));
+
+            return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected);
         }
 
         private bool ShouldIgnoreError(string errorTypeName)
@@ -136,11 +138,11 @@ namespace NewRelic.Agent.Core.Errors
             var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
             var noticedAt = DateTime.UtcNow;
 
-            var isExpected = IsErrorExpected(exception);
+            var isExpected = IsErrorFromExceptionExpected(exception);
             return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
         }
 
-        private bool IsErrorExpected(Exception exception)
+        private bool IsErrorFromExceptionExpected(Exception exception)
         {
             var isExpected = IsExceptionExpected(exception);
 

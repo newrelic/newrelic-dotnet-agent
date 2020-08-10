@@ -33,11 +33,14 @@ namespace NewRelic.Agent.Core.Configuration
         public static readonly string RawStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.raw);
         public static readonly string ObfuscatedStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.obfuscated);
         public static readonly string OffStringValue = Enum.GetName(typeof(configurationTransactionTracerRecordSql), configurationTransactionTracerRecordSql.off);
+        private static readonly char HyphenChar = '-';
 
         private const string HighSecurityConfigSource = "High Security Mode";
         private const string SecurityPolicyConfigSource = "Security Policy";
         private const string LocalConfigSource = "Local Configuration";
         private const string ServerConfigSource = "Server Configuration";
+        private const int MaxExptectedErrorConfigEntries = 50;
+
         private static long _currentConfigurationVersion;
         private const int DefaultSpanEventsMaxSamplesStored = 1000;
         private readonly IEnvironment _environment = new EnvironmentMock();
@@ -141,12 +144,6 @@ namespace NewRelic.Agent.Core.Configuration
         {
             return _newRelicAppSettings.TryGetValue(key, out var valueStr) ? valueStr : null;
         }
-
-        private float TryGetAppSettingAsFloatWithDefault(string key, float defaultValue)
-        {
-            return TryGetAppSettingAsFloat(key).GetValueOrDefault(defaultValue);
-        }
-
 
         private float? TryGetAppSettingAsFloat(string key)
         {
@@ -1159,6 +1156,8 @@ namespace NewRelic.Agent.Core.Configuration
 
             var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
 
+            var count = expectedErrorInfo.Count;
+
             foreach (var className in expectedClasses)
             {
                 if (expectedErrorInfo.ContainsKey(className))
@@ -1167,40 +1166,60 @@ namespace NewRelic.Agent.Core.Configuration
                     Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
                     expectedMessages.Remove(className);
                 }
-                else
+                else if (count < MaxExptectedErrorConfigEntries)
                 {
                     expectedErrorInfo.Add(className, Enumerable.Empty<string>());
+                    count++;
                 }
             }
 
-            var localStatusCodesToIgnore = new List<string>();
+            var expectedStatusCodesString = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
 
-            foreach (var localCode in _localConfiguration.errorCollector.expectedStatusCodes.code)
-            {
-                localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
-            }
-
-            var expectedStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, localStatusCodesToIgnore);
-
-            foreach (var statusCode in expectedStatusCodes)
-            {
-                if (expectedErrorInfo.ContainsKey(statusCode))
-                {
-                    Log.Warn($"{statusCode} status code is already specified once in the errorCollector.expectedStatusCodes configuration.");
-                }
-                else
-                {
-                    expectedErrorInfo.Add(statusCode, Enumerable.Empty<string>());
-                }
-            }
-
+            ExpectedStatusCodes = ParseExpectedStatusCodesString(expectedStatusCodesString);
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
             ExpectedErrorClassesForAgentSettings = expectedClasses;
-            ExpectedErrorStatusCodesForAgentSettings = string.Join(",", expectedStatusCodes);
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesString;
+        }
+
+        private IEnumerable<MatchRule> ParseExpectedStatusCodesString(string expectedStatusCodesString)
+        {
+            var expectedStatusCodes = new List<MatchRule>();
+
+            var expectedStatusCodeArray = expectedStatusCodesString.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var singleCodeOrRange in expectedStatusCodeArray)
+            {
+                var index = singleCodeOrRange.IndexOf(HyphenChar);
+                if (index != -1)
+                {
+                    var lowerBoundString = singleCodeOrRange.Substring(0, index).Trim();
+                    var upperBoundString = singleCodeOrRange.Substring(index + 1, singleCodeOrRange.Length - index - 1).Trim();
+
+                    AddRule(StatusCodeInRangeMatchRule.GenerateRule(lowerBoundString, upperBoundString), singleCodeOrRange);
+                }
+                else
+                {
+                    AddRule(StatusCodeExactMatchRule.GenerateRule(singleCodeOrRange), singleCodeOrRange);
+                }
+            }
+
+            return expectedStatusCodes;
+
+            void AddRule(MatchRule rule, string statusCode)
+            {
+                if (rule != null)
+                {
+                    expectedStatusCodes.Add(rule);
+                }
+                else
+                {
+                    Log.Warn($"Cannot parse {statusCode} status code. This status code format is not supported.");
+                }
+            }
         }
 
         public IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; private set; }
+        public IEnumerable<MatchRule> ExpectedStatusCodes { get; private set; }
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public string ExpectedErrorStatusCodesForAgentSettings { get; private set; }
@@ -1789,6 +1808,7 @@ namespace NewRelic.Agent.Core.Configuration
         public string UtilizationFullHostName => _utilizationFullHostName.Value;
 
         private readonly Lazy<string> _utilizationHostName;
+
         public string UtilizationHostName => _utilizationHostName.Value;
 
         #endregion

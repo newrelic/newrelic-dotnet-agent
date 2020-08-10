@@ -895,9 +895,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         <errorClass>ErrorClass1</errorClass>
         <errorClass>ErrorClass2</errorClass>
     </expectedClasses>
-    <expectedStatusCodes>
-        <code>404</code>
-    </expectedStatusCodes>
+    <expectedStatusCodes>404,500</expectedStatusCodes>
     <expectedMessages>
         <errorClass name=""ErrorClass2"">
             <message>error message 1 in ErrorClass2</message>
@@ -920,7 +918,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.That(_defaultConfig.ExpectedErrorsConfiguration.ContainsKey("404"));
+            Assert.That(_defaultConfig.ExpectedErrorStatusCodesForAgentSettings == "404,500");
 
             var expectedMessages = _defaultConfig.ExpectedErrorsConfiguration;
 
@@ -949,16 +947,40 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key;
         }
 
-        [TestCase(new[] { 401f }, new[] { "405" }, ExpectedResult = "405")]
-        [TestCase(new[] { 401f }, null, ExpectedResult = "401")]
-        public string ExpectedStatusCodesSetFromLocalAndServerOverrides(float[] local, string[] server)
+        [TestCase("401", "405", ExpectedResult = "405")]
+        [TestCase("401", null, ExpectedResult = "401")]
+        public string ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string server)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
-            _localConfig.errorCollector.expectedStatusCodes.code = new List<float>(local);
+            _localConfig.errorCollector.expectedStatusCodes = (local);
 
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExpectedErrorsConfiguration.Keys.FirstOrDefault();
+            return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings;
+        }
+
+        [TestCase("400,401,404", new string[]{"400", "401", "402", "403", "404"},  new bool[] { true, true, false, false, true })]
+        [TestCase("400, 401 ,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
+        [TestCase("400, 401,404, ", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
+        [TestCase("400,401-404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, true, true, true })]
+        [TestCase("402,401-404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { false, true, true, true, true })]
+        [TestCase("401.4,401", new string[] { "400", "401", "402", "403", "404" }, new bool[] { false, true, false, false, false })] //does not support full status codes
+        [TestCase("404,401.4", new string[] { "400", "401", "402", "403", "404" }, new bool[] { false, false, false, false, true })]
+        [TestCase("401.4-404.5", new string[] { "400", "401", "402", "403", "404" }, new bool[] { false, false, false, false, false })] //does not support full status codes
+        public void ExpectedStatusCodesParserTests(string local, string[] inputs, bool[] expected)
+        {
+            _localConfig.errorCollector.expectedStatusCodes = local;
+
+            CreateDefaultConfiguration();
+
+            var actual = new bool[inputs.Length];
+            for (var i = 0; i < inputs.Length; i++)
+            {
+                actual[i] = _defaultConfig.ExpectedStatusCodes.Any(u => u.IsMatch(inputs[i]));
+            }
+
+            CollectionAssert.AreEqual(expected, actual);
+            
         }
 
         [TestCase(true, ExpectedResult = "server")]
@@ -986,7 +1008,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [Test]
         public void ExpectedErrorSettingsForAgentSettingsReportedCorrectly()
         {
-            _localConfig.errorCollector.expectedStatusCodes.code = new List<float> { 404, 500 };
+            _localConfig.errorCollector.expectedStatusCodes = "404,500";
             _localConfig.errorCollector.expectedClasses.errorClass = new List<string> { "ErrorClass1", "ErrorClass2" };
             _localConfig.errorCollector.expectedMessages = new List<configurationErrorCollectorErrorClass>
             {
