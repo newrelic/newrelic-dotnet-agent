@@ -6,10 +6,10 @@
 Name: newrelic-netcore20-agent
 Version: %{getenv:AGENT_VERSION}
 Release: 1
-License: Commercial
+License: Apache Software License 2.0
 Vendor: New Relic, Inc.
 Group: Development/Languages
-Summary: The New Relic .NET agent for .NET Core 2.0
+Summary: The New Relic .NET agent for .NET Core
 
 URL: http://newrelic.com/
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
@@ -19,7 +19,7 @@ SOURCE0: %{name}-%{version}.tar.gz
 
 %description
 The New Relic .NET agent monitors applications running
-on .NET Core 2.0.
+on .NET Core 2.0+.
 
 %prep
 %setup -q
@@ -39,7 +39,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-#%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+%config(noreplace) %{_install}/newrelic.config
 %{_install}/*
 
 %post
