@@ -13,8 +13,8 @@ The New Relic .NET agent is now open source! Now you can view the source code to
 * **Garbage Collection Performance Metrics for Windows** <br/>
 Fixes an issue where Garbage Collection Performance Metrics may not be reported for Windows Applications.
 
-* **Maintaining newrelic.config on RPM (Linux) upgrades** <br/>
-Fixes an issue where `newrelic.config` was being overwritten when upgrading the agent via RPM or YUM on RedHat-based Linux distros.
+* **Maintaining newrelic.config on Linux package upgrades** <br/>
+Fixes an issue where `newrelic.config` was being overwritten when upgrading the agent via either `rpm`/`yum` (RedHat/Centos) or `dpkg`/`apt` (Debian/Ubuntu).
  
 ### Docs Changes
 * [Doc Title](https://urlToDraft)
