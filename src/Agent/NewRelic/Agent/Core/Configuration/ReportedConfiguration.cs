@@ -48,6 +48,12 @@ namespace NewRelic.Agent.Core.Configuration
         [JsonProperty("error_collector.ignore_errors")]
         public IEnumerable<string> ErrorCollectorIgnoreErrors { get; set; }
 
+        [JsonProperty("error_collector.ignore_classes")]
+        public IEnumerable<string> ErrorCollectorIgnoreClasses { get; set; }
+
+        [JsonProperty("error_collector.ignore_messages")]
+        public IDictionary<string, IEnumerable<string>> ErrorCollectorIgnoreMessages { get; set; }
+
         [JsonProperty("error_collector.expected_classes")]
         public IEnumerable<string> ErrorCollectorExpectedClasses { get; set; }
 

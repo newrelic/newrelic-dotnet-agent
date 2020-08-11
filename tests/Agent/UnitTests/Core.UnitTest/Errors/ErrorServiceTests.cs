@@ -287,7 +287,7 @@ namespace NewRelic.Agent.Core.Errors
             {
                 foreach (var errorMessage in errorMessagesToBeExpected)
                 {
-                    var x = new configurationErrorCollectorErrorClass()
+                    var x = new ErrorMessagesCollectionErrorClass()
                     {
                         name = errorMessage.Key,
                         message = errorMessage.Value.ToList()

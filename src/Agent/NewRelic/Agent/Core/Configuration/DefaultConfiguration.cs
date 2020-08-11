@@ -40,6 +40,7 @@ namespace NewRelic.Agent.Core.Configuration
         private const string LocalConfigSource = "Local Configuration";
         private const string ServerConfigSource = "Server Configuration";
         private const int MaxExptectedErrorConfigEntries = 50;
+        private const int MaxIgnoreErrorConfigEntries = 50;
 
         private static long _currentConfigurationVersion;
         private const int DefaultSpanEventsMaxSamplesStored = 1000;
@@ -110,6 +111,7 @@ namespace NewRelic.Agent.Core.Configuration
             EventListenerSamplersEnabled = TryGetAppSettingAsBoolWithDefault("NewRelic.EventListenerSamplersEnabled", true);
 
             ParseExpectedErrorConfigurations();
+            ParseIgnoreErrorConfigurations();
         }
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
@@ -1135,52 +1137,24 @@ namespace NewRelic.Agent.Core.Configuration
         }
 
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
-        public virtual IEnumerable<string> ExceptionsToIgnore { get { return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception); } }
 
-        private void ParseExpectedErrorConfigurations()
+        private IEnumerable<string> _exceptionsToIgnore;
+        public virtual IEnumerable<string> ExceptionsToIgnore
         {
-            var localExpectedErrorMessages = new Dictionary<string, IEnumerable<string>>();
-
-            foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
+            get
             {
-                var messages = errorClass.message;
-                if (messages != null)
+                if (_exceptionsToIgnore == null)
                 {
-                    localExpectedErrorMessages.Add(errorClass.name, messages);
+                    _exceptionsToIgnore = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
                 }
+
+                return _exceptionsToIgnore;
             }
-
-            var expectedErrorInfo =  ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedErrorMessages).ToDictionary();
-
-            var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
-
-            var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
-
-            var count = expectedErrorInfo.Count;
-
-            foreach (var className in expectedClasses)
-            {
-                if (expectedErrorInfo.ContainsKey(className))
-                {
-                    expectedErrorInfo[className] = Enumerable.Empty<string>();
-                    Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
-                    expectedMessages.Remove(className);
-                }
-                else if (count < MaxExptectedErrorConfigEntries)
-                {
-                    expectedErrorInfo.Add(className, Enumerable.Empty<string>());
-                    count++;
-                }
-            }
-
-            var expectedStatusCodesString = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
-
-            ExpectedStatusCodes = ParseExpectedStatusCodesString(expectedStatusCodesString);
-            ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
-            ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
-            ExpectedErrorClassesForAgentSettings = expectedClasses;
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesString;
         }
+
+        public IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; private set; }
+        public IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; private set; }
+        public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings { get; private set; }
 
         private IEnumerable<MatchRule> ParseExpectedStatusCodesString(string expectedStatusCodesString)
         {
@@ -1407,18 +1381,8 @@ namespace NewRelic.Agent.Core.Configuration
         #endregion
 
         public virtual int StackTraceMaximumFrames { get { return _localConfiguration.maxStackTraceLines; } }
-        public virtual IEnumerable<string> HttpStatusCodesToIgnore
-        {
-            get
-            {
-                var localStatusCodesToIgnore = new List<string>();
-                foreach (var localCode in _localConfiguration.errorCollector.ignoreStatusCodes.code)
-                {
-                    localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
-                }
-                return ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, localStatusCodesToIgnore);
-            }
-        }
+        public virtual IEnumerable<string> HttpStatusCodesToIgnore { get; private set; }
+
         public virtual IEnumerable<string> ThreadProfilingIgnoreMethods { get { return _localConfiguration.threadProfiling ?? new List<string>(); } }
 
         #region Custom Events
@@ -2047,6 +2011,111 @@ namespace NewRelic.Agent.Core.Configuration
             return new KeyValuePair<string, IEnumerable<string>>(prefix, terms);
         }
 
+        private void ParseExpectedErrorConfigurations()
+        {
+            var localExpectedErrorMessages = new Dictionary<string, IEnumerable<string>>();
+
+            foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
+            {
+                var messages = errorClass.message;
+                if (messages != null)
+                {
+                    localExpectedErrorMessages.Add(errorClass.name, messages);
+                }
+            }
+
+            var expectedErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedErrorMessages).ToDictionary();
+
+            var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
+
+            var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
+
+            var count = expectedErrorInfo.Count;
+
+            foreach (var className in expectedClasses)
+            {
+                if (expectedErrorInfo.ContainsKey(className))
+                {
+                    expectedErrorInfo[className] = Enumerable.Empty<string>();
+                    Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
+                    expectedMessages.Remove(className);
+                }
+                else if (count < MaxExptectedErrorConfigEntries)
+                {
+                    expectedErrorInfo.Add(className, Enumerable.Empty<string>());
+                    count++;
+                }
+            }
+
+            var expectedStatusCodesString = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
+
+            ExpectedStatusCodes = ParseExpectedStatusCodesString(expectedStatusCodesString);
+            ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
+            ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
+            ExpectedErrorClassesForAgentSettings = expectedClasses;
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesString;
+        }
+
+        private void ParseIgnoreErrorConfigurations()
+        {
+            var localIgnoreErrorMessages = new Dictionary<string, IEnumerable<string>>();
+
+            foreach (var errorClass in _localConfiguration.errorCollector.ignoreMessages)
+            {
+                var messages = errorClass.message;
+                if (messages != null)
+                {
+                    localIgnoreErrorMessages.Add(errorClass.name, messages);
+                }
+            }
+
+            var ignoreErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreMessages, localIgnoreErrorMessages).ToDictionary();
+
+            var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
+
+            var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
+
+            var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass)
+                .Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);
+
+            var count = ignoreErrorInfo.Count;
+
+            foreach (var className in ignoreClasses)
+            {
+                if (ignoreErrorInfo.ContainsKey(className))
+                {
+                    ignoreErrorInfo[className] = Enumerable.Empty<string>();
+                    Log.Warn($"{className} class is specified in both errorCollector.ignoreClasses and errorCollector.ingoreMessages configurations. Any errors of this class will be ignored.");
+                    ignoreMessages.Remove(className);
+                }
+                else if (count < MaxIgnoreErrorConfigEntries)
+                {
+                    ignoreErrorInfo.Add(className, Enumerable.Empty<string>());
+                    count++;
+                }
+            }
+
+            var localStatusCodesToIgnore = new List<string>();
+            foreach (var localCode in _localConfiguration.errorCollector.ignoreStatusCodes.code)
+            {
+                localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
+            }
+
+            var ignoreStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, localStatusCodesToIgnore);
+
+            foreach (var code in ignoreStatusCodes)
+            {
+                if (!ignoreErrorInfo.ContainsKey(code))
+                {
+                    ignoreErrorInfo.Add(code, Enumerable.Empty<string>());
+                }
+            }
+
+            IgnoreErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreErrorInfo);
+            IgnoreErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreMessages);
+            IgnoreErrorClassesForAgentSettings = ignoreClasses;
+            HttpStatusCodesToIgnore = ignoreStatusCodes;
+        }
 
         private static string TryGetValidPrefix(string prefix)
         {

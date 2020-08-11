@@ -1031,6 +1031,53 @@ namespace NewRelic.Agent.Core.Config
         #endregion
     }
     
+    /// <summary>
+    /// A list of fully qualified error class names to be marked as ignored/expected.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
+    public partial class ErrorClassCollection
+    {
+        
+        private List<string> errorClassField;
+        
+        /// <summary>
+        /// ErrorClassCollection class constructor
+        /// </summary>
+        public ErrorClassCollection()
+        {
+            this.errorClassField = new List<string>();
+        }
+        
+        /// <summary>
+        /// Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
+        /// </summary>
+        [System.Xml.Serialization.XmlElementAttribute("errorClass")]
+        public List<string> errorClass
+        {
+            get
+            {
+                return this.errorClassField;
+            }
+            set
+            {
+                this.errorClassField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this ErrorClassCollection object
+        /// </summary>
+        public virtual ErrorClassCollection Clone()
+        {
+            return ((ErrorClassCollection)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
@@ -3849,11 +3896,15 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationErrorCollectorIgnoreErrors ignoreErrorsField;
         
+        private ErrorClassCollection ignoreClassesField;
+        
+        private List<ErrorMessagesCollectionErrorClass> ignoreMessagesField;
+        
         private configurationErrorCollectorIgnoreStatusCodes ignoreStatusCodesField;
         
-        private configurationErrorCollectorExpectedClasses expectedClassesField;
+        private ErrorClassCollection expectedClassesField;
         
-        private List<configurationErrorCollectorErrorClass> expectedMessagesField;
+        private List<ErrorMessagesCollectionErrorClass> expectedMessagesField;
         
         private string expectedStatusCodesField;
         
@@ -3873,9 +3924,11 @@ namespace NewRelic.Agent.Core.Config
         public configurationErrorCollector()
         {
             this.attributesField = new configurationErrorCollectorAttributes();
-            this.expectedMessagesField = new List<configurationErrorCollectorErrorClass>();
-            this.expectedClassesField = new configurationErrorCollectorExpectedClasses();
+            this.expectedMessagesField = new List<ErrorMessagesCollectionErrorClass>();
+            this.expectedClassesField = new ErrorClassCollection();
             this.ignoreStatusCodesField = new configurationErrorCollectorIgnoreStatusCodes();
+            this.ignoreMessagesField = new List<ErrorMessagesCollectionErrorClass>();
+            this.ignoreClassesField = new ErrorClassCollection();
             this.ignoreErrorsField = new configurationErrorCollectorIgnoreErrors();
             this.enabledField = true;
             this.captureEventsField = true;
@@ -3894,6 +3947,31 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
+        public ErrorClassCollection ignoreClasses
+        {
+            get
+            {
+                return this.ignoreClassesField;
+            }
+            set
+            {
+                this.ignoreClassesField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlArrayItemAttribute("errorClass", IsNullable=false)]
+        public List<ErrorMessagesCollectionErrorClass> ignoreMessages
+        {
+            get
+            {
+                return this.ignoreMessagesField;
+            }
+            set
+            {
+                this.ignoreMessagesField = value;
+            }
+        }
+        
         public configurationErrorCollectorIgnoreStatusCodes ignoreStatusCodes
         {
             get
@@ -3906,7 +3984,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public configurationErrorCollectorExpectedClasses expectedClasses
+        public ErrorClassCollection expectedClasses
         {
             get
             {
@@ -3919,7 +3997,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("errorClass", IsNullable=false)]
-        public List<configurationErrorCollectorErrorClass> expectedMessages
+        public List<ErrorMessagesCollectionErrorClass> expectedMessages
         {
             get
             {
@@ -4089,6 +4167,65 @@ namespace NewRelic.Agent.Core.Config
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
+    public partial class ErrorMessagesCollectionErrorClass
+    {
+        
+        private List<string> messageField;
+        
+        private string nameField;
+        
+        /// <summary>
+        /// ErrorMessagesCollectionErrorClass class constructor
+        /// </summary>
+        public ErrorMessagesCollectionErrorClass()
+        {
+            this.messageField = new List<string>();
+        }
+        
+        [System.Xml.Serialization.XmlElementAttribute("message")]
+        public List<string> message
+        {
+            get
+            {
+                return this.messageField;
+            }
+            set
+            {
+                this.messageField = value;
+            }
+        }
+        
+        /// <summary>
+        /// Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
+        /// </summary>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string name
+        {
+            get
+            {
+                return this.nameField;
+            }
+            set
+            {
+                this.nameField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this ErrorMessagesCollectionErrorClass object
+        /// </summary>
+        public virtual ErrorMessagesCollectionErrorClass Clone()
+        {
+            return ((ErrorMessagesCollectionErrorClass)(this.MemberwiseClone()));
+        }
+        #endregion
+    }
+    
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
     public partial class configurationErrorCollectorIgnoreStatusCodes
     {
         
@@ -4122,103 +4259,6 @@ namespace NewRelic.Agent.Core.Config
         public virtual configurationErrorCollectorIgnoreStatusCodes Clone()
         {
             return ((configurationErrorCollectorIgnoreStatusCodes)(this.MemberwiseClone()));
-        }
-        #endregion
-    }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public partial class configurationErrorCollectorExpectedClasses
-    {
-        
-        private List<string> errorClassField;
-        
-        /// <summary>
-        /// configurationErrorCollectorExpectedClasses class constructor
-        /// </summary>
-        public configurationErrorCollectorExpectedClasses()
-        {
-            this.errorClassField = new List<string>();
-        }
-        
-        [System.Xml.Serialization.XmlElementAttribute("errorClass")]
-        public List<string> errorClass
-        {
-            get
-            {
-                return this.errorClassField;
-            }
-            set
-            {
-                this.errorClassField = value;
-            }
-        }
-        
-        #region Clone method
-        /// <summary>
-        /// Create a clone of this configurationErrorCollectorExpectedClasses object
-        /// </summary>
-        public virtual configurationErrorCollectorExpectedClasses Clone()
-        {
-            return ((configurationErrorCollectorExpectedClasses)(this.MemberwiseClone()));
-        }
-        #endregion
-    }
-    
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
-    [System.SerializableAttribute()]
-    [System.ComponentModel.DesignerCategoryAttribute("code")]
-    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public partial class configurationErrorCollectorErrorClass
-    {
-        
-        private List<string> messageField;
-        
-        private string nameField;
-        
-        /// <summary>
-        /// configurationErrorCollectorErrorClass class constructor
-        /// </summary>
-        public configurationErrorCollectorErrorClass()
-        {
-            this.messageField = new List<string>();
-        }
-        
-        [System.Xml.Serialization.XmlElementAttribute("message")]
-        public List<string> message
-        {
-            get
-            {
-                return this.messageField;
-            }
-            set
-            {
-                this.messageField = value;
-            }
-        }
-        
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string name
-        {
-            get
-            {
-                return this.nameField;
-            }
-            set
-            {
-                this.nameField = value;
-            }
-        }
-        
-        #region Clone method
-        /// <summary>
-        /// Create a clone of this configurationErrorCollectorErrorClass object
-        /// </summary>
-        public virtual configurationErrorCollectorErrorClass Clone()
-        {
-            return ((configurationErrorCollectorErrorClass)(this.MemberwiseClone()));
         }
         #endregion
     }
@@ -4691,6 +4731,9 @@ namespace NewRelic.Agent.Core.Config
         
         private bool instrumentField;
         
+        /// <summary>
+        /// Fully qualified class name of an exception, such as "System.IO.FileNotFoundException".
+        /// </summary>
         [System.Xml.Serialization.XmlAttributeAttribute()]
         public string name
         {
@@ -5036,5 +5079,50 @@ namespace NewRelic.Agent.Core.Config
         high,
         
         low,
+    }
+    
+    /// <summary>
+    /// An optional map of fully qualified error class name to list of strings matching a substring of the message of an error to be ignored/expected.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Xsd2Code", "3.6.0.20097")]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace="urn:newrelic-config", IsNullable=true)]
+    public partial class ErrorMessagesCollection
+    {
+        
+        private List<ErrorMessagesCollectionErrorClass> errorClassField;
+        
+        /// <summary>
+        /// ErrorMessagesCollection class constructor
+        /// </summary>
+        public ErrorMessagesCollection()
+        {
+            this.errorClassField = new List<ErrorMessagesCollectionErrorClass>();
+        }
+        
+        [System.Xml.Serialization.XmlElementAttribute("errorClass")]
+        public List<ErrorMessagesCollectionErrorClass> errorClass
+        {
+            get
+            {
+                return this.errorClassField;
+            }
+            set
+            {
+                this.errorClassField = value;
+            }
+        }
+        
+        #region Clone method
+        /// <summary>
+        /// Create a clone of this ErrorMessagesCollection object
+        /// </summary>
+        public virtual ErrorMessagesCollection Clone()
+        {
+            return ((ErrorMessagesCollection)(this.MemberwiseClone()));
+        }
+        #endregion
     }
 }

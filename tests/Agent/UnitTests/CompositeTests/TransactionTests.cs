@@ -247,6 +247,7 @@ namespace CompositeTests
         {
             _compositeTestAgent.LocalConfiguration.errorCollector.ignoreErrors.exception =
                 new List<string>() { "System.OperationCanceledException" };
+            _compositeTestAgent.PushConfiguration();
 
             var tx = _agent.CreateTransaction(true, "TestCategory", "TestTransaction", false);
             var segment = _agent.StartCustomSegmentOrThrow("TestSegment");

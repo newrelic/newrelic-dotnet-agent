@@ -327,6 +327,8 @@ namespace NewRelic.Agent.Core.DataTransport
                 ErrorCollectorEnabled = _configuration.ErrorCollectorEnabled,
                 ErrorCollectorIgnoreStatusCodes = _configuration.HttpStatusCodesToIgnore.ToList(),
                 ErrorCollectorIgnoreErrors = _configuration.ExceptionsToIgnore.ToList(),
+                ErrorCollectorIgnoreClasses = _configuration.IgnoreErrorClassesForAgentSettings,
+                ErrorCollectorIgnoreMessages = _configuration.IgnoreErrorMessagesForAgentSettings,
                 ErrorCollectorExpectedClasses = _configuration.ExpectedErrorClassesForAgentSettings,
                 ErrorCollectorExpectedMessages = _configuration.ExpectedErrorMessagesForAgentSettings,
                 ErrorCollectoryExpectedStatusCodes = _configuration.ExpectedErrorStatusCodesForAgentSettings,
