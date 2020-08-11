@@ -2073,8 +2073,10 @@ namespace NewRelic.Agent.Core.Configuration
 
             var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
+            var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
+
             var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass)
-                .Concat(ExceptionsToIgnore);
+                .Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);
 
             var count = ignoreErrorInfo.Count;
 
