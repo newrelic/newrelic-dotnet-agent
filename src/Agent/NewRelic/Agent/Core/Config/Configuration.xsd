@@ -2,7 +2,7 @@
 <!-- The documentation in here must be kept up to date with that embedded in comments in newrelic.config -->
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:tns="urn:newrelic-config" targetNamespace="urn:newrelic-config" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nr="Configuration.xsd">
 
-    <xs:complexType name="ErrorClassType">
+    <xs:complexType name="ErrorClassCollection">
         <xs:annotation>
             <xs:documentation>
                 A list of fully qualified error class names to be marked as ignored/expected.
@@ -19,7 +19,7 @@
         </xs:sequence>
     </xs:complexType>
 
-    <xs:complexType name="ErrorMessagesType">
+    <xs:complexType name="ErrorMessagesCollection">
         <xs:annotation>
             <xs:documentation>
                 An optional map of fully qualified error class name to list of strings matching a substring of the message of an error to be ignored/expected.
@@ -1265,10 +1265,10 @@
                 </xs:complexType>
               </xs:element>
 
-              <xs:element name="ignoreClasses" type="tns:ErrorClassType" minOccurs="0" maxOccurs="1">
+              <xs:element name="ignoreClasses" type="tns:ErrorClassCollection" minOccurs="0" maxOccurs="1">
               </xs:element>
 
-              <xs:element name="ignoreMessages" type="tns:ErrorMessagesType" minOccurs="0" maxOccurs="1" >
+              <xs:element name="ignoreMessages" type="tns:ErrorMessagesCollection" minOccurs="0" maxOccurs="1" >
               </xs:element>
 
               <xs:element name="ignoreStatusCodes" >
@@ -1292,10 +1292,10 @@
                 </xs:complexType>
               </xs:element>
 
-              <xs:element name="expectedClasses" type="tns:ErrorClassType" minOccurs="0" maxOccurs="1">
+              <xs:element name="expectedClasses" type="tns:ErrorClassCollection" minOccurs="0" maxOccurs="1">
               </xs:element>
 
-              <xs:element name="expectedMessages" type="tns:ErrorMessagesType" minOccurs="0" maxOccurs="1" >
+              <xs:element name="expectedMessages" type="tns:ErrorMessagesCollection" minOccurs="0" maxOccurs="1" >
               </xs:element>
 
               <xs:element name="expectedStatusCodes" minOccurs="0" maxOccurs="1" type="xs:string">

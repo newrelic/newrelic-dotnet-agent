@@ -1049,14 +1049,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
                 };
             }
 
-            _localConfig.errorCollector.expectedMessages = new List<ErrorMessagesTypeErrorClass>()
+            _localConfig.errorCollector.expectedMessages = new List<ErrorMessagesCollectionErrorClass>()
             {
-                new ErrorMessagesTypeErrorClass() {name = "local"}
+                new ErrorMessagesCollectionErrorClass() {name = "local"}
             };
 
-            _localConfig.errorCollector.ignoreMessages = new List<ErrorMessagesTypeErrorClass>()
+            _localConfig.errorCollector.ignoreMessages = new List<ErrorMessagesCollectionErrorClass>()
             {
-                new ErrorMessagesTypeErrorClass() {name = "local"}
+                new ErrorMessagesCollectionErrorClass() {name = "local"}
             };
 
             CreateDefaultConfiguration();
@@ -1069,14 +1069,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             _localConfig.errorCollector.expectedStatusCodes = "404,500";
             _localConfig.errorCollector.expectedClasses.errorClass = new List<string> { "ErrorClass1", "ErrorClass2" };
-            _localConfig.errorCollector.expectedMessages = new List<ErrorMessagesTypeErrorClass>
+            _localConfig.errorCollector.expectedMessages = new List<ErrorMessagesCollectionErrorClass>
             {
-                new ErrorMessagesTypeErrorClass
+                new ErrorMessagesCollectionErrorClass
                 {
                     name = "ErrorClass2",
                     message = new List<string> { "error message 1 in ErrorClass2" }
                 },
-                new ErrorMessagesTypeErrorClass
+                new ErrorMessagesCollectionErrorClass
                 {
                     name = "ErrorClass3",
                     message = new List<string> { "error message 1 in ErrorClass3", "error message 2 in ErrorClass3" }

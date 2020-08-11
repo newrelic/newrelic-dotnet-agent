@@ -1038,15 +1038,15 @@ namespace NewRelic.Agent.Core.Config
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
-    public partial class ErrorClassType
+    public partial class ErrorClassCollection
     {
         
         private List<string> errorClassField;
         
         /// <summary>
-        /// ErrorClassType class constructor
+        /// ErrorClassCollection class constructor
         /// </summary>
-        public ErrorClassType()
+        public ErrorClassCollection()
         {
             this.errorClassField = new List<string>();
         }
@@ -1069,11 +1069,11 @@ namespace NewRelic.Agent.Core.Config
         
         #region Clone method
         /// <summary>
-        /// Create a clone of this ErrorClassType object
+        /// Create a clone of this ErrorClassCollection object
         /// </summary>
-        public virtual ErrorClassType Clone()
+        public virtual ErrorClassCollection Clone()
         {
-            return ((ErrorClassType)(this.MemberwiseClone()));
+            return ((ErrorClassCollection)(this.MemberwiseClone()));
         }
         #endregion
     }
@@ -3896,15 +3896,15 @@ namespace NewRelic.Agent.Core.Config
         
         private configurationErrorCollectorIgnoreErrors ignoreErrorsField;
         
-        private ErrorClassType ignoreClassesField;
+        private ErrorClassCollection ignoreClassesField;
         
-        private List<ErrorMessagesTypeErrorClass> ignoreMessagesField;
+        private List<ErrorMessagesCollectionErrorClass> ignoreMessagesField;
         
         private configurationErrorCollectorIgnoreStatusCodes ignoreStatusCodesField;
         
-        private ErrorClassType expectedClassesField;
+        private ErrorClassCollection expectedClassesField;
         
-        private List<ErrorMessagesTypeErrorClass> expectedMessagesField;
+        private List<ErrorMessagesCollectionErrorClass> expectedMessagesField;
         
         private string expectedStatusCodesField;
         
@@ -3924,11 +3924,11 @@ namespace NewRelic.Agent.Core.Config
         public configurationErrorCollector()
         {
             this.attributesField = new configurationErrorCollectorAttributes();
-            this.expectedMessagesField = new List<ErrorMessagesTypeErrorClass>();
-            this.expectedClassesField = new ErrorClassType();
+            this.expectedMessagesField = new List<ErrorMessagesCollectionErrorClass>();
+            this.expectedClassesField = new ErrorClassCollection();
             this.ignoreStatusCodesField = new configurationErrorCollectorIgnoreStatusCodes();
-            this.ignoreMessagesField = new List<ErrorMessagesTypeErrorClass>();
-            this.ignoreClassesField = new ErrorClassType();
+            this.ignoreMessagesField = new List<ErrorMessagesCollectionErrorClass>();
+            this.ignoreClassesField = new ErrorClassCollection();
             this.ignoreErrorsField = new configurationErrorCollectorIgnoreErrors();
             this.enabledField = true;
             this.captureEventsField = true;
@@ -3947,7 +3947,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public ErrorClassType ignoreClasses
+        public ErrorClassCollection ignoreClasses
         {
             get
             {
@@ -3960,7 +3960,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("errorClass", IsNullable=false)]
-        public List<ErrorMessagesTypeErrorClass> ignoreMessages
+        public List<ErrorMessagesCollectionErrorClass> ignoreMessages
         {
             get
             {
@@ -3984,7 +3984,7 @@ namespace NewRelic.Agent.Core.Config
             }
         }
         
-        public ErrorClassType expectedClasses
+        public ErrorClassCollection expectedClasses
         {
             get
             {
@@ -3997,7 +3997,7 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlArrayItemAttribute("errorClass", IsNullable=false)]
-        public List<ErrorMessagesTypeErrorClass> expectedMessages
+        public List<ErrorMessagesCollectionErrorClass> expectedMessages
         {
             get
             {
@@ -4167,7 +4167,7 @@ namespace NewRelic.Agent.Core.Config
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true, Namespace="urn:newrelic-config")]
-    public partial class ErrorMessagesTypeErrorClass
+    public partial class ErrorMessagesCollectionErrorClass
     {
         
         private List<string> messageField;
@@ -4175,9 +4175,9 @@ namespace NewRelic.Agent.Core.Config
         private string nameField;
         
         /// <summary>
-        /// ErrorMessagesTypeErrorClass class constructor
+        /// ErrorMessagesCollectionErrorClass class constructor
         /// </summary>
-        public ErrorMessagesTypeErrorClass()
+        public ErrorMessagesCollectionErrorClass()
         {
             this.messageField = new List<string>();
         }
@@ -4213,11 +4213,11 @@ namespace NewRelic.Agent.Core.Config
         
         #region Clone method
         /// <summary>
-        /// Create a clone of this ErrorMessagesTypeErrorClass object
+        /// Create a clone of this ErrorMessagesCollectionErrorClass object
         /// </summary>
-        public virtual ErrorMessagesTypeErrorClass Clone()
+        public virtual ErrorMessagesCollectionErrorClass Clone()
         {
-            return ((ErrorMessagesTypeErrorClass)(this.MemberwiseClone()));
+            return ((ErrorMessagesCollectionErrorClass)(this.MemberwiseClone()));
         }
         #endregion
     }
@@ -5089,21 +5089,21 @@ namespace NewRelic.Agent.Core.Config
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="urn:newrelic-config")]
     [System.Xml.Serialization.XmlRootAttribute(Namespace="urn:newrelic-config", IsNullable=true)]
-    public partial class ErrorMessagesType
+    public partial class ErrorMessagesCollection
     {
         
-        private List<ErrorMessagesTypeErrorClass> errorClassField;
+        private List<ErrorMessagesCollectionErrorClass> errorClassField;
         
         /// <summary>
-        /// ErrorMessagesType class constructor
+        /// ErrorMessagesCollection class constructor
         /// </summary>
-        public ErrorMessagesType()
+        public ErrorMessagesCollection()
         {
-            this.errorClassField = new List<ErrorMessagesTypeErrorClass>();
+            this.errorClassField = new List<ErrorMessagesCollectionErrorClass>();
         }
         
         [System.Xml.Serialization.XmlElementAttribute("errorClass")]
-        public List<ErrorMessagesTypeErrorClass> errorClass
+        public List<ErrorMessagesCollectionErrorClass> errorClass
         {
             get
             {
@@ -5117,11 +5117,11 @@ namespace NewRelic.Agent.Core.Config
         
         #region Clone method
         /// <summary>
-        /// Create a clone of this ErrorMessagesType object
+        /// Create a clone of this ErrorMessagesCollection object
         /// </summary>
-        public virtual ErrorMessagesType Clone()
+        public virtual ErrorMessagesCollection Clone()
         {
-            return ((ErrorMessagesType)(this.MemberwiseClone()));
+            return ((ErrorMessagesCollection)(this.MemberwiseClone()));
         }
         #endregion
     }
