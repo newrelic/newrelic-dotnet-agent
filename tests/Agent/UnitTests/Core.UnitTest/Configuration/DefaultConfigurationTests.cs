@@ -884,7 +884,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             CreateDefaultConfiguration();
 
-            return _defaultConfig.ExceptionsToIgnore.FirstOrDefault();
+            return _defaultConfig.IgnoreErrorsConfiguration.Keys.FirstOrDefault();
         }
 
         [Test]

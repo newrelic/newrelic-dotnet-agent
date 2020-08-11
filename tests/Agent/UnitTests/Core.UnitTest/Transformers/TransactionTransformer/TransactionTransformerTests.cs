@@ -864,9 +864,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             {
                 { "System.IO.IOException", Enumerable.Empty<string>()}
             });
-            Mock.Arrange(() => _configuration.ExceptionsToIgnore).Returns(new List<string>()
+            Mock.Arrange(() => _configuration.IgnoreErrorsConfiguration).Returns(new Dictionary<string, IEnumerable<string>>
             {
-                { "System.IO.IOException"}
+                { "System.IO.IOException", Enumerable.Empty<string>()}
             });
 
             var transaction = TestTransactions.CreateDefaultTransaction(false, configurationService: _configurationService, exception: new IOException());

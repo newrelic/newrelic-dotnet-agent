@@ -93,7 +93,8 @@ namespace NewRelic.Agent.Configuration
         IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; }
         string ExpectedErrorStatusCodesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; }
-        IEnumerable<string> ExceptionsToIgnore { get; }
+        IEnumerable<string> IgnoreErrorsForAgentSettings { get; }
+        IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; }
         IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings { get; }
         Dictionary<string, string> RequestHeadersMap { get; }

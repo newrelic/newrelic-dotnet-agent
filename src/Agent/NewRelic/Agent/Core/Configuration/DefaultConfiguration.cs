@@ -1138,19 +1138,7 @@ namespace NewRelic.Agent.Core.Configuration
 
         public virtual uint ErrorsMaximumPerPeriod { get { return 20; } }
 
-        private IEnumerable<string> _exceptionsToIgnore;
-        public virtual IEnumerable<string> ExceptionsToIgnore
-        {
-            get
-            {
-                if (_exceptionsToIgnore == null)
-                {
-                    _exceptionsToIgnore = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
-                }
-
-                return _exceptionsToIgnore;
-            }
-        }
+        public virtual IEnumerable<string> IgnoreErrorsForAgentSettings { get; private set; }
 
         public IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; private set; }
         public IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; private set; }
@@ -2074,6 +2062,8 @@ namespace NewRelic.Agent.Core.Configuration
             var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
             var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
+
+            IgnoreErrorsForAgentSettings = ignoreClassesFromErrorCollectorIgnoreErrorsConfig;
 
             var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass)
                 .Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);

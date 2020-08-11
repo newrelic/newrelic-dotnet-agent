@@ -41,17 +41,26 @@ namespace NewRelic.Agent.Core.Errors
 
         public bool ShouldIgnoreException(Exception exception)
         {
-            var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
-            if (ShouldIgnoreError(exceptionTypeName)) return true;
-
-            var baseException = exception.GetBaseException();
-            var baseExceptionTypeName = GetFriendlyExceptionTypeName(baseException);
-            return ShouldIgnoreError(baseExceptionTypeName);
+            return IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.IgnoreErrorsConfiguration);
         }
 
         public bool ShouldIgnoreHttpStatusCode(int statusCode, int? subStatusCode)
         {
-            return ShouldIgnoreError(GetFormattedHttpStatusCode(statusCode, subStatusCode));
+            var formattedStatusCode = GetFormattedHttpStatusCode(statusCode, subStatusCode);
+
+            if (_configurationService.Configuration.IgnoreErrorsConfiguration.ContainsKey(formattedStatusCode))
+            {
+                return true;
+            }
+
+            var splitStatusCode = formattedStatusCode.Split(StringSeparators.Period);
+
+            if (splitStatusCode[0] != null && _configurationService.Configuration.IgnoreErrorsConfiguration.ContainsKey(splitStatusCode[0]))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public ErrorData FromException(Exception exception)
@@ -99,24 +108,7 @@ namespace NewRelic.Agent.Core.Errors
             return new ErrorData(errorMessage, errorTypeName, null, noticedAt, null, isExpected);
         }
 
-        private bool ShouldIgnoreError(string errorTypeName)
-        {
-            if (_configurationService.Configuration.ExceptionsToIgnore.Contains(errorTypeName))
-                return true;
-
-            if (_configurationService.Configuration.HttpStatusCodesToIgnore.Contains(errorTypeName))
-                return true;
-
-            var splitStatusCode = errorTypeName.Split(StringSeparators.Period);
-            if (splitStatusCode[0] != null && _configurationService.Configuration.HttpStatusCodesToIgnore.Contains(splitStatusCode[0]))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private string GetFriendlyExceptionTypeName(Exception exception)
+        private static string GetFriendlyExceptionTypeName(Exception exception)
         {
             var exceptionTypeName = exception.GetType().FullName;
             return exceptionTypeName?.Split(StringSeparators.BackTick, 2)[0] ?? string.Empty;
@@ -138,32 +130,31 @@ namespace NewRelic.Agent.Core.Errors
             var stackTrace = ExceptionFormatter.FormatStackTrace(exception, _configurationService.Configuration.StripExceptionMessages);
             var noticedAt = DateTime.UtcNow;
 
-            var isExpected = IsErrorFromExceptionExpected(exception);
+            var isExpected = IsErrorFromExceptionSpecified(exception, _configurationService.Configuration.ExpectedErrorsConfiguration);
             return new ErrorData(message, baseExceptionTypeName, stackTrace, noticedAt, customAttributes, isExpected);
         }
 
-        private bool IsErrorFromExceptionExpected(Exception exception)
+        private static bool IsErrorFromExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)
         {
-            var isExpected = IsExceptionExpected(exception);
+            var isSpecified = IsExceptionSpecified(exception, source);
 
-            if (!isExpected)
+            if (!isSpecified)
             {
                 var baseException = exception.GetBaseException();
-                return IsExceptionExpected(baseException);
+                return IsExceptionSpecified(baseException, source);
             }
-            return isExpected;
+            return isSpecified;
         }
 
-        private bool IsExceptionExpected(Exception exception)
+        private static bool IsExceptionSpecified(Exception exception, IDictionary<string, IEnumerable<string>> source)
         {
             var exceptionTypeName = GetFriendlyExceptionTypeName(exception);
-            var expectedErrorInfo = _configurationService.Configuration.ExpectedErrorsConfiguration;
 
-            if (expectedErrorInfo.TryGetValue(exceptionTypeName, out var expectedMessages))
+            if (source.TryGetValue(exceptionTypeName, out var messages))
             {
-                if (expectedMessages != Enumerable.Empty<string>())
+                if (messages != Enumerable.Empty<string>())
                 {
-                    return ContainsSubstring(expectedMessages, exception.Message);
+                    return ContainsSubstring(messages, exception.Message);
                 }
                 else
                 {
@@ -174,7 +165,7 @@ namespace NewRelic.Agent.Core.Errors
             return false;
         }
 
-        private bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
+        private static bool ContainsSubstring(IEnumerable<string> subStringList, string sourceString)
         {
             foreach (var item in subStringList)
             {

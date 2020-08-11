@@ -67,7 +67,7 @@ namespace NewRelic.Agent.Core.Configuration
             Mock.Arrange(() => configuration.ExpectedErrorMessagesForAgentSettings).Returns(ErrorCollectorExpectedMessages);
             Mock.Arrange(() => configuration.ExpectedErrorStatusCodesForAgentSettings).Returns(ErrorCollectorExpectedStatusCodes);
             Mock.Arrange(() => configuration.HttpStatusCodesToIgnore).Returns(ErrorCollectorIgnoreStatusCodes);
-            Mock.Arrange(() => configuration.ExceptionsToIgnore).Returns(ErrorCollectorIgnoreStatusCodes);
+            Mock.Arrange(() => configuration.IgnoreErrorsForAgentSettings).Returns(ErrorCollectorIgnoreStatusCodes);
             Mock.Arrange(() => configuration.IgnoreErrorClassesForAgentSettings).Returns(ErrorCollectorIgnoreClasses);
             Mock.Arrange(() => configuration.IgnoreErrorMessagesForAgentSettings).Returns(ErrorCollectorIgnoreMessages);
             Mock.Arrange(() => configuration.TransactionTracerStackThreshold).Returns(TransactionTracerStackThreshold);
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.Core.Configuration
                 DistributedTracingEnabled = configuration.DistributedTracingEnabled,
                 ErrorCollectorEnabled = configuration.ErrorCollectorEnabled,
                 ErrorCollectorIgnoreStatusCodes = configuration.HttpStatusCodesToIgnore.ToList(),
-                ErrorCollectorIgnoreErrors = configuration.ExceptionsToIgnore.ToList(),
+                ErrorCollectorIgnoreErrors = configuration.IgnoreErrorsForAgentSettings.ToList(),
                 ErrorCollectorIgnoreClasses = configuration.IgnoreErrorClassesForAgentSettings,
                 ErrorCollectorIgnoreMessages = configuration.IgnoreErrorMessagesForAgentSettings,
                 ErrorCollectorExpectedClasses = configuration.ExpectedErrorClassesForAgentSettings,
