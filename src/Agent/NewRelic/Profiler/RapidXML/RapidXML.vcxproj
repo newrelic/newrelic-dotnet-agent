@@ -22,6 +22,7 @@
     <ProjectGuid>{A9DAD133-1A59-4A55-B0CE-214D3880AAE6}</ProjectGuid>
     <RootNamespace>RapidXML</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
