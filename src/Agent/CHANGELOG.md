@@ -11,7 +11,7 @@ The New Relic .NET agent is now open source! Now you can view the source code to
 * **Expected Errors!** <br/>
 This release provides you with several flexible error configuration options to control how your errors are reported. With this addition, you can now configure certain exceptions that you expect your application logic will throw. These “expected errors” will not be counted towards your application error rate and Apdex; you will only be alerted on errors that truly affect the health of your application.
 
-Expected errors can be configured by exception class or HTTP response code. When specifying an exception class, you can provide an error message to match. See the [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details.
+   Expected errors can be configured by exception class or HTTP response code. When specifying an exception class, you can provide an error message to match. See the [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details.
 * **Ignore Errors!** <br/>
 Ignore errors can be configured by exception class or HTTP response code. When specifying an exception class, you can provide an error message to match. See the [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details.
 
