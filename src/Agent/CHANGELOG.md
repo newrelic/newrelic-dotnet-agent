@@ -21,12 +21,6 @@ Fixes an issue where Garbage Collection Performance Metrics may not be reported 
 
 * **Maintaining newrelic.config on Linux package upgrades** <br/>
 Fixes an issue where `newrelic.config` was being overwritten when upgrading the agent via either `rpm`/`yum` (RedHat/Centos) or `dpkg`/`apt` (Debian/Ubuntu).
- 
-### Docs Changes
-* https://docs.newrelic.com/node/13816/draft
-* https://docs.newrelic.com/node/1766/draft
-* https://docs.newrelic.com/node/11611/draft
-
 
 ## [8.30] - 2020-07-15
 ### Fixes
