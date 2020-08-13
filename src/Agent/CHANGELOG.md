@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 * **The .NET Agent is now open source!** <br/>
 The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](/CODE_OF_CONDUCT.md) for details on contributing!
+* **Expected Errors!** <br/>
+This release provides you with several flexible error configuration options to control how your errors are reported. With this addition, you can now configure certain exceptions that you expect your application logic will throw. These “expected errors” will not be counted towards your application error rate and Apdex; you will only be alerted on errors that truly affect the health of your application.
+
+Expected errors can be configured by exception class or HTTP response code. When specifying an exception class, you can provide an error message to match. See the [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details.
+* **Ignore Errors!** <br/>
+Ignore errors can be configured by exception class or HTTP response code. When specifying an exception class, you can provide an error message to match. See the [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details.
 
 ### Fixes
 * **Garbage Collection Performance Metrics for Windows** <br/>
