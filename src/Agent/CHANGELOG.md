@@ -8,12 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### New Features
 * **The .NET Agent is now open source!** <br/>
 The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](/CODE_OF_CONDUCT.md) for details on contributing!
-* **Expected Errors!** <br/>
-This release provides you with several flexible error configuration options to control how your errors are reported. With this addition, you can now configure certain exceptions that you expect your application logic will throw. These “expected errors” will not be counted towards your application error rate and Apdex; you will only be alerted on errors that truly affect the health of your application.
 
-   Expected errors can be configured by exception class or HTTP response code. When specifying an exception class, you can provide an error message to match. See the [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details.
-* **Ignore Errors!** <br/>
-Ignore errors can be configured by exception class or HTTP response code. When specifying an exception class, you can provide an error message to match. See the [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details.
+
+## [Unreleased]
+### New Features
+* **The .NET Agent is now open source!** <br/>
+The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](/CODE_OF_CONDUCT.md) for details on contributing!
+
+* **Expected Errors Support** <br/>
+Certain errors that are expected within the application may be identified so that they will not be counted towards the application's error rate and Apdex Score.  Only errors that truly affect the health of the application will be alerted on.  Please review the following [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#error_collector) for details on how to configure Expected Errors.
+
+* **Ignored Errors Enhancements** <br/>
+Certain errors may be identified in configuration so that they will be ignored.  These errors will not be counted towards the application's error rate, Apdex score, and will not be reported by the agent. Please review the following [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#error_collector) for details on how to configure Ignored Errors.
 
 ### Fixes
 * **Garbage Collection Performance Metrics for Windows** <br/>
@@ -23,7 +29,9 @@ Fixes an issue where Garbage Collection Performance Metrics may not be reported 
 Fixes an issue where `newrelic.config` was being overwritten when upgrading the agent via either `rpm`/`yum` (RedHat/Centos) or `dpkg`/`apt` (Debian/Ubuntu).
  
 ### Docs Changes
-* [Doc Title](https://urlToDraft)
+* https://docs.newrelic.com/node/13816/draft
+* https://docs.newrelic.com/node/1766/draft
+* https://docs.newrelic.com/node/11611/draft
 
 
 ## [8.30] - 2020-07-15
