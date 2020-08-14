@@ -42,7 +42,7 @@ Function InstallAgent() {
 
     $locationExists = Test-Path $Destination
 	$locationIsEmpty = $False
-	if ($locaitonExists) {
+	if ($locationExists) {
 	   $locationIsEmpty = (Get-ChildItem $Destination).Length -eq 0
 	}
 
@@ -91,7 +91,7 @@ must back them up to another location prior to forcing an over-install.
         
     else {
         Get-ChildItem $resolvedPath | Remove-Item -Recurse
-        Copy-Item "$x86Filepath\*" $resolvedPath - Recurse
+        Copy-Item "$x86Filepath\*" $resolvedPath -Recurse
     }
 
     if ( $installType -eq "global") {
