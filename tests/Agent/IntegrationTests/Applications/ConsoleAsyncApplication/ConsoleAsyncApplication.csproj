@@ -33,9 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NewRelic.Api.Agent, Version=8.2.216.0, Culture=neutral, PublicKeyToken=06552fced0b33d87, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NewRelic.Agent.Api.8.2.216\lib\net45\NewRelic.Api.Agent.dll</HintPath>
-    </Reference>
+    <PackageReference Include="NewRelic.Agent.Api">
+      <Version>8.2.216</Version>
+    </PackageReference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

@@ -1,1 +1,1 @@
-﻿<%@ Application Codebehind="Global.asax.cs" Inherits="OpenRastaSite.Global" Language="C#" %>
+﻿<%@ Application Codebehind="Global.asax.cs" Inherits="OpenRastaWebApplication.Global" Language="C#" %>

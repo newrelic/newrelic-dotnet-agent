@@ -45,7 +45,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="ServiceStack, Version=5.0.0.0, Culture=neutral, PublicKeyToken=02c12cbda47e6587, processorArchitecture=MSIL">
+    <!-- <Reference Include="ServiceStack, Version=5.0.0.0, Culture=neutral, PublicKeyToken=02c12cbda47e6587, processorArchitecture=MSIL">
       <HintPath>..\..\packages\ServiceStack.5.0.2\lib\net45\ServiceStack.dll</HintPath>
     </Reference>
     <Reference Include="ServiceStack.Client, Version=5.0.0.0, Culture=neutral, PublicKeyToken=02c12cbda47e6587, processorArchitecture=MSIL">
@@ -71,7 +71,7 @@
     </Reference>
     <Reference Include="ServiceStack.Text, Version=5.0.0.0, Culture=neutral, PublicKeyToken=02c12cbda47e6587, processorArchitecture=MSIL">
       <HintPath>..\..\packages\ServiceStack.Text.5.0.2\lib\net45\ServiceStack.Text.dll</HintPath>
-    </Reference>
+    </Reference> -->
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -87,7 +87,37 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <PackageReference Include="ServiceStack">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.Client">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.Common">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.Interfaces">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.OrmLite">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.Redis">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.Seq.RequestLogsFeature">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.Server">
+      <Version>5.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="ServiceStack.Text">
+      <Version>5.0.2</Version>
+    </PackageReference>
+
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="Properties\PublishProfiles\LocalDeploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

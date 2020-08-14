@@ -1,15 +1,10 @@
-/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
-using Microsoft.Owin.Hosting;
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using CommandLine;
 using System.Threading;
+using CommandLine;
+using Microsoft.Owin.Hosting;
 
 namespace OwinRemotingClient
 {
@@ -36,18 +31,8 @@ namespace OwinRemotingClient
             using (WebApp.Start<Startup>(baseAddress))
             {
                 var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + Port.ToString());
-                CreatePidFile();
                 eventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
             }
-        }
-
-        private static void CreatePidFile()
-        {
-            var pid = Process.GetCurrentProcess().Id;
-            var thisAssemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
-            var pidFilePath = thisAssemblyPath + ".pid";
-            var file = File.CreateText(pidFilePath);
-            file.WriteLine(pid);
         }
     }
 }

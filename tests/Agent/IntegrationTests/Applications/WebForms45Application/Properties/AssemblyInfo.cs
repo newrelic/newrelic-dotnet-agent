@@ -1,7 +1,5 @@
-/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -15,7 +13,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("WebForms45Application")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -25,7 +23,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("17284146-1556-49ee-9d89-c545970d72fd")]
+[assembly: Guid("d5fc7b64-1fe6-43ba-8e2e-8f98066d8827")]
 
 // Version information for an assembly consists of the following four values:
 //
