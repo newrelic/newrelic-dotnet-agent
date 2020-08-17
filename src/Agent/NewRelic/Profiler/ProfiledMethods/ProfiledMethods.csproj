@@ -141,4 +141,5 @@
     <Copy SourceFiles="$(OutDir)\newrelic.config" DestinationFolder="$(TestNewRelicHomeDirectory)" />
     <Copy SourceFiles="debug-$(Platform).bat" DestinationFiles="$(OutDir)\debug.bat" />
   </Target>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'FullAgent.sln'))\build\StyleCop.props" />
 </Project>

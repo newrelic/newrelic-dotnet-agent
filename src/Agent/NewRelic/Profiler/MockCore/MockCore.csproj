@@ -4,4 +4,5 @@
     <RootNamespace>NewRelic.Agent.Core</RootNamespace>
     <AssemblyName>NewRelic.Agent.Core</AssemblyName>
   </PropertyGroup>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'FullAgent.sln'))\build\StyleCop.props" />
 </Project>
