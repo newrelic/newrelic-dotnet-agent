@@ -11,4 +11,5 @@
     <PostBuildEvent>"$(SolutionDir)VersionFileGenerator\bin\$(Configuration)\$(TargetFrameWork)\VersionFileGenerator.exe" --solution="$(SolutionDir)\</PostBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)..\..\..\Build\NewRelic.Common.proj" Condition="Exists('$(SolutionDir)..\..\..\Build\NewRelic.Common.proj')" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'FullAgent.sln'))\build\StyleCop.props" />
 </Project>

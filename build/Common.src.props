@@ -36,5 +36,5 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
-
+  
 </Project>

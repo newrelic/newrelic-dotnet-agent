@@ -1,7 +1,6 @@
-/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 
 // stdafx.h : include file for standard system include files,
 // or project specific include files that are used frequently, but

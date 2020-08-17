@@ -1,13 +1,10 @@
-/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
-using NServiceBus;
 using System.Reflection;
 using System.Web.Mvc;
-using System.Web.Optimization;
 using System.Web.Routing;
+using NServiceBus;
 
 namespace NServiceBusBasicMvcApplication
 {
@@ -20,7 +17,6 @@ namespace NServiceBusBasicMvcApplication
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
-            BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             Bus = CreateNServiceBus();
         }

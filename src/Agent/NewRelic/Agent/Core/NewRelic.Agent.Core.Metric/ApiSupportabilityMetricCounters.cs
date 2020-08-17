@@ -1,7 +1,6 @@
-/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 using NewRelic.Agent.Core.SharedInterfaces;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Agent.Core.WireModels;

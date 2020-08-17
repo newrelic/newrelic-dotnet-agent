@@ -1,12 +1,9 @@
-/*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Messaging;
 using System.Web.Mvc;
-using System.Threading;
 
 namespace MSMQBasicMVCApplication.Controllers
 {
