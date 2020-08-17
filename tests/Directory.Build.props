@@ -1,4 +1,5 @@
 <Project>
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
   <Import Project="$(MSBuildThisFileDirectory)..\build\Common.test.props" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'FullAgent.sln'))\build\StyleCop.props" />
 </Project>
