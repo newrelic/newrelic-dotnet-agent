@@ -7,6 +7,7 @@ using NewRelic.OpenTracing.AmazonLambda.Util;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace NewRelic.OpenTracing.AmazonLambda
@@ -16,6 +17,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
         private LinkedList<Event> _spanReservoir = new LinkedList<Event>();
         private Errors _errors = new Errors();
         private string _executionEnv = Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV");
+        private string _namedPipePath = "/tmp/newrelic-telemetry";
         private ILogger _logger;
         private readonly bool _debugMode;
         private readonly object _spanReservoirLock = new object();
@@ -63,23 +65,44 @@ namespace NewRelic.OpenTracing.AmazonLambda
                 TransactionEvent txnEvent = new TransactionEvent(rootSpan);
                 var errorEvents = _errors.GetAndClearEvents();
                 var errorTraces = _errors.GetAndClearTraces();
-                WriteData(arn, _executionEnv, spans.ToList(), txnEvent, errorEvents, errorTraces);
+
+                var (payload, data) = PreparePayload(arn, _executionEnv, spans.ToList(), txnEvent, errorEvents, errorTraces);
+
+                // If named pipe exists we want to send the payload there instead of writing to standard out.
+                var namedPipe = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, _namedPipePath));
+                if (File.Exists(namedPipe))
+                {
+                    WriteToNamedPipe(payload, namedPipe);
+                    return;
+                }
+                WriteData(payload, data);
             }
         }
 
-        // Write all the payload data to the console using standard out. This is the only method that should call the Logger#out method.
-        private void WriteData(string arn, string executionEnv, IList<Event> spans, TransactionEvent txnEvent, IList<ErrorEvent> errorEvents, IList<ErrorTrace> errorTraces)
+        private (string, IDictionary<string, object>) PreparePayload(string arn, string executionEnv, IList<Event> spans, TransactionEvent txnEvent, IList<ErrorEvent> errorEvents, IList<ErrorTrace> errorTraces)
         {
             var metadata = ProtocolUtil.GetMetadata(arn, executionEnv);
             var data = ProtocolUtil.GetData(spans, txnEvent, errorEvents, errorTraces);
-
             var payload = new List<object> { 2, "NR_LAMBDA_MONITORING", metadata, ProtocolUtil.CompressAndEncode(JsonConvert.SerializeObject(data)) };
+
+            return (JsonConvert.SerializeObject(payload), data);
+        }
+
+        // Write all the payload data to the console using standard out. This is the only method that should call the Logger#out method.
+        private void WriteData(string payload, IDictionary<string, object> data)
+        {
             _logger.Log(JsonConvert.SerializeObject(payload));
             var debug = Environment.GetEnvironmentVariable("NEW_RELIC_DEBUG_MODE");
             if (_debugMode)
             {
                 _logger.Log(JsonConvert.SerializeObject(data));
             }
+        }
+
+        // Write payload to named pipe, overwriting any previous data.
+        private void WriteToNamedPipe(string payload, string namedPipe)
+        {
+            File.WriteAllText(namedPipe, JsonConvert.SerializeObject(payload));
         }
     }
 }
