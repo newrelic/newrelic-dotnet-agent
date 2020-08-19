@@ -9,7 +9,7 @@ Param(
     [Parameter(Mandatory=$true)][string] $yumRepoUrl
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop" # make a change to a non-markdown file to see if this change triggers a build
 
 Write-Host "version=$version"
 Write-Host "aptRepoUrl=$aptRepoUrl"
