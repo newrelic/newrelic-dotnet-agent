@@ -69,10 +69,9 @@ namespace NewRelic.OpenTracing.AmazonLambda
                 var (payload, data) = PreparePayload(arn, _executionEnv, spans.ToList(), txnEvent, errorEvents, errorTraces);
 
                 // If named pipe exists we want to send the payload there instead of writing to standard out.
-                var namedPipe = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, _namedPipePath));
-                if (File.Exists(namedPipe))
+                if (File.Exists(_namedPipePath))
                 {
-                    WriteToNamedPipe(payload, namedPipe);
+                    WriteToNamedPipe(payload);
                     return;
                 }
                 WriteData(payload, data);
@@ -100,9 +99,9 @@ namespace NewRelic.OpenTracing.AmazonLambda
         }
 
         // Write payload to named pipe, overwriting any previous data.
-        private void WriteToNamedPipe(string payload, string namedPipe)
+        private void WriteToNamedPipe(string payload)
         {
-            File.WriteAllText(namedPipe, JsonConvert.SerializeObject(payload));
+            File.WriteAllText(_namedPipePath, JsonConvert.SerializeObject(payload));
         }
     }
 }

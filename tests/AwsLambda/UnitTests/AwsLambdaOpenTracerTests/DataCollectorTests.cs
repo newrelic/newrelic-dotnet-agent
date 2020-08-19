@@ -36,8 +36,7 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
         public void DoesWriteDataToNamedPipe()
         {
             // Setting up named pipe to test
-            var root = Path.GetFullPath(AppContext.BaseDirectory);
-            DirectoryInfo di = Directory.CreateDirectory(root + "tmp");
+            DirectoryInfo di = Directory.CreateDirectory("/tmp");
             var namedPipe = di.ToString() + "/newrelic-telemetry";
             FileStream fs = File.Create(namedPipe);
             fs.Close();
