@@ -3,17 +3,17 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Mvc;
+//using System.Web.Mvc;
 using System.Web.Routing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
-using NewRelic.SystemExtensions.Collections.Generic;
+//using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Providers.Wrapper.Mvc3
 {
     public static class MvcRouteNamingHelper
     {
-        public static string TryGetControllerNameFromObject(ControllerContext controllerContext)
+        public static string TryGetControllerNameFromObject(dynamic controllerContext)
         {
             var controller = controllerContext.Controller;
             if (controller == null)
@@ -23,7 +23,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
             return controllerType.Name;
         }
 
-        public static string TryGetActionNameFromRouteParameters(MethodCall methodCall, RouteData routeData)
+        public static string TryGetActionNameFromRouteParameters(MethodCall methodCall, dynamic routeData)
         {
             var actionName = methodCall.MethodArguments.ExtractAs<string>(1);
             if (actionName != null)
