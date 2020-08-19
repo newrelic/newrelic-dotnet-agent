@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### New Features
+
+This is not a real change, I just want to test something about our CI.
+
 ### Fixes
 
 ## [8.31] - 2020-08-17
