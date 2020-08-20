@@ -90,7 +90,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
         // Write all the payload data to the console using standard out. This is the only method that should call the Logger#out method.
         private void WriteData(string payload, IDictionary<string, object> data)
         {
-            _logger.Log(JsonConvert.SerializeObject(payload));
+            _logger.Log(payload);
             var debug = Environment.GetEnvironmentVariable("NEW_RELIC_DEBUG_MODE");
             if (_debugMode)
             {
@@ -101,7 +101,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
         // Write payload to named pipe, overwriting any previous data.
         private void WriteToNamedPipe(string payload)
         {
-            File.WriteAllText(_namedPipePath, JsonConvert.SerializeObject(payload));
+            File.WriteAllText(_namedPipePath, payload);
         }
     }
 }
