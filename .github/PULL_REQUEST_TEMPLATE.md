@@ -1,34 +1,14 @@
-<!--
-Thank you for submitting a pull request.
+Thank you for submitting a pull request.  Please review our [contributing guidelines](/CONTRIBUTING.md) and [code of conduct](/CODE_OF_CONDUCT.md).
 
-This code is leveraged to monitor critical services. Please consider the following:
-* Tests are required.
-* Performance matters.
-* Features that are specific to just your app are unlikely to make it in.
-* Where applicable, a CHANGELOG entry should be included.
--->
+### Description
 
-## Summary
+The what, the why and the how of your PR.
 
-<!--
-A brief description of what your PR is about.
--->
+### Testing
 
-## Details
+What unit or integration tests were added or modified, or why no testing changes were required.
 
-<!--
-In-depth description of changes, other technical notes, etc.
--->
+### Changelog
 
-## Links
-
-<!--
-Any relevant links that will help reviewers.
--->
-
-## Proposed Release Notes
-
-<!--
-Proposed test of release notes, if applicable.
--->
+Please remember to update our [changelog](/src/Agent/CHANGELOG.md) if applicable (or [this changelog](/src/AwsLambda/CHANGELOG.md) for Lambda agent changes),
 
