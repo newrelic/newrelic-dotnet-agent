@@ -106,6 +106,14 @@
                     </xs:annotation>
                   </xs:attribute>
 
+                  <xs:attribute name="obscuringKey" type="xs:string" use="optional">
+                    <xs:annotation>
+                      <xs:documentation>
+                        The key used to deobscure the proxy password (optional).
+                      </xs:documentation>
+                    </xs:annotation>
+                  </xs:attribute>
+
                   <xs:attribute name="domain" type="xs:string" use="optional">
                     <xs:annotation>
                       <xs:documentation>

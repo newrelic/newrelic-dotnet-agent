@@ -4,6 +4,7 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Metric;
+using NewRelic.Agent.Core.NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Helpers;
 using NewRelic.Core.Logging;
 using NewRelic.Memoization;
@@ -40,6 +41,7 @@ namespace NewRelic.Agent.Core.Configuration
         private const string ServerConfigSource = "Server Configuration";
         private const int MaxExptectedErrorConfigEntries = 50;
         private const int MaxIgnoreErrorConfigEntries = 50;
+        private const string ObscuredPrefix = "!obscured";
 
         private static long _currentConfigurationVersion;
         private const int DefaultSpanEventsMaxSamplesStored = 1000;
@@ -1306,7 +1308,32 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual string ProxyUriPath { get { return _localConfiguration.service.proxy.uriPath; } }
         public virtual int ProxyPort { get { return _localConfiguration.service.proxy.port; } }
         public virtual string ProxyUsername { get { return _localConfiguration.service.proxy.user; } }
-        public virtual string ProxyPassword { get { return _localConfiguration.service.proxy.password; } }
+
+        private string _proxyPassword;
+        public virtual string ProxyPassword
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_localConfiguration.service.proxy.password))
+                {
+                    var trimmedPassword = _localConfiguration.service.proxy.password.Trim();
+                    var index = trimmedPassword.IndexOf(ObscuredPrefix, StringComparison.InvariantCultureIgnoreCase);
+                    if (index > -1)
+                    {
+                        var obscuredPassword = trimmedPassword.Substring(ObscuredPrefix.Length + index, trimmedPassword.Length - ObscuredPrefix.Length);
+                        obscuredPassword = obscuredPassword.Trim();
+                        _proxyPassword = Obfuscator.DeobfuscateNameUsingKey(obscuredPassword, _localConfiguration.service.proxy.obscuringKey);
+                    }
+                    else
+                    {
+                        _proxyPassword = _localConfiguration.service.proxy.password;
+                    }
+                }
+
+                return _proxyPassword;
+            }
+        }
+
         public virtual string ProxyDomain { get { return _localConfiguration.service.proxy.domain ?? string.Empty; } }
 
         #endregion

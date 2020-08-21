@@ -9,6 +9,7 @@ using System.ServiceModel.Description;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Agent.Core.NewRelic.Agent.Core.Utils;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using NewRelic.Testing.Assertions;
@@ -1061,6 +1062,22 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             CreateDefaultConfiguration();
 
             return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key + "," + _defaultConfig.IgnoreErrorsConfiguration.FirstOrDefault().Key;
+        }
+
+        [Test]
+        public void Encrypt_Decrypt_ProxyPassword()
+        {
+            var obscuringKey = "key";
+            var password = "ABCDEF";
+
+            var obscuredPassword = Obfuscator.ObfuscateNameUsingKey(password, obscuringKey);
+
+            _localConfig.service.proxy.obscuringKey = obscuringKey;
+            _localConfig.service.proxy.password = $"!obscured {obscuredPassword}";
+            
+            CreateDefaultConfiguration();
+
+            Assert.AreEqual(password, _defaultConfig.ProxyPassword);
         }
 
         [Test]
