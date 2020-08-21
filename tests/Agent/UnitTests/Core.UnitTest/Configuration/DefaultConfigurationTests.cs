@@ -1064,20 +1064,56 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key + "," + _defaultConfig.IgnoreErrorsConfiguration.FirstOrDefault().Key;
         }
 
-        [Test]
-        public void Encrypt_Decrypt_ProxyPassword()
+        [TestCase("ABCDEF", "123", null)]
+        [TestCase("ABCDEF", "123", "456")]
+        public void Encrypting_Decrypting_ProxyPassword_Tests(string password, string localConfigObscuringKey, string envObscuringKey)
         {
-            var obscuringKey = "key";
-            var password = "ABCDEF";
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("OBSCURING_KEY")).Returns(envObscuringKey);
 
-            var obscuredPassword = Obfuscator.ObfuscateNameUsingKey(password, obscuringKey);
+            var obscuredPassword = Obfuscator.ObfuscateNameUsingKey(password, localConfigObscuringKey);
+            if (!string.IsNullOrEmpty(envObscuringKey))
+            {
+                obscuredPassword = Obfuscator.ObfuscateNameUsingKey(password, envObscuringKey);
+            }
 
-            _localConfig.service.proxy.obscuringKey = obscuringKey;
-            _localConfig.service.proxy.password = $"!obscured {obscuredPassword}";
+            _localConfig.service.obscuringKey = localConfigObscuringKey;
+            _localConfig.service.proxy.proxyPasswordEncrypted = $"{obscuredPassword}";
             
             CreateDefaultConfiguration();
 
             Assert.AreEqual(password, _defaultConfig.ProxyPassword);
+        }
+
+        [Test]
+        public void Return_ObscuredPassword_When_ProxyPassword_And_ProxyPasswordEncrypted_Both_Specified_ObscuringKey_Specified()
+        {
+            var obscuringKey = "123";
+            var proxyPassword = "ABC";
+            var proxydPasswordEncrypted = Obfuscator.ObfuscateNameUsingKey("XYZ", "123");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("OBSCURING_KEY")).Returns((string)null);
+
+            _localConfig.service.obscuringKey = obscuringKey;
+            _localConfig.service.proxy.proxyPasswordEncrypted = $"{proxydPasswordEncrypted}";
+            _localConfig.service.proxy.password = proxyPassword;
+
+            CreateDefaultConfiguration();
+
+            Assert.AreEqual("XYZ", _defaultConfig.ProxyPassword);
+        }
+
+        [Test]
+        public void Return_ProxyPassword_When_ProxyPassword_And_ProxyPasswordEncrypted_Both_Specified_ObscuringKey_Not_Specified()
+        {
+            var proxyPassword = "ABC";
+            var proxydPasswordEncrypted = Obfuscator.ObfuscateNameUsingKey("XYZ", "123");
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("OBSCURING_KEY")).Returns((string)null);
+
+            _localConfig.service.proxy.proxyPasswordEncrypted = $"{proxydPasswordEncrypted}";
+            _localConfig.service.proxy.password = proxyPassword;
+
+            CreateDefaultConfiguration();
+
+            Assert.AreEqual("ABC", _defaultConfig.ProxyPassword);
         }
 
         [Test]

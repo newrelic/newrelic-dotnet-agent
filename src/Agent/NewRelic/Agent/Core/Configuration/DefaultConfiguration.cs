@@ -1309,22 +1309,40 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual int ProxyPort { get { return _localConfiguration.service.proxy.port; } }
         public virtual string ProxyUsername { get { return _localConfiguration.service.proxy.user; } }
 
+        private string _obscuringKey;
+        public string ObscuringKey
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_obscuringKey))
+                {
+                    _obscuringKey = EnvironmentOverrides(_localConfiguration.service.obscuringKey, "OBSCURING_KEY");
+                }
+
+                return _obscuringKey;
+            }
+        }
+
         private string _proxyPassword;
         public virtual string ProxyPassword
         {
             get
             {
-                if (!string.IsNullOrEmpty(_localConfiguration.service.proxy.password))
+                if (string.IsNullOrEmpty(_proxyPassword))
                 {
-                    var trimmedPassword = _localConfiguration.service.proxy.password.Trim();
-                    var index = trimmedPassword.IndexOf(ObscuredPrefix, StringComparison.InvariantCultureIgnoreCase);
-                    if (index > -1)
+                    if (!string.IsNullOrEmpty(ObscuringKey))
                     {
-                        var obscuredPassword = trimmedPassword.Substring(ObscuredPrefix.Length + index, trimmedPassword.Length - ObscuredPrefix.Length);
-                        obscuredPassword = obscuredPassword.Trim();
-                        _proxyPassword = Obfuscator.DeobfuscateNameUsingKey(obscuredPassword, _localConfiguration.service.proxy.obscuringKey);
+                        if (!string.IsNullOrEmpty(_localConfiguration.service.proxy.proxyPasswordEncrypted))
+                        {
+                            _proxyPassword = Obfuscator.DeobfuscateNameUsingKey(_localConfiguration.service.proxy.proxyPasswordEncrypted, ObscuringKey);
+                        }
+                        else
+                        {
+                            _proxyPassword = _localConfiguration.service.proxy.password;
+                        }
                     }
-                    else
+
+                    if (string.IsNullOrEmpty(_proxyPassword))
                     {
                         _proxyPassword = _localConfiguration.service.proxy.password;
                     }

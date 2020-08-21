@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Utils
 {
-    public class Obfuscator
+    public static class Obfuscator
     {
         public static string ObfuscateNameUsingKey(string name, string key)
         {

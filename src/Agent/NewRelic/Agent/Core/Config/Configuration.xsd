@@ -55,6 +55,13 @@
               </xs:documentation>
             </xs:annotation>
             <xs:sequence>
+              <xs:element name="obscuringKey" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                  <xs:documentation>
+                    The key used to deobscure the proxy password (optional).
+                  </xs:documentation>
+                </xs:annotation>
+              </xs:element>
 
               <xs:element name="proxy" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
@@ -106,14 +113,13 @@
                     </xs:annotation>
                   </xs:attribute>
 
-                  <xs:attribute name="obscuringKey" type="xs:string" use="optional">
+                  <xs:attribute name="proxyPasswordEncrypted" type="xs:string" use="optional">
                     <xs:annotation>
                       <xs:documentation>
-                        The key used to deobscure the proxy password (optional).
+                        The encrypted password used to authenticate with the proxy server (optional).
                       </xs:documentation>
                     </xs:annotation>
                   </xs:attribute>
-
                   <xs:attribute name="domain" type="xs:string" use="optional">
                     <xs:annotation>
                       <xs:documentation>
