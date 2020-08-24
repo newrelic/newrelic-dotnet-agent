@@ -59,9 +59,6 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
         private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         private Dictionary<string, string> _newRelicAppSettings { get; }
-        private bool _hasObscuringKey;
-        private bool _hasEncryptedPassword;
-        private bool _proxyPasswordEvaluated;
 
         public bool UseResourceBasedNamingForWCFEnabled { get; }
         public bool EventListenerSamplersEnabled { get; set; }
@@ -115,9 +112,6 @@ namespace NewRelic.Agent.Core.Configuration
 
             ParseExpectedErrorConfigurations();
             ParseIgnoreErrorConfigurations();
-
-            _hasObscuringKey = !string.IsNullOrEmpty(ObscuringKey);
-            _hasEncryptedPassword = !string.IsNullOrEmpty(_localConfiguration.service.proxy.encryptedPassword);
         }
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
@@ -1314,20 +1308,23 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual int ProxyPort { get { return _localConfiguration.service.proxy.port; } }
         public virtual string ProxyUsername { get { return _localConfiguration.service.proxy.user; } }
 
+        private bool _obscuringKeyEvaluated;
         private string _obscuringKey;
         public string ObscuringKey
         {
             get
             {
-                if (string.IsNullOrEmpty(_obscuringKey))
+                if (!_obscuringKeyEvaluated)
                 {
                     _obscuringKey = EnvironmentOverrides(_localConfiguration.service.obscuringKey, "OBSCURING_KEY");
+                    _obscuringKeyEvaluated = true;
                 }
 
                 return _obscuringKey;
             }
         }
 
+        private bool _proxyPasswordEvaluated;
         private string _proxyPassword;
         public virtual string ProxyPassword
         {
@@ -1335,9 +1332,12 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (!_proxyPasswordEvaluated)
                 {
-                    if (_hasObscuringKey && _hasEncryptedPassword)
+                    var hasObscuringKey = !string.IsNullOrWhiteSpace(ObscuringKey);
+                    var hasEncryptedPassword = !string.IsNullOrWhiteSpace(_localConfiguration.service.proxy.encryptedPassword);
+
+                    if (hasObscuringKey && hasEncryptedPassword)
                     {
-                         _proxyPassword = Obfuscator.DeobfuscateNameUsingKey(_localConfiguration.service.proxy.encryptedPassword, ObscuringKey);
+                         _proxyPassword = Strings.Base64Decode(_localConfiguration.service.proxy.encryptedPassword, ObscuringKey);
                     }
                     else
                     {

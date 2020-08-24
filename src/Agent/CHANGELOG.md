@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 * **Proxy Password Encryption Support** <br/>
-Agent supports obscured proxy password produced from using newrelic-cli. Please review the following [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration) for details on how to configure obscured proxy password.
+Agent supports obscured proxy password produced from using newrelic-cli. Please review the following [documentation](https://docs.newrelic.com/docs/agents/net-agent/configuration/net-agent-configuration#proxy) for details on how to configure obscured proxy password.
 
 ### Fixes
 
