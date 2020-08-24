@@ -4,8 +4,8 @@
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Metric;
-using NewRelic.Agent.Core.NewRelic.Agent.Core.Utils;
 using NewRelic.Agent.Helpers;
+using NewRelic.Core;
 using NewRelic.Core.Logging;
 using NewRelic.Memoization;
 using NewRelic.SystemExtensions;
@@ -41,7 +41,6 @@ namespace NewRelic.Agent.Core.Configuration
         private const string ServerConfigSource = "Server Configuration";
         private const int MaxExptectedErrorConfigEntries = 50;
         private const int MaxIgnoreErrorConfigEntries = 50;
-        private const string ObscuredPrefix = "!obscured";
 
         private static long _currentConfigurationVersion;
         private const int DefaultSpanEventsMaxSamplesStored = 1000;
@@ -60,6 +59,9 @@ namespace NewRelic.Agent.Core.Configuration
         private readonly RunTimeConfiguration _runTimeConfiguration = new RunTimeConfiguration();
         private readonly SecurityPoliciesConfiguration _securityPoliciesConfiguration = new SecurityPoliciesConfiguration();
         private Dictionary<string, string> _newRelicAppSettings { get; }
+        private bool _hasObscuringKey;
+        private bool _hasEncryptedPassword;
+        private bool _proxyPasswordEvaluated;
 
         public bool UseResourceBasedNamingForWCFEnabled { get; }
         public bool EventListenerSamplersEnabled { get; set; }
@@ -113,6 +115,9 @@ namespace NewRelic.Agent.Core.Configuration
 
             ParseExpectedErrorConfigurations();
             ParseIgnoreErrorConfigurations();
+
+            _hasObscuringKey = !string.IsNullOrEmpty(ObscuringKey);
+            _hasEncryptedPassword = !string.IsNullOrEmpty(_localConfiguration.service.proxy.encryptedPassword);
         }
 
         public IReadOnlyDictionary<string, string> GetAppSettings()
@@ -1328,24 +1333,18 @@ namespace NewRelic.Agent.Core.Configuration
         {
             get
             {
-                if (string.IsNullOrEmpty(_proxyPassword))
+                if (!_proxyPasswordEvaluated)
                 {
-                    if (!string.IsNullOrEmpty(ObscuringKey))
+                    if (_hasObscuringKey && _hasEncryptedPassword)
                     {
-                        if (!string.IsNullOrEmpty(_localConfiguration.service.proxy.proxyPasswordEncrypted))
-                        {
-                            _proxyPassword = Obfuscator.DeobfuscateNameUsingKey(_localConfiguration.service.proxy.proxyPasswordEncrypted, ObscuringKey);
-                        }
-                        else
-                        {
-                            _proxyPassword = _localConfiguration.service.proxy.password;
-                        }
+                         _proxyPassword = Obfuscator.DeobfuscateNameUsingKey(_localConfiguration.service.proxy.encryptedPassword, ObscuringKey);
                     }
-
-                    if (string.IsNullOrEmpty(_proxyPassword))
+                    else
                     {
                         _proxyPassword = _localConfiguration.service.proxy.password;
                     }
+
+                    _proxyPasswordEvaluated = true;
                 }
 
                 return _proxyPassword;

@@ -4,7 +4,7 @@
 using System;
 using System.Text;
 
-namespace NewRelic.Agent.Core.NewRelic.Agent.Core.Utils
+namespace NewRelic.Core
 {
     public static class Obfuscator
     {

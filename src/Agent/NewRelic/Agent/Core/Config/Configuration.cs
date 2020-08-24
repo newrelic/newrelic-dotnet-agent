@@ -940,7 +940,7 @@ namespace NewRelic.Agent.Core.Config
         
         private string passwordField;
         
-        private string proxyPasswordEncryptedField;
+        private string encryptedPasswordField;
         
         private string domainField;
         
@@ -1019,15 +1019,15 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string proxyPasswordEncrypted
+        public string encryptedPassword
         {
             get
             {
-                return this.proxyPasswordEncryptedField;
+                return this.encryptedPasswordField;
             }
             set
             {
-                this.proxyPasswordEncryptedField = value;
+                this.encryptedPasswordField = value;
             }
         }
         
