@@ -1063,8 +1063,8 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key + "," + _defaultConfig.IgnoreErrorsConfiguration.FirstOrDefault().Key;
         }
 
-        //password = "XYZ" obscuring-key = "123"  encrypted-passord = "aWtp"
-        //password = "XYZ" obscuring-key = "456"  encrypted-passord = "bGxs"
+        //password = "XYZ" obscuring-key = "123"  encrypted-password = "aWtp"
+        //password = "XYZ" obscuring-key = "456"  encrypted-password = "bGxs"
 
         [TestCase("ABCD", "aWtp", "123", null, ExpectedResult = "XYZ")]
         [TestCase("ABCD", "bGxs", null, "456", ExpectedResult = "XYZ")]
