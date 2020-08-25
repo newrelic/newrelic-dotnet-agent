@@ -43,7 +43,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         [Fact]
         public void CheckForDatastoreInstanceMetrics()
         {
-            var m = _fixture.AgentLog.GetMetricByName($"Datastore/instance/MongoDB/{MongoDbConfiguration.MongoDb26Server}/{MongoDbConfiguration.MongoDb26Port}");
+            var serverHost = CommonUtils.NormalizeHostname(MongoDbConfiguration.MongoDb26Server);
+            var m = _fixture.AgentLog.GetMetricByName($"Datastore/instance/MongoDB/{serverHost}/{MongoDbConfiguration.MongoDb26Port}");
             Assert.NotNull(m);
         }
 

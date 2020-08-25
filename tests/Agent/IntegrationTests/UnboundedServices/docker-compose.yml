@@ -7,8 +7,19 @@ rabbitmq:
     hostname: my-rabbit
     container_name: RabbitmqServer
 
+mongodb32: 
+    build: ./mongodb32 
+    ports:
+        - "27017:27017"
+    container_name: MongoDB32Server
 
-#couchbase:
+mongodb36: 
+    build: ./mongodb36 
+    ports:
+        - "27018:27017"
+    container_name: MongoDB36Server
+                
+
 
 
 
