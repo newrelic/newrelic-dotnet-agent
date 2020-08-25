@@ -5,7 +5,7 @@ using NewRelic.OpenTracing.AmazonLambda;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {
-    public class MockFileManager : IFileManager
+    public class MockFileSystemManager : IFileSystemManager
     {
         public bool PathExists { get; set; }
         public string FileContents { get; set; }

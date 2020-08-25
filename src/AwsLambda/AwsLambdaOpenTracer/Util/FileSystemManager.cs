@@ -5,24 +5,23 @@ using System.IO;
 
 namespace NewRelic.OpenTracing.AmazonLambda
 {
-    interface IFileManager
+    internal interface IFileSystemManager
     {
         bool Exists(string path);
+
         void WriteAllText(string path, string contents);
     }
 
-    public class ConcreteFileManager : IFileManager
+    internal class FileSystemManager : IFileSystemManager
     {
         public bool Exists(string path)
         {
             return File.Exists(path);
         }
+
         public void WriteAllText(string path, string contents)
         {
             File.WriteAllText(path, contents);
         }
     }
 }
-
-
-

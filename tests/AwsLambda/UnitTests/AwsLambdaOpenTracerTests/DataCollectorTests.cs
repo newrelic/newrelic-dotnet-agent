@@ -34,16 +34,16 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
         [Test]
         public void DoesWriteDataToNamedPipe()
         {
-            var fileManager = new MockFileManager();
-            fileManager.PathExists = true;
+            var fileSystemManager = new MockFileSystemManager();
+            fileSystemManager.PathExists = true;
 
             var startTime = DateTimeOffset.UtcNow;
-            var span = TestUtil.CreateRootSpan("operationName", startTime, new Dictionary<string, object>(), "testGuid", fileManager : fileManager);
+            var span = TestUtil.CreateRootSpan("operationName", startTime, new Dictionary<string, object>(), "testGuid", fileSystemManager: fileSystemManager);
 
             span.RootSpan.PrioritySamplingState.Sampled = true;
             span.Finish();
 
-            var data = fileManager.FileContents;
+            var data = fileSystemManager.FileContents;
             
             Assert.IsTrue(data.Contains("analytic_event_data"));
             Assert.IsTrue(data.Contains("span_event_data"));

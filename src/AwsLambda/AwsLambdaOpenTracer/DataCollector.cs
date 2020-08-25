@@ -19,15 +19,15 @@ namespace NewRelic.OpenTracing.AmazonLambda
         private string _namedPipePath = "/tmp/newrelic-telemetry";
         private ILogger _logger;
 
-        private readonly IFileManager _fileManager;
+        private readonly IFileSystemManager _fileSystemManager;
         private readonly bool _debugMode;
         private readonly object _spanReservoirLock = new object();
 
-        public DataCollector(ILogger logger, bool debugMode, IFileManager fileManager)
+        public DataCollector(ILogger logger, bool debugMode, IFileSystemManager fileSystemManager)
         {
             _debugMode = debugMode;
             _logger = logger;
-            _fileManager = fileManager;
+            _fileSystemManager = fileSystemManager;
         }
 
         //Push finished spans into the reservoir. When the root span finishes, log them only if they're sampled.
@@ -71,9 +71,9 @@ namespace NewRelic.OpenTracing.AmazonLambda
                 var (payload, data) = PreparePayload(arn, _executionEnv, spans.ToList(), txnEvent, errorEvents, errorTraces);
 
                 // If named pipe exists we want to send the payload there instead of writing to standard out, overwriting any previous data.
-                if (_fileManager.Exists(_namedPipePath))
+                if (_fileSystemManager.Exists(_namedPipePath))
                 {
-                    _fileManager.WriteAllText(_namedPipePath, payload);
+                    _fileSystemManager.WriteAllText(_namedPipePath, payload);
                     return;
                 }
                 WriteData(payload, data);
