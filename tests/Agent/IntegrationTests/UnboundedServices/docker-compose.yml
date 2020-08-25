@@ -1,0 +1,14 @@
+rabbitmq: 
+    build: ./rabbitmq 
+    ports:
+        - "4369:4369"
+        - "5671-5672:5671-5672"
+        - "25672:25672"
+    hostname: my-rabbit
+    container_name: RabbitmqServer
+
+
+#couchbase:
+
+
+
