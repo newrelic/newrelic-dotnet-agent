@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
@@ -766,6 +767,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             return false;
         }
+
+        public static string NormalizeHostname(string host)
+        {
+            var resolvedHostName = IsLocalHost(host) ? Dns.GetHostName() : host;
+            return resolvedHostName;
+        }
+
+        private static bool IsLocalHost(string host)
+        {
+            var localhost = new[] { ".", "localhost" };
+            var hostIsLocalhost = localhost.Contains(host);
+            if (!hostIsLocalhost)
+            {
+                IPAddress ipAddress;
+                var isIpAddress = IPAddress.TryParse(host, out ipAddress);
+                hostIsLocalhost = isIpAddress && IPAddress.IsLoopback(ipAddress);
+            }
+            return hostIsLocalhost;
+        }
+
     }
 
     public static class EnumerableExtensions

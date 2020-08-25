@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
+using System.Linq;
+using System.Net;
+using System.Text.RegularExpressions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
@@ -35,7 +39,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
         [Fact]
         public void CheckForDatastoreInstanceMetrics()
         {
-            var m = _fixture.AgentLog.GetMetricByName($"Datastore/instance/MongoDB/{MongoDbConfiguration.MongoDb26Server}/{MongoDbConfiguration.MongoDb26Port}");
+            var serverHost = CommonUtils.NormalizeHostname(MongoDbConfiguration.MongoDb26Server);
+            var m = _fixture.AgentLog.GetMetricByName($"Datastore/instance/MongoDB/{serverHost}/{MongoDbConfiguration.MongoDb26Port}");
             Assert.NotNull(m);
         }
 
