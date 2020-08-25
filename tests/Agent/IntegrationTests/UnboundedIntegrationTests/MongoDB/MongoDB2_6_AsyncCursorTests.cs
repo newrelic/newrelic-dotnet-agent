@@ -1,11 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
-using System;
-using System.Linq;
-using System.Net;
-using System.Text.RegularExpressions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;

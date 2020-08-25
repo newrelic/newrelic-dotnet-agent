@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
 using Xunit;
@@ -54,7 +53,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
             var m = _fixture.AgentLog.GetMetricByName($"{DatastorePath}/LinqQueryAsync");
             Assert.NotNull(m);
         }
-
 
     }
 }
