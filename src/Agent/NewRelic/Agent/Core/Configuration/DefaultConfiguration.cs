@@ -5,6 +5,7 @@ using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Agent.Helpers;
+using NewRelic.Core;
 using NewRelic.Core.Logging;
 using NewRelic.Memoization;
 using NewRelic.SystemExtensions;
@@ -1306,7 +1307,50 @@ namespace NewRelic.Agent.Core.Configuration
         public virtual string ProxyUriPath { get { return _localConfiguration.service.proxy.uriPath; } }
         public virtual int ProxyPort { get { return _localConfiguration.service.proxy.port; } }
         public virtual string ProxyUsername { get { return _localConfiguration.service.proxy.user; } }
-        public virtual string ProxyPassword { get { return _localConfiguration.service.proxy.password; } }
+
+        private bool _obscuringKeyEvaluated;
+        private string _obscuringKey;
+        public string ObscuringKey
+        {
+            get
+            {
+                if (!_obscuringKeyEvaluated)
+                {
+                    _obscuringKey = EnvironmentOverrides(_localConfiguration.service.obscuringKey, "OBSCURING_KEY");
+                    _obscuringKeyEvaluated = true;
+                }
+
+                return _obscuringKey;
+            }
+        }
+
+        private bool _proxyPasswordEvaluated;
+        private string _proxyPassword;
+        public virtual string ProxyPassword
+        {
+            get
+            {
+                if (!_proxyPasswordEvaluated)
+                {
+                    var hasObscuringKey = !string.IsNullOrWhiteSpace(ObscuringKey);
+                    var hasEncryptedPassword = !string.IsNullOrWhiteSpace(_localConfiguration.service.proxy.encryptedPassword);
+
+                    if (hasObscuringKey && hasEncryptedPassword)
+                    {
+                         _proxyPassword = Strings.Base64Decode(_localConfiguration.service.proxy.encryptedPassword, ObscuringKey);
+                    }
+                    else
+                    {
+                        _proxyPassword = _localConfiguration.service.proxy.password;
+                    }
+
+                    _proxyPasswordEvaluated = true;
+                }
+
+                return _proxyPassword;
+            }
+        }
+
         public virtual string ProxyDomain { get { return _localConfiguration.service.proxy.domain ?? string.Empty; } }
 
         #endregion

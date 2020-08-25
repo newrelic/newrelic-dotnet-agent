@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.ServiceModel.Description;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport;
+using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using NewRelic.Testing.Assertions;
@@ -1061,6 +1061,29 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             CreateDefaultConfiguration();
 
             return _defaultConfig.ExpectedErrorsConfiguration.FirstOrDefault().Key + "," + _defaultConfig.IgnoreErrorsConfiguration.FirstOrDefault().Key;
+        }
+
+        //password = "XYZ" obscuring-key = "123"  encrypted-password = "aWtp"
+        //password = "XYZ" obscuring-key = "456"  encrypted-password = "bGxs"
+
+        [TestCase("ABCD", "aWtp", "123", null, ExpectedResult = "XYZ")]
+        [TestCase("ABCD", "bGxs", null, "456", ExpectedResult = "XYZ")]
+        [TestCase("ABCD", "bGxs", "123", "456", ExpectedResult = "XYZ")]
+        [TestCase("ABCD", "bGxs", null, null, ExpectedResult = "ABCD")]
+        [TestCase("ABCD", null, "123", null, ExpectedResult = "ABCD")]
+        [TestCase("ABCD", "   ", "123", null, ExpectedResult = "ABCD")]
+        [TestCase("ABCD", "bGxs", "   ", null, ExpectedResult = "ABCD")]
+        public string Encrypting_Decrypting_ProxyPassword_Tests(string password, string encryptedPassword, string localConfigObscuringKey, string envObscuringKey)
+        {
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("OBSCURING_KEY")).Returns(envObscuringKey);
+
+            _localConfig.service.proxy.password = password;
+            _localConfig.service.obscuringKey = localConfigObscuringKey;
+            _localConfig.service.proxy.encryptedPassword = encryptedPassword;
+            
+            CreateDefaultConfiguration();
+
+            return _defaultConfig.ProxyPassword;
         }
 
         [Test]
