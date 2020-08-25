@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
 {
@@ -35,29 +34,19 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
         [Test]
         public void DoesWriteDataToNamedPipe()
         {
-            if (!Directory.Exists("/tmp"))
-            {
-                return;
-            }
-
-            // Setting up named pipe to test
-            var namedPipe = "/tmp/newrelic-telemetry";
-            FileStream fs = File.Create(namedPipe);
-            fs.Close();
+            var fileManager = new MockFileManager();
+            fileManager.PathExists = true;
 
             var startTime = DateTimeOffset.UtcNow;
-            var span = TestUtil.CreateRootSpan("operationName", startTime, new Dictionary<string, object>(), "testGuid");
+            var span = TestUtil.CreateRootSpan("operationName", startTime, new Dictionary<string, object>(), "testGuid", fileManager : fileManager);
 
             span.RootSpan.PrioritySamplingState.Sampled = true;
             span.Finish();
 
-            var data = File.ReadAllText(namedPipe);
+            var data = fileManager.FileContents;
             
             Assert.IsTrue(data.Contains("analytic_event_data"));
             Assert.IsTrue(data.Contains("span_event_data"));
-
-            // Post test clean up of named pipe
-            File.Delete(namedPipe);
         }
     }
 }

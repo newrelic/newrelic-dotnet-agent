@@ -7,7 +7,6 @@ using NewRelic.OpenTracing.AmazonLambda.Util;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace NewRelic.OpenTracing.AmazonLambda
@@ -19,13 +18,16 @@ namespace NewRelic.OpenTracing.AmazonLambda
         private string _executionEnv = Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV");
         private string _namedPipePath = "/tmp/newrelic-telemetry";
         private ILogger _logger;
+
+        private readonly IFileManager _fileManager;
         private readonly bool _debugMode;
         private readonly object _spanReservoirLock = new object();
 
-        public DataCollector(ILogger logger, bool debugMode)
+        public DataCollector(ILogger logger, bool debugMode, IFileManager fileManager)
         {
             _debugMode = debugMode;
             _logger = logger;
+            _fileManager = fileManager;
         }
 
         //Push finished spans into the reservoir. When the root span finishes, log them only if they're sampled.
@@ -68,10 +70,10 @@ namespace NewRelic.OpenTracing.AmazonLambda
 
                 var (payload, data) = PreparePayload(arn, _executionEnv, spans.ToList(), txnEvent, errorEvents, errorTraces);
 
-                // If named pipe exists we want to send the payload there instead of writing to standard out.
-                if (File.Exists(_namedPipePath))
+                // If named pipe exists we want to send the payload there instead of writing to standard out, overwriting any previous data.
+                if (_fileManager.Exists(_namedPipePath))
                 {
-                    WriteToNamedPipe(payload);
+                    _fileManager.WriteAllText(_namedPipePath, payload);
                     return;
                 }
                 WriteData(payload, data);
@@ -96,12 +98,6 @@ namespace NewRelic.OpenTracing.AmazonLambda
             {
                 _logger.Log(JsonConvert.SerializeObject(data));
             }
-        }
-
-        // Write payload to named pipe, overwriting any previous data.
-        private void WriteToNamedPipe(string payload)
-        {
-            File.WriteAllText(_namedPipePath, payload);
         }
     }
 }
