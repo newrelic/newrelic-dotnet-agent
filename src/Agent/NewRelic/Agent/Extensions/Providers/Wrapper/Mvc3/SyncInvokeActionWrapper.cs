@@ -21,19 +21,25 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             transaction.AttachToAsync();
-
             var controllerContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<dynamic>(0);
-            var controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
-            var actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
-            var transactionName = string.Format("{0}/{1}", controllerName, actionName);
-            transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
+            if (controllerContext != null)
+            {
+                var controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
+                var actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
-            var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
-            if (segment == null)
-                return Delegates.NoOp;
+                var transactionName = string.Format("{0}/{1}", controllerName, actionName);
+                transaction.SetWebTransactionName(WebTransactionType.MVC, transactionName, TransactionNamePriority.FrameworkHigh);
 
-            return Delegates.GetDelegateFor(segment);
+                var segment = transaction.StartMethodSegment(instrumentedMethodCall.MethodCall, controllerName, actionName);
+
+                if (segment != null)
+                {
+                    return Delegates.GetDelegateFor(segment);
+                }
+            }
+
+            return Delegates.NoOp;
         }
     }
 }
