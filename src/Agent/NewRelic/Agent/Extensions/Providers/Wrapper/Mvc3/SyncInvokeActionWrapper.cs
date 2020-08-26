@@ -1,7 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-using System.Web.Mvc;
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
@@ -23,7 +22,7 @@ namespace NewRelic.Providers.Wrapper.Mvc3
         {
             transaction.AttachToAsync();
 
-            var controllerContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<ControllerContext>(0);
+            var controllerContext = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<dynamic>(0);
             var controllerName = MvcRouteNamingHelper.TryGetControllerNameFromObject(controllerContext);
             var actionName = MvcRouteNamingHelper.TryGetActionNameFromRouteParameters(instrumentedMethodCall.MethodCall, controllerContext.RouteData);
 
