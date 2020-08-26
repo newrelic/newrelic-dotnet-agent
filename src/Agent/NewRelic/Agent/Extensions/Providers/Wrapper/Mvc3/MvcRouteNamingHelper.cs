@@ -3,11 +3,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
-//using System.Web.Mvc;
 using System.Web.Routing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
 using NewRelic.SystemExtensions;
-//using NewRelic.SystemExtensions.Collections.Generic;
 
 namespace NewRelic.Providers.Wrapper.Mvc3
 {
