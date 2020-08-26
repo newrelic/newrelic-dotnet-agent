@@ -41,10 +41,13 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             var span = TestUtil.CreateRootSpan("operationName", startTime, new Dictionary<string, object>(), "testGuid", fileSystemManager: fileSystemManager);
 
             span.RootSpan.PrioritySamplingState.Sampled = true;
+
             span.Finish();
 
-            var data = fileSystemManager.FileContents;
-            
+            var deserializedPayload = JsonConvert.DeserializeObject<object[]>(fileSystemManager.FileContents);
+            var data = TestUtil.DecodeAndDecompressNewRelicPayload(deserializedPayload[3] as string);
+
+            Assert.IsTrue(fileSystemManager.FileContents.Contains("NR_LAMBDA_MONITORING"));
             Assert.IsTrue(data.Contains("analytic_event_data"));
             Assert.IsTrue(data.Contains("span_event_data"));
         }
