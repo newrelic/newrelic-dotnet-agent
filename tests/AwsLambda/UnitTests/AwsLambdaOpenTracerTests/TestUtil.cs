@@ -21,13 +21,19 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaOpenTracerTests
             span.SetContext(context);
             return span;
         }
-        internal static LambdaSpan CreateRootSpan(string operationName, DateTimeOffset timestamp, IDictionary<string, object> tags, string guid, ILogger logger = null)
+        internal static LambdaSpan CreateRootSpan(string operationName, DateTimeOffset timestamp, IDictionary<string, object> tags, string guid, ILogger logger = null, IFileSystemManager fileSystemManager = null)
         {
             if (logger == null)
             {
                 logger = new MockLogger();
             }
-            var rootSpan = new LambdaRootSpan(operationName, timestamp, tags, guid, new DataCollector(logger, false), new TransactionState(), new PrioritySamplingState(), new DistributedTracingState());
+
+            if (fileSystemManager == null)
+            {
+                fileSystemManager = new MockFileSystemManager();
+            }
+
+            var rootSpan = new LambdaRootSpan(operationName, timestamp, tags, guid, new DataCollector(logger, false, fileSystemManager), new TransactionState(), new PrioritySamplingState(), new DistributedTracingState());
             LambdaSpanContext context = new LambdaSpanContext(rootSpan);
             rootSpan.SetContext(context);
             return rootSpan;

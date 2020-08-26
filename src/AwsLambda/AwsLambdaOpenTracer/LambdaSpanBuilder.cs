@@ -14,6 +14,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
     internal class LambdaSpanBuilder : ISpanBuilder
     {
         private readonly ILogger _logger;
+        private readonly IFileSystemManager _fileSystemManager;
         private long _startTimeInTicks;
         private bool _ignoreActiveSpan = false;
         private ISpanContext _parent;
@@ -24,6 +25,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
         {
             _logger = new Logger();
             this._operationName = operationName;
+            _fileSystemManager = new FileSystemManager();
         }
 
         public ISpanBuilder AddReference(string referenceType, ISpanContext referencedContext)
@@ -150,7 +152,7 @@ namespace NewRelic.OpenTracing.AmazonLambda
             }
             else
             {
-                var rootSpan = new LambdaRootSpan(_operationName, DateTimeOffset.UtcNow, _tags, guid, new DataCollector(_logger, tracer.DebugMode), new TransactionState(), new PrioritySamplingState(), new DistributedTracingState());
+                var rootSpan = new LambdaRootSpan(_operationName, DateTimeOffset.UtcNow, _tags, guid, new DataCollector(_logger, tracer.DebugMode, _fileSystemManager), new TransactionState(), new PrioritySamplingState(), new DistributedTracingState());
 
                 if (parentSpanContext is LambdaPayloadContext payloadContext)
                 {
