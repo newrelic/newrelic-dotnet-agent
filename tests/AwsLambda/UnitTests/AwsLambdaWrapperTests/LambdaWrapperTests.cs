@@ -38,11 +38,12 @@ namespace NewRelic.Tests.AwsLambda.AwsLambdaWrapperTests
         private IDictionary<string, string> _tags;
 
         private ILogger _logger = new Logger();
+        private IFileSystemManager _fileSystemManager = new FileSystemManager();
 
         [SetUp]
         public void Setup()
         {
-            _span = new LambdaRootSpan("testOperation", new DateTimeOffset(), new Dictionary<string, object>(), "guid", new DataCollector(_logger, false), new TransactionState(), new PrioritySamplingState(), new DistributedTracingState());
+            _span = new LambdaRootSpan("testOperation", new DateTimeOffset(), new Dictionary<string, object>(), "guid", new DataCollector(_logger, false, _fileSystemManager), new TransactionState(), new PrioritySamplingState(), new DistributedTracingState());
         }
 
         [OneTimeSetUp]
