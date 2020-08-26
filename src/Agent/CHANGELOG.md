@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 ### Fixes
+Fixes issue that may cause InvalidCastException due to an assembly version mismatch in Mvc3 instrumentation.
 
 ## [8.31] - 2020-08-17
 ### New Features
