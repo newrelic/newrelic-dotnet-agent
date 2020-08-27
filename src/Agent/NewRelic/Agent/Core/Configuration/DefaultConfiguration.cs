@@ -1316,7 +1316,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (!_obscuringKeyEvaluated)
                 {
-                    _obscuringKey = EnvironmentOverrides(_localConfiguration.service.obscuringKey, "OBSCURING_KEY");
+                    _obscuringKey = EnvironmentOverrides(_localConfiguration.service.obscuringKey, "NEW_RELIC_CONFIG_OBSCURING_KEY");
                     _obscuringKeyEvaluated = true;
                 }
 
