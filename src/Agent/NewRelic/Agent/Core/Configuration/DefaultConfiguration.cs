@@ -41,6 +41,7 @@ namespace NewRelic.Agent.Core.Configuration
         private const string ServerConfigSource = "Server Configuration";
         private const int MaxExptectedErrorConfigEntries = 50;
         private const int MaxIgnoreErrorConfigEntries = 50;
+        private const string NewRelicConfigObscuringKey = "NEW_RELIC_CONFIG_OBSCURING_KEY";
 
         private static long _currentConfigurationVersion;
         private const int DefaultSpanEventsMaxSamplesStored = 1000;
@@ -1316,7 +1317,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (!_obscuringKeyEvaluated)
                 {
-                    _obscuringKey = EnvironmentOverrides(_localConfiguration.service.obscuringKey, "OBSCURING_KEY");
+                    _obscuringKey = EnvironmentOverrides(_localConfiguration.service.obscuringKey, NewRelicConfigObscuringKey);
                     _obscuringKeyEvaluated = true;
                 }
 

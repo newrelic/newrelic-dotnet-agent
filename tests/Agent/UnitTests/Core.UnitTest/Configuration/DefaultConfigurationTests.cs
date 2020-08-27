@@ -1075,7 +1075,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("ABCD", "bGxs", "   ", null, ExpectedResult = "ABCD")]
         public string Encrypting_Decrypting_ProxyPassword_Tests(string password, string encryptedPassword, string localConfigObscuringKey, string envObscuringKey)
         {
-            Mock.Arrange(() => _environment.GetEnvironmentVariable("OBSCURING_KEY")).Returns(envObscuringKey);
+            Mock.Arrange(() => _environment.GetEnvironmentVariable("NEW_RELIC_CONFIG_OBSCURING_KEY")).Returns(envObscuringKey);
 
             _localConfig.service.proxy.password = password;
             _localConfig.service.obscuringKey = localConfigObscuringKey;
