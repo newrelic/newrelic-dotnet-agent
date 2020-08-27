@@ -1,4 +1,4 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
@@ -11,7 +11,7 @@ namespace RejitMvcApplication.Controllers
     /// <summary>
     /// Endpoints used for Rejit Integration tests.
     /// </summary>
-    public class CustomInstrumentationController : Controller
+    public class RejitController : Controller
     {
         /// <summary>
         /// HTTP GET method that has no additional methods to instrument.
@@ -29,7 +29,7 @@ namespace RejitMvcApplication.Controllers
         /// <param name="id">Selects which instrumented method to call within the action. Options: 0, 1</param>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetNodeAdd(int id)
+        public string GetAddNode(int id)
         {
             switch (id)
             {
@@ -53,7 +53,7 @@ namespace RejitMvcApplication.Controllers
         /// <param name="id">Selects which instrumented method to call within the action. Options: 0, 1</param>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetNodeDelete(int id)
+        public string GetDeleteNode(int id)
         {
             switch (id)
             {
@@ -76,7 +76,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetAttributeAdd()
+        public string GetAddAttribute()
         {
             CustomMethodDefaultWrapperAddAttribute();
             return "It am working";
@@ -87,9 +87,9 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetAttributeChange()
+        public string GetChangeAttributeValue()
         {
-            CustomMethodDefaultWrapperChangeAttribute();
+            CustomMethodDefaultWrapperChangeAttributeValue();
             return "It am working";
         }
 
@@ -98,7 +98,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetAttributeDelete()
+        public string GetDeleteAttribute()
         {
             CustomMethodDefaultWrapperDeleteAttribute();
             return "It am working";
@@ -109,7 +109,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetFileAdd()
+        public string GetAddFile()
         {
             CustomMethodDefaultWrapperAddFile();
             return "It am working";
@@ -120,7 +120,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetFileRename()
+        public string GetRenameFile()
         {
             CustomMethodDefaultWrapperRenameFile();
             return "It am working";
@@ -131,7 +131,7 @@ namespace RejitMvcApplication.Controllers
         /// </summary>
         /// <returns>Returns a string containing: It am working</returns>
         [HttpGet]
-        public string GetFileDelete()
+        public string GetDeleteFile()
         {
             CustomMethodDefaultWrapperDeleteFile();
             return "It am working";
@@ -168,7 +168,7 @@ namespace RejitMvcApplication.Controllers
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void CustomMethodDefaultWrapperChangeAttribute()
+        private static void CustomMethodDefaultWrapperChangeAttributeValue()
         {
             Thread.Sleep(TimeSpan.FromMilliseconds(5));
         }
