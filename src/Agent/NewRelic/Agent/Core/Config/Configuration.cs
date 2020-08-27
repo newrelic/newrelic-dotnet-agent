@@ -672,6 +672,8 @@ namespace NewRelic.Agent.Core.Config
     public partial class configurationService
     {
         
+        private string obscuringKeyField;
+        
         private configurationServiceProxy proxyField;
         
         private bool sendEnvironmentInfoField;
@@ -706,6 +708,18 @@ namespace NewRelic.Agent.Core.Config
             this.sendDataOnExitField = false;
             this.sendDataOnExitThresholdField = ((float)(60000F));
             this.completeTransactionsOnThreadField = false;
+        }
+        
+        public string obscuringKey
+        {
+            get
+            {
+                return this.obscuringKeyField;
+            }
+            set
+            {
+                this.obscuringKeyField = value;
+            }
         }
         
         public configurationServiceProxy proxy
@@ -930,6 +944,8 @@ namespace NewRelic.Agent.Core.Config
         
         private string passwordField;
         
+        private string encryptedPasswordField;
+        
         private string domainField;
         
         /// <summary>
@@ -1003,6 +1019,19 @@ namespace NewRelic.Agent.Core.Config
             set
             {
                 this.passwordField = value;
+            }
+        }
+        
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string encryptedPassword
+        {
+            get
+            {
+                return this.encryptedPasswordField;
+            }
+            set
+            {
+                this.encryptedPasswordField = value;
             }
         }
         

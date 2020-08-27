@@ -18,6 +18,7 @@ if ($saveWorkingFolders) {
 
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\..\.."
 $xUnitPath = Resolve-Path "$rootDirectory\build\Tools\XUnit-Console\xunit.console.exe"
+$unboundedServicesControlPath = Resolve-Path "$rootDirectory\tests\Agent\IntegrationTests\UnboundedServices\unbounded-services-control.ps1"
 
 switch ($testSuite) {
     "integration" { $testSuiteDll = "$rootDirectory\tests\Agent\IntegrationTests\IntegrationTests\bin\Release\net461\NewRelic.Agent.IntegrationTests.dll" }
@@ -29,7 +30,21 @@ if (!(Test-Path $testSuiteDll)) {
     exit
 }
 
-cat $secretsFilePath | dotnet user-secrets set --project "$rootDirectory\tests\Agent\IntegrationTests\Shared"
+if ($secretsFilePath -ne "") {
+    Get-Content $secretsFilePath | dotnet user-secrets set --project "$rootDirectory\tests\Agent\IntegrationTests\Shared"
+}
+
+if ($testSuite -eq "unbounded") {
+    Invoke-Expression "$unboundedServicesControlPath -Start"
+}
 
 $expression = "$xUnitPath" + " " + "$testSuiteDll" + " " +  $xunitParams
 Invoke-Expression $expression
+$testResult = $LASTEXITCODE
+
+if ($testSuite -eq "unbounded") {
+    Invoke-Expression "$unboundedServicesControlPath -Stop"
+}
+
+exit $testResult
+
