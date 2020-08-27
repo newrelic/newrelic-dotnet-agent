@@ -18,7 +18,19 @@ mongodb36:
     ports:
         - "27018:27017"
     container_name: MongoDB36Server
-                
+
+couchbase: 
+    build: ./couchbase
+    ports:
+        - "8091-8094:8091-8094"
+        - "11210:11210"
+    environment:
+        # These credentials are only used to configure the Couchbase container for use by the integration tests
+        # You can change these to any value you wish before running the container for the first time
+        - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
+        - COUCHBASE_ADMINISTRATOR_PASSWORD=password
+    container_name: CouchbaseServer
+    
 
 
 
