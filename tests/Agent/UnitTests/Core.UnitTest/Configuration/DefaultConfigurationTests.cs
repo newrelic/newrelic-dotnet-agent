@@ -8,7 +8,6 @@ using System.Linq;
 using System.Xml.Serialization;
 using NewRelic.Agent.Core.Config;
 using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Core;
 using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using NewRelic.Testing.Assertions;
