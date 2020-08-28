@@ -68,6 +68,7 @@ namespace NewRelic.Agent.IntegrationTests
 
                     _fixture.AddCommand($"W3CTestService StartService {_fixture.RemoteApplication.Port}");
                     _fixture.AddCommand($@"GitCommand Clone https://github.com/w3c/trace-context.git {_fixture.RemoteApplication.DestinationApplicationDirectoryPath}\trace-context");
+                    _fixture.AddCommand($@"GitCommand Checkout {_fixture.RemoteApplication.DestinationApplicationDirectoryPath}\trace-context 98f210efd89c63593dce90e2bae0a1bdcb986f51");
                     _fixture.AddCommand("ProcessRunner ProcessName python.exe");
                     _fixture.AddCommand("ProcessRunner AddArgument -m unittest");
                     _fixture.AddCommand("ProcessRunner AddSwitch -v");
