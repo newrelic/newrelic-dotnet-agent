@@ -1,5 +1,6 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
+
 
 using System;
 using System.Web.Http;
@@ -13,14 +14,14 @@ namespace OwinRemotingClient.Controllers
         [Route("GetObjectTcp")]
         public string GetObjectTcp()
         {
-            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "tcp://localhost:9001/GetObject");
+            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "tcp://localhost:7878/GetObject");
             return GetObject(myMarshalByRefClassObj);
         }
 
         [Route("GetObjectHttp")]
         public string GetObjectHttp()
         {
-            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "http://localhost:9002/GetObject");
+            var myMarshalByRefClassObj = (MyMarshalByRefClass)Activator.GetObject(typeof(MyMarshalByRefClass), "http://localhost:7879/GetObject");
             return GetObject(myMarshalByRefClassObj);
         }
 

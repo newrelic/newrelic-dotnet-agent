@@ -1,5 +1,6 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
+
 
 using System.Net.Http.Formatting;
 using System.Web.Http;

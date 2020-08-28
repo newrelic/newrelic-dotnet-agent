@@ -18,6 +18,12 @@ mongodb36:
     ports:
         - "27018:27017"
     container_name: MongoDB36Server
+                
+redis:
+    build: ./redis
+    ports:
+        - "6379:6379"
+    container_name: RedisServer
 
 couchbase: 
     build: ./couchbase
@@ -30,8 +36,6 @@ couchbase:
         - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
         - COUCHBASE_ADMINISTRATOR_PASSWORD=password
     container_name: CouchbaseServer
-    
-
 
 
 

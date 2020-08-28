@@ -56,7 +56,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 62 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Redis/all", callCount = 62 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Redis/allWeb", callCount = 62 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Redis/{StackExchangeRedisConfiguration.StackExchangeRedisServer}/{StackExchangeRedisConfiguration.StackExchangeRedisPort}", callCount = 62},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Redis/{CommonUtils.NormalizeHostname(StackExchangeRedisConfiguration.StackExchangeRedisServer)}/{StackExchangeRedisConfiguration.StackExchangeRedisPort}", callCount = 62},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/SET", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/SET", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Redis/GET", callCount = 2 },
