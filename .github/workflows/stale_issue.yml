@@ -10,7 +10,7 @@ jobs:
     - uses: actions/stale@v3
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-pr-message: 'This Issue has been marked stale after 90 days with no activity. It will be closed in 30 days if there is no activity.'
+        stale-issue-message: 'This Issue has been marked stale after 90 days with no activity. It will be closed in 30 days if there is no activity.'
         days-before-stale: 90
         days-before-close: 30
         stale-issue-label: 'stale'
