@@ -112,11 +112,11 @@ ALTER TABLE ONLY newrelic.teammembers ALTER COLUMN id SET DEFAULT nextval('newre
 --
 
 COPY newrelic.teammembers (id, firstname, lastname, email, phone, twitter) FROM stdin;
-1	Matthew	Sneeden	msneeden@newrelic.com	630-217-2170	@matthewsneeden
-2	Nick	Floyd	nickfloyd@newrelic.com	469-394-0008	@nickfloyd
-3	Bob	Uva	bobu@newrelic.com	503-810-6387	@bobuva
-4	Micah	Caldwell	micah@newrelic.com	RAGIN-MICAH	@Micah71381
-5	Kirby	Frugia	kirby@newrelic.com	503-327-3223	@krugia
+1	Matthew	Furter	mfurter@bogus.com	800-555-9090	@mfurter
+2	Nick	Raff	nraff@bogus.com	888-555-9999	@nraff
+3	Bob	Majors	bmajors@bogus.com	800-567-7777	@bmajors
+4	Micah	Weiss	mweiss@bogus.com	888-345-2121	@mweiss
+5	Kirby	Hapschatt	khapschatt@bogus.com	800-767-5340	@khapschatt
 \.
 
 
