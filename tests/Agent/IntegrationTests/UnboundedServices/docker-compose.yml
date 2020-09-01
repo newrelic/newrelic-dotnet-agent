@@ -43,8 +43,9 @@ oracle:
     shm_size: 1g
     ports:
         - "1521:1521"
-        #- "8080:8080"
     environment:
         # The password set here must match the password set in the connection 
         # string being used by the Oracle unbounded integration tests
         - ORACLE_PWD=password
+    container_name: OracleServer
+    

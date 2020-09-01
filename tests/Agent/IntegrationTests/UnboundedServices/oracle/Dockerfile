@@ -1,1 +1,1 @@
-FROM docker.pkg.github.com/newrelic/newrelic-dotnet-agent/oracledb:11.2.0.2-xe
+FROM newrelic/test-oracle-db:11.2.0.2-xe
