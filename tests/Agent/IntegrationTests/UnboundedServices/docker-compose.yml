@@ -36,6 +36,18 @@ couchbase:
         - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
         - COUCHBASE_ADMINISTRATOR_PASSWORD=password
     container_name: CouchbaseServer
+                    
+postgres:
+    build: ./postgres
+    ports:
+        - "5432:5432"
+    environment:
+        # These credentials are only used to configure the Postgres container for use by the integration tests
+        # They must match the values from the connection string used by those tests
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=password
+    container_name: PostgresServer
+
 
 
 
