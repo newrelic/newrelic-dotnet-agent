@@ -37,5 +37,15 @@ couchbase:
         - COUCHBASE_ADMINISTRATOR_PASSWORD=password
     container_name: CouchbaseServer
 
-
+db2:
+    build: ./db2
+    privileged: true
+    ports:
+        - "50000:50000"
+    environment:
+        - LICENSE=accept
+        - DB2INSTANCE=newrelic
+        - DB2INST1_PASSWORD=password
+        - SAMPLEDB=true
+    container_name: Db2Server
 
