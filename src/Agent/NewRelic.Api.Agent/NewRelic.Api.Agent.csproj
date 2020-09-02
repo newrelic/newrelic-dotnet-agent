@@ -7,6 +7,8 @@
     <DocumentationFile>$(RootProjectDirectory)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\NewRelic.Api.Agent.xml</DocumentationFile>
     <IntermediateOutputPath>$(RootProjectDirectory)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
     <OutputPath>$(RootProjectDirectory)\src\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
+    <Nullable>enable</Nullable>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

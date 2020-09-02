@@ -12,7 +12,7 @@ namespace NewRelic.Api.Agent
         private readonly dynamic _wrappedTransaction;
         private static ITransaction _noOpTransaction = new NoOpTransaction();
 
-        internal Transaction(dynamic wrappedTransaction = null)
+        internal Transaction(dynamic? wrappedTransaction = null)
         {
             _wrappedTransaction = wrappedTransaction ?? _noOpTransaction;
         }

@@ -156,7 +156,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(Exception exception, IDictionary<string, string> parameters)
+        public static void NoticeError(Exception exception, IDictionary<string, string>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
         }
@@ -196,7 +196,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(Exception exception, IDictionary<string, object> parameters)
+        public static void NoticeError(Exception exception, IDictionary<string, object>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
         }
@@ -266,7 +266,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, string> parameters)
+        public static void NoticeError(string message, IDictionary<string, string>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
         }
@@ -306,7 +306,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, object> parameters)
+        public static void NoticeError(string message, IDictionary<string, object>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
         }
@@ -349,7 +349,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, string> parameters, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, string>? parameters, bool isExpected)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
         }
@@ -392,7 +392,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, object> parameters, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, object>? parameters, bool isExpected)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
         }
@@ -460,7 +460,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetTransactionName(string category, string name)
+        public static void SetTransactionName(string? category, string name)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetTransactionName({0},{1})", category, name));
         }
@@ -525,7 +525,7 @@ namespace NewRelic.Api.Agent
         /// </example>
         /// <returns>An html string to be embedded in a page header.</returns>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static string GetBrowserTimingHeader()
+        public static string? GetBrowserTimingHeader()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader()");
             return "<!-- New Relic Header -->";
@@ -583,7 +583,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetUserParameters(string userName, string accountName, string productName)
+        public static void SetUserParameters(string? userName, string? accountName, string? productName)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetUserParameters(String userName, String accountName, String productName)");
         }
@@ -642,7 +642,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
+        public static void SetApplicationName(string? applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)");
         }
@@ -666,7 +666,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
+        public static IEnumerable<KeyValuePair<string, string>>? GetRequestMetadata()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetRequestMetadata()");
             return null;
@@ -694,7 +694,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
+        public static IEnumerable<KeyValuePair<string, string>>? GetResponseMetadata()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetResponseMetadata()");
             return null;

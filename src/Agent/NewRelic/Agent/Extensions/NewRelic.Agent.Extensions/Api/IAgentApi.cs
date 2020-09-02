@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -56,9 +58,9 @@ namespace NewRelic.Agent.Api
         /// information may be retained to prevent the report from being too large. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        void NoticeError(Exception exception, IDictionary<string, string> customAttributes);
+        void NoticeError(Exception exception, IDictionary<string, string>? customAttributes);
 
-        void NoticeError(Exception exception, IDictionary<string, object> customAttributes);
+        void NoticeError(Exception exception, IDictionary<string, object>? customAttributes);
 
         /// <summary> Notice an error identified by an exception report it to the New Relic service. If
         /// this method is called within a transaction, the exception will be reported with the
@@ -86,9 +88,9 @@ namespace NewRelic.Agent.Api
         /// first 1000 characters are retained. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        void NoticeError(string message, IDictionary<string, string> customAttributes);
+        void NoticeError(string message, IDictionary<string, string>? customAttributes);
 
-        void NoticeError(string message, IDictionary<string, object> customAttributes);
+        void NoticeError(string message, IDictionary<string, object>? customAttributes);
 
         /// <summary> Notice an error identified by a simple message and report it to the New Relic
         /// service. If this method is called within a transaction, the exception will be reported with
@@ -105,9 +107,9 @@ namespace NewRelic.Agent.Api
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
         /// <param name="isExpected"> Marks the error expected.
         /// </param>
-        void NoticeError(string message, IDictionary<string, string> customAttributes, bool isExpected);
+        void NoticeError(string message, IDictionary<string, string>? customAttributes, bool isExpected);
 
-        void NoticeError(string message, IDictionary<string, object> customAttributes, bool isExpected);
+        void NoticeError(string message, IDictionary<string, object>? customAttributes, bool isExpected);
 
         /// <summary> Add a key/value pair to the current transaction.  These are reported in errors and
         /// transaction traces. Supports web applications only. </summary>
@@ -139,7 +141,7 @@ namespace NewRelic.Agent.Api
         /// category defaults to "Custom". </param>
         /// <param name="name">	    The name of the transaction starting with a forward slash.  example:
         /// /store/order Only the first 1000 characters are retained. </param>
-        void SetTransactionName(string category, string name);
+        void SetTransactionName(string? category, string name);
 
         /// <summary> Sets transaction URI. </summary>
         ///
@@ -154,7 +156,7 @@ namespace NewRelic.Agent.Api
         /// <param name="userName">    Name of the user to be associated with the transaction. </param>
         /// <param name="accountName"> Name of the account to be associated with the transaction. </param>
         /// <param name="productName"> Name of the product to be associated with the transaction. </param>
-        void SetUserParameters(string userName, string accountName, string productName);
+        void SetUserParameters(string? userName, string? accountName, string? productName);
 
         /// <summary> Ignore the transaction that is currently in process. Supports web applications only. </summary>
         void IgnoreTransaction();
@@ -177,13 +179,13 @@ namespace NewRelic.Agent.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        string GetBrowserTimingHeader();
+        string? GetBrowserTimingHeader();
 
         /// <summary> (This method is obsolete) gets browser timing footer. </summary>
         ///
         /// <returns> An empty string. </returns>
         [Obsolete]
-        string GetBrowserTimingFooter();
+        string? GetBrowserTimingFooter();
 
         /// <summary> Disables the automatic instrumentation of browser monitoring hooks in individual
         /// pages Supports web applications only. </summary>
@@ -217,16 +219,18 @@ namespace NewRelic.Agent.Api
         /// <param name="applicationName">  The main application name. </param>
         /// <param name="applicationName2"> (Optional) The second application name. </param>
         /// <param name="applicationName3"> (Optional) The third application name. </param>
-        void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null);
+        void SetApplicationName(string? applicationName, string? applicationName2 = null, string? applicationName3 = null);
 
         /// <summary> Gets the request metadata for the current transaction. </summary>
         ///
         /// <returns> A list of key-value pairs representing the request metadata. </returns>
-        IEnumerable<KeyValuePair<string, string>> GetRequestMetadata();
+        IEnumerable<KeyValuePair<string, string>>? GetRequestMetadata();
 
         /// <summary> Gets the response metadata for the current transaction. </summary>
         ///
         /// <returns> A list of key-value pairs representing the request metadata. </returns>
-        IEnumerable<KeyValuePair<string, string>> GetResponseMetadata();
+        IEnumerable<KeyValuePair<string, string>>? GetResponseMetadata();
     }
 }
+
+#nullable restore

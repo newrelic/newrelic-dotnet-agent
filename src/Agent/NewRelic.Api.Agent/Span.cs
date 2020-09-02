@@ -10,7 +10,7 @@ namespace NewRelic.Api.Agent
         private readonly dynamic _wrappedSpan;
         private static ISpan _noOpSpan = new NoOpSpan();
 
-        internal Span(dynamic wrappedSpan = null)
+        internal Span(dynamic? wrappedSpan = null)
         {
             _wrappedSpan = wrappedSpan ?? _noOpSpan;
         }
@@ -29,7 +29,7 @@ namespace NewRelic.Api.Agent
                 _wrappedSpan.AddCustomAttribute(key, value);
                 return this;
             }
-            catch (RuntimeBinderException ex)
+            catch (RuntimeBinderException)
             {
                 _isAddCustomAttributeAvailable = false;
             }

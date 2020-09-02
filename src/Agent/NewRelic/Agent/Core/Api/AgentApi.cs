@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#nullable enable
+
 using NewRelic.Agent.Api;
 using NewRelic.Agent.Core.Metric;
 using NewRelic.Core.CodeAttributes;
@@ -36,7 +38,7 @@ namespace NewRelic.Agent.Core
             AgentInitializer.InitializeAgent();
         }
 
-        private static IApiSupportabilityMetricCounters _apiSupportabilityMetricCounters;
+        private static IApiSupportabilityMetricCounters? _apiSupportabilityMetricCounters;
 
         public static void SetSupportabilityMetricCounters(IApiSupportabilityMetricCounters apiSupportabilityMetricCounters)
         {
@@ -61,7 +63,7 @@ namespace NewRelic.Agent.Core
 
         private static void RecordSupportabilityMetric(ApiMethod apiMethod)
         {
-            _apiSupportabilityMetricCounters.Record(apiMethod);
+            _apiSupportabilityMetricCounters?.Record(apiMethod);
         }
 
         /// <summary> Increment the supportability metric counter for specific API. Update our thread state
@@ -95,7 +97,8 @@ namespace NewRelic.Agent.Core
         /// <param name="methodName"> A string identifying the API name. </param>
         /// <param name="apiMethod">  An enum value identifying the supportability metric to create. </param>
         /// <returns> A value of the generic type T. </returns>
-        public static T TryInvoke<T>(Func<T> action, string methodName, ApiMethod apiMethod)
+        public static T? TryInvoke<T>(Func<T> action, string methodName, ApiMethod apiMethod)
+            where T: class
         {
             try
             {
@@ -192,7 +195,7 @@ namespace NewRelic.Agent.Core
         /// May be null.
         /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
-        public static void NoticeError(Exception exception, IDictionary<string, string> customAttributes)
+        public static void NoticeError(Exception exception, IDictionary<string, string>? customAttributes)
         {
             const ApiMethod apiMetric = ApiMethod.NoticeError;
             const string apiName = nameof(NoticeError);
@@ -218,7 +221,7 @@ namespace NewRelic.Agent.Core
         /// May be null.
         /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
-        public static void NoticeError(Exception exception, IDictionary<string, object> customAttributes)
+        public static void NoticeError(Exception exception, IDictionary<string, object>? customAttributes)
         {
             const ApiMethod apiMetric = ApiMethod.NoticeError;
             const string apiName = nameof(NoticeError);
@@ -266,7 +269,7 @@ namespace NewRelic.Agent.Core
         /// May be null.
         /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
-        public static void NoticeError(string message, IDictionary<string, string> customAttributes)
+        public static void NoticeError(string message, IDictionary<string, string>? customAttributes)
         {
             const ApiMethod apiMetric = ApiMethod.NoticeError;
             const string apiName = nameof(NoticeError);
@@ -277,7 +280,7 @@ namespace NewRelic.Agent.Core
             TryInvoke(work, apiName, apiMetric);
         }
 
-        public static void NoticeError(string message, IDictionary<string, string> customAttributes, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, string>? customAttributes, bool isExpected)
         {
             const ApiMethod apiMetric = ApiMethod.NoticeError;
             const string apiName = nameof(NoticeError);
@@ -303,7 +306,7 @@ namespace NewRelic.Agent.Core
         /// May be null.
         /// Only 10,000 characters of combined key/value data is retained.
         /// </param>
-        public static void NoticeError(string message, IDictionary<string, object> customAttributes)
+        public static void NoticeError(string message, IDictionary<string, object>? customAttributes)
         {
             const ApiMethod apiMetric = ApiMethod.NoticeError;
             const string apiName = nameof(NoticeError);
@@ -314,7 +317,7 @@ namespace NewRelic.Agent.Core
             TryInvoke(work, apiName, apiMetric);
         }
 
-        public static void NoticeError(string message, IDictionary<string, object> customAttributes, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, object>? customAttributes, bool isExpected)
         {
             const ApiMethod apiMetric = ApiMethod.NoticeError;
             const string apiName = nameof(NoticeError);
@@ -376,7 +379,7 @@ namespace NewRelic.Agent.Core
         /// <param name="name">The name of the transaction starting with a forward slash.  example: /store/order
         /// Only the first 1000 characters are retained.
         /// </param>
-        public static void SetTransactionName(string category, string name)
+        public static void SetTransactionName(string? category, string name)
         {
             const ApiMethod apiMetric = ApiMethod.SetTransactionName;
             const string apiName = nameof(SetTransactionName);
@@ -410,7 +413,7 @@ namespace NewRelic.Agent.Core
         /// <param name="userName"> Name of the user to be associated with the transaction.</param>
         /// <param name="accountName">Name of the account to be associated with the transaction.</param>
         /// <param name="productName">Name of the product to be associated with the transaction.</param>
-        public static void SetUserParameters(string userName, string accountName, string productName)
+        public static void SetUserParameters(string? userName, string? accountName, string? productName)
         {
             const ApiMethod apiMetric = ApiMethod.SetUserParameters;
             const string apiName = nameof(SetUserParameters);
@@ -459,7 +462,7 @@ namespace NewRelic.Agent.Core
         /// </code>
         /// </example>
         /// <returns>An html string to be embedded in a page header.</returns>
-        public static string GetBrowserTimingHeader()
+        public static string? GetBrowserTimingHeader()
         {
             const ApiMethod apiMetric = ApiMethod.GetBrowserTimingHeader;
             const string apiName = nameof(GetBrowserTimingHeader);
@@ -473,7 +476,7 @@ namespace NewRelic.Agent.Core
         /// <returns>An empty string.</returns>
         [Obsolete("This method returns an empty string.")]
         [ToBeRemovedInFutureRelease()]
-        public static string GetBrowserTimingFooter()
+        public static string? GetBrowserTimingFooter()
         {
             const ApiMethod apiMetric = ApiMethod.GetBrowserTimingFooter;
             const string apiName = nameof(GetBrowserTimingFooter);
@@ -527,7 +530,7 @@ namespace NewRelic.Agent.Core
         /// <param name="applicationName">The main application name.</param>
         /// <param name="applicationName2">An optional second application name.</param>
         /// <param name="applicationName3">An optional third application name.</param>
-        public static void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
+        public static void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
             const string apiName = nameof(SetApplicationName);
             void work()
@@ -559,3 +562,5 @@ namespace NewRelic.Agent.Core
         }
     }
 }
+
+#nullable restore

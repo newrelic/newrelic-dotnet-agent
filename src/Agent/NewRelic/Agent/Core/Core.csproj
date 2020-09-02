@@ -9,6 +9,7 @@
     <IntermediateOutputPath>$(MSBuildThisFileDirectory)\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</IntermediateOutputPath>
     <OutputPath>$(MSBuildThisFileDirectory)\..\..\..\..\_build\$(Platform)-$(Configuration)\$(AssemblyName)\</OutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
