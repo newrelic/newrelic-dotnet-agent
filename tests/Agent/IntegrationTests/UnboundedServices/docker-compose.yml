@@ -49,5 +49,17 @@ postgres:
     container_name: PostgresServer
 
 
-
+db2:
+    build: ./db2
+    privileged: true
+    ports:
+        - "50000:50000"
+    environment:
+        - LICENSE=accept
+        # These credentials are only used to configure the Db2 container for use by the integration tests
+        # They must match the values from the connection string used by those tests
+        - DB2INSTANCE=newrelic
+        - DB2INST1_PASSWORD=password
+        - SAMPLEDB=true
+    container_name: Db2Server
 
