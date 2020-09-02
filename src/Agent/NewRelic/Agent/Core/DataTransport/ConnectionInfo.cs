@@ -60,9 +60,9 @@ namespace NewRelic.Agent.Core.DataTransport
             const char domainSeparator = '.';
             const char regionSeparator = 'x';
 
-            if (!string.IsNullOrEmpty(configuration.CollectorHost))
+            if (string.IsNullOrEmpty(configuration.CollectorHost))
             {
-                return configuration.CollectorHost;
+                return defaultCollectorUrl;
             }
 
             if (configuration.AgentLicenseKey != null)
