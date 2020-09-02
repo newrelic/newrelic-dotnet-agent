@@ -22,5 +22,13 @@ namespace MultiFunctionApplicationHelpers.NetStandardLibraries
 
             return Repository.Clone(repoUri, fullPath);
         }
+
+        [LibraryMethod]
+        public static string Checkout(string fullPath, string commitOrBranch)
+        {
+            var repo = new Repository(fullPath);
+            var branch = Commands.Checkout(repo, commitOrBranch);
+            return branch.CanonicalName;
+        }
     }
 }
