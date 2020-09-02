@@ -9,7 +9,8 @@ Param (
     [string]$testSuite,
     [string]$xunitParams = "",
     [switch]$saveWorkingFolders = $false,
-    [string]$secretsFilePath = ""
+    [string]$secretsFilePath = "",
+    [int]$unboundedServicesStartDelaySeconds = 300
 )
 
 if ($saveWorkingFolders) {
@@ -35,7 +36,7 @@ if ($secretsFilePath -ne "") {
 }
 
 if ($testSuite -eq "unbounded") {
-    Invoke-Expression "$unboundedServicesControlPath -Start"
+    Invoke-Expression "$unboundedServicesControlPath -Start -StartDelaySeconds $unboundedServicesStartDelaySeconds"
 }
 
 $expression = "$xUnitPath" + " " + "$testSuiteDll" + " " +  $xunitParams
