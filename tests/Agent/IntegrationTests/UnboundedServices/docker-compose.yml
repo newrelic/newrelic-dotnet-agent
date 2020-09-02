@@ -37,6 +37,18 @@ couchbase:
         - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
         - COUCHBASE_ADMINISTRATOR_PASSWORD=password
     container_name: CouchbaseServer
+                    
+postgres:
+    build: ./postgres
+    ports:
+        - "5432:5432"
+    environment:
+        # These credentials are only used to configure the Postgres container 
+        # for use by the integration tests. They must match the values from 
+        # the connection string used by those tests
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=password
+    container_name: PostgresServer
 
 oracle:
     build: ./oracle
@@ -48,4 +60,19 @@ oracle:
         # string being used by the Oracle unbounded integration tests
         - ORACLE_PWD=password
     container_name: OracleServer
-    
+
+db2:
+    build: ./db2
+    privileged: true
+    ports:
+        - "50000:50000"
+    environment:
+        - LICENSE=accept
+        # These credentials are only used to configure the Db2 container for 
+        # use by the integration tests. They must match the values from the 
+        # connection string used by those tests
+        - DB2INSTANCE=newrelic
+        - DB2INST1_PASSWORD=password
+        - SAMPLEDB=true
+    container_name: Db2Server
+

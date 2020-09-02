@@ -12,15 +12,17 @@ Param(
     [Parameter(Mandatory=$true,
     ParameterSetName="Stop")]
     [Switch]
-    $Stop
+    $Stop,
+
+    [int]$StartDelaySeconds = 300
 )
 
 Function StartUnboundedServices([string] $scriptPath) {
     Push-Location "$scriptPath"
     Write-Host "Launching docker services"
     docker-compose up -d
-    Write-Host "Waiting for services to be ready"
-    sleep 30 #TODO: something smarter than this
+    Write-Host "Waiting $StartDelaySeconds seconds for services to be ready"
+    Start-Sleep $StartDelaySeconds #TODO: something smarter than this
     Pop-Location
 }
 

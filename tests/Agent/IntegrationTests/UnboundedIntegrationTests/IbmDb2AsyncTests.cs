@@ -60,7 +60,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/IBMDB2/all", callCount = 4 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/IBMDB2/allWeb", callCount = 4 },
-                new Assertions.ExpectedMetric { metricName = $"Datastore/instance/IBMDB2/{Db2Configuration.Db2Server}/default", callCount = 4},
+                new Assertions.ExpectedMetric { metricName = $"Datastore/instance/IBMDB2/{CommonUtils.NormalizeHostname(Db2Configuration.Db2Server)}/default", callCount = 4},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/IBMDB2/select", callCount = 2 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/IBMDB2/employee/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/IBMDB2/employee/select", callCount = 1, metricScope = "WebTransaction/MVC/IbmDb2Controller/InvokeIbmDb2QueryAsync"},
@@ -94,7 +94,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
             var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
             {
-                new Assertions.ExpectedSegmentParameter { segmentName = @"Datastore/statement/IBMDB2/employee/select", parameterName = "host", parameterValue = $"{Db2Configuration.Db2Server}"},
+                new Assertions.ExpectedSegmentParameter { segmentName = @"Datastore/statement/IBMDB2/employee/select", parameterName = "host", parameterValue = CommonUtils.NormalizeHostname(Db2Configuration.Db2Server)},
                 new Assertions.ExpectedSegmentParameter { segmentName = @"Datastore/statement/IBMDB2/employee/select", parameterName = "port_path_or_id", parameterValue = "default"},
                 new Assertions.ExpectedSegmentParameter { segmentName = @"Datastore/statement/IBMDB2/employee/select", parameterName = "database_name", parameterValue = "SAMPLE"}
 
