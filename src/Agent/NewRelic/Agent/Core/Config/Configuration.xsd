@@ -113,10 +113,10 @@
                     </xs:annotation>
                   </xs:attribute>
 
-                  <xs:attribute name="encryptedPassword" type="xs:string" use="optional">
+                  <xs:attribute name="passwordObfuscated" type="xs:string" use="optional">
                     <xs:annotation>
                       <xs:documentation>
-                        The encrypted password used to authenticate with the proxy server (optional).
+                        The obfuscated password with which to authenticate to the proxy server (optional).
                       </xs:documentation>
                     </xs:annotation>
                   </xs:attribute>
