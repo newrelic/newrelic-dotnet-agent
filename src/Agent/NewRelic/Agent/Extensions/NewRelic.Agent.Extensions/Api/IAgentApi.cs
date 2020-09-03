@@ -219,7 +219,7 @@ namespace NewRelic.Agent.Api
         /// <param name="applicationName">  The main application name. </param>
         /// <param name="applicationName2"> (Optional) The second application name. </param>
         /// <param name="applicationName3"> (Optional) The third application name. </param>
-        void SetApplicationName(string? applicationName, string? applicationName2 = null, string? applicationName3 = null);
+        void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null);
 
         /// <summary> Gets the request metadata for the current transaction. </summary>
         ///

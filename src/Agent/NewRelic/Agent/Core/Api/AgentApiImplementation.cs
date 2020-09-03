@@ -580,7 +580,7 @@ namespace NewRelic.Agent.Core.Api
         /// <param name="applicationName">  The main application name. </param>
         /// <param name="applicationName2"> (Optional) The second application name. </param>
         /// <param name="applicationName3"> (Optional) The third application name. </param>
-        public void SetApplicationName(string? applicationName, string? applicationName2 = null, string? applicationName3 = null)
+        public void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
             var appNames = new List<string>();
             if (applicationName != null)

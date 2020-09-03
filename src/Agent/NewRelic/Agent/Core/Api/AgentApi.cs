@@ -462,7 +462,7 @@ namespace NewRelic.Agent.Core
         /// </code>
         /// </example>
         /// <returns>An html string to be embedded in a page header.</returns>
-        public static string? GetBrowserTimingHeader()
+        public static string GetBrowserTimingHeader()
         {
             const ApiMethod apiMetric = ApiMethod.GetBrowserTimingHeader;
             const string apiName = nameof(GetBrowserTimingHeader);
@@ -476,7 +476,7 @@ namespace NewRelic.Agent.Core
         /// <returns>An empty string.</returns>
         [Obsolete("This method returns an empty string.")]
         [ToBeRemovedInFutureRelease()]
-        public static string? GetBrowserTimingFooter()
+        public static string GetBrowserTimingFooter()
         {
             const ApiMethod apiMetric = ApiMethod.GetBrowserTimingFooter;
             const string apiName = nameof(GetBrowserTimingFooter);
