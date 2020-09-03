@@ -944,7 +944,7 @@ namespace NewRelic.Agent.Core.Config
         
         private string passwordField;
         
-        private string encryptedPasswordField;
+        private string passwordObfuscatedField;
         
         private string domainField;
         
@@ -1023,15 +1023,15 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string encryptedPassword
+        public string passwordObfuscated
         {
             get
             {
-                return this.encryptedPasswordField;
+                return this.passwordObfuscatedField;
             }
             set
             {
-                this.encryptedPasswordField = value;
+                this.passwordObfuscatedField = value;
             }
         }
         
