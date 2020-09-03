@@ -336,6 +336,7 @@ namespace NewRelic.Agent.Core
         /// Only the first 1000 characters are retained.
         /// </param>
         /// <param name="value">The numeric value to add to the current transaction.</param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, IConvertible value)
         {
             const ApiMethod apiMetric = ApiMethod.AddCustomParameter;
@@ -357,6 +358,7 @@ namespace NewRelic.Agent.Core
         /// <param name="value">The value.
         /// Only the first 1000 characters are retained.
         /// </param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, string value)
         {
             const ApiMethod apiMetric = ApiMethod.AddCustomParameter;

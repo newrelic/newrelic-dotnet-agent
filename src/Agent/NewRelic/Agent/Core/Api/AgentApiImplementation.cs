@@ -498,7 +498,7 @@ namespace NewRelic.Agent.Core.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        public string? GetBrowserTimingHeader()
+        public string GetBrowserTimingHeader()
         {
             using (new IgnoreWork())
             {
@@ -515,8 +515,7 @@ namespace NewRelic.Agent.Core.Api
                 // The transaction's name must be frozen if we're going to generate a RUM script
                 transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.ManualBrowserScriptInjection);
 
-                //this can return null
-                return _browserMonitoringScriptMaker.GetScript(transaction);
+                return _browserMonitoringScriptMaker.GetScript(transaction) ?? string.Empty;
             }
         }
 

@@ -174,6 +174,7 @@ namespace NewRelic.Agent.Api
         /// <param name="value"> The numeric value to add to the current transaction. If the value is a
         /// float it is recorded as a number, otherwise, <paramref name="value"/> is converted to a
         /// string. (via <c>value.ToString(CultureInfo.InvariantCulture);</c> </param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, IConvertible value)
         {
             _agentApiImplementation?.AddCustomParameter(key, value);
@@ -189,6 +190,7 @@ namespace NewRelic.Agent.Api
         /// are retained. </param>
         /// <param name="value"> The value associated with the custom parameter. Only the first 1000
         /// characters are retained. </param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, string value)
         {
             _agentApiImplementation?.AddCustomParameter(key, value);

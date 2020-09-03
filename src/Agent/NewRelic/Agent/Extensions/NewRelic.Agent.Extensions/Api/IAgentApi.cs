@@ -179,13 +179,13 @@ namespace NewRelic.Agent.Api
         ///   &lt;body&gt;
         ///   ...
         /// </code></example>
-        string? GetBrowserTimingHeader();
+        string GetBrowserTimingHeader();
 
         /// <summary> (This method is obsolete) gets browser timing footer. </summary>
         ///
         /// <returns> An empty string. </returns>
         [Obsolete]
-        string? GetBrowserTimingFooter();
+        string GetBrowserTimingFooter();
 
         /// <summary> Disables the automatic instrumentation of browser monitoring hooks in individual
         /// pages Supports web applications only. </summary>
