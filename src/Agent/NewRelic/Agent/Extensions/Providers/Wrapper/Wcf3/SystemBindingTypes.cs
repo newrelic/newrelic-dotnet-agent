@@ -21,7 +21,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             typeof(NetTcpBinding),
             typeof(NetNamedPipeBinding),
             typeof(NetMsmqBinding),
-            typeof(NetPeerTcpBinding),
+            //typeof(NetPeerTcpBinding),
             typeof(MsmqIntegrationBinding),
             typeof(BasicHttpContextBinding),
             typeof(NetTcpContextBinding),
