@@ -229,7 +229,7 @@ namespace NewRelic.Agent.Api
         /// <summary> Gets the response metadata for the current transaction. </summary>
         ///
         /// <returns> A list of key-value pairs representing the request metadata. </returns>
-        IEnumerable<KeyValuePair<string, string>>? GetResponseMetadata();
+        IEnumerable<KeyValuePair<string, string>> GetResponseMetadata();
     }
 }
 

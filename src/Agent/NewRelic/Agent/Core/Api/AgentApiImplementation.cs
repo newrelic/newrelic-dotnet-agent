@@ -23,6 +23,7 @@ using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
 using NewRelic.Agent.Api;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -660,12 +661,12 @@ namespace NewRelic.Agent.Core.Api
         /// <summary> Gets the response metadata for the current transaction. </summary>
         ///
         /// <returns> A list of key-value pairs representing the request metadata. </returns>
-        public IEnumerable<KeyValuePair<string, string>>? GetResponseMetadata()
+        public IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
                 Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetResponseMetadata));
-                return null;
+                return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
             return _agent.CurrentTransaction.GetResponseMetadata();
