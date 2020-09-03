@@ -98,7 +98,7 @@ SPDX-License-Identifier: Apache-2.0
 							</xs:annotation>
 						</xs:attribute>
 
-						<xs:attribute name="host" type="xs:string" default="collector.newrelic.com">
+						<xs:attribute name="host" type="xs:string" use="optional">
 							<xs:annotation>
 								<xs:documentation>
 									The name of the collector host within newrelic.com where the agent is to send its data.

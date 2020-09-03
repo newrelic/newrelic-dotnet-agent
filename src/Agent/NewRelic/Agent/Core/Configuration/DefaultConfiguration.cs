@@ -443,7 +443,7 @@ namespace NewRelic.Agent.Core.Configuration
         #region Collector Connection
 
         public virtual string CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
-        public virtual string CollectorHttpProtocol { get { return (HighSecurityModeEnabled || _localConfiguration.service.ssl) ? "https" : "http"; } }
+        public virtual string CollectorHttpProtocol { get { return "https"; } }
         public virtual uint CollectorPort { get { return (uint)(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : ((CollectorHttpProtocol == "https") ? 443 : 80)); } }
         public virtual bool CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
         public virtual float CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }

@@ -34,7 +34,7 @@ namespace NewRelic.Agent.Core.DataTransport
         }
 
         public const string AuditLogFormat = "Data {0} from the {1} : {2}";
-        public const int ProtocolVersion = 14;
+        public const int ProtocolVersion = 15;
 
         private const int CompressMinimumByteLength = 20;
         private bool _diagnoseConnectionError = true;

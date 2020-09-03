@@ -25,7 +25,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public ConnectionInfo(IConfiguration configuration)
         {
-            Host = GetCollectorHost(configuration);
+            Host = configuration.CollectorHost;
             Port = configuration.CollectorPort;
             HttpProtocol = configuration.CollectorHttpProtocol;
             ProxyHost = configuration.ProxyHost;
@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         public ConnectionInfo(IConfiguration configuration, string redirectHost)
         {
-            Host = redirectHost ?? GetCollectorHost(configuration);
+            Host = redirectHost ?? configuration.CollectorHost;
             Port = configuration.CollectorPort;
             HttpProtocol = configuration.CollectorHttpProtocol;
             ProxyHost = configuration.ProxyHost;
@@ -53,33 +53,6 @@ namespace NewRelic.Agent.Core.DataTransport
             Proxy = GetWebProxy(ProxyHost, ProxyUriPath, ProxyPort, ProxyUsername, ProxyPassword, ProxyDomain);
         }
 
-        private static string GetCollectorHost(IConfiguration configuration)
-        {
-            const string defaultCollectorUrl = "collector.newrelic.com";
-            const string regionAwareDefaultCollectorUrl = "collector.nr-data.net";
-            const char domainSeparator = '.';
-            const char regionSeparator = 'x';
-
-            if (string.IsNullOrEmpty(configuration.CollectorHost))
-            {
-                return defaultCollectorUrl;
-            }
-
-            if (configuration.AgentLicenseKey != null)
-            {
-                var match = accountRegionRegex.Match(configuration.AgentLicenseKey);
-
-                if (match.Success)
-                {
-                    var regionSegment = match.Value.TrimEnd(regionSeparator);
-                    var collectorUrlRegionStartPosition = regionAwareDefaultCollectorUrl.IndexOf(domainSeparator) + 1;
-                    var regionAwareCollectorUrl = regionAwareDefaultCollectorUrl.Insert(collectorUrlRegionStartPosition, regionSegment + domainSeparator);
-                    return regionAwareCollectorUrl;
-                }
-            }
-
-            return defaultCollectorUrl;
-        }
 
         private static WebProxy GetWebProxy(string proxyHost, string proxyUriPath, int proxyPort, string proxyUsername, string proxyPassword, string proxyDomain)
         {
