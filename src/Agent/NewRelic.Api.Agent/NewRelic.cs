@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 // This file is compiled into a dll which is shipped to the customer,
@@ -525,7 +526,7 @@ namespace NewRelic.Api.Agent
         /// </example>
         /// <returns>An html string to be embedded in a page header.</returns>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static string? GetBrowserTimingHeader()
+        public static string GetBrowserTimingHeader()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetBrowserTimingHeader()");
             return "<!-- New Relic Header -->";
@@ -583,7 +584,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetUserParameters(string? userName, string? accountName, string? productName)
+        public static void SetUserParameters(string userName, string? accountName, string? productName)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetUserParameters(String userName, String accountName, String productName)");
         }
@@ -666,10 +667,10 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static IEnumerable<KeyValuePair<string, string>>? GetRequestMetadata()
+        public static IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetRequestMetadata()");
-            return null;
+            return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         /// <summary>
@@ -694,10 +695,10 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static IEnumerable<KeyValuePair<string, string>>? GetResponseMetadata()
+        public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetResponseMetadata()");
-            return null;
+            return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         #endregion

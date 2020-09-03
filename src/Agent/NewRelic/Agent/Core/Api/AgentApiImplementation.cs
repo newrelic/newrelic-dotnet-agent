@@ -647,12 +647,12 @@ namespace NewRelic.Agent.Core.Api
         /// <summary> Gets the request metadata for the current transaction. </summary>
         ///
         /// <returns> A list of key-value pairs representing the request metadata. </returns>
-        public IEnumerable<KeyValuePair<string, string>>? GetRequestMetadata()
+        public IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
         {
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
                 Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetRequestMetadata));
-                return null;
+                return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
             return _agent.CurrentTransaction.GetRequestMetadata();
