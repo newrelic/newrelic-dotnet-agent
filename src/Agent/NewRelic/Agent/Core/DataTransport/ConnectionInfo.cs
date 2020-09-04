@@ -62,7 +62,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
             if (!string.IsNullOrEmpty(configuration.CollectorHost))
             {
-                return defaultCollectorUrl;
+                return configuration.CollectorHost;
             }
 
             if (configuration.AgentLicenseKey != null)
