@@ -1,53 +1,60 @@
-rabbitmq: 
-    build: ./rabbitmq 
-    ports:
-        - "4369:4369"
-        - "5671-5672:5671-5672"
-        - "25672:25672"
-    hostname: my-rabbit
-    container_name: RabbitmqServer
+# rabbitmq: 
+#     build: ./rabbitmq 
+#     ports:
+#         - "4369:4369"
+#         - "5671-5672:5671-5672"
+#         - "25672:25672"
+#     hostname: my-rabbit
+#     container_name: RabbitmqServer
 
-mongodb32: 
-    build: ./mongodb32 
-    ports:
-        - "27017:27017"
-    container_name: MongoDB32Server
+# mongodb32: 
+#     build: ./mongodb32 
+#     ports:
+#         - "27017:27017"
+#     container_name: MongoDB32Server
 
-mongodb36: 
-    build: ./mongodb36 
-    ports:
-        - "27018:27017"
-    container_name: MongoDB36Server
+# mongodb36: 
+#     build: ./mongodb36 
+#     ports:
+#         - "27018:27017"
+#     container_name: MongoDB36Server
                 
-redis:
-    build: ./redis
-    ports:
-        - "6379:6379"
-    container_name: RedisServer
+# redis:
+#     build: ./redis
+#     ports:
+#         - "6379:6379"
+#     container_name: RedisServer
 
-couchbase: 
-    build: ./couchbase
-    ports:
-        - "8091-8094:8091-8094"
-        - "11210:11210"
-    environment:
-        # These credentials are only used to configure the Couchbase container for use by the integration tests
-        # You can change these to any value you wish before running the container for the first time
-        - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
-        - COUCHBASE_ADMINISTRATOR_PASSWORD=password
-    container_name: CouchbaseServer
+# couchbase: 
+#     build: ./couchbase
+#     ports:
+#         - "8091-8094:8091-8094"
+#         - "11210:11210"
+#     environment:
+#         # These credentials are only used to configure the Couchbase container for use by the integration tests
+#         # You can change these to any value you wish before running the container for the first time
+#         - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
+#         - COUCHBASE_ADMINISTRATOR_PASSWORD=password
+#     container_name: CouchbaseServer
                     
-postgres:
-    build: ./postgres
-    ports:
-        - "5432:5432"
-    environment:
-        # These credentials are only used to configure the Postgres container for use by the integration tests
-        # They must match the values from the connection string used by those tests
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=password
-    container_name: PostgresServer
+# postgres:
+#     build: ./postgres
+#     ports:
+#         - "5432:5432"
+#     environment:
+#         # These credentials are only used to configure the Postgres container for use by the integration tests
+#         # They must match the values from the connection string used by those tests
+#         - POSTGRES_USER=postgres
+#         - POSTGRES_PASSWORD=password
+#     container_name: PostgresServer
 
+mssql:
+    build: ./mssql
+    ports:
+        - "1433:1433"
+    environment:
+        - SA_PASSWORD=password0TS
+    container_name: MssqlServer
 
 
 
