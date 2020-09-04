@@ -10,7 +10,7 @@ namespace NewRelic.Agent.Core.DataTransport
     public class ConnectionInfo
     {
         public readonly string Host;
-        public readonly uint Port;
+        public readonly int Port;
         public readonly string HttpProtocol;
         public readonly string ProxyHost;
         public readonly string ProxyUriPath;
