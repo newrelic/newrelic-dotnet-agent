@@ -441,10 +441,12 @@ namespace NewRelic.Agent.Core.Configuration
         #endregion
 
         #region Collector Connection
+        private const int DefaultSslPort = 443;
 
         public virtual string CollectorHost { get { return EnvironmentOverrides(_localConfiguration.service.host, @"NEW_RELIC_HOST"); } }
         public virtual string CollectorHttpProtocol { get { return "https"; } }
-        public virtual uint CollectorPort { get { return (uint)(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : ((CollectorHttpProtocol == "https") ? 443 : 80)); } }
+        public virtual int CollectorPort => EnvironmentOverrides(_localConfiguration.service.port > 0 ? _localConfiguration.service.port : (int?)null, "NEW_RELIC_PORT") ?? DefaultSslPort;
+
         public virtual bool CollectorSendDataOnExit { get { return _localConfiguration.service.sendDataOnExit; } }
         public virtual float CollectorSendDataOnExitThreshold { get { return _localConfiguration.service.sendDataOnExitThreshold; } }
         public virtual bool CollectorSendEnvironmentInfo { get { return _localConfiguration.service.sendEnvironmentInfo; } }
