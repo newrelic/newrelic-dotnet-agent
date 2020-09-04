@@ -569,7 +569,6 @@ namespace NewRelic.Agent.Core.Config
         {
             this.proxyField = new configurationServiceProxy();
             this.sendEnvironmentInfoField = true;
-            this.hostField = "collector.newrelic.com";
             this.sslField = true;
             this.syncStartupField = false;
             this.autoStartField = true;
