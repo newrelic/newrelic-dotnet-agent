@@ -618,7 +618,6 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute("collector.newrelic.com")]
         public string host
         {
             get
