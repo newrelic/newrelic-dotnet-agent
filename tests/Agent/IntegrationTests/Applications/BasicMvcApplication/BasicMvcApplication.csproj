@@ -96,7 +96,8 @@
       <Version>5.2.7</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.Razor">
-      <Version>3.2.0</Version>
+      <!-- <Version>3.2.0</Version> -->
+      <Version>3.2.7</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client">
       <Version>5.2.3</Version>
@@ -108,7 +109,8 @@
       <Version>5.2.3</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNet.Webpages">
-      <Version>3.2.0</Version>
+      <!-- <Version>3.2.0</Version> -->
+      <Version>3.2.7</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
       <Version>2.0.1</Version>
