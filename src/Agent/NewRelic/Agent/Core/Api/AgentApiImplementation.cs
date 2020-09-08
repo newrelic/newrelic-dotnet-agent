@@ -390,12 +390,8 @@ namespace NewRelic.Agent.Core.Api
 
             using (new IgnoreWork())
             {
-                category = category != null
-                    ? category.Trim()
-                    : string.Empty;
-
                 // Default to "Custom" category if none provided
-                if (string.IsNullOrEmpty(category))
+                if (category == null || string.IsNullOrWhiteSpace(category))
                 {
                     category = MetricNames.Custom;
                 }

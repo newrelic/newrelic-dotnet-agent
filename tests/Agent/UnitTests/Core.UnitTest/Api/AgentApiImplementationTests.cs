@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetResponseMetadata();
 
             //Assert
-            Assert.IsNull(result);
+            Assert.IsEmpty(result);
         }
 
         [Test]

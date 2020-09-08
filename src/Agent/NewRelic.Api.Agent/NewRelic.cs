@@ -584,7 +584,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetUserParameters(string userName, string? accountName, string? productName)
+        public static void SetUserParameters(string? userName, string? accountName, string? productName)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetUserParameters(String userName, String accountName, String productName)");
         }
@@ -643,7 +643,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetApplicationName(string? applicationName, string? applicationName2 = null, string? applicationName3 = null)
+        public static void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)");
         }
