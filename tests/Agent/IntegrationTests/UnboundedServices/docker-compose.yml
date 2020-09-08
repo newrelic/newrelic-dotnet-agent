@@ -31,8 +31,9 @@ couchbase:
         - "8091-8094:8091-8094"
         - "11210:11210"
     environment:
-        # These credentials are only used to configure the Couchbase container for use by the integration tests
-        # You can change these to any value you wish before running the container for the first time
+        # These credentials are only used to configure the Couchbase container 
+        # for use by the integration tests. You can change these to any value 
+        # you wish before running the container for the first time
         - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
         - COUCHBASE_ADMINISTRATOR_PASSWORD=password
     container_name: CouchbaseServer
@@ -42,12 +43,23 @@ postgres:
     ports:
         - "5432:5432"
     environment:
-        # These credentials are only used to configure the Postgres container for use by the integration tests
-        # They must match the values from the connection string used by those tests
+        # These credentials are only used to configure the Postgres container 
+        # for use by the integration tests. They must match the values from 
+        # the connection string used by those tests
         - POSTGRES_USER=postgres
         - POSTGRES_PASSWORD=password
     container_name: PostgresServer
 
+oracle:
+    build: ./oracle
+    shm_size: 1g
+    ports:
+        - "1521:1521"
+    environment:
+        # The password set here must match the password set in the connection 
+        # string being used by the Oracle unbounded integration tests
+        - ORACLE_PWD=password
+    container_name: OracleServer
 
 db2:
     build: ./db2
@@ -56,8 +68,9 @@ db2:
         - "50000:50000"
     environment:
         - LICENSE=accept
-        # These credentials are only used to configure the Db2 container for use by the integration tests
-        # They must match the values from the connection string used by those tests
+        # These credentials are only used to configure the Db2 container for 
+        # use by the integration tests. They must match the values from the 
+        # connection string used by those tests
         - DB2INSTANCE=newrelic
         - DB2INST1_PASSWORD=password
         - SAMPLEDB=true
