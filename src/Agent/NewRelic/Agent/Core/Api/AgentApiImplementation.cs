@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#nullable enable
+
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.Aggregators;
 using NewRelic.Agent.Core.BrowserMonitoring;
@@ -21,6 +23,7 @@ using System.Reflection;
 using NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders;
 using NewRelic.Core.Logging;
 using NewRelic.Agent.Api;
+using System.Linq;
 
 namespace NewRelic.Agent.Core.Api
 {
@@ -184,7 +187,7 @@ namespace NewRelic.Agent.Core.Api
         /// information may be retained to prevent the report from being too large. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        public void NoticeError(Exception exception, IDictionary<string, string> customAttributes)
+        public void NoticeError(Exception exception, IDictionary<string, string>? customAttributes)
         {
             exception = exception ?? throw new ArgumentNullException(nameof(exception));
 
@@ -197,7 +200,7 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void NoticeError(Exception exception, IDictionary<string, object> customAttributes)
+        public void NoticeError(Exception exception, IDictionary<string, object>? customAttributes)
         {
             exception = exception ?? throw new ArgumentNullException(nameof(exception));
 
@@ -247,12 +250,12 @@ namespace NewRelic.Agent.Core.Api
         /// first 1000 characters are retained. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        public void NoticeError(string message, IDictionary<string, string> customAttributes)
+        public void NoticeError(string message, IDictionary<string, string>? customAttributes)
         {
             NoticeError(message, customAttributes, false);
         }
 
-        public void NoticeError(string message, IDictionary<string, string> customAttributes, bool isExpected)
+        public void NoticeError(string message, IDictionary<string, string>? customAttributes, bool isExpected)
         {
             message = message ?? throw new ArgumentNullException(nameof(message));
 
@@ -265,12 +268,12 @@ namespace NewRelic.Agent.Core.Api
             }
         }
 
-        public void NoticeError(string message, IDictionary<string, object> customAttributes)
+        public void NoticeError(string message, IDictionary<string, object>? customAttributes)
         {
             NoticeError(message, customAttributes, false);
         }
 
-        public void NoticeError(string message, IDictionary<string, object> customAttributes, bool isExpected)
+        public void NoticeError(string message, IDictionary<string, object>? customAttributes, bool isExpected)
         {
             message = message ?? throw new ArgumentNullException(nameof(message));
 
@@ -381,16 +384,17 @@ namespace NewRelic.Agent.Core.Api
         /// category defaults to "Custom". </param>
         /// <param name="name">	    The name of the transaction starting with a forward slash.  example:
         /// /store/order Only the first 1000 characters are retained. </param>
-        public void SetTransactionName(string category, string name)
-
+        public void SetTransactionName(string? category, string name)
         {
             name = name ?? throw new ArgumentNullException(nameof(name));
 
             using (new IgnoreWork())
             {
                 // Default to "Custom" category if none provided
-                if (string.IsNullOrEmpty(category?.Trim()))
+                if (category == null || string.IsNullOrWhiteSpace(category))
+                {
                     category = MetricNames.Custom;
+                }
 
                 // Get rid of any slashes
                 category = category.Trim(TrimPathChar);
@@ -439,20 +443,20 @@ namespace NewRelic.Agent.Core.Api
         /// <param name="userName">    Name of the user to be associated with the transaction. </param>
         /// <param name="accountName"> Name of the account to be associated with the transaction. </param>
         /// <param name="productName"> Name of the product to be associated with the transaction. </param>
-        public void SetUserParameters(string userName, string accountName, string productName)
+        public void SetUserParameters(string? userName, string? accountName, string? productName)
         {
             using (new IgnoreWork())
             {
                 if (_configurationService.Configuration.CaptureCustomParameters)
                 {
                     var transactionMetadata = GetCurrentInternalTransaction().TransactionMetadata;
-                    if (!string.IsNullOrEmpty(userName))
+                    if (userName != null && !string.IsNullOrEmpty(userName))
                         transactionMetadata.AddUserAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
 
-                    if (!string.IsNullOrEmpty(accountName))
+                    if (accountName != null && !string.IsNullOrEmpty(accountName))
                         transactionMetadata.AddUserAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
 
-                    if (!string.IsNullOrEmpty(productName))
+                    if (productName != null && !string.IsNullOrEmpty(productName))
                         transactionMetadata.AddUserAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
                 }
             }
@@ -508,7 +512,7 @@ namespace NewRelic.Agent.Core.Api
                 // The transaction's name must be frozen if we're going to generate a RUM script
                 transaction.CandidateTransactionName.Freeze(TransactionNameFreezeReason.ManualBrowserScriptInjection);
 
-                return _browserMonitoringScriptMaker.GetScript(transaction);
+                return _browserMonitoringScriptMaker.GetScript(transaction) ?? string.Empty;
             }
         }
 
@@ -572,7 +576,7 @@ namespace NewRelic.Agent.Core.Api
         /// <param name="applicationName">  The main application name. </param>
         /// <param name="applicationName2"> (Optional) The second application name. </param>
         /// <param name="applicationName3"> (Optional) The third application name. </param>
-        public void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
+        public void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
             var appNames = new List<string>();
             if (applicationName != null)
@@ -644,7 +648,7 @@ namespace NewRelic.Agent.Core.Api
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
                 Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetRequestMetadata));
-                return null;
+                return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
             return _agent.CurrentTransaction.GetRequestMetadata();
@@ -658,10 +662,11 @@ namespace NewRelic.Agent.Core.Api
             if (_configurationService.Configuration.DistributedTracingEnabled)
             {
                 Log.FinestFormat(DistributedTracingIsEnabledIgnoringCall, nameof(GetResponseMetadata));
-                return null;
+                return Enumerable.Empty<KeyValuePair<string, string>>();
             }
 
             return _agent.CurrentTransaction.GetResponseMetadata();
         }
     }
 }
+#nullable restore
