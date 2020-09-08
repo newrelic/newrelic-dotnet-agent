@@ -21,7 +21,9 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             typeof(NetTcpBinding),
             typeof(NetNamedPipeBinding),
             typeof(NetMsmqBinding),
-            //typeof(NetPeerTcpBinding),
+#pragma warning disable CS0618 // Type or member is obsolete
+            typeof(NetPeerTcpBinding),
+#pragma warning restore CS0618 // Type or member is obsolete
             typeof(MsmqIntegrationBinding),
             typeof(BasicHttpContextBinding),
             typeof(NetTcpContextBinding),
