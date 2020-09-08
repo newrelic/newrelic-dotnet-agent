@@ -569,7 +569,6 @@ namespace NewRelic.Agent.Core.Config
         {
             this.proxyField = new configurationServiceProxy();
             this.sendEnvironmentInfoField = true;
-            this.hostField = "collector.newrelic.com";
             this.sslField = true;
             this.syncStartupField = false;
             this.autoStartField = true;
@@ -618,7 +617,6 @@ namespace NewRelic.Agent.Core.Config
         }
         
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        [System.ComponentModel.DefaultValueAttribute("collector.newrelic.com")]
         public string host
         {
             get

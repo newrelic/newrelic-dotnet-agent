@@ -50,7 +50,7 @@ namespace NewRelic.Agent.Configuration
 
         string CollectorHost { get; }
         string CollectorHttpProtocol { get; }
-        uint CollectorPort { get; }
+        int CollectorPort { get; }
         bool CollectorSendDataOnExit { get; }
         float CollectorSendDataOnExitThreshold { get; }
         bool CollectorSendEnvironmentInfo { get; }
