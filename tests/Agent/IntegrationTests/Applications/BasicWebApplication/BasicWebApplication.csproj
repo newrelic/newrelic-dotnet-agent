@@ -18,6 +18,8 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <Use64BitIISExpress />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,9 +39,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr3.Runtime, Version=3.4.1.9004, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
@@ -57,20 +56,8 @@
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
-    <Reference Include="Microsoft.ScriptManager.MSAjax">
-      <HintPath>..\..\packages\Microsoft.AspNet.ScriptManager.MSAjax.5.0.0\lib\net45\Microsoft.ScriptManager.MSAjax.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Owin.Host.SystemWeb">
-      <HintPath>..\..\packages\Microsoft.Owin.Host.SystemWeb.3.0.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
-    </Reference>
-    <Reference Include="Owin">
-      <HintPath>..\..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-    <ItemGroup>
     <PackageReference Include="EntityFramework">
       <Version>6.1.1</Version>
     </PackageReference>
@@ -126,7 +113,6 @@
       <Version>6.0.4</Version>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
     <None Include="Properties\PublishProfiles\LocalDeploy.pubxml" />
     <Content Include="Default.aspx" />
