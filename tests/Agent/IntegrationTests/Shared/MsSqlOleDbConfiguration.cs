@@ -9,7 +9,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     public class MsSqlOleDbConfiguration
     {
         private static string _msSqlOleDbConnectionString;
-        private static string _msSqlOleDbServer;
 
         // example:  "PROVIDER=SQLXXXX11;Server=1.2.3.4;Database=DBName;Trusted_Connection=no;UID=sa;PWD=password;Encrypt=no;Timeout=30;"
         public static string MsSqlOleDbConnectionString

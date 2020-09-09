@@ -43,10 +43,6 @@
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Couchbase.NetClient, Version=2.3.8.0, Culture=neutral, PublicKeyToken=05e9c6b5a9ec94c2, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\CouchbaseNetClient.2.3.8\lib\net45\Couchbase.NetClient.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="IBM.Data.DB2, Version=9.7.4.4, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=AMD64">
       <Private>False</Private>
     </Reference>
@@ -67,7 +63,6 @@
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
-  
   <ItemGroup>
     <PackageReference Include="Common.Logging">
       <Version>3.3.1</Version>
@@ -136,7 +131,6 @@
       <Version>4.5.0</Version>
     </PackageReference>
   </ItemGroup>
-  
   <ItemGroup>
     <None Include="Properties\PublishProfiles\LocalDeploy.pubxml" />
     <Content Include="Web.config" />
