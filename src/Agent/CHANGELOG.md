@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### New Features
 
+## [6.26]
+### New Features
+
 * **The .NET Agent is now open source!** <br/>
 The New Relic .NET agent is now open source! Now you can view the source code to help with troubleshooting, observe the project roadmap, and file issues directly in this repository.  We are now using the [Apache 2 license](/LICENSE). See our [Contributing guide](/CONTRIBUTING.md) and [Code of Conduct](/CODE_OF_CONDUCT.md) for details on contributing!
+
+* **SSL Required** <br/>
+In order to increase security, disabling agent HTTPS communication via the service SSL configuration is no longer supported.  All communication with New Relic services will occur via SSL.
+
+* **EU Data Center Support** <br/>
+Adds support for communicating with New Relic's EU Data Center.  Please review our [docs site](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers) for further information.
 
 ### Fixes
 
@@ -38,8 +47,9 @@ The New Relic .NET agent is now open source! Now you can view the source code to
 
 * [Security Bulletin NR18-04](https://docs.newrelic.com/docs/accounts-partnerships/welcome-new-relic/security-bulletins/security-bulletin-nr18-04): Fixes issue where error messages were not fully being filtered out of error traces and error events when High Security Mode was enabled.
 
-[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.25.0...net35/main
+[Unreleased]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.26.0...net35/main
 
+[6.26]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.25.0...v6.26.0
 [6.25]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.24.0...v6.25.0
 [6.24]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.23.0...v6.24.0
 [6.23]: https://github.com/newrelic/newrelic-dotnet-agent/compare/v6.22.0...v6.23.0
