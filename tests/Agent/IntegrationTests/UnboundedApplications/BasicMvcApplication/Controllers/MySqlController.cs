@@ -79,12 +79,12 @@ namespace BasicMvcApplication.Controllers
         }
 
 
-        private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `newrelic`.`{0}`({1}) BEGIN END;";
+        private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `{0}`.`{1}`({2}) BEGIN END;";
 
         private void CreateProcedure(string procedureName)
         {
             var parameters = string.Join(", ", DbParameterData.MySqlParameters.Select(x => $"{x.ParameterName} {x.DbTypeName}"));
-            var statement = string.Format(CreateProcedureStatement, procedureName, parameters);
+            var statement = string.Format(CreateProcedureStatement, MySqlTestConfiguration.MySqlDbName, procedureName, parameters);
             using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
             using (var command = new MySqlCommand(statement, connection))
             {
