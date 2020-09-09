@@ -58,7 +58,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MySQL/allWeb", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{MySqlTestConfiguration.MySqlServer}/{MySqlTestConfiguration.MySqlPort}", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MySQL/{CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)}/{MySqlTestConfiguration.MySqlPort}", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MySQL/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MySQL/dates/select", callCount = 1, metricScope = "WebTransaction/MVC/MySqlController/MySql"},
@@ -100,9 +100,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
             {
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "sql", parameterValue = "SELECT _date FROM dates WHERE _date LIKE ? ORDER BY _date DESC LIMIT ?"},
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "host", parameterValue = MySqlTestConfiguration.MySqlServer},
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "host", parameterValue = CommonUtils.NormalizeHostname(MySqlTestConfiguration.MySqlServer)},
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "port_path_or_id", parameterValue = MySqlTestConfiguration.MySqlPort},
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "database_name", parameterValue = "NewRelic"},
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "database_name", parameterValue = "newrelic"},
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MySQL/dates/select", parameterName = "explain_plan"}
             };
 

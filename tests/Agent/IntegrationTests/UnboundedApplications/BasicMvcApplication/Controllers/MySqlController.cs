@@ -79,7 +79,7 @@ namespace BasicMvcApplication.Controllers
         }
 
 
-        private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `NewRelic`.`{0}`({1}) BEGIN END;";
+        private static readonly string CreateProcedureStatement = @"CREATE PROCEDURE `newrelic`.`{0}`({1}) BEGIN END;";
 
         private void CreateProcedure(string procedureName)
         {
