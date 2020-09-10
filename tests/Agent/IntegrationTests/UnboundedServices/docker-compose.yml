@@ -85,3 +85,15 @@ db2:
         - SAMPLEDB=true
     container_name: Db2Server
 
+mysql:
+    build: ./mysql
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    ports:
+        - "3306:3306"
+    environment:
+        # These credentials are only used to configure the MySql container 
+        # for use by the integration tests. They must match the values from 
+        # the connection string used by those tests
+        - MYSQL_ROOT_PASSWORD=password
+    container_name: MySqlServer
+    
