@@ -1333,11 +1333,11 @@ namespace NewRelic.Agent.Core.Configuration
                 if (!_proxyPasswordEvaluated)
                 {
                     var hasObscuringKey = !string.IsNullOrWhiteSpace(ObscuringKey);
-                    var hasEncryptedPassword = !string.IsNullOrWhiteSpace(_localConfiguration.service.proxy.encryptedPassword);
+                    var hasObfuscatedPassword = !string.IsNullOrWhiteSpace(_localConfiguration.service.proxy.passwordObfuscated);
 
-                    if (hasObscuringKey && hasEncryptedPassword)
+                    if (hasObscuringKey && hasObfuscatedPassword)
                     {
-                         _proxyPassword = Strings.Base64Decode(_localConfiguration.service.proxy.encryptedPassword, ObscuringKey);
+                         _proxyPassword = Strings.Base64Decode(_localConfiguration.service.proxy.passwordObfuscated, ObscuringKey);
                     }
                     else
                     {

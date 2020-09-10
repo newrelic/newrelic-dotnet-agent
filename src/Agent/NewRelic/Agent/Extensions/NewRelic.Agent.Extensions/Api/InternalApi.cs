@@ -1,6 +1,8 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,7 @@ namespace NewRelic.Agent.Api
 {
     public static class InternalApi
     {
-        private static IAgentApi _agentApiImplementation;
+        private static IAgentApi? _agentApiImplementation;
 
         public static void SetAgentApiImplementation(IAgentApi agentApiImplementation)
         {
@@ -79,7 +81,7 @@ namespace NewRelic.Agent.Api
         /// information may be retained to prevent the report from being too large. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        public static void NoticeError(Exception exception, IDictionary<string, string> customAttributes)
+        public static void NoticeError(Exception exception, IDictionary<string, string>? customAttributes)
         {
             _agentApiImplementation?.NoticeError(exception, customAttributes);
         }
@@ -97,7 +99,7 @@ namespace NewRelic.Agent.Api
         /// information may be retained to prevent the report from being too large. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        public static void NoticeError(Exception exception, IDictionary<string, object> customAttributes)
+        public static void NoticeError(Exception exception, IDictionary<string, object>? customAttributes)
         {
             _agentApiImplementation?.NoticeError(exception, customAttributes);
         }
@@ -131,12 +133,12 @@ namespace NewRelic.Agent.Api
         /// first 1000 characters are retained. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        public static void NoticeError(string message, IDictionary<string, string> customAttributes)
+        public static void NoticeError(string message, IDictionary<string, string>? customAttributes)
         {
             _agentApiImplementation?.NoticeError(message, customAttributes);
         }
 
-        public static void NoticeError(string message, IDictionary<string, string> customAttributes, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, string>? customAttributes, bool isExpected)
         {
             _agentApiImplementation?.NoticeError(message, customAttributes, isExpected);
         }
@@ -154,12 +156,12 @@ namespace NewRelic.Agent.Api
         /// first 1000 characters are retained. </param>
         /// <param name="customAttributes"> Custom parameters to include in the traced error. May be
         /// null. Only 10,000 characters of combined key/value data is retained. </param>
-        public static void NoticeError(string message, IDictionary<string, object> customAttributes)
+        public static void NoticeError(string message, IDictionary<string, object>? customAttributes)
         {
             _agentApiImplementation?.NoticeError(message, customAttributes);
         }
 
-        public static void NoticeError(string message, IDictionary<string, object> customAttributes, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, object>? customAttributes, bool isExpected)
         {
             _agentApiImplementation?.NoticeError(message, customAttributes, isExpected);
         }
@@ -172,6 +174,7 @@ namespace NewRelic.Agent.Api
         /// <param name="value"> The numeric value to add to the current transaction. If the value is a
         /// float it is recorded as a number, otherwise, <paramref name="value"/> is converted to a
         /// string. (via <c>value.ToString(CultureInfo.InvariantCulture);</c> </param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, IConvertible value)
         {
             _agentApiImplementation?.AddCustomParameter(key, value);
@@ -187,6 +190,7 @@ namespace NewRelic.Agent.Api
         /// are retained. </param>
         /// <param name="value"> The value associated with the custom parameter. Only the first 1000
         /// characters are retained. </param>
+        [Obsolete("Will be dropped in a future version.  Use Transaction.AddCustomAttribute instead")]
         public static void AddCustomParameter(string key, string value)
         {
             _agentApiImplementation?.AddCustomParameter(key, value);
@@ -201,7 +205,7 @@ namespace NewRelic.Agent.Api
         /// category defaults to "Custom". </param>
         /// <param name="name">	    The name of the transaction starting with a forward slash.  example:
         /// /store/order Only the first 1000 characters are retained. </param>
-        public static void SetTransactionName(string category, string name)
+        public static void SetTransactionName(string? category, string name)
         {
             _agentApiImplementation?.SetTransactionName(category, name);
         }
@@ -222,7 +226,7 @@ namespace NewRelic.Agent.Api
         /// <param name="userName">    Name of the user to be associated with the transaction. </param>
         /// <param name="accountName"> Name of the account to be associated with the transaction. </param>
         /// <param name="productName"> Name of the product to be associated with the transaction. </param>
-        public static void SetUserParameters(string userName, string accountName, string productName)
+        public static void SetUserParameters(string? userName, string? accountName, string? productName)
         {
             _agentApiImplementation?.SetUserParameters(userName, accountName, productName);
         }
@@ -312,7 +316,7 @@ namespace NewRelic.Agent.Api
         /// <param name="applicationName">  The main application name. </param>
         /// <param name="applicationName2"> (Optional) The second application name. </param>
         /// <param name="applicationName3"> (Optional) The third application name. </param>
-        public static void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
+        public static void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
             _agentApiImplementation?.SetApplicationName(applicationName, applicationName2, applicationName3);
         }
@@ -334,3 +338,5 @@ namespace NewRelic.Agent.Api
         }
     }
 }
+
+#nullable restore

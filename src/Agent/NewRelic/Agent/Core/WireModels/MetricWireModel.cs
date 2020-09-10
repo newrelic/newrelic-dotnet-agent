@@ -112,6 +112,14 @@ namespace NewRelic.Agent.Core.WireModels
             return false;
         }
 
+        public override int GetHashCode()
+        {
+            var hashCode = 2074576463;
+            hashCode = hashCode * -1521134295 + EqualityComparer<MetricNameWireModel>.Default.GetHashCode(MetricName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<MetricDataWireModel>.Default.GetHashCode(Data);
+            return hashCode;
+        }
+
         public class MetricBuilder : IMetricBuilder
         {
             private readonly IMetricNameService _metricNameService;

@@ -30,7 +30,7 @@ namespace NewRelic.Agent.Core.Api
 
 
         [Test]
-        public void GetRequestMetadataShouldBeNullWhenDistributedTracingEnabled()
+        public void GetRequestMetadataShouldBeEmptylWhenDistributedTracingEnabled()
         {
             //Arrange
             Mock.Arrange(() => _configuration.DistributedTracingEnabled).Returns(true);
@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetRequestMetadata();
 
             //Assert
-            Assert.IsNull(result);
+            Assert.IsEmpty(result);
         }
 
         [Test]
@@ -80,7 +80,7 @@ namespace NewRelic.Agent.Core.Api
             var result = _agentApi.GetResponseMetadata();
 
             //Assert
-            Assert.IsNull(result);
+            Assert.IsEmpty(result);
         }
 
         [Test]

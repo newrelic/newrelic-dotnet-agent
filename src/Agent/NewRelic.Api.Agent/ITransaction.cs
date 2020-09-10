@@ -55,7 +55,7 @@ namespace NewRelic.Api.Agent
         ///   ITransaction currentTransaction = _agent.CurrentTransaction;
         ///   currentTransaction.AcceptDistributedTraceHeaders(httpContext, Getter, TransportType.HTTP);
         ///   
-        ///   IEnumerable<string> Getter(HttpContext carrier, string key)
+        ///   IEnumerable&gt;string&lt; Getter(HttpContext carrier, string key)
         ///   {
         ///      string value = carrier.Request.Headers[key];
         ///      return value == null ? null : new string[] { value };
@@ -76,7 +76,7 @@ namespace NewRelic.Api.Agent
         ///   IAgent agent = GetAgent();
         ///   ITransaction currentTransaction = _agent.CurrentTransaction;
         ///
-        ///   var setter = new Action<System.Net.HttpWebRequest, string, string>((carrier, key, value) =>
+        ///   var setter = new Action&gt;System.Net.HttpWebRequest, string, string&lt;((carrier, key, value) =>
         ///   {
         ///	     carrier.Headers?.Set(key, value);
         ///   });

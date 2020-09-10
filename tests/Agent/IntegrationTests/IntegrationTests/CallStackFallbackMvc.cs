@@ -1,8 +1,6 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -73,8 +71,8 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/Normalized/*" },
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
 
-				// The .NET agent does not have the information needed to generate this metric
-				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
+                // The .NET agent does not have the information needed to generate this metric
+                new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
             };
 
@@ -110,8 +108,7 @@ namespace NewRelic.Agent.IntegrationTests
             };
             var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
-                {"type", "Transaction"},
-                {"nr.apdexPerfZone", "F"}
+                {"type", "Transaction"}
             };
             var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
@@ -119,7 +116,8 @@ namespace NewRelic.Agent.IntegrationTests
                 "duration",
                 "webDuration",
                 "queueDuration",
-                "totalTime"
+                "totalTime",
+                "nr.apdexPerfZone"
             };
             var expectedTransactionEventAgentAttributes = new Dictionary<string, object>
             {

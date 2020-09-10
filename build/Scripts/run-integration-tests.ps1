@@ -9,7 +9,9 @@ Param (
     [string]$testSuite,
     [string]$xunitParams = "",
     [switch]$saveWorkingFolders = $false,
-    [string]$secretsFilePath = ""
+    [string]$secretsFilePath = "",
+    [switch]$startUnboundedServices = $false,
+    [int]$unboundedServicesStartDelaySeconds = 600
 )
 
 if ($saveWorkingFolders) {
@@ -34,15 +36,15 @@ if ($secretsFilePath -ne "") {
     Get-Content $secretsFilePath | dotnet user-secrets set --project "$rootDirectory\tests\Agent\IntegrationTests\Shared"
 }
 
-if ($testSuite -eq "unbounded") {
-    Invoke-Expression "$unboundedServicesControlPath -Start"
+if ($testSuite -eq "unbounded" -and $startUnboundedServices) {
+    Invoke-Expression "$unboundedServicesControlPath -Start -StartDelaySeconds $unboundedServicesStartDelaySeconds"
 }
 
 $expression = "$xUnitPath" + " " + "$testSuiteDll" + " " +  $xunitParams
 Invoke-Expression $expression
 $testResult = $LASTEXITCODE
 
-if ($testSuite -eq "unbounded") {
+if ($testSuite -eq "unbounded" -and $startUnboundedServices) {
     Invoke-Expression "$unboundedServicesControlPath -Stop"
 }
 

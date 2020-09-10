@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 // This file is compiled into a dll which is shipped to the customer,
@@ -156,7 +157,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(Exception exception, IDictionary<string, string> parameters)
+        public static void NoticeError(Exception exception, IDictionary<string, string>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
         }
@@ -196,7 +197,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(Exception exception, IDictionary<string, object> parameters)
+        public static void NoticeError(Exception exception, IDictionary<string, object>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", exception, parameters));
         }
@@ -266,7 +267,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, string> parameters)
+        public static void NoticeError(string message, IDictionary<string, string>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
         }
@@ -306,7 +307,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, object> parameters)
+        public static void NoticeError(string message, IDictionary<string, object>? parameters)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1})", message, parameters));
         }
@@ -349,7 +350,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, string> parameters, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, string>? parameters, bool isExpected)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
         }
@@ -392,7 +393,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void NoticeError(string message, IDictionary<string, object> parameters, bool isExpected)
+        public static void NoticeError(string message, IDictionary<string, object>? parameters, bool isExpected)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.NoticeError({0},{1},{2})", message, parameters, isExpected));
         }
@@ -460,7 +461,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetTransactionName(string category, string name)
+        public static void SetTransactionName(string? category, string name)
         {
             System.Diagnostics.Trace.WriteLine(string.Format("NewRelic.SetTransactionName({0},{1})", category, name));
         }
@@ -583,7 +584,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetUserParameters(string userName, string accountName, string productName)
+        public static void SetUserParameters(string? userName, string? accountName, string? productName)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetUserParameters(String userName, String accountName, String productName)");
         }
@@ -642,7 +643,7 @@ namespace NewRelic.Api.Agent
         /// </code>
         /// </example>
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void SetApplicationName(string applicationName, string applicationName2 = null, string applicationName3 = null)
+        public static void SetApplicationName(string applicationName, string? applicationName2 = null, string? applicationName3 = null)
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.SetApplicationName(String applicationName, String applicationName2 = null, String applicationName3 = null)");
         }
@@ -669,7 +670,7 @@ namespace NewRelic.Api.Agent
         public static IEnumerable<KeyValuePair<string, string>> GetRequestMetadata()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetRequestMetadata()");
-            return null;
+            return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         /// <summary>
@@ -697,7 +698,7 @@ namespace NewRelic.Api.Agent
         public static IEnumerable<KeyValuePair<string, string>> GetResponseMetadata()
         {
             System.Diagnostics.Trace.WriteLine("NewRelic.GetResponseMetadata()");
-            return null;
+            return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         #endregion
