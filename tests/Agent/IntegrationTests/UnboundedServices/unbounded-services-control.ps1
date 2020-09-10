@@ -14,7 +14,7 @@ Param(
     [Switch]
     $Stop,
 
-    [int]$StartDelaySeconds = 300
+    [int]$StartDelaySeconds = 600
 )
 
 Function StartUnboundedServices([string] $scriptPath) {
