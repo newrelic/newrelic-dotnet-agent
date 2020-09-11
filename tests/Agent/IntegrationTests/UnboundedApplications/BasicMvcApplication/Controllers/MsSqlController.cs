@@ -31,7 +31,7 @@ namespace BasicMvcApplication.Controllers
             {
                 connection.Open();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'Matthew'", connection))
+                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
                 {
 
                     using (var reader = command.ExecuteReader())
@@ -79,7 +79,7 @@ namespace BasicMvcApplication.Controllers
             {
                 connection.Open();
 
-                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'Matthew'", connection))
+                using (var command = new SqlCommand("SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'", connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -200,7 +200,7 @@ namespace BasicMvcApplication.Controllers
             var teamMembers = new List<string>();
             var msSqlDatabase = new SqlDatabase(MsSqlConfiguration.MsSqlConnectionString);
 
-            using (var reader = msSqlDatabase.ExecuteReader(CommandType.Text, "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'Matthew'"))
+            using (var reader = msSqlDatabase.ExecuteReader(CommandType.Text, "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = 'John'"))
             {
                 while (reader.Read())
                 {
