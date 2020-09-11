@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.XPath;
@@ -500,6 +501,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             </extension>";
 
             File.WriteAllText(instrumentationFilePath, emptyInstrumentationFileText);
+        }
+
+        public static string NormalizeHostname(string host)
+        {
+            var resolvedHostName = IsLocalHost(host) ? Dns.GetHostName() : host;
+            return resolvedHostName;
+        }
+
+        private static bool IsLocalHost(string host)
+        {
+            var localhost = new[] { ".", "localhost" };
+            var hostIsLocalhost = localhost.Contains(host);
+            if (!hostIsLocalhost)
+            {
+                IPAddress ipAddress;
+                var isIpAddress = IPAddress.TryParse(host, out ipAddress);
+                hostIsLocalhost = isIpAddress && IPAddress.IsLoopback(ipAddress);
+            }
+            return hostIsLocalhost;
         }
     }
 

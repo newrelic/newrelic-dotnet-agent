@@ -1,5 +1,6 @@
-﻿// Copyright 2020 New Relic, Inc. All rights reserved.
+// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
+
 
 using System;
 using System.Net;
@@ -15,8 +16,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         private const string CreateHotelTableOracleSql = "CREATE TABLE {0} (HOTEL_ID INT NOT NULL, BOOKING_DATE DATE NOT NULL, " +
                                                          "ROOMS_TAKEN INT DEFAULT 0, PRIMARY KEY (HOTEL_ID, BOOKING_DATE))";
         private const string DropHotelTableOracleSql = "DROP TABLE {0}";
-
-        private readonly string _connectionString = $@"Data Source={OracleConfiguration.OracleServer}:{OracleConfiguration.OraclePort}/XE;User Id=SYSTEM;Password=!4maline!;";
 
         private readonly string _tableName;
         public string TableName
@@ -73,7 +72,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         private void CreateTable()
         {
             var createTable = string.Format(CreateHotelTableOracleSql, TableName);
-            using (var connection = new OracleConnection(_connectionString))
+            using (var connection = new OracleConnection(OracleConfiguration.OracleConnectionString))
             {
                 connection.Open();
 
@@ -88,7 +87,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             var dropTableSql = string.Format(DropHotelTableOracleSql, TableName);
 
-            using (var connection = new OracleConnection(_connectionString))
+            using (var connection = new OracleConnection(OracleConfiguration.OracleConnectionString))
             {
                 connection.Open();
 

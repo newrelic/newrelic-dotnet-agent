@@ -10,6 +10,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         private static string _mySqlConnectionString;
         private static string _mySqlServer;
         private static string _mySqlPort;
+        private static string _mySqlDbName;
 
         // example: "Network Address=1.2.3.4;Port=4444;Initial Catalog=CatalogName;Persist Security Info=no;User Name=root;Password=password"
         public static string MySqlConnectionString
@@ -76,5 +77,28 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 return _mySqlPort;
             }
         }
+
+        public static string MySqlDbName
+        {
+            get
+            {
+                if (_mySqlDbName == null)
+                {
+                    try
+                    {
+                        var subParts = MySqlConnectionString.Split(';');
+                        var index = subParts[2].IndexOf('=') + 1;
+                        _mySqlDbName = subParts[2].Substring(index);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("MySqlDbName configuration is invalid.", ex);
+                    }
+                }
+
+                return _mySqlDbName;
+            }
+        }
+
     }
 }
