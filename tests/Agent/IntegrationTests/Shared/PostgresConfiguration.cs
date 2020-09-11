@@ -3,14 +3,13 @@
 
 
 using System;
-using System.Collections.Generic;
+using System.Data.Common;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
     public class PostgresConfiguration
     {
         private static string _postgresConnectionString;
-        private static Dictionary<string, string> _connectionStringValues;
         private static string _postgresServer;
         private static string _postgresPort;
 
@@ -36,26 +35,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
-        public static Dictionary<string, string> ConnectionStringValues
-        {
-            get
-            {
-                if (_connectionStringValues == null)
-                {
-                    try
-                    {
-                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(PostgresConnectionString);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Unable to parse connection string.", ex);
-                    }
-                }
-
-                return _connectionStringValues;
-            }
-        }
-
         public static string PostgresServer
         {
             get
@@ -64,7 +43,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        _postgresServer = ConfigUtils.GetConnectionStringValue("Server", ConnectionStringValues);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
+                        _postgresServer = builder["Server"].ToString();
                     }
                     catch (Exception ex)
                     {
@@ -84,7 +64,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        _postgresPort = ConfigUtils.GetConnectionStringValue("Port", ConnectionStringValues);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
+                        _postgresPort = builder["Port"].ToString();
                     }
                     catch (Exception ex)
                     {

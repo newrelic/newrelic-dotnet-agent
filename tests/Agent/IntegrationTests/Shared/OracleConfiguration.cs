@@ -3,14 +3,13 @@
 
 
 using System;
-using System.Collections.Generic;
+using System.Data.Common;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
     public class OracleConfiguration
     {
         private static string _oracleConnectionString;
-        private static Dictionary<string, string> _connectionStringValues;
         private static string _oracleDataSource;
         private static string _oracleServer;
         private static string _oraclePort;
@@ -37,26 +36,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
-        public static Dictionary<string, string> ConnectionStringValues
-        {
-            get
-            {
-                if (_connectionStringValues == null)
-                {
-                    try
-                    {
-                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(OracleConnectionString);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Unable to parse connection string.", ex);
-                    }
-                }
-
-                return _connectionStringValues;
-            }
-        }
-
         public static string OracleDataSource
         {
             get
@@ -65,7 +44,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        _oracleDataSource = ConfigUtils.GetConnectionStringValue("Data Source", ConnectionStringValues);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = OracleConnectionString };
+                        _oracleDataSource = builder["Data Source"].ToString();
                     }
                     catch (Exception ex)
                     {
