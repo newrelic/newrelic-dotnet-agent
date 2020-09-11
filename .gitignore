@@ -114,6 +114,11 @@ FunctionalTests/InstallUtil.InstallLog
 *.coverage
 Agent/TestResults/*
 *.pubxml.user
+
+tests/Agent/IntegrationTests/Applications/*/Deploy/
+tests/Agent/IntegrationTests/UnboundedApplications/*/Deploy/
+tests/Agent/IntegrationTests/.vs/config/applicationhost.config
+
 IntegrationTests/Applications/*/Deploy/
 IntegrationTests/UnboundedApplications/*/Deploy/
 IntegrationTests/.vs/config/applicationhost.config
