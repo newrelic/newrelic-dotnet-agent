@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(MySqlConnectionString);
+                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(PostgresConnectionString);
                     }
                     catch (Exception ex)
                     {
