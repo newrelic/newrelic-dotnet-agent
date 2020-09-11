@@ -9,7 +9,7 @@ COPY setup.sh /var/
 COPY entrypoint.sh /var/
 COPY restore.sql /var/
 
-# Try restoring from backup of NewRelic database on dn-database-01
+# Copy database backup file to container
 COPY NewRelicDB.bak /var/opt/mssql/backup/NewRelicDB.bak
 
 RUN chmod 777 /var/setup.sh \
