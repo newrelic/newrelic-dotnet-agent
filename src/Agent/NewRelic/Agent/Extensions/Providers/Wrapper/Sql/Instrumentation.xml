@@ -87,6 +87,22 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteNonQuery" />
       </match>
 
+      <!-- MySqlConnector 0.x -->
+      <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlCommand">
+        <exactMethodMatcher methodName="ExecuteDbDataReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteReader" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+
+      <!-- MySqlConnector 1.x -->
+      <match assemblyName="MySqlConnector" className="MySqlConnector.MySqlCommand">
+        <exactMethodMatcher methodName="ExecuteDbDataReader" parameters="System.Data.CommandBehavior" />
+        <exactMethodMatcher methodName="ExecuteReader" />
+        <exactMethodMatcher methodName="ExecuteNonQuery" />
+        <exactMethodMatcher methodName="ExecuteScalar" />
+      </match>
+
       <!-- IBM DB2 driver -->
       <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2Command">
         <exactMethodMatcher methodName="ExecuteReader" parameters="System.Data.CommandBehavior"/>
@@ -127,6 +143,24 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
         <exactMethodMatcher methodName="ExecuteXmlReaderAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- MySqlConnector 0.x -->
+      <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlCommand">
+        <exactMethodMatcher methodName="ExecuteDbDataReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
+      </match>
+
+      <!-- MySqlConnector 1.x -->
+      <match assemblyName="MySqlConnector" className="MySqlConnector.MySqlCommand">
+        <exactMethodMatcher methodName="ExecuteDbDataReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteReaderAsync" parameters="System.Data.CommandBehavior,System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteNonQueryAsync" parameters="System.Threading.CancellationToken" />
+        <exactMethodMatcher methodName="ExecuteScalarAsync" parameters="System.Threading.CancellationToken" />
       </match>
 
       <!-- Postgres SQL Driver-->
@@ -182,6 +216,18 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="Read" />
       </match>
 
+      <!-- MySqlConnector 0.x -->
+      <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
+      <!-- MySqlConnector 1.x -->
+      <match assemblyName="MySqlConnector" className="MySqlConnector.MySqlDataReader">
+        <exactMethodMatcher methodName="NextResult" />
+        <exactMethodMatcher methodName="Read" />
+      </match>
+
       <!-- IBM DB2 driver -->
       <match assemblyName="IBM.Data.DB2" className="IBM.Data.DB2.DB2DataReader">
         <exactMethodMatcher methodName="NextResult" />
@@ -212,7 +258,19 @@ SPDX-License-Identifier: Apache-2.0
         <exactMethodMatcher methodName="NextResultAsync" />
         <exactMethodMatcher methodName="ReadAsync" />
       </match>
-      
+
+      <!-- MySqlConnector 0.x -->
+      <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlDataReader">
+        <exactMethodMatcher methodName="NextResultAsync" />
+        <exactMethodMatcher methodName="ReadAsync" />
+      </match>
+
+      <!-- MySqlConnector 1.x -->
+      <match assemblyName="MySqlConnector" className="MySqlConnector.MySqlDataReader">
+        <exactMethodMatcher methodName="NextResultAsync" />
+        <exactMethodMatcher methodName="ReadAsync" />
+      </match>
+
       <!-- Postgres data provider -->
       <match assemblyName="Npgsql" className="Npgsql.NpgsqlDataReader">
         <exactMethodMatcher methodName="NextResultAsync" />
@@ -256,6 +314,16 @@ SPDX-License-Identifier: Apache-2.0
       <!-- MySql (official) driver -->
       <match assemblyName="MySql.Data" className="MySql.Data.MySqlClient.MySqlConnection">
         <exactMethodMatcher methodName="Open"/>
+      </match>
+
+      <!-- MySqlConnector 0.x -->
+      <match assemblyName="MySqlConnector" className="MySql.Data.MySqlClient.MySqlConnection">
+        <exactMethodMatcher methodName="Open" />
+      </match>
+
+      <!-- MySqlConnector 1.x -->
+      <match assemblyName="MySqlConnector" className="MySqlConnector.MySqlConnection">
+        <exactMethodMatcher methodName="Open" />
       </match>
 
       <!-- IBM DB2 driver -->
