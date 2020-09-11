@@ -3,12 +3,14 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
     public class MySqlTestConfiguration
     {
         private static string _mySqlConnectionString;
+        private static Dictionary<string, string> _connectionStringValues;
         private static string _mySqlServer;
         private static string _mySqlPort;
         private static string _mySqlDbName;
@@ -35,6 +37,26 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
+        public static Dictionary<string,string> ConnectionStringValues
+        {
+            get
+            {
+                if (_connectionStringValues == null)
+                {
+                    try
+                    {
+                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(MySqlConnectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Unable to parse connection string.", ex);
+                    }
+                }
+
+                return _connectionStringValues;
+            }
+        }
+
         public static string MySqlServer
         {
             get
@@ -43,9 +65,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MySqlConnectionString.Split(';');
-                        var index = subParts[0].IndexOf('=') + 1;
-                        _mySqlServer = subParts[0].Substring(index);
+                        _mySqlServer = ConfigUtils.GetConnectionStringValue("Network Address", ConnectionStringValues);
                     }
                     catch (Exception ex)
                     {
@@ -65,9 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MySqlConnectionString.Split(';');
-                        var index = subParts[1].IndexOf('=') + 1;
-                        _mySqlPort = subParts[1].Substring(index);
+                        _mySqlPort = ConfigUtils.GetConnectionStringValue("Port", ConnectionStringValues);
                     }
                     catch (Exception ex)
                     {
@@ -87,9 +105,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MySqlConnectionString.Split(';');
-                        var index = subParts[2].IndexOf('=') + 1;
-                        _mySqlDbName = subParts[2].Substring(index);
+                        _mySqlDbName = ConfigUtils.GetConnectionStringValue("Initial Catalog", ConnectionStringValues);
                     }
                     catch (Exception ex)
                     {
@@ -100,5 +116,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 return _mySqlDbName;
             }
         }
+
     }
 }

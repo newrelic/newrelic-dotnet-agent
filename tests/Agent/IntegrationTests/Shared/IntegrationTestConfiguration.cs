@@ -80,4 +80,33 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public string AwsAccountNumber { get; set; }
         public IDictionary<string, string> CustomSettings { get; set; }
     }
+
+    public class ConfigUtils
+    {
+        public static string GetConnectionStringValue(string connectionStringKey, Dictionary <string,string> connectionStringDictionary)
+        {
+            try
+            {
+                return connectionStringDictionary[connectionStringKey];
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Did not find value for key named '{connectionStringKey}' in connection string.", ex);
+            }
+        }
+
+        public static Dictionary<string, string> GetKeyValuePairsFromConnectionString(string connectionString)
+        {
+            var connectionStringKeyValuePairs = new Dictionary<string, string>();
+
+            var subParts = connectionString.Split(';');
+            foreach (var part in subParts)
+            {
+                var key = part.Split('=')[0];
+                var value = part.Split('=')[1];
+                connectionStringKeyValuePairs[key] = value;
+            }
+            return connectionStringKeyValuePairs;
+        }
+    }
 }
