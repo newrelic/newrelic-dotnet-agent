@@ -7,7 +7,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
-    public class MvcWithCollectorFixture : HttpCollectorFixture
+    public class MvcWithCollectorFixture : MockNewRelicFixture
     {
         public MvcWithCollectorFixture() : base(new RemoteWebApplication("BasicMvcApplication", ApplicationType.Bounded))
         {
@@ -16,12 +16,19 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public void Get()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default";
-            var webClient = new WebClient();
+            DownloadStringAndAssertContains(address, "<html>");
+        }
 
-            var responseBody = webClient.DownloadString(address);
+        public void GenerateCallsToCustomInstrumentationEditorMethods()
+        {
+            var address = $"http://{DestinationServerName}:{Port}/CustomInstrumentation/Get";
+            DownloadStringAndAssertEqual(address, "Worked");
+        }
 
-            Assert.NotNull(responseBody);
-            Assert.Contains("Worked", responseBody);
+        public void StartAgent()
+        {
+            var address = $"http://{DestinationServerName}:{Port}/Default/StartAgent";
+            DownloadStringAndAssertContains(address, "<html>");
         }
     }
 }

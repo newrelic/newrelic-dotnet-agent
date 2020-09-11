@@ -19,7 +19,6 @@ namespace NewRelic.Agent.IntegrationTests
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-            _fixture.DelayKill = true;
             _fixture.Actions
             (
                 setupConfiguration: () =>

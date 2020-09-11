@@ -4,7 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
 using NewRelic.Agent.IntegrationTests.Shared;
+using Newtonsoft.Json;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
@@ -18,30 +23,28 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private bool _initialized;
 
+        public int? ExitCode => RemoteApplication?.ExitCode;
+
         private readonly object _initializeLock = new object();
 
-        private readonly RemoteApplication _remoteApplication;
+        public readonly RemoteApplication RemoteApplication;
 
-        public RemoteApplication RemoteApplication { get { return _remoteApplication; } }
+        public AgentLogFile AgentLog { get { return RemoteApplication.AgentLog; } }
 
-        public AgentLogFile AgentLog { get { return _remoteApplication.AgentLog; } }
+        public string DestinationServerName { get { return RemoteApplication.DestinationServerName; } }
 
-        public string DestinationServerName { get { return _remoteApplication.DestinationServerName; } }
-
-        public string Port { get { return _remoteApplication.Port; } }
+        public string Port { get { return RemoteApplication.Port; } }
 
         public string CommandLineArguments { get; set; }
 
-        public string DestinationNewRelicConfigFilePath { get { return _remoteApplication.DestinationNewRelicConfigFilePath; } }
+        public string DestinationNewRelicConfigFilePath { get { return RemoteApplication.DestinationNewRelicConfigFilePath; } }
 
-        public string DestinationApplicationDirectoryPath { get { return _remoteApplication.DestinationApplicationDirectoryPath; } }
+        public string DestinationApplicationDirectoryPath { get { return RemoteApplication.DestinationApplicationDirectoryPath; } }
 
-        public string DestinationNewRelicExtensionsDirectoryPath => _remoteApplication.DestinationNewRelicExtensionsDirectoryPath;
-
-        private readonly IDictionary<string, string> _initialNewRelicAppSettings = new Dictionary<string, string>();
-        public IDictionary<string, string> InitialNewRelicAppSettings { get { return _initialNewRelicAppSettings; } }
+        public string DestinationNewRelicExtensionsDirectoryPath => RemoteApplication.DestinationNewRelicExtensionsDirectoryPath;
 
         public ITestOutputHelper TestLogger { get; set; }
+
 
         public bool DelayKill;
 
@@ -75,7 +78,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         protected RemoteApplicationFixture(RemoteApplication remoteApplication)
         {
-            _remoteApplication = remoteApplication;
+            RemoteApplication = remoteApplication;
         }
 
         public void Actions(Action setupConfiguration = null, Action exerciseApplication = null)
@@ -135,17 +138,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 _exerciseApplication();
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
-            if (_initialized)
-                return;
-
             lock (_initializeLock)
             {
                 if (_initialized)
                     return;
 
-                TestLogger?.WriteLine(RemoteApplication.AppName);
+                _initialized = true;
+
+                TestLogger?.WriteLine(RemoteServiceFixtures.RemoteApplication.AppName);
 
                 var numberOfTries = 0;
 
@@ -155,88 +157,117 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                     do
                     {
+                        TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
+
                         appIsExercisedNormally = true;
+                        RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
 
-                        _remoteApplication.DeleteWorkingSpace();
+                        RemoteApplication.DeleteWorkingSpace();
 
-                        _remoteApplication.CopyToRemote();
-                        foreach (var appSetting in InitialNewRelicAppSettings)
-                            _remoteApplication.AddAppSetting(appSetting.Key, appSetting.Value);
+                        RemoteApplication.CopyToRemote();
 
                         SetupConfiguration();
 
-                        var captureStandardOutput = _remoteApplication.CaptureStandardOutputRequired;
+                        var captureStandardOutput = RemoteApplication.CaptureStandardOutputRequired;
 
-                        using (var appServerProcess = _remoteApplication.Start(CommandLineArguments, captureStandardOutput))
+                        RemoteApplication.Start(CommandLineArguments, captureStandardOutput);
+
+                        
+                        try
                         {
-                            try
-                            {
-                                ExerciseApplication();
-                            }
-                            catch (Exception ex)
-                            {
-                                appIsExercisedNormally = false;
-                                TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.Message);
+                            ExerciseApplication();
+                        }
+                        catch (Exception ex)
+                        {
+                            appIsExercisedNormally = false;
+                            TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.Message);
 
-                            }
-                            finally
+                        }
+                        finally
+                        {
+                            if (!DelayKill)
                             {
-                                if (!DelayKill)
+                                ShutdownRemoteApplication();
+
+                                if (captureStandardOutput)
                                 {
-                                    _remoteApplication.Shutdown();
+                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
 
-                                    if (captureStandardOutput)
+                                    // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
+                                    // WCF tests. For the HWC tests we carefully validate the console output in order
+                                    // to detect process-level failures that may cause test flickers. For the self-
+                                    // hosted tests, unfortunately, we just punt that.
+                                    if (RemoteApplication.ValidateHostedWebCoreOutput)
                                     {
-                                        using (var reader = appServerProcess.StandardOutput)
-                                        {
-                                            // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
-                                            // WCF tests. For the HWC tests we carefully validate the console output in order
-                                            // to detect process-level failures that may cause test flickers. For the self-
-                                            // hosted tests, unfortunately, we just punt that.
-                                            var log = reader.ReadToEnd();
-
-                                            if (appIsExercisedNormally)
-                                            {
-                                                TestLogger?.WriteLine("====== LogValidator: raw child process log =====");
-                                                TestLogger?.WriteLine(log);
-                                                TestLogger?.WriteLine("====== LogValidator: end of raw child log  =====");
-                                            }
-
-                                            SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(log, TestLogger);
-                                        }
+                                        SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
                                     }
                                     else
                                     {
-                                        TestLogger?.WriteLine("Note: child process is not required for log validation because it is running an application that test runner doesn't redirect its standard output.");
+                                        TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
                                     }
 
-                                    appServerProcess.WaitForExit();
-
-                                    appIsExercisedNormally = AgentDidStartupWithoutLoggedErrors();
-
+                                }
+                                else
+                                {
+                                    TestLogger?.WriteLine("Note: child process is not required for log validation because it is running an application that test runner doesn't redirect its standard output.");
                                 }
 
-                                numberOfTries++;
+                                RemoteApplication.WaitForExit();
 
+                                appIsExercisedNormally = RemoteApplication.ExitCode == 0;
+
+                                TestLogger?.WriteLine($"Remote application exited with a {(appIsExercisedNormally ? "success" : "failure")} exit code of {RemoteApplication.ExitCode}.");
                             }
+                            else
+                            {
+                                TestLogger?.WriteLine("Note: Due to DelayKill being used, no process output or agent log validation was performed to verify that the application started and ran successfully.");
+                            }
+
+                            if (!appIsExercisedNormally && DelayKill)
+                            {
+                                RemoteApplication.Kill();
+
+                                if (captureStandardOutput)
+                                {
+                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("[RemoteApplicationFixture]: Initialize");
+                                }
+
+                                RemoteApplication.WaitForExit();
+                            }
+
+                            Thread.Sleep(1000);
+
+                            numberOfTries++;
+
                         }
                     } while (!appIsExercisedNormally && numberOfTries < MaxTries);
 
                     if (!appIsExercisedNormally)
                     {
                         TestLogger?.WriteLine($"Test App wasn't exercised normally after {MaxTries} tries.");
+                        throw new Exception($"Test App wasn't exercised normally after {MaxTries} tries.");
                     }
                 }
                 finally
                 {
                     TestLogger?.WriteLine("===== Begin Agent log file =====");
-                    TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
-                    TestLogger?.WriteLine("===== End of Agent log file =====");
-                    _initialized = true;
+                    try
+                    {
+                        TestLogger?.WriteLine(AgentLog.GetFullLogAsString());
+                    }
+                    catch (Exception)
+                    {
+                        TestLogger?.WriteLine("No log file found.");
+                    }
+                    TestLogger?.WriteLine("----- End of Agent log file -----");
                 }
             }
         }
 
+        public virtual void ShutdownRemoteApplication()
+        {
+            RemoteApplication.Shutdown();
+        }
 
         private bool AgentDidStartupWithoutLoggedErrors()
         {
@@ -257,8 +288,87 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public virtual void Dispose()
         {
-            _remoteApplication.Shutdown();
-            _remoteApplication.Dispose();
+            RemoteApplication.Shutdown();
+            RemoteApplication.Dispose();
+        }
+
+        protected string DownloadStringAndAssertEqual(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers = null)
+        {
+            var webClient = new WebClient();
+
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    webClient.Headers.Add(header.Key, header.Value);
+                }
+            }
+
+            var result = webClient.DownloadString(address);
+
+            Assert.NotNull(result);
+            if (expectedResult != null)
+            {
+                Assert.Equal(expectedResult, result);
+            }
+
+            return result;
+        }
+
+        protected string DownloadStringAndAssertContains(string address, string expectedResult, IEnumerable<KeyValuePair<string, string>> headers)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Get, address);
+
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        requestMessage.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+                var result = httpClient.SendAsync(requestMessage).Result;
+                var body = result.Content.ReadAsStringAsync().Result;
+
+                Assert.NotNull(result);
+
+                if (expectedResult != null)
+                {
+                    Assert.Contains(expectedResult, body);
+                }
+
+                return body;
+            }
+        }
+
+        protected string DownloadStringAndAssertContains(string address, string expectedResult)
+        {
+            return DownloadStringAndAssertContains(address, expectedResult, null);
+        }
+
+        protected T DownloadJsonAndAssertEqual<T>(string address, T expectedResult)
+        {
+            var webClient = new WebClient();
+            webClient.Headers.Add("accept", "application/json");
+
+            var resultJson = webClient.DownloadString(address);
+            var result = JsonConvert.DeserializeObject<T>(resultJson);
+
+            Assert.NotEqual(default(T), result);
+
+            if (expectedResult != null)
+            {
+                Assert.Equal(expectedResult, result);
+            }
+
+            return result;
+        }
+
+        public virtual void WriteProcessOutputToLog()
+        {
+            RemoteApplication.CapturedOutput.WriteProcessOutputToLog("Remote application:");
         }
     }
 }

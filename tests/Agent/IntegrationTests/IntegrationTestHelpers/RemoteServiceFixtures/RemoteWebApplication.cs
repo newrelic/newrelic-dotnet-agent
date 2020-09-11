@@ -36,7 +36,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         public RemoteWebApplication(string applicationDirectoryName, ApplicationType applicationType) : base(applicationType)
         {
             _applicationDirectoryName = applicationDirectoryName;
-
+            ValidateHostedWebCoreOutput = true;
             CaptureStandardOutputRequired = true;
         }
 
@@ -68,6 +68,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 UseShellExecute = false,
                 WorkingDirectory = DestinationHostedWebCoreDirectoryPath,
                 RedirectStandardOutput = captureStandardOutput,
+                RedirectStandardError = captureStandardOutput
             };
 
             startInfo.EnvironmentVariables.Remove("COR_ENABLE_PROFILING");
@@ -92,19 +93,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
             }
 
-            Process process = Process.Start(startInfo);
+            if (AdditionalEnvironmentVariables != null)
+            {
+                foreach (var kp in AdditionalEnvironmentVariables)
+                {
+                    startInfo.EnvironmentVariables.Add(kp.Key, kp.Value);
+                }
+            }
 
-            if (process == null)
+            RemoteProcess = Process.Start(startInfo);
+
+            if (RemoteProcess == null)
                 throw new Exception("Process failed to start.");
 
-            if (process.HasExited && process.ExitCode != 0)
-                throw new Exception("Hosted Web Core shutdown unexpectedly.");
+            CapturedOutput = new ProcessOutput(TestLogger, RemoteProcess, captureStandardOutput);
 
-            WaitForHostedWebCoreToStartListening();
+            WaitForHostedWebCoreToStartListening(RemoteProcess, captureStandardOutput);
 
-            RemoteProcessId = Convert.ToUInt32(process.Id);
-
-            return process;
+            return RemoteProcess;
         }
 
         private void CopyHostedWebCoreToRemote()
@@ -203,12 +209,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             CommonUtils.ModifyOrCreateXmlAttributes(DestinationApplicationHostConfigFilePath, string.Empty, nodes, attributes);
         }
 
-        private void WaitForHostedWebCoreToStartListening()
+        private void WaitForHostedWebCoreToStartListening(Process process, bool captureStandardOutput)
         {
             var pidFilePath = DestinationHostedWebCoreExecutablePath + ".pid";
             Console.Write("[" + DateTime.Now + "] Waiting for process to start (" + pidFilePath + ") ... " + Environment.NewLine);
             var stopwatch = Stopwatch.StartNew();
-            while (stopwatch.Elapsed < Timing.TimeToColdStart)
+            while (!process.HasExited && stopwatch.Elapsed < Timing.TimeToColdStart)
             {
                 if (File.Exists(pidFilePath))
                 {
@@ -216,6 +222,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     return;
                 }
                 Thread.Sleep(Timing.TimeBetweenFileExistChecks);
+            }
+
+            if (!process.HasExited)
+            {
+                try
+                {
+                    //We need to attempt to clean up the process that did not successfully start.
+                    process.Kill();
+                }
+                catch (Exception)
+                {
+                    TestLogger?.WriteLine("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening could not kill hung remote process.");
+                }
+            }
+
+            if (captureStandardOutput)
+            {
+                CapturedOutput.WriteProcessOutputToLog("[RemoteWebApplication]: WaitForHostedWebCoreToStartListening");
             }
 
             Assert.True(false, "Remote process never generated a .pid file!");

@@ -77,13 +77,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 ApplicationDirectoryName + ".csproj");
             var deployPath = Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName);
 
-            Process process = new Process();
-            ProcessStartInfo startInfo = new ProcessStartInfo();
+            var process = new Process();
+            var startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             startInfo.FileName = "dotnet.exe";
 
             startInfo.Arguments =
-                $"publish {projectFile} --configuration Release --runtime win10-x64 --framework netcoreapp2.0 --output {deployPath}";
+                $"publish {projectFile} --configuration Release --runtime win10-x64 --framework netcoreapp2.1 --output {deployPath}";
             process.StartInfo = startInfo;
             process.Start();
 
@@ -153,25 +153,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
 
+            RemoteProcess = Process.Start(startInfo);
 
-
-            Process process = Process.Start(startInfo);
-
-            if (process == null)
+            if (RemoteProcess == null)
             {
                 throw new Exception("Process failed to start.");
             }
 
-            if (process.HasExited && process.ExitCode != 0)
+            CapturedOutput = new ProcessOutput(TestLogger, base.RemoteProcess, captureStandardOutput);
+
+            if (RemoteProcess.HasExited && RemoteProcess.ExitCode != 0)
             {
                 throw new Exception("App server shutdown unexpectedly.");
             }
 
             WaitForAppServerToStartListening();
 
-            RemoteProcessId = Convert.ToUInt32(process.Id);
+            RemoteProcessId = Convert.ToUInt32(RemoteProcess.Id);
 
-            return process;
+            return RemoteProcess;
         }
 
         private void WaitForAppServerToStartListening()

@@ -1,12 +1,14 @@
 ﻿// Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared.Models;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests
 {
@@ -16,9 +18,10 @@ namespace NewRelic.Agent.IntegrationTests
 
         private IEnumerable<CollectedRequest> _collectedRequests = null;
 
-        public DataTransmissionDefaults(MvcWithCollectorFixture fixture)
+        public DataTransmissionDefaults(MvcWithCollectorFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
+            _fixture.TestLogger = output;
 
             _fixture.AddActions(
                 setupConfiguration: () =>
@@ -28,6 +31,7 @@ namespace NewRelic.Agent.IntegrationTests
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
                     _collectedRequests = _fixture.GetCollectedRequests();
                 }
             );

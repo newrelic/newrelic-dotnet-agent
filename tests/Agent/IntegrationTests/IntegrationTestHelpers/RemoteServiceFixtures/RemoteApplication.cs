@@ -41,6 +41,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private static readonly string DestinationWorkingDirectoryRemoteDefault = Path.Combine(@"\\", Dns.GetHostName(), "C$", "IntegrationTestWorkingDirectory");
 
+        public string DestinationExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "extensions"); } }
+
+        public string DestinationApplicationDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName); } }
+
+        protected string DestinationLauncherDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "ApplicationLauncher"); } }
+
+        protected string DestinationApplicationLauncherExecutablePath { get { return Path.Combine(DestinationLauncherDirectoryPath, HostedWebCoreTargetFramework, "ApplicationLauncher.exe"); } }
+
+        public void WaitForExit()
+        {
+            RemoteProcess.WaitForExit();
+        }
+
+        public void Kill()
+        {
+            RemoteProcess?.Kill();
+        }
+
         #endregion
 
         #region Private
@@ -65,6 +83,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         #endregion
 
+        public ITestLogger TestLogger { get; set; }
+
         public const string AppName = "IntegrationTestAppName";
 
         private readonly string _uniqueFolderName = Guid.NewGuid().ToString();
@@ -82,19 +102,24 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         }
         private uint? _remoteProcessId;
 
+        protected Process RemoteProcess { get; set; }
+
+        public ProcessOutput CapturedOutput { get; protected set; }
+
+        public int? ExitCode => RemoteProcess.HasExited
+            ? RemoteProcess.ExitCode
+            : (int?)null;
+
+
+        public bool IsRunning => (!RemoteProcess?.HasExited) ?? false;
+
         protected const string HostedWebCoreTargetFramework = "net451";
 
         public bool KeepWorkingDirectory { get; set; } = false;
 
         protected string DestinationRootDirectoryPath { get { return Path.Combine(DestinationWorkingDirectoryRemotePath, _uniqueFolderName); } }
 
-        protected string DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "New Relic Home"); } }
-
-        public string DestinationApplicationDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, ApplicationDirectoryName); } }
-
-        protected string DestinationLauncherDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "ApplicationLauncher"); } }
-
-        protected string DestinationApplicationLauncherExecutablePath { get { return Path.Combine(DestinationLauncherDirectoryPath, HostedWebCoreTargetFramework, "ApplicationLauncher.exe"); } }
+        public string DestinationNewRelicHomeDirectoryPath { get { return Path.Combine(DestinationRootDirectoryPath, "New Relic Home"); } }
 
         public string Port { get { return _port ?? (_port = _port = RandomPortGenerator.NextPortString()); } }
 
@@ -104,6 +129,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public string DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "Extensions"); } }
 
+        public bool ValidateHostedWebCoreOutput { get; set; } = false;
+
         public AgentLogFile AgentLog { get { return new AgentLogFile(DestinationNewRelicLogFilePath, Timing.TimeToConnect); } }
 
         protected bool _isCoreApp;
@@ -111,6 +138,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         static RemoteApplication()
         {
             AssemblySetUp.TouchMe();
+        }
+
+        protected IDictionary<string, string> AdditionalEnvironmentVariables;
+        public RemoteApplication SetAdditionalEnvironmentVariable(string key, string value)
+        {
+            if (AdditionalEnvironmentVariables == null)
+            {
+                return SetAdditionalEnvironmentVariables(new Dictionary<string, string> { { key, value } });
+            }
+
+            AdditionalEnvironmentVariables[key] = value;
+
+            return this;
+        }
+
+        public RemoteApplication SetAdditionalEnvironmentVariables(IDictionary<string, string> envVariables)
+        {
+            AdditionalEnvironmentVariables = envVariables;
+            return this;
         }
 
         protected RemoteApplication(ApplicationType applicationType, bool isCoreApp = false)
@@ -128,20 +174,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
 
-        public void Shutdown()
+        public virtual void Shutdown()
         {
-            if (!RemoteProcessId.HasValue)
+            if (!IsRunning)
+            {
                 return;
+            }
+
+            var expectedWaitHandle = "app_server_wait_for_all_request_done_" + Port;
 
             try
             {
+                TestLogger?.WriteLine($"[RemoteApplication] Sending shutdown signal to {ApplicationDirectoryName}.");
                 //The test runner opens an event created by the app server and set it to signal the app server that the test has finished. 
-                var remoteAppEvent = EventWaitHandle.OpenExisting("app_server_wait_for_all_request_done_" + Port.ToString());
+                var remoteAppEvent = EventWaitHandle.OpenExisting(expectedWaitHandle);
                 remoteAppEvent.Set();
             }
-            catch
+            catch (Exception ex)
             {
-                ProcessExtensions.KillTreeRemote(DestinationServerName, RemoteProcessId.Value);
+                TestLogger?.WriteLine($"[RemoteApplication] FAILED sending shutdown signal to wait handle \"{expectedWaitHandle}\": {ex}.");
+                RemoteProcess.Kill();
             }
         }
 
@@ -242,6 +294,92 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             if (Directory.Exists(DestinationRootDirectoryPath))
                 Directory.Delete(DestinationRootDirectoryPath, true);
+        }
+    }
+
+
+    public class ProcessOutput
+    {
+        public string StandardOutput { get; set; } = string.Empty;
+        public string StandardError { get; set; } = string.Empty;
+        private Thread _standardOutputThread;
+        private Thread _standardErrorThread;
+        private readonly ITestLogger _testLogger;
+
+        /// <summary>
+        /// Class that encapsulates how to capture and retrieve both standard output and standard error
+        /// from a Process while reducing the risk of deadlock. See the Microsoft documentation for
+        /// Process.StandardOutput for a list of the possible deadlock risks. This class uses Microsoft's
+        /// recommendation of creating two threads that can read from StandardOutput and StandardError
+        /// so that those two output streams/pipes don't block each other and ultimately prevent the process
+        /// from ending, which also prevents StandardOutput from reaching the end of its stream.
+        /// </summary>
+        /// <param name="testLogger">The logger to write the output streams to</param>
+        /// <param name="process">The process with output streams to log</param>
+        /// <param name="captureOutput">Flag controlling whether or not we should read and log the output and error streams for the process</param>
+        public ProcessOutput(ITestLogger testLogger, Process process, bool captureOutput)
+        {
+            _testLogger = testLogger;
+
+            if (captureOutput)
+            {
+                StartCapturingForProcess(process);
+            }
+        }
+
+        private void StartCapturingForProcess(Process process)
+        {
+            _standardOutputThread = new Thread(() =>
+            {
+                using (var reader = process.StandardOutput)
+                {
+                    StandardOutput = reader.ReadToEnd();
+                }
+            })
+            {
+                IsBackground = true
+            };
+            _standardOutputThread.Start();
+
+            _standardErrorThread = new Thread(() =>
+            {
+                using (var reader = process.StandardError)
+                {
+                    StandardError = reader.ReadToEnd();
+                }
+            })
+            {
+                IsBackground = true
+            };
+            _standardErrorThread.Start();
+        }
+
+        private void WaitForOutput()
+        {
+            _standardOutputThread?.Join(TimeSpan.FromMinutes(2));
+            _standardErrorThread?.Join(TimeSpan.FromMinutes(2));
+        }
+
+        public virtual void WriteProcessOutputToLog(string processDescription)
+        {
+            WaitForOutput();
+
+            _testLogger?.WriteLine("");
+            _testLogger?.WriteLine($"====== {processDescription} standard output log =====");
+            _testLogger?.WriteLine(StandardOutput);
+            _testLogger?.WriteLine($"----- {processDescription} end of standard output log  -----");
+
+            _testLogger?.WriteLine("");
+            _testLogger?.WriteLine($"====== {processDescription} standard error log =====");
+            _testLogger?.WriteLine(StandardError);
+            _testLogger?.WriteLine($"----- {processDescription} end of standard error log -----");
+            _testLogger?.WriteLine("");
+        }
+
+        public string ReturnProcessOutput()
+        {
+            WaitForOutput();
+            return StandardOutput;
         }
     }
 }
