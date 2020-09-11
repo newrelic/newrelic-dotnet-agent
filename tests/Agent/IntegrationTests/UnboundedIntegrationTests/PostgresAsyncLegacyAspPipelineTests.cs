@@ -58,7 +58,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{PostgresConfiguration.PostgresServer}/{PostgresConfiguration.PostgresPort}", callCount = 1},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1 },
             };
 
