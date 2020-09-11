@@ -3,12 +3,15 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
     public class OracleConfiguration
     {
         private static string _oracleConnectionString;
+        private static Dictionary<string, string> _connectionStringValues;
+        private static string _oracleDataSource;
         private static string _oracleServer;
         private static string _oraclePort;
 
@@ -34,6 +37,46 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
+        public static Dictionary<string, string> ConnectionStringValues
+        {
+            get
+            {
+                if (_connectionStringValues == null)
+                {
+                    try
+                    {
+                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(OracleConnectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Unable to parse connection string.", ex);
+                    }
+                }
+
+                return _connectionStringValues;
+            }
+        }
+
+        public static string OracleDataSource
+        {
+            get
+            {
+                if (_oracleDataSource == null)
+                {
+                    try
+                    {
+                        _oracleDataSource = ConfigUtils.GetConnectionStringValue("Data Source", ConnectionStringValues);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("OracleServer configuration is invalid.", ex);
+                    }
+                }
+
+                return _oracleDataSource;
+            }
+        }
+
         public static string OracleServer
         {
             get
@@ -42,9 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var indexFrom = OracleConnectionString.IndexOf("Data Source=") + "Data Source=".Length;
-                        var indexTo = OracleConnectionString.IndexOf(":");
-                        _oracleServer = OracleConnectionString.Substring(indexFrom, indexTo - indexFrom);
+                        _oracleServer = OracleDataSource.Split(':')[0];
                     }
                     catch (Exception ex)
                     {
@@ -64,9 +105,9 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var indexFrom = OracleConnectionString.IndexOf(":") + 1;
-                        var indexTo = OracleConnectionString.IndexOf("/");
-                        _oraclePort = OracleConnectionString.Substring(indexFrom, indexTo - indexFrom);
+                        var indexFrom = OracleDataSource.IndexOf(":") + 1;
+                        var indexTo = OracleDataSource.IndexOf("/");
+                        _oraclePort = OracleDataSource.Substring(indexFrom, indexTo - indexFrom);
                     }
                     catch (Exception ex)
                     {

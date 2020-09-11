@@ -3,12 +3,14 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
     public class PostgresConfiguration
     {
         private static string _postgresConnectionString;
+        private static Dictionary<string, string> _connectionStringValues;
         private static string _postgresServer;
         private static string _postgresPort;
 
@@ -34,6 +36,26 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
+        public static Dictionary<string, string> ConnectionStringValues
+        {
+            get
+            {
+                if (_connectionStringValues == null)
+                {
+                    try
+                    {
+                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(MySqlConnectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Unable to parse connection string.", ex);
+                    }
+                }
+
+                return _connectionStringValues;
+            }
+        }
+
         public static string PostgresServer
         {
             get
@@ -42,9 +64,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = PostgresConnectionString.Split(';');
-                        var index = subParts[0].IndexOf('=') + 1;
-                        _postgresServer = subParts[0].Substring(index);
+                        _postgresServer = ConfigUtils.GetConnectionStringValue("Server", ConnectionStringValues);
                     }
                     catch (Exception ex)
                     {
@@ -64,9 +84,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = PostgresConnectionString.Split(';');
-                        var index = subParts[1].IndexOf('=') + 1;
-                        _postgresPort = subParts[1].Substring(index);
+                        _postgresPort = ConfigUtils.GetConnectionStringValue("Port", ConnectionStringValues);
                     }
                     catch (Exception ex)
                     {

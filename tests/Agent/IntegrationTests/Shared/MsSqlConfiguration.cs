@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
@@ -10,6 +11,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     {
         private static string _msSqlConnectionString;
         private static string _msSqlServer;
+        private static Dictionary<string, string> _connectionStringValues;
 
         // example: "Server=1.2.3.4;Database=DBName;User ID=sa;Password=password;Trusted_Connection=False;Encrypt=False;Connection Timeout=30;"
         public static string MsSqlConnectionString
@@ -33,6 +35,27 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
+        public static Dictionary<string, string> ConnectionStringValues
+        {
+            get
+            {
+                if (_connectionStringValues == null)
+                {
+                    try
+                    {
+                        _connectionStringValues = ConfigUtils.GetKeyValuePairsFromConnectionString(MsSqlConnectionString);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Unable to parse connection string.", ex);
+                    }
+                }
+
+                return _connectionStringValues;
+            }
+        }
+
+
         public static string MsSqlServer
         {
             get
@@ -41,9 +64,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MsSqlConnectionString.Split(';');
-                        var index = subParts[0].IndexOf('=') + 1;
-                        _msSqlServer = subParts[0].Substring(index);
+                        _msSqlServer = ConfigUtils.GetConnectionStringValue("Server", ConnectionStringValues);
                     }
                     catch (Exception ex)
                     {
