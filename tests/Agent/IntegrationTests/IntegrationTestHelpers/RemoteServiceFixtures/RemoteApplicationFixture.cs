@@ -135,7 +135,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 _exerciseApplication();
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
             if (_initialized)
                 return;
@@ -254,6 +254,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 return false;
             }
         }
+
+        public virtual void ShutdownRemoteApplication()
+        {
+            _remoteApplication.Shutdown();
+        }
+
 
         public virtual void Dispose()
         {

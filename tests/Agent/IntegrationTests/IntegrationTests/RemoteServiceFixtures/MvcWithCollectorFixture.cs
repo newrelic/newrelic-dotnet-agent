@@ -7,7 +7,7 @@ using Xunit;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
-    public class MvcWithCollectorFixture : HttpCollectorFixture
+    public class MvcWithCollectorFixture : MockNewRelicFixture
     {
         public MvcWithCollectorFixture() : base(new RemoteWebApplication("BasicMvcApplication", ApplicationType.Bounded))
         {

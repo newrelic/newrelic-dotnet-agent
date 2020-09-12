@@ -35,6 +35,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private string DestinationApplicationExecutablePath => Path.Combine(DestinationApplicationDirectoryPath, _executableName);
 
+        public XUnitTestLogger TestLogger { get; set; }
+        public ProcessOutput CapturedOutput { get; set; }
+
         public RemoteService(string applicationDirectoryName, string executableName, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false) : base(applicationType, isCoreApp)
         {
             _applicationDirectoryName = applicationDirectoryName;
@@ -153,25 +156,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
 
+            RemoteProcess = Process.Start(startInfo);
 
 
-            Process process = Process.Start(startInfo);
-
-            if (process == null)
+            if (RemoteProcess == null)
             {
                 throw new Exception("Process failed to start.");
             }
 
-            if (process.HasExited && process.ExitCode != 0)
+            CapturedOutput = new ProcessOutput(TestLogger, RemoteProcess, captureStandardOutput);
+
+            if (RemoteProcess.HasExited && RemoteProcess.ExitCode != 0)
             {
                 throw new Exception("App server shutdown unexpectedly.");
             }
 
             WaitForAppServerToStartListening();
 
-            RemoteProcessId = Convert.ToUInt32(process.Id);
+            RemoteProcessId = Convert.ToUInt32(RemoteProcess.Id);
 
-            return process;
+            return RemoteProcess;
         }
 
         private void WaitForAppServerToStartListening()

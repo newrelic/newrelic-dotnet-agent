@@ -72,6 +72,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwinRemotingClient", "Appli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwinRemotingServer", "Applications\OwinRemotingServer\OwinRemotingServer.csproj", "{84CDF87A-57E0-4411-B3B7-E51B04F09FEE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MockNewRelic", "Applications\MockNewRelic\MockNewRelic.csproj", "{2EFC8D9E-D890-4701-A1DE-ABBA2B1DCDCC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -190,6 +192,10 @@ Global
 		{84CDF87A-57E0-4411-B3B7-E51B04F09FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84CDF87A-57E0-4411-B3B7-E51B04F09FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84CDF87A-57E0-4411-B3B7-E51B04F09FEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EFC8D9E-D890-4701-A1DE-ABBA2B1DCDCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EFC8D9E-D890-4701-A1DE-ABBA2B1DCDCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EFC8D9E-D890-4701-A1DE-ABBA2B1DCDCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EFC8D9E-D890-4701-A1DE-ABBA2B1DCDCC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -217,6 +223,7 @@ Global
 		{D5FC7B64-1FE6-43BA-8E2E-8F98066D8827} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{0FD77D76-4C61-47B9-B970-0563F8C57F3F} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{84CDF87A-57E0-4411-B3B7-E51B04F09FEE} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
+		{2EFC8D9E-D890-4701-A1DE-ABBA2B1DCDCC} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}
