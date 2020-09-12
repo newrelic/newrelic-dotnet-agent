@@ -50,6 +50,19 @@ postgres:
         - POSTGRES_PASSWORD=password
     container_name: PostgresServer
 
+mssql:
+    build: ./mssql
+    ports:
+        - "1433:1433"
+    environment:
+        # The password set here must match the password set in the connection
+        # string being used by the MS SQL tests.  SQL server requires a more
+        # complex password than 'password' and that is why this service does
+        # not follow the same pattern as the others.
+        - SA_PASSWORD=password0TS
+        - SQLCMDPASSWORD=password0TS
+    container_name: MssqlServer
+
 oracle:
     build: ./oracle
     shm_size: 1g

@@ -58,7 +58,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = 5 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/all", callCount = 5 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allWeb", callCount = 5 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{MsSqlConfiguration.MsSqlServer}/default", callCount = 5},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = 5},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 3 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/MsSqlAsync"},
