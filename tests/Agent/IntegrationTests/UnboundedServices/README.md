@@ -11,9 +11,14 @@ Note: while not a hard requirement, the containers will perform better if you us
 
 ## Running the containers
 
+**Notes**:
+
+* All commands below should be run from a shell (we've tested Powershell and "git-bash") in the same location as this README.
+* Before Docker containers can be used the first time, they need to be built by executing `docker-compose build`.
+
 ### All
 
-To run all services, run the following from a shell (we've tested Powershell and "git-bash") in the same path as this document:
+To run all services:
 
 `docker-compose up`
 
