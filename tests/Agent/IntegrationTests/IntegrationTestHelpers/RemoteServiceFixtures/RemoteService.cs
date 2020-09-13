@@ -74,6 +74,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ModifyNewRelicConfig();
         }
 
+        public virtual string NetCoreVersion { get; set; } = "netcoreapp2.0";
+
         private void PublishCoreApp()
         {
             var projectFile = Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName,
@@ -86,7 +88,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.FileName = "dotnet.exe";
 
             startInfo.Arguments =
-                $"publish {projectFile} --configuration Release --runtime win10-x64 --framework netcoreapp2.0 --output {deployPath}";
+                $"publish {projectFile} --configuration Release --runtime win10-x64 --framework {NetCoreVersion} --output {deployPath}";
             process.StartInfo = startInfo;
             process.Start();
 

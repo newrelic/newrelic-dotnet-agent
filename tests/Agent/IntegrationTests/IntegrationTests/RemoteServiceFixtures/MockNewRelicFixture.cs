@@ -25,7 +25,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public MockNewRelicFixture(RemoteApplication remoteApplication) : base(remoteApplication)
         {
             MockNewRelicApplication = new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true);
-            //MockNewRelicApplication.NetCoreVersion = "netcoreapp2.1";
+            MockNewRelicApplication.NetCoreVersion = "netcoreapp2.1";
 
             Actions(
                 setupConfiguration: () =>
