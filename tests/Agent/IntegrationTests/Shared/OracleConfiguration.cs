@@ -3,12 +3,14 @@
 
 
 using System;
+using System.Data.Common;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
     public class OracleConfiguration
     {
         private static string _oracleConnectionString;
+        private static string _oracleDataSource;
         private static string _oracleServer;
         private static string _oraclePort;
 
@@ -34,6 +36,27 @@ namespace NewRelic.Agent.IntegrationTests.Shared
             }
         }
 
+        public static string OracleDataSource
+        {
+            get
+            {
+                if (_oracleDataSource == null)
+                {
+                    try
+                    {
+                        var builder = new DbConnectionStringBuilder { ConnectionString = OracleConnectionString };
+                        _oracleDataSource = builder["Data Source"].ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("OracleServer configuration is invalid.", ex);
+                    }
+                }
+
+                return _oracleDataSource;
+            }
+        }
+
         public static string OracleServer
         {
             get
@@ -42,9 +65,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var indexFrom = OracleConnectionString.IndexOf("Data Source=") + "Data Source=".Length;
-                        var indexTo = OracleConnectionString.IndexOf(":");
-                        _oracleServer = OracleConnectionString.Substring(indexFrom, indexTo - indexFrom);
+                        var uri = new UriBuilder(OracleDataSource);
+                        _oracleServer = uri.Host;
                     }
                     catch (Exception ex)
                     {
@@ -64,9 +86,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var indexFrom = OracleConnectionString.IndexOf(":") + 1;
-                        var indexTo = OracleConnectionString.IndexOf("/");
-                        _oraclePort = OracleConnectionString.Substring(indexFrom, indexTo - indexFrom);
+                        var uri = new UriBuilder(OracleDataSource);
+                        _oraclePort = uri.Port.ToString();
                     }
                     catch (Exception ex)
                     {

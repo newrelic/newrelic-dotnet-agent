@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Data.Common;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
@@ -41,9 +42,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MsSqlConnectionString.Split(';');
-                        var index = subParts[0].IndexOf('=') + 1;
-                        _msSqlServer = subParts[0].Substring(index);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = MsSqlConnectionString };
+                        _msSqlServer = builder["Server"].ToString();
                     }
                     catch (Exception ex)
                     {

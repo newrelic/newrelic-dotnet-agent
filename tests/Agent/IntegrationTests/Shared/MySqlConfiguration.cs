@@ -3,6 +3,7 @@
 
 
 using System;
+using System.Data.Common;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
@@ -43,9 +44,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MySqlConnectionString.Split(';');
-                        var index = subParts[0].IndexOf('=') + 1;
-                        _mySqlServer = subParts[0].Substring(index);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = MySqlConnectionString };
+                        _mySqlServer = builder["Network Address"].ToString();
                     }
                     catch (Exception ex)
                     {
@@ -65,9 +65,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MySqlConnectionString.Split(';');
-                        var index = subParts[1].IndexOf('=') + 1;
-                        _mySqlPort = subParts[1].Substring(index);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = MySqlConnectionString };
+                        _mySqlPort = builder["Port"].ToString();
                     }
                     catch (Exception ex)
                     {
@@ -87,9 +86,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = MySqlConnectionString.Split(';');
-                        var index = subParts[2].IndexOf('=') + 1;
-                        _mySqlDbName = subParts[2].Substring(index);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = MySqlConnectionString };
+                        _mySqlDbName = builder["Initial Catalog"].ToString();
                     }
                     catch (Exception ex)
                     {
@@ -100,5 +98,6 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 return _mySqlDbName;
             }
         }
+
     }
 }

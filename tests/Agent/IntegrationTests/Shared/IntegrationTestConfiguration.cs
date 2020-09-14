@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 
@@ -80,4 +79,5 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public string AwsAccountNumber { get; set; }
         public IDictionary<string, string> CustomSettings { get; set; }
     }
+
 }
