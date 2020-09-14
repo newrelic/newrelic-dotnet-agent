@@ -64,9 +64,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var indexFrom = MongoDb26ConnectionString.IndexOf("//") + "//".Length;
-                        var indexTo = MongoDb26ConnectionString.LastIndexOf(":");
-                        _mongoDb26Server = MongoDb26ConnectionString.Substring(indexFrom, indexTo - indexFrom);
+                        var uri = new UriBuilder(MongoDb26ConnectionString);
+                        _mongoDb26Server = uri.Host;
                     }
                     catch (Exception ex)
                     {
@@ -86,8 +85,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var index = MongoDb26ConnectionString.LastIndexOf(":") + 1;
-                        _mongoDb26Port = MongoDb26ConnectionString.Substring(index);
+                        var uri = new UriBuilder(MongoDb26ConnectionString);
+                        _mongoDb26Port = uri.Port.ToString();
                     }
                     catch (Exception ex)
                     {

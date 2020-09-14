@@ -65,7 +65,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        _oracleServer = OracleDataSource.Split(':')[0];
+                        var uri = new UriBuilder(OracleDataSource);
+                        _oracleServer = uri.Host;
                     }
                     catch (Exception ex)
                     {
@@ -85,9 +86,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var indexFrom = OracleDataSource.IndexOf(":") + 1;
-                        var indexTo = OracleDataSource.IndexOf("/");
-                        _oraclePort = OracleDataSource.Substring(indexFrom, indexTo - indexFrom);
+                        var uri = new UriBuilder(OracleDataSource);
+                        _oraclePort = uri.Port.ToString();
                     }
                     catch (Exception ex)
                     {

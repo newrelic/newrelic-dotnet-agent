@@ -3,7 +3,6 @@
 
 
 using System;
-using System.Collections.Generic;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
