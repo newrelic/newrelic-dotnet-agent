@@ -93,7 +93,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             startInfo.Arguments =
                 $"publish {projectFile} --configuration Release --runtime win10-x64 --framework {NetCoreVersion} --output {deployPath}";
 
-            Console.WriteLine($"[{DateTime.Now}] Publishing core app with command line: ${startInfo.Arguments}");
+            Console.WriteLine($"[{DateTime.Now}] Publishing core app with command line: {startInfo.Arguments}");
             process.StartInfo = startInfo;
             process.Start();
 
