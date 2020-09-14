@@ -106,6 +106,18 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             }
         }
 
+        private void SetHeaders (HttpRequestMessageProperty carrier, string key, string value)
+        {
+            // 'Set' will replace an existing value
+            carrier.Headers?.Set(key, value);
+        }
+
+        private void SetHeaders(Message carrier, string key, string value)
+        {
+            // 'Set' will replace an existing value
+            carrier.Headers.Add(MessageHeader.CreateHeader(key, string.Empty, value));
+        }
+
         public object BeforeSendRequest(ref Message request, IClientChannel channel)
         {
             var transactionWrapperApi = _agent.CurrentTransaction;
@@ -126,15 +138,14 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                 request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);
             }
 
-            var setHeaders = new Action<HttpRequestMessageProperty, string, string>((carrier, key, value) =>
-            {
-                // 'Set' will replace an existing value
-                carrier.Headers?.Set(key, value);
-            });
-
             try
             {
-                _agent.CurrentTransaction.InsertDistributedTraceHeaders(httpRequestMessage, setHeaders);
+                _agent.CurrentTransaction.InsertDistributedTraceHeaders(httpRequestMessage, SetHeaders);
+
+                if(request.Headers.MessageVersion == MessageVersion.None)
+                {
+                    _agent.CurrentTransaction.InsertDistributedTraceHeaders(request, SetHeaders);
+                }
             }
             catch (Exception ex)
             {
