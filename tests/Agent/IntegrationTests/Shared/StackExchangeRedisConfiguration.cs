@@ -41,8 +41,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var index = StackExchangeRedisConnectionString.IndexOf(":");
-                        _stackExchangeRedisServer = StackExchangeRedisConnectionString.Substring(0, index);
+                        var uri = new UriBuilder(StackExchangeRedisConnectionString);
+                        _stackExchangeRedisServer = uri.Host;
                     }
                     catch (Exception ex)
                     {
@@ -62,8 +62,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var index = StackExchangeRedisConnectionString.IndexOf(":") + 1;
-                        _stackExchangeRedisPort = StackExchangeRedisConnectionString.Substring(index);
+                        var uri = new UriBuilder(StackExchangeRedisConnectionString);
+                        _stackExchangeRedisPort = uri.Port.ToString();
                     }
                     catch (Exception ex)
                     {
