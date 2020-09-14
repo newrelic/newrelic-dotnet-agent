@@ -86,9 +86,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             startInfo.FileName = "dotnet.exe";
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
 
             startInfo.Arguments =
                 $"publish {projectFile} --configuration Release --runtime win10-x64 --framework {NetCoreVersion} --output {deployPath}";
+
+            Console.WriteLine($"[{DateTime.Now}] Publishing core app with command line: ${startInfo.Arguments}");
             process.StartInfo = startInfo;
             process.Start();
 
@@ -98,6 +103,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             if (process.ExitCode != 0)
             {
+                Console.WriteLine($"[{DateTime.Now}] dotnet.exe stderr: {process.StandardError.ReadToEnd()}");
                 throw new Exception("Failed to publish Core application");
             }
 
