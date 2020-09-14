@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Data.Common;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
@@ -41,9 +42,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = PostgresConnectionString.Split(';');
-                        var index = subParts[0].IndexOf('=') + 1;
-                        _postgresServer = subParts[0].Substring(index);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
+                        _postgresServer = builder["Server"].ToString();
                     }
                     catch (Exception ex)
                     {
@@ -63,9 +63,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = PostgresConnectionString.Split(';');
-                        var index = subParts[1].IndexOf('=') + 1;
-                        _postgresPort = subParts[1].Substring(index);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = PostgresConnectionString };
+                        _postgresPort = builder["Port"].ToString();
                     }
                     catch (Exception ex)
                     {

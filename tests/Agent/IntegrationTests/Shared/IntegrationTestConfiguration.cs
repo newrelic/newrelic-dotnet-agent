@@ -78,4 +78,5 @@ namespace NewRelic.Agent.IntegrationTests.Shared
         public string AwsAccountNumber { get; set; }
         public IDictionary<string, string> CustomSettings { get; set; }
     }
+
 }

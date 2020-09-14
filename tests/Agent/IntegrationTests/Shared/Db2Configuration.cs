@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Data.Common;
 
 namespace NewRelic.Agent.IntegrationTests.Shared
 {
@@ -9,6 +10,7 @@ namespace NewRelic.Agent.IntegrationTests.Shared
     {
         private static string _db2ConnectionString;
         private static string _db2Server;
+
 
         // example: "Server=1.2.3.4;Database=SAMPLE;UserID=db2User;Password=db2password"
         public static string Db2ConnectionString
@@ -40,9 +42,8 @@ namespace NewRelic.Agent.IntegrationTests.Shared
                 {
                     try
                     {
-                        var subParts = Db2ConnectionString.Split(';');
-                        var index = subParts[0].IndexOf('=') + 1;
-                        _db2Server = subParts[0].Substring(index);
+                        var builder = new DbConnectionStringBuilder { ConnectionString = Db2ConnectionString };
+                        _db2Server = builder["Server"].ToString();
                     }
                     catch (Exception ex)
                     {
