@@ -46,7 +46,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
         protected readonly WCFBindingType _bindingToTest;
         protected string ExpectedTransportType => _bindingToTest == WCFBindingType.NetTcp
-            ? "NetTCP"
+            ? "Other"
             : "HTTP";
 
         protected readonly WCFInvocationMethod[] _serviceInvocationMethodsToTest;

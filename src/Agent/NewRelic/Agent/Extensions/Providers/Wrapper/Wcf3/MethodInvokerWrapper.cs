@@ -95,17 +95,38 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             return new CanWrapResponse(canWrap);
         }
 
-        private static IEnumerable<string> GetHeaderValue(List<KeyValuePair<string, string>> headers, string key)
+        private static IEnumerable<string> ExtractHeaderValue(OperationContext context, string key)
         {
-            var matchHeaderValue = headers
-                .Where(x => x.Key != null && x.Key.Equals(key) && x.Value != null)
-                .Select(x => x.Value)
-                .FirstOrDefault();
+            string headerValue = null;
 
-            return matchHeaderValue == null
-                ? null
-                : new string[] { matchHeaderValue };
+            if(context.IncomingMessageProperties != null && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject))
+            {
+                var httpRequestMessage = httpRequestMessageAsObject as HttpRequestMessageProperty;
+                if (httpRequestMessage != null && httpRequestMessage.Headers != null)
+                {
+                    headerValue = httpRequestMessage.Headers.Get(key);
+                }
+            }
+
+            if(headerValue == null && context.IncomingMessageHeaders != null)
+            {
+                try
+                {
+                    headerValue = context.IncomingMessageHeaders.GetHeader<string>(key, string.Empty);
+                }
+                catch
+                {
+                    //Some of the headers cannot be extracted as strings.
+                    //This catch will prevent this from bubbling up.
+                    //Nonetheless, this header cannot be retrieved using this method.
+                }
+            }
+
+            return headerValue != null
+                            ? new[] { headerValue }
+                            : null;
         }
+
 
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -161,56 +182,18 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
                 if (!transactionAlreadyExists)
                 {
-                    var haveAcceptedTraceHeaders = false;
+                    var transportType = TransportType.Other;
 
-                    //Supporing HTTP
-                    var messageProperties = OperationContext.Current?.IncomingMessageProperties;
-                    if (messageProperties != null && messageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
+                    var msgProperties = OperationContext.Current?.IncomingMessageProperties;
+                    if (msgProperties != null && msgProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
                     {
-                        var retrievedHeaders = new List<KeyValuePair<string, string>>();
-
-                        var httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
-                        if (httpRequestMessage != null)
+                        if (httpRequestMessageObject is HttpRequestMessageProperty)
                         {
-                            foreach (var headerName in httpRequestMessage.Headers.AllKeys)
-                            {
-                                retrievedHeaders.Add(new KeyValuePair<string, string>(headerName, httpRequestMessage.Headers[headerName]));
-                            }
-
-                            if (retrievedHeaders.Any())
-                            {
-                                haveAcceptedTraceHeaders = true;
-                                transaction.AcceptDistributedTraceHeaders(retrievedHeaders, GetHeaderValue, TransportType.HTTP);
-                            }
+                            transportType = TransportType.HTTP;
                         }
                     }
 
-                    //Supporting NetTCP
-                    if (!haveAcceptedTraceHeaders)
-                    {
-                        var messageHeaders = OperationContext.Current?.IncomingMessageHeaders;
-                        if (messageHeaders != null && messageHeaders.MessageVersion != MessageVersion.None)
-                        {
-                            var retrievedHeaders = new List<KeyValuePair<string, string>>();
-                            for (var i = 0; i < messageHeaders.Count; i++)
-                            {
-                                try
-                                {
-                                    retrievedHeaders.Add(new KeyValuePair<string, string>(messageHeaders[i].Name, messageHeaders.GetHeader<string>(i)));
-                                }
-                                catch
-                                {
-                                    //gulp
-                                }
-                            }
-
-                            if (retrievedHeaders.Any())
-                            {
-                                haveAcceptedTraceHeaders = true;
-                                transaction.AcceptDistributedTraceHeaders(retrievedHeaders, GetHeaderValue, TransportType.NetTCP);
-                            }
-                        }
-                    }
+                    transaction.AcceptDistributedTraceHeaders(OperationContext.Current, ExtractHeaderValue, transportType);
                 }
             }
 

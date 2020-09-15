@@ -128,7 +128,6 @@ namespace NewRelic.Agent.Extensions.Providers.Wrapper
         IronMQ = 5,
         AMQP = 6,
         Queue = 7,
-        NetTCP = 8,
-        Other = 100,
+        Other = 8
     }
 }
