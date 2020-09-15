@@ -16,6 +16,7 @@ Enables nullable reference types that are part of the C# 8.0 language specificat
 
 ### Fixes
 * Fixes an issue that may cause `InvalidCastException` due to an assembly version mismatch in Mvc3 instrumentation.
+* Fixes an async timing issue that can cause the end time of `Task`-returning methods to be determined incorrectly.
 
 ## [8.31] - 2020-08-17
 ### New Features
