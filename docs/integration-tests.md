@@ -38,7 +38,10 @@ Tests the integration of the New Relic .NET agent with various .NET applications
   * MSMQ-Triggers
   * MSRDC-Infrastructure
   * WCF-Services45
-  * WCF-TCP-PortSharing45 
+  * WCF-TCP-PortSharing45
+* IBM DB2 Data Server Client
+  * We use IBM Data Server Driver from the IBM Data Server Client installer in our unbounded integration tests for DB2. Unfortunately, simply referencing the appropriate dll in our tests is insufficient. A full install of Data Server Client is required on any machine running our unbounded integration test suite.
+  * The data server client installer can be downloaded from [here](https://www.ibm.com/support/pages/ibm-data-server-client-packages-version-111-mod-4-fix-pack-4).
 
 ### Set up test secrets
 You must have a New Relic license key to run the tests. Some tests require special New Relic license keys for high security mode (HSM) and configurable security policies (CSP). Follow the steps below to set these license keys.
