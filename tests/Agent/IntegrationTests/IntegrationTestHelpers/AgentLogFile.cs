@@ -33,6 +33,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public const string AgentConnectionErrorLineRegex = @"^.*? NewRelic ERROR: Unable to connect to the New Relic service at";
         public const string ThreadProfileStartingLogLineRegex = @"^.*? NewRelic INFO: Starting a thread profiling session";
         public const string ThreadProfileDataLogLineRegex = @"^.*? NewRelic DEBUG: Invoking ""profile_data"" with : (.*)";
+        public const string ShutdownLogLineRegex = @"^.*? NewRelic INFO: The New Relic Agent has shutdown.";
 
         private readonly string _filePath;
 

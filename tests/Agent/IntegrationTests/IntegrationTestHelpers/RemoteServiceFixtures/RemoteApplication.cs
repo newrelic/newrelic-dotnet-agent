@@ -69,6 +69,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private readonly string _uniqueFolderName = Guid.NewGuid().ToString();
 
+
+
         protected uint? RemoteProcessId
         {
             get
@@ -81,6 +83,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
         }
         private uint? _remoteProcessId;
+
+        public Process RemoteProcess { get; protected set; }
+
+        public int? ExitCode => RemoteProcess.HasExited
+            ? RemoteProcess.ExitCode
+            : (int?)null;
+
+
+        public bool IsRunning => (!RemoteProcess?.HasExited) ?? false;
 
         protected const string HostedWebCoreTargetFramework = "net451";
 
@@ -242,6 +253,91 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             if (Directory.Exists(DestinationRootDirectoryPath))
                 Directory.Delete(DestinationRootDirectoryPath, true);
+        }
+    }
+
+    public class ProcessOutput
+    {
+        public string StandardOutput { get; set; } = string.Empty;
+        public string StandardError { get; set; } = string.Empty;
+        private Thread _standardOutputThread;
+        private Thread _standardErrorThread;
+        private readonly ITestLogger _testLogger;
+
+        /// <summary>
+        /// Class that encapsulates how to capture and retrieve both standard output and standard error
+        /// from a Process while reducing the risk of deadlock. See the Microsoft documentation for
+        /// Process.StandardOutput for a list of the possible deadlock risks. This class uses Microsoft's
+        /// recommendation of creating two threads that can read from StandardOutput and StandardError
+        /// so that those two output streams/pipes don't block each other and ultimately prevent the process
+        /// from ending, which also prevents StandardOutput from reaching the end of its stream.
+        /// </summary>
+        /// <param name="testLogger">The logger to write the output streams to</param>
+        /// <param name="process">The process with output streams to log</param>
+        /// <param name="captureOutput">Flag controlling whether or not we should read and log the output and error streams for the process</param>
+        public ProcessOutput(ITestLogger testLogger, Process process, bool captureOutput)
+        {
+            _testLogger = testLogger;
+
+            if (captureOutput)
+            {
+                StartCapturingForProcess(process);
+            }
+        }
+
+        private void StartCapturingForProcess(Process process)
+        {
+            _standardOutputThread = new Thread(() =>
+            {
+                using (var reader = process.StandardOutput)
+                {
+                    StandardOutput = reader.ReadToEnd();
+                }
+            })
+            {
+                IsBackground = true
+            };
+            _standardOutputThread.Start();
+
+            _standardErrorThread = new Thread(() =>
+            {
+                using (var reader = process.StandardError)
+                {
+                    StandardError = reader.ReadToEnd();
+                }
+            })
+            {
+                IsBackground = true
+            };
+            _standardErrorThread.Start();
+        }
+
+        private void WaitForOutput()
+        {
+            _standardOutputThread?.Join(TimeSpan.FromMinutes(2));
+            _standardErrorThread?.Join(TimeSpan.FromMinutes(2));
+        }
+
+        public virtual void WriteProcessOutputToLog(string processDescription)
+        {
+            WaitForOutput();
+
+            _testLogger?.WriteLine("");
+            _testLogger?.WriteLine($"====== {processDescription} standard output log =====");
+            _testLogger?.WriteLine(StandardOutput);
+            _testLogger?.WriteLine($"----- {processDescription} end of standard output log  -----");
+
+            _testLogger?.WriteLine("");
+            _testLogger?.WriteLine($"====== {processDescription} standard error log =====");
+            _testLogger?.WriteLine(StandardError);
+            _testLogger?.WriteLine($"----- {processDescription} end of standard error log -----");
+            _testLogger?.WriteLine("");
+        }
+
+        public string ReturnProcessOutput()
+        {
+            WaitForOutput();
+            return StandardOutput;
         }
     }
 }

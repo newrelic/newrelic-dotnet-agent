@@ -35,6 +35,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private string DestinationApplicationExecutablePath => Path.Combine(DestinationApplicationDirectoryPath, _executableName);
 
+        public XUnitTestLogger TestLogger { get; set; }
+        public ProcessOutput CapturedOutput { get; set; }
+
         public RemoteService(string applicationDirectoryName, string executableName, ApplicationType applicationType, bool createsPidFile = true, bool isCoreApp = false) : base(applicationType, isCoreApp)
         {
             _applicationDirectoryName = applicationDirectoryName;
@@ -71,6 +74,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ModifyNewRelicConfig();
         }
 
+        public virtual string NetCoreVersion { get; set; } = "netcoreapp2.0";
+
         private void PublishCoreApp()
         {
             var projectFile = Path.Combine(SourceApplicationsDirectoryPath, ApplicationDirectoryName,
@@ -81,9 +86,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.WindowStyle = ProcessWindowStyle.Hidden;
             startInfo.FileName = "dotnet.exe";
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
 
             startInfo.Arguments =
-                $"publish {projectFile} --configuration Release --runtime win10-x64 --framework netcoreapp2.0 --output {deployPath}";
+                $"publish {projectFile} --configuration Release --runtime win10-x64 --framework {NetCoreVersion} --output {deployPath}";
+
+            Console.WriteLine($"[{DateTime.Now}] Publishing core app with command line: {startInfo.Arguments}");
             process.StartInfo = startInfo;
             process.Start();
 
@@ -93,6 +103,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             if (process.ExitCode != 0)
             {
+                Console.WriteLine($"[{DateTime.Now}] dotnet.exe stderr: {process.StandardError.ReadToEnd()}");
                 throw new Exception("Failed to publish Core application");
             }
 
@@ -153,25 +164,26 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             startInfo.EnvironmentVariables.Add("NEWRELIC_PROFILER_LOG_DIRECTORY", profilerLogDirectoryPath);
 
+            RemoteProcess = Process.Start(startInfo);
 
 
-            Process process = Process.Start(startInfo);
-
-            if (process == null)
+            if (RemoteProcess == null)
             {
                 throw new Exception("Process failed to start.");
             }
 
-            if (process.HasExited && process.ExitCode != 0)
+            CapturedOutput = new ProcessOutput(TestLogger, RemoteProcess, captureStandardOutput);
+
+            if (RemoteProcess.HasExited && RemoteProcess.ExitCode != 0)
             {
                 throw new Exception("App server shutdown unexpectedly.");
             }
 
             WaitForAppServerToStartListening();
 
-            RemoteProcessId = Convert.ToUInt32(process.Id);
+            RemoteProcessId = Convert.ToUInt32(RemoteProcess.Id);
 
-            return process;
+            return RemoteProcess;
         }
 
         private void WaitForAppServerToStartListening()
