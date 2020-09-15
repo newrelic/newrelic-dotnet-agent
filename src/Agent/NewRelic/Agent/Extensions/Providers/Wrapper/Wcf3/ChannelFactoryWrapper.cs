@@ -38,8 +38,16 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             return Delegates.GetDelegateFor(onComplete: () =>
             {
                 var channelFactory = instrumentedMethodCall.MethodCall.InvocationTarget as ChannelFactory;
-                channelFactory?.Endpoint.Behaviors.Add(new NewRelicEndpointBehavior(agent));
-                TrySendBindingMetric(channelFactory?.Endpoint.Binding.GetType(), agent);
+                if(channelFactory == null)
+                {
+                    return;
+                }
+
+                var bindingType = channelFactory.Endpoint.Binding.GetType();
+
+                channelFactory.Endpoint.Behaviors.Add(new NewRelicEndpointBehavior(agent, bindingType));
+
+                TrySendBindingMetric(bindingType, agent);
             });
         }
 
@@ -74,15 +82,18 @@ namespace NewRelic.Providers.Wrapper.Wcf3
     {
         private const string AppDataHttpHeader = "X-NewRelic-App-Data";
         private IAgent _agent;
+        private Type _bindingType;
 
-        public NewRelicClientMessageInspector(IAgent agent)
+        public NewRelicClientMessageInspector(IAgent agent, Type bindingType)
         {
             _agent = agent;
+            _bindingType = bindingType;
         }
 
         public void AfterReceiveReply(ref Message reply, object correlationState)
         {
             var typedCorrelationState = correlationState as CorrelationState;
+
 
             string headerValue = null;
             if (reply.Properties.TryGetValue(HttpResponseMessageProperty.Name, out var httpResponseObject))
@@ -97,7 +108,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             if (string.IsNullOrEmpty(headerValue))
             {
                 var headerIndex = reply.Headers.FindHeader(AppDataHttpHeader, "");
-                headerValue = headerIndex > 0 ? reply.Headers.GetHeader<string>(headerIndex) : null;
+                headerValue = headerIndex >= 0 ? reply.Headers.GetHeader<string>(headerIndex) : null;
             }
 
             if (correlationState != null && !string.IsNullOrEmpty(headerValue))
@@ -127,24 +138,28 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                 return null;
             }
 
-            HttpRequestMessageProperty httpRequestMessage;
-            if (request.Properties.TryGetValue(HttpRequestMessageProperty.Name, out object httpRequestMessageObject))
-            {
-                httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
-            }
-            else
-            {
-                httpRequestMessage = new HttpRequestMessageProperty();
-                request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);
-            }
-
             try
             {
-                _agent.CurrentTransaction.InsertDistributedTraceHeaders(httpRequestMessage, SetHeaders);
 
-                if(request.Headers.MessageVersion == MessageVersion.None)
+
+                if (_bindingType == typeof(NetTcpBinding))
                 {
                     _agent.CurrentTransaction.InsertDistributedTraceHeaders(request, SetHeaders);
+                }
+                else
+                {
+                    HttpRequestMessageProperty httpRequestMessage;
+                    if (request.Properties.TryGetValue(HttpRequestMessageProperty.Name, out object httpRequestMessageObject))
+                    {
+                        httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
+                    }
+                    else
+                    {
+                        httpRequestMessage = new HttpRequestMessageProperty();
+                        request.Properties.Add(HttpRequestMessageProperty.Name, httpRequestMessage);
+                    }
+
+                    _agent.CurrentTransaction.InsertDistributedTraceHeaders(httpRequestMessage, SetHeaders);
                 }
             }
             catch (Exception ex)
@@ -171,9 +186,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
     public class NewRelicEndpointBehavior : IEndpointBehavior
     {
         private readonly IAgent _agent;
+        private readonly Type _bindingType;
 
-        public NewRelicEndpointBehavior(IAgent agent)
+        public NewRelicEndpointBehavior(IAgent agent, Type bindingType)
         {
+            _bindingType = bindingType;
             _agent = agent;
         }
 
@@ -183,7 +200,7 @@ namespace NewRelic.Providers.Wrapper.Wcf3
 
         public void ApplyClientBehavior(ServiceEndpoint endpoint, ClientRuntime clientRuntime)
         {
-            var inspector = new NewRelicClientMessageInspector(_agent);
+            var inspector = new NewRelicClientMessageInspector(_agent, _bindingType);
             clientRuntime.ClientMessageInspectors.Add(inspector);
         }
 

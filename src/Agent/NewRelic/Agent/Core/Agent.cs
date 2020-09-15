@@ -456,7 +456,7 @@ namespace NewRelic.Agent.Core
         {
             long contentLength = default;
             var headers = getter(carrier, "Content-Length");
-            if (headers.Count() > 0)
+            if (headers?.Count() > 0)
             {
                 var contentLengthString = headers.FirstOrDefault();
                 long.TryParse(contentLengthString, out contentLength);

@@ -14,6 +14,9 @@ The MySqlConnector ADO.NET driver is instrumented by default. Fixes [#85](https:
 * **Nullable Reference Type support in the API**<br/>
 Enables nullable reference types that are part of the C# 8.0 language specification and updates the signatures of API methods accordingly.  There should be no required changes in API usage.
 
+* **Improved Support for NetTCP Binding in WCF Instrumation**
+When the NetTCP Binding type is used in Windows Communication Foundation (WCF), the Agent will now send and receive trace context information in support of Distributed Tracing (DT) or Cross Application Tracing (CAT).
+
 ### Fixes
 * Fixes an issue that may cause `InvalidCastException` due to an assembly version mismatch in Mvc3 instrumentation.
 

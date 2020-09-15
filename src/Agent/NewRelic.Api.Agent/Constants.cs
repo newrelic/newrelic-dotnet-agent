@@ -17,7 +17,8 @@ namespace NewRelic.Api.Agent
         IronMQ = 5,
         AMQP = 6,
         Queue = 7,
-        Other = 8
+        NetTCP = 8,
+        Other = 100
     }
 
     /// <summary>
