@@ -5,6 +5,7 @@ using NewRelic.Agent.Api;
 using NewRelic.Agent.Api.Experimental;
 using NewRelic.Agent.Extensions.Parsing;
 using NewRelic.Agent.Extensions.Providers.Wrapper;
+using NewRelic.Core.Logging;
 using NewRelic.Reflection;
 using NewRelic.SystemExtensions;
 using System;
@@ -94,6 +95,40 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             return new CanWrapResponse(canWrap);
         }
 
+        private static IEnumerable<string> ExtractHeaderValue(OperationContext context, string key)
+        {
+            string headerValue = null;
+
+            if(context.IncomingMessageProperties != null && context.IncomingMessageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageAsObject))
+            {
+                var httpRequestMessage = httpRequestMessageAsObject as HttpRequestMessageProperty;
+                if (httpRequestMessage != null && httpRequestMessage.Headers != null)
+                {
+                    headerValue = httpRequestMessage.Headers.Get(key);
+                }
+            }
+
+            if(headerValue == null && context.IncomingMessageHeaders != null)
+            {
+                try
+                {
+                    headerValue = context.IncomingMessageHeaders.GetHeader<string>(key, string.Empty);
+                }
+                catch
+                {
+                    //Some of the headers cannot be extracted as strings.
+                    //This catch will prevent this from bubbling up.
+                    //Nonetheless, this header cannot be retrieved using this method.
+                }
+            }
+
+            return headerValue != null
+                            ? new[] { headerValue }
+                            : null;
+        }
+
+
+
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
             var transactionAlreadyExists = transaction.IsValid;
@@ -145,30 +180,20 @@ namespace NewRelic.Providers.Wrapper.Wcf3
                 transaction.SetWebTransactionName(WebTransactionType.WCF, transactionName, TransactionNamePriority.FrameworkHigh);
                 transaction.SetRequestParameters(parameters);
 
-                var messageProperties = OperationContext.Current?.IncomingMessageProperties;
-
-                if (!transactionAlreadyExists && messageProperties != null && messageProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
+                if (!transactionAlreadyExists)
                 {
-                    var httpRequestMessage = httpRequestMessageObject as HttpRequestMessageProperty;
-                    var retrievedHeaders = new List<KeyValuePair<string, string>>();
+                    var transportType = TransportType.Other;
 
-                    foreach (var headerName in httpRequestMessage.Headers.AllKeys)
+                    var msgProperties = OperationContext.Current?.IncomingMessageProperties;
+                    if (msgProperties != null && msgProperties.TryGetValue(HttpRequestMessageProperty.Name, out var httpRequestMessageObject))
                     {
-                        retrievedHeaders.Add(new KeyValuePair<string, string>(headerName, httpRequestMessage.Headers[headerName]));
+                        if (httpRequestMessageObject is HttpRequestMessageProperty)
+                        {
+                            transportType = TransportType.HTTP;
+                        }
                     }
 
-                    transaction.AcceptDistributedTraceHeaders(retrievedHeaders, GetHeaderValue, TransportType.HTTP);
-
-                    IEnumerable<string> GetHeaderValue(List<KeyValuePair<string, string>> headers, string key)
-                    {
-                        string value = null;
-
-                        value = retrievedHeaders.
-                            Where(header => header.Key.Equals(key)).
-                            FirstOrDefault().Value;
-
-                        return value == null ? null : new string[] { value };
-                    }
+                    transaction.AcceptDistributedTraceHeaders(OperationContext.Current, ExtractHeaderValue, transportType);
                 }
             }
 
@@ -320,19 +345,22 @@ namespace NewRelic.Providers.Wrapper.Wcf3
         private void ProcessResponse(ITransaction transaction, OperationContext context)
         {
             var wcfStartedTransaction = transaction.GetExperimentalApi().GetWrapperToken() == _wrapperToken;
-            if (wcfStartedTransaction)
+            if (!wcfStartedTransaction)
             {
-                var headersToAttach = transaction.GetResponseMetadata();
-                foreach (var header in headersToAttach)
-                {
-                    var outgoingMessageHeaders = context.OutgoingMessageHeaders;
-                    if (outgoingMessageHeaders != null && outgoingMessageHeaders.MessageVersion.Envelope != EnvelopeVersion.None)
-                    {
-                        context.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
-                    }
+                return;
+            }
 
-                    AddHeaderToHttpResponsePropertyForOutgoingMessage(header, context);
+            var headersToAttach = transaction.GetResponseMetadata();
+            foreach (var header in headersToAttach)
+            {
+                //Supporting non HTTP
+                var outgoingMessageHeaders = context.OutgoingMessageHeaders;
+                if (outgoingMessageHeaders != null && outgoingMessageHeaders.MessageVersion.Envelope != EnvelopeVersion.None)
+                {
+                    context.OutgoingMessageHeaders.Add(MessageHeader.CreateHeader(header.Key, "", header.Value));
                 }
+
+                AddHeaderToHttpResponsePropertyForOutgoingMessage(header, context);
             }
         }
 
@@ -343,10 +371,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             {
                 return;
             }
+
             if (context.OutgoingMessageProperties.TryGetValue(HttpResponseMessageProperty.Name, out var httpResponseMessagePropertyObject))
             {
                 var httpResponseMessageProperty = httpResponseMessagePropertyObject as HttpResponseMessageProperty;
-                httpResponseMessageProperty.Headers.Add(header.Key, header.Value);
+                httpResponseMessageProperty?.Headers.Add(header.Key, header.Value);
             }
             else
             {

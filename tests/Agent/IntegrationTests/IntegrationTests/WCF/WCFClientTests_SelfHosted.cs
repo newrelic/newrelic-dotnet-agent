@@ -81,6 +81,16 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.Self
     }
 
     [NetFrameworkTest]
+    public class WCFClient_Self_NetTCP_DT : WCFClient_Self
+    {
+        public WCFClient_Self_NetTCP_DT(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+            : base(fixture, output, WCFBindingType.NetTcp, TracingTestOption.DT)
+        {
+        }
+    }
+
+
+    [NetFrameworkTest]
     public class WCFClient_Self_WebHTTP_CAT : WCFClient_Self
     {
         public WCFClient_Self_WebHTTP_CAT(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
@@ -103,6 +113,15 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Client.Self
     {
         public WCFClient_Self_BasicHTTP_CAT(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
             : base(fixture, output, WCFBindingType.BasicHttp, TracingTestOption.CAT)
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class WCFClient_Self_NetTCP_CAT : WCFClient_Self
+    {
+        public WCFClient_Self_NetTCP_CAT(ConsoleDynamicMethodFixtureFW fixture, ITestOutputHelper output)
+            : base(fixture, output, WCFBindingType.NetTcp, TracingTestOption.CAT)
         {
         }
     }

@@ -219,10 +219,10 @@ namespace NewRelic.Agent.IntegrationTests.WCF.Service
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/HTTP/all" },
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/HTTP/allWeb" },
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/HTTP/all" },
-                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/HTTP/allWeb" },
+                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/all" },
+                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"DurationByCaller/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/allWeb" },
+                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/all" },
+                new Assertions.ExpectedMetric(){ callCount = _countServiceInvocationMethodsToTest * COUNT_SVC_METHODS, metricName = $"TransportDuration/App/{AccountID_Client}/{AppID_Client}/{ExpectedTransportType}/allWeb" },
 
                 new Assertions.ExpectedMetric(){ metricName = "Supportability/DistributedTrace/CreatePayload/Success",
                     callCount =     (_countServiceInvocationMethodsToTest * COUNT_SVC_METHODS)		//Each Client Call

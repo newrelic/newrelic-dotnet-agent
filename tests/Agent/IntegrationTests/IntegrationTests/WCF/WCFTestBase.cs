@@ -45,6 +45,9 @@ namespace NewRelic.Agent.IntegrationTests.WCF
         protected readonly ConsoleDynamicMethodFixtureFW _fixture;
 
         protected readonly WCFBindingType _bindingToTest;
+        protected string ExpectedTransportType => _bindingToTest == WCFBindingType.NetTcp
+            ? "Other"
+            : "HTTP";
 
         protected readonly WCFInvocationMethod[] _serviceInvocationMethodsToTest;
         protected int _countServiceInvocationMethodsToTest => _serviceInvocationMethodsToTest.Length;
@@ -280,8 +283,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
                 // Verify the correct transport type 
                 var actualTransportType = svcTrx.IntrinsicAttributes["parent.transportType"].ToString();
-                var expectedTransportType = "HTTP";
-                Assert.True(actualTransportType == expectedTransportType, $"Mismatched TransportType, expected {expectedTransportType}, actual {actualTransportType}");
+               
+                Assert.True(actualTransportType == ExpectedTransportType, $"Mismatched TransportType, expected {ExpectedTransportType}, actual {actualTransportType}");
 
                 //Given the ParentID on the Svc Transaction, we should find the client transaction that matches.
                 var parentTrxID = svcTrx.IntrinsicAttributes["parentId"].ToString();
