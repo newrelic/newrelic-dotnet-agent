@@ -11,7 +11,7 @@ namespace NewRelic.Providers.Wrapper.Owin
     public class ResolveAppWrapper : IWrapper
     {
         public bool IsTransactionRequired => false;
-
+        private static bool _isNewRelicMiddlewareAdded;
         private Func<object, object> _getBuilder;
         public Func<object, object> GetBuilder => _getBuilder ?? (_getBuilder = VisibilityBypasser.Instance.GeneratePropertyAccessor<object>("Microsoft.Owin.Hosting",
                 "Microsoft.Owin.Hosting.Engine.StartContext", "Builder"));
@@ -23,16 +23,21 @@ namespace NewRelic.Providers.Wrapper.Owin
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
         {
-            var context = instrumentedMethodCall.MethodCall.MethodArguments[0];
-
-            var app = GetBuilder(context);
-
-            var method = app.GetType().GetMethod("Use");
-
-            method.Invoke(app, new object[]
+            if (!_isNewRelicMiddlewareAdded)
             {
+                var context = instrumentedMethodCall.MethodCall.MethodArguments[0];
+
+                var app = GetBuilder(context);
+
+                var method = app.GetType().GetMethod("Use");
+
+                method.Invoke(app, new object[]
+                {
                 typeof(OwinStartupMiddleware), new object[] { agent }
-            });
+                });
+
+                _isNewRelicMiddlewareAdded = true;
+            }
 
             return Delegates.NoOp;
         }
