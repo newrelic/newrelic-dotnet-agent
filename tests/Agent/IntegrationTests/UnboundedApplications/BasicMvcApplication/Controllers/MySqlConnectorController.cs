@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using MySqlConnector;
 using NewRelic.Agent.IntegrationTests.Shared;
 using System.Collections.Generic;
@@ -14,14 +15,11 @@ namespace BasicMvcApplication.Controllers
     public class MySqlConnectorController : Controller
     {
         [HttpGet]
-        public string MySql()
+        public string ExecuteReader()
         {
-            var dates = new List<string>();
-
-            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
+            return ExecuteCommand(command =>
             {
-                connection.Open();
+                var dates = new List<string>();
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -29,20 +27,27 @@ namespace BasicMvcApplication.Controllers
                         dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                     }
                 }
-            }
-
-            return string.Join(",", dates);
+                return string.Join(",", dates);
+            });
         }
 
         [HttpGet]
-        public async Task<string> MySqlAsync()
-        {
-            var dates = new List<string>();
+        public string ExecuteScalar() => ExecuteCommand(command => (string)command.ExecuteScalar());
 
-            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
-            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 10000", connection))
+        [HttpGet]
+        public string ExecuteNonQuery() => ExecuteCommand(command =>
+        {
+            command.ExecuteNonQuery();
+            return "done";
+        });
+
+        [HttpGet]
+        public async Task<string> ExecuteReaderAsync()
+        {
+            return await ExecuteCommandAsync(async command =>
             {
-                connection.Open();
+                var dates = new List<string>();
+
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
@@ -50,9 +55,35 @@ namespace BasicMvcApplication.Controllers
                         dates.Add(reader.GetString(reader.GetOrdinal("_date")));
                     }
                 }
+                return string.Join(",", dates);
+            });
+        }
+
+        [HttpGet]
+        public async Task<string> ExecuteScalarAsync() => await ExecuteCommandAsync(async command => (string) await command.ExecuteScalarAsync());
+
+        [HttpGet]
+        public async Task<string> ExecuteNonQueryAsync() => await ExecuteCommandAsync(async command =>
+        {
+            await command.ExecuteNonQueryAsync();
+            return "done";
+        });
+
+        private string ExecuteCommand(Func<MySqlCommand, string> action) =>
+            ExecuteCommandAsync(command => Task.FromResult(action(command))).GetAwaiter().GetResult();
+
+        private async Task<string> ExecuteCommandAsync(Func<MySqlCommand, Task<string>> action)
+        {
+            string result;
+
+            using (var connection = new MySqlConnection(MySqlTestConfiguration.MySqlConnectionString))
+            using (var command = new MySqlCommand("SELECT _date FROM dates WHERE _date LIKE '2%' ORDER BY _date DESC LIMIT 1", connection))
+            {
+                connection.Open();
+                result = await action(command);
             }
 
-            return string.Join(",", dates);
+            return result;
         }
 
         [HttpGet]

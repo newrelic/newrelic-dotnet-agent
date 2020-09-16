@@ -4,6 +4,7 @@
 
 using System;
 using System.Net;
+using System.Runtime.CompilerServices;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using MySqlConnector;
@@ -20,50 +21,15 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
             ProcedureName = GenerateProcedureName();
         }
 
-        public void GetMySql()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MySqlConnector/MySql";
+        public void GetExecuteNonQuery() => GetUrl();
+        public void GetExecuteNonQueryAsync() => GetUrl();
+        public void GetExecuteReader() => GetUrl();
+        public void GetExecuteReaderAsync() => GetUrl();
+        public void GetExecuteScalar() => GetUrl();
+        public void GetExecuteScalarAsync() => GetUrl();
 
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-        }
-
-        public void GetMySqlAsync()
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MySqlConnector/MySqlAsync";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-        }
-
-        public void GetMySqlParameterizedStoredProcedure(bool paramsWithAtSigns)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MySqlConnector/MySqlParameterizedStoredProcedure?procedureName={ProcedureName}&paramsWithAtSigns={paramsWithAtSigns}";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-        }
-
-        public void DropMySqlStoredProcedure(string procedureName)
-        {
-            var address = $"http://{DestinationServerName}:{Port}/MySqlConnector/MySqlDropProcedure?procedureName={ProcedureName}";
-
-            using (var webClient = new WebClient())
-            {
-                var responseBody = webClient.DownloadString(address);
-                Assert.NotNull(responseBody);
-            }
-
-        }
+        public void GetMySqlParameterizedStoredProcedure(bool paramsWithAtSigns) => GetUrl("MySqlParameterizedStoredProcedure?procedureName={ProcedureName}&paramsWithAtSigns={paramsWithAtSigns}");
+        public void DropMySqlStoredProcedure(string procedureName) => GetUrl("MySqlDropProcedure?procedureName={ProcedureName}");
 
         private static string GenerateProcedureName()
         {
@@ -90,6 +56,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         {
             base.Dispose();
             DropProcedure();
+        }
+
+        private void GetUrl([CallerMemberName] string pathSuffix = null)
+        {
+            var address = $"http://{DestinationServerName}:{Port}/MySqlConnector/{pathSuffix.Replace("Get", "")}";
+
+            using (var webClient = new WebClient())
+            {
+                var responseBody = webClient.DownloadString(address);
+                Assert.NotNull(responseBody);
+            }
         }
     }
 }
