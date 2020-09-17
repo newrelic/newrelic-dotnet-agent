@@ -27,6 +27,12 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
         public void GetExecuteReaderAsync() => GetUrl();
         public void GetExecuteScalar() => GetUrl();
         public void GetExecuteScalarAsync() => GetUrl();
+        public void GetDbCommandExecuteNonQuery() => GetUrl();
+        public void GetDbCommandExecuteNonQueryAsync() => GetUrl();
+        public void GetDbCommandExecuteReader() => GetUrl();
+        public void GetDbCommandExecuteReaderAsync() => GetUrl();
+        public void GetDbCommandExecuteScalar() => GetUrl();
+        public void GetDbCommandExecuteScalarAsync() => GetUrl();
 
         public void GetMySqlParameterizedStoredProcedure(bool paramsWithAtSigns) => GetUrl("MySqlParameterizedStoredProcedure?procedureName={ProcedureName}&paramsWithAtSigns={paramsWithAtSigns}");
         public void DropMySqlStoredProcedure(string procedureName) => GetUrl("MySqlDropProcedure?procedureName={ProcedureName}");

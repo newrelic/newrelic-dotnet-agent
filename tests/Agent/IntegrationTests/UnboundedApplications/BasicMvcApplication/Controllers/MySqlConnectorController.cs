@@ -6,6 +6,7 @@ using System;
 using MySqlConnector;
 using NewRelic.Agent.IntegrationTests.Shared;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -60,10 +61,65 @@ namespace BasicMvcApplication.Controllers
         }
 
         [HttpGet]
-        public async Task<string> ExecuteScalarAsync() => await ExecuteCommandAsync(async command => (string) await command.ExecuteScalarAsync());
+        public async Task<string> ExecuteScalarAsync() => await ExecuteDbCommandAsync(async command => (string) await command.ExecuteScalarAsync());
 
         [HttpGet]
-        public async Task<string> ExecuteNonQueryAsync() => await ExecuteCommandAsync(async command =>
+        public async Task<string> ExecuteNonQueryAsync() => await ExecuteDbCommandAsync(async command =>
+        {
+            await command.ExecuteNonQueryAsync();
+            return "done";
+        });
+
+        [HttpGet]
+        public string DbCommandExecuteReader()
+        {
+            return ExecuteDbCommand(command =>
+            {
+                var dates = new List<string>();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                    }
+                }
+                return string.Join(",", dates);
+            });
+        }
+
+        [HttpGet]
+        public string DbCommandExecuteScalar() => ExecuteDbCommand(command => (string)command.ExecuteScalar());
+
+        [HttpGet]
+        public string DbCommandExecuteNonQuery() => ExecuteDbCommand(command =>
+        {
+            command.ExecuteNonQuery();
+            return "done";
+        });
+
+        [HttpGet]
+        public async Task<string> DbCommandExecuteReaderAsync()
+        {
+            return await ExecuteDbCommandAsync(async command =>
+            {
+                var dates = new List<string>();
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        dates.Add(reader.GetString(reader.GetOrdinal("_date")));
+                    }
+                }
+                return string.Join(",", dates);
+            });
+        }
+
+        [HttpGet]
+        public async Task<string> DbCommandExecuteScalarAsync() => await ExecuteDbCommandAsync(async command => (string)await command.ExecuteScalarAsync());
+
+        [HttpGet]
+        public async Task<string> DbCommandExecuteNonQueryAsync() => await ExecuteDbCommandAsync(async command =>
         {
             await command.ExecuteNonQueryAsync();
             return "done";
@@ -85,6 +141,11 @@ namespace BasicMvcApplication.Controllers
 
             return result;
         }
+
+        private string ExecuteDbCommand(Func<DbCommand, string> action) => ExecuteCommand(action);
+
+        private async Task<string> ExecuteDbCommandAsync(Func<DbCommand, Task<string>> action) =>
+            await ExecuteCommandAsync(async x => await action(x));
 
         [HttpGet]
         public int MySqlParameterizedStoredProcedure(string procedureName, bool paramsWithAtSigns)

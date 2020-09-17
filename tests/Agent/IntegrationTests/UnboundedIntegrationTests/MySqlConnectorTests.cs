@@ -186,4 +186,59 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         {
         }
     }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteReaderTest : MySqlConnectorTestBase
+    {
+        public MySqlConnectorDbCommandExecuteReaderTest(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, x => x.GetDbCommandExecuteReader(), "DbCommandExecuteReader")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteScalarTest : MySqlConnectorTestBase
+    {
+        public MySqlConnectorDbCommandExecuteScalarTest(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, x => x.GetDbCommandExecuteScalar(), "DbCommandExecuteScalar")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteNonQueryTest : MySqlConnectorTestBase
+    {
+        public MySqlConnectorDbCommandExecuteNonQueryTest(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, x => x.GetDbCommandExecuteNonQuery(), "DbCommandExecuteNonQuery")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteReaderAsyncTest : MySqlConnectorTestBase
+    {
+        public MySqlConnectorDbCommandExecuteReaderAsyncTest(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, x => x.GetDbCommandExecuteReaderAsync(), "DbCommandExecuteReaderAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteScalarAsyncTest : MySqlConnectorTestBase
+    {
+        public MySqlConnectorDbCommandExecuteScalarAsyncTest(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, x => x.GetDbCommandExecuteScalarAsync(), "DbCommandExecuteScalarAsync")
+        {
+        }
+    }
+
+    [NetFrameworkTest]
+    public class MySqlConnectorDbCommandExecuteNonQueryAsyncTest : MySqlConnectorTestBase
+    {
+        public MySqlConnectorDbCommandExecuteNonQueryAsyncTest(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, x => x.GetDbCommandExecuteNonQueryAsync(), "DbCommandExecuteNonQueryAsync")
+        {
+        }
+    }
+
 }
