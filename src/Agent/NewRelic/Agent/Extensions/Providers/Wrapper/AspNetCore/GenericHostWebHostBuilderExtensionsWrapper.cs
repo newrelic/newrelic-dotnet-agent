@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
+using System.Threading;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using NewRelic.Agent.Api;
@@ -12,7 +13,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
     public class GenericHostWebHostBuilderExtensionsWrapper : IWrapper
     {
         public bool IsTransactionRequired => false;
-        private static bool _isNewRelicStartupFilterAdded;
+        private static int _isNewRelicStartupFilterAdded;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -33,11 +34,10 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
         {
             public static void AddStartupFilterToHostBuilder(object hostBuilder, IAgent agent)
             {
-                if (!_isNewRelicStartupFilterAdded)
+                if (0 == Interlocked.CompareExchange(ref _isNewRelicStartupFilterAdded, 1, 0))
                 {
                     var typedHostBuilder = (Microsoft.Extensions.Hosting.IHostBuilder)hostBuilder;
                     typedHostBuilder.ConfigureServices(AddStartupFilter);
-                    _isNewRelicStartupFilterAdded = true;
 
                     void AddStartupFilter(Microsoft.Extensions.Hosting.HostBuilderContext hostBuilderContext, IServiceCollection services)
                     {
