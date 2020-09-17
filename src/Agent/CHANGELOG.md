@@ -17,13 +17,10 @@ Enables nullable reference types that are part of the C# 8.0 language specificat
 * **Improved Support for NetTCP Binding in WCF Instrumation**
 When the NetTCP Binding type is used in Windows Communication Foundation (WCF), the Agent will now send and receive trace context information in support of Distributed Tracing (DT) or Cross Application Tracing (CAT).  Implements [#209](https://github.com/newrelic/newrelic-dotnet-agent/issues/209).
 
-* **.NET 5 Prerelease Support**<br/>
-Adds support for .NET 5 prerelease. 
-
 ### Fixes
 * Fixes an issue that may cause `InvalidCastException` due to an assembly version mismatch in Mvc3 instrumentation.
 * Fixes an async timing issue that can cause the end time of `Task`-returning methods to be determined incorrectly.
-* Fixes an issue that causes .NET 5 prerealease incompatability.
+* Fixes [#223](https://github.com/newrelic/newrelic-dotnet-agent/issues/223) that causes the agent incompatible with ASP.NET Core 5 RC1 applications.
 
 ## [8.31] - 2020-08-17
 ### New Features
