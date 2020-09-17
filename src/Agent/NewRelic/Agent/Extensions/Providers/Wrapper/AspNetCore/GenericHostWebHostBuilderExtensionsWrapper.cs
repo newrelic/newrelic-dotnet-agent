@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Linq;
+using System.Threading;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using NewRelic.Agent.Api;
@@ -12,6 +13,7 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
     public class GenericHostWebHostBuilderExtensionsWrapper : IWrapper
     {
         public bool IsTransactionRequired => false;
+        private static int _isNewRelicStartupFilterAdded;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -32,20 +34,23 @@ namespace NewRelic.Providers.Wrapper.AspNetCore
         {
             public static void AddStartupFilterToHostBuilder(object hostBuilder, IAgent agent)
             {
-                var typedHostBuilder = (Microsoft.Extensions.Hosting.IHostBuilder)hostBuilder;
-                typedHostBuilder.ConfigureServices(AddStartupFilter);
-
-                void AddStartupFilter(Microsoft.Extensions.Hosting.HostBuilderContext hostBuilderContext, IServiceCollection services)
+                if (0 == Interlocked.CompareExchange(ref _isNewRelicStartupFilterAdded, 1, 0))
                 {
-                    //Forced evaluation is important. Do not remove ToList()
-                    var startupFilters = services.Where(serviceDescriptor => serviceDescriptor.ServiceType == typeof(IStartupFilter)).ToList();
+                    var typedHostBuilder = (Microsoft.Extensions.Hosting.IHostBuilder)hostBuilder;
+                    typedHostBuilder.ConfigureServices(AddStartupFilter);
 
-                    services.AddTransient<IStartupFilter>(provider => new AddNewRelicStartupFilter(agent));
-
-                    foreach (var filter in startupFilters)
+                    void AddStartupFilter(Microsoft.Extensions.Hosting.HostBuilderContext hostBuilderContext, IServiceCollection services)
                     {
-                        services.Remove(filter); // Remove from early in pipeline
-                        services.Add(filter); // Add to end after our AddNewRelicStartupFilter
+                        //Forced evaluation is important. Do not remove ToList()
+                        var startupFilters = services.Where(serviceDescriptor => serviceDescriptor.ServiceType == typeof(IStartupFilter)).ToList();
+
+                        services.AddTransient<IStartupFilter>(provider => new AddNewRelicStartupFilter(agent));
+
+                        foreach (var filter in startupFilters)
+                        {
+                            services.Remove(filter); // Remove from early in pipeline
+                            services.Add(filter); // Add to end after our AddNewRelicStartupFilter
+                        }
                     }
                 }
             }
