@@ -125,9 +125,12 @@ namespace NewRelic.Agent.Core.Metrics
                     Log.DebugFormat($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"");
                     return null;
                 }
-                    
+
                 if (ruleResult.Replacement == null)
-                    throw new Exception("RuleResult matched but returned null replacement string");
+                {
+                    Log.Error("RuleResult matched but returned null replacement string");
+                    return null;
+                }
 
                 input = ruleResult.Replacement;
 
