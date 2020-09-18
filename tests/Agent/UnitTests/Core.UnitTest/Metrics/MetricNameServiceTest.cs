@@ -62,9 +62,9 @@ namespace NewRelic.Agent.Core.Metrics
         }
 
         [Test]
-        [TestCase("/apple", true)]
-        [TestCase("/banana", false)]
-        public void NormalizeUrl_Throws_IfIgnoreRuleMatchesInput(string input, bool shouldThrow)
+        [TestCase("/apple", null)]
+        [TestCase("/banana", "/banana")]
+        public void NormalizeUrl_ReturnsNull_IfIgnoreRuleMatchesInput(string input, string expectedResult)
         {
             Mock.Arrange(() => _configuration.UrlRegexRules).Returns(new List<RegexRule>
             {
@@ -72,12 +72,9 @@ namespace NewRelic.Agent.Core.Metrics
                 new RegexRule("/apple", null, true, 10, false, false, false)
             });
 
-            Action normalizeAction = () => _metricNameService.NormalizeUrl(input);
+            var actualResult =_metricNameService.NormalizeUrl(input);
 
-            if (shouldThrow)
-                NrAssert.Throws<IgnoreTransactionException>(normalizeAction);
-            else
-                normalizeAction();
+            Assert.AreEqual(expectedResult, actualResult);
         }
 
         [Test]
@@ -104,15 +101,7 @@ namespace NewRelic.Agent.Core.Metrics
                 if (test == null)
                     continue;
 
-                string actualOutput;
-                try
-                {
-                    actualOutput = _metricNameService.NormalizeUrl(test.Input);
-                }
-                catch (IgnoreTransactionException)
-                {
-                    actualOutput = null;
-                }
+                string actualOutput = _metricNameService.NormalizeUrl(test.Input);
 
                 Assert.AreEqual(test.Expected, actualOutput);
             }

@@ -30,18 +30,10 @@ namespace NewRelic.Agent.Core.Metrics
 
         public string NormalizeUrl(string url)
         {
-            ITimer timer = new Timer();
-            try
-            {
-                url = StripParameters(url);
-                url = RenameUsingRegexRules(url, _configuration.UrlRegexRules);
+            url = StripParameters(url);
+            url = RenameUsingRegexRules(url, _configuration.UrlRegexRules);
 
-                return url;
-            }
-            finally
-            {
-                timer.Stop();
-            }
+            return url;   
         }
 
         public TimeSpan? TryGetApdex_t(string transactionName)
@@ -56,17 +48,16 @@ namespace NewRelic.Agent.Core.Metrics
         public TransactionMetricName RenameTransaction(TransactionMetricName proposedTransactionName)
         {
             var shouldIgnore = false;
-            string newPrefixedTransactionName;
-            try
+            var newPrefixedTransactionName = RenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules);
+
+            if (newPrefixedTransactionName != null)
             {
-                newPrefixedTransactionName = RenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules);
                 newPrefixedTransactionName = RenameUsingWhitelistRules(newPrefixedTransactionName, _configuration.TransactionNameWhitelistRules);
             }
-            catch (IgnoreTransactionException ex)
+            else
             {
-                Log.Debug(ex.Message);
                 shouldIgnore = true;
-                newPrefixedTransactionName = ex.IgnoredTransactionName;
+                newPrefixedTransactionName = proposedTransactionName.PrefixedName;
             }
 
             // Renaming rules are not allowed to change the first segment of a transaction name
@@ -83,17 +74,11 @@ namespace NewRelic.Agent.Core.Metrics
             if (metricName == null)
                 return null;
 
-            try
-            {
-                return RenameUsingRegexRules(metricName, _configuration.MetricNameRegexRules);
-            }
-            catch (IgnoreTransactionException)
-            {
-                return null;
-            }
+            return RenameUsingRegexRules(metricName, _configuration.MetricNameRegexRules);
         }
 
         #endregion Public API
+
 
         #region Event Handlers
 
@@ -138,8 +123,11 @@ namespace NewRelic.Agent.Core.Metrics
                     continue;
 
                 if (rule.Ignore)
-                    throw new IgnoreTransactionException($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"", input);
-
+                {
+                    Log.Debug($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"");
+                    return null;
+                }
+                    
                 if (ruleResult.Replacement == null)
                     throw new Exception("RuleResult matched but returned null replacement string");
 
