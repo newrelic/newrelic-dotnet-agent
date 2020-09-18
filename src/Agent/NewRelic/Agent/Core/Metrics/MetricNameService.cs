@@ -122,7 +122,7 @@ namespace NewRelic.Agent.Core.Metrics
 
                 if (rule.Ignore)
                 {
-                    Log.Debug($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"");
+                    Log.DebugFormat($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"");
                     return null;
                 }
                     
