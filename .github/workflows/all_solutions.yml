@@ -211,7 +211,7 @@ jobs:
           conclusion: neutral
           output: |
             { "summary": "${{ steps.test.outputs.summary }}",
-            "text_description": "[FullAgent Test Results](https://jaffinito.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://jaffinito.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
+            "text_description": "[FullAgent Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
 
   build-test-windows-profiler:
     name: Build Windows Profiler
