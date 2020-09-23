@@ -15,21 +15,36 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 {
     public class SendAsync : IWrapper
     {
-        public const string InstrumentedTypeName = "System.Net.Http.HttpClient";
-
         public bool IsTransactionRequired => true;
+
+        private const string AssemblyName = "System.Net.Http";
+        private const string HttpClientTypeName = "System.Net.Http.HttpClient";
+        private const string SocketsHttpHandlerTypeName = "System.Net.Http.SocketsHttpHandler";
+        private const string SendAsyncMethodName = "SendAsync";
+        private const string SendMethodName = "Send";
+        private const int DotNet5AssemblyVersionMajor = 5;
+
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             var method = methodInfo.Method;
-            if (method.MatchesAny(assemblyName: "System.Net.Http", typeName: InstrumentedTypeName, methodName: "SendAsync"))
+
+            var version = method.Type.Assembly.GetName().Version;
+
+            if (version.Major < DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: HttpClientTypeName, methodName: SendAsyncMethodName))
             {
-                return TaskFriendlySyncContextValidator.CanWrapAsyncMethod("System.Net.Http", "System.Net.Http.HttpClient", method.MethodName);
+                return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(AssemblyName, HttpClientTypeName, method.MethodName);
             }
-            else
+            else if (version.Major >= DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: SocketsHttpHandlerTypeName, methodName: SendAsyncMethodName))
             {
-                return new CanWrapResponse(false);
+                return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(AssemblyName, SocketsHttpHandlerTypeName, method.MethodName);
             }
+            else if (version.Major >= DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: SocketsHttpHandlerTypeName, methodName: SendMethodName))
+            {
+                return new CanWrapResponse(true);
+            }
+
+            return new CanWrapResponse(false);
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
@@ -40,7 +55,8 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             }
 
             var httpRequestMessage = instrumentedMethodCall.MethodCall.MethodArguments.ExtractNotNullAs<HttpRequestMessage>(0);
-            var httpClient = (System.Net.Http.HttpClient)instrumentedMethodCall.MethodCall.InvocationTarget;
+
+            var httpClient = instrumentedMethodCall.MethodCall.InvocationTarget as System.Net.Http.HttpClient;
             var uri = TryGetAbsoluteUri(httpRequestMessage, httpClient);
             if (uri == null)
             {
@@ -75,17 +91,33 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             // We cannot rely on SerializeHeadersWrapper to attach the headers because it is called on a thread that does not have access to the transaction
             TryAttachHeadersToRequest(agent, httpRequestMessage);
 
-            // 1.  Since this finishes on a background thread, it is possible it will race the end of
-            //     the transaction. Using holdTransactionOpen = true to prevent the transaction from ending early.
-            // 2.  Do not want to post to the sync context as this library is commonly used with the
-            //     blocking TPL pattern of .Result or .Wait(). Posting to the sync context will result
-            //     in recording time waiting for the current unit of work on the sync context to finish.
-            //     This overload GetAsyncDelegateFor does not use the synchronization context's task scheduler.
-            return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment, true, InvokeTryProcessResponse);
-
-            void InvokeTryProcessResponse(Task<HttpResponseMessage> httpResponseMessage)
+            if (instrumentedMethodCall.InstrumentedMethodInfo.Method.MethodName.Equals(SendMethodName))
             {
-                TryProcessResponse(agent, httpResponseMessage, transaction, segment, externalSegmentData);
+                return Delegates.GetDelegateFor<HttpResponseMessage>(
+                    onSuccess: response =>
+                    {
+                        TryProcessResponse(agent, response, transaction, segment, externalSegmentData);
+                        segment.End();
+                    },
+                    onFailure: exception =>
+                    {
+                        segment.End(exception);
+                    });
+            }
+            else
+            {
+                // 1.  Since this finishes on a background thread, it is possible it will race the end of
+                //     the transaction. Using holdTransactionOpen = true to prevent the transaction from ending early.
+                // 2.  Do not want to post to the sync context as this library is commonly used with the
+                //     blocking TPL pattern of .Result or .Wait(). Posting to the sync context will result
+                //     in recording time waiting for the current unit of work on the sync context to finish.
+                //     This overload GetAsyncDelegateFor does not use the synchronization context's task scheduler.
+                return Delegates.GetAsyncDelegateFor<Task<HttpResponseMessage>>(agent, segment, true, InvokeTryProcessResponse);
+
+                void InvokeTryProcessResponse(Task<HttpResponseMessage> httpResponseMessage)
+                {
+                    TryProcessResponse(agent, httpResponseMessage, transaction, segment, externalSegmentData);
+                }
             }
         }
 
@@ -94,6 +126,9 @@ namespace NewRelic.Providers.Wrapper.HttpClient
             // If RequestUri is specified and it is an absolute URI then we should use it
             if (httpRequestMessage.RequestUri?.IsAbsoluteUri == true)
                 return httpRequestMessage.RequestUri;
+
+            if (httpClient == null)
+                return null;
 
             // If RequestUri is specified but isn't absolute then we need to combine it with the BaseAddress, as long as the BaseAddress is an absolute URI
             if (httpRequestMessage.RequestUri?.IsAbsoluteUri == false && httpClient.BaseAddress?.IsAbsoluteUri == true)
@@ -128,22 +163,28 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
         private static void TryProcessResponse(IAgent agent, Task<HttpResponseMessage> response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
         {
+
+            if (!ValidTaskResponse(response) || (segment == null))
+            {
+                return;
+            }
+
+            TryProcessResponse(agent, response?.Result, transaction, segment, externalSegmentData);
+        }
+
+        private static void TryProcessResponse(IAgent agent, HttpResponseMessage response, ITransaction transaction, ISegment segment, IExternalSegmentData externalSegmentData)
+        {
             try
             {
-                if (!ValidTaskResponse(response) || (segment == null))
+                if (response == null || segment == null)
                 {
                     return;
                 }
 
-                var result = response?.Result;
+                var httpStatusCode = response.StatusCode;
+                externalSegmentData.SetHttpStatusCode((int)httpStatusCode);
 
-                var httpStatusCode = result?.StatusCode;
-                if (httpStatusCode.HasValue)
-                {
-                    externalSegmentData.SetHttpStatusCode((int)httpStatusCode);
-                }
-
-                var headers = result?.Headers?.ToList();
+                var headers = response.Headers?.ToList();
                 if (headers == null)
                     return;
 
@@ -156,6 +197,7 @@ namespace NewRelic.Providers.Wrapper.HttpClient
                 agent.HandleWrapperException(ex);
             }
         }
+
 
         private static bool ValidTaskResponse(Task<HttpResponseMessage> response)
         {
