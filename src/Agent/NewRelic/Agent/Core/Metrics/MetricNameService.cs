@@ -123,7 +123,7 @@ namespace NewRelic.Agent.Core.Metrics
 
         private static bool TryRenameUsingRegexRules(string input, IEnumerable<RegexRule> rules, out string result)
         {
-            result = null;
+            result = input;
             bool success = true;
 
             foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
