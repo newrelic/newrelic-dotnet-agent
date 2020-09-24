@@ -29,9 +29,17 @@ namespace NewRelic.Agent.Core.Metrics
         public string NormalizeUrl(string url)
         {
             url = StripParameters(url);
-            TryRenameUsingRegexRules(url, _configuration.UrlRegexRules, out string result);
-
-            return result;   
+            if (TryRenameUsingRegexRules(url, _configuration.UrlRegexRules, out string result))
+            {
+                return result;
+            }
+            else
+            {
+                // This is currently a placeholder until a decision is made on
+                // whether or not the pre-existing behavior of bubbling up an
+                // exception is actually desired.
+                return result;
+            }  
         }
 
         public TimeSpan? TryGetApdex_t(string transactionName)
@@ -47,9 +55,7 @@ namespace NewRelic.Agent.Core.Metrics
         {
             var shouldIgnore = false;
 
-            TryRenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules, out string newPrefixedTransactionName);
-
-            if (newPrefixedTransactionName != null)
+            if (TryRenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules, out string newPrefixedTransactionName))
             {
                 newPrefixedTransactionName = RenameUsingWhitelistRules(newPrefixedTransactionName, _configuration.TransactionNameWhitelistRules);
             }
@@ -115,28 +121,29 @@ namespace NewRelic.Agent.Core.Metrics
             return url;
         }
 
-        private static void TryRenameUsingRegexRules(string input, IEnumerable<RegexRule> rules, out string result)
+        private static bool TryRenameUsingRegexRules(string input, IEnumerable<RegexRule> rules, out string result)
         {
             result = null;
+            bool success = true;
 
             foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
             {
                 var ruleResult = rule.ApplyTo(input);
                 if (!ruleResult.IsMatch)
+                {
                     continue;
-
-                if (rule.Ignore)
+                }
+                else if (rule.Ignore)
                 {
                     Log.DebugFormat($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"");
                     result = null;
-                    return;
+                    return false;
                 }
-
-                if (ruleResult.Replacement == null)
+                else if (ruleResult.Replacement == null)
                 {
                     Log.Error("RuleResult matched but returned null replacement string");
                     result = null;
-                    return;
+                    return false;
                 }
 
                 result = ruleResult.Replacement;
@@ -144,6 +151,8 @@ namespace NewRelic.Agent.Core.Metrics
                 if (rule.TerminateChain)
                     break;
             }
+
+            return success;
         }
 
         private static string RenameUsingWhitelistRules(string metricName, IDictionary<string, IEnumerable<string>> whitelistRules)
