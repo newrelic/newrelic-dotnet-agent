@@ -29,9 +29,9 @@ namespace NewRelic.Agent.Core.Metrics
         public string NormalizeUrl(string url)
         {
             url = StripParameters(url);
-            url = RenameUsingRegexRules(url, _configuration.UrlRegexRules);
+            TryRenameUsingRegexRules(url, _configuration.UrlRegexRules, out string result);
 
-            return url;   
+            return result;   
         }
 
         public TimeSpan? TryGetApdex_t(string transactionName)
@@ -46,7 +46,8 @@ namespace NewRelic.Agent.Core.Metrics
         public TransactionMetricName RenameTransaction(TransactionMetricName proposedTransactionName)
         {
             var shouldIgnore = false;
-            var newPrefixedTransactionName = RenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules);
+
+            TryRenameUsingRegexRules(proposedTransactionName.PrefixedName, _configuration.TransactionNameRegexRules, out string newPrefixedTransactionName);
 
             if (newPrefixedTransactionName != null)
             {
@@ -72,7 +73,9 @@ namespace NewRelic.Agent.Core.Metrics
             if (metricName == null)
                 return null;
 
-            return RenameUsingRegexRules(metricName, _configuration.MetricNameRegexRules);
+            TryRenameUsingRegexRules(metricName, _configuration.MetricNameRegexRules, out string result);
+
+            return result;
         }
 
         #endregion Public API
@@ -112,8 +115,10 @@ namespace NewRelic.Agent.Core.Metrics
             return url;
         }
 
-        private static string RenameUsingRegexRules(string input, IEnumerable<RegexRule> rules)
+        private static void TryRenameUsingRegexRules(string input, IEnumerable<RegexRule> rules, out string result)
         {
+            result = null;
+
             foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
             {
                 var ruleResult = rule.ApplyTo(input);
@@ -123,22 +128,22 @@ namespace NewRelic.Agent.Core.Metrics
                 if (rule.Ignore)
                 {
                     Log.DebugFormat($"Ignoring \"{input}\" because it matched pattern \"{rule.MatchExpression}\"");
-                    return null;
+                    result = null;
+                    return;
                 }
 
                 if (ruleResult.Replacement == null)
                 {
                     Log.Error("RuleResult matched but returned null replacement string");
-                    return null;
+                    result = null;
+                    return;
                 }
 
-                input = ruleResult.Replacement;
+                result = ruleResult.Replacement;
 
                 if (rule.TerminateChain)
                     break;
             }
-
-            return input;
         }
 
         private static string RenameUsingWhitelistRules(string metricName, IDictionary<string, IEnumerable<string>> whitelistRules)
