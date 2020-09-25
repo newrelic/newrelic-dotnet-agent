@@ -128,7 +128,7 @@ namespace NewRelic.Agent.Core.Metrics
 
             foreach (var rule in rules.OrderBy(rule => rule.EvaluationOrder))
             {
-                var ruleResult = rule.ApplyTo(input);
+                var ruleResult = rule.ApplyTo(result);
                 if (!ruleResult.IsMatch)
                 {
                     continue;
