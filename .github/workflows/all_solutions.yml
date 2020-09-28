@@ -252,12 +252,18 @@ jobs:
         MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
       shell: powershell
 
-    - name: Archive Artifacts
+    - name: Archive Artifacts x64
       uses: actions/upload-artifact@v2
       with:
-        name: windowsprofiler-${{ github.run_id }}
+        name: windowsprofiler-x64-${{ github.run_id }}
         path: |
           ${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release
+
+    - name: Archive Artifacts x86
+      uses: actions/upload-artifact@v2
+      with:
+        name: windowsprofiler-x86-${{ github.run_id }}
+        path: |
           ${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release
 
   build-test-linux-profiler:
