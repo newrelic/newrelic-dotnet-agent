@@ -110,6 +110,7 @@ namespace NewRelic.Agent.Core.Samplers
                 }
 
                 _listener = _listener ?? _eventListenerFactory();
+                _listener.StartListening(); // TODO: consequences if already listening?
             }
             catch (Exception ex)
             {
@@ -122,8 +123,8 @@ namespace NewRelic.Agent.Core.Samplers
         {
             base.Stop();
             _listener?.StopListening();
-            _listener?.Dispose();
-            _listener = null;
+            //_listener?.Dispose();
+            //_listener = null;
         }
 
         public override void Dispose()
@@ -178,7 +179,8 @@ namespace NewRelic.Agent.Core.Samplers
             if (eventSource.Guid == EventSourceIDToMonitor)
             {
                 _eventSource = eventSource;
-                EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)GCKeyword);
+                //EnableEvents(eventSource, EventLevel.Informational, (EventKeywords)GCKeyword);
+                StartListening();
                 base.OnEventSourceCreated(eventSource);
             }
         }
@@ -253,6 +255,14 @@ namespace NewRelic.Agent.Core.Samplers
             if (_collectionCountPerGen.Length > 2) result[GCSampleType.Gen2CollectionCount] = _collectionCountPerGen[2].Exchange(0);
 
             return result;
+        }
+
+        public override void StartListening()
+        {
+            if (_eventSource != null)
+            {
+                EnableEvents(_eventSource, EventLevel.Informational, (EventKeywords)GCKeyword);
+            }
         }
     }
 }

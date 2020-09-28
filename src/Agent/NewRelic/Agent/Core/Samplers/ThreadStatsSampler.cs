@@ -74,8 +74,8 @@ namespace NewRelic.Agent.Core.Samplers
         {
             base.Stop();
             _listener?.StopListening();
-            _listener?.Dispose();
-            _listener = null;
+            //_listener?.Dispose();
+            //_listener = null;
         }
 
         public override void Dispose()
@@ -107,7 +107,8 @@ namespace NewRelic.Agent.Core.Samplers
             {
                 _eventSource = eventSource;
 
-                EnableEvents(eventSource, EventLevel.LogAlways, (EventKeywords)_threadpool_Keyword);
+                //EnableEvents(eventSource, EventLevel.LogAlways, (EventKeywords)_threadpool_Keyword);
+                StartListening();
 
                 base.OnEventSourceCreated(eventSource);
             }
@@ -149,6 +150,11 @@ namespace NewRelic.Agent.Core.Samplers
                 _threadRequestQueueLength);
 
             return result;
+        }
+
+        public override void StartListening()
+        {
+            EnableEvents(_eventSource, EventLevel.LogAlways, (EventKeywords)_threadpool_Keyword);
         }
     }
 

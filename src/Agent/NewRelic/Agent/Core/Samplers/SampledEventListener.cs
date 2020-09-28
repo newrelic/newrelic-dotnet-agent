@@ -10,6 +10,7 @@ namespace NewRelic.Agent.Core.Samplers
     {
         T Sample();
         void StopListening();
+        void StartListening();
     }
 
     public abstract class SampledEventListener<T> : EventListener, ISampledEventListener<T>
@@ -30,6 +31,8 @@ namespace NewRelic.Agent.Core.Samplers
                 }
             }
         }
+
+        public abstract void StartListening();
 
         public override void Dispose()
         {
