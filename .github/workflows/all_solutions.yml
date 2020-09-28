@@ -203,7 +203,8 @@ jobs:
           branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}    
 
-      - uses: LouisBrunner/checks-action@v1.0.0
+      - name: Create Check-run with test results
+        uses: LouisBrunner/checks-action@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
@@ -250,6 +251,14 @@ jobs:
         Write-Host "MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
         MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
       shell: powershell
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windowsprofiler-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release
+          ${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release
 
   build-test-linux-profiler:
     name: Build Linux Profiler
