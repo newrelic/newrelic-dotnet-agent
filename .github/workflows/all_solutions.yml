@@ -293,7 +293,7 @@ jobs:
       with:
         name: linuxprofiler-${{ github.run_id }}
         path: |
-          ${{ github.workspace }}\src\Agent\NewRelic\Profiler\libNewRelicProfiler.so
+          ${{ github.workspace }}/src/Agent/NewRelic/Profiler/libNewRelicProfiler.so
 
   build-integration-tests:
     needs: [build-test-fullagent-msi, build-test-windows-profiler, build-test-linux-profiler]
