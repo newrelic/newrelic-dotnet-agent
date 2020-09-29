@@ -22,24 +22,15 @@ namespace NewRelic.Providers.Wrapper.HttpClient
         private const string SocketsHttpHandlerTypeName = "System.Net.Http.SocketsHttpHandler";
         private const string SendAsyncMethodName = "SendAsync";
         private const string SendMethodName = "Send";
-        private const int DotNet5AssemblyVersionMajor = 5;
-
-
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
             var method = methodInfo.Method;
 
-            var version = method.Type.Assembly.GetName().Version;
-
-            if (version.Major < DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: HttpClientTypeName, methodName: SendAsyncMethodName))
+            if (method.MatchesAny(assemblyName: AssemblyName, typeNames: new[] { HttpClientTypeName, SocketsHttpHandlerTypeName }, methodName: SendAsyncMethodName))
             {
                 return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(AssemblyName, HttpClientTypeName, method.MethodName);
             }
-            else if (version.Major >= DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: SocketsHttpHandlerTypeName, methodName: SendAsyncMethodName))
-            {
-                return TaskFriendlySyncContextValidator.CanWrapAsyncMethod(AssemblyName, SocketsHttpHandlerTypeName, method.MethodName);
-            }
-            else if (version.Major >= DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: SocketsHttpHandlerTypeName, methodName: SendMethodName))
+            else if (method.MatchesAny(assemblyName: AssemblyName, typeName: SocketsHttpHandlerTypeName, methodName: SendMethodName))
             {
                 return new CanWrapResponse(true);
             }

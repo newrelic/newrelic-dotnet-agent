@@ -67,6 +67,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             ipToFind->MethodName = function->GetFunctionName();
             ipToFind->Parameters = std::unique_ptr<xstring_t>(new xstring_t(methodSignature->ToString(function->GetTokenResolver())));
 
+            if (Strings::AreEqualCaseInsensitive(function->GetAssemblyName(), _X("System.Net.Http"))
+                && ((function->GetAssemblyProps().usMajorVersion >= 5 && Strings::AreEqualCaseInsensitive(function->GetTypeName(), _X("System.Net.Http.HttpClient"))) || (function->GetAssemblyProps().usMajorVersion < 5 && Strings::AreEqualCaseInsensitive(function->GetTypeName(), _X("System.Net.Http.SocketsHttpHandler")))))
+            {
+                return nullptr;
+            }
+
             auto instPoint = TryGetInstrumentationPoint(ipToFind);
             return instPoint;
         }
