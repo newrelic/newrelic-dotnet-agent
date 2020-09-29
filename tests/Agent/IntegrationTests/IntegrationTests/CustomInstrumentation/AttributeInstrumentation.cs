@@ -10,7 +10,7 @@ using NewRelic.Testing.Assertions;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
     public class AttributeInstrumentation : IClassFixture<RemoteServiceFixtures.AttributeInstrumentation>

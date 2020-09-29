@@ -8,15 +8,15 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class OtherTransactionResponseTimeTestsConsole : IClassFixture<RemoteServiceFixtures.ConsoleOtherTransactionWrapperFixture>
+    public class OtherTransactionResponseTimeTestsWebApi : IClassFixture<RemoteServiceFixtures.WebApiAsyncFixture>
     {
-        private readonly RemoteServiceFixtures.ConsoleOtherTransactionWrapperFixture _fixture;
+        private readonly RemoteServiceFixtures.WebApiAsyncFixture _fixture;
         private const int _delayDuration = 2;
 
-        public OtherTransactionResponseTimeTestsConsole(RemoteServiceFixtures.ConsoleOtherTransactionWrapperFixture fixture, ITestOutputHelper output)
+        public OtherTransactionResponseTimeTestsWebApi(RemoteServiceFixtures.WebApiAsyncFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.IntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-
+                    _fixture.ExecuteResponseTimeTestOperation(_delayDuration);
                 }
             );
 
@@ -53,16 +53,18 @@ namespace NewRelic.Agent.IntegrationTests
             //It should have the following intrinsic values
             NrAssert.Multiple(
                 () => { Assert.True(trx.IntrinsicAttributes.ContainsKey("totalTime")); },
-                () => { Assert.True(trx.IntrinsicAttributes.ContainsKey("duration")); }
-            );
+                () => { Assert.True(trx.IntrinsicAttributes.ContainsKey("duration")); },
+                () => { Assert.True(trx.IntrinsicAttributes.ContainsKey("webDuration")); });
 
             var trxDuration = (double)trx.IntrinsicAttributes["duration"];
+            var trxWebDuration = (double)trx.IntrinsicAttributes["webDuration"];
             var trxTotalTime = (double)trx.IntrinsicAttributes["totalTime"];
 
             //The times should all be greater than 2x the delay since the InnerMethod, which uses
             //OtherTransactionWrapper should NOT record responsetime
             NrAssert.Multiple(
                 () => { Assert.True(trxDuration > durationShouldBeGreaterThan); },
+                () => { Assert.True(trxWebDuration > durationShouldBeGreaterThan); },
                 () => { Assert.True(trxTotalTime > durationShouldBeGreaterThan); });
         }
     }

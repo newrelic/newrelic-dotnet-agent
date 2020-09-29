@@ -11,14 +11,14 @@ using System.Linq;
 using NewRelic.Testing.Assertions;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class CustomInstrumentationEditorConnectCommand : IClassFixture<MvcWithCollectorFixture>
+    public class CustomInstrumentationEditorAgentCommand : IClassFixture<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;
 
-        public CustomInstrumentationEditorConnectCommand(MvcWithCollectorFixture fixture, ITestOutputHelper output)
+        public CustomInstrumentationEditorAgentCommand(MvcWithCollectorFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -27,15 +27,15 @@ namespace NewRelic.Agent.IntegrationTests
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(_fixture.DestinationNewRelicConfigFilePath);
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(_fixture.DestinationNewRelicConfigFilePath, new[] { "configuration", "service" }, "autoStart", "false");
                     configModifier.SetLogLevel("finest");
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.SetCustomInstrumentationEditorOnConnect();
                     _fixture.Get();
-                    _fixture.StartAgent();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.TriggerCustomInstrumentationEditorAgentCommand();
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.InstrumentationUpdateCommandLogLineRegex, TimeSpan.FromMinutes(3));
+
+                    _fixture.AgentLog.ClearLog(TimeSpan.FromSeconds(5));
                     _fixture.GenerateCallsToCustomInstrumentationEditorMethods();
                 }
             );
@@ -62,4 +62,3 @@ namespace NewRelic.Agent.IntegrationTests
         }
     }
 }
-

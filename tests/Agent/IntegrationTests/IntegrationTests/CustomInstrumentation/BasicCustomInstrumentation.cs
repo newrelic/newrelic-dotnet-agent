@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -10,14 +9,14 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class CustomInstrumentation : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class BasicCustomInstrumentation : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public CustomInstrumentation(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public BasicCustomInstrumentation(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
