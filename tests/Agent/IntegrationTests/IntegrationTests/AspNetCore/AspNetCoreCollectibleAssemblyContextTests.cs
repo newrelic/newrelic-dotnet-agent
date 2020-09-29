@@ -9,7 +9,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetCoreTest]
     public class AspNetCoreCollectibleAssemblyContextTests : IClassFixture<RemoteServiceFixtures.AspNetCore3FeaturesFixture>

@@ -10,7 +10,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetFrameworkTest]
     public class AspNetCoreMvcFrameworkTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcFrameworkFixture>

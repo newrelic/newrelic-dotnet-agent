@@ -11,16 +11,16 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetCoreTest]
-    public class AspNetCoreMvcBasicRequestsTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    public class AspNetCoreGenericWebHostTests : IClassFixture<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
     {
-        private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
+        private readonly RemoteServiceFixtures.AspNetCore3FeaturesFixture _fixture;
 
         private const int ExpectedTransactionCount = 2;
 
-        public AspNetCoreMvcBasicRequestsTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+        public AspNetCoreGenericWebHostTests(RemoteServiceFixtures.AspNetCore3FeaturesFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -34,7 +34,6 @@ namespace NewRelic.Agent.IntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetCORSPreflight();
                     _fixture.Get();
                     _fixture.ThrowException();
 
@@ -50,13 +49,10 @@ namespace NewRelic.Agent.IntegrationTests
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             Assert.NotNull(metrics);
 
-            Assertions.MetricsExist(_generalMetrics, metrics);
-            Assertions.MetricsDoNotExist(_unexpectedMetrics, metrics);
-
             NrAssert.Multiple
             (
-                () => Assertions.MetricsExist(_indexMetrics, metrics),
-                () => Assertions.MetricsExist(_throwMetrics, metrics)
+                () => Assertions.MetricsExist(_generalMetrics, metrics),
+                () => Assertions.MetricsExist(_indexMetrics, metrics)
             );
 
             var expectedTransactionTraceSegments = new List<string>
@@ -68,10 +64,8 @@ namespace NewRelic.Agent.IntegrationTests
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
                 .FirstOrDefault(sample => sample.Path == @"WebTransaction/MVC/Home/Index");
 
-
             Assert.NotNull(transactionSample);
             Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample);
-
 
             var expectedErrorEventAttributes = new Dictionary<string, string>
             {
@@ -131,12 +125,5 @@ namespace NewRelic.Agent.IntegrationTests
             new Assertions.ExpectedMetric { metricName = @"DotNet/HomeController/ThrowException", metricScope = @"WebTransaction/MVC/Home/ThrowException", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/Home/ThrowException", callCount = 1 }
         };
-
-        private readonly List<Assertions.ExpectedMetric> _unexpectedMetrics = new List<Assertions.ExpectedMetric>
-        {
-			// SUPNET-492 (ASP.NET Core CORS MGI)
-			new Assertions.ExpectedMetric {metricName = @"WebTransaction/ASP/Home/About", callCount = 1},
-        };
-
     }
 }

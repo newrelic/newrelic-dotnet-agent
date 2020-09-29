@@ -10,16 +10,16 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
-    [NetCoreTest]
-    public class AspNetCoreMvcAsyncTests : IClassFixture<AspNetCoreMvcAsyncTestsFixture>
+    [NetFrameworkTest]
+    public class AspNetCoreMvcFrameworkAsyncTests : IClassFixture<AspNetCoreMvcFrameworkAsyncTestsFixture>
     {
-        private readonly AspNetCoreMvcAsyncTestsFixture _fixture;
+        private readonly AspNetCoreMvcFrameworkAsyncTestsFixture _fixture;
         private const int ExpectedTransactionCount = 7;
-        private const string AssemblyName = "AspNetCoreMvcAsyncApplication";
+        private const string AssemblyName = "AspNetCoreMvcFrameworkAsyncApplication";
 
-        public AspNetCoreMvcAsyncTests(AspNetCoreMvcAsyncTestsFixture fixture, ITestOutputHelper output)
+        public AspNetCoreMvcFrameworkAsyncTests(AspNetCoreMvcFrameworkAsyncTestsFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -42,6 +42,7 @@ namespace NewRelic.Agent.IntegrationTests
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, AssemblyName, $"{AssemblyName}.Controllers.ManualAsyncController", "TaskRunBackgroundMethod", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "ManualTaskRunBackgroundMethod");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, AssemblyName, $"{AssemblyName}.Controllers.ManualAsyncController", "TaskFactoryStartNewBackgroundMethod", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "ManualTaskFactoryStartNewBackgroundMethod");
                     CommonUtils.AddCustomInstrumentation(instrumentationFilePath, AssemblyName, $"{AssemblyName}.Controllers.ManualAsyncController", "ThreadStartBackgroundMethod", "NewRelic.Providers.Wrapper.CustomInstrumentationAsync.DefaultWrapperAsync", "ManualThreadStartBackgroundMethod");
+
                 },
                 exerciseApplication: () =>
                 {
@@ -53,6 +54,7 @@ namespace NewRelic.Agent.IntegrationTests
                     _fixture.GetManualTaskRunBlocked();
                     _fixture.GetManualTaskFactoryStartNewBlocked();
                     _fixture.GetManualNewThreadStartBlocked();
+
                 }
             );
             _fixture.Initialize();
@@ -81,11 +83,11 @@ namespace NewRelic.Agent.IntegrationTests
                 () => Assertions.MetricsExist(_manualTaskFactoryStartNewMetrics, metrics),
                 () => Assertions.MetricsExist(_manualNewThreadStartBlocked, metrics)
             );
+
         }
 
         private readonly List<Assertions.ExpectedMetric> _generalMetrics = new List<Assertions.ExpectedMetric>
         {
-            new Assertions.ExpectedMetric { metricName = @"Supportability/OS/Linux", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = ExpectedTransactionCount },
             new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = ExpectedTransactionCount },
             new Assertions.ExpectedMetric { metricName = @"Apdex"},
@@ -197,5 +199,6 @@ namespace NewRelic.Agent.IntegrationTests
             new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/ManualAsync/NewThreadStartBlocked", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/ManualThreadStartBackgroundMethod", metricScope = @"WebTransaction/MVC/ManualAsync/NewThreadStartBlocked", callCount = 1 }
         };
+
     }
 }
