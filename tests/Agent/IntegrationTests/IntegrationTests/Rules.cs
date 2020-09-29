@@ -15,7 +15,7 @@ namespace NewRelic.Agent.IntegrationTests
     /// Tests around transaction renaming using URL rules and transaction segment terms
     /// NOTE: These tests depend on the application named "RulesWebApi" having some specific rules in place.
     ///		with prefix "WebTransaction/WebAPI" and whitelist terms "Values Sleep UrlRule".
-    ///		Can be found at https://[staging|rpm].newrelicc.com/account/{accountId}/applications/{applicationId}/segment_terms
+    ///		Can be found at https://[staging|rpm].newrelic.com/account/{accountId}/applications/{applicationId}/segment_terms
     /// </summary>
     [NetFrameworkTest]
     public class Rules : IClassFixture<RulesWebApi>
