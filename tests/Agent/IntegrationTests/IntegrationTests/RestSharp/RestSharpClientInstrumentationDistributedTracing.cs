@@ -6,18 +6,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NewRelic.Agent.IntegrationTestHelpers;
+using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
     [NetFrameworkTest]
-    public class RestSharpInstrumentation : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class RestSharpInstrumentationDistributedTracing : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public RestSharpInstrumentation(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public RestSharpInstrumentationDistributedTracing(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -26,6 +27,7 @@ namespace NewRelic.Agent.IntegrationTests
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.SetOrDeleteDistributedTraceEnabled(true);
                     configModifier.ForceTransactionTraces();
                 },
                 exerciseApplication: () =>
@@ -47,8 +49,6 @@ namespace NewRelic.Agent.IntegrationTests
         public void Test()
         {
             var myHostname = _fixture.DestinationServerName; // This is needed because we are making "external" calls to ourself to test RestSharp
-            var crossProcessId = _fixture.AgentLog.GetCrossProcessId();
-
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
 
@@ -59,10 +59,10 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/POST", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/DELETE", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/RestSharpClientTaskCancelled", callCount = 1},
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Get", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Put", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Post", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $"ExternalTransaction/{myHostname}/{crossProcessId}/WebTransaction/WebAPI/RestAPI/Delete", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/GET", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/PUT", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/POST", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $"External/{myHostname}/Stream/DELETE", metricScope = @"WebTransaction/MVC/RestSharpController/SyncClient", callCount = 1 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
@@ -77,16 +77,34 @@ namespace NewRelic.Agent.IntegrationTests
                 .Where(e => e.IntrinsicAttributes.ContainsKey("externalDuration"))
                 .FirstOrDefault();
 
+            var externalSpanEvents = _fixture.AgentLog.GetSpanEvents()
+                .Where(e => e.AgentAttributes.ContainsKey("http.url"))
+                .ToList();
+
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
-                () => Assert.NotNull(transactionEventWithExternal)
+                () => Assert.NotNull(transactionEventWithExternal),
+                () => Assert.All(externalSpanEvents, AssertSpanEventsContainHttpStatusCodeForCompletedRequests)
             );
 
             var agentWrapperErrorRegex = AgentLogBase.ErrorLogLinePrefixRegex + @"An exception occurred in a wrapper: (.*)";
             var wrapperError = _fixture.AgentLog.TryGetLogLine(agentWrapperErrorRegex);
 
             Assert.Null(wrapperError);
+
+            void AssertSpanEventsContainHttpStatusCodeForCompletedRequests(SpanEvent spanEvent)
+            {
+                var url = (string)spanEvent.AgentAttributes["http.url"];
+                if (url.Contains("/RestAPI/4"))
+                {
+                    Assert.DoesNotContain("http.statusCode", spanEvent.AgentAttributes.Keys);
+                }
+                else
+                {
+                    Assert.Contains("http.statusCode", spanEvent.AgentAttributes.Keys);
+                }
+            }
         }
     }
 }
