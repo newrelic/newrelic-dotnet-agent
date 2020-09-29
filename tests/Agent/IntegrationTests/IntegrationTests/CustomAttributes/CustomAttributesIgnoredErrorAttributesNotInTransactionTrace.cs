@@ -7,19 +7,18 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 {
     [NetFrameworkTest]
-    public class CustomAttributesIgnoredErrorAttributesNotInTransactionTrace : IClassFixture<CustomAttributesWebApi>
+    public class CustomAttributesIgnoredErrorAttributesNotInTransactionTrace : IClassFixture<RemoteServiceFixtures.CustomAttributesWebApi>
     {
-        private readonly CustomAttributesWebApi _fixture;
+        private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributesIgnoredErrorAttributesNotInTransactionTrace(CustomAttributesWebApi fixture, ITestOutputHelper output)
+        public CustomAttributesIgnoredErrorAttributesNotInTransactionTrace(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

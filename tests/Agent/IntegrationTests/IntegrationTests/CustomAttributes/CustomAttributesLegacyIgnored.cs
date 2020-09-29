@@ -7,19 +7,18 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 {
     [NetFrameworkTest]
-    public class CustomAttributesLegacyDisabled : IClassFixture<CustomAttributesWebApi>
+    public class CustomAttributesLegacyIgnored : IClassFixture<RemoteServiceFixtures.CustomAttributesWebApi>
     {
-        private readonly CustomAttributesWebApi _fixture;
+        private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributesLegacyDisabled(CustomAttributesWebApi fixture, ITestOutputHelper output)
+        public CustomAttributesLegacyIgnored(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -30,38 +29,40 @@ namespace NewRelic.Agent.IntegrationTests
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
 
-                    CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath,
-                        new[] { "configuration", "parameterGroups", "customParameters" }, "enabled", "false");
+                    CommonUtils.ModifyOrCreateXmlNodeInNewRelicConfig(configPath,
+                        new[] { "configuration", "parameterGroups", "customParameters" }, "ignore", "key");
                 },
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
-                    _fixture.Get404();
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 }
-            );
+
+                );
             _fixture.Initialize();
         }
 
         [Fact]
         public void Test()
         {
+            var expectedTransactionTraceAttributes = new Dictionary<string, string>
+            {
+                { "foo", "bar" }
+            };
             var unexpectedTransactionTraceAttributes = new List<string>
             {
-                "key",
-                "foo",
-                "hey",
-                "faz",
+                "key"
             };
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
+            Assert.NotNull(transactionSample);
             var maybeDeprecationMessage = _fixture.AgentLog.TryGetLogLine(AgentLogBase.WarnLogLinePrefixRegex + @"Deprecated configuration property 'parameterGroups.customParameters.ignore'.  Use 'attributes.exclude'.  See http://docs.newrelic.com for details.");
 
-            Assert.NotNull(transactionSample);
             NrAssert.Multiple
             (
+                () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
                 () => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
-                () => Assert.Null(maybeDeprecationMessage)
+                () => Assert.NotNull(maybeDeprecationMessage)
             );
         }
     }
