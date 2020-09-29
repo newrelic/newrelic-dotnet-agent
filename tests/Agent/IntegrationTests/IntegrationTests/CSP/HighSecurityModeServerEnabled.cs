@@ -6,15 +6,14 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
-    public class HighSecurityModeServerDisabled : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>
+    public class HighSecurityModeServerEnabled : IClassFixture<RemoteServiceFixtures.HSMOwinWebApiFixture>
     {
+        private readonly RemoteServiceFixtures.HSMOwinWebApiFixture _fixture;
 
-        private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
-
-        public HighSecurityModeServerDisabled(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+        public HighSecurityModeServerEnabled(RemoteServiceFixtures.HSMOwinWebApiFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -23,10 +22,9 @@ namespace NewRelic.Agent.IntegrationTests
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
-
                     var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.SetLogLevel("debug");
-                    configModifier.SetHighSecurityMode(true);
+                    configModifier.SetHighSecurityMode(false);
                     configModifier.SetEnableRequestParameters(true);
                 },
                 exerciseApplication: () =>

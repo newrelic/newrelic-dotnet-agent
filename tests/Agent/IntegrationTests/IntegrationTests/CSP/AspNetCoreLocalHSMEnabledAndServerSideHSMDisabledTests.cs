@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetCoreTest]
     public class AspNetCoreLocalHSMEnabledAndServerSideHSMDisabledTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>

@@ -2,22 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetCoreTest]
-    public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : IClassFixture<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
+    [NetFrameworkTest]
+    public class HighSecurityModeServerDisabled : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>
     {
-        private const string QueryStringParameterValue = @"my thing";
 
+        private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
-        private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
-
-        public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+        public HighSecurityModeServerDisabled(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -26,13 +23,20 @@ namespace NewRelic.Agent.IntegrationTests
                 setupConfiguration: () =>
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
+
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("debug");
+                    configModifier.SetHighSecurityMode(true);
                     configModifier.SetEnableRequestParameters(true);
-                    configModifier.SetHighSecurityMode(false);
                 },
-                exerciseApplication: () => _fixture.GetWithData(QueryStringParameterValue)
+                exerciseApplication: () =>
+                {
+                    _fixture.GetData();
+                    _fixture.Get();
+                    _fixture.Get404();
+                    _fixture.GetId();
+                    _fixture.Post();
+                }
             );
             _fixture.Initialize();
         }

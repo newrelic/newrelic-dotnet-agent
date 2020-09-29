@@ -6,14 +6,17 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CSP
 {
-    [NetFrameworkTest]
-    public class HighSecurityModeServerEnabled : IClassFixture<RemoteServiceFixtures.HSMOwinWebApiFixture>
+    [NetCoreTest]
+    public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : IClassFixture<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
     {
-        private readonly RemoteServiceFixtures.HSMOwinWebApiFixture _fixture;
+        private const string QueryStringParameterValue = @"my thing";
 
-        public HighSecurityModeServerEnabled(RemoteServiceFixtures.HSMOwinWebApiFixture fixture, ITestOutputHelper output)
+
+        private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
+
+        public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -23,18 +26,12 @@ namespace NewRelic.Agent.IntegrationTests
                 {
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
                     var configModifier = new NewRelicConfigModifier(configPath);
+                    configModifier.ForceTransactionTraces();
                     configModifier.SetLogLevel("debug");
-                    configModifier.SetHighSecurityMode(false);
                     configModifier.SetEnableRequestParameters(true);
+                    configModifier.SetHighSecurityMode(false);
                 },
-                exerciseApplication: () =>
-                {
-                    _fixture.GetData();
-                    _fixture.Get();
-                    _fixture.Get404();
-                    _fixture.GetId();
-                    _fixture.Post();
-                }
+                exerciseApplication: () => _fixture.GetWithData(QueryStringParameterValue)
             );
             _fixture.Initialize();
         }
