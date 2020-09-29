@@ -339,12 +339,8 @@ namespace NewRelic { namespace Profiler
             mdAssembly mda = 0;
             ThrowOnError(_metaDataAssemblyImport->GetAssemblyFromScope, &mda);
 
-            LPWSTR szName = new TCHAR[200];
-            ULONG cchName = 200;
-            ULONG* pchName = new ULONG;
             _assemblyProps = ASSEMBLYMETADATA();
-
-            ThrowOnError(_metaDataAssemblyImport->GetAssemblyProps, mda, 0, 0, 0, szName, cchName, pchName, &_assemblyProps, 0);
+            ThrowOnError(_metaDataAssemblyImport->GetAssemblyProps, mda, 0, 0, 0, nullptr, 0, nullptr, &_assemblyProps, 0);
 
 #ifdef DEBUG_PREPROCESSOR
             auto isMsCorLib = assemblyName == _X("mscorlib");
