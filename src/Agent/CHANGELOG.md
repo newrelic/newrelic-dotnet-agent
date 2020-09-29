@@ -13,7 +13,7 @@ Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
 
 ### Fixes
 * Fixes [#223](https://github.com/newrelic/newrelic-dotnet-agent/issues/223) so the agent can be compatible with ASP.NET Core 5 RC1.
-* Fixes `HttpClient` instrumentation for .NET 5 RC1. See [#227](https://github.com/newrelic/newrelic-dotnet-agent/issues/227).
+* Fixes issue in .NET 5 applications where external calls made with HttpClient may not get instrumented. For example, calls made with HttpClient.GetStringAsync would be missed. ([#235](https://github.com/newrelic/newrelic-dotnet-agent/issues/225))
 
 
 ## [8.32] - 2020-09-17
