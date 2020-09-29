@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
     public class OwinWebApiStatusCodeRollupTests : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>

@@ -12,7 +12,7 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
     public class OwinWebApiAsyncTests : IClassFixture<OwinWebApiFixture>

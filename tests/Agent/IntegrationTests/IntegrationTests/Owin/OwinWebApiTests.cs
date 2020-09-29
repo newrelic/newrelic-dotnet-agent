@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
     public class OwinWebApiTests : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>

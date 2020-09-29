@@ -11,7 +11,7 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 using System.Collections.Generic;
 using NewRelic.Testing.Assertions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
     public class OwinCATChainTests : IClassFixture<OwinTracingChainFixture>
