@@ -67,7 +67,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             ipToFind->MethodName = function->GetFunctionName();
             ipToFind->Parameters = std::unique_ptr<xstring_t>(new xstring_t(methodSignature->ToString(function->GetTokenResolver())));
 
-            // Temporarily specifically ignore System.Net.Http.HttpClient instrumentation for .Net 5 and above and System.Net.Http.SocketsHttpHandler for .Net framework less than .Net 5
+            // Temporarily specifically ignore System.Net.Http.HttpClient instrumentation for .Net 5 and greater, and System.Net.Http.SocketsHttpHandler for framework less than .Net 5
             // until version checking from instrumentation xml is supported.
             if (IsHttpClient5OrGreater(function) || IsSocketsHttpHandlerLessThan5(function))
             {
