@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     public class ServiceStackRedisCommands
     {
