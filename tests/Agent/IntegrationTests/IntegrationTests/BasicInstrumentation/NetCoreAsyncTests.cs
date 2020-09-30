@@ -10,7 +10,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetCoreTest]
     public class NetCoreAsyncTests : IClassFixture<NetCoreAsyncTestsFixture>

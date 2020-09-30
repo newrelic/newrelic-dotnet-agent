@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
     public class MvcRum : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

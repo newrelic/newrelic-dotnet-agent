@@ -9,7 +9,7 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Net;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
     public class MsCorLibTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

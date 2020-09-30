@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -11,14 +10,15 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class WebForms45Application : IClassFixture<RemoteServiceFixtures.WebForms45Application>
+    public class BasicOpenRastaApplication : IClassFixture<RemoteServiceFixtures.BasicOpenRastaApplication>
     {
-        private readonly RemoteServiceFixtures.WebForms45Application _fixture;
 
-        public WebForms45Application(RemoteServiceFixtures.WebForms45Application fixture, ITestOutputHelper output)
+        private readonly RemoteServiceFixtures.BasicOpenRastaApplication _fixture;
+
+        public BasicOpenRastaApplication(RemoteServiceFixtures.BasicOpenRastaApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -26,15 +26,13 @@ namespace NewRelic.Agent.IntegrationTests
             (
                 setupConfiguration: () =>
                 {
-                    var newRelicConfig = _fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(newRelicConfig);
+                    var configPath = fixture.DestinationNewRelicConfigFilePath;
+                    var configModifier = new NewRelicConfigModifier(configPath);
                     configModifier.ForceTransactionTraces();
                 },
                 exerciseApplication: () =>
                 {
-                    // Make a request with an invalid query string to ensure that the agent handles it safely
-                    var queryStringParams = new Dictionary<string, string> { { "a", "<b>" } };
-                    _fixture.GetWithQueryString(queryStringParams, true);
+                    _fixture.GetWithQueryString();
                 }
             );
             _fixture.Initialize();
@@ -47,22 +45,20 @@ namespace NewRelic.Agent.IntegrationTests
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/ASP/default.aspx", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/ASP/default.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
-
-				// On hold until we port the Page.PerformPreInit instrumentation to a wrapper
-				//new Assertions.ExpectedMetric { metricName = @"DotNet/System.Web.UI.Page/PerformPreInit", metricScope = @"WebTransaction/ASP/webformslow.aspx", callCount = 1 },
-
-				new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/ASP/default.aspx", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/OpenRasta/home/get", callCount = 1 },
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -72,6 +68,7 @@ namespace NewRelic.Agent.IntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"OtherTransaction/all" },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/Transactions/allOther" },
             };
+
             var expectedTransactionTraceSegments = new List<string>
             {
                 @"AuthenticateRequest",
@@ -80,21 +77,24 @@ namespace NewRelic.Agent.IntegrationTests
                 @"MapRequestHandler",
                 @"AcquireRequestState",
                 @"ExecuteRequestHandler",
-				
-				// On hold until we port the Page.PerformPreInit instrumentation to a wrapper
-				//@"DotNet/System.Web.UI.Page/PerformPreInit",
-
-				@"EndRequest",
+                @"views/homeview.aspx",
+                @"DotNet/home/get",
+                @"ReleaseRequestState",
+                @"UpdateRequestCache",
+                @"EndRequest"
             };
+
             var expectedTransactionTraceAgentAttributes = new Dictionary<string, object>
             {
-                { "response.status", "500" },
-                { "http.statusCode", 500 }
+                { "response.status", "200" },
+                { "http.statusCode", 200 }
             };
+
             var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
                 {"type", "Transaction"}
             };
+
             var expectedTransactionEventIntrinsicAttributes2 = new List<string>
             {
                 "timestamp",
@@ -103,15 +103,16 @@ namespace NewRelic.Agent.IntegrationTests
                 "queueDuration",
                 "totalTime"
             };
+
             var expectedTransactionEventAgentAttributes = new Dictionary<string, object>
             {
-                { "response.status", "500"},
-                { "http.statusCode", 500 }
+                { "response.status", "200"},
+                { "http.statusCode", 200 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-                .Where(sample => sample.Path == @"WebTransaction/ASP/default.aspx")
+                .Where(sample => sample.Path == @"WebTransaction/OpenRasta/home/get")
                 .FirstOrDefault();
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
                 .FirstOrDefault();

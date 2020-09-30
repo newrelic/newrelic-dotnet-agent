@@ -10,14 +10,15 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class BasicMvcApplication : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class BasicMvcApplicationWithAsyncDisabled : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
+
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public BasicMvcApplication(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public BasicMvcApplicationWithAsyncDisabled(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -31,7 +32,7 @@ namespace NewRelic.Agent.IntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.Get();
+                    _fixture.GetWithAsyncDisabled();
                 }
             );
             _fixture.Initialize();
@@ -44,21 +45,21 @@ namespace NewRelic.Agent.IntegrationTests
             {
                 new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsCollected", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"HttpDispatcher", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransaction", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/DefaultController/Index", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthenticateRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AuthorizeRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ResolveRequestCache", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/MapRequestHandler", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/AcquireRequestState", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ExecuteRequestHandler", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/DisableAsyncSupportController/Index", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/ReleaseRequestState", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/UpdateRequestCache", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"DotNet/EndRequest", metricScope = @"WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -69,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTests
 
 				// The .NET agent does not have the information needed to generate this metric
 				new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DefaultController/Index", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"CPU/WebTransaction/MVC/DisableAsyncSupportController/Index", callCount = 1 },
             };
 
             var expectedTransactionTraceSegments = new List<string>
@@ -80,7 +81,7 @@ namespace NewRelic.Agent.IntegrationTests
                 @"MapRequestHandler",
                 @"AcquireRequestState",
                 @"ExecuteRequestHandler",
-                @"DotNet/DefaultController/Index",
+                @"DotNet/DisableAsyncSupportController/Index",
                 @"ReleaseRequestState",
                 @"UpdateRequestCache",
                 @"EndRequest",
@@ -88,8 +89,7 @@ namespace NewRelic.Agent.IntegrationTests
             var expectedTransactionTraceAgentAttributes = new Dictionary<string, object>
             {
                 { "response.status", "200" },
-                { "http.statusCode", 200 },
-                { "request.uri", "/Default" }
+                { "http.statusCode", 200 }
             };
             var expectedTransactionEventIntrinsicAttributes1 = new Dictionary<string, string>
             {
@@ -105,18 +105,14 @@ namespace NewRelic.Agent.IntegrationTests
             };
             var expectedTransactionEventAgentAttributes = new Dictionary<string, object>
             {
-                { "response.status", "200" },
-                { "http.statusCode", 200 },
-                { "request.uri", "/Default" }
+                { "response.status", "200"},
+                { "http.statusCode", 200 }
             };
-
-            var connect = _fixture.AgentLog.GetConnectData().Environment.GetPluginList();
-            Assert.DoesNotContain(connect, x => x.Contains("NewRelic.Providers.Wrapper.AspNetCore"));
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
-                .Where(sample => sample.Path == @"WebTransaction/MVC/DefaultController/Index")
+                .Where(sample => sample.Path == @"WebTransaction/MVC/DisableAsyncSupportController/Index")
                 .FirstOrDefault();
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents()
                 .FirstOrDefault();
