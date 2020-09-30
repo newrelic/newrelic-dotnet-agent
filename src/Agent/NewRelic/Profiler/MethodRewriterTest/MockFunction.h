@@ -152,6 +152,11 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter { namespace T
             return false;
         }
 
+        virtual ASSEMBLYMETADATA GetAssemblyProps() override
+        {
+            return ASSEMBLYMETADATA();
+        }
+
         virtual bool ShouldInjectMethodInstrumentation() override
         {
             return false;

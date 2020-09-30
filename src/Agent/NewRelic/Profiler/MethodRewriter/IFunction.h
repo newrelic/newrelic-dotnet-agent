@@ -31,6 +31,7 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter
         virtual FunctionHeaderInfoPtr GetFunctionHeaderInfo() = 0;
         virtual bool Preprocess() = 0;
         virtual bool ShouldTrace() = 0;
+        virtual ASSEMBLYMETADATA GetAssemblyProps() = 0;
         virtual bool IsValid() = 0;
         virtual bool IsCoreClr() = 0;
         virtual uint32_t GetTracerFlags() = 0;

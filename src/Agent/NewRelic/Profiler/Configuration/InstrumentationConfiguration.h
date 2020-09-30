@@ -67,6 +67,13 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             ipToFind->MethodName = function->GetFunctionName();
             ipToFind->Parameters = std::unique_ptr<xstring_t>(new xstring_t(methodSignature->ToString(function->GetTokenResolver())));
 
+            // Temporarily specifically ignore System.Net.Http.HttpClient instrumentation for .Net 5 and greater, and System.Net.Http.SocketsHttpHandler for framework less than .Net 5
+            // until version checking from instrumentation xml is supported.
+            if (IsHttpClient5OrGreater(function) || IsSocketsHttpHandlerLessThan5(function))
+            {
+                return nullptr;
+            }
+
             auto instPoint = TryGetInstrumentationPoint(ipToFind);
             return instPoint;
         }
@@ -84,6 +91,16 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             }
 
             return nullptr;
+        }
+
+        bool IsHttpClient5OrGreater(const MethodRewriter::IFunctionPtr function) const
+        {
+            return Strings::AreEqualCaseInsensitive(function->GetAssemblyName(), _X("System.Net.Http")) && function->GetAssemblyProps().usMajorVersion >= 5 && Strings::AreEqualCaseInsensitive(function->GetTypeName(), _X("System.Net.Http.HttpClient"));
+        }
+
+        bool IsSocketsHttpHandlerLessThan5(const MethodRewriter::IFunctionPtr function) const
+        {
+            return Strings::AreEqualCaseInsensitive(function->GetAssemblyName(), _X("System.Net.Http")) && function->GetAssemblyProps().usMajorVersion < 5 && Strings::AreEqualCaseInsensitive(function->GetTypeName(), _X("System.Net.Http.SocketsHttpHandler"));
         }
 
         void GetInstrumentationPoints(xstring_t instrumentationXml)
