@@ -6,13 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetCoreTest]
     public class ExpectedErrorTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>

@@ -8,7 +8,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
     public class EnvironmentTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

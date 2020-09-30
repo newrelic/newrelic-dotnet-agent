@@ -7,7 +7,7 @@ using System;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     public class ConfigBuilderDeadlock : IClassFixture<ConsoleDynamicMethodFixtureFW>
     {

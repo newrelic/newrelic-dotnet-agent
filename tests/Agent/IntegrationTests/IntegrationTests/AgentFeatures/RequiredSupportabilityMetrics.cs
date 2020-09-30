@@ -10,17 +10,18 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
+    // This test verifies that all supportability metrics are generated that are required by APM.
     [NetFrameworkTest]
-    public class CpuMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class RequiredSupportabilityMetrics : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public CpuMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
+        public RequiredSupportabilityMetrics(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
-            _fixture.TestLogger = testLogger;
+            _fixture.TestLogger = output;
             _fixture.Actions
             (
                 setupConfiguration: () =>
@@ -30,11 +31,14 @@ namespace NewRelic.Agent.IntegrationTests
                 exerciseApplication: () =>
                 {
                     _fixture.Get();
+                    _fixture.Get();
+                    _fixture.Get();
+                    _fixture.Get();
+
+                    // The Supportability/AnalyticsEvents/TotalEventsSent metric won't be seen until a second harvest occurs, so we must wait up to 60 seconds for it
                     var startTime = DateTime.Now;
-                    while (DateTime.Now <= startTime.AddSeconds(60))
+                    while (DateTime.Now <= startTime.AddSeconds(60) && !_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Supportability/AnalyticsEvents/TotalEventsSent"))
                     {
-                        if (_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "CPU/User Time"))
-                            break;
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
                 }
@@ -47,8 +51,9 @@ namespace NewRelic.Agent.IntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = @"CPU/User Time"},
-                new Assertions.ExpectedMetric {metricName = @"CPU/User/Utilization"}
+                new Assertions.ExpectedMetric { metricName = @"Supportability/MetricHarvest/transmit", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSeen", callCount = 4 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/AnalyticsEvents/TotalEventsSent", callCount = 4 },
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

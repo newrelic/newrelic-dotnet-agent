@@ -9,7 +9,7 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     /// <summary>
     /// Tests around transaction renaming using URL rules and transaction segment terms

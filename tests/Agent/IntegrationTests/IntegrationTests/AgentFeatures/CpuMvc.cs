@@ -10,14 +10,14 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class MemoryMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class CpuMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public MemoryMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
+        public CpuMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;
@@ -33,7 +33,7 @@ namespace NewRelic.Agent.IntegrationTests
                     var startTime = DateTime.Now;
                     while (DateTime.Now <= startTime.AddSeconds(60))
                     {
-                        if (_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "Memory/Physical"))
+                        if (_fixture.AgentLog.GetMetrics().Any(metric => metric.MetricSpec.Name == "CPU/User Time"))
                             break;
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
@@ -47,7 +47,8 @@ namespace NewRelic.Agent.IntegrationTests
         {
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric {metricName = @"Memory/Physical"}
+                new Assertions.ExpectedMetric {metricName = @"CPU/User Time"},
+                new Assertions.ExpectedMetric {metricName = @"CPU/User/Utilization"}
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();

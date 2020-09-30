@@ -8,7 +8,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using System.Linq;
 using NewRelic.Testing.Assertions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
     public class InstrumentationLoaderTests : IClassFixture<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture>

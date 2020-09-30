@@ -9,7 +9,7 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
 
     [NetFrameworkTest]

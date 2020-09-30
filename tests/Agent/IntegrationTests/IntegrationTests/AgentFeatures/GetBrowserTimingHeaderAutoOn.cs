@@ -2,24 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class GetBrowserTimingHeader : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class GetBrowserTimingHeaderAutoOn : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
-
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         private string _browserTimingHeader;
+        private string _htmlContentAfterCallToGetBrowserTiming;
 
-        public GetBrowserTimingHeader(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public GetBrowserTimingHeaderAutoOn(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -30,12 +29,14 @@ namespace NewRelic.Agent.IntegrationTests
                     var configPath = fixture.DestinationNewRelicConfigFilePath;
 
                     var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.AutoInstrumentBrowserMonitoring(false);
+                    configModifier.AutoInstrumentBrowserMonitoring(true);
                     configModifier.BrowserMonitoringEnableAttributes(true);
+
                 },
                 exerciseApplication: () =>
                 {
                     _browserTimingHeader = _fixture.GetBrowserTimingHeader();
+                    _htmlContentAfterCallToGetBrowserTiming = _fixture.GetHtmlWithCallToGetBrowserTimingHeader();
                 }
             );
             _fixture.Initialize();
@@ -44,7 +45,10 @@ namespace NewRelic.Agent.IntegrationTests
         [Fact]
         public void Test()
         {
-            Assert.Contains("NREUM", _browserTimingHeader);
+            NrAssert.Multiple(
+                () => Assert.Contains("NREUM", _browserTimingHeader),
+                ShouldNotAutoInstrumentAfterCallToGetBrowserTimingHeader
+            );
 
             var browserMonitoringConfig = JavaScriptAgent.GetJavaScriptAgentConfigFromSource(_browserTimingHeader);
 
@@ -59,6 +63,7 @@ namespace NewRelic.Agent.IntegrationTests
                 () => Assert.Contains("agent", browserMonitoringConfig.Keys),
                 () => Assert.Contains("atts", browserMonitoringConfig.Keys)
             );
+
             var attrsDict = HeaderEncoder.DecodeAndDeserialize<Dictionary<string, IDictionary<string, object>>>(browserMonitoringConfig["atts"], _fixture.TestConfiguration.LicenseKey, 13);
             Assert.Contains("a", attrsDict.Keys);
             IDictionary<string, object> agentAttrsDict = attrsDict["a"];
@@ -74,6 +79,11 @@ namespace NewRelic.Agent.IntegrationTests
                 () => Assert.NotNull(browserMonitoringConfig["applicationTime"]),
                 () => Assert.NotNull(browserMonitoringConfig["agent"])
             );
+        }
+
+        private void ShouldNotAutoInstrumentAfterCallToGetBrowserTimingHeader()
+        {
+            Assert.DoesNotContain("NREUM", _htmlContentAfterCallToGetBrowserTiming);
         }
     }
 }
