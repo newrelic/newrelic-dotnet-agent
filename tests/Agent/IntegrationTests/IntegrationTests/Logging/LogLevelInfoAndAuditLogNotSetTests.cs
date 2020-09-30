@@ -8,7 +8,7 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.Logging
 {
     [NetFrameworkTest]
     public class LogLevelInfoAndAuditLogNotSetTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
