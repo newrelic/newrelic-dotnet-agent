@@ -10,7 +10,7 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
     public class ConsoleAsyncForceNewTransactionTests_Instrumented : ConsoleAsyncForceNewTransactionTests

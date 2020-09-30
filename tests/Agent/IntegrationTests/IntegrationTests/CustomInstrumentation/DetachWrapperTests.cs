@@ -9,31 +9,28 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     /// <summary>
-    /// This test verifies that our TerminatingSegmentWrapper behaves correctly when running on .NET Framework. In particular, we really care
+    /// This test verifies that our TerminatingSegmentWrapper behaves correctly when running on .NET Core. In particular, we really care
     /// about testing the behavior of removing the transaction data from AsyncLocal storage.
     /// </summary>
-    [NetFrameworkTest]
-    public class DetachWrapperFrameworkTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcFrameworkFixture>
+    [NetCoreTest]
+    public class DetachWrapperTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
-        private readonly RemoteServiceFixtures.AspNetCoreMvcFrameworkFixture _fixture;
+        private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public DetachWrapperFrameworkTests(RemoteServiceFixtures.AspNetCoreMvcFrameworkFixture fixture, ITestOutputHelper output)
+        public DetachWrapperTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
-
-            _fixture.UseLocalConfig = true;
-
             _fixture.Actions
             (
                 setupConfiguration: () =>
                 {
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\TerminatingSegmentInstrumentation.xml";
 
-                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "AspNetCoreMvcFrameworkApplication", "AspNetCoreMvcFrameworkApplication.Controllers.DetachWrapperController", "AsyncMethodWithExternalCall", "DetachWrapper");
+                    CommonUtils.AddCustomInstrumentation(instrumentationFilePath, "AspNetCoreMvcBasicRequestsApplication", "AspNetCoreMvcBasicRequestsApplication.Controllers.DetachWrapperController", "AsyncMethodWithExternalCall", "DetachWrapper");
                 },
                 exerciseApplication: () =>
                 {

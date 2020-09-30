@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 {
     [NetFrameworkTest]
     public class Labels : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>

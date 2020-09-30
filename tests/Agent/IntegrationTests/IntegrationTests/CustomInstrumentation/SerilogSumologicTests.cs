@@ -9,7 +9,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetCoreTest]
     public class SerilogSumologicSyncTests : IClassFixture<RemoteServiceFixtures.SerilogSumologicFixture>

@@ -6,11 +6,10 @@ using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
-using System.Collections.Generic;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
     /// <summary>
     /// This test runs the python-based W3C validation tests found at https://github.com/w3c/trace-context/tree/master/test

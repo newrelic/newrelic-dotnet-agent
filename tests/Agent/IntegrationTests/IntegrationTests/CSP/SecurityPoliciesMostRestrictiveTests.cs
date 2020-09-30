@@ -10,7 +10,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
     public class SecurityPoliciesMostRestrictiveTests : IClassFixture<RemoteServiceFixtures.SecurityPoliciesBasicMvcApplicationTestFixture>
