@@ -11,7 +11,9 @@ Param (
     [switch]$saveWorkingFolders = $false,
     [string]$secretsFilePath = "",
     [switch]$startUnboundedServices = $false,
-    [int]$unboundedServicesStartDelaySeconds = 600
+    [int]$unboundedServicesStartDelaySeconds = 600,
+    [ValidateSet("linux", "windows")]
+    [string]$platform
 )
 
 if ($saveWorkingFolders) {
@@ -20,7 +22,7 @@ if ($saveWorkingFolders) {
 
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\..\.."
 $xUnitPath = Resolve-Path "$rootDirectory\build\Tools\XUnit-Console\xunit.console.exe"
-$unboundedServicesControlPath = Resolve-Path "$rootDirectory\tests\Agent\IntegrationTests\UnboundedServices\unbounded-services-control.ps1"
+$unboundedServicesControlPath = Resolve-Path "$rootDirectory\tests\Agent\IntegrationTests\UnboundedServices\$platform\unbounded-services-control.ps1"
 
 switch ($testSuite) {
     "integration" { $testSuiteDll = "$rootDirectory\tests\Agent\IntegrationTests\IntegrationTests\bin\Release\net461\NewRelic.Agent.IntegrationTests.dll" }
