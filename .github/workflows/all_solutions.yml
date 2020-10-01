@@ -430,7 +430,7 @@ jobs:
       - name: Set up secrets
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-        shell: powershell
+        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
       - name: Download Agent Home Folders
         uses: actions/download-artifact@v2
