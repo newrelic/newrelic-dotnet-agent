@@ -418,7 +418,7 @@ jobs:
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-      xunit_console: ${{ env.tools_path }}/XUnit-Console/xunit.console.exe
+      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
 
     steps:
