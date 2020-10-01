@@ -129,7 +129,7 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
 
             try
             {
-                LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Moddule  ", module.GetModuleName());
+                LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName());
 
                 // if the assembly wasn't in the existing references try to define a new one
                 ASSEMBLYMETADATA amd;
@@ -147,20 +147,20 @@ namespace NewRelic { namespace Profiler { namespace ModuleInjector
                 if (injectResult == S_OK)
                 {
                     module.SetMscorlibAssemblyRef(assemblyToken);
-                    LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Moddule  ", module.GetModuleName(), L" - Success: ", assemblyToken);
+                    LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName(), L" - Success: ", assemblyToken);
 
                     return true;
                 }
                 else
                 {
-                    LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Moddule  ", module.GetModuleName(), L" - FAIL: ", injectResult);
+                    LogDebug(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName(), L" - FAIL: ", injectResult);
 
                     return false;
                 }
             }
             catch (NewRelic::Profiler::Win32Exception& ex)
             {
-                LogError(L"Attempting to Inject reference to mscorlib into netstandard Moddule  ", module.GetModuleName(), L" - ERROR: ", ex._message);
+                LogError(L"Attempting to Inject reference to mscorlib into netstandard Module  ", module.GetModuleName(), L" - ERROR: ", ex._message);
                 return false;
             }
         }
