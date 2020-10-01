@@ -459,7 +459,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace ${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
-          shell: powershell
+        shell: powershell
 
       - name: Archive Test Results
         if: ${{ always() }}
