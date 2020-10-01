@@ -55,7 +55,8 @@ namespace NewRelic.Agent.IntegrationTests.HttpClientInstrumentation.NetCore
                 new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/Stream/GET", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.google.com/Stream/GET", metricScope = @"WebTransaction/MVC/Home/HttpClient", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = @"External/www.yahoo.com/Stream/GET", metricScope = @"WebTransaction/MVC/Home/HttpClient", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/Stream/GET", metricScope = @"WebTransaction/MVC/Home/HttpClientTaskCancelled", callCount = 1 }
+                new Assertions.ExpectedMetric { metricName = @"External/www.bing.com/Stream/GET", metricScope = @"WebTransaction/MVC/Home/HttpClientTaskCancelled", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Supportability/SpanEvent/TotalEventsSeen", CallCountAllHarvests = 9 }
             };
 
             var expectedTransactionTraceSegments = new List<string>
