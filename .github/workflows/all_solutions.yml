@@ -457,9 +457,9 @@ jobs:
           # Should not need a path because the integration test artifacts are archived with the full directory structure
 
       - name: Run Integration Tests
-       run: |
-        ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace ${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
-        shell: powershell
+        run: |
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace ${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+          shell: powershell
 
       - name: Archive Test Results
         if: ${{ always() }}
