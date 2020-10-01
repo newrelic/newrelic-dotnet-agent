@@ -398,4 +398,73 @@ jobs:
       run: |
         Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
         MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
-      shell: powershell  
+      shell: powershell
+
+  run-integration-tests:
+    needs: [build-integration-tests]
+    name: Run IntegrationTests
+
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        # namespace: [ AgentFeatures, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, CSP,
+        #   CustomAttributes, CustomInstrumentation, DistributedTracing, DistributedTracing.W3CInstrumentationTests, 
+        #   HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
+        #   ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client, WCF.Client.IIS, WCF.Client.IIS.ASPDisabled, 
+        #   WCF.Client.IIS.ASPEnabled, WCF.Client.Self, WCF, WCF.Service, WCF.Service.IIS, WCF.Service.IIS.ASPDisabled, 
+        #   WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
+        namespace: [ AgentFeatures, Api ]
+
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+      xunit_console: ${{ env.tools_path }}/XUnit-Console/xunit.console.exe
+      integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
+
+    steps:
+      - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+      - name: Set up secrets
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: powershell
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders-${{ github.run_id }}
+          path: src/Agent
+
+      - name: Download Windows Profiler
+        uses: actions/download-artifact@v2
+        with:
+          name: windowsprofiler-x64-${{ github.run_id }}
+          path: windows_profiler_x64
+
+      - name: Copy profiler to home folders
+        run: |
+          Copy-Item ${{ github.workspace }}/windows_profiler_x64/NewRelic.Profiler.dll ${{ github.workspace }}/src/Agent/newrelichome_x64
+          Copy-Item ${{ github.workspace }}/windows_profiler_x64/NewRelic.Profiler.dll ${{ github.workspace }}/src/Agent/newrelichome_x64_coreclr
+        shell: powershell
+
+      - name: Download Integration Test Artifacts
+        uses: actions/download-artifact/@v2
+        with:
+          name: integrationtests-${{ github.run_id }}
+          # Should not need a path because the integration test artifacts are archived with the full directory structure
+
+      - name: Run Integration Tests
+       run: |
+        ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace ${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+        shell: powershell
+
+      - name: Archive Test Results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
+          path: ${{ github.workspace }}/TestResults
+          if-no-files-found: error
