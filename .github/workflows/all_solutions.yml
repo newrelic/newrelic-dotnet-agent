@@ -65,6 +65,7 @@ jobs:
           ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
           ${{ github.workspace }}\src\Agent\newrelichome_x86
           ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
+        if-no-files-found: error
 
     - name: Create Self-signed code signing cert
       run: |
@@ -138,6 +139,7 @@ jobs:
       with:
         name: test-results-${{ github.run_id }}
         path: ${{ github.workspace }}\TestResults
+        if-no-files-found: error
 
   publish-test-results:
     needs: build-test-fullagent-msi
@@ -265,6 +267,7 @@ jobs:
         name: windowsprofiler-x86-${{ github.run_id }}
         path: |
           ${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release
+        if-no-files-found: error
 
   build-test-linux-profiler:
     name: Build Linux Profiler
@@ -294,6 +297,7 @@ jobs:
         name: linuxprofiler-${{ github.run_id }}
         path: |
           ${{ github.workspace }}/src/Agent/NewRelic/Profiler/libNewRelicProfiler.so
+        if-no-files-found: error
 
   build-integration-tests:
     needs: [build-test-fullagent-msi, build-test-windows-profiler, build-test-linux-profiler]
@@ -324,6 +328,17 @@ jobs:
         Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
         MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
       shell: powershell
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: integrationtests-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
+          !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+        if-no-files-found: error
 
   build-unbounded-tests:
     needs: [build-test-fullagent-msi, build-test-windows-profiler, build-test-linux-profiler]
