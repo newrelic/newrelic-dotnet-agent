@@ -428,7 +428,8 @@ jobs:
           fetch-depth: 0
 
       - name: Set up secrets
-        env: INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
