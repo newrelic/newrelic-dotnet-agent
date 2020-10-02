@@ -13,6 +13,8 @@ Note: while not a hard requirement, the containers will perform better if you us
 
 **Notes**:
 
+* There are two subfolders called `linux` and `windows`. The `linux` subfolder has Dockerfiles that set up Linux containerized services and can be used with Docker Desktop's WSL2 backend. Developers should use these containers in their system as opposed to the ones in the `windows` subfoler which are only intended for our CI.
+
 * All commands below should be run from a shell (we've tested Powershell and "git-bash") in the same location as this README.
 * Before Docker containers can be used the first time, they need to be built by executing `docker-compose build`.
 
