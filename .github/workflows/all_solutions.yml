@@ -458,6 +458,11 @@ jobs:
           name: integrationtests-${{ github.run_id }}
           # Should not need a path because the integration test artifacts are archived with the full directory structure
 
+      - name: Install dependencies
+        run: |
+          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+        shell: powershell
+
       - name: Run Integration Tests
         run: |
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
