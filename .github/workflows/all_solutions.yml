@@ -15,8 +15,107 @@ env:
 
 jobs:
 
+  build-test-windows-profiler:
+    name: Build Windows Profiler
+
+    runs-on: windows-2019
+
+    env:
+      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
+      profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
+      output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
+      #<other env vars here>
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Clean out _profilerBuild directory
+      run: |
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
+      shell: powershell
+
+    - name: Install dependencies
+      run: |
+        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+        ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+      shell: powershell
+
+    - name: Build x64
+      run: |
+        Write-Host "MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+        MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+      shell: powershell
+      
+    - name: Build x86
+      run: |
+        Write-Host "MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+        MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+      shell: powershell
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: profiler-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+        if-no-files-found: error
+
+  build-test-linux-profiler:
+    name: Build Linux Profiler
+
+    runs-on: ubuntu-18.04
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      #<other env vars here>
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Clean out _profilerBuild directory
+      run: |
+        rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.*
+        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release
+        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release
+        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release
+      shell: bash
+
+    - name: Build Linux Profler
+      run: |
+        cd ${{ env.profiler_path }}
+        docker-compose build build
+        docker-compose run build
+      shell: bash
+
+    - name: Move Profiler to staging folder
+      run: |
+        mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/
+        mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/libNewRelicProfiler.so
+      shell: bash
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: profiler-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}/src/Agent/_profilerBuild/
+        if-no-files-found: error
+
   # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
   build-test-fullagent-msi:
+    needs: [ build-test-windows-profiler, build-test-linux-profiler ]
     name: Build and Test FullAgent and MSIInstaller
 
     runs-on: windows-2019
@@ -36,6 +135,20 @@ jobs:
 
     - name: Setup VSTest Path
       uses: darenm/Setup-VSTest@v1
+
+    - name: Clean out _profilerBuild directory
+      run: |
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
+      shell: powershell
+
+    - name: Download Profiler Artifacts Before Agent Build
+      uses: actions/download-artifact@v2
+      with:
+        name: profiler-${{ github.run_id }}
+        path: ${{ github.workspace }}/src/Agent/_profilerBuild/
     
     - name: Install dependencies for FullAgent.sln
       run: |
@@ -216,91 +329,8 @@ jobs:
             { "summary": "${{ steps.test.outputs.summary }}",
             "text_description": "[FullAgent Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
 
-  build-test-windows-profiler:
-    name: Build Windows Profiler
-
-    runs-on: windows-2019
-
-    env:
-      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
-      profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
-      output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
-      #<other env vars here>
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.1
-
-    - name: Install dependencies
-      run: |
-        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-        ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-      shell: powershell
-
-    - name: Build x64
-      run: |
-        Write-Host "MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-        MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
-      shell: powershell
-      
-    - name: Build x86
-      run: |
-        Write-Host "MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-        MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
-      shell: powershell
-
-    - name: Archive Artifacts x64
-      uses: actions/upload-artifact@v2
-      with:
-        name: windowsprofiler-x64-${{ github.run_id }}
-        path: |
-          ${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release
-
-    - name: Archive Artifacts x86
-      uses: actions/upload-artifact@v2
-      with:
-        name: windowsprofiler-x86-${{ github.run_id }}
-        path: |
-          ${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release
-        if-no-files-found: error
-
-  build-test-linux-profiler:
-    name: Build Linux Profiler
-
-    runs-on: ubuntu-18.04
-
-    env:
-      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
-      #<other env vars here>
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: Build Linux Profler
-      run: |
-        cd ${{ env.profiler_path }}
-        docker-compose build build
-        docker-compose run build
-      shell: bash
-
-    - name: Archive Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: linuxprofiler-${{ github.run_id }}
-        path: |
-          ${{ github.workspace }}/src/Agent/NewRelic/Profiler/libNewRelicProfiler.so
-        if-no-files-found: error
-
   build-integration-tests:
-    needs: [build-test-fullagent-msi, build-test-windows-profiler, build-test-linux-profiler]
+    needs: build-test-fullagent-msi
     name: Build IntegrationTests
 
     runs-on: windows-2019
@@ -341,7 +371,7 @@ jobs:
         if-no-files-found: error
 
   build-unbounded-tests:
-    needs: [build-test-fullagent-msi, build-test-windows-profiler, build-test-linux-profiler]
+    needs: build-test-fullagent-msi
     name: Build UnboundedIntegrationTests
 
     runs-on: windows-2019
@@ -371,7 +401,7 @@ jobs:
       shell: powershell
 
   build-platform-tests: 
-    needs: [build-test-fullagent-msi, build-test-windows-profiler, build-test-linux-profiler]
+    needs: build-test-fullagent-msi
     name: Build PlatformTests
 
     runs-on: windows-2019
