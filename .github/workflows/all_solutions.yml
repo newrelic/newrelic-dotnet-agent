@@ -414,6 +414,7 @@ jobs:
         #   WCF.Client.IIS.ASPEnabled, WCF.Client.Self, WCF, WCF.Service, WCF.Service.IIS, WCF.Service.IIS.ASPDisabled, 
         #   WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
         namespace: [ AgentFeatures, Api ]
+      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
