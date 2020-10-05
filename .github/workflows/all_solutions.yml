@@ -286,13 +286,16 @@ jobs:
           $resultname = "fullagent_msi-${{ github.run_id }}".ToLower().Replace(" ", "")
           Write-Host "::set-env name=results_name::$resultname"
 
+          Write-Host "Check if testresults folder exists, create if not."
           if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults" )) {
             New-Item -Path "${{ github.workspace }}\docs" -Name "testresults" -ItemType "directory" }
+          
+          Write-Host "Check if test run results ($resultname) folder exists, create if not."
+          if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults\$resultname" )) {
+            New-Item -Path "${{ github.workspace }}\docs\testresults" -Name "$resultname" -ItemType "directory" }
 
-          New-Item -Path "${{ github.workspace }}\docs\testresults" -Name "$resultname" -ItemType "directory"
-
-          Write-Host "Copy the files"
-          Copy-Item .\* -Destination ${{ github.workspace }}\docs\testresults\$resultname\
+          Write-Host "Copy the files and overwrite if already exists"
+          Copy-Item .\* -Destination ${{ github.workspace }}\docs\testresults\$resultname\ -Force
 
           Write-Host "Confirm Folder Exists"
           Test-Path "${{ github.workspace }}\docs\testresults\$resultname"
