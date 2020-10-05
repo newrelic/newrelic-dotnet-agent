@@ -11,7 +11,9 @@ Param (
     [switch]$saveWorkingFolders = $false,
     [string]$secretsFilePath = "",
     [switch]$startUnboundedServices = $false,
-    [int]$unboundedServicesStartDelaySeconds = 600
+    [int]$unboundedServicesStartDelaySeconds = 600,
+    [ValidateSet("linux", "windows")]
+    [string]$platform
 )
 
 if ($saveWorkingFolders) {
@@ -37,7 +39,7 @@ if ($secretsFilePath -ne "") {
 }
 
 if ($testSuite -eq "unbounded" -and $startUnboundedServices) {
-    Invoke-Expression "$unboundedServicesControlPath -Start -StartDelaySeconds $unboundedServicesStartDelaySeconds"
+    Invoke-Expression "$unboundedServicesControlPath -Start -StartDelaySeconds $unboundedServicesStartDelaySeconds -Platform $platform"
 }
 
 $expression = "$xUnitPath" + " " + "$testSuiteDll" + " " +  $xunitParams
@@ -45,7 +47,7 @@ Invoke-Expression $expression
 $testResult = $LASTEXITCODE
 
 if ($testSuite -eq "unbounded" -and $startUnboundedServices) {
-    Invoke-Expression "$unboundedServicesControlPath -Stop"
+    Invoke-Expression "$unboundedServicesControlPath -Stop -Platform $platform"
 }
 
 exit $testResult
