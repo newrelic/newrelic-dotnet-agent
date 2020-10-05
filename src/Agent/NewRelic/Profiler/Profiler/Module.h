@@ -27,13 +27,10 @@ namespace NewRelic { namespace Profiler
             _moduleName = std::wstring(moduleNameChars.get());
 
             // get the necessary metadata interfaces
-            CComPtr<IMetaDataAssemblyEmit> metaDataAssemblyEmit;
             ThrowOnError(_profilerInfo->GetModuleMetaData, moduleId, CorOpenFlags::ofWrite, IID_IMetaDataEmit2, (IUnknown**)&_metaDataEmit);
             ThrowOnError(_profilerInfo->GetModuleMetaData, moduleId, CorOpenFlags::ofRead, IID_IMetaDataImport2, (IUnknown**)&_metaDataImport);
-            ThrowOnError(_profilerInfo->GetModuleMetaData, moduleId, CorOpenFlags::ofWrite, IID_IMetaDataAssemblyEmit, (IUnknown**)&metaDataAssemblyEmit);
+            ThrowOnError(_profilerInfo->GetModuleMetaData, moduleId, CorOpenFlags::ofWrite, IID_IMetaDataAssemblyEmit, (IUnknown**)&_metaDataAssemblyEmit);
             ThrowOnError(_profilerInfo->GetModuleMetaData, moduleId, CorOpenFlags::ofRead, IID_IMetaDataAssemblyImport, (IUnknown**)&_metaDataAssemblyImport);
-
-            _tokenizer.reset(new CorTokenizer(metaDataAssemblyEmit, _metaDataEmit, _metaDataImport, _metaDataAssemblyImport));
 
             if (_metaDataEmit == nullptr || _metaDataImport == nullptr || _metaDataAssemblyImport == nullptr)
             {
@@ -50,13 +47,24 @@ namespace NewRelic { namespace Profiler
                 _moduleName = std::wstring(moduleNameChars.get());
             }
 
-            if (Strings::EndsWith(_moduleName, L"mscorlib.dll"))
-                _mscorlibAssemblyReferenceToken = mdAssemblyRefNil;
-            else
-                _mscorlibAssemblyReferenceToken = GetAssemblyReference(L"mscorlib");
+            CheckIfThisIsAFrameworkAssembly();
+            IdentifyFrameworkAssemblyReferences();
+
+            _tokenizer.reset(new CorTokenizer(_metaDataAssemblyEmit, _metaDataEmit, _metaDataImport, _metaDataAssemblyImport));
         }
 
         virtual std::wstring GetModuleName() override { return _moduleName; }
+
+        virtual bool GetHasRefMscorlib() override { return _hasRefMscorlib; }
+        virtual bool GetHasRefSysRuntime() override { return _hasRefSysRuntime; }
+        virtual bool GetHasRefNetStandard() override { return _hasRefNetStandard; }
+
+        virtual void SetMscorlibAssemblyRef(mdAssembly assemblyRefToken) override { _mscorlibAssemblyRefToken = assemblyRefToken; }
+
+        virtual bool GetIsThisTheMscorlibAssembly() override { return _isMscorlib; }
+        virtual bool GetIsThisTheNetStandardAssembly() override { return _isNetStandard; }
+
+        virtual CComPtr<IMetaDataAssemblyEmit> GetMetaDataAssemblyEmit() override{ return _metaDataAssemblyEmit; }
 
         virtual void InjectPlatformInvoke(const std::wstring& methodName, const std::wstring& className, const std::wstring& moduleName, const ByteVector& signature) override
         {
@@ -91,7 +99,7 @@ namespace NewRelic { namespace Profiler
 
         virtual void InjectMscorlibSecuritySafeMethodReference(const std::wstring& methodName, const std::wstring& className, const ByteVector& signature) override
         {
-            auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_mscorlibAssemblyReferenceToken, className);
+            auto typeReferenceOrDefinitionToken = GetOrCreateTypeReferenceToken(_mscorlibAssemblyRefToken, className);
             GetOrCreateMemberReferenceToken(typeReferenceOrDefinitionToken, methodName, signature);
         }
 
@@ -105,10 +113,17 @@ namespace NewRelic { namespace Profiler
         CComPtr<IMetaDataEmit2> _metaDataEmit;
         CComPtr<IMetaDataImport2> _metaDataImport;
         CComPtr<IMetaDataAssemblyImport> _metaDataAssemblyImport;
+        CComPtr<IMetaDataAssemblyEmit> _metaDataAssemblyEmit;
         sicily::codegen::ITokenizerPtr _tokenizer;
         ModuleID _moduleId;
         std::wstring _moduleName;
-        mdAssemblyRef _mscorlibAssemblyReferenceToken;
+        mdAssemblyRef _mscorlibAssemblyRefToken;
+        bool _hasRefMscorlib;
+        bool _hasRefSysRuntime;
+        bool _hasRefNetStandard;
+
+        bool _isMscorlib;
+        bool _isNetStandard;
 
         mdMethodDef GetSecuritySafeCriticalConstructorToken()
         {
@@ -192,6 +207,42 @@ namespace NewRelic { namespace Profiler
             return assemblyName.get();
         }
 
+        void IdentifyFrameworkAssemblyReferences()
+        {
+            _hasRefMscorlib = false;
+            _hasRefNetStandard = false;
+            _hasRefSysRuntime = false;
+
+            HCORENUM enumerator = nullptr;
+            mdAssemblyRef assemblyToken;
+            ULONG assembliesFound = 0;
+            OnDestruction enumerationCloser([&] { _metaDataAssemblyImport->CloseEnum(enumerator); });
+            while (SUCCEEDED(_metaDataAssemblyImport->EnumAssemblyRefs(&enumerator, &assemblyToken, 1, &assembliesFound)) && assembliesFound > 0)
+            {
+                auto foundAssemblyName = GetAssemblyName(assemblyToken);
+
+                if (Strings::EndsWith(foundAssemblyName, L"mscorlib"))
+                {
+                    _hasRefMscorlib = true;
+                    _mscorlibAssemblyRefToken = assemblyToken;
+                }
+                else if (Strings::EndsWith(foundAssemblyName, L"netstandard"s))
+                {
+                    _hasRefNetStandard = true;
+                }
+                else if (Strings::EndsWith(foundAssemblyName, L"System.Runtime"s))
+                {
+                    _hasRefSysRuntime = true;
+                }
+            }
+        }
+
+        void CheckIfThisIsAFrameworkAssembly()
+        {
+            _isMscorlib = Strings::EndsWith(GetModuleName(), L"mscorlib.dll");
+            _isNetStandard = Strings::EndsWith(GetModuleName(), L"netstandard.dll");
+        }
+
         mdAssemblyRef GetAssemblyReference(const std::wstring& assemblyName)
         {
             HCORENUM enumerator = nullptr;
@@ -204,14 +255,6 @@ namespace NewRelic { namespace Profiler
                 if (Strings::EndsWith(foundAssemblyName, assemblyName))
                 {
                     return assemblyToken;
-                }
-                else if (assemblyName == L"mscorlib"s)
-                {
-                    if (Strings::EndsWith(foundAssemblyName, L"netstandard"s) || 
-                        Strings::EndsWith(foundAssemblyName, L"System.Runtime"s))
-                    {
-                        return assemblyToken;
-                    }
                 }
             }
 

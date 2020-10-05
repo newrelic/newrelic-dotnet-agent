@@ -7,9 +7,16 @@ cmake \
 	-DCORECLR_PATH=/root/git/coreclr \
 	.
 make clean && make 
+retVal=$?
 
 if [ -f "libNewRelicProfiler.so" ]
 	then ldd libNewRelicProfiler.so
 	else 
-		echo "libNewRelicProfiler.so was not built"
+		echo "::error libNewRelicProfiler.so was not built"
 fi
+
+if [ $retVal -ne 0 ]; then
+    echo "::error Exit code was $retVal."
+fi
+
+exit $retVal
