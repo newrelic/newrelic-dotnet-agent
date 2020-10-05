@@ -472,18 +472,6 @@ jobs:
           name: homefolders-${{ github.run_id }}
           path: src/Agent
 
-      - name: Download Windows Profiler
-        uses: actions/download-artifact@v2
-        with:
-          name: windowsprofiler-x64-${{ github.run_id }}
-          path: windows_profiler_x64
-
-      - name: Copy profiler to home folders
-        run: |
-          Copy-Item ${{ github.workspace }}/windows_profiler_x64/NewRelic.Profiler.dll ${{ github.workspace }}/src/Agent/newrelichome_x64
-          Copy-Item ${{ github.workspace }}/windows_profiler_x64/NewRelic.Profiler.dll ${{ github.workspace }}/src/Agent/newrelichome_x64_coreclr
-        shell: powershell
-
       - name: Download Integration Test Artifacts
         uses: actions/download-artifact/@v2
         with:
