@@ -313,6 +313,9 @@ jobs:
 
           Write-Host "git commit"
           git commit -am "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
+
+          Write-Host "git pull"
+          git pull
         shell: powershell
 
       - name: Push changes
