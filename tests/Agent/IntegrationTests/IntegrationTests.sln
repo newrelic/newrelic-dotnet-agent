@@ -134,6 +134,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCore3Collectible", "Appl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleInstrumentationLoaderCore", "Applications\ConsoleInstrumentationLoaderCore\ConsoleInstrumentationLoaderCore.csproj", "{8AC32C1E-2C20-4ECE-8480-700E28C3E43D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetStandardTestLibrary", "ApplicationHelperLibraries\NetStandardTestLibrary\NetStandardTestLibrary.csproj", "{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -364,6 +366,10 @@ Global
 		{8AC32C1E-2C20-4ECE-8480-700E28C3E43D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AC32C1E-2C20-4ECE-8480-700E28C3E43D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8AC32C1E-2C20-4ECE-8480-700E28C3E43D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -418,6 +424,7 @@ Global
 		{383D35CC-5B34-4ABE-AEB2-B3E2666DD572} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
 		{1F9D5857-EEE4-48FC-B101-2ADFFC88EA4A} = {CB5B7DCD-F949-4435-BC39-C34F4F3D2009}
 		{8AC32C1E-2C20-4ECE-8480-700E28C3E43D} = {F0F6F2CE-8AE8-49E1-8EE9-A44B451EFC29}
+		{6FD48F14-8D60-4BB0-8DC9-72E4A4D43DFF} = {CB5B7DCD-F949-4435-BC39-C34F4F3D2009}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3830ABDF-4AEA-4D91-83A2-13F091D1DF5F}

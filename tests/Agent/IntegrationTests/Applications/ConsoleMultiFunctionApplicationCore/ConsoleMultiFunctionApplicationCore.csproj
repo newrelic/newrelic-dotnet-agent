@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ApplicationHelperLibraries\ConsoleMultiFunctionApplicationHelpers\MultiFunctionApplicationHelpers.csproj" />
+    <ProjectReference Include="..\..\ApplicationHelperLibraries\NetStandardTestLibrary\NetStandardTestLibrary.csproj" />
   </ItemGroup>
 
 </Project>

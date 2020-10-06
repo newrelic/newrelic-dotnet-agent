@@ -81,6 +81,10 @@
       <Project>{2d9c79c0-0c7b-4816-be7e-1db9ebf59667}</Project>
       <Name>IntegrationTestFrameworkHelpers</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\ApplicationHelperLibraries\NetStandardTestLibrary\NetStandardTestLibrary.csproj">
+      <Project>{6fd48f14-8d60-4bb0-8dc9-72e4a4d43dff}</Project>
+      <Name>NetStandardTestLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\ApplicationHelperLibraries\ReflectionHelpers\ReflectionHelpers.csproj">
       <Project>{1ebd3244-3889-490f-a418-7c665a2d6219}</Project>
       <Name>ReflectionHelpers</Name>
