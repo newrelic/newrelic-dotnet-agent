@@ -3,7 +3,6 @@
 
 
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
@@ -14,53 +13,6 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
-
-    [NetFrameworkTest]
-    public class NetStandardLibraryInstrumentation : IClassFixture<RemoteServiceFixtures.ConsoleDynamicMethodFixture>
-    {
-        private ConsoleDynamicMethodFixture _fixture;
-
-        public NetStandardLibraryInstrumentation(RemoteServiceFixtures.ConsoleDynamicMethodFixture fixture, ITestOutputHelper output)
-        {
-            _fixture = fixture;
-            _fixture.TestLogger = output;
-            _fixture.Actions
-            (
-                setupConfiguration: () =>
-                {
-                    var configPath = fixture.DestinationNewRelicConfigFilePath;
-                    var configModifier = new NewRelicConfigModifier(configPath);
-                    configModifier.ForceTransactionTraces();
-
-                    var instrumentationXmlFilePath = Path.Combine(fixture.DestinationNewRelicExtensionsDirectoryPath, "TestCustomInstrumetnation.xml");
-
-                    CommonUtils.AddCustomInstrumentation(
-                        instrumentationFilePath: instrumentationXmlFilePath,
-                        assemblyName: "NetStandardTestLibrary",
-                        typeName: "NetStandardTestLibrary.NetStandardTestLibUtil",
-                        methodName: "Test");
-
-                    _fixture.RemoteApplication.NewRelicConfig.SetLogLevel("finest");
-                    _fixture.RemoteApplication.NewRelicConfig.ForceTransactionTraces();
-                    _fixture.RemoteApplication.NewRelicConfig.SetOrDeleteDistributedTraceEnabled(true);
-                    _fixture.RemoteApplication.NewRelicConfig.SetCATEnabled(false);
-
-                    _fixture.AddCommand("NetStandardTestLibUtil Test 10");
-                }
-            );
-            _fixture.Initialize();
-        }
-
-        [Fact]
-        public void Test()
-        {
-            var l = _fixture.AgentLog;
-            var m = _fixture.AgentLog.GetMetrics();
-            var t = _fixture.AgentLog.GetTransactionEvents();
-        }
-    }
-
-
     [NetFrameworkTest]
     public class BasicMvcApplication : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
