@@ -60,7 +60,6 @@ mssql:
         # complex password than 'password' and that is why this service does
         # not follow the same pattern as the others.
         - SA_PASSWORD=password0TS
-        - SQLCMDPASSWORD=password0TS
     container_name: MssqlServer
 
 oracle:

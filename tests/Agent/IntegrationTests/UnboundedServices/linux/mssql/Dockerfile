@@ -1,8 +1,6 @@
 FROM microsoft/mssql-server-linux:2017-latest
 
 ENV ACCEPT_EULA=Y
-ENV MSSQL_SA_PASSWORD=password0TS
-ENV SQLCMDPASSWORD=password0TS
 ENV SA_PASSWORD=password0TS
 
 COPY setup.sh /var/
