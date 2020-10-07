@@ -3,15 +3,12 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2019
 # Download Links:
 ENV sql_express_download_url "https://go.microsoft.com/fwlink/?linkid=829176"
 
-ENV sa_password="_" \
-    attach_dbs="[]" \
-    ACCEPT_EULA="_" \
-    sa_password_path="C:\ProgramData\Docker\secrets\sa-password"
-
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
 # make install files accessible
 COPY start.ps1 /
+COPY NewRelicDB.bak /
+COPY restore.sql /
 WORKDIR /
 
 RUN Invoke-WebRequest -Uri $env:sql_express_download_url -OutFile sqlexpress.exe ; \
@@ -24,4 +21,4 @@ RUN stop-service MSSQL`$SQLEXPRESS ; \
         set-itemproperty -path 'HKLM:\software\microsoft\microsoft sql server\mssql14.SQLEXPRESS\mssqlserver\supersocketnetlib\tcp\ipall' -name tcpport -value 1433 ; \
         set-itemproperty -path 'HKLM:\software\microsoft\microsoft sql server\mssql14.SQLEXPRESS\mssqlserver\' -name LoginMode -value 2 ;
 
-CMD .\start -sa_password $env:sa_password -ACCEPT_EULA $env:ACCEPT_EULA -attach_dbs \"$env:attach_dbs\" -Verbose
+CMD .\start -sa_password $env:sa_password -ACCEPT_EULA $env:ACCEPT_EULA -Verbose
