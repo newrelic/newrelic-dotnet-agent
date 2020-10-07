@@ -38,6 +38,8 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         void Initialize()
         {
+            LogTrace("MethodRewriter Initialize - Begin");
+
             // We have to instrument mscorlib to add our hooks.  Yes, this is a little brittle
             // and it should probably live closer to the code that mucks with these methods.
             _instrumentedAssemblies->emplace(_X("mscorlib"));
@@ -52,7 +54,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("LoadAssemblyOrThrow"));
             _instrumentedFunctionNames->emplace(_X("StoreMethodInAppDomainStorageOrThrow"));
 
-            for (auto instrumentationPoint : *_instrumentationConfiguration->GetInstrumentationPoints().get()) {
+            auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
+
+            for (auto instrumentationPoint : *instrumentationPoints) {
+
                 _instrumentedAssemblies->emplace(instrumentationPoint->AssemblyName);
                 _instrumentedFunctionNames->emplace(instrumentationPoint->MethodName);
                 _instrumentedTypes->emplace(instrumentationPoint->ClassName);

@@ -23,7 +23,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     {
     public:
         InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls) :
-            _instrumentationPoints(new InstrumentationPointSet()),
+            _instrumentationPointsMap(new InstrumentationPointMap()),
             _invalidFileCount(0)
         {
             // pull instrumentation points from every xml string
@@ -45,12 +45,13 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         }
 
         InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints) :
-            _instrumentationPoints(instrumentationPoints),
+            _instrumentationPointsMap(new InstrumentationPointMap()),
             _invalidFileCount(0)
-        {}
-
-        InstrumentationPointSetPtr GetInstrumentationPoints() {
-            return _instrumentationPoints;
+        {
+            for (auto instrumentationPoint : *instrumentationPoints)
+            {
+                (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()] = instrumentationPoint;
+            }
         }
 
         uint16_t GetInvalidFileCount()
@@ -58,15 +59,37 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return _invalidFileCount;
         }
 
+        InstrumentationPointSetPtr GetInstrumentationPoints()
+        {
+            auto result = InstrumentationPointSetPtr(new InstrumentationPointSet());
+            for (auto instrumentationPointKVP : *_instrumentationPointsMap) {
+                result->insert(instrumentationPointKVP.second);
+            }
+
+            return result;
+        }
+
+        /*std::set<InstrumentationPointPtr> GetAssemblyInstrumentation(xstring_t assemblyName)
+        {
+
+            LogTrace("GetAssemblyInstrumentation", assemblyName, ": Started");
+
+            auto result = new std::set<InstrumentationPointPtr>();
+            for (auto instrumentationPointKVP : *_instrumentationPointsMap) {
+
+                if (assemblyName == instrumentationPointKVP.second->AssemblyName) {
+                    result->emplace(instrumentationPointKVP.second);
+                }
+            }
+
+            LogTrace("GetAssemblyInstrumentation", assemblyName, ": Ended");
+
+            return *result;
+
+        }*/
+
         InstrumentationPointPtr TryGetInstrumentationPoint(const MethodRewriter::IFunctionPtr function) const
         {
-            SignatureParser::MethodSignaturePtr methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
-            InstrumentationPointPtr ipToFind(new InstrumentationPoint());
-            ipToFind->AssemblyName = function->GetAssemblyName();
-            ipToFind->ClassName = function->GetTypeName();
-            ipToFind->MethodName = function->GetFunctionName();
-            ipToFind->Parameters = std::unique_ptr<xstring_t>(new xstring_t(methodSignature->ToString(function->GetTokenResolver())));
-
             // Temporarily specifically ignore System.Net.Http.HttpClient instrumentation for .Net 5 and greater, and System.Net.Http.SocketsHttpHandler for framework less than .Net 5
             // until version checking from instrumentation xml is supported.
             if (IsHttpClient5OrGreater(function) || IsSocketsHttpHandlerLessThan5(function))
@@ -74,23 +97,49 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 return nullptr;
             }
 
-            auto instPoint = TryGetInstrumentationPoint(ipToFind);
+            auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
+            auto params = new xstring_t(methodSignature->ToString(function->GetTokenResolver()));
+
+            auto instPoint = TryGetInstrumentationPoint(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), *params);
             return instPoint;
         }
 
     private:
 
-        InstrumentationPointPtr TryGetInstrumentationPoint(const InstrumentationPointPtr ipToFind) const
+        InstrumentationPointPtr TryGetInstrumentationPoint(const xstring_t assemblyName,
+            const xstring_t className,
+            const xstring_t methodName,
+            const xstring_t parameters) const
         {
-            for (auto current : *_instrumentationPoints)
+            auto matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName, parameters);
+            auto matchInstrumentation = TryGetInstrumentationPoint(matchKey);
+
+            if (matchInstrumentation != nullptr)
             {
-                if (current == ipToFind)
-                {
-                    return current;
-                }
+                return matchInstrumentation;
             }
 
-            return nullptr;
+            matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName);
+            return TryGetInstrumentationPoint(matchKey);
+        }
+
+
+        InstrumentationPointPtr TryGetInstrumentationPoint(const InstrumentationPointPtr ipToFind) const
+        {
+            auto const key = ipToFind->GetMatchKey();
+
+            return TryGetInstrumentationPoint(key);
+        }
+
+        InstrumentationPointPtr TryGetInstrumentationPoint(const xstring_t key) const
+        {
+            auto matches = _instrumentationPointsMap->find(key);
+            if (matches == _instrumentationPointsMap->end())
+            {
+                return nullptr;
+            }
+
+            return matches->second;
         }
 
         bool IsHttpClient5OrGreater(const MethodRewriter::IFunctionPtr function) const
@@ -273,6 +322,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             auto instrumentationPoints = SplitInstrumentationPointsOnClassNames(instrumentationPoint);
 
             for (auto iPoint : instrumentationPoints) {
+
                 // check if this method has already been instrumented -- if so, log a warning
                 auto existingInstrumentation = TryGetInstrumentationPoint(iPoint);
                 if (existingInstrumentation != nullptr)
@@ -282,7 +332,8 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 }
 
                 // finally add the new instrumentation point(s) to our set of instrumentation points
-                _instrumentationPoints->insert(iPoint);
+                (*_instrumentationPointsMap)[iPoint->GetMatchKey()] = iPoint;
+
             }
         }
 
@@ -358,7 +409,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         }
 
     private:
-        InstrumentationPointSetPtr _instrumentationPoints;
+        InstrumentationPointMapPtr _instrumentationPointsMap;
         uint16_t _invalidFileCount;
     };
     typedef std::shared_ptr<InstrumentationConfiguration> InstrumentationConfigurationPtr;
