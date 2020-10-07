@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+    
+    mssql:
+        build: ./mssql
+        ports:
+            - "1433:1433"
+        environment:
+            # The password set here must match the password set in the connection
+            # string being used by the MS SQL tests.  SQL server requires a more
+            # complex password than 'password' and that is why this service does
+            # not follow the same pattern as the others.
+            - SA_PASSWORD=password0TS
+            - ACCEPT_EULA=Y
+        container_name: MssqlServer
+
+    
