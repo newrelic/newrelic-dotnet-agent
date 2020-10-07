@@ -313,6 +313,9 @@ jobs:
 
           Write-Host "git commit"
           git commit -am "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
+
+          Write-Host "git pull"
+          git pull
         shell: powershell
 
       - name: Push changes
@@ -431,4 +434,66 @@ jobs:
       run: |
         Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
         MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
-      shell: powershell  
+      shell: powershell
+
+  run-integration-tests:
+    needs: [build-integration-tests]
+    name: Run IntegrationTests
+
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
+          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
+          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
+          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
+          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
+      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
+      integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders-${{ github.run_id }}
+          path: src/Agent
+
+      - name: Download Integration Test Artifacts
+        uses: actions/download-artifact/@v2
+        with:
+          name: integrationtests-${{ github.run_id }}
+          # Should not need a path because the integration test artifacts are archived with the full directory structure
+
+      - name: Install dependencies
+        run: |
+          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+        shell: powershell
+
+      - name: Run Integration Tests
+        run: |
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+        shell: powershell
+
+      - name: Archive Test Results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
+          path: ${{ github.workspace }}/TestResults
+          if-no-files-found: error

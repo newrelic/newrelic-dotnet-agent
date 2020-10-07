@@ -11,16 +11,16 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.AgentFeatures
+namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
     [NetFrameworkTest]
-    public class DataTransmissionPutGzip : IClassFixture<MvcWithCollectorFixture>
+    public class DataTransmissionDefaults : IClassFixture<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;
 
         private IEnumerable<CollectedRequest> _collectedRequests = null;
 
-        public DataTransmissionPutGzip(MvcWithCollectorFixture fixture, ITestOutputHelper output)
+        public DataTransmissionDefaults(MvcWithCollectorFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -29,9 +29,6 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 setupConfiguration: () =>
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
-
-                    configModifier.PutForDataSend();
-                    configModifier.CompressedContentEncoding("gzip");
                 },
                 exerciseApplication: () =>
                 {
@@ -49,9 +46,9 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
             Assert.NotNull(_collectedRequests);
             var request = _collectedRequests.FirstOrDefault(x => x.Querystring.FirstOrDefault(y => y.Key == "method").Value == "connect");
             Assert.NotNull(request);
-            Assert.True(request.Method == "PUT");
-            Assert.True(request.ContentEncoding.First() == "gzip");
-            var decompressedBody = Decompressor.GzipDecompress(request.RequestBody);
+            Assert.True(request.Method == "POST");
+            Assert.True(request.ContentEncoding.First() == "deflate");
+            var decompressedBody = Decompressor.DeflateDecompress(request.RequestBody);
             Assert.NotEmpty(decompressedBody);
         }
     }

@@ -12,7 +12,7 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.IntegrationTests.AgentFeatures
+namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
     [NetFrameworkTest]
     public class ConnectResponseHandlingTests : IClassFixture<MvcWithCollectorFixture>
