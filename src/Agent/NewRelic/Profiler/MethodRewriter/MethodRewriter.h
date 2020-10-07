@@ -38,8 +38,6 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
 
         void Initialize()
         {
-            LogTrace("MethodRewriter Initialize - Begin");
-
             // We have to instrument mscorlib to add our hooks.  Yes, this is a little brittle
             // and it should probably live closer to the code that mucks with these methods.
             _instrumentedAssemblies->emplace(_X("mscorlib"));
