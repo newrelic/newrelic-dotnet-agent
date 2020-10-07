@@ -69,25 +69,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return result;
         }
 
-        /*std::set<InstrumentationPointPtr> GetAssemblyInstrumentation(xstring_t assemblyName)
-        {
-
-            LogTrace("GetAssemblyInstrumentation", assemblyName, ": Started");
-
-            auto result = new std::set<InstrumentationPointPtr>();
-            for (auto instrumentationPointKVP : *_instrumentationPointsMap) {
-
-                if (assemblyName == instrumentationPointKVP.second->AssemblyName) {
-                    result->emplace(instrumentationPointKVP.second);
-                }
-            }
-
-            LogTrace("GetAssemblyInstrumentation", assemblyName, ": Ended");
-
-            return *result;
-
-        }*/
-
         InstrumentationPointPtr TryGetInstrumentationPoint(const MethodRewriter::IFunctionPtr function) const
         {
             // Temporarily specifically ignore System.Net.Http.HttpClient instrumentation for .Net 5 and greater, and System.Net.Http.SocketsHttpHandler for framework less than .Net 5
@@ -220,6 +201,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             instrumentationPoint->ClassName = GetAttributeOrEmptyString(matchNode, _X("className"));
             instrumentationPoint->MethodName = GetAttributeOrEmptyString(matcherNode, _X("methodName"));
             instrumentationPoint->Parameters = TryGetAttribute(matcherNode, _X("parameters"));
+
+            // void as the parameters means parameterless method call (not all overloads)
+            if (instrumentationPoint->Parameters != nullptr && Strings::AreEqualCaseInsensitive(*(instrumentationPoint->Parameters), _X("void")))
+            {
+                instrumentationPoint->Parameters = std::unique_ptr<xstring_t>(new xstring_t());
+            }
 
             // sdaubin : I'm sure we could allow some mscorlib methods to be instrumented because we're able to 
             // append methods onto an mscorlib exception class.  But we'd need to do something like we do for those
