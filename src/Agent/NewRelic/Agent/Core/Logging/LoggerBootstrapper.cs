@@ -287,6 +287,7 @@ namespace NewRelic.Agent.Core
 #if NET45
 			var appender = new EventLogAppender();
 			appender.Layout = eventLoggerLayout;
+			appender.Threshold = Level.Warn;
 			appender.Name = EventLogAppenderName;
 			appender.LogName = EventLogName;
 			appender.ApplicationName = EventLogSourceName;
@@ -395,7 +396,7 @@ namespace NewRelic.Agent.Core
             catch (Exception exception)
             {
                 log.ErrorFormat("Unable to write the {0} log to \"{1}\": {2}", appenderName, fileName, exception.Message);
-                throw exception;
+                throw;
             }
 
             try
@@ -418,7 +419,7 @@ namespace NewRelic.Agent.Core
             catch (Exception exception)
             {
                 log.ErrorFormat("Unable to configure the {0} log file appender for \"{1}\": {2}", appenderName, fileName, exception.Message);
-                throw exception;
+                throw;
             }
         }
     }

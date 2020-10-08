@@ -57,6 +57,7 @@ namespace NewRelic { namespace Profiler
         bool _isCoreClr;
         bool _injectMethodInstrumentation;
         uint32_t _tracerFlags;
+        ASSEMBLYMETADATA _assemblyProps;
 
         ByteVectorPtr _signature;
         ByteVectorPtr _method;
@@ -335,6 +336,12 @@ namespace NewRelic { namespace Profiler
                 _tracerFlags |= NewRelic::Profiler::Configuration::TracerFlags::AsyncMethod;
             }
 
+            mdAssembly mda = 0;
+            ThrowOnError(_metaDataAssemblyImport->GetAssemblyFromScope, &mda);
+
+            _assemblyProps = ASSEMBLYMETADATA();
+            ThrowOnError(_metaDataAssemblyImport->GetAssemblyProps, mda, 0, 0, 0, nullptr, 0, nullptr, &_assemblyProps, 0);
+
 #ifdef DEBUG_PREPROCESSOR
             auto isMsCorLib = assemblyName == _X("mscorlib");
             if (!isMsCorLib && 
@@ -393,6 +400,11 @@ namespace NewRelic { namespace Profiler
         virtual bool ShouldTrace() override
         {
             return _shouldTrace;
+        }
+
+        virtual ASSEMBLYMETADATA GetAssemblyProps() override
+        {
+            return _assemblyProps;
         }
 
         virtual bool ShouldInjectMethodInstrumentation() override

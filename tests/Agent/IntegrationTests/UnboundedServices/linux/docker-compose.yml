@@ -1,0 +1,102 @@
+rabbitmq: 
+    build: ./rabbitmq 
+    ports:
+        - "4369:4369"
+        - "5671-5672:5671-5672"
+        - "25672:25672"
+    hostname: my-rabbit
+    container_name: RabbitmqServer
+
+mongodb32: 
+    build: ./mongodb32 
+    ports:
+        - "27017:27017"
+    container_name: MongoDB32Server
+
+mongodb36: 
+    build: ./mongodb36 
+    ports:
+        - "27018:27017"
+    container_name: MongoDB36Server
+                
+redis:
+    build: ./redis
+    ports:
+        - "6379:6379"
+    container_name: RedisServer
+
+couchbase: 
+    build: ./couchbase
+    ports:
+        - "8091-8094:8091-8094"
+        - "11210:11210"
+    environment:
+        # These credentials are only used to configure the Couchbase container 
+        # for use by the integration tests. You can change these to any value 
+        # you wish before running the container for the first time
+        - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
+        - COUCHBASE_ADMINISTRATOR_PASSWORD=password
+    container_name: CouchbaseServer
+                    
+postgres:
+    build: ./postgres
+    ports:
+        - "5432:5432"
+    environment:
+        # These credentials are only used to configure the Postgres container 
+        # for use by the integration tests. They must match the values from 
+        # the connection string used by those tests
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=password
+    container_name: PostgresServer
+
+mssql:
+    build: ./mssql
+    ports:
+        - "1433:1433"
+    environment:
+        # The password set here must match the password set in the connection
+        # string being used by the MS SQL tests.  SQL server requires a more
+        # complex password than 'password' and that is why this service does
+        # not follow the same pattern as the others.
+        - SA_PASSWORD=password0TS
+    container_name: MssqlServer
+
+oracle:
+    build: ./oracle
+    shm_size: 1g
+    ports:
+        - "1521:1521"
+    environment:
+        # The password set here must match the password set in the connection 
+        # string being used by the Oracle unbounded integration tests
+        - ORACLE_PWD=password
+    container_name: OracleServer
+
+db2:
+    build: ./db2
+    privileged: true
+    ports:
+        - "50000:50000"
+    environment:
+        - LICENSE=accept
+        # These credentials are only used to configure the Db2 container for 
+        # use by the integration tests. They must match the values from the 
+        # connection string used by those tests
+        - DB2INSTANCE=newrelic
+        - DB2INST1_PASSWORD=password
+        - SAMPLEDB=true
+    container_name: Db2Server
+
+mysql:
+    build: ./mysql
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    ports:
+        - "3306:3306"
+    environment:
+        # These credentials are only used to configure the MySql container 
+        # for use by the integration tests. They must match the values from 
+        # the connection string used by those tests
+        - MYSQL_ROOT_PASSWORD=password
+    container_name: MySqlServer
+    

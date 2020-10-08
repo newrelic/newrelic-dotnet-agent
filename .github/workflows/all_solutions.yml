@@ -1,0 +1,499 @@
+name: .NET Agent All Solutions Build
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  scripts_path: ${{ github.workspace }}\build\scripts
+  tools_path: ${{ github.workspace }}\build\Tools
+  DOTNET_NOLOGO: true
+  #<other env vars here>
+
+jobs:
+
+  build-test-windows-profiler:
+    name: Build Windows Profiler
+
+    runs-on: windows-2019
+
+    env:
+      profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
+      profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
+      output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
+      #<other env vars here>
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Clean out _profilerBuild directory
+      run: |
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
+      shell: powershell
+
+    - name: Install dependencies
+      run: |
+        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+        ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+      shell: powershell
+
+    - name: Build x64
+      run: |
+        Write-Host "MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+        MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+      shell: powershell
+      
+    - name: Build x86
+      run: |
+        Write-Host "MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+        MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+      shell: powershell
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: profiler-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+        if-no-files-found: error
+
+  build-test-linux-profiler:
+    name: Build Linux Profiler
+
+    runs-on: ubuntu-18.04
+
+    env:
+      profiler_path: ${{ github.workspace }}/src/Agent/NewRelic/Profiler
+      #<other env vars here>
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Clean out _profilerBuild directory
+      run: |
+        rm -f ${{ github.workspace }}/src/Agent/_profilerBuild/*.*
+        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release
+        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x64-Release
+        rm -rf ${{ github.workspace }}/src/Agent/_profilerBuild/x86-Release
+      shell: bash
+
+    - name: Build Linux Profler
+      run: |
+        cd ${{ env.profiler_path }}
+        docker-compose build build
+        docker-compose run build
+      shell: bash
+
+    - name: Move Profiler to staging folder
+      run: |
+        mkdir --parents ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/
+        mv -f ${{ env.profiler_path }}/libNewRelicProfiler.so  ${{ github.workspace }}/src/Agent/_profilerBuild/linux-release/libNewRelicProfiler.so
+      shell: bash
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: profiler-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}/src/Agent/_profilerBuild/
+        if-no-files-found: error
+
+  # This builds both FullAgent and MSIInstaller since MSIInstaller requires FullAgent artifacts.
+  build-test-fullagent-msi:
+    needs: [ build-test-windows-profiler, build-test-linux-profiler ]
+    name: Build and Test FullAgent and MSIInstaller
+
+    runs-on: windows-2019
+
+    env:
+      fullagent_solution_path: ${{ github.workspace }}\FullAgent.sln
+      msi_solution_path: ${{ github.workspace }}\src\Agent\MsiInstaller\MsiInstaller.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Setup VSTest Path
+      uses: darenm/Setup-VSTest@v1
+
+    - name: Clean out _profilerBuild directory
+      run: |
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x64-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\x86-Release" -Recurse -Force  -ErrorAction SilentlyContinue
+        Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
+      shell: powershell
+
+    - name: Download Profiler Artifacts Before Agent Build
+      uses: actions/download-artifact@v2
+      with:
+        name: profiler-${{ github.run_id }}
+        path: ${{ github.workspace }}/src/Agent/_profilerBuild/
+    
+    - name: Install dependencies for FullAgent.sln
+      run: |
+        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.fullagent_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+        ${{ env.tools_path }}\nuget.exe restore ${{ env.fullagent_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+      shell: powershell
+
+    - name: Install dependencies for MsiInstaller.sln
+      run: |
+        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.msi_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+        ${{ env.tools_path }}\nuget.exe restore ${{ env.msi_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+      shell: powershell
+    
+    - name: Build FullAgent.sln
+      run: |
+        Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
+        MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+      shell: powershell
+
+    - name: Archive FullAgent Home folders
+      uses: actions/upload-artifact@v2
+      with:
+        name: homefolders-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}\src\Agent\newrelichome_x64
+          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
+          ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr_linux
+          ${{ github.workspace }}\src\Agent\newrelichome_x86
+          ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
+        if-no-files-found: error
+
+    - name: Create Self-signed code signing cert
+      run: |
+        Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
+        New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
+      shell: powershell
+
+    - name: Build MsiInstaller.sln x86
+      run: |
+        Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
+        MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
+      shell: powershell
+
+    - name: Build MsiInstaller.sln x64
+      run: |
+        Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
+        MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
+      shell: powershell
+
+    - name: Unit Tests
+      run: |
+        # Write-Host ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
+        # ${{ env.scripts_path }}\DotNet-Agent-CI-UnitTests.ps1
+        Write-Host "Creating TestResults directory to temporarily get around nunit limitation"
+        mkdir ${{ github.workspace }}\TestResults
+
+        $testDllPatterns = @('*Tests.dll', '*Test.dll', '*Test.Legacy.dll')
+
+        Write-Host "Finding files for Framework NUnit tests"
+        $frameworkTestPaths = @('Tests\Agent\UnitTests', 'Tests\NewRelic.Core.Tests')
+        $frameworkTestFileNames = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
+        $frameworkFiles = (Get-ChildItem -Recurse -Path $frameworkTestPaths -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
+
+        Write-Host "Building file list for Framework NUnit tests"
+        $frameworkUnitTestPaths = @()
+        for ($i = 0; $i -lt $frameworkTestFileNames.Length; $i++)
+        { $frameworkFiles | ForEach-Object { if ($_.Name -eq $frameworkTestFileNames[$i].Name) { $frameworkUnitTestPaths += $_.FullName; Continue } } }
+
+        $frameworkUnitTestPaths | ForEach-Object { $_ }
+        Write-Host "Executing: vstest.console.exe " $frameworkUnitTestPaths " --parallel --logger:'html;LogFileName=agent-results.html'"
+        vstest.console.exe $frameworkUnitTestPaths --parallel --logger:"html;LogFileName=agent-results.html"
+        # & '.\Build\Tools\NUnit-Console\nunit3-console.exe ' $frameworkUnitTestPaths '--result=TestResults\NUnit2-results.xml;format=nunit2'
+
+        if ($LastExitCode -ne 0)
+        { exit $LastExitCode }
+
+
+        Write-Host "Finding files for .NET Core NUnit tests"
+        $netCoreTestFileNames = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
+        $netCoreFiles = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
+
+        Write-Host "Building file list for .NET Core NUnit tests"
+        $netCoreUnitTestPaths = @()
+
+        for ($i = 0; $i -lt $netCoreTestFileNames.Length; $i++)
+        { $netCoreFiles | ForEach-Object { if ($_.Name -eq $netCoreTestFileNames[$i].Name) { $netCoreUnitTestPaths += $_.FullName; Continue } } }
+
+        Write-Host "Executing .NET Core NUnit Tests:"
+        $netCoreUnitTestPaths | ForEach-Object { $_ }
+
+        Write-Host "Executing: dotnet test " $netCoreUnitTestPaths " --parallel --logger:'html;LogFileName=lambda-results.html'"
+        dotnet test $netCoreUnitTestPaths --parallel --logger:"html;LogFileName=lambda-results.html"
+
+        if ($LastExitCode -ne 0)
+        { exit $LastExitCode }
+      shell: powershell
+
+    - name: Archive Test Results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results-${{ github.run_id }}
+        path: ${{ github.workspace }}\TestResults
+        if-no-files-found: error
+
+  publish-test-results:
+    needs: build-test-fullagent-msi
+    if: ${{ always() }}
+    name: Publish Test Results
+
+    runs-on: windows-2019
+
+    env:
+      results_name: ""
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download Test Results Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: test-results-${{ github.run_id }}
+          path: testresults
+
+      - name: Move Test Results
+        run: |
+          Write-Host "Change to testresults"
+          cd testresults
+
+          Write-Host "Create the folder"
+          $resultname = "fullagent_msi-${{ github.run_id }}".ToLower().Replace(" ", "")
+          Write-Host "::set-env name=results_name::$resultname"
+
+          Write-Host "Check if testresults folder exists, create if not."
+          if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults" )) {
+            New-Item -Path "${{ github.workspace }}\docs" -Name "testresults" -ItemType "directory" }
+          
+          Write-Host "Check if test run results ($resultname) folder exists, create if not."
+          if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults\$resultname" )) {
+            New-Item -Path "${{ github.workspace }}\docs\testresults" -Name "$resultname" -ItemType "directory" }
+
+          Write-Host "Copy the files and overwrite if already exists"
+          Copy-Item .\* -Destination ${{ github.workspace }}\docs\testresults\$resultname\ -Force
+
+          Write-Host "Confirm Folder Exists"
+          Test-Path "${{ github.workspace }}\docs\testresults\$resultname"
+        shell: powershell
+
+      - name: Commit files
+        run: |
+          Write-Host "git config"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          Write-Host "Stage files in git"
+          $ErrorActionPreference = 'Continue'
+          git add -A
+
+          Write-Host "git commit"
+          git commit -am "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
+
+          Write-Host "git pull"
+          git pull
+        shell: powershell
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}    
+
+      - name: Create Check-run with test results
+        uses: LouisBrunner/checks-action@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
+          status: completed
+          conclusion: neutral
+          output: |
+            { "summary": "${{ steps.test.outputs.summary }}",
+            "text_description": "[FullAgent Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
+
+  build-integration-tests:
+    needs: build-test-fullagent-msi
+    name: Build IntegrationTests
+
+    runs-on: windows-2019
+
+    env:
+      integration_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\IntegrationTests.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Install dependencies for IntegrationTests.sln
+      run: |
+        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.integration_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+        ${{ env.tools_path }}\nuget.exe restore ${{ env.integration_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+      shell: powershell
+
+    - name: Build IntegrationTests.sln
+      run: |
+        Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
+        MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
+      shell: powershell
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: integrationtests-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
+          ${{ github.workspace }}\tests\Agent\IntegrationTests\**\Deploy\**\*
+          !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
+        if-no-files-found: error
+
+  build-unbounded-tests:
+    needs: build-test-fullagent-msi
+    name: Build UnboundedIntegrationTests
+
+    runs-on: windows-2019
+
+    env:
+      unbounded_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Install dependencies for UnboundedIntegrationTests.sln
+      run: |
+        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+        ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+      shell: powershell
+
+    - name: Build UnboundedIntegrationTests.sln
+      run: |
+        Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
+        MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
+      shell: powershell
+
+  build-platform-tests: 
+    needs: build-test-fullagent-msi
+    name: Build PlatformTests
+
+    runs-on: windows-2019
+
+    env:
+      platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Install dependencies for PlatformTests.sln
+      run: |
+        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+        ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+      shell: powershell
+
+    - name: Build PlatformTests.sln
+      run: |
+        Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
+        MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
+      shell: powershell
+
+  run-integration-tests:
+    needs: [build-integration-tests]
+    name: Run IntegrationTests
+
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
+          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
+          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
+          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
+          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
+      fail-fast: false # we don't want one test failure in one namespace to kill the other runs
+
+    env:
+      integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
+      xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
+      integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up secrets
+        env:
+          INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+        run: |
+          "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+        shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
+
+      - name: Download Agent Home Folders
+        uses: actions/download-artifact@v2
+        with:
+          name: homefolders-${{ github.run_id }}
+          path: src/Agent
+
+      - name: Download Integration Test Artifacts
+        uses: actions/download-artifact/@v2
+        with:
+          name: integrationtests-${{ github.run_id }}
+          # Should not need a path because the integration test artifacts are archived with the full directory structure
+
+      - name: Install dependencies
+        run: |
+          Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+        shell: powershell
+
+      - name: Run Integration Tests
+        run: |
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+        shell: powershell
+
+      - name: Archive Test Results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
+          path: ${{ github.workspace }}/TestResults
+          if-no-files-found: error
