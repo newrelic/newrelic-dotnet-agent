@@ -419,7 +419,7 @@ namespace NewRelic.Agent.Core
             catch (Exception exception)
             {
                 log.ErrorFormat("Unable to configure the {0} log file appender for \"{1}\": {2}", appenderName, fileName, exception.Message);
-                throw exception;
+                throw;
             }
         }
     }
