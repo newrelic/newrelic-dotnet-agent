@@ -19,7 +19,7 @@ Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
 * Fixes [#223](https://github.com/newrelic/newrelic-dotnet-agent/issues/223) so the agent can be compatible with ASP.NET Core 5 RC1.
 * Fixes issue in .NET 5 applications where external calls made with HttpClient may not get instrumented. For example, calls made with `HttpClient.GetStringAsync` would be missed. ([#235](https://github.com/newrelic/newrelic-dotnet-agent/pull/235))
 * Fixes issue [#257](https://github.com/newrelic/newrelic-dotnet-agent/issues/223) where .NET Standard Libraries that do not reference `mscorlib` fail to be instrumented in .NET Framework applications.
-* Addresses issue [#269](https://github.com/newrelic/newrelic-dotnet-agent/issues/269) by revising the method by which instrumentation points are stored.  Maintaining instrumentation points in a map structure results in a more efficient lookup when determining whether or not a method should be instrumented at the time of JIT.
+* Reduces the performance impact of large amounts of instrumentation. See issue [#269](https://github.com/newrelic/newrelic-dotnet-agent/issues/269) for more information.
 
 ## [8.32] - 2020-09-17
 
