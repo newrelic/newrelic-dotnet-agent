@@ -64,12 +64,12 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 : GetMatchKey(AssemblyName, ClassName, MethodName, *Parameters);
         }
 
-        static xstring_t GetMatchKey(xstring_t assemblyName, xstring_t className, xstring_t methodName)
+        static xstring_t GetMatchKey(const xstring_t& assemblyName, const xstring_t& className, const xstring_t& methodName)
         {
             return xstring_t(_X("[")) + assemblyName + _X("]") + className + _X(".") + methodName;
         }
 
-        static xstring_t GetMatchKey(xstring_t assemblyName, xstring_t className, xstring_t methodName, xstring_t parameters)
+        static xstring_t GetMatchKey(const xstring_t& assemblyName, const xstring_t& className, const xstring_t& methodName, const xstring_t& parameters)
         {
             return GetMatchKey(assemblyName, className, methodName) + _X("(") + parameters + _X(")");
         }

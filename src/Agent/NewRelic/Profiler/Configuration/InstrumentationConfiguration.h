@@ -23,9 +23,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     {
     public:
         InstrumentationConfiguration(InstrumentationXmlSetPtr instrumentationXmls) :
-            _instrumentationPointsMap(new InstrumentationPointMap()),
-            _invalidFileCount(0)
+            _instrumentationPointsSet(new InstrumentationPointSet())
         {
+
             // pull instrumentation points from every xml string
             for (auto instrumentationXml : *instrumentationXmls)
             {
@@ -45,9 +45,10 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         }
 
         InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints) :
-            _instrumentationPointsMap(new InstrumentationPointMap()),
-            _invalidFileCount(0)
+            _instrumentationPointsSet(instrumentationPoints)
         {
+            _instrumentationPointsSet = instrumentationPoints;
+
             for (auto instrumentationPoint : *instrumentationPoints)
             {
                 (*_instrumentationPointsMap)[instrumentationPoint->GetMatchKey()] = instrumentationPoint;
@@ -59,14 +60,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return _invalidFileCount;
         }
 
-        InstrumentationPointSetPtr GetInstrumentationPoints()
+        InstrumentationPointSetPtr GetInstrumentationPoints() const
         {
-            auto result = InstrumentationPointSetPtr(new InstrumentationPointSet());
-            for (auto instrumentationPointKVP : *_instrumentationPointsMap) {
-                result->insert(instrumentationPointKVP.second);
-            }
-
-            return result;
+            return _instrumentationPointsSet;
         }
 
         InstrumentationPointPtr TryGetInstrumentationPoint(const MethodRewriter::IFunctionPtr function) const
@@ -78,19 +74,20 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                 return nullptr;
             }
 
-            auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
-            auto params = new xstring_t(methodSignature->ToString(function->GetTokenResolver()));
+            const auto methodSignature = SignatureParser::SignatureParser::ParseMethodSignature(function->GetSignature()->begin(), function->GetSignature()->end());
+            const auto params = methodSignature->ToString(function->GetTokenResolver());
+            const auto instPoint = TryGetInstrumentationPoint(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), params);
 
-            auto instPoint = TryGetInstrumentationPoint(function->GetAssemblyName(), function->GetTypeName(), function->GetFunctionName(), *params);
             return instPoint;
         }
 
     private:
 
-        InstrumentationPointPtr TryGetInstrumentationPoint(const xstring_t assemblyName,
-            const xstring_t className,
-            const xstring_t methodName,
-            const xstring_t parameters) const
+        InstrumentationPointPtr TryGetInstrumentationPoint(
+            const xstring_t& assemblyName,
+            const xstring_t& className,
+            const xstring_t& methodName,
+            const xstring_t& parameters) const
         {
             auto matchKey = InstrumentationPoint::GetMatchKey(assemblyName, className, methodName, parameters);
             auto matchInstrumentation = TryGetInstrumentationPoint(matchKey);
@@ -104,7 +101,6 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return TryGetInstrumentationPoint(matchKey);
         }
 
-
         InstrumentationPointPtr TryGetInstrumentationPoint(const InstrumentationPointPtr ipToFind) const
         {
             auto const key = ipToFind->GetMatchKey();
@@ -112,7 +108,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             return TryGetInstrumentationPoint(key);
         }
 
-        InstrumentationPointPtr TryGetInstrumentationPoint(const xstring_t key) const
+        InstrumentationPointPtr TryGetInstrumentationPoint(const xstring_t& key) const
         {
             auto matches = _instrumentationPointsMap->find(key);
             if (matches == _instrumentationPointsMap->end())
@@ -320,7 +316,7 @@ namespace NewRelic { namespace Profiler { namespace Configuration
 
                 // finally add the new instrumentation point(s) to our set of instrumentation points
                 (*_instrumentationPointsMap)[iPoint->GetMatchKey()] = iPoint;
-
+                _instrumentationPointsSet->insert(iPoint);
             }
         }
 
@@ -396,8 +392,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
         }
 
     private:
-        InstrumentationPointMapPtr _instrumentationPointsMap;
-        uint16_t _invalidFileCount;
+        InstrumentationPointMapPtr _instrumentationPointsMap = InstrumentationPointMapPtr(new InstrumentationPointMap());
+        InstrumentationPointSetPtr _instrumentationPointsSet;
+        uint16_t _invalidFileCount = 0;
     };
     typedef std::shared_ptr<InstrumentationConfiguration> InstrumentationConfigurationPtr;
 }}}
