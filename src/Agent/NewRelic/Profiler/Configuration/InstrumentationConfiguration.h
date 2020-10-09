@@ -42,6 +42,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
                     continue;
                 }
             }
+
+            LogInfo("Identified ", _instrumentationPointsSet->size(), " Instrumentation points in .xml files");
+            
         }
 
         InstrumentationConfiguration(InstrumentationPointSetPtr instrumentationPoints) :
