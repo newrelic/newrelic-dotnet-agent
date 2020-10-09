@@ -8,6 +8,7 @@
 #include <memory>
 #include <stdint.h>
 #include <set>
+#include <map>
 #include "Strings.h"
 #include "../Logging/Logger.h"
 
@@ -56,6 +57,24 @@ namespace NewRelic { namespace Profiler { namespace Configuration
             }
         }
 
+        xstring_t GetMatchKey()
+        {
+            return Parameters == nullptr
+                ? GetMatchKey(AssemblyName, ClassName, MethodName)
+                : GetMatchKey(AssemblyName, ClassName, MethodName, *Parameters);
+        }
+
+        static xstring_t GetMatchKey(const xstring_t& assemblyName, const xstring_t& className, const xstring_t& methodName)
+        {
+            return xstring_t(_X("[")) + assemblyName + _X("]") + className + _X(".") + methodName;
+        }
+
+        static xstring_t GetMatchKey(const xstring_t& assemblyName, const xstring_t& className, const xstring_t& methodName, const xstring_t& parameters)
+        {
+            return GetMatchKey(assemblyName, className, methodName) + _X("(") + parameters + _X(")");
+        }
+
+
     private:
         bool ParametersMatch(const InstrumentationPoint& other)
         {
@@ -82,6 +101,9 @@ namespace NewRelic { namespace Profiler { namespace Configuration
     typedef std::shared_ptr<InstrumentationPoint> InstrumentationPointPtr;
     typedef std::set<InstrumentationPointPtr> InstrumentationPointSet;
     typedef std::shared_ptr<InstrumentationPointSet> InstrumentationPointSetPtr;
+
+    typedef std::map<xstring_t, InstrumentationPointPtr> InstrumentationPointMap;
+    typedef std::shared_ptr<InstrumentationPointMap> InstrumentationPointMapPtr;
 
     inline bool operator==(std::nullptr_t /*leftSide*/, InstrumentationPointPtr rightSide)
     {

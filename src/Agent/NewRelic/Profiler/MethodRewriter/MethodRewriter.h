@@ -52,7 +52,10 @@ namespace NewRelic { namespace Profiler { namespace MethodRewriter {
             _instrumentedFunctionNames->emplace(_X("LoadAssemblyOrThrow"));
             _instrumentedFunctionNames->emplace(_X("StoreMethodInAppDomainStorageOrThrow"));
 
-            for (auto instrumentationPoint : *_instrumentationConfiguration->GetInstrumentationPoints().get()) {
+            auto instrumentationPoints = _instrumentationConfiguration->GetInstrumentationPoints();
+
+            for (auto instrumentationPoint : *instrumentationPoints) {
+
                 _instrumentedAssemblies->emplace(instrumentationPoint->AssemblyName);
                 _instrumentedFunctionNames->emplace(instrumentationPoint->MethodName);
                 _instrumentedTypes->emplace(instrumentationPoint->ClassName);
