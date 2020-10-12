@@ -443,11 +443,7 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
-          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
+        namespace: [ BasicInstrumentation ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -488,7 +484,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
-        shell: powershell
+        shell: pwsh
 
       - name: Archive Test Results
         if: ${{ always() }}
