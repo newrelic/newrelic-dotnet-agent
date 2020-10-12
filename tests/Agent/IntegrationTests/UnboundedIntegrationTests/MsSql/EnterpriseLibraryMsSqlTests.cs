@@ -12,7 +12,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
     [NetFrameworkTest]
     public class EnterpriseLibraryMsSqlTests : IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
