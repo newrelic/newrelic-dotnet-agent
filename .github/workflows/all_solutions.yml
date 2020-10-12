@@ -487,7 +487,7 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xml ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
         shell: powershell
 
       - name: Archive Test Results
@@ -497,3 +497,23 @@ jobs:
           name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
           path: ${{ github.workspace }}/TestResults
           if-no-files-found: error
+
+  combine-integration-test-results:
+    needs: run-integration-tests
+    if: ${{ always() }}
+    name: Combine Integration Test Results
+
+    runs-on: windows-2019
+
+    env:
+      results_name: ""
+
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Combine Integration Results
+        run: |
+          Get-ChildItem . -Recurse
+        shell: powershell
+
