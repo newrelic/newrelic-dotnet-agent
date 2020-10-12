@@ -487,7 +487,14 @@ jobs:
 
       - name: Run Integration Tests
         run: |
+          Write-Host "List ports in use"
+          netstat -no
+
+          Write-Host "Run tests"
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xml ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
+          
+          Write-Host "Get HostableWebCore errors (if any)"
+          Get-EventLog -LogName Application -Source HostableWebCore
         shell: powershell
 
       - name: Archive Test Results
@@ -514,6 +521,15 @@ jobs:
 
       - name: Combine Integration Results
         run: |
-          Get-ChildItem . -Recurse
+          mkdir all-integration-test-results
+
+          Get-ChildItem -Path .\integration-test-results* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
         shell: powershell
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: all-integration-test-results-${{ github.run_id }}
+          path: ./all-integration-test-results
+          if-no-files-found: error
 
