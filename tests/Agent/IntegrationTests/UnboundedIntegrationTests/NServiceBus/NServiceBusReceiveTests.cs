@@ -12,7 +12,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Assert = Xunit.Assert;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
     [NetFrameworkTest]
     public class NServiceBusReceiveTests : IClassFixture<NServiceBusReceiverFixture>
