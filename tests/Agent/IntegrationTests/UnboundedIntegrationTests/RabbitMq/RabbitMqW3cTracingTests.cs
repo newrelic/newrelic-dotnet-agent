@@ -13,7 +13,7 @@ using Xunit;
 using Xunit.Abstractions;
 
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
     public abstract class RabbitMqW3cTracingTests : IClassFixture<RemoteServiceFixtures.RabbitMqBasicMvcFixture>

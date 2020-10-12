@@ -6,26 +6,23 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NewRelic.Agent.IntegrationTestHelpers;
-using NewRelic.Agent.IntegrationTestHelpers.Models;
-using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
-    public class RabbitMqDistributedTracingTests : IClassFixture<RemoteServiceFixtures.RabbitMqBasicMvcFixture>
+    public class RabbitMqLegacyDistributedTracingTests : IClassFixture<RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture>
     {
         // regex for payload
         private const string PayloadRegex = "{\"v\":\\[\\d,\\d\\],\"d\":{\"ty\":\"App\",\"ac\":\"\\d{1,9}\",\"ap\":\"\\d{1,9}\",\"tr\":\"\\w{16,32}\",\"pr\":\\d.\\d{5,6},\"sa\":true,\"ti\":\\d{10,16},\"tk\":\"\\w{0,16}\",\"tx\":\"\\w{16,16}\",\"id\":\"\\w{16,16}\"}}";
 
         private bool _headerExists;
         private string _headerValue;
-        private RabbitMqBasicMvcFixture _fixture;
+        private RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture _fixture;
 
-        public RabbitMqDistributedTracingTests(RemoteServiceFixtures.RabbitMqBasicMvcFixture fixture, ITestOutputHelper output)
+        public RabbitMqLegacyDistributedTracingTests(RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             fixture.TestLogger = output;
@@ -43,7 +40,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 {
                     _headerExists = fixture.GetMessageQueue_RabbitMQ_SendReceive_HeaderExists("Test Message");
                     _headerValue = fixture.GetMessageQueue_RabbitMQ_SendReceive_HeaderValue("Test Message");
-                    fixture.GetMessageQueue_RabbitMQ_SendReceiveWithEventingConsumer("Test Message");
+                    fixture.GetMessageQueue_RabbitMQ_SendReceiveWithEventingConsumer_HeaderValue("Test Message");
                 }
             );
             fixture.Initialize();
@@ -84,7 +81,6 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
                 () => Assertions.MetricsExist(expectedMetrics, metrics)
             );
-
         }
     }
 }
