@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -13,14 +12,14 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
     [NetCoreTest]
-    public class PostgresExecuteScalarCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
+    public class PostgresAsyncCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
     {
         private readonly PostgresBasicMvcCoreFixture _fixture;
 
-        public PostgresExecuteScalarCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
+        public PostgresAsyncCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -35,12 +34,14 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
 
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
+                    var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
+                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
+                       instrumentationFilePath,
+                        "", "enabled", "true");
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.PostgresExecuteScalar();
-                    _fixture.PostgresExecuteScalarAsync();
-                    _fixture.AgentLog.WaitForLogLines(AgentLogBase.SqlTraceDataLogLineRegex, new TimeSpan(0, 1, 0), 2);
+                    _fixture.GetPostgresAsync();
                 }
             );
             _fixture.Initialize();
@@ -49,9 +50,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedSyncTransactionName = "WebTransaction/MVC/Postgres/PostgresExecuteScalar";
-            var expectedAsyncTransactionName = "WebTransaction/MVC/Postgres/PostgresExecuteScalarAsync";
-            var expectedDatastoreCallCount = 2;
+            var expectedTransactionName = "WebTransaction/MVC/Postgres/PostgresAsync";
+            var expectedDatastoreCallCount = 1;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -59,12 +59,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/allWeb", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/all", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allWeb", callCount = expectedDatastoreCallCount },
-                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = 2},
+                new Assertions.ExpectedMetric { metricName = @"DotNet/Npgsql.NpgsqlConnection/Open", callCount = 1},
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/Postgres/{CommonUtils.NormalizeHostname(PostgresConfiguration.PostgresServer)}/{PostgresConfiguration.PostgresPort}", callCount = expectedDatastoreCallCount},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedSyncTransactionName},
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedAsyncTransactionName},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/Postgres/teammembers/select", callCount = 1, metricScope = expectedTransactionName},
             };
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
@@ -73,8 +72,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/Postgres/allOther", callCount = 1 },
 
 				// The operation metric should not be scoped because the statement metric is scoped instead
-				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedSyncTransactionName },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedAsyncTransactionName }
+				new Assertions.ExpectedMetric { metricName = @"Datastore/operation/Postgres/select", callCount = 1, metricScope = expectedTransactionName }
             };
             var expectedTransactionTraceSegments = new List<string>
             {
@@ -89,34 +87,30 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = expectedSyncTransactionName,
-                    Sql = "SELECT lastname FROM newrelic.teammembers WHERE firstname = ?",
+                    TransactionName = expectedTransactionName,
+                    Sql = "SELECT * FROM newrelic.teammembers WHERE firstname = ?",
                     DatastoreMetricName = "Datastore/statement/Postgres/teammembers/select",
                     HasExplainPlan = false
                 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var syncTransactionSample = _fixture.AgentLog.TryGetTransactionSample(expectedSyncTransactionName);
-            var syncTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedSyncTransactionName);
-            var asyncTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedAsyncTransactionName);
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample(expectedTransactionName);
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
 
             NrAssert.Multiple(
-                () => Assert.NotNull(syncTransactionSample),
-                () => Assert.NotNull(syncTransactionEvent),
-                () => Assert.NotNull(asyncTransactionEvent),
-                () => Assert.NotNull(sqlTraces),
-                () => Assert.Equal(2, sqlTraces.Count())
+                () => Assert.NotNull(transactionSample),
+                () => Assert.NotNull(transactionEvent)
                 );
 
             NrAssert.Multiple
             (
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, syncTransactionSample),
-                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, syncTransactionEvent),
-                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, asyncTransactionEvent),
+                () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+
+                () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
             );
         }

@@ -12,14 +12,14 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    [NetCoreTest]
-    public class PostgresAsyncCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
+    [NetFrameworkTest]
+    public class PostgresAsyncTests : IClassFixture<PostgresBasicMvcFixture>
     {
-        private readonly PostgresBasicMvcCoreFixture _fixture;
+        private readonly PostgresBasicMvcFixture _fixture;
 
-        public PostgresAsyncCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
+        public PostgresAsyncTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -50,7 +50,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "WebTransaction/MVC/Postgres/PostgresAsync";
+            var expectedTransactionName = "WebTransaction/MVC/PostgresController/PostgresAsync";
             var expectedDatastoreCallCount = 1;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>

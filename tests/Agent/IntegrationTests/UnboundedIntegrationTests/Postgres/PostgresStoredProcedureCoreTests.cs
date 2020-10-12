@@ -12,15 +12,15 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    [NetFrameworkTest]
-    public class PostgresStoredProcedureAsyncTests : IClassFixture<PostgresBasicMvcFixture>
+    [NetCoreTest]
+    public class PostgresStoredProcedureCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
     {
-        private readonly PostgresBasicMvcFixture _fixture;
-        private readonly string _procedureName = $"PostgresTestStoredProcAsync{Guid.NewGuid():N}";
+        private readonly PostgresBasicMvcCoreFixture _fixture;
+        private readonly string _procedureName = $"PostgresTestStoredProc{Guid.NewGuid():N}";
 
-        public PostgresStoredProcedureAsyncTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)
+        public PostgresStoredProcedureCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -41,7 +41,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.PostgresParameterizedStoredProcedureAsync(_procedureName);
+                    _fixture.PostgresParameterizedStoredProcedure(_procedureName);
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex);
                 }
             );
@@ -51,7 +51,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "WebTransaction/MVC/PostgresController/PostgresParameterizedStoredProcedureAsync";
+            var expectedTransactionName = "WebTransaction/MVC/Postgres/PostgresParameterizedStoredProcedure/{procedureName}";
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },

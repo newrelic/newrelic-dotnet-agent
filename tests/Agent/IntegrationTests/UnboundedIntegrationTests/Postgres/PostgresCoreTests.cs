@@ -13,13 +13,13 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    [NetFrameworkTest]
-    public class PostgresTests : IClassFixture<PostgresBasicMvcFixture>
+    [NetCoreTest]
+    public class PostgresCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
     {
-        private readonly PostgresBasicMvcFixture _fixture;
-        public PostgresTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)
+        private readonly PostgresBasicMvcCoreFixture _fixture;
+        public PostgresCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -35,9 +35,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
-                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
-                       instrumentationFilePath,
-                        "NewRelic.Agent.Core.Tracer.Factories.Sql.DataReaderTracerFactory", "enabled", "true");
+                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "DataReaderTracer", "enabled", "true");
                 },
                 exerciseApplication: () =>
                 {
@@ -50,8 +48,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "WebTransaction/MVC/PostgresController/Postgres";
             var expectedCallCount = 1;
+
+            var expectedTransactionName = "WebTransaction/MVC/Postgres/Postgres";
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {

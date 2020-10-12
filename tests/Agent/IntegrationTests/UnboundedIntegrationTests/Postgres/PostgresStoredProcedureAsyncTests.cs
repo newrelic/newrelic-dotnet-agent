@@ -12,15 +12,15 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
-    [NetCoreTest]
-    public class PostgresStoredProcedureAsyncCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
+    [NetFrameworkTest]
+    public class PostgresStoredProcedureAsyncTests : IClassFixture<PostgresBasicMvcFixture>
     {
-        private readonly PostgresBasicMvcCoreFixture _fixture;
+        private readonly PostgresBasicMvcFixture _fixture;
         private readonly string _procedureName = $"PostgresTestStoredProcAsync{Guid.NewGuid():N}";
 
-        public PostgresStoredProcedureAsyncCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
+        public PostgresStoredProcedureAsyncTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -51,7 +51,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         [Fact]
         public void Test()
         {
-            var expectedTransactionName = "WebTransaction/MVC/Postgres/PostgresParameterizedStoredProcedureAsync/{procedureName}";
+            var expectedTransactionName = "WebTransaction/MVC/PostgresController/PostgresParameterizedStoredProcedureAsync";
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Postgres/{_procedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
