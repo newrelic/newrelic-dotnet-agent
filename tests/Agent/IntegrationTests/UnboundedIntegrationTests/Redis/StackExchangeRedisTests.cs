@@ -11,16 +11,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
-using Assert = Xunit.Assert;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
 {
     [NetFrameworkTest]
-    public class StackExchangeRedisStrongNameTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    public class StackExchangeRedisTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public StackExchangeRedisStrongNameTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
+        public StackExchangeRedisTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -39,8 +38,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetStackExchangeRedisStrongName();
-                    _fixture.GetStackExchangeRedisAsyncStrongName();
+                    _fixture.GetStackExchangeRedis();
+                    _fixture.GetStackExchangeRedisAsync();
                 }
             );
 
@@ -103,8 +102,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/RedisController/StackExchangeRedisStrongName");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RedisController/StackExchangeRedisStrongName");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/RedisController/StackExchangeRedis");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RedisController/StackExchangeRedis");
 
             NrAssert.Multiple
             (

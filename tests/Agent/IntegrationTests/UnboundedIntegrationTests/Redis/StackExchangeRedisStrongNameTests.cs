@@ -11,15 +11,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using Assert = Xunit.Assert;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
 {
     [NetFrameworkTest]
-    public class StackExchangeRedisTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    public class StackExchangeRedisStrongNameTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public StackExchangeRedisTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
+        public StackExchangeRedisStrongNameTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -38,8 +39,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetStackExchangeRedis();
-                    _fixture.GetStackExchangeRedisAsync();
+                    _fixture.GetStackExchangeRedisStrongName();
+                    _fixture.GetStackExchangeRedisAsyncStrongName();
                 }
             );
 
@@ -102,8 +103,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/RedisController/StackExchangeRedis");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RedisController/StackExchangeRedis");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/RedisController/StackExchangeRedisStrongName");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/RedisController/StackExchangeRedisStrongName");
 
             NrAssert.Multiple
             (
