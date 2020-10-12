@@ -2,24 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTests.Shared;
-using NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
-
-    public abstract class MsSqlStoredProcedureUsingOdbcDriverTestsBase : IClassFixture<OdbcBasicMvcFixture>
+    public abstract class MsSqlStoredProcedureUsingOleDbDriverTestsBase : IClassFixture<OleDbBasicMvcFixture>
     {
-        private readonly OdbcBasicMvcFixture _fixture;
+        private readonly OleDbBasicMvcFixture _fixture;
         private readonly bool _paramsWithAtSigns;
-        public MsSqlStoredProcedureUsingOdbcDriverTestsBase(OdbcBasicMvcFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns)
+
+        public MsSqlStoredProcedureUsingOleDbDriverTestsBase(OleDbBasicMvcFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns)
         {
             _paramsWithAtSigns = paramsWithAtSigns;
 
@@ -42,7 +40,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetMsSqlParameterizedStoredProcedureUsingOdbcDriver(_paramsWithAtSigns);
+                    _fixture.GetMsSqlParameterizedStoredProcedureUsingOleDbDriver(_paramsWithAtSigns);
                     _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionTransformCompletedLogLineRegex);
                 }
             );
@@ -52,40 +50,37 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         [Fact]
         public void Test()
         {
-            var parameterPlaceholder = string.Join(",", DbParameterData.OdbcMsSqlParameters.Select(_ => "?"));
-            var expectedSqlStatement = $"{{call {_fixture.ProcedureName.ToLower()}({parameterPlaceholder})}}";
-
             var expectedMetrics = new List<Assertions.ExpectedMetric>
             {
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver"}
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/Other/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure", callCount = 1, metricScope = "WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOleDbDriver"}
             };
 
             var expectedTransactionTraceSegments = new List<string>
             {
-                $"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure"
+                $"Datastore/statement/Other/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure"
             };
 
             var expectedQueryParameters = _paramsWithAtSigns
-                    ? DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue)
-                    : DbParameterData.OdbcMsSqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
+                ? DbParameterData.OleDbMsSqlParameters.ToDictionary(p => p.ParameterName, p => p.ExpectedValue)
+                : DbParameterData.OleDbMsSqlParameters.ToDictionary(p => p.ParameterName.TrimStart('@'), p => p.ExpectedValue);
 
-            var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure", QueryParameters = expectedQueryParameters };
+            var expectedTransactionTraceQueryParameters = new Assertions.ExpectedSegmentQueryParameters { segmentName = $"Datastore/statement/Other/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure", QueryParameters = expectedQueryParameters };
 
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
                 new Assertions.ExpectedSqlTrace
                 {
-                    TransactionName = "WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver",
-                    Sql = $"{{call {_fixture.ProcedureName}({parameterPlaceholder})}}",
-                    DatastoreMetricName = $"Datastore/statement/Other/{expectedSqlStatement}/ExecuteProcedure",
+                    TransactionName = "WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOleDbDriver",
+                    Sql = _fixture.ProcedureName,
+                    DatastoreMetricName = $"Datastore/statement/Other/{_fixture.ProcedureName.ToLower()}/ExecuteProcedure",
                     QueryParameters = expectedQueryParameters
                 }
             };
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
-            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver");
-            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOdbcDriver");
+            var transactionSample = _fixture.AgentLog.TryGetTransactionSample("WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOleDbDriver");
+            var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/MsSqlController/MsSqlParameterizedStoredProcedureUsingOleDbDriver");
             var sqlTraces = _fixture.AgentLog.GetSqlTraces().ToList();
             var logEntries = _fixture.AgentLog.GetFileLines().ToList();
 
@@ -106,17 +101,17 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
     }
 
     [NetFrameworkTest]
-    public class MsSqlStoredProcedureUsingOdbcDriverTests : MsSqlStoredProcedureUsingOdbcDriverTestsBase
+    public class MsSqlStoredProcedureUsingOleDbDriverTests : MsSqlStoredProcedureUsingOleDbDriverTestsBase
     {
-        public MsSqlStoredProcedureUsingOdbcDriverTests(OdbcBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MsSqlStoredProcedureUsingOleDbDriverTests(OleDbBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
         {
         }
     }
 
     [NetFrameworkTest]
-    public class MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns : MsSqlStoredProcedureUsingOdbcDriverTestsBase
+    public class MsSqlStoredProcedureUsingOleDbDriverTests_ParamsWithoutAtSigns : MsSqlStoredProcedureUsingOleDbDriverTestsBase
     {
-        public MsSqlStoredProcedureUsingOdbcDriverTests_ParamsWithoutAtSigns(OdbcBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MsSqlStoredProcedureUsingOleDbDriverTests_ParamsWithoutAtSigns(OleDbBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
         {
         }
     }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -11,14 +12,14 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
-    public abstract class MsSqlAsyncTestsBase
+    public abstract class MsSqlTestsBase
     {
         private readonly RemoteServiceFixtures.IMsSqlClientFixture _fixture;
         private readonly string _expectedTransactionName;
 
-        public MsSqlAsyncTestsBase(RemoteServiceFixtures.IMsSqlClientFixture fixture, ITestOutputHelper output, string expectedTransactionName)
+        public MsSqlTestsBase(RemoteServiceFixtures.IMsSqlClientFixture fixture, ITestOutputHelper output, string expectedTransactionName)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -37,13 +38,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                     CommonUtils.ModifyOrCreateXmlAttributeInNewRelicConfig(configPath, new[] { "configuration", "transactionTracer" }, "explainThreshold", "1");
 
                     var instrumentationFilePath = $@"{fixture.DestinationNewRelicExtensionsDirectoryPath}\NewRelic.Providers.Wrapper.Sql.Instrumentation.xml";
-                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(
-                       instrumentationFilePath,
-                        "", "enabled", "true");
+                    CommonUtils.SetAttributeOnTracerFactoryInNewRelicInstrumentation(instrumentationFilePath, "", "enabled", "true");
                 },
                 exerciseApplication: () =>
                 {
-                    _fixture.GetMsSqlAsync();
+                    _fixture.GetMsSql();
                 }
             );
             _fixture.Initialize();
@@ -53,10 +52,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
         public void Test()
         {
             var expectedDatastoreCallCount = 4;
-
-            //This value is dictated by the query and subsequent ExecuteScalarAsync that is being run as part of this test. In this case, we're running a query that returns a single row.
-            //This results in a call to ReadAsync followed by a NextResultAsync and finally another ReadAsync. Therefore
-            //the call count for the Iterate metric should be 3.
+            //This value is dictated by the query that is being run as part of this test. In this case, we're running a query that returns a single row.
+            //This results in a call to Read, NextResult and then a final Read. Therefore the call count for the Iterate metric should be 3.
             var expectedIterateCallCount = 3;
 
             var expectedMetrics = new List<Assertions.ExpectedMetric>
@@ -67,8 +64,8 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allWeb", callCount = expectedDatastoreCallCount },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/instance/MSSQL/{CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)}/default", callCount = expectedDatastoreCallCount},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 2 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedTransactionName},
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 1 },
+                new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/teammembers/select", callCount = 1, metricScope = _expectedTransactionName},
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/select", callCount = 1 },
                 new Assertions.ExpectedMetric { metricName = $@"Datastore/statement/MSSQL/{_fixture.TableName}/select", callCount = 1, metricScope = _expectedTransactionName},
                 new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1 },
@@ -80,25 +77,25 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount },
                 new Assertions.ExpectedMetric { metricName = @"DotNet/DatabaseResult/Iterate", callCount = expectedIterateCallCount, metricScope = _expectedTransactionName}
             };
-
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
                 // The datastore operation happened inside a web transaction so there should be no allOther metrics
-                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther", callCount = 5 },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther", callCount = 5 },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/allOther"},
+                new Assertions.ExpectedMetric { metricName = @"Datastore/MSSQL/allOther"},
 
                 // The operation metric should not be scoped because the statement metric is scoped instead
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", callCount = 3, metricScope = _expectedTransactionName },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", callCount = 1, metricScope = _expectedTransactionName },
-                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", callCount = 1, metricScope = _expectedTransactionName }
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/select", metricScope = _expectedTransactionName },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/insert", metricScope = _expectedTransactionName },
+                new Assertions.ExpectedMetric { metricName = @"Datastore/operation/MSSQL/delete", metricScope = _expectedTransactionName }
             };
             var expectedTransactionTraceSegments = new List<string>
             {
-                "Datastore/statement/MSSQL/teammembers/select"
+                $"Datastore/statement/MSSQL/teammembers/select"
             };
+
             var expectedTransactionTraceSegmentParameters = new List<Assertions.ExpectedSegmentParameter>
             {
-                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "explain_plan"},
+                new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "explain_plan" },
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "sql", parameterValue = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = ?"},
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "host", parameterValue = CommonUtils.NormalizeHostname(MsSqlConfiguration.MsSqlServer)},
                 new Assertions.ExpectedSegmentParameter { segmentName = "Datastore/statement/MSSQL/teammembers/select", parameterName = "port_path_or_id", parameterValue = "default"},
@@ -110,6 +107,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
             {
                 "databaseDuration"
             };
+
             var expectedSqlTraces = new List<Assertions.ExpectedSqlTrace>
             {
                 new Assertions.ExpectedSqlTrace
@@ -117,6 +115,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                     TransactionName = _expectedTransactionName,
                     Sql = "SELECT * FROM NewRelic.dbo.TeamMembers WHERE FirstName = ?",
                     DatastoreMetricName = "Datastore/statement/MSSQL/teammembers/select",
+
                     HasExplainPlan = true
                 },
                 new Assertions.ExpectedSqlTrace
@@ -160,7 +159,9 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
+
                 () => Assertions.TransactionTraceSegmentParametersExist(expectedTransactionTraceSegmentParameters, transactionSample),
+
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventIntrinsicAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
                 () => Assertions.SqlTraceExists(expectedSqlTraces, sqlTraces)
             );
@@ -168,19 +169,19 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
     }
 
     [NetFrameworkTest]
-    public class MsSqlAsyncTests : MsSqlAsyncTestsBase, IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class MsSqlTests : MsSqlTestsBase, IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
     {
-        public MsSqlAsyncTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSqlAsync")
+        public MsSqlTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSql")
         {
         }
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientAsyncTests : MsSqlAsyncTestsBase, IClassFixture<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientTests : MsSqlTestsBase, IClassFixture<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
     {
-        public MicrosoftDataSqlClientAsyncTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
-            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlAsync/{tableName}")
+        public MicrosoftDataSqlClientTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
+            : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql/{tableName}")
         {
         }
     }
