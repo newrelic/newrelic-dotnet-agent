@@ -11,7 +11,7 @@ using NewRelic.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace NewRelic.Agent.UnboundedIntegrationTests
+namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
     [NetFrameworkTest]
     public class MySqlTests : IClassFixture<RemoteServiceFixtures.MySqlBasicMvcFixture>
