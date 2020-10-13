@@ -283,7 +283,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public void WriteToStandardInput(string commandText)
         {
-            RemoteProcess.StandardInput.WriteLine(commandText);
+            RemoteProcess.StandardInput.Write($"{commandText}{Environment.NewLine}");
         }
 
         public virtual void Shutdown()
