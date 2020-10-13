@@ -79,6 +79,8 @@ namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
 
             foreach (var assembly in assemblies)
             {
+                Console.WriteLine($"ASSEMBLY: {assembly.FullName} - {assembly.Location}");
+
                 foreach (var type in assembly.GetTypes())
                 {
                     if (type.IsDefined(attribType, true))
