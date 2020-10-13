@@ -494,7 +494,10 @@ jobs:
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xml ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
           
           Write-Host "Get HostableWebCore errors (if any)"
-          Get-EventLog -LogName Application -Source HostableWebCore
+          Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+
+          Write-Host "Get .NET Runtime errors (if any)"
+          Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
         shell: powershell
 
       - name: Archive Test Results
