@@ -254,86 +254,86 @@ jobs:
         path: ${{ github.workspace }}\TestResults
         if-no-files-found: error
 
-  publish-test-results:
-    needs: build-test-fullagent-msi
-    if: ${{ always() }}
-    name: Publish Test Results
+  # publish-test-results:
+  #   needs: build-test-fullagent-msi
+  #   if: ${{ always() }}
+  #   name: Publish Test Results
 
-    runs-on: windows-2019
+  #   runs-on: windows-2019
 
-    env:
-      results_name: ""
+  #   env:
+  #     results_name: ""
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         ref: gh-pages
+  #         fetch-depth: 0
 
-      - name: Download Test Results Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: test-results-${{ github.run_id }}
-          path: testresults
+  #     - name: Download Test Results Artifacts
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: test-results-${{ github.run_id }}
+  #         path: testresults
 
-      - name: Move Test Results
-        run: |
-          Write-Host "Change to testresults"
-          cd testresults
+  #     - name: Move Test Results
+  #       run: |
+  #         Write-Host "Change to testresults"
+  #         cd testresults
 
-          Write-Host "Create the folder"
-          $resultname = "fullagent_msi-${{ github.run_id }}".ToLower().Replace(" ", "")
-          Write-Host "::set-env name=results_name::$resultname"
+  #         Write-Host "Create the folder"
+  #         $resultname = "fullagent_msi-${{ github.run_id }}".ToLower().Replace(" ", "")
+  #         Write-Host "::set-env name=results_name::$resultname"
 
-          Write-Host "Check if testresults folder exists, create if not."
-          if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults" )) {
-            New-Item -Path "${{ github.workspace }}\docs" -Name "testresults" -ItemType "directory" }
+  #         Write-Host "Check if testresults folder exists, create if not."
+  #         if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults" )) {
+  #           New-Item -Path "${{ github.workspace }}\docs" -Name "testresults" -ItemType "directory" }
           
-          Write-Host "Check if test run results ($resultname) folder exists, create if not."
-          if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults\$resultname" )) {
-            New-Item -Path "${{ github.workspace }}\docs\testresults" -Name "$resultname" -ItemType "directory" }
+  #         Write-Host "Check if test run results ($resultname) folder exists, create if not."
+  #         if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults\$resultname" )) {
+  #           New-Item -Path "${{ github.workspace }}\docs\testresults" -Name "$resultname" -ItemType "directory" }
 
-          Write-Host "Copy the files and overwrite if already exists"
-          Copy-Item .\* -Destination ${{ github.workspace }}\docs\testresults\$resultname\ -Force
+  #         Write-Host "Copy the files and overwrite if already exists"
+  #         Copy-Item .\* -Destination ${{ github.workspace }}\docs\testresults\$resultname\ -Force
 
-          Write-Host "Confirm Folder Exists"
-          Test-Path "${{ github.workspace }}\docs\testresults\$resultname"
-        shell: powershell
+  #         Write-Host "Confirm Folder Exists"
+  #         Test-Path "${{ github.workspace }}\docs\testresults\$resultname"
+  #       shell: powershell
 
-      - name: Commit files
-        run: |
-          Write-Host "git config"
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+  #     - name: Commit files
+  #       run: |
+  #         Write-Host "git config"
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
 
-          Write-Host "Stage files in git"
-          $ErrorActionPreference = 'Continue'
-          git add -A
+  #         Write-Host "Stage files in git"
+  #         $ErrorActionPreference = 'Continue'
+  #         git add -A
 
-          Write-Host "git commit"
-          git commit -am "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
+  #         Write-Host "git commit"
+  #         git commit -am "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
 
-          Write-Host "git pull"
-          git pull
-        shell: powershell
+  #         Write-Host "git pull"
+  #         git pull
+  #       shell: powershell
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          branch: gh-pages
-          github_token: ${{ secrets.GITHUB_TOKEN }}    
+  #     - name: Push changes
+  #       uses: ad-m/github-push-action@master
+  #       with:
+  #         branch: gh-pages
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}    
 
-      - name: Create Check-run with test results
-        uses: LouisBrunner/checks-action@v1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
-          status: completed
-          conclusion: neutral
-          output: |
-            { "summary": "${{ steps.test.outputs.summary }}",
-            "text_description": "[FullAgent Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
+  #     - name: Create Check-run with test results
+  #       uses: LouisBrunner/checks-action@v1.0.0
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         name: "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
+  #         status: completed
+  #         conclusion: neutral
+  #         output: |
+  #           { "summary": "${{ steps.test.outputs.summary }}",
+  #           "text_description": "[FullAgent Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
 
   build-integration-tests:
     needs: build-test-fullagent-msi
@@ -376,65 +376,65 @@ jobs:
           !${{ github.workspace }}\tests\Agent\IntegrationTests\**\obj\**\*
         if-no-files-found: error
 
-  build-unbounded-tests:
-    needs: build-test-fullagent-msi
-    name: Build UnboundedIntegrationTests
+  # build-unbounded-tests:
+  #   needs: build-test-fullagent-msi
+  #   name: Build UnboundedIntegrationTests
 
-    runs-on: windows-2019
+  #   runs-on: windows-2019
 
-    env:
-      unbounded_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln
+  #   env:
+  #     unbounded_solution_path: ${{ github.workspace }}\tests\Agent\IntegrationTests\UnboundedIntegrationTests.sln
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #     with:
+  #       fetch-depth: 0
 
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.1
+  #   - name: Add msbuild to PATH
+  #     uses: microsoft/setup-msbuild@v1.0.1
 
-    - name: Install dependencies for UnboundedIntegrationTests.sln
-      run: |
-        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-        ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-      shell: powershell
+  #   - name: Install dependencies for UnboundedIntegrationTests.sln
+  #     run: |
+  #       Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+  #       ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+  #     shell: powershell
 
-    - name: Build UnboundedIntegrationTests.sln
-      run: |
-        Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
-        MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
-      shell: powershell
+  #   - name: Build UnboundedIntegrationTests.sln
+  #     run: |
+  #       Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
+  #       MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
+  #     shell: powershell
 
-  build-platform-tests: 
-    needs: build-test-fullagent-msi
-    name: Build PlatformTests
+  # build-platform-tests: 
+  #   needs: build-test-fullagent-msi
+  #   name: Build PlatformTests
 
-    runs-on: windows-2019
+  #   runs-on: windows-2019
 
-    env:
-      platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
+  #   env:
+  #     platform_solution_path: ${{ github.workspace }}\tests\Agent\PlatformTests\PlatformTests.sln
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #     with:
+  #       fetch-depth: 0
 
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.1
+  #   - name: Add msbuild to PATH
+  #     uses: microsoft/setup-msbuild@v1.0.1
 
-    - name: Install dependencies for PlatformTests.sln
-      run: |
-        Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-        ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-      shell: powershell
+  #   - name: Install dependencies for PlatformTests.sln
+  #     run: |
+  #       Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
+  #       ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
+  #     shell: powershell
 
-    - name: Build PlatformTests.sln
-      run: |
-        Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
-        MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
-      shell: powershell
+  #   - name: Build PlatformTests.sln
+  #     run: |
+  #       Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
+  #       MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
+  #     shell: powershell
 
   run-integration-tests:
     needs: [build-integration-tests]
