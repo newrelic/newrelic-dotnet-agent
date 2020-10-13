@@ -491,7 +491,7 @@ jobs:
           netstat -no
 
           Write-Host "Run tests"
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xml ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xmlv1 ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
           
           Write-Host "Get HostableWebCore errors (if any)"
           Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
