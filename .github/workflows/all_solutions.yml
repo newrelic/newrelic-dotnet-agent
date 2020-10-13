@@ -454,6 +454,8 @@ jobs:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: true
 
     steps:
       - name: Checkout
@@ -487,17 +489,21 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          Write-Host "List ports in use"
-          netstat -no
+          if ($Env:enhanced_logging) {
+            Write-Host "List ports in use"
+            netstat -no  
+          }
 
           Write-Host "Run tests"
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xmlv1 ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
           
-          Write-Host "Get HostableWebCore errors (if any)"
-          Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
-
-          Write-Host "Get .NET Runtime errors (if any)"
-          Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore
+          if ($Env:enhanced_logging) {
+            Write-Host "Get HostableWebCore errors (if any)"
+            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+  
+            Write-Host "Get .NET Runtime errors (if any)"
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+          }
         shell: powershell
 
       - name: Archive Test Results
