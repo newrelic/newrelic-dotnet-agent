@@ -484,7 +484,7 @@ jobs:
       - name: Run Integration Tests
         run: |
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
-        shell: pwsh
+        shell: cmd
 
       - name: Archive Test Results
         if: ${{ always() }}
