@@ -109,15 +109,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
 
             var unfilteredIntrinsicsDic = attributes.GetAttributeValues(AttributeClassification.Intrinsics)
-                .Where(x=>x.AttributeDefinition.IsAvailableForAny(AttributeDestinations.TransactionEvent))
-                .ToDictionary(x => x.AttributeDefinition);
+                .Where(x => x.AttributeDefinition.IsAvailableForAny(AttributeDestinations.TransactionEvent))
+                .Select(x => x.AttributeDefinition.Name)
+                .Distinct();
 
             var filteredIntrinsicsDic = transactionEvent.AttributeValues.GetAttributeValues(AttributeClassification.Intrinsics)
                 .ToDictionary(x => x.AttributeDefinition);
 
             // ASSERT
             NrAssert.Multiple(
-                () => CollectionAssert.AreEquivalent(unfilteredIntrinsicsDic.Keys, filteredIntrinsicsDic.Keys),
+                () => CollectionAssert.AreEquivalent(unfilteredIntrinsicsDic, filteredIntrinsicsDic.Keys),
                 () => Assert.AreEqual(19, intrinsicAttributes.Count),
                 () => Assert.AreEqual("Transaction", intrinsicAttributes["type"]),
                 () => Assert.AreEqual(4, agentAttributes.Count),

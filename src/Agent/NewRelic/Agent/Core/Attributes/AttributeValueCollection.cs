@@ -120,7 +120,13 @@ namespace NewRelic.Agent.Core.Attributes
 
         public IDictionary<string, object> GetAttributeValuesDic(AttributeClassification classification)
         {
-            return GetAttribValuesImpl(classification).Cast<IAttributeValue>().ToDictionary(x => x.AttributeDefinition.Name, x => x.Value);
+            var result = new Dictionary<string, object>();
+            foreach(var attribVal in GetAttribValuesImpl(classification))
+            {
+                result[attribVal.AttributeDefinition.Name] = attribVal.Value;
+            }
+
+            return result;
         }
 
         public void AddRange(IEnumerable<IAttributeValue> attribValues)
@@ -282,28 +288,33 @@ namespace NewRelic.Agent.Core.Attributes
 
         }
 
+        //private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesIntrinsicAttribs;
+        //private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesAgentAttribs;
+        //private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesUserAttribs;
 
-        private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesIntrinsicAttribs;
-        private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesAgentAttribs;
-        private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesUserAttribs;
 
-        private ConcurrentDictionary<AttributeDefinition, AttributeValue> GetValueDictionary(AttributeClassification classification, bool withCreate)
+        private ConcurrentBag<AttributeValue> _attribValuesIntrinsicAttribs;
+        private ConcurrentBag<AttributeValue> _attribValuesAgentAttribs;
+        private ConcurrentBag<AttributeValue> _attribValuesUserAttribs;
+
+
+        private ConcurrentBag<AttributeValue> GetValueDictionary(AttributeClassification classification, bool withCreate)
         {
             switch(classification)
             {
                 case AttributeClassification.Intrinsics:
                     return withCreate
-                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new ConcurrentDictionary<AttributeDefinition, AttributeValue>())
+                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new ConcurrentBag<AttributeValue>())
                         : _attribValuesIntrinsicAttribs;
 
                 case AttributeClassification.AgentAttributes:
                     return withCreate
-                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new ConcurrentDictionary<AttributeDefinition, AttributeValue>())
+                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new ConcurrentBag<AttributeValue>())
                         : _attribValuesAgentAttribs;
 
                 case AttributeClassification.UserAttributes:
                     return withCreate
-                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new ConcurrentDictionary<AttributeDefinition, AttributeValue>())
+                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new ConcurrentBag<AttributeValue>())
                         : _attribValuesUserAttribs;
             }
 
@@ -316,15 +327,25 @@ namespace NewRelic.Agent.Core.Attributes
 
             return dic == null
                 ? Enumerable.Empty<AttributeValue>()
-                : dic.Values.AsEnumerable();
+                : dic;
         }
 
         protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
         {
-            foreach(var itemToRemove in itemsToRemove)
+
+            if (_attribValuesIntrinsicAttribs != null)
             {
-                var dic = GetValueDictionary(itemToRemove.AttributeDefinition.Classification,false);
-                dic?.TryRemove(itemToRemove.AttributeDefinition, out _);
+                _attribValuesIntrinsicAttribs = new ConcurrentBag<AttributeValue>(_attribValuesIntrinsicAttribs.Except(itemsToRemove));
+            }
+
+            if (_attribValuesAgentAttribs != null)
+            {
+                _attribValuesAgentAttribs = new ConcurrentBag<AttributeValue>(_attribValuesAgentAttribs.Except(itemsToRemove));
+            }
+
+            if (_attribValuesUserAttribs != null)
+            {
+                _attribValuesUserAttribs = new ConcurrentBag<AttributeValue>(_attribValuesUserAttribs.Except(itemsToRemove));
             }
         }
 
@@ -383,7 +404,7 @@ namespace NewRelic.Agent.Core.Attributes
             }
 
             var dic = GetValueDictionary(attribVal.AttributeDefinition.Classification, true);
-            dic[attribVal.AttributeDefinition] = attribVal;
+            dic.Add(attribVal);
 
             return true;
         }
