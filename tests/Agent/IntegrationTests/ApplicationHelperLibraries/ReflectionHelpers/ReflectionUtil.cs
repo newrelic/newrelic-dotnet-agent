@@ -79,12 +79,16 @@ namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
 
             foreach (var assembly in assemblies)
             {
-                Console.WriteLine($"ASSEMBLY: {assembly.FullName} - {assembly.Location}");
+                Console.WriteLine($"ASSEMBLY: {assembly.GetName().Name}");
 
                 foreach (var type in assembly.GetTypes())
                 {
+                    Console.WriteLine($"\t\tPossible Type: {type.FullName}");
+
                     if (type.IsDefined(attribType, true))
                     {
+                        Console.WriteLine($"\t\tPossible Type: {type.FullName} - MATCHAROOSKI");
+
                         yield return type;
                     }
                 }
@@ -97,8 +101,11 @@ namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
 
             foreach (var method in type.GetMethods())
             {
+                Console.WriteLine($"\t\t\tPossible Method: {method.Name}");
                 if (method.IsDefined(attribType, true))
                 {
+                    Console.WriteLine($"\t\t\tPossible Method: {method.Name} - MATCHAROOSKI");
+
                     yield return method;
                 }
 
