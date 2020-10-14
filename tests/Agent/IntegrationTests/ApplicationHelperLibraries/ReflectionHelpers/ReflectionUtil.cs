@@ -79,16 +79,10 @@ namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
 
             foreach (var assembly in assemblies)
             {
-                Console.WriteLine($"ASSEMBLY: {assembly.GetName().Name}");
-
                 foreach (var type in assembly.GetTypes())
                 {
-                    Console.WriteLine($"\t\tPossible Type: {type.FullName}");
-
                     if (type.IsDefined(attribType, true))
                     {
-                        Console.WriteLine($"\t\tPossible Type: {type.FullName} - MATCHAROOSKI");
-
                         yield return type;
                     }
                 }
@@ -101,11 +95,8 @@ namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
 
             foreach (var method in type.GetMethods())
             {
-                Console.WriteLine($"\t\t\tPossible Method: {method.Name}");
                 if (method.IsDefined(attribType, true))
                 {
-                    Console.WriteLine($"\t\t\tPossible Method: {method.Name} - MATCHAROOSKI");
-
                     yield return method;
                 }
 
@@ -121,25 +112,9 @@ namespace NewRelic.Agent.IntegrationTests.ApplicationHelpers
                 .Where(t => t.Name.Equals(libraryName, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            foreach(var t in types)
-            {
-                Console.WriteLine($"TYPE: {t.FullName}");
-            }
-
             var methods = types.SelectMany(t => ReflectionUtil.FindMethodsWithAttribute<TAttribMethod>(t)
                                                     .Where(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase)))
                                                     .ToList();
-
-
-            foreach (var m in methods)
-            {
-                Console.WriteLine($"METHOD: {m.Name}");
-                foreach(var p in m.GetParameters())
-                {
-                    Console.WriteLine($"\tPARAM: {p.Name}  {p.ParameterType.FullName}");
-                }
-            }
-
 
             return methods;
         }
