@@ -432,13 +432,34 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public IEnumerable<Metric> GetMetrics()
         {
-            return TryGetLogLines(MetricDataLogLineRegex)
+            var logLines = TryGetLogLines(MetricDataLogLineRegex).ToList();
+
+            Console.WriteLine($"GET METRICS: TryGetLogLines - {logLines.Count}");
+
+
+            var logLinesJsonStrings = logLines
                 .Select(match => TryExtractJson(match, 1))
                 .Where(json => json != null)
+                .ToList();
+
+            Console.WriteLine($"GET METRICS: TryGetLogLinesJsonString - {logLines.Count}");
+
+
+            var metricDataObjects = logLinesJsonStrings
                 .Select(JsonConvert.DeserializeObject<MetricData>)
                 .Where(metricData => metricData != null)
+                .ToList();
+
+            Console.WriteLine($"GET METRICS: metricDataObjects - {metricDataObjects.Count}");
+
+            var metrics = metricDataObjects
                 .SelectMany(metricData => metricData.Metrics)
-                .Where(metric => metric != null);
+                .Where(metric => metric != null)
+                .ToList();
+
+            Console.WriteLine($"GET METRICS: metric values - {metrics.Count}");
+
+            return metrics;
         }
 
         public Metric GetMetricByName(string name, string scope = null)
