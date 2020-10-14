@@ -44,7 +44,11 @@ namespace MultiFunctionApplicationHelpers
 
                 command = command.Substring(startPos);
 
-
+                if (string.IsNullOrWhiteSpace(command))
+                {
+                    continue;
+                }
+                
                 Console.WriteLine();
                 if (command.Equals("exit", StringComparison.OrdinalIgnoreCase) || command.Equals("quit", StringComparison.OrdinalIgnoreCase))
                 {
