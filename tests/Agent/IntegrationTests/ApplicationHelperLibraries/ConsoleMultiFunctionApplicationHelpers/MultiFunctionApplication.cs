@@ -33,6 +33,18 @@ namespace MultiFunctionApplicationHelpers
                     continue;
                 }
 
+                var startPos = 0;
+                for (startPos = 0; startPos < command.Length; startPos++)
+                {
+                    if (char.IsLetter(command[startPos]))
+                    {
+                        break;
+                    }
+                }
+
+                command = command.Substring(startPos);
+
+
                 Console.WriteLine();
                 if (command.Equals("exit", StringComparison.OrdinalIgnoreCase) || command.Equals("quit", StringComparison.OrdinalIgnoreCase))
                 {
@@ -56,7 +68,7 @@ namespace MultiFunctionApplicationHelpers
             Logger.Info($"EXECUTING: '{commandText}'");
 
             var args = commandText.Split(' ');
-
+            
             if (args.Count() < 2)
             {
                 Logger.Error($"INVALID FORMAT: '{commandText}'");
