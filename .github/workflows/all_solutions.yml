@@ -443,11 +443,12 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
-          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
+        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
+        # namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
+        #   CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
+        #   HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
+        #   ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
+        #   WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -513,6 +514,14 @@ jobs:
         with:
           name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
           path: ${{ github.workspace }}/TestResults
+          if-no-files-found: error
+
+      - name: Archive Working Directories
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: IntegrationTestsWorkingFolder
+          path: ${{ github.workspace }}/IntegrationTestWorkingDirectory/**/*.log
           if-no-files-found: error
 
   combine-integration-test-results:
