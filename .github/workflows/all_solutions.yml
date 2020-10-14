@@ -485,6 +485,7 @@ jobs:
       - name: Install dependencies
         run: |
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+          pip install aiohttp
         shell: powershell
 
       - name: Run Integration Tests
