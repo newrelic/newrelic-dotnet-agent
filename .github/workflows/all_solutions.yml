@@ -454,6 +454,8 @@ jobs:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: true
 
     steps:
       - name: Checkout
@@ -483,11 +485,26 @@ jobs:
       - name: Install dependencies
         run: |
           Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+          pip install aiohttp
         shell: powershell
 
       - name: Run Integration Tests
         run: |
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+          if ($Env:enhanced_logging) {
+            Write-Host "List ports in use"
+            netstat -no  
+          }
+
+          Write-Host "Run tests"
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xmlv1 ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
+          
+          if ($Env:enhanced_logging) {
+            Write-Host "Get HostableWebCore errors (if any)"
+            Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+  
+            Write-Host "Get .NET Runtime errors (if any)"
+            Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+          }
         shell: powershell
 
       - name: Archive Test Results
@@ -497,3 +514,32 @@ jobs:
           name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
           path: ${{ github.workspace }}/TestResults
           if-no-files-found: error
+
+  combine-integration-test-results:
+    needs: run-integration-tests
+    if: ${{ always() }}
+    name: Combine Integration Test Results
+
+    runs-on: windows-2019
+
+    env:
+      results_name: ""
+
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Combine Integration Results
+        run: |
+          mkdir all-integration-test-results
+
+          Get-ChildItem -Path .\integration-test-results* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
+        shell: powershell
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: all-integration-test-results-${{ github.run_id }}
+          path: ./all-integration-test-results
+          if-no-files-found: error
+
