@@ -467,6 +467,7 @@ jobs:
       - name: Set up secrets
         env:
           INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
+          NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
@@ -520,8 +521,8 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
-          name: IntegrationTestsWorkingFolder
-          path: ${{ github.workspace }}/IntegrationTestWorkingDirectory/**/*.log
+          name: integration-test-logs-${{ matrix.namespace }}
+          path: C:\IntegrationTestWorkingDirectory\**\*.log
           if-no-files-found: error
 
   combine-integration-test-results:
