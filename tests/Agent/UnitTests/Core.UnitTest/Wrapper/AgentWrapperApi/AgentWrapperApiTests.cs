@@ -351,9 +351,17 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.SetRequestParameters(parameters);
 
-            Assert.AreEqual(1, _transaction.TransactionMetadata.RequestParameters.Length);
-            Assert.AreEqual("key", _transaction.TransactionMetadata.RequestParameters[0].Key);
-            Assert.AreEqual("value", _transaction.TransactionMetadata.RequestParameters[0].Value);
+            //Assert.AreEqual(1, _transaction.TransactionMetadata.RequestParameters.Length);
+            //Assert.AreEqual("key", _transaction.TransactionMetadata.RequestParameters[0].Key);
+            //Assert.AreEqual("value", _transaction.TransactionMetadata.RequestParameters[0].Value);
+
+            var attribs = _transaction.TransactionMetadata.TransactionAttributes.ToDictionary();
+
+            Assert.AreEqual(1, attribs.Count);
+            Assert.AreEqual("key", attribs.FirstOrDefault().Key);
+            Assert.AreEqual("value", attribs.FirstOrDefault().Value);
+
+
         }
 
         [Test]
@@ -365,10 +373,10 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.SetRequestParameters(parameters);
 
-            var result = _transaction.TransactionMetadata.RequestParameters.ToDictionary();
-            Assert.AreEqual(2, _transaction.TransactionMetadata.RequestParameters.Length);
-            Assert.Contains("firstName", result.Keys);
-            Assert.Contains("lastName", result.Keys);
+            var result = _transaction.TransactionMetadata.TransactionAttributes.ToDictionary();
+            Assert.AreEqual(2, result.Count);
+            Assert.Contains("request.firstName", result.Keys);
+            Assert.Contains("request.lastName", result.Keys);
             Assert.Contains("Jane", result.Values);
             Assert.Contains("Doe", result.Values);
         }

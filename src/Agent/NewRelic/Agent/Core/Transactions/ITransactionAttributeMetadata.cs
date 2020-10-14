@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using NewRelic.Agent.Core.Attributes;
 
 namespace NewRelic.Agent.Core.Transactions
 {
@@ -13,8 +14,11 @@ namespace NewRelic.Agent.Core.Transactions
     /// </summary>
     public interface ITransactionAttributeMetadata
     {
-        KeyValuePair<string, string>[] RequestParameters { get; }
-        KeyValuePair<string, object>[] UserAttributes { get; }
+
+        AttributeValueCollection TransactionAttributes { get; }
+
+        //KeyValuePair<string, string>[] RequestParameters { get; }
+        //KeyValuePair<string, object>[] UserAttributes { get; }
         IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState { get; }
 
         string Uri { get; }

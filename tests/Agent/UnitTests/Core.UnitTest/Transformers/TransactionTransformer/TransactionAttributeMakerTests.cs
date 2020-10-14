@@ -331,8 +331,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+
+            transaction.SetRequestParameters(new Dictionary<string, string> { { "requestParameterKey", "requestParameterValue" } });
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
@@ -414,8 +418,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.SetRequestParameters(new Dictionary<string, string>{{ "requestParameterKey", "requestParameterValue" }});
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.SetHttpResponseStatusCode(200, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
@@ -512,8 +516,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+
+            transaction.SetRequestParameters(new Dictionary<string, string> { { "requestParameterKey", "requestParameterValue" } });
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -589,8 +597,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.SetRequestParameters(new Dictionary<string, string> { { "requestParameterKey", "requestParameterValue" } });
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.SetHttpResponseStatusCode(200, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
@@ -666,8 +676,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.SetRequestParameters(new Dictionary<string, string> { { "requestParameterKey", "requestParameterValue" } });
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.SetHttpResponseStatusCode(200, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
             transaction.TransactionMetadata.SetQueueTime(TimeSpan.FromSeconds(1));
@@ -1255,8 +1267,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.SetRequestParameters(new Dictionary<string, string> { { "requestParameterKey", "requestParameterValue" } });
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -1327,7 +1341,9 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
+
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
@@ -1390,8 +1406,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.SetRequestParameters(new Dictionary<string, string> { { "requestParameterKey", "requestParameterValue" } });
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");
@@ -1459,8 +1477,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             var priority = 0.5f;
             var transaction = new Transaction(_configuration, TransactionName.ForWebTransaction("transactionCategory", "transactionName"), timer, expectedStartTime, Mock.Create<ICallStackManager>(), _databaseService, priority, Mock.Create<IDatabaseStatementParser>(), _distributedTracePayloadHandler, _errorService, _attribDefs);
-            transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
-            transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            //transaction.TransactionMetadata.AddRequestParameter("requestParameterKey", "requestParameterValue");
+            //transaction.TransactionMetadata.AddUserAttribute("userAttributeKey", "userAttributeValue");
+            transaction.SetRequestParameters(new Dictionary<string, string> { { "requestParameterKey", "requestParameterValue" } });
+            transaction.AddCustomAttribute("userAttributeKey", "userAttributeValue");
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(MakeErrorData());
             transaction.SetHttpResponseStatusCode(400, null);
             transaction.TransactionMetadata.SetOriginalUri("originalUri");

@@ -16,9 +16,10 @@ namespace NewRelic.Agent.Core.Transactions
 {
     public class TestImmutableTransactionMetadata : IImmutableTransactionMetadata
     {
-        public KeyValuePair<string, string>[] RequestParameters { get; }
-        public KeyValuePair<string, object>[] UserAttributes { get; }
+        //public KeyValuePair<string, string>[] RequestParameters { get; }
+        //public KeyValuePair<string, object>[] UserAttributes { get; }
 
+        public AttributeValueCollection TransactionAttributes { get; }
 
         public string Uri { get; }
         public string OriginalUri { get; }
@@ -59,8 +60,9 @@ namespace NewRelic.Agent.Core.Transactions
             string originalUri,
             string referrerUri,
             TimeSpan? queueTime,
-            ConcurrentDictionary<string, string> requestParameters,
-            ConcurrentDictionary<string, object> userAttributes,
+            AttributeValueCollection transactionAttributes,
+            //ConcurrentDictionary<string, string> requestParameters,
+            //ConcurrentDictionary<string, object> userAttributes,
             ITransactionErrorState transactionErrorState,
             int? httpResponseStatusCode,
             int? httpResponseSubStatusCode,
@@ -85,9 +87,6 @@ namespace NewRelic.Agent.Core.Transactions
             QueueTime = queueTime;
 
             // The following must use ToArray because ToArray is thread safe on a ConcurrentDictionary.
-            RequestParameters = requestParameters.ToArray();
-            UserAttributes = userAttributes.ToArray();
-
             ReadOnlyTransactionErrorState = transactionErrorState;
 
             HttpResponseStatusCode = httpResponseStatusCode;
@@ -106,6 +105,7 @@ namespace NewRelic.Agent.Core.Transactions
             IsSynthetics = isSynthetics;
             HasCatResponseHeaders = hasCatResponseHeaders;
             Priority = priority;
+            TransactionAttributes = transactionAttributes;
         }
     }
 
@@ -250,8 +250,7 @@ namespace NewRelic.Agent.Core.Transactions
                 originalUri: "originalUri",
                 referrerUri: "referrerUri",
                 queueTime: new TimeSpan(1),
-                requestParameters: new ConcurrentDictionary<string, string>(),
-                userAttributes: new ConcurrentDictionary<string, object>(),
+                new AttributeValueCollection(),
                 transactionErrorState: _transactionErrorState,
                 httpResponseStatusCode: 200,
                 httpResponseSubStatusCode: 201,
