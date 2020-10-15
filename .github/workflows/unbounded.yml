@@ -311,19 +311,12 @@ jobs:
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: true
-      
+
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-
-    - name: Set up secrets
-      env:
-        UNBOUNDED_TEST_SECRETS: ${{ secrets.UNBOUNDED_TEST_SECRETS }}
-      run: |
-        "$Env:UNBOUNDED_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-      shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
     - name: Download Agent Home Folders
       uses: actions/download-artifact@v2
@@ -340,8 +333,18 @@ jobs:
     - name: Install dependencies
       run: |
         Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-#        msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
+        if (${{ matrix.namespace }} -eq "MsSql") {
+          msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
+        }
+        choco install gnupg
+        gpg --quiet --batch --yes --decrypt --passphrase="$UNBOUNDED_PASSPHRASE" --output ${{ github.workspace }}\build\keys\secrets-live.json ${{ github.workspace }}\build\keys\secrets-live.json.gpg
       shell: powershell
+
+    - name: Set up secrets
+      run: |
+        $secrets = Get-Content ${{ github.workspace }}\build\keys\secrets-live.json
+        "$secrets" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+      shell: powershell #this doesn't work with normal powershell due to UTF-8 BOM handling
 
     - name: Run Unbounded Integration Tests
       run: |
@@ -349,9 +352,9 @@ jobs:
           Write-Host "List ports in use"
           netstat -no  
         }
-        
+
         ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -serialize -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
-        
+
         if ($Env:enhanced_logging) {
           Write-Host "Get HostableWebCore errors (if any)"
           Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
@@ -360,7 +363,7 @@ jobs:
           Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
         }
       shell: powershell
-      
+
     - name: Archive Working Folders
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
