@@ -457,7 +457,8 @@ jobs:
       integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
       enhanced_logging: true
-
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -467,7 +468,6 @@ jobs:
       - name: Set up secrets
         env:
           INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
-          NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
         run: |
           "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
         shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
