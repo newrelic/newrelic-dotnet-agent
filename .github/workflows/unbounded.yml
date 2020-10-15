@@ -343,7 +343,7 @@ jobs:
 
     - name: Run Unbounded Integration Tests
       run: |
-        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -serialize -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
       shell: powershell
       
     - name: Archive Working Folders
