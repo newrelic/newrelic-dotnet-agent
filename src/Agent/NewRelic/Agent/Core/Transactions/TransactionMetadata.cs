@@ -89,7 +89,7 @@ namespace NewRelic.Agent.Core.Transactions
         private volatile string _originalUri;
         private volatile string _referrerUri;
 
-        private readonly AttributeValueCollection _transactionAttributes = new AttributeValueCollection(AttributeDestinations.All);
+        private readonly AttributeValueCollection _transactionAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
         public AttributeValueCollection TransactionAttributes => _transactionAttributes;
 
         //private readonly ConcurrentDictionary<string, string> _requestParameters = new ConcurrentDictionary<string, string>();

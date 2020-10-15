@@ -358,7 +358,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
             var attribs = _transaction.TransactionMetadata.TransactionAttributes.ToDictionary();
 
             Assert.AreEqual(1, attribs.Count);
-            Assert.AreEqual("key", attribs.FirstOrDefault().Key);
+            Assert.AreEqual("request.parameters.key", attribs.FirstOrDefault().Key);
             Assert.AreEqual("value", attribs.FirstOrDefault().Value);
 
 
@@ -375,8 +375,8 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             var result = _transaction.TransactionMetadata.TransactionAttributes.ToDictionary();
             Assert.AreEqual(2, result.Count);
-            Assert.Contains("request.firstName", result.Keys);
-            Assert.Contains("request.lastName", result.Keys);
+            Assert.Contains("request.parameters.firstName", result.Keys);
+            Assert.Contains("request.parameters.lastName", result.Keys);
             Assert.Contains("Jane", result.Values);
             Assert.Contains("Doe", result.Values);
         }

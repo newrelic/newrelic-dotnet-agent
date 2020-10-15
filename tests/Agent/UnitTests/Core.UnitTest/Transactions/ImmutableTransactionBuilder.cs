@@ -250,7 +250,7 @@ namespace NewRelic.Agent.Core.Transactions
                 originalUri: "originalUri",
                 referrerUri: "referrerUri",
                 queueTime: new TimeSpan(1),
-                new AttributeValueCollection(),
+                new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes),
                 transactionErrorState: _transactionErrorState,
                 httpResponseStatusCode: 200,
                 httpResponseSubStatusCode: 201,

@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
         {
             // ARRANGE
             var transaction = BuildTestTransaction(statusCode: 200, uri: "http://foo.com");
-            transaction.TransactionMetadata.AddUserAttribute("foo", "bar");
+            transaction.AddCustomAttribute("foo", "bar");
             var errorData = MakeErrorData();
             transaction.TransactionMetadata.TransactionErrorState.AddCustomErrorData(errorData);
 
@@ -237,12 +237,12 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             internalTransaction.SetSampled(adaptiveSampler);
 
             var transactionMetadata = internalTransaction.TransactionMetadata;
-            PopulateTransactionMetadataBuilder(transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
+            PopulateTransactionMetadataBuilder(internalTransaction, transactionMetadata, uri, statusCode, subStatusCode, referrerCrossProcessId, exceptionData, customErrorData, isSynthetics, isCAT, referrerUri, includeUserAttributes);
 
             return internalTransaction;
         }
 
-        private void PopulateTransactionMetadataBuilder(ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData exceptionData = null, ErrorData customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeUserAttributes = false)
+        private void PopulateTransactionMetadataBuilder(Transaction transaction, ITransactionMetadata metadata, string uri = null, int? statusCode = null, int? subStatusCode = null, string referrerCrossProcessId = null, ErrorData exceptionData = null, ErrorData customErrorData = null, bool isSynthetics = true, bool isCAT = true, string referrerUri = null, bool includeUserAttributes = false)
         {
             if (uri != null)
                 metadata.SetUri(uri);
@@ -273,7 +273,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             if (includeUserAttributes)
             {
-                metadata.AddUserAttribute("sample.user.attribute", "user attribute string");
+                transaction.AddCustomAttribute("sample.user.attribute", "user attribute string");
             }
 
             if (isSynthetics)
