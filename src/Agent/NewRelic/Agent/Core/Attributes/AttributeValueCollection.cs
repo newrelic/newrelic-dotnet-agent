@@ -288,33 +288,28 @@ namespace NewRelic.Agent.Core.Attributes
 
         }
 
-        //private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesIntrinsicAttribs;
-        //private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesAgentAttribs;
-        //private ConcurrentDictionary<AttributeDefinition, AttributeValue> _attribValuesUserAttribs;
+        private List<AttributeValue> _attribValuesIntrinsicAttribs;
+        private List<AttributeValue> _attribValuesAgentAttribs;
+        private List<AttributeValue> _attribValuesUserAttribs;
 
 
-        private ConcurrentQueue<AttributeValue> _attribValuesIntrinsicAttribs;
-        private ConcurrentQueue<AttributeValue> _attribValuesAgentAttribs;
-        private ConcurrentQueue<AttributeValue> _attribValuesUserAttribs;
-
-
-        private ConcurrentQueue<AttributeValue> GetValueDictionary(AttributeClassification classification, bool withCreate)
+        private List<AttributeValue> GetAttribValues(AttributeClassification classification, bool withCreate)
         {
             switch(classification)
             {
                 case AttributeClassification.Intrinsics:
                     return withCreate
-                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new ConcurrentQueue<AttributeValue>())
+                        ? _attribValuesIntrinsicAttribs ?? (_attribValuesIntrinsicAttribs = new List<AttributeValue>())
                         : _attribValuesIntrinsicAttribs;
 
                 case AttributeClassification.AgentAttributes:
                     return withCreate
-                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new ConcurrentQueue<AttributeValue>())
+                        ? _attribValuesAgentAttribs ?? (_attribValuesAgentAttribs = new List<AttributeValue>())
                         : _attribValuesAgentAttribs;
 
                 case AttributeClassification.UserAttributes:
                     return withCreate
-                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new ConcurrentQueue<AttributeValue>())
+                        ? _attribValuesUserAttribs ?? (_attribValuesUserAttribs = new List<AttributeValue>())
                         : _attribValuesUserAttribs;
             }
 
@@ -323,7 +318,7 @@ namespace NewRelic.Agent.Core.Attributes
 
         protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
         {
-            var dic = GetValueDictionary(classification, false);
+            var dic = GetAttribValues(classification, false);
 
             return dic == null
                 ? Enumerable.Empty<AttributeValue>()
@@ -335,17 +330,17 @@ namespace NewRelic.Agent.Core.Attributes
 
             if (_attribValuesIntrinsicAttribs != null)
             {
-                _attribValuesIntrinsicAttribs = new ConcurrentQueue<AttributeValue>(_attribValuesIntrinsicAttribs.Except(itemsToRemove));
+                Interlocked.Exchange(ref _attribValuesIntrinsicAttribs, new List<AttributeValue>(_attribValuesIntrinsicAttribs.Except(itemsToRemove)));
             }
 
             if (_attribValuesAgentAttribs != null)
             {
-                _attribValuesAgentAttribs = new ConcurrentQueue<AttributeValue>(_attribValuesAgentAttribs.Except(itemsToRemove));
+                Interlocked.Exchange(ref _attribValuesAgentAttribs, new List<AttributeValue>(_attribValuesAgentAttribs.Except(itemsToRemove)));
             }
 
             if (_attribValuesUserAttribs != null)
             {
-                _attribValuesUserAttribs = new ConcurrentQueue<AttributeValue>(_attribValuesUserAttribs.Except(itemsToRemove));
+                Interlocked.Exchange(ref _attribValuesUserAttribs, new List<AttributeValue>(_attribValuesUserAttribs.Except(itemsToRemove)));
             }
         }
 
@@ -396,6 +391,8 @@ namespace NewRelic.Agent.Core.Attributes
             return SetValueImplInternal(attribVal);
         }
 
+        private object syncObj = new object();
+
         private bool SetValueImplInternal(AttributeValue attribVal)
         {
             if(IsImmutable)
@@ -403,8 +400,11 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var dic = GetValueDictionary(attribVal.AttributeDefinition.Classification, true);
-            dic.Enqueue(attribVal);
+            lock (syncObj)
+            {
+                var dic = GetAttribValues(attribVal.AttributeDefinition.Classification, true);
+                dic.Add(attribVal);
+            }
 
             return true;
         }
