@@ -336,7 +336,7 @@ jobs:
     - name: Install dependencies
       run: |
         Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-        msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
+#        msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
       shell: powershell
 
     - name: Run Unbounded Integration Tests
