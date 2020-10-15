@@ -111,12 +111,12 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
         {
             IAttributeValueCollection mockAttributes;
 
-            Mock.Arrange(() => _transactionAttributeMaker.SetUserAndAgentAttributes(Arg.IsAny<IAttributeValueCollection>(), Arg.IsAny<ITransactionAttributeMetadata>()))
-                .DoInstead<IAttributeValueCollection, ITransactionAttributeMetadata>((attribVals, txMetadata) =>
+            Mock.Arrange(() => _transactionAttributeMaker.SetUserAndAgentAttributes(Arg.IsAny<ITransactionAttributeMetadata>()))
+                .DoInstead<ITransactionAttributeMetadata>((txMetadata) =>
                 {
-                    mockAttributes = attribVals;
-                    _attribDefs.OriginalUrl.TrySetValue(attribVals, "http://www.google.com");
-                    _attribDefs.GetCustomAttributeForTransaction("foo").TrySetValue(attribVals, "bar");
+                    mockAttributes = txMetadata.TransactionAttributes;
+                    _attribDefs.OriginalUrl.TrySetValue(txMetadata.TransactionAttributes, "http://www.google.com");
+                    _attribDefs.GetCustomAttributeForTransaction("foo").TrySetValue(txMetadata.TransactionAttributes, "bar");
                 });
 
             var transaction = BuildTestTransaction(queueTime: TimeSpan.FromSeconds(1), applicationTime: TimeSpan.FromSeconds(2));

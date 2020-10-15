@@ -13,7 +13,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
     public interface ITransactionAttributeMaker
     {
         IAttributeValueCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, TransactionMetricStatsCollection txStats);
-        void SetUserAndAgentAttributes(IAttributeValueCollection attribValues, ITransactionAttributeMetadata metadata);
+        void SetUserAndAgentAttributes(ITransactionAttributeMetadata metadata);
     }
 
     public class TransactionAttributeMaker : ITransactionAttributeMaker
@@ -34,14 +34,16 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
         {
             //var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
             var attribVals = immutableTransaction.TransactionMetadata.TransactionAttributes;
-            SetUserAndAgentAttributes(attribVals, immutableTransaction.TransactionMetadata);
-            SetIntrinsicAttributes(attribVals, immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
+            SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
+            SetIntrinsicAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
 
             return attribVals;
         }
 
-        private void SetIntrinsicAttributes(IAttributeValueCollection attribValues, ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
+        private void SetIntrinsicAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
         {
+            var attribValues = immutableTransaction.TransactionMetadata.TransactionAttributes;
+
             // Required transaction attributes
             _attribDefs.GetTypeAttribute(TypeAttributeValue.Transaction).TrySetDefault(attribValues);
             _attribDefs.Timestamp.TrySetValue(attribValues, immutableTransaction.StartTime);
@@ -175,8 +177,10 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             }
         }
 
-        public void SetUserAndAgentAttributes(IAttributeValueCollection attribValues, ITransactionAttributeMetadata metadata)
+        public void SetUserAndAgentAttributes(ITransactionAttributeMetadata metadata)
         {
+            var attribValues = metadata.TransactionAttributes;
+
             _attribDefs.RequestUri.TrySetValue(attribValues, metadata.Uri ?? "/Unknown");
 
             // original_url should only be generated if it is distinct from the current URI

@@ -108,8 +108,8 @@ namespace NewRelic.Agent.Core.BrowserMonitoring
             var queueTime = transaction.TransactionMetadata.QueueTime ?? _zeroTimespan;
             var applicationTime = transaction.GetDurationUntilNow();
 
-            var attributes = new AttributeValueCollection(AttributeDestinations.JavaScriptAgent);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, transaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(transaction.TransactionMetadata);
+            var attributes = new AttributeValueCollection(transaction.TransactionMetadata.TransactionAttributes, AttributeDestinations.JavaScriptAgent);
 
             // for now, treat tripId as an agent attribute when passing to browser.  Eventually this will be an intrinsic but need changes to browser code first.
             // if CrossApplicationReferrerTripId is null then this transaction started the first external request, so use its guid

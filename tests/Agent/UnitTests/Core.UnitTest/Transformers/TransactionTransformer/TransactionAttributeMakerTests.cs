@@ -1287,21 +1287,20 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             
             // ACT
-            var builderAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(builderAttributes, transaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(transaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
 
+            var txAttributes = new AttributeValueCollection(transaction.TransactionMetadata.TransactionAttributes, AttributeDestinations.TransactionEvent);
+            var immutableTxAttributes = new AttributeValueCollection(immutableTransaction.TransactionMetadata.TransactionAttributes, AttributeDestinations.TransactionEvent);
 
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
 
             // ACQUIRE
-            var txBuilderAttributes = builderAttributes.ToDictionary();
-
-            var transactionAttributes = attributes.ToDictionary();
+            var txBuilderAttributes = txAttributes.ToDictionary();
+            var transactionAttributes = immutableTxAttributes.ToDictionary();
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(10, GetCount(builderAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(10, GetCount(txAttributes)),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("originalUri", txBuilderAttributes["original_url"]),
                 () => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
                 () => Assert.AreEqual("referrerUri", txBuilderAttributes["request.referer"]),
@@ -1314,7 +1313,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.Contains("host.displayName", txBuilderAttributes.Keys)
             );
             NrAssert.Multiple(
-                () => Assert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(10, GetCount(immutableTxAttributes)),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
                 () => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
                 () => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
@@ -1350,8 +1349,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
 
             // ACT
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
+            var attributes = immutableTransaction.TransactionMetadata.TransactionAttributes;
 
             // ASSERT
             NrAssert.Multiple(
@@ -1376,11 +1375,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // ACT
-            var builderAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(builderAttributes, transaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(transaction.TransactionMetadata);
+            var builderAttributes = transaction.TransactionMetadata.TransactionAttributes;
 
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
+            var attributes = immutableTransaction.TransactionMetadata.TransactionAttributes;
 
             // ACQUIRE
             var txBuilderAttributes = builderAttributes.ToDictionary();
@@ -1425,11 +1424,11 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // ACT
-            var builderAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(builderAttributes, transaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(transaction.TransactionMetadata);
+            var builderAttributes = transaction.TransactionMetadata.TransactionAttributes;
 
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
+            var attributes = immutableTransaction.TransactionMetadata.TransactionAttributes;
 
             AssertAttributeShouldBeAvailableFor(builderAttributes, "http.statusCode", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent, AttributeDestinations.SpanEvent);
             AssertAttributeShouldBeAvailableFor(builderAttributes, "request.parameters.requestParameterKey", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.SpanEvent);
@@ -1496,8 +1495,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             var immutableTransaction = transaction.ConvertToImmutableTransaction();
 
             // ACT
-            var attributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
-            _transactionAttributeMaker.SetUserAndAgentAttributes(attributes, immutableTransaction.TransactionMetadata);
+            _transactionAttributeMaker.SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
+            var attributes = immutableTransaction.TransactionMetadata.TransactionAttributes;
 
             // ACQUIRE
             var agentAttributes = attributes.ToDictionary(AttributeClassification.AgentAttributes);
