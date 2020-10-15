@@ -333,7 +333,7 @@ jobs:
     - name: Install dependencies
       run: |
         Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-        if (${{ matrix.namespace }} -eq "MsSql") {
+        if ("${{ matrix.namespace }}" -eq "MsSql") {
           msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
         }
         choco install gnupg
