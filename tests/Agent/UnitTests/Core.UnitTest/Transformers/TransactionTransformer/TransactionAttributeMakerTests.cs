@@ -1290,8 +1290,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             _transactionAttributeMaker.SetUserAndAgentAttributes(transaction.TransactionMetadata);
             _transactionAttributeMaker.SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
 
-            var txAttributes = new AttributeValueCollection(transaction.TransactionMetadata.TransactionAttributes, AttributeDestinations.TransactionEvent);
-            var immutableTxAttributes = new AttributeValueCollection(immutableTransaction.TransactionMetadata.TransactionAttributes, AttributeDestinations.TransactionEvent);
+            var txAttributes = transaction.TransactionMetadata.TransactionAttributes;
+            var immutableTxAttributes = immutableTransaction.TransactionMetadata.TransactionAttributes;
 
 
             // ACQUIRE
@@ -1300,7 +1300,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             // ASSERT
             NrAssert.Multiple(
-                () => Assert.AreEqual(10, GetCount(txAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(10, GetCount(new AttributeValueCollection(txAttributes, AttributeDestinations.TransactionEvent))),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("originalUri", txBuilderAttributes["original_url"]),
                 () => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
                 () => Assert.AreEqual("referrerUri", txBuilderAttributes["request.referer"]),
@@ -1313,7 +1313,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
                 () => Assert.Contains("host.displayName", txBuilderAttributes.Keys)
             );
             NrAssert.Multiple(
-                () => Assert.AreEqual(10, GetCount(immutableTxAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(10, GetCount(new AttributeValueCollection(immutableTxAttributes, AttributeDestinations.TransactionEvent))),  // Assert that only these attributes are generated
                 () => Assert.AreEqual("originalUri", transactionAttributes["original_url"]),
                 () => Assert.AreEqual("uri", transactionAttributes["request.uri"]),
                 () => Assert.AreEqual("referrerUri", transactionAttributes["request.referer"]),
@@ -1436,7 +1436,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             // ASSERT
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(10, GetCount(builderAttributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(10, GetCount(new AttributeValueCollection(builderAttributes, AttributeDestinations.TransactionEvent))),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(builderAttributes, "original_url" , AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(builderAttributes, "request.uri", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.SqlTrace),
                 () => AssertAttributeShouldBeAvailableFor(builderAttributes, "request.referer", AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
@@ -1451,7 +1451,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(10, GetCount(attributes)),  // Assert that only these attributes are generated
+                () => Assert.AreEqual(10, GetCount(new AttributeValueCollection(attributes, AttributeDestinations.TransactionEvent))),  // Assert that only these attributes are generated
                 () => AssertAttributeShouldBeAvailableFor(attributes, "original_url", AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "request.uri", AttributeDestinations.TransactionEvent, AttributeDestinations.ErrorEvent, AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.SqlTrace),
                 () => AssertAttributeShouldBeAvailableFor(attributes, "request.referer", AttributeDestinations.ErrorTrace, AttributeDestinations.TransactionTrace, AttributeDestinations.ErrorEvent),
