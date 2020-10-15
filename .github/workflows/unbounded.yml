@@ -309,6 +309,8 @@ jobs:
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       unbounded_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net461/NewRelic.Agent.UnboundedIntegrationTests.dll
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
+      enhanced_logging: true
       
     steps:
     - name: Checkout
@@ -343,7 +345,20 @@ jobs:
 
     - name: Run Unbounded Integration Tests
       run: |
+        if ($Env:enhanced_logging) {
+          Write-Host "List ports in use"
+          netstat -no  
+        }
+        
         ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -serialize -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+        
+        if ($Env:enhanced_logging) {
+          Write-Host "Get HostableWebCore errors (if any)"
+          Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
+
+          Write-Host "Get .NET Runtime errors (if any)"
+          Get-EventLog -LogName Application -Source ".NET Runtime" -EntryType "Error","Warning" -ErrorAction:Ignore  
+        }
       shell: powershell
       
     - name: Archive Working Folders
