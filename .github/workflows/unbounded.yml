@@ -351,7 +351,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: working-folders-${{ matrix.namespace }}-${{ github.run_id }}
-        path: ${{ github.workspace }}/IntegrationTestWorkingDirectory
+        path: c:/IntegrationTestWorkingDirectory
         if-no-files-found: error
 
     - name: Archive Test Results
