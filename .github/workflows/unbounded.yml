@@ -308,7 +308,8 @@ jobs:
       integration_tests_shared_project: ${{ github.workspace }}/tests/Agent/IntegrationTests/Shared
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       unbounded_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/UnboundedIntegrationTests/bin/Release/net461/NewRelic.Agent.UnboundedIntegrationTests.dll
-
+      NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
+      
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -344,6 +345,14 @@ jobs:
       run: |
         ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
       shell: powershell
+      
+    - name: Archive Working Folders
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: working-folders-${{ matrix.namespace }}-${{ github.run_id }}
+        path: ${{ github.workspace }}/IntegrationTestWorkingDirectory
+        if-no-files-found: error
 
     - name: Archive Test Results
       if: ${{ always() }}
