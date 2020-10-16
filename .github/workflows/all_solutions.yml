@@ -508,22 +508,15 @@ jobs:
           }
         shell: powershell
 
-      - name: Archive Test Results
+      - name: Archive Test Artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
-          name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
-          path: ${{ github.workspace }}/TestResults
-          if-no-files-found: error
-
-      - name: Archive Working Directories
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: integration-test-logs-${{ matrix.namespace }}
+          name: integration-test-artifacts-${{ matrix.namespace }}-${{ github.run_id }}
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
+            ${{ github.workspace }}/TestResults
           if-no-files-found: error
 
   combine-integration-test-results:
