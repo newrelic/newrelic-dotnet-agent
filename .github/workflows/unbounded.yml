@@ -336,18 +336,14 @@ jobs:
         if ("${{ matrix.namespace }}" -eq "MsSql") {
           msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
         }
-        
-        pushd ${{ github.workspace }}\build\Tools
-        .\gnupg-w32-2.2.23_20200903.exe /S
-        popd
-        gpg --quiet --batch --yes --decrypt --passphrase="$UNBOUNDED_PASSPHRASE" --output ${{ github.workspace }}\build\keys\secrets-live.json ${{ github.workspace }}\build\keys\secrets-live.json.gpg
       shell: powershell
 
     - name: Set up secrets
+      env:
+        INTEGRATION_TEST_SECRETS: ${{ secrets.TEST_SECRETS }}
       run: |
-        $secrets = Get-Content ${{ github.workspace }}\build\keys\secrets-live.json
-        "$secrets" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
-      shell: powershell #this doesn't work with normal powershell due to UTF-8 BOM handling
+        "$Env:INTEGRATION_TEST_SECRETS" | dotnet user-secrets set --project ${{ env.integration_tests_shared_project }}
+      shell: pwsh #this doesn't work with normal powershell due to UTF-8 BOM handling
 
     - name: Run Unbounded Integration Tests
       run: |
@@ -356,7 +352,7 @@ jobs:
           netstat -no  
         }
 
-        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -serialize -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
 
         if ($Env:enhanced_logging) {
           Write-Host "Get HostableWebCore errors (if any)"
