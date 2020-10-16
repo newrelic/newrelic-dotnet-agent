@@ -225,7 +225,6 @@ jobs:
         if ($LastExitCode -ne 0)
         { exit $LastExitCode }
 
-
         Write-Host "Finding files for .NET Core NUnit tests"
         $netCoreTestFileNames = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release') } | Select Name -Unique)
         $netCoreFiles = (Get-ChildItem -Recurse -Path 'Tests\AwsLambda\UnitTests' -Include $testDllPatterns | Where-Object { !$_.FullName.Contains('obj\Release')  })
@@ -497,7 +496,7 @@ jobs:
           }
 
           Write-Host "Run tests"
-          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
+          ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
           
           if ($Env:enhanced_logging) {
             Write-Host "Get HostableWebCore errors (if any)"
@@ -516,34 +515,34 @@ jobs:
           path: |
             C:\IntegrationTestWorkingDirectory\**\*.log
             C:\IntegrationTestWorkingDirectory\**\*.config
-            ${{ github.workspace }}/TestResults
+            C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
           if-no-files-found: error
 
-  combine-integration-test-results:
-    needs: run-integration-tests
-    if: ${{ always() }}
-    name: Combine Integration Test Results
+  # combine-integration-test-results:
+  #   needs: run-integration-tests
+  #   if: ${{ always() }}
+  #   name: Combine Integration Test Results
 
-    runs-on: windows-2019
+  #   runs-on: windows-2019
 
-    env:
-      results_name: ""
+  #   env:
+  #     results_name: ""
 
-    steps:
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v2
+  #   steps:
+  #     - name: Download all workflow run artifacts
+  #       uses: actions/download-artifact@v2
 
-      - name: Combine Integration Results
-        run: |
-          mkdir all-integration-test-results
+  #     - name: Combine Integration Results
+  #       run: |
+  #         mkdir all-integration-test-results
 
-          Get-ChildItem -Path .\integration-test-results* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
-        shell: powershell
+  #         Get-ChildItem -Path .\integration-test-results* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
+  #       shell: powershell
 
-      - name: Upload combined artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: all-integration-test-results-${{ github.run_id }}
-          path: ./all-integration-test-results
-          if-no-files-found: error
+  #     - name: Upload combined artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: all-integration-test-results-${{ github.run_id }}
+  #         path: ./all-integration-test-results
+  #         if-no-files-found: error
 
