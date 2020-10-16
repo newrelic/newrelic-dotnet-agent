@@ -17,8 +17,6 @@ namespace NewRelic.Agent.Core.Transactions
 
         AttributeValueCollection TransactionAttributes { get; }
 
-        //KeyValuePair<string, string>[] RequestParameters { get; }
-        //KeyValuePair<string, object>[] UserAttributes { get; }
         IReadOnlyTransactionErrorState ReadOnlyTransactionErrorState { get; }
 
         string Uri { get; }

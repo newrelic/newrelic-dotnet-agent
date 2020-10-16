@@ -351,10 +351,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi
 
             _agent.CurrentTransaction.SetRequestParameters(parameters);
 
-            //Assert.AreEqual(1, _transaction.TransactionMetadata.RequestParameters.Length);
-            //Assert.AreEqual("key", _transaction.TransactionMetadata.RequestParameters[0].Key);
-            //Assert.AreEqual("value", _transaction.TransactionMetadata.RequestParameters[0].Value);
-
             var attribs = _transaction.TransactionMetadata.TransactionAttributes.ToDictionary();
 
             Assert.AreEqual(1, attribs.Count);

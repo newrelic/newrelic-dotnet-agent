@@ -372,7 +372,6 @@ namespace NewRelic.Agent.Core.Api
             {
                 var transaction = GetCurrentInternalTransaction();
                 transaction.AddCustomAttribute(key, value);
-                //transaction.TransactionMetadata.AddUserAttribute(key, value);
             }
         }
 
@@ -456,19 +455,16 @@ namespace NewRelic.Agent.Core.Api
                     {
                         transaction.AddCustomAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
                     }
-                        //transactionMetadata.AddUserAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
 
                     if (accountName != null && !string.IsNullOrEmpty(accountName))
                     {
                         transaction.AddCustomAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
                     }
-                        //transactionMetadata.AddUserAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
 
                     if (productName != null && !string.IsNullOrEmpty(productName))
                     {
                         transaction.AddCustomAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
                     }
-                        //transactionMetadata.AddUserAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
                 }
             }
         }

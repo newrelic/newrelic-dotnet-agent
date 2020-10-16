@@ -316,7 +316,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer.UnitTest
             if (includeUserAttributes)
             {
                 transaction.AddCustomAttribute("sample.user.attribute", "user attribute string");
-                //metadata.AddUserAttribute("sample.user.attribute", "user attribute string");
             }
 
             if (isSynthetics)

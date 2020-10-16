@@ -150,6 +150,7 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
         //    var valueB = "valueB";
 
         //    var metadata = new TransactionMetadata();
+        //    metadata.TransactionAttributes
         //    metadata.AddRequestParameter(key, valueA);
         //    metadata.AddRequestParameter(key, valueB);
 

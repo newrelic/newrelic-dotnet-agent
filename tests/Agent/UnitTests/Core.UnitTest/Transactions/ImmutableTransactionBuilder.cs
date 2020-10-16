@@ -16,9 +16,6 @@ namespace NewRelic.Agent.Core.Transactions
 {
     public class TestImmutableTransactionMetadata : IImmutableTransactionMetadata
     {
-        //public KeyValuePair<string, string>[] RequestParameters { get; }
-        //public KeyValuePair<string, object>[] UserAttributes { get; }
-
         public AttributeValueCollection TransactionAttributes { get; }
 
         public string Uri { get; }
@@ -61,8 +58,6 @@ namespace NewRelic.Agent.Core.Transactions
             string referrerUri,
             TimeSpan? queueTime,
             AttributeValueCollection transactionAttributes,
-            //ConcurrentDictionary<string, string> requestParameters,
-            //ConcurrentDictionary<string, object> userAttributes,
             ITransactionErrorState transactionErrorState,
             int? httpResponseStatusCode,
             int? httpResponseSubStatusCode,
@@ -250,7 +245,7 @@ namespace NewRelic.Agent.Core.Transactions
                 originalUri: "originalUri",
                 referrerUri: "referrerUri",
                 queueTime: new TimeSpan(1),
-                new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes),
+                transactionAttributes: new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes),
                 transactionErrorState: _transactionErrorState,
                 httpResponseStatusCode: 200,
                 httpResponseSubStatusCode: 201,

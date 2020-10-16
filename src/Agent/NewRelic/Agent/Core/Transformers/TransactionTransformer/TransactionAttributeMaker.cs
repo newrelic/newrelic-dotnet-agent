@@ -32,7 +32,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
         public IAttributeValueCollection GetAttributes(ImmutableTransaction immutableTransaction, TransactionMetricName transactionMetricName, TimeSpan? apdexT, TimeSpan totalTime, TransactionMetricStatsCollection txStats)
         {
-            //var attribVals = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
             var attribVals = immutableTransaction.TransactionMetadata.TransactionAttributes;
             SetUserAndAgentAttributes(immutableTransaction.TransactionMetadata);
             SetIntrinsicAttributes(immutableTransaction, transactionMetricName, apdexT, totalTime, txStats);
@@ -195,16 +194,6 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
             _attribDefs.HttpStatusCode.TrySetValue(attribValues, metadata.HttpResponseStatusCode);
 
             _attribDefs.HostDisplayName.TrySetValue(attribValues, _configurationService.Configuration.ProcessHostDisplayName);
-
-            //foreach(var reqParam in metadata.RequestParameters)
-            //{
-            //    _attribDefs.GetRequestParameterAttribute(reqParam.Key).TrySetValue(attribValues, reqParam.Value);
-            //}
-
-            //foreach (var userAttrib in metadata.UserAttributes)
-            //{
-            //    _attribDefs.GetCustomAttributeForTransaction(userAttrib.Key).TrySetValue(attribValues, userAttrib.Value);
-            //}
 
             if (_configurationService.Configuration.ErrorCollectorEnabled && metadata.ReadOnlyTransactionErrorState.HasError && metadata.ReadOnlyTransactionErrorState.ErrorData != null && metadata.ReadOnlyTransactionErrorState.ErrorData.CustomAttributes != null)
             {

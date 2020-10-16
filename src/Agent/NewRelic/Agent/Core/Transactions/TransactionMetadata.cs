@@ -22,8 +22,6 @@ namespace NewRelic.Agent.Core.Transactions
         void SetOriginalUri(string uri);
         void SetReferrerUri(string uri);
         void SetQueueTime(TimeSpan queueTime);
-        //void AddRequestParameter(string key, string value);
-        //void AddUserAttribute(string key, object value);
         void SetHttpResponseStatusCode(int statusCode, int? subStatusCode, IErrorService errorService);
         void SetCrossApplicationReferrerTripId(string tripId);
         void SetCrossApplicationReferrerPathHash(string referrerPathHash);
@@ -92,9 +90,6 @@ namespace NewRelic.Agent.Core.Transactions
         private readonly AttributeValueCollection _transactionAttributes = new AttributeValueCollection(AttributeValueCollection.AllTargetModelTypes);
         public AttributeValueCollection TransactionAttributes => _transactionAttributes;
 
-        //private readonly ConcurrentDictionary<string, string> _requestParameters = new ConcurrentDictionary<string, string>();
-        //private readonly ConcurrentDictionary<string, object> _userAttributes = new ConcurrentDictionary<string, object>();
-
         private readonly ConcurrentHashSet<string> _allCrossApplicationPathHashes = new ConcurrentHashSet<string>();
         private volatile bool _hasResponseCatHeaders;
 
@@ -125,26 +120,6 @@ namespace NewRelic.Agent.Core.Transactions
         {
             _timeSpanQueueTime = () => queueTime;
         }
-
-        //public void AddRequestParameter(string key, string value)
-        //{
-        //    _requestParameters[key] = value;
-        //}
-
-        //public void AddUserAttribute(string key, object value)
-        //{
-            
-        //    // A context switch is possible between calls to Count and AddOrUpdate.
-        //    // This makes the following logic somewhat bogus. That is, it is possible for more attributes to be added than allowed by UserAttributeClamp.
-        //    // However, the AttributeService still enforces UserAttributeClamp on the back end.
-        //    if (_userAttributes.Count >= AttributeValueCollection.MaxCountUserAttrib)
-        //    {
-        //        Log.Debug($"User Attribute discarded: {key}. User limit of 64 reached.");
-        //        return;
-        //    }
-
-        //    _userAttributes[key] = value;
-        //}
 
         public void SetHttpResponseStatusCode(int statusCode, int? subStatusCode, IErrorService errorService)
         {
@@ -249,10 +224,6 @@ namespace NewRelic.Agent.Core.Transactions
 
         public int? HttpResponseStatusCode => _httpResponseStatusCode == int.MinValue ? default(int?) : _httpResponseStatusCode;
         public int? HttpResponseSubStatusCode => _httpResponseSubStatusCode == int.MinValue ? default(int?) : _httpResponseSubStatusCode;
-
-        //public KeyValuePair<string, string>[] RequestParameters => _requestParameters.ToArray();
-        //public KeyValuePair<string, object>[] UserAttributes => _userAttributes.ToArray();
-
 
         public IEnumerable<string> CrossApplicationAlternatePathHashes => _allCrossApplicationPathHashes
             .Except(new[] { _latestCrossApplicationPathHash })

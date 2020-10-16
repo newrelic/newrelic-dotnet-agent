@@ -285,13 +285,11 @@ namespace NewRelic.Agent.Core.Attributes
 
         public AttributeValueCollection(params AttributeDestinations[] targetModelTypes) : base(targetModelTypes)
         {
-
         }
 
         private List<AttributeValue> _attribValuesIntrinsicAttribs;
         private List<AttributeValue> _attribValuesAgentAttribs;
         private List<AttributeValue> _attribValuesUserAttribs;
-
 
         private List<AttributeValue> GetAttribValues(AttributeClassification classification, bool withCreate)
         {
