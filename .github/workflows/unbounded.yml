@@ -336,7 +336,7 @@ jobs:
         if ("${{ matrix.namespace }}" -eq "MsSql") {
           msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
         }
-        choco install gnupg
+        choco install -y gnupg
         gpg --quiet --batch --yes --decrypt --passphrase="$UNBOUNDED_PASSPHRASE" --output ${{ github.workspace }}\build\keys\secrets-live.json ${{ github.workspace }}\build\keys\secrets-live.json.gpg
       shell: powershell
 
