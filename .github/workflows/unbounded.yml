@@ -245,7 +245,7 @@ jobs:
     strategy:
       matrix:
         #namespace: [ Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
-        namespace: [ MongoDB ]
+        namespace: [ Msmq ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -280,8 +280,17 @@ jobs:
 
     - name: Install dependencies
       run: |
+        Write-Host "Installing HostableWebCore Feature"
         Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
+
+        if ("${{ matrix.namespace }}" -eq "Msmq") {
+          Write-Host "Installing Msmq Features"
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server
+        }
+
         if ("${{ matrix.namespace }}" -eq "MsSql") {
+          Write-Host "Installing MSSQL CLI"
           msiexec /i ${{ github.workspace }}\build\Tools\sqlncli.msi /quiet /qn /norestart
         }
       shell: powershell
