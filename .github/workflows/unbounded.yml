@@ -285,8 +285,8 @@ jobs:
 
         if ("${{ matrix.namespace }}" -eq "Msmq") {
           Write-Host "Installing Msmq Features"
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP
           Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server
+          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP
         }
 
         if ("${{ matrix.namespace }}" -eq "MsSql") {
