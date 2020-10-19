@@ -62,8 +62,8 @@ namespace NewRelic.Agent.IntegrationTests.Errors
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// error metrics
-				new Assertions.ExpectedMetric {metricName = @"Errors/all"},
+                // error metrics
+                new Assertions.ExpectedMetric {metricName = @"Errors/all"},
                 new Assertions.ExpectedMetric {metricName = @"Errors/allWeb"},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/MVC/ExpectedErrorTest/ThrowExceptionWithMessage/{exceptionMessage}"},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/MVC/ExpectedErrorTest/ThrowCustomException"},
@@ -77,16 +77,17 @@ namespace NewRelic.Agent.IntegrationTests.Errors
             };
 
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEventPayloads = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEvents = errorEventPayloads.SelectMany(payload => payload.Events).ToList();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-                () => Assert.True(errorTraces.Count == 3, $"Expected 3 errors traces but found {errorTraces.Count}"),
-                () => Assert.True(errorEvents[0].Events.Count == 3, $"Expected 3 errors events but found {errorEvents.Count}")
+                () => Assert.True(errorTraces.Count == 3, $"Expected 3 error traces but found {errorTraces.Count}"),
+                () => Assert.True(errorEvents.Count == 3, $"Expected 3 error events but found {errorEvents.Count}")
             );
 
-            foreach(var errorEvent in errorEvents[0].Events)
+            foreach(var errorEvent in errorEvents)
             {
                 Assertions.ErrorEventHasAttributes(expectedErrorAttributes, EventAttributeType.Intrinsic, errorEvent);
             }
