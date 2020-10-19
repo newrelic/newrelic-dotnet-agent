@@ -1,0 +1,43 @@
+# This is a basic workflow to help you get started with Actions
+
+name: featuretesting
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the main branch
+on:
+  workflow_dispatch:
+
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  run-unbounded-tests:
+    name: Run Unbounded Tests
+
+    runs-on: windows-2019
+
+    steps:
+    - name: Install dependencies
+      run: |
+        Write-Host "Installing Msmq Features"
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerRole
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServer
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerManagementTools
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-NetFxExtensibility
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-NetFxExtensibility45
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-DefaultDocument
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-DirectoryBrowsing
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-StaticContent
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpRedirect
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-CustomLogging
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpLogging
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-ODBCLogging
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpTracing
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-RequestMonitor
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpCompressionStatic
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-HttpCompressionDynamic
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-Security
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-RequestFiltering
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers
+      shell: powershell
