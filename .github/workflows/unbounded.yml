@@ -245,7 +245,7 @@ jobs:
     strategy:
       matrix:
         #namespace: [ Couchbase, MongoDB, Msmq, MsSql, MySql, NServiceBus, Oracle, Postgres, RabbitMq, Redis ]
-        namespace: [ Couchbase ]
+        namespace: [ MongoDB ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -312,7 +312,7 @@ jobs:
       shell: powershell
 
     - name: Archive Working Folders
-      if: ${{ always() }}
+      if: ${{ failure() }}
       uses: actions/upload-artifact@v2
       with:
         name: working-folders-${{ matrix.namespace }}-${{ github.run_id }}
