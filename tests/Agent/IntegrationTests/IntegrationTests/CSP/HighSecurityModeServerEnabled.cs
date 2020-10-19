@@ -9,11 +9,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
-    public class HighSecurityModeServerEnabled : IClassFixture<RemoteServiceFixtures.HSMOwinWebApiFixture>
+    public class HighSecurityModeServerEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMOwinWebApiFixture>
     {
         private readonly RemoteServiceFixtures.HSMOwinWebApiFixture _fixture;
 
-        public HighSecurityModeServerEnabled(RemoteServiceFixtures.HSMOwinWebApiFixture fixture, ITestOutputHelper output)
+        public HighSecurityModeServerEnabled(RemoteServiceFixtures.HSMOwinWebApiFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

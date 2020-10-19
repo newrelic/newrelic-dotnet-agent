@@ -10,12 +10,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class AutoStartDisabled : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class AutoStartDisabled : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
 
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         public AutoStartDisabled(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

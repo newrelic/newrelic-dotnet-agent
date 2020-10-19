@@ -20,11 +20,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Files: Integration.Testing.AddXmlFileTest.xml
     /// </summary>
     [NetFrameworkTest]
-    public class RejitAddFile : IClassFixture<AspNetFrameworkReJitMvcApplicationFixture>
+    public class RejitAddFile : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;
 
         public RejitAddFile(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
 

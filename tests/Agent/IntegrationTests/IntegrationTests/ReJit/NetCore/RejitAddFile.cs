@@ -20,11 +20,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Files: Integration.Testing.AddXmlFileTest.xml
     /// </summary>
     [NetCoreTest]
-    public class RejitAddFile : IClassFixture<AspNetCoreReJitMvcApplicationFixture>
+    public abstract class RejitAddFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture:AspNetCoreReJitMvcApplicationFixture
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
-        public RejitAddFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+        protected RejitAddFileBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 
@@ -82,7 +83,15 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         }
     }
 
-    public class RejitAddFileWithTieredCompilation : RejitAddFile, IClassFixture<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+    public class RejitAddFile : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixture>
+    {
+        public RejitAddFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RejitAddFileWithTieredCompilation : RejitAddFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
     {
         public RejitAddFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
             : base(fixture, output)

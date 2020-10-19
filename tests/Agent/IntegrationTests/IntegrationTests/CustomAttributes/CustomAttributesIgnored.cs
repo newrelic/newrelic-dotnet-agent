@@ -15,11 +15,11 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 
 {
     [NetFrameworkTest]
-    public class CustomAttributesIgnored : IClassFixture<RemoteServiceFixtures.CustomAttributesWebApi>
+    public class CustomAttributesIgnored : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
     {
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributesIgnored(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
+        public CustomAttributesIgnored(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -21,8 +21,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private Action _setupConfiguration;
         private Action _exerciseApplication;
+        
 
         private bool _initialized;
+
+        public void SetTestClassType(Type testClassType)
+        {
+            RemoteApplication?.SetTestClassType(testClassType);
+        }
 
         public int? ExitCode => RemoteApplication?.ExitCode;
 

@@ -13,13 +13,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetFrameworkTest]
-    public class AspNetCoreMvcFrameworkAsyncTests : IClassFixture<AspNetCoreMvcFrameworkAsyncTestsFixture>
+    public class AspNetCoreMvcFrameworkAsyncTests : NewRelicIntegrationTest<AspNetCoreMvcFrameworkAsyncTestsFixture>
     {
         private readonly AspNetCoreMvcFrameworkAsyncTestsFixture _fixture;
         private const int ExpectedTransactionCount = 7;
         private const string AssemblyName = "AspNetCoreMvcFrameworkAsyncApplication";
 
         public AspNetCoreMvcFrameworkAsyncTests(AspNetCoreMvcFrameworkAsyncTestsFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

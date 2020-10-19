@@ -16,7 +16,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 {
     [NetCoreTest]
-    public class AspNetCoreDistTraceRequestChainTests : IClassFixture<AspNetCoreDistTraceRequestChainFixture>
+    public class AspNetCoreDistTraceRequestChainTests : NewRelicIntegrationTest<AspNetCoreDistTraceRequestChainFixture>
     {
         private readonly AspNetCoreDistTraceRequestChainFixture _fixture;
 
@@ -24,6 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
         public const string TransportType = "HTTP"; //All calls are Http for the distributed traces
 
         public AspNetCoreDistTraceRequestChainTests(AspNetCoreDistTraceRequestChainFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

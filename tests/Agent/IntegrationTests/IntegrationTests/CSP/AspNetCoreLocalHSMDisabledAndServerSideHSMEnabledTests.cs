@@ -9,14 +9,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetCoreTest]
-    public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : IClassFixture<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
+    public class AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests : NewRelicIntegrationTest<RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture>
     {
         private const string QueryStringParameterValue = @"my thing";
 
 
         private readonly RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture _fixture;
 
-        public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+        public AspNetCoreLocalHSMDisabledAndServerSideHSMEnabledTests(RemoteServiceFixtures.HSMAspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
