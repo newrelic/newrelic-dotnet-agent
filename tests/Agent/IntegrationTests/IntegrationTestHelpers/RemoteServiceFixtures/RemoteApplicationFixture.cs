@@ -79,8 +79,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             set { RemoteApplication.KeepWorkingDirectory = value; }
         }
 
-        //public bool DelayKill;
-
         protected virtual int MaxTries => 2;
 
         public void DisableAsyncLocalCallStack()
@@ -204,13 +202,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                 try
                 {
-                    var appIsExercisedNormally = true;
                     var retryTest = false;
 
                     do
                     {
                         TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
-                        appIsExercisedNormally = true;
                         retryTest = false; // reset for each loop iteration
 
                         RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
@@ -231,66 +227,45 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         catch (Exception ex)
                         {
-                            appIsExercisedNormally = false;
                             retryTest = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
                         }
                         finally
                         {
-                            //if (!DelayKill)
-                            //{
-                                ShutdownRemoteApplication();
 
-                                if (captureStandardOutput)
+                            ShutdownRemoteApplication();
+
+                            if (captureStandardOutput)
+                            {
+                                RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
+
+                                // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
+                                // WCF tests. For the HWC tests we carefully validate the console output in order
+                                // to detect process-level failures that may cause test flickers. For the self-
+                                // hosted tests, unfortunately, we just punt that.
+                                if (RemoteApplication.ValidateHostedWebCoreOutput)
                                 {
-                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("RemoteApplication:");
-
-                                    // Most of our tests run in HostedWebCore, but some don't, e.g. the self-hosted
-                                    // WCF tests. For the HWC tests we carefully validate the console output in order
-                                    // to detect process-level failures that may cause test flickers. For the self-
-                                    // hosted tests, unfortunately, we just punt that.
-                                    if (RemoteApplication.ValidateHostedWebCoreOutput)
-                                    {
-                                        SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
-                                    }
-                                    else
-                                    {
-                                        TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
-                                    }
+                                    SubprocessLogValidator.ValidateHostedWebCoreConsoleOutput(RemoteApplication.CapturedOutput.StandardOutput, TestLogger);
                                 }
                                 else
                                 {
-                                    TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
+                                    TestLogger?.WriteLine("Note: child process is not required for log validation because _remoteApplication.ValidateHostedWebCoreOutput = false");
                                 }
+                            }
+                            else
+                            {
+                                TestLogger?.WriteLine("Note: child process application does not redirect output because _remoteApplication.CaptureStandardOutput = false. HostedWebCore validation cannot take place without the standard output. This is common for non-web and self-hosted applications.");
+                            }
 
-                                RemoteApplication.WaitForExit();
+                            RemoteApplication.WaitForExit();
 
-                                appIsExercisedNormally = RemoteApplication.ExitCode == 0;
-                                if (!appIsExercisedNormally)
-                                {
-                                    retryTest = true;
-                                }
+                            var appIsExercisedNormally = RemoteApplication.ExitCode == 0;
+                            if (!appIsExercisedNormally)
+                            {
+                                retryTest = true;
+                            }
 
-                                TestLogger?.WriteLine($"Remote application exited with a {(appIsExercisedNormally ? "success" : "failure")} exit code of {RemoteApplication.ExitCode}.");
-
-                            //}
-                            //else
-                            //{
-                            //    TestLogger?.WriteLine("Note: Due to DelayKill being used, no process output or agent log validation was performed to verify that the application started and ran successfully.");
-                            //}
-
-                            // Unnecessary since RemoteApplication has already exited (with a non-zero exit code)
-                            //if (!appIsExercisedNormally)
-                            //{
-                            //    RemoteApplication.Kill();
-
-                            //    if (captureStandardOutput)
-                            //    {
-                            //        RemoteApplication.CapturedOutput.WriteProcessOutputToLog("[RemoteApplicationFixture]: Initialize");
-                            //    }
-
-                            //    RemoteApplication.WaitForExit();
-                            //}
+                            TestLogger?.WriteLine($"Remote application exited with a {(appIsExercisedNormally ? "success" : "failure")} exit code of {RemoteApplication.ExitCode}.");
 
                             if (retryTest)
                             {
@@ -301,10 +276,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                     } while (retryTest && numberOfTries < MaxTries);
 
-                    if (!appIsExercisedNormally)
+                    if (retryTest)
                     {
-                        TestLogger?.WriteLine($"Test App wasn't exercised normally after {MaxTries} tries.");
-                        throw new Exception($"Test App wasn't exercised normally after {MaxTries} tries.");
+                        var message = ($"Test failed after {MaxTries} tries.");
+                        TestLogger?.WriteLine(message);
+                        throw new Exception(message);
                     }
                 }
                 finally
