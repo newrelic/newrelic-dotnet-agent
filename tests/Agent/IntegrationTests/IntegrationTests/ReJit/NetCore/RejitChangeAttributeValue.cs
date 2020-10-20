@@ -96,7 +96,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 
     public class RejitChangeAttributeValue : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixture>
     {
-        public RejitChangeAttributeValue(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
+        public RejitChangeAttributeValue(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }

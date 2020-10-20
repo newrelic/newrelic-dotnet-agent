@@ -182,6 +182,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         {
         }
     }
+
     public class Owin4WebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
     {
         public Owin4WebApiTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
