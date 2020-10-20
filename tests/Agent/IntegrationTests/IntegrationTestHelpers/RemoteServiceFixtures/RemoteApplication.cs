@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
 
 namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
@@ -204,17 +203,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         private AgentLogFile _agentLogFile;
 
-        public AgentLogFile AgentLog
-        {
-            get
-            {
-                if (_agentLogFile == null)
-                {
-                    _agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName, Timing.TimeToConnect);
-                }
-                return _agentLogFile;
-            }
-        }
+        public AgentLogFile AgentLog => _agentLogFile ?? (_agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName, Timing.TimeToConnect));
 
         public ProfilerLogFile ProfilerLog { get { return new ProfilerLogFile(DefaultLogFileDirectoryPath, Timing.TimeToConnect); } }
 
