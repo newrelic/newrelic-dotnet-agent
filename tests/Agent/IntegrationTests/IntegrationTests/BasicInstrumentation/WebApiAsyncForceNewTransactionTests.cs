@@ -51,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 () => Assertions.MetricsExist(_expectedMetrics_Sync_FireAndForget, metrics),
                 () => Assertions.MetricsExist(_expectedMetrics_Sync_Sync, metrics),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEventPayloads())
             );
         }
 
@@ -183,7 +183,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 () => Assert.Empty(metrics.Where(x => x.MetricSpec.Name.StartsWith("OtherTransaction", StringComparison.OrdinalIgnoreCase))),
 
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEventPayloads())
             );
         }
     }

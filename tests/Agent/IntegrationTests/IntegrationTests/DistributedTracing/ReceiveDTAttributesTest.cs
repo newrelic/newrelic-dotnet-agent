@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing
             var transactionEventExpectedAttributes = new List<string>(expectedAttributes) { "parentId" };
 
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents().FirstOrDefault();
-            var errorEvent = _fixture.AgentLog.GetErrorEvents().First().Events.First();
+            var errorEvent = _fixture.AgentLog.GetErrorEventPayloads().First().Events.First();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
                 .FirstOrDefault(sample => sample.Path == @"WebTransaction/MVC/DistributedTracingController/ReceivePayload");

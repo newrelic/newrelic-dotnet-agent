@@ -75,14 +75,14 @@ namespace NewRelic.Agent.IntegrationTests.Owin
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
             var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
 
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.NotEmpty(errorTraces),
-                () => Assert.NotEmpty(_fixture.AgentLog.GetErrorEvents()),
+                () => Assert.NotEmpty(_fixture.AgentLog.GetErrorEventPayloads()),
                 () => Assert.Equal("WebTransaction/StatusCode/500", errorTraces[0].Path),
                 () => Assert.Equal(expectedExceptionClassName, errorTraces[0].ExceptionClassName),
                 () => Assert.Equal(expectedExceptionMessage, errorTraces[0].Message),

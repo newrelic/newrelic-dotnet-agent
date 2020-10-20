@@ -150,7 +150,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent),
                 () => JavaScriptAgent.GetJavaScriptAgentConfigFromSource(_fixture.ResponseBody),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents()),
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEventPayloads()),
                 () => Assertions.LogLinesExist(expectedLogLineRegexes, _fixture.AgentLog.GetFileLines()),
                 () => Assertions.LogLinesNotExist(unexpectedLogLineRegexes, _fixture.AgentLog.GetFileLines())
             );

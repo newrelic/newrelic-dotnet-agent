@@ -102,7 +102,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
                 () => Assert.NotNull(transactionEventWithExternal),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEventPayloads())
             );
 
             // check the transaction trace samples

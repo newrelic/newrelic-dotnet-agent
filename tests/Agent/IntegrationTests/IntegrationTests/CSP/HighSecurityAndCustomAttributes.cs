@@ -58,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
             Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample);
 
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var errorEventPayload = _fixture.AgentLog.GetErrorEventPayloads().FirstOrDefault();
 
             var unexpectedErrorCustomAttributes = new List<string>
             {

@@ -85,7 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().ToList().FirstOrDefault();
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents().ToList().FirstOrDefault();
-            var errorEvent = _fixture.AgentLog.GetErrorEvents().ToList().FirstOrDefault();
+            var errorEvent = _fixture.AgentLog.GetErrorEventPayloads().ToList().FirstOrDefault();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),

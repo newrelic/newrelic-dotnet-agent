@@ -74,7 +74,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
             };
 
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
 
             NrAssert.Multiple(
                 () => Assert.True(errorTraces.Any(), "No error trace found."),

@@ -203,7 +203,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             );
 
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
 
             NrAssert.Multiple(
                 () => Assert.Single(errorTraces),

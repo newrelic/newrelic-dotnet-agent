@@ -69,7 +69,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                 { "foo", "bar" }
             };
 
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
 
             var transactionSample = _fixture.AgentLog.GetTransactionSamples()
                 .Where(sample => sample.Path == expectedTransactionName)

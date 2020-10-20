@@ -55,7 +55,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var errorEventPayload = _fixture.AgentLog.GetErrorEventPayloads().FirstOrDefault();
 
             //order events chronologically
             var errorEvents = errorEventPayload.Events

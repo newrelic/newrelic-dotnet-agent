@@ -104,7 +104,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
             var errorTrace = _fixture.AgentLog.GetErrorTraces()
                 .Where(trace => trace.Path == expectedTracedErrorPathAsync)
                 .FirstOrDefault();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
 
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
 

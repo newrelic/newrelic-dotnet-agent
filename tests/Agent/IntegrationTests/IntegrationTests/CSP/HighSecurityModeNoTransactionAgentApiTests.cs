@@ -58,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var errorEventPayload = _fixture.AgentLog.GetErrorEventPayloads().FirstOrDefault();
 
             NrAssert.Multiple
                 (

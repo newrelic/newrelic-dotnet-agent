@@ -97,7 +97,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
             var getDataTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/Query");
             var getExceptionTransactionEvent = _fixture.AgentLog.TryGetTransactionEvent("WebTransaction/MVC/DefaultController/ThrowException");
 
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
 
             var firstErrorEvent = errorEvents.FirstOrDefault()?.Events.FirstOrDefault();
