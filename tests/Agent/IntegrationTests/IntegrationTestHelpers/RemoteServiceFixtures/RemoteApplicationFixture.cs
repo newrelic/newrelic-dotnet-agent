@@ -205,11 +205,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 try
                 {
                     var appIsExercisedNormally = true;
+                    var retryTest = false;
 
                     do
                     {
                         TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
                         appIsExercisedNormally = true;
+                        retryTest = false; // reset for each loop iteration
 
                         RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
 
@@ -230,6 +232,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         catch (Exception ex)
                         {
                             appIsExercisedNormally = false;
+                            retryTest = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
                         }
                         finally
@@ -263,6 +266,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                                 RemoteApplication.WaitForExit();
 
                                 appIsExercisedNormally = RemoteApplication.ExitCode == 0;
+                                if (!appIsExercisedNormally)
+                                {
+                                    retryTest = true;
+                                }
 
                                 TestLogger?.WriteLine($"Remote application exited with a {(appIsExercisedNormally ? "success" : "failure")} exit code of {RemoteApplication.ExitCode}.");
 
@@ -272,24 +279,27 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                             //    TestLogger?.WriteLine("Note: Due to DelayKill being used, no process output or agent log validation was performed to verify that the application started and ran successfully.");
                             //}
 
-                            //if (!appIsExercisedNormally && DelayKill)
-                            if (!appIsExercisedNormally)
+                            // Unnecessary since RemoteApplication has already exited (with a non-zero exit code)
+                            //if (!appIsExercisedNormally)
+                            //{
+                            //    RemoteApplication.Kill();
+
+                            //    if (captureStandardOutput)
+                            //    {
+                            //        RemoteApplication.CapturedOutput.WriteProcessOutputToLog("[RemoteApplicationFixture]: Initialize");
+                            //    }
+
+                            //    RemoteApplication.WaitForExit();
+                            //}
+
+                            if (retryTest)
                             {
-                                RemoteApplication.Kill();
-
-                                if (captureStandardOutput)
-                                {
-                                    RemoteApplication.CapturedOutput.WriteProcessOutputToLog("[RemoteApplicationFixture]: Initialize");
-                                }
-
-                                RemoteApplication.WaitForExit();
+                                Thread.Sleep(1000);
+                                numberOfTries++;
                             }
 
-                            Thread.Sleep(1000);
-
-                            numberOfTries++;
                         }
-                    } while (!appIsExercisedNormally && numberOfTries < MaxTries);
+                    } while (retryTest && numberOfTries < MaxTries);
 
                     if (!appIsExercisedNormally)
                     {
