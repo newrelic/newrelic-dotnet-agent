@@ -134,7 +134,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, transactionEvent),
                 () => JavaScriptAgent.GetJavaScriptAgentConfigFromSource(_fixture.ResponseBody),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEventPayloads())
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
             );
         }
     }

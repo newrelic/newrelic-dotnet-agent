@@ -302,6 +302,11 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 .Where(errorEvent => errorEvent != null);
         }
 
+        public IEnumerable<ErrorEventEvents> GetErrorEvents()
+        {
+            return GetErrorEventPayloads().SelectMany(payload => payload.Events);
+        }
+
         #endregion ErrorEvents
 
         #region ErrorTraces

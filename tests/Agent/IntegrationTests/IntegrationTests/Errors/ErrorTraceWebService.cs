@@ -86,7 +86,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
             var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
@@ -106,7 +106,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
                 () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[1]),
                 () => Assert.Single(errorEvents),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0].Events[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents.FirstOrDefault())
             );
         }
     }

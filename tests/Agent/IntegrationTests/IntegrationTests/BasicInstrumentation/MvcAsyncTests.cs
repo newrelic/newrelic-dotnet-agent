@@ -70,7 +70,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(_generalMetrics, metrics),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEventPayloads())
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
             );
 
             NrAssert.Multiple

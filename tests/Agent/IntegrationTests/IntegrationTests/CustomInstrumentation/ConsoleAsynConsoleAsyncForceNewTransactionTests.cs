@@ -51,7 +51,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                 () => Assertions.MetricsExist(_expectedMetrics_Sync_FireAndForget, metrics),
                 () => Assertions.MetricsExist(_expectedMetrics_Sync_Sync, metrics),
                 () => Assert.Empty(Fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(Fixture.AgentLog.GetErrorEventPayloads())
+                () => Assert.Empty(Fixture.AgentLog.GetErrorEvents())
             );
         }
 
@@ -141,7 +141,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
                 () => Assertions.MetricsExist(_expectedMetrics_Sync_AwaitedAsync, metrics),
                 () => Assertions.MetricsExist(_expectedMetrics_Sync_Sync, metrics),
                 () => Assert.Empty(Fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(Fixture.AgentLog.GetErrorEventPayloads())
+                () => Assert.Empty(Fixture.AgentLog.GetErrorEvents())
             );
         }
 

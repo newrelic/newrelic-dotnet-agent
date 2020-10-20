@@ -75,7 +75,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
 
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
             var transactionEvents = _fixture.AgentLog.GetTransactionEvents().ToList();
 
 
@@ -87,7 +87,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
                 () => Assert.Equal(expectedExceptionClassName, errorTraces[0].ExceptionClassName),
                 () => Assert.Equal(expectedExceptionMessage, errorTraces[0].Message),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0].Events[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0])
             );
         }
     }

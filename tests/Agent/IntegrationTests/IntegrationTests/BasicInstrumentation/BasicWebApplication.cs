@@ -64,7 +64,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.TransactionTraceSegmentsExist(expectedTransactionTraceSegments, transactionSample),
                 () => Assert.Empty(_fixture.AgentLog.GetErrorTraces()),
-                () => Assert.Empty(_fixture.AgentLog.GetErrorEventPayloads())
+                () => Assert.Empty(_fixture.AgentLog.GetErrorEvents())
             );
         }
     }

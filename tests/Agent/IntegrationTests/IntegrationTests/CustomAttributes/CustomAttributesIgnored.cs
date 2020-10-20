@@ -104,7 +104,7 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
             var errorTrace = _fixture.AgentLog.GetErrorTraces()
                 .Where(trace => trace.Path == expectedTracedErrorPathAsync)
                 .FirstOrDefault();
-            var errorEvents = _fixture.AgentLog.GetErrorEventPayloads().ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
 
             var transactionEvent = _fixture.AgentLog.TryGetTransactionEvent(expectedTransactionName);
 
@@ -116,8 +116,8 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                 () => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
                 () => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorTraceAttributes, ErrorTraceAttributeType.User, errorTrace),
                 () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTranscationEventAttributes, TransactionEventAttributeType.User, transactionEvent),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0]),
-                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.User, errorEvents[0]),
+                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventAttributes, EventAttributeType.User, errorEvents[0])
             );
 
         }
