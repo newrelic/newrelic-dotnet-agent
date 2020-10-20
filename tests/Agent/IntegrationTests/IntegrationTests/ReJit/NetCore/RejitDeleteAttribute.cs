@@ -24,7 +24,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
-        public RejitDeleteAttributeBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected RejitDeleteAttributeBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 

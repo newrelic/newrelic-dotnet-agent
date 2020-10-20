@@ -20,7 +20,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        public OwinMiddlewareExceptionTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected OwinMiddlewareExceptionTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

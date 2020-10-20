@@ -21,7 +21,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         private readonly List<string> bogusPaths = new List<string> { "no/such/path", "foo/bar/baz", "fizz/buzz", "one/two/red/blue" };
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        public OwinWebApiStatusCodeRollupTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected OwinWebApiStatusCodeRollupTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

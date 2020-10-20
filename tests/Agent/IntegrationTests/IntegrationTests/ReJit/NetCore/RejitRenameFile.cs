@@ -26,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
 
         private readonly string _renameOriginalFileFilePath;
 
-        public RejitRenameFileBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
+        protected RejitRenameFileBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 
