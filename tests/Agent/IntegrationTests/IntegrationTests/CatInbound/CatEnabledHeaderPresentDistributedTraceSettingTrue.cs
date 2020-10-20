@@ -12,12 +12,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
     [NetFrameworkTest]
-    public class CatEnabledHeaderPresentDistributedTraceSettingTrue : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class CatEnabledHeaderPresentDistributedTraceSettingTrue : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
         private HttpResponseHeaders _responseHeaders;
 
         public CatEnabledHeaderPresentDistributedTraceSettingTrue(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

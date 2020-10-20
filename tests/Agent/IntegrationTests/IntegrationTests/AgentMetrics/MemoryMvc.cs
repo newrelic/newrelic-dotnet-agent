@@ -13,11 +13,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentMetrics
 {
     [NetFrameworkTest]
-    public class MemoryMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class MemoryMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         public MemoryMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;

@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
     [NetFrameworkTest]
-    public class ErrorTraceMvc : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class ErrorTraceMvc : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public ErrorTraceMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger)
+        public ErrorTraceMvc(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper testLogger) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;

@@ -14,12 +14,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing
 {
     [NetFrameworkTest]
-    public class InitiateDTAttributesTest : IClassFixture<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
+    public class InitiateDTAttributesTest : NewRelicIntegrationTest<RemoteServiceFixtures.DTBasicMVCApplicationFixture>
     {
 
         private readonly RemoteServiceFixtures.DTBasicMVCApplicationFixture _fixture;
 
-        public InitiateDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output)
+        public InitiateDTAttributesTest(RemoteServiceFixtures.DTBasicMVCApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

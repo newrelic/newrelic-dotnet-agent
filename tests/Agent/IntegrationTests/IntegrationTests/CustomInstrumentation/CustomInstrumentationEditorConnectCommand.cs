@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class CustomInstrumentationEditorConnectCommand : IClassFixture<MvcWithCollectorFixture>
+    public class CustomInstrumentationEditorConnectCommand : NewRelicIntegrationTest<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;
 
-        public CustomInstrumentationEditorConnectCommand(MvcWithCollectorFixture fixture, ITestOutputHelper output)
+        public CustomInstrumentationEditorConnectCommand(MvcWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

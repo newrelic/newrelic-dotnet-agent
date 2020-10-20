@@ -112,7 +112,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
         };
     }
 
-    public abstract class DotNetPerfMetricsTests<TFixture> : IClassFixture<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    public abstract class DotNetPerfMetricsTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private const ulong COUNT_GC_INDUCED = 5;
         private const int THREADPOOL_WORKER_MAX = 275;
@@ -140,7 +140,7 @@ namespace NewRelic.Agent.IntegrationTests.AgentMetrics
             "Threadpool/Throughput/QueueLength"
         };
 
-        public DotNetPerfMetricsTests(TFixture fixture, ITestOutputHelper output)
+        public DotNetPerfMetricsTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
             Fixture.TestLogger = output;

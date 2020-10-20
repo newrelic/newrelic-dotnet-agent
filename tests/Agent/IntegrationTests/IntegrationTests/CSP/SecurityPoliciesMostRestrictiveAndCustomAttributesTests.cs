@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
-    public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : IClassFixture<SecurityPoliciesCustomAttributesWebApi>
+    public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicIntegrationTest<SecurityPoliciesCustomAttributesWebApi>
     {
         private readonly SecurityPoliciesCustomAttributesWebApi _fixture;
 
-        public SecurityPoliciesMostRestrictiveAndCustomAttributesTests(SecurityPoliciesCustomAttributesWebApi fixture, ITestOutputHelper output)
+        public SecurityPoliciesMostRestrictiveAndCustomAttributesTests(SecurityPoliciesCustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

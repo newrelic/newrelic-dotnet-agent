@@ -13,14 +13,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
-    public class HighSecurityModeEnabled : IClassFixture<RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture>
+    public class HighSecurityModeEnabled : NewRelicIntegrationTest<RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture>
     {
         private const string QueryStringParameterValue = @"my thing";
 
         private readonly RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture _fixture;
 
         private const string StripExceptionMessagesMessage = "Message removed by New Relic based on your currently enabled security settings.";
-        public HighSecurityModeEnabled(RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public HighSecurityModeEnabled(RemoteServiceFixtures.HSMBasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

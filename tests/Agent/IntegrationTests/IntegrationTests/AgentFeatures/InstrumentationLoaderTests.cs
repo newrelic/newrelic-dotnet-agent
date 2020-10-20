@@ -11,12 +11,12 @@ using NewRelic.Testing.Assertions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class InstrumentationLoaderTests : IClassFixture<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture>
+    public class InstrumentationLoaderTests : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture>
     {
         private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture _fixture;
         private readonly ITestOutputHelper _output;
 
-        public InstrumentationLoaderTests(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture fixture, ITestOutputHelper output)
+        public InstrumentationLoaderTests(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -59,11 +59,11 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
     }
 
     [NetCoreTest]
-    public class InstrumentationLoaderTestsCore : IClassFixture<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore>
+    public class InstrumentationLoaderTestsCore : NewRelicIntegrationTest<RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore>
     {
         private readonly RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore _fixture;
 
-        public InstrumentationLoaderTestsCore(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore fixture, ITestOutputHelper output)
+        public InstrumentationLoaderTestsCore(RemoteServiceFixtures.ConsoleInstrumentationLoaderFixtureCore fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

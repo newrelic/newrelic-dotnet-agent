@@ -9,14 +9,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class RemotingSerialization : IClassFixture<RemoteServiceFixtures.OwinRemotingFixture>
+    public class RemotingSerialization : NewRelicIntegrationTest<RemoteServiceFixtures.OwinRemotingFixture>
     {
         private readonly RemoteServiceFixtures.OwinRemotingFixture _fixture;
 
         string _tcpResponse;
         string _httpResponse;
 
-        public RemotingSerialization(RemoteServiceFixtures.OwinRemotingFixture fixture, ITestOutputHelper output)
+        public RemotingSerialization(RemoteServiceFixtures.OwinRemotingFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

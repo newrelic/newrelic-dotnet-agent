@@ -16,11 +16,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
     [NetCoreTest]
-    public class PostgresExecuteScalarCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
+    public class PostgresExecuteScalarCoreTests : NewRelicIntegrationTest<PostgresBasicMvcCoreFixture>
     {
         private readonly PostgresBasicMvcCoreFixture _fixture;
 
-        public PostgresExecuteScalarCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
+        public PostgresExecuteScalarCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -15,12 +15,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
     [NetFrameworkTest]
-    public class OracleStoredProcedureTests : IClassFixture<OracleBasicMvcFixture>
+    public class OracleStoredProcedureTests : NewRelicIntegrationTest<OracleBasicMvcFixture>
     {
         private readonly OracleBasicMvcFixture _fixture;
         private readonly string _procedureName = $"OracleTestStoredProc{Guid.NewGuid():N}".Substring(0, 30);
 
-        public OracleStoredProcedureTests(OracleBasicMvcFixture fixture, ITestOutputHelper output)
+        public OracleStoredProcedureTests(OracleBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

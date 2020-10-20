@@ -19,11 +19,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Files: Integration.Testing.DeleteXmlFileTest.xml
     /// </summary>
     [NetCoreTest]
-    public class RejitDeleteFile : IClassFixture<AspNetCoreReJitMvcApplicationFixture>
+    public abstract class RejitDeleteFileBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture:AspNetCoreReJitMvcApplicationFixture
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
-        public RejitDeleteFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+        protected RejitDeleteFileBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 
@@ -82,12 +83,19 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         }
     }
 
-    public class RejitDeleteFileWithTieredCompilation : RejitDeleteFile, IClassFixture<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+    public class RejitDeleteFile : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixture>
+    {
+        public RejitDeleteFile(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RejitDeleteFileWithTieredCompilation : RejitDeleteFileBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
     {
         public RejitDeleteFileWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
-
     }
 }

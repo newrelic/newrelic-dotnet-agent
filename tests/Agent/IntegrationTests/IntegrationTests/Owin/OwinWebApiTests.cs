@@ -14,12 +14,13 @@ using NewRelic.Testing.Assertions;
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
-    public class OwinWebApiTests : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>
+    public abstract class OwinWebApiTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        public OwinWebApiTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+        protected OwinWebApiTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -166,14 +167,23 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         }
     }
 
-    public class Owin3WebApiTests : OwinWebApiTests, IClassFixture<RemoteServiceFixtures.Owin3WebApiFixture>
+    public class OwinWebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
+    {
+        public OwinWebApiTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class Owin3WebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
     {
         public Owin3WebApiTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
-    public class Owin4WebApiTests : OwinWebApiTests, IClassFixture<RemoteServiceFixtures.Owin4WebApiFixture>
+
+    public class Owin4WebApiTests : OwinWebApiTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
     {
         public Owin4WebApiTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
