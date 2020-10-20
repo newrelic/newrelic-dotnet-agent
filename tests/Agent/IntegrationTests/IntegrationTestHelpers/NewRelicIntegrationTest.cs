@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using Xunit;
 
-namespace NewRelic.Agent.IntegrationTests
+namespace NewRelic.Agent.IntegrationTestHelpers
 {
     public abstract class NewRelicIntegrationTest<TFixture> : IClassFixture<TFixture>
             where TFixture : RemoteApplicationFixture

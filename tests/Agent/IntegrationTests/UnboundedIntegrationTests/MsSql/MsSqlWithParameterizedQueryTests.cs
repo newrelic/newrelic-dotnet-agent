@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -13,13 +14,14 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
-    public abstract class MsSqlQueryParameterCaptureTestsBase
+    public abstract class MsSqlQueryParameterCaptureTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture:RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
     {
         private readonly RemoteServiceFixtures.IMsSqlClientFixture _fixture;
         private readonly string _expectedTransactionName;
         private readonly bool _paramsWithAtSigns;
 
-        public MsSqlQueryParameterCaptureTestsBase(RemoteServiceFixtures.IMsSqlClientFixture fixture, ITestOutputHelper output, string expectedTransactionName, bool paramsWithAtSigns)
+        public MsSqlQueryParameterCaptureTestsBase(TFixture fixture, ITestOutputHelper output, string expectedTransactionName, bool paramsWithAtSigns) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -144,7 +146,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MsSqlQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase, IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class MsSqlQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MsSqlBasicMvcFixture>
     {
         public MsSqlQueryParameterCaptureTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSql_WithParameterizedQuery", true)
@@ -153,7 +155,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MsSqlQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase, IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class MsSqlQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MsSqlBasicMvcFixture>
     {
         public MsSqlQueryParameterCaptureTests_ParamsWithoutAtSigns(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSql_WithParameterizedQuery", false)
@@ -162,7 +164,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase, IClassFixture<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
     {
         public MicrosoftDataSqlClientQueryParameterCaptureTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", true)
@@ -171,7 +173,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase, IClassFixture<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns : MsSqlQueryParameterCaptureTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
     {
         public MicrosoftDataSqlClientQueryParameterCaptureTests_ParamsWithoutAtSigns(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql_WithParameterizedQuery/{tableName}/{paramsWithAtSign}", false)
