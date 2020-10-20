@@ -517,32 +517,4 @@ jobs:
             C:\IntegrationTestWorkingDirectory\**\*.config
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
           if-no-files-found: error
-
-  # combine-integration-test-results:
-  #   needs: run-integration-tests
-  #   if: ${{ always() }}
-  #   name: Combine Integration Test Results
-
-  #   runs-on: windows-2019
-
-  #   env:
-  #     results_name: ""
-
-  #   steps:
-  #     - name: Download all workflow run artifacts
-  #       uses: actions/download-artifact@v2
-
-  #     - name: Combine Integration Results
-  #       run: |
-  #         mkdir all-integration-test-results
-
-  #         Get-ChildItem -Path .\integration-test-results* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
-  #       shell: powershell
-
-  #     - name: Upload combined artifacts
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: all-integration-test-results-${{ github.run_id }}
-  #         path: ./all-integration-test-results
-  #         if-no-files-found: error
-
+          
