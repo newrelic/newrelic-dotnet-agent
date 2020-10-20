@@ -105,6 +105,21 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         }
     }
 
+    [TestFixture, Category("Configuration")]
+    public class Method_Parse_Expected_Status_Codes
+    {
+        [TestCase("{\"agent_run_id\":42,\"agent_config\":{\"error_collector.expected_status_codes\":[401,402]}}", ExpectedResult = new[] { "401", "402" })]
+        [TestCase("{\"agent_run_id\":42,\"agent_config\":{\"error_collector.expected_status_codes\":[]}}", ExpectedResult = new string[0])]
+        [TestCase("{\"agent_run_id\":42,\"agent_config\":{\"error_collector.expected_status_codes\":[\"401\",\"402\"]}}", ExpectedResult = new[] { "401", "402" })]
+        [TestCase("{\"agent_run_id\":42,\"agent_config\":{\"error_collector.expected_status_codes\":401}}", ExpectedResult = new[] { "401" })]
+
+        public string[] Expected_Status_Codes_Parsing_Tests(string json)
+        {
+            var serverConfiguration = ServerConfiguration.FromJson(json);
+            return serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes.ExpectedStatusCodesArray;
+        }
+    }
+
     [TestFixture]
     public class Method_JsonContainsNonNullProperty
     {

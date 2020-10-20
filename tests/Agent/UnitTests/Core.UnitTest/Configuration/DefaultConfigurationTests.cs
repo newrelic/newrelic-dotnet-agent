@@ -994,11 +994,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return string.Join(",", _defaultConfig.IgnoreErrorsConfiguration.Keys);
         }
 
-        [TestCase("401", "405", ExpectedResult = "405")]
+
+
+        [TestCase("401", new[] { "405" }, ExpectedResult = "405")]
+        [TestCase("401", new string[0], ExpectedResult = "")]
         [TestCase("401", null, ExpectedResult = "401")]
-        public string ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string server)
+        public string ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
         {
-            _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
+            _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = new ExpectedStatusCodes(server);
             _localConfig.errorCollector.expectedStatusCodes = (local);
 
             CreateDefaultConfiguration();

@@ -1144,11 +1144,10 @@ namespace NewRelic.Agent.Core.Configuration
         public IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings { get; private set; }
 
-        private IEnumerable<MatchRule> ParseExpectedStatusCodesString(string expectedStatusCodesString)
+        private IEnumerable<MatchRule> ParseExpectedStatusCodesArray(string[] expectedStatusCodeArray)
         {
             var expectedStatusCodes = new List<MatchRule>();
 
-            var expectedStatusCodeArray = expectedStatusCodesString.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
             foreach (var singleCodeOrRange in expectedStatusCodeArray)
             {
                 var index = singleCodeOrRange.IndexOf(HyphenChar);
@@ -2078,13 +2077,16 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            var expectedStatusCodesString = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes, _localConfiguration.errorCollector.expectedStatusCodes);
+            var expectedStatusCodesArrayLocal = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
 
-            ExpectedStatusCodes = ParseExpectedStatusCodesString(expectedStatusCodesString);
+            var expectedStatusCodesArray = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.ExpectedStatusCodesArray, expectedStatusCodesArrayLocal);
+
+            ExpectedStatusCodes = expectedStatusCodesArray != null ? ParseExpectedStatusCodesArray(expectedStatusCodesArray) : new List<MatchRule>();
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray != null ? string.Join(",", expectedStatusCodesArray) : null;
+
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
             ExpectedErrorClassesForAgentSettings = expectedClasses;
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesString;
         }
 
         private void ParseIgnoreErrorConfigurations()
