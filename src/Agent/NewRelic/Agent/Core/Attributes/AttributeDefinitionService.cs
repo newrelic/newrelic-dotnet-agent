@@ -44,7 +44,7 @@ namespace NewRelic.Agent.Core.Attributes
         AttributeDefinition<string, string> DbStatement { get; }
         AttributeDefinition<string, string> DistributedTraceId { get; }
         AttributeDefinition<TimeSpan, double> Duration { get; }
-        AttributeDefinition<bool, bool> IsErrorExpected { get;}
+        AttributeDefinition<bool, bool> IsErrorExpected { get; }
         AttributeDefinition<bool, bool> SpanIsErrorExpected { get; }
         AttributeDefinition<string, string> ErrorClass { get; }
         AttributeDefinition<string, string> ErrorDotMessage { get; }
@@ -163,76 +163,104 @@ namespace NewRelic.Agent.Core.Attributes
 
         private readonly ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>> _typeAttributes = new ConcurrentDictionary<TypeAttributeValue, AttributeDefinition<TypeAttributeValue, string>>();
 
+
+        private AttributeDefinition<object, object> CreateCustomAttributeForTransaction(string name)
+        {
+            return AttributeDefinitionBuilder
+                .CreateCustomAttribute(name, AttributeDestinations.All)
+                .Build(_attribFilter);
+        }
+
+        private AttributeDefinition<object, object> CreateCustomAttributeForCustomEvent(string name)
+        {
+            return AttributeDefinitionBuilder
+                .CreateCustomAttribute(name, AttributeDestinations.CustomEvent)
+                .Build(_attribFilter);
+        }
+
+        private AttributeDefinition<object, object> CreateCustomAttributeForError(string name)
+        {
+            return AttributeDefinitionBuilder
+                .CreateCustomAttribute(name, AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace)
+                .Build(_attribFilter);
+        }
+
+        private AttributeDefinition<object, object> CreateCustomAttributeForSpan(string name)
+        {
+            return AttributeDefinitionBuilder
+                .CreateCustomAttribute(name, AttributeDestinations.SpanEvent)
+                .Build(_attribFilter);
+        }
+
+        private AttributeDefinition<string, string> CreateRequestParameterAttribute(string paramName)
+        {
+            var attribName = $"request.parameters.{paramName}";
+
+            return AttributeDefinitionBuilder
+                .CreateString(attribName, AttributeClassification.AgentAttributes)
+                .AppliesTo(AttributeDestinations.TransactionEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionEvent))
+                .AppliesTo(AttributeDestinations.TransactionTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionTrace))
+                .AppliesTo(AttributeDestinations.ErrorTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorTrace))
+                .AppliesTo(AttributeDestinations.ErrorEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorEvent))
+                .AppliesTo(AttributeDestinations.SpanEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.SpanEvent))
+                .Build(_attribFilter);
+        }
+
         public AttributeDefinition<object, object> GetCustomAttributeForTransaction(string name)
         {
-            return _trxCustomAttributes.GetOrAdd(name, (n) => AttributeDefinitionBuilder
-                .CreateCustomAttribute(n, AttributeDestinations.All)
-                .Build(_attribFilter));
+            return _trxCustomAttributes.GetOrAdd(name, CreateCustomAttributeForTransaction);
         }
 
         public AttributeDefinition<object, object> GetCustomAttributeForCustomEvent(string name)
         {
-            return _customEventCustomAttributes.GetOrAdd(name, (n) => AttributeDefinitionBuilder
-                .CreateCustomAttribute(n, AttributeDestinations.CustomEvent)
-                .Build(_attribFilter));
+            return _customEventCustomAttributes.GetOrAdd(name, CreateCustomAttributeForCustomEvent);
         }
 
         public AttributeDefinition<object, object> GetCustomAttributeForError(string name)
         {
-            return _errorCustomAttributes.GetOrAdd(name, (n) => AttributeDefinitionBuilder
-                .CreateCustomAttribute(n, AttributeDestinations.ErrorEvent | AttributeDestinations.ErrorTrace)
-                .Build(_attribFilter));
+            return _errorCustomAttributes.GetOrAdd(name, CreateCustomAttributeForError);
         }
 
         public AttributeDefinition<object, object> GetCustomAttributeForSpan(string name)
         {
-            return _spanCustomAttributes.GetOrAdd(name, (n) => AttributeDefinitionBuilder
-                .CreateCustomAttribute(n, AttributeDestinations.SpanEvent)
-                .Build(_attribFilter));
+            return _spanCustomAttributes.GetOrAdd(name, CreateCustomAttributeForSpan);
         }
 
         public AttributeDefinition<string, string> GetRequestParameterAttribute(string paramName)
         {
-            var attribName = $"request.parameters.{paramName}";
+            return _requestParameterAttributes.GetOrAdd(paramName, CreateRequestParameterAttribute);
+        }
 
-            return _requestParameterAttributes.GetOrAdd(paramName, (pn) => AttributeDefinitionBuilder
-                .CreateString(attribName, AttributeClassification.AgentAttributes)
-                .AppliesTo(AttributeDestinations.TransactionEvent, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionEvent))
-                .AppliesTo(AttributeDestinations.TransactionTrace, _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.TransactionTrace))
-                .AppliesTo(AttributeDestinations.ErrorTrace,       _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorTrace))
-                .AppliesTo(AttributeDestinations.ErrorEvent,       _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.ErrorEvent))
-                .AppliesTo(AttributeDestinations.SpanEvent,        _attribFilter.CheckOrAddAttributeClusionCache(attribName, AttributeDestinations.None, AttributeDestinations.SpanEvent))
-                .Build(_attribFilter));
+        public AttributeDefinition<TypeAttributeValue, string> CreateTypeAttribute(TypeAttributeValue tm)
+        {
+            var val = EnumNameCache<TypeAttributeValue>.GetName(tm);
+
+            var dest = AttributeDestinations.None;
+            switch (tm)
+            {
+                case TypeAttributeValue.Transaction:
+                    dest = AttributeDestinations.TransactionEvent;
+                    break;
+
+                case TypeAttributeValue.TransactionError:
+                    dest = AttributeDestinations.ErrorEvent;
+                    break;
+
+                case TypeAttributeValue.Span:
+                    dest = AttributeDestinations.SpanEvent;
+                    break;
+            }
+
+            return AttributeDefinitionBuilder.CreateString<TypeAttributeValue>("type", AttributeClassification.Intrinsics)
+                .AppliesTo(dest)
+                .WithDefaultOutputValue(val)
+                .WithConvert((target) => val)
+                .Build(_attribFilter);
         }
 
         public AttributeDefinition<TypeAttributeValue, string> GetTypeAttribute(TypeAttributeValue targetModel)
         {
-            return _typeAttributes.GetOrAdd(targetModel, (tm) =>
-            {
-                var val = EnumNameCache<TypeAttributeValue>.GetName(tm);
-
-                var dest = AttributeDestinations.None;
-                switch(tm)
-                {
-                    case TypeAttributeValue.Transaction:
-                        dest = AttributeDestinations.TransactionEvent;
-                        break;
-
-                    case TypeAttributeValue.TransactionError:
-                        dest = AttributeDestinations.ErrorEvent;
-                        break;
-
-                    case TypeAttributeValue.Span:
-                        dest = AttributeDestinations.SpanEvent;
-                        break;
-                }
-
-                return AttributeDefinitionBuilder.CreateString<TypeAttributeValue>("type", AttributeClassification.Intrinsics)
-                    .AppliesTo(dest)
-                    .WithDefaultOutputValue(val)
-                    .WithConvert((target) => val)
-                    .Build(_attribFilter);
-            });
+            return _typeAttributes.GetOrAdd(targetModel, CreateTypeAttribute);
         }
 
         private AttributeDefinition<TimeSpan?, string> _queueWaitTime;
@@ -291,7 +319,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
-                .WithConvert(x=>x.ToString())
+                .WithConvert(x => x.ToString())
                 .Build(_attribFilter));
 
         private AttributeDefinition<long?, long> _httpStatusCode;
@@ -375,8 +403,8 @@ namespace NewRelic.Agent.Core.Attributes
                         return null;
                     }
 
-                    var hashesArray = hashes.OrderBy(x=>x).ToArray();
-                    if(hashesArray.Length == 0)
+                    var hashesArray = hashes.OrderBy(x => x).ToArray();
+                    if (hashesArray.Length == 0)
                     {
                         return null;
                     }

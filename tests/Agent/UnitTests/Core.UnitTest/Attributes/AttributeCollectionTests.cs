@@ -61,7 +61,7 @@ namespace NewRelic.Agent.Core.Attributes.Tests
 
             NrAssert.Multiple
             (
-                () => Assert.AreEqual(2, allAttribs.Count),
+                () => Assert.AreEqual(4, allAttribs.Count),
                 () => Assert.AreEqual(1, agentAttribsDic.Count()),
                 () => Assert.AreEqual("banana2", agentAttribsDic["original_url"]),
                 () => Assert.AreEqual(1, userAttribsDic.Count()),
