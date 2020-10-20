@@ -175,14 +175,14 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 
     }
 
-    public abstract class ConsoleAsyncForceNewTransactionTests : IClassFixture<ConsoleAsyncFixture>
+    public abstract class ConsoleAsyncForceNewTransactionTests : NewRelicIntegrationTest<ConsoleAsyncFixture>
     {
         protected readonly ConsoleAsyncFixture Fixture;
         protected const string AssemblyName = "ConsoleAsyncApplication";
 
         protected abstract void SetupConfiguration(string instrumentationFilePath);
 
-        public ConsoleAsyncForceNewTransactionTests(ConsoleAsyncFixture fixture, ITestOutputHelper output)
+        public ConsoleAsyncForceNewTransactionTests(ConsoleAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
             Fixture.TestLogger = output;

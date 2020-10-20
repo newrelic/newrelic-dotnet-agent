@@ -13,12 +13,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetCoreTest]
-    public class NetCoreAsyncTests : IClassFixture<NetCoreAsyncTestsFixture>
+    public class NetCoreAsyncTests : NewRelicIntegrationTest<NetCoreAsyncTestsFixture>
     {
         private readonly NetCoreAsyncTestsFixture _fixture;
         private const int ExpectedTransactionCount = 3;
 
-        public NetCoreAsyncTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output)
+        public NetCoreAsyncTests(NetCoreAsyncTestsFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

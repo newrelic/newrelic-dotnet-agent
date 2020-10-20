@@ -16,11 +16,12 @@ namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
     /// about testing the behavior of removing the transaction data from AsyncLocal storage.
     /// </summary>
     [NetCoreTest]
-    public class DetachWrapperTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    public class DetachWrapperTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
         public DetachWrapperTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

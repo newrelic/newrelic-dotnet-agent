@@ -125,7 +125,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         /// actual process to the fixture.  This ensures that the remote application
         /// is managed internally.
         /// </summary>
-
+        ///
         protected abstract string ApplicationDirectoryName { get; }
 
         protected abstract string SourceApplicationDirectoryPath { get; }
@@ -135,6 +135,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         public abstract void Start(string commandLineArguments, bool captureStandardOutput = false, bool doProfile = true);
 
         #endregion
+
+        private Type _testClassType;
+        public RemoteApplication SetTestClassType(Type testClassType)
+        {
+            _testClassType = testClassType;
+            return this;
+        }
+
 
         protected IDictionary<string, string> AdditionalEnvironmentVariables;
         public RemoteApplication SetAdditionalEnvironmentVariable(string key, string value)
@@ -164,7 +172,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
         {
             get
             {
-                return _uniqueFolderName ?? (_uniqueFolderName = ApplicationDirectoryName + "_" + Guid.NewGuid().ToString());
+                return _uniqueFolderName ?? (_uniqueFolderName = (_testClassType?.Name ?? ApplicationDirectoryName) + "_" + Guid.NewGuid().ToString());
             }
         }
 

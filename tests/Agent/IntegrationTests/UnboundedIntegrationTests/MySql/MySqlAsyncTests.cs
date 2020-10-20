@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
     [NetFrameworkTest]
-    public class MySqlAsyncTests : IClassFixture<RemoteServiceFixtures.MySqlBasicMvcFixture>
+    public class MySqlAsyncTests : NewRelicIntegrationTest<RemoteServiceFixtures.MySqlBasicMvcFixture>
     {
         private readonly RemoteServiceFixtures.MySqlBasicMvcFixture _fixture;
 
-        public MySqlAsyncTests(RemoteServiceFixtures.MySqlBasicMvcFixture fixture, ITestOutputHelper output)
+        public MySqlAsyncTests(RemoteServiceFixtures.MySqlBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

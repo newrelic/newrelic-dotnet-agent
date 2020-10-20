@@ -9,13 +9,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
     [NetFrameworkTest]
-    public class MongoDB2_6_AsyncCursorTests : IClassFixture<RemoteServiceFixtures.MongoDB2_6ApplicationFixture>
+    public class MongoDB2_6_AsyncCursorTests : NewRelicIntegrationTest<RemoteServiceFixtures.MongoDB2_6ApplicationFixture>
     {
         private readonly RemoteServiceFixtures.MongoDB2_6ApplicationFixture _fixture;
 
         private readonly string DatastorePath = "Datastore/statement/MongoDB/myCollection";
 
-        public MongoDB2_6_AsyncCursorTests(RemoteServiceFixtures.MongoDB2_6ApplicationFixture fixture, ITestOutputHelper output)
+        public MongoDB2_6_AsyncCursorTests(RemoteServiceFixtures.MongoDB2_6ApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

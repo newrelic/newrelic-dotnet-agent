@@ -13,12 +13,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     [NetFrameworkTest]
-    public class AgentApiTests : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
+    public class AgentApiTests : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
     {
 
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
         public AgentApiTests(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

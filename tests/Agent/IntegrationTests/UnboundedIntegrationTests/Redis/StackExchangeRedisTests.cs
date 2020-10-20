@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
 {
     [NetFrameworkTest]
-    public class StackExchangeRedisTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    public class StackExchangeRedisTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplication>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public StackExchangeRedisTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
+        public StackExchangeRedisTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

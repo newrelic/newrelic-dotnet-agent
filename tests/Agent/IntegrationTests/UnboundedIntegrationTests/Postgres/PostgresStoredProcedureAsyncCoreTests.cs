@@ -15,12 +15,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
     [NetCoreTest]
-    public class PostgresStoredProcedureAsyncCoreTests : IClassFixture<PostgresBasicMvcCoreFixture>
+    public class PostgresStoredProcedureAsyncCoreTests : NewRelicIntegrationTest<PostgresBasicMvcCoreFixture>
     {
         private readonly PostgresBasicMvcCoreFixture _fixture;
         private readonly string _procedureName = $"PostgresTestStoredProcAsync{Guid.NewGuid():N}";
 
-        public PostgresStoredProcedureAsyncCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)
+        public PostgresStoredProcedureAsyncCoreTests(PostgresBasicMvcCoreFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

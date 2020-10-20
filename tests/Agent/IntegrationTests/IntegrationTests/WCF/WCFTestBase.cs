@@ -5,6 +5,7 @@
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.ApplicationLibraries.Wcf;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 using NewRelic.Testing.Assertions;
 using System;
@@ -16,7 +17,7 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.IntegrationTests.WCF
 {
-    public abstract class WCFTestBase : IClassFixture<ConsoleDynamicMethodFixtureFW>
+    public abstract class WCFTestBase : NewRelicIntegrationTest<ConsoleDynamicMethodFixtureFW>
     {
         public enum TracingTestOption
         {
@@ -108,7 +109,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
             HostingModel hostingModelOption,
             ASPCompatibilityMode aspCompatModeOption,
             IWCFLogHelpers logHelpersImpl
-            )
+            ) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

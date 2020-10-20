@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
     [NetFrameworkTest]
-    public class ErrorTraceWebApi : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>
+    public class ErrorTraceWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
-        public ErrorTraceWebApi(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper testLogger)
+        public ErrorTraceWebApi(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper testLogger) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;

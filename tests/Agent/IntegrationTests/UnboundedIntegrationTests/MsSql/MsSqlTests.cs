@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -14,12 +15,13 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
-    public abstract class MsSqlTestsBase
+    public abstract class MsSqlTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture:RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
     {
         private readonly RemoteServiceFixtures.IMsSqlClientFixture _fixture;
         private readonly string _expectedTransactionName;
 
-        public MsSqlTestsBase(RemoteServiceFixtures.IMsSqlClientFixture fixture, ITestOutputHelper output, string expectedTransactionName)
+        public MsSqlTestsBase(TFixture fixture, ITestOutputHelper output, string expectedTransactionName) :  base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -169,7 +171,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MsSqlTests : MsSqlTestsBase, IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class MsSqlTests : MsSqlTestsBase<RemoteServiceFixtures.MsSqlBasicMvcFixture>
     {
         public MsSqlTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSql")
@@ -178,7 +180,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientTests : MsSqlTestsBase, IClassFixture<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientTests : MsSqlTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
     {
         public MicrosoftDataSqlClientTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSql/{tableName}")

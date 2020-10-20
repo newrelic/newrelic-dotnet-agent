@@ -11,13 +11,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetCoreTest]
-    public class AsyncStreamTests : IClassFixture<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
+    public class AsyncStreamTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCore3FeaturesFixture _fixture;
 
         private const int ExpectedTransactionCount = 2;
 
         public AsyncStreamTests(RemoteServiceFixtures.AspNetCore3FeaturesFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

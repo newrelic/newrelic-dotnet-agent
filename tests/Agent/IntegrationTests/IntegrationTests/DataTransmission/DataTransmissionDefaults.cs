@@ -14,13 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.DataTransmission
 {
     [NetFrameworkTest]
-    public class DataTransmissionDefaults : IClassFixture<MvcWithCollectorFixture>
+    public class DataTransmissionDefaults : NewRelicIntegrationTest<MvcWithCollectorFixture>
     {
         private readonly MvcWithCollectorFixture _fixture;
 
         private IEnumerable<CollectedRequest> _collectedRequests = null;
 
-        public DataTransmissionDefaults(MvcWithCollectorFixture fixture, ITestOutputHelper output)
+        public DataTransmissionDefaults(MvcWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

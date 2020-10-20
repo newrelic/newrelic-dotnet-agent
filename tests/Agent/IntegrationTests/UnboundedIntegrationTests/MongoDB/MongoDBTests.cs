@@ -10,11 +10,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MongoDB
 {
     [NetFrameworkTest]
-    public class MongoDBTests : IClassFixture<RemoteServiceFixtures.MongoDbApplicationFixture>
+    public class MongoDBTests : NewRelicIntegrationTest<RemoteServiceFixtures.MongoDbApplicationFixture>
     {
         private readonly RemoteServiceFixtures.MongoDbApplicationFixture _fixture;
 
-        public MongoDBTests(RemoteServiceFixtures.MongoDbApplicationFixture fixture, ITestOutputHelper output)
+        public MongoDBTests(RemoteServiceFixtures.MongoDbApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

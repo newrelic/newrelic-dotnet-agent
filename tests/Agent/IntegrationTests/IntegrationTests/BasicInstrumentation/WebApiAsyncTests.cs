@@ -14,13 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class WebApiAsyncTests : IClassFixture<WebApiAsyncFixture>
+    public class WebApiAsyncTests : NewRelicIntegrationTest<WebApiAsyncFixture>
     {
         private readonly WebApiAsyncFixture _fixture;
         private const int ExpectedTransactionCount = 6;
         private const string AssemblyName = "WebApiAsyncApplication";
 
-        public WebApiAsyncTests(WebApiAsyncFixture fixture, ITestOutputHelper output)
+        public WebApiAsyncTests(WebApiAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

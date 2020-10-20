@@ -13,7 +13,7 @@ using NewRelic.Agent.IntegrationTests.RemoteServiceFixtures;
 
 namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationTests
 {
-    public abstract class W3CTestBase<T> : IClassFixture<T> where T : TracingChainFixture
+    public abstract class W3CTestBase<T> : NewRelicIntegrationTest<T> where T : TracingChainFixture
     {
         protected T _fixture;
         protected const string TestTraceId = "12345678901234567890123456789012";
@@ -26,7 +26,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
                 new KeyValuePair<string, string> ("tracestate", TestOtherVendorEntries)
             };
 
-        public W3CTestBase(T fixture, ITestOutputHelper output)
+        public W3CTestBase(T fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

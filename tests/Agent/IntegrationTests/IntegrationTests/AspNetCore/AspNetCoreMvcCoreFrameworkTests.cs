@@ -13,11 +13,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AspNetCore
 {
     [NetFrameworkTest]
-    public class AspNetCoreMvcCoreFrameworkTests : IClassFixture<AspNetCoreMvcCoreFrameworkFixture>
+    public class AspNetCoreMvcCoreFrameworkTests : NewRelicIntegrationTest<AspNetCoreMvcCoreFrameworkFixture>
     {
         private readonly AspNetCoreMvcCoreFrameworkFixture _fixture;
 
         public AspNetCoreMvcCoreFrameworkTests(AspNetCoreMvcCoreFrameworkFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

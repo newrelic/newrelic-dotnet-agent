@@ -13,12 +13,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
     [NetFrameworkTest]
-    public class CatEnabledDoesStatusCodeRollupNaming : IClassFixture<BasicMvcApplicationTestFixture>
+    public class CatEnabledDoesStatusCodeRollupNaming : NewRelicIntegrationTest<BasicMvcApplicationTestFixture>
     {
         private BasicMvcApplicationTestFixture _fixture;
         private HttpResponseHeaders _responseHeaders;
 
         public CatEnabledDoesStatusCodeRollupNaming(BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -12,12 +12,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     [NetFrameworkTest]
-    public class ApiAppNameChangeTests : IClassFixture<RemoteServiceFixtures.ApiAppNameChangeFixture>
+    public class ApiAppNameChangeTests : NewRelicIntegrationTest<RemoteServiceFixtures.ApiAppNameChangeFixture>
     {
 
         private readonly RemoteServiceFixtures.ApiAppNameChangeFixture _fixture;
 
         public ApiAppNameChangeTests(RemoteServiceFixtures.ApiAppNameChangeFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

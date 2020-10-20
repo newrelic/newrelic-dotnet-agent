@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
     [NetFrameworkTest]
-    public class EnterpriseLibraryMsSqlTests : IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class EnterpriseLibraryMsSqlTests : NewRelicIntegrationTest<RemoteServiceFixtures.MsSqlBasicMvcFixture>
     {
         private readonly RemoteServiceFixtures.MsSqlBasicMvcFixture _fixture;
 
-        public EnterpriseLibraryMsSqlTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
+        public EnterpriseLibraryMsSqlTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

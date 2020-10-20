@@ -20,11 +20,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Files: Integration.Testing.AddAttributeTest.xml
     /// </summary>
     [NetCoreTest]
-    public class RejitAddAttribute : IClassFixture<AspNetCoreReJitMvcApplicationFixture>
+    public abstract class RejitAddAttributeBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture: AspNetCoreReJitMvcApplicationFixture
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
-        public RejitAddAttribute(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+        protected RejitAddAttributeBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 
@@ -97,7 +98,15 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         }
     }
 
-    public class RejitAddAttributeWithTieredCompilation : RejitAddAttribute, IClassFixture<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+    public class RejitAddAttribute : RejitAddAttributeBase<AspNetCoreReJitMvcApplicationFixture>
+    {
+        public RejitAddAttribute(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RejitAddAttributeWithTieredCompilation : RejitAddAttributeBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
     {
         public RejitAddAttributeWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
             : base(fixture, output)

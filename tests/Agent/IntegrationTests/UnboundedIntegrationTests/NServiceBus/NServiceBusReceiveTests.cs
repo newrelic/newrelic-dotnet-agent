@@ -15,11 +15,11 @@ using Assert = Xunit.Assert;
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
     [NetFrameworkTest]
-    public class NServiceBusReceiveTests : IClassFixture<NServiceBusReceiverFixture>
+    public class NServiceBusReceiveTests : NewRelicIntegrationTest<NServiceBusReceiverFixture>
     {
         private readonly NServiceBusReceiverFixture _fixture;
 
-        public NServiceBusReceiveTests(NServiceBusReceiverFixture fixture, ITestOutputHelper output)
+        public NServiceBusReceiveTests(NServiceBusReceiverFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
