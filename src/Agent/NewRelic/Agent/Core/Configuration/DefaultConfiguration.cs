@@ -1144,7 +1144,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IEnumerable<string> IgnoreErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> IgnoreErrorMessagesForAgentSettings { get; private set; }
 
-        private IEnumerable<MatchRule> ParseExpectedStatusCodesArray(string[] expectedStatusCodeArray)
+        private IEnumerable<MatchRule> ParseExpectedStatusCodesArray(IEnumerable<string> expectedStatusCodeArray)
         {
             var expectedStatusCodes = new List<MatchRule>();
 
@@ -1188,7 +1188,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IEnumerable<MatchRule> ExpectedStatusCodes { get; private set; }
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
         public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
-        public string ExpectedErrorStatusCodesForAgentSettings { get; private set; }
+        public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; private set; }
 
         #endregion
 
@@ -2087,7 +2087,7 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedStatusCodesArray = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.ExpectedStatusCodesArray, expectedStatusCodesArrayLocal);
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray != null ? string.Join(",", expectedStatusCodesArray) : string.Empty;
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray;
 
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);

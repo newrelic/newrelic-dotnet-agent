@@ -936,7 +936,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             _defaultConfig = new TestableDefaultConfiguration(_environment, localConfiguration, _serverConfig, _runTimeConfig, _securityPoliciesConfiguration, _processStatic, _httpRuntimeStatic, _configurationManagerStatic, _dnsStatic);
 
-            Assert.That(_defaultConfig.ExpectedErrorStatusCodesForAgentSettings == "404,500");
+            CollectionAssert.AreEquivalent(_defaultConfig.ExpectedErrorStatusCodesForAgentSettings, new[] { "404", "500" });
 
             var expectedMessages = _defaultConfig.ExpectedErrorsConfiguration;
 
@@ -996,10 +996,10 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 
 
-        [TestCase("401", new[] { "405" }, ExpectedResult = "405")]
-        [TestCase("401", new string[0], ExpectedResult = "")]
-        [TestCase("401", null, ExpectedResult = "401")]
-        public string ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
+        [TestCase("401", new[] { "405" }, ExpectedResult = new[] { "405" })]
+        [TestCase("401", new string[0], ExpectedResult = new string[0])]
+        [TestCase("401", null, ExpectedResult = new[] { "401" })]
+        public IEnumerable<object> ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = new ExpectedStatusCodes(server);
             _localConfig.errorCollector.expectedStatusCodes = (local);
@@ -1110,7 +1110,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
             CreateDefaultConfiguration();
 
-            var expectedStatusCodes = "404,500";
+            var expectedStatusCodes = new string[] { "404", "500" };
             var expectedErrorClasses = new[] { "ErrorClass1", "ErrorClass2" };
             var expectedErrorMessages = new Dictionary<string, IEnumerable<string>>
             {
@@ -1118,7 +1118,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             };
 
             NrAssert.Multiple(
-                () => Assert.AreEqual(expectedStatusCodes, _defaultConfig.ExpectedErrorStatusCodesForAgentSettings),
+                () => CollectionAssert.AreEquivalent(expectedStatusCodes, _defaultConfig.ExpectedErrorStatusCodesForAgentSettings),
                 () => CollectionAssert.AreEquivalent(expectedErrorClasses, _defaultConfig.ExpectedErrorClassesForAgentSettings),
                 () => CollectionAssert.AreEquivalent(expectedErrorMessages, _defaultConfig.ExpectedErrorMessagesForAgentSettings)
             );

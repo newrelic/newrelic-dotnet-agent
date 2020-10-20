@@ -333,11 +333,11 @@ namespace NewRelic.Agent.Core.Configuration
     [JsonConverter(typeof(ExpectedStatusCodesConverter))]
     public class ExpectedStatusCodes
     {
-        public ExpectedStatusCodes(string[] expectedStatusCodesArray)
+        public ExpectedStatusCodes(IEnumerable<string> expectedStatusCodesArray)
         {
             ExpectedStatusCodesArray = expectedStatusCodesArray;
         }
 
-        public string[] ExpectedStatusCodesArray { get; private set; }
+        public IEnumerable<string> ExpectedStatusCodesArray { get; private set; }
     }
 }
