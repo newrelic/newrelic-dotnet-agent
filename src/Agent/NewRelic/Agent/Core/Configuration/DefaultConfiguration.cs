@@ -1148,6 +1148,11 @@ namespace NewRelic.Agent.Core.Configuration
         {
             var expectedStatusCodes = new List<MatchRule>();
 
+            if(expectedStatusCodeArray == null)
+            {
+                return expectedStatusCodes;
+            }
+
             foreach (var singleCodeOrRange in expectedStatusCodeArray)
             {
                 var index = singleCodeOrRange.IndexOf(HyphenChar);
@@ -2081,8 +2086,8 @@ namespace NewRelic.Agent.Core.Configuration
 
             var expectedStatusCodesArray = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.ExpectedStatusCodesArray, expectedStatusCodesArrayLocal);
 
-            ExpectedStatusCodes = expectedStatusCodesArray != null ? ParseExpectedStatusCodesArray(expectedStatusCodesArray) : new List<MatchRule>();
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray != null ? string.Join(",", expectedStatusCodesArray) : null;
+            ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray != null ? string.Join(",", expectedStatusCodesArray) : string.Empty;
 
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);

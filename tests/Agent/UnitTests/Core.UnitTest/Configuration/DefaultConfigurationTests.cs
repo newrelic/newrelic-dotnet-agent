@@ -1017,6 +1017,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("401.4,401", new string[] { "400", "401", "402", "403", "404" }, new bool[] { false, true, false, false, false })] //does not support full status codes
         [TestCase("404,401.4", new string[] { "400", "401", "402", "403", "404" }, new bool[] { false, false, false, false, true })]
         [TestCase("401.4-404.5", new string[] { "400", "401", "402", "403", "404" }, new bool[] { false, false, false, false, false })] //does not support full status codes
+        [TestCase("Foo,Bar,X-Y", new string[] { "400", "401" }, new bool[] { false, false })] //does not work with non status code values
         public void ExpectedStatusCodesParserTests(string local, string[] inputs, bool[] expected)
         {
             _localConfig.errorCollector.expectedStatusCodes = local;
