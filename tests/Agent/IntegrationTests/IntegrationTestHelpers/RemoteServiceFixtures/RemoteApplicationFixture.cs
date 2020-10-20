@@ -272,8 +272,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                                 Thread.Sleep(1000);
                                 numberOfTries++;
                             }
-
                         }
+
                     } while (retryTest && numberOfTries < MaxTries);
 
                     if (retryTest)
@@ -283,6 +283,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         throw new Exception(message);
                     }
                 }
+
                 finally
                 {
                     TestLogger?.WriteLine("===== Begin Agent log file =====");
