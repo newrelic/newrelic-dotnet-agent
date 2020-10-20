@@ -79,7 +79,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             set { RemoteApplication.KeepWorkingDirectory = value; }
         }
 
-        public bool DelayKill;
+        //public bool DelayKill;
 
         protected virtual int MaxTries => 2;
 
@@ -234,8 +234,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         finally
                         {
-                            if (!DelayKill)
-                            {
+                            //if (!DelayKill)
+                            //{
                                 ShutdownRemoteApplication();
 
                                 if (captureStandardOutput)
@@ -266,13 +266,14 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                                 TestLogger?.WriteLine($"Remote application exited with a {(appIsExercisedNormally ? "success" : "failure")} exit code of {RemoteApplication.ExitCode}.");
 
-                            }
-                            else
-                            {
-                                TestLogger?.WriteLine("Note: Due to DelayKill being used, no process output or agent log validation was performed to verify that the application started and ran successfully.");
-                            }
+                            //}
+                            //else
+                            //{
+                            //    TestLogger?.WriteLine("Note: Due to DelayKill being used, no process output or agent log validation was performed to verify that the application started and ran successfully.");
+                            //}
 
-                            if (!appIsExercisedNormally && DelayKill)
+                            //if (!appIsExercisedNormally && DelayKill)
+                            if (!appIsExercisedNormally)
                             {
                                 RemoteApplication.Kill();
 

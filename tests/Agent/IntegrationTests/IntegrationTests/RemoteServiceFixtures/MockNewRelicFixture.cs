@@ -141,12 +141,12 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             {
                 base.Initialize();
 
-                if (!DelayKill)
-                {
+                //if (!DelayKill)
+                //{
                     RemoteApplication.AgentLog.WaitForLogLine(AgentLogFile.ShutdownLogLineRegex, TimeSpan.FromMinutes(2));
                     MockNewRelicApplication.Shutdown();
                     MockNewRelicApplication.CapturedOutput?.WriteProcessOutputToLog("MockNewRelic application:");
-                }
+                //}
             }
             catch (Exception)
             {
