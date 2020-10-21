@@ -26,7 +26,7 @@ namespace Owin4WebApi.Controllers
             }
             catch (Exception ex)
             {
-                var result = $"Exception occured in {nameof(DistributedTracingSenderController)} calling [{nextUrl}]: {ex}";
+                var result = $"Exception occurred in {nameof(DistributedTracingSenderController)} calling [{nextUrl}]: {ex}";
                 return result;
             }
         }
