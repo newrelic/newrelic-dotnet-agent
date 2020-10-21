@@ -371,7 +371,7 @@ namespace NewRelic.Agent.Core.Api
             if (_configurationService.Configuration.CaptureCustomParameters)
             {
                 var transaction = GetCurrentInternalTransaction();
-                transaction.TransactionMetadata.AddUserAttribute(key, value);
+                transaction.AddCustomAttribute(key, value);
             }
         }
 
@@ -449,15 +449,22 @@ namespace NewRelic.Agent.Core.Api
             {
                 if (_configurationService.Configuration.CaptureCustomParameters)
                 {
-                    var transactionMetadata = GetCurrentInternalTransaction().TransactionMetadata;
+                    //var transactionMetadata = GetCurrentInternalTransaction().TransactionMetadata;
+                    var transaction = GetCurrentInternalTransaction();
                     if (userName != null && !string.IsNullOrEmpty(userName))
-                        transactionMetadata.AddUserAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
+                    {
+                        transaction.AddCustomAttribute("user", userName.ToString(CultureInfo.InvariantCulture));
+                    }
 
                     if (accountName != null && !string.IsNullOrEmpty(accountName))
-                        transactionMetadata.AddUserAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
+                    {
+                        transaction.AddCustomAttribute("account", accountName.ToString(CultureInfo.InvariantCulture));
+                    }
 
                     if (productName != null && !string.IsNullOrEmpty(productName))
-                        transactionMetadata.AddUserAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
+                    {
+                        transaction.AddCustomAttribute("product", productName.ToString(CultureInfo.InvariantCulture));
+                    }
                 }
             }
         }

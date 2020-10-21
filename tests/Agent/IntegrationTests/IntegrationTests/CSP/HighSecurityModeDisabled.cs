@@ -85,13 +85,14 @@ namespace NewRelic.Agent.IntegrationTests.CSP
             var transactionSample = _fixture.AgentLog.GetTransactionSamples().FirstOrDefault();
             var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var firstErrorEvent = errorEvents.FirstOrDefault()?.Events.FirstOrDefault();
+            var firstErrorEvent = errorEvents.FirstOrDefault();
             var firstErrorTrace = errorTraces.FirstOrDefault();
 
             NrAssert.Multiple(
                 () => Assert.Equal("custom-host-name", displayHost),
                 () => Assertions.TransactionEventHasAttributes(expectedTransactionEventAgentAttributes, TransactionEventAttributeType.Agent, getDataTransactionEvent),
                 () => Assertions.TransactionTraceHasAttributes(expectedTransactionTraceAttributes, TransactionTraceAttributeType.Agent, transactionSample),
+                () => Assert.NotNull(firstErrorEvent),
                 () => Assertions.ErrorEventHasAttributes(expectedAgentErrorEventAttributes, EventAttributeType.Agent, firstErrorEvent),
                 () => Assertions.ErrorTraceHasAttributes(expectedAgentErrorTraceAttributes, ErrorTraceAttributeType.Agent, firstErrorTrace)
 

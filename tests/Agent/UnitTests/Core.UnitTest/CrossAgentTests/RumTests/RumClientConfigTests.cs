@@ -137,7 +137,7 @@ namespace NewRelic.Agent.Core.CrossAgentTests.RumTests
             var priority = 0.5f;
             IInternalTransaction tx = new Transaction(_configuration, name, timer, DateTime.UtcNow, Mock.Create<ICallStackManager>(), Mock.Create<IDatabaseService>(), priority, Mock.Create<IDatabaseStatementParser>(), Mock.Create<IDistributedTracePayloadHandler>(), Mock.Create<IErrorService>(), _attribDefs);
             tx.TransactionMetadata.SetQueueTime(TimeSpan.FromMilliseconds(testCase.QueueTimeMilliseconds));
-            testCase.UserAttributes.ForEach(attr => tx.TransactionMetadata.AddUserAttribute(attr.Key, attr.Value));
+            testCase.UserAttributes.ForEach(attr => tx.AddCustomAttribute(attr.Key, attr.Value));
             tx.TransactionMetadata.SetCrossApplicationReferrerTripId("");
             // ACT
             var browserMonitoringScript = _browserMonitoringScriptMaker.GetScript(tx);
