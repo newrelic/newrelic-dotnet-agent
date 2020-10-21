@@ -13,7 +13,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
-    public class RabbitMqLegacyDistributedTracingTests : IClassFixture<RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture>
+    public class RabbitMqLegacyDistributedTracingTests : NewRelicIntegrationTest<RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture>
     {
         // regex for payload
         private const string PayloadRegex = "{\"v\":\\[\\d,\\d\\],\"d\":{\"ty\":\"App\",\"ac\":\"\\d{1,9}\",\"ap\":\"\\d{1,9}\",\"tr\":\"\\w{16,32}\",\"pr\":\\d.\\d{5,6},\"sa\":true,\"ti\":\\d{10,16},\"tk\":\"\\w{0,16}\",\"tx\":\"\\w{16,16}\",\"id\":\"\\w{16,16}\"}}";
@@ -22,7 +22,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
         private string _headerValue;
         private RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture _fixture;
 
-        public RabbitMqLegacyDistributedTracingTests(RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture fixture, ITestOutputHelper output)
+        public RabbitMqLegacyDistributedTracingTests(RemoteServiceFixtures.RabbitMqLegacyBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             fixture.TestLogger = output;

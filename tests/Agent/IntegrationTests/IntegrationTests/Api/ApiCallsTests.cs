@@ -29,7 +29,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
         }
     }
 
-    public abstract class ApiCallsTests<TFixture> : IClassFixture<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    public abstract class ApiCallsTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private readonly string[] ApiCalls = new string[]
             {
@@ -39,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.Api
 
         protected readonly TFixture Fixture;
 
-        public ApiCallsTests(TFixture fixture, ITestOutputHelper output)
+        public ApiCallsTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
             Fixture.TestLogger = output;

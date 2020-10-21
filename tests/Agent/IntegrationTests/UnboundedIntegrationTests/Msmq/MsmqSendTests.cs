@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
 {
     [NetFrameworkTest]
-    public class MsmqSendTests : IClassFixture<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
+    public class MsmqSendTests : NewRelicIntegrationTest<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
     {
         private readonly RemoteServiceFixtures.MSMQBasicMVCApplicationFixture _fixture;
 
-        public MsmqSendTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)
+        public MsmqSendTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

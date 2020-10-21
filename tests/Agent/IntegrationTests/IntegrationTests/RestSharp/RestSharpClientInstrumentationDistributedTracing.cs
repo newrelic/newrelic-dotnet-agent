@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.RestSharp
 {
     [NetFrameworkTest]
-    public class RestSharpInstrumentationDistributedTracing : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class RestSharpInstrumentationDistributedTracing : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public RestSharpInstrumentationDistributedTracing(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public RestSharpInstrumentationDistributedTracing(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

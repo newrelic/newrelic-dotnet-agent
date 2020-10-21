@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 {
     [NetFrameworkTest]
-    public class CustomAttributesKeyNull : IClassFixture<RemoteServiceFixtures.CustomAttributesWebApi>
+    public class CustomAttributesKeyNull : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
     {
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributesKeyNull(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
+        public CustomAttributesKeyNull(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

@@ -16,11 +16,11 @@ using Assert = Xunit.Assert;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Redis
 {
     [NetFrameworkTest]
-    public class StackExchangeRedisStrongNameTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplication>
+    public class StackExchangeRedisStrongNameTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplication>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplication _fixture;
 
-        public StackExchangeRedisStrongNameTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)
+        public StackExchangeRedisStrongNameTests(RemoteServiceFixtures.BasicMvcApplication fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

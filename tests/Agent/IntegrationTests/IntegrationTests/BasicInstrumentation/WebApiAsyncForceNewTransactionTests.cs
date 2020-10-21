@@ -188,14 +188,14 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         }
     }
 
-    public abstract class WebApiAsyncForceNewTransactionTests : IClassFixture<WebApiAsyncFixture>
+    public abstract class WebApiAsyncForceNewTransactionTests : NewRelicIntegrationTest<WebApiAsyncFixture>
     {
         protected readonly WebApiAsyncFixture _fixture;
         protected const string AssemblyName = "WebApiAsyncApplication";
 
         protected abstract void SetupConfiguration(string instrumentationFilePath);
 
-        protected WebApiAsyncForceNewTransactionTests(WebApiAsyncFixture fixture, ITestOutputHelper output)
+        protected WebApiAsyncForceNewTransactionTests(WebApiAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

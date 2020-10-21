@@ -20,11 +20,11 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.Msmq
     /// in order to separately test the existence of a Consume segment in the transaction trace. Only a single TT is being saved per test.
     /// </remarks>
     [NetFrameworkTest]
-    public class MsmqConsumeTests : IClassFixture<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
+    public class MsmqConsumeTests : NewRelicIntegrationTest<RemoteServiceFixtures.MSMQBasicMVCApplicationFixture>
     {
         private readonly RemoteServiceFixtures.MSMQBasicMVCApplicationFixture _fixture;
 
-        public MsmqConsumeTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)
+        public MsmqConsumeTests(RemoteServiceFixtures.MSMQBasicMVCApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

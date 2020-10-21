@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.Models;
+using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
 using NewRelic.Agent.IntegrationTests.Shared;
 using NewRelic.Testing.Assertions;
 using Xunit;
@@ -13,12 +14,13 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
-    public abstract class MsSqlAsyncTestsBase
+    public abstract class MsSqlAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture:RemoteApplicationFixture, RemoteServiceFixtures.IMsSqlClientFixture
     {
         private readonly RemoteServiceFixtures.IMsSqlClientFixture _fixture;
         private readonly string _expectedTransactionName;
 
-        public MsSqlAsyncTestsBase(RemoteServiceFixtures.IMsSqlClientFixture fixture, ITestOutputHelper output, string expectedTransactionName)
+        public MsSqlAsyncTestsBase(TFixture fixture, ITestOutputHelper output, string expectedTransactionName) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -168,7 +170,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetFrameworkTest]
-    public class MsSqlAsyncTests : MsSqlAsyncTestsBase, IClassFixture<RemoteServiceFixtures.MsSqlBasicMvcFixture>
+    public class MsSqlAsyncTests : MsSqlAsyncTestsBase<RemoteServiceFixtures.MsSqlBasicMvcFixture>
     {
         public MsSqlAsyncTests(RemoteServiceFixtures.MsSqlBasicMvcFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MsSqlController/MsSqlAsync")
@@ -177,7 +179,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     }
 
     [NetCoreTest]
-    public class MicrosoftDataSqlClientAsyncTests : MsSqlAsyncTestsBase, IClassFixture<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
+    public class MicrosoftDataSqlClientAsyncTests : MsSqlAsyncTestsBase<RemoteServiceFixtures.MicrosoftDataSqlClientFixture>
     {
         public MicrosoftDataSqlClientAsyncTests(RemoteServiceFixtures.MicrosoftDataSqlClientFixture fixture, ITestOutputHelper output)
             : base(fixture, output, "WebTransaction/MVC/MicrosoftDataSqlClient/MsSqlAsync/{tableName}")

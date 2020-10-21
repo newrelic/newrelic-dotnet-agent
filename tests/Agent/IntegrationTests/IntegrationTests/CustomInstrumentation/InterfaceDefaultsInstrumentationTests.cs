@@ -11,13 +11,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetCoreTest]
-    public class InterfaceDefaultsInstrumentationTests : IClassFixture<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
+    public class InterfaceDefaultsInstrumentationTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCore3FeaturesFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCore3FeaturesFixture _fixture;
 
         private const int ExpectedTransactionCount = 2;
 
         public InterfaceDefaultsInstrumentationTests(RemoteServiceFixtures.AspNetCore3FeaturesFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

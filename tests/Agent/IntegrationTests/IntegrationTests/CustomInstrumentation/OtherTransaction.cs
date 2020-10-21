@@ -12,11 +12,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class OtherTransaction : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
+    public class OtherTransaction : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
     {
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
         public OtherTransaction(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

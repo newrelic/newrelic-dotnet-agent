@@ -13,11 +13,12 @@ using NewRelic.Agent.IntegrationTestHelpers.Models;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class AttributeInstrumentation : IClassFixture<RemoteServiceFixtures.AttributeInstrumentation>
+    public class AttributeInstrumentation : NewRelicIntegrationTest<RemoteServiceFixtures.AttributeInstrumentation>
     {
         private readonly RemoteServiceFixtures.AttributeInstrumentation _fixture;
 
         public AttributeInstrumentation(RemoteServiceFixtures.AttributeInstrumentation fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

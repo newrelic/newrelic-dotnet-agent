@@ -18,11 +18,11 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
     ///		Can be found at https://[staging|rpm].newrelic.com/account/{accountId}/applications/{applicationId}/segment_terms
     /// </summary>
     [NetFrameworkTest]
-    public class Rules : IClassFixture<RulesWebApi>
+    public class Rules : NewRelicIntegrationTest<RulesWebApi>
     {
         private readonly RulesWebApi _fixture;
 
-        public Rules(RulesWebApi fixture, ITestOutputHelper output)
+        public Rules(RulesWebApi fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
