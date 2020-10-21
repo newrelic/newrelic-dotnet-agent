@@ -35,13 +35,13 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
     /// </summary>
     /// <typeparam name="TFixture"></typeparam>
     public abstract class NetStandardLibraryInstrumentation<TFixture>
-        : IClassFixture<TFixture> where TFixture : ConsoleDynamicMethodFixture
+        : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         private TFixture _fixture;
 
         private const int COUNT_ITERATIONS = 10;
 
-        public NetStandardLibraryInstrumentation(TFixture fixture, ITestOutputHelper output)
+        public NetStandardLibraryInstrumentation(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

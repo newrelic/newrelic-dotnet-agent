@@ -14,12 +14,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    public abstract class MySqlStoredProcedureTestsBase : IClassFixture<MySqlBasicMvcFixture>
+    public abstract class MySqlStoredProcedureTestsBase : NewRelicIntegrationTest<MySqlBasicMvcFixture>
     {
         private readonly MySqlBasicMvcFixture _fixture;
         private readonly bool _paramsWithAtSigns;
 
-        protected MySqlStoredProcedureTestsBase(MySqlBasicMvcFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns)
+        protected MySqlStoredProcedureTestsBase(MySqlBasicMvcFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     [NetFrameworkTest]
     public class MySqlStoredProcedureTestsWithAtSigns : MySqlStoredProcedureTestsBase
     {
-        public MySqlStoredProcedureTestsWithAtSigns(MySqlBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MySqlStoredProcedureTestsWithAtSigns(MySqlBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture, output, true)
         {
 
         }
@@ -122,7 +122,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
     [NetFrameworkTest]
     public class MySqlStoredProcedureTestsWithoutAtSigns : MySqlStoredProcedureTestsBase
     {
-        public MySqlStoredProcedureTestsWithoutAtSigns(MySqlBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MySqlStoredProcedureTestsWithoutAtSigns(MySqlBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture, output, false)
         {
 
         }

@@ -15,12 +15,12 @@
 //namespace NewRelic.Agent.UnboundedIntegrationTests.IbmDb2
 //{
 //    [NetFrameworkTest]
-//    public class IbmDb2StoredProcedureTests : IClassFixture<IbmDb2BasicMvcFixture>
+//    public class IbmDb2StoredProcedureTests : NewRelicIntegrationTest<IbmDb2BasicMvcFixture>
 //    {
 //        private readonly IbmDb2BasicMvcFixture _fixture;
 //        private readonly string _procedureName = $"IbmDb2TestStoredProc{Guid.NewGuid():N}";
 
-//        public IbmDb2StoredProcedureTests(IbmDb2BasicMvcFixture fixture, ITestOutputHelper output)
+//        public IbmDb2StoredProcedureTests(IbmDb2BasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
 //        {
 //            _fixture = fixture;
 //            _fixture.TestLogger = output;

@@ -13,14 +13,15 @@ using NewRelic.Testing.Assertions;
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
-    public class OwinWebApiStatusCodeRollupTests : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>
+    public abstract class OwinWebApiStatusCodeRollupTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : RemoteServiceFixtures.OwinWebApiFixture
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
         private readonly List<string> bogusPaths = new List<string> { "no/such/path", "foo/bar/baz", "fizz/buzz", "one/two/red/blue" };
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        public OwinWebApiStatusCodeRollupTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+        protected OwinWebApiStatusCodeRollupTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -76,19 +77,27 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         }
     }
 
-    public class Owin3WebApiStatusCodeRollupTests : OwinWebApiTests, IClassFixture<RemoteServiceFixtures.Owin3WebApiFixture>
+    public class OwinWebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsBase<RemoteServiceFixtures.OwinWebApiFixture>
+    {
+        public OwinWebApiStatusCodeRollupTests(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class Owin3WebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsBase<RemoteServiceFixtures.Owin3WebApiFixture>
     {
         public Owin3WebApiStatusCodeRollupTests(RemoteServiceFixtures.Owin3WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
-    public class Owin4WebApiStatusCodeRollupTests : OwinWebApiTests, IClassFixture<RemoteServiceFixtures.Owin4WebApiFixture>
+
+    public class Owin4WebApiStatusCodeRollupTests : OwinWebApiStatusCodeRollupTestsBase<RemoteServiceFixtures.Owin4WebApiFixture>
     {
         public Owin4WebApiStatusCodeRollupTests(RemoteServiceFixtures.Owin4WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
-
 }

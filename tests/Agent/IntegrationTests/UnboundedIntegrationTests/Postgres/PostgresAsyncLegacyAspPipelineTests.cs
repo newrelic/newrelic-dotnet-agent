@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Postgres
 {
     [NetFrameworkTest]
-    public class PostgresAsyncLegacyAspPipelineTests : IClassFixture<PostgresBasicMvcFixture>
+    public class PostgresAsyncLegacyAspPipelineTests : NewRelicIntegrationTest<PostgresBasicMvcFixture>
     {
         private readonly PostgresBasicMvcFixture _fixture;
 
-        public PostgresAsyncLegacyAspPipelineTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)
+        public PostgresAsyncLegacyAspPipelineTests(PostgresBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

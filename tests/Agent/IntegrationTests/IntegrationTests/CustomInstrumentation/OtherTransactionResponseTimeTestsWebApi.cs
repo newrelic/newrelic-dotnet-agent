@@ -11,12 +11,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CustomInstrumentation
 {
     [NetFrameworkTest]
-    public class OtherTransactionResponseTimeTestsWebApi : IClassFixture<RemoteServiceFixtures.WebApiAsyncFixture>
+    public class OtherTransactionResponseTimeTestsWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.WebApiAsyncFixture>
     {
         private readonly RemoteServiceFixtures.WebApiAsyncFixture _fixture;
         private const int _delayDuration = 2;
 
-        public OtherTransactionResponseTimeTestsWebApi(RemoteServiceFixtures.WebApiAsyncFixture fixture, ITestOutputHelper output)
+        public OtherTransactionResponseTimeTestsWebApi(RemoteServiceFixtures.WebApiAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

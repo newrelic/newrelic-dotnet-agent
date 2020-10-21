@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Oracle
 {
     [NetFrameworkTest]
-    public class OracleTests : IClassFixture<RemoteServiceFixtures.OracleBasicMvcFixture>
+    public class OracleTests : NewRelicIntegrationTest<RemoteServiceFixtures.OracleBasicMvcFixture>
     {
         private readonly RemoteServiceFixtures.OracleBasicMvcFixture _fixture;
 
-        public OracleTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output)
+        public OracleTests(RemoteServiceFixtures.OracleBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

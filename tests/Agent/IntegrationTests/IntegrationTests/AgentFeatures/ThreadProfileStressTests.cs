@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetFrameworkTest]
-    public class ThreadProfileStressTests : IClassFixture<ThreadProfileStressTestWithCollectorFixture>
+    public class ThreadProfileStressTests : NewRelicIntegrationTest<ThreadProfileStressTestWithCollectorFixture>
     {
         private string _threadProfileString;
 
-        public ThreadProfileStressTests(ThreadProfileStressTestWithCollectorFixture fixture, ITestOutputHelper output)
+        public ThreadProfileStressTests(ThreadProfileStressTestWithCollectorFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             fixture.TestLogger = output;
 

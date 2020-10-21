@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.NServiceBus
 {
     [NetFrameworkTest]
-    public class NServiceBusTests : IClassFixture<RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture>
+    public class NServiceBusTests : NewRelicIntegrationTest<RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture>
     {
         private readonly RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture _fixture;
 
-        public NServiceBusTests(RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture fixture, ITestOutputHelper output)
+        public NServiceBusTests(RemoteServiceFixtures.NServiceBusBasicMvcApplicationFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

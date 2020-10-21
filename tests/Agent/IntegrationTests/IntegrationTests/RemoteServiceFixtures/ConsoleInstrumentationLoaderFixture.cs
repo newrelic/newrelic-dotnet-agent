@@ -18,8 +18,6 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             : base(new RemoteConsoleApplication(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded)
                 .SetTimeout(TimeSpan.FromMinutes(2)))
         {
-
-
         }
 
     }
