@@ -451,7 +451,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         public string GetHtmlWithCallToGetBrowserTimingHeader()
         {
             var address = $"http://{DestinationServerName}:{Port}/Default/GetHtmlWithCallToGetBrowserTimingHeader";
-            ResponseBody = DownloadStringAndAssertContains(address, "NREUM");
+            ResponseBody = DownloadStringAndAssertContains(address, "Worked");
 
             return ResponseBody;
         }
