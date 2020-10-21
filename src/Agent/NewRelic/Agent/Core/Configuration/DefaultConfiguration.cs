@@ -2048,14 +2048,13 @@ namespace NewRelic.Agent.Core.Configuration
 
             foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
             {
-                var messages = errorClass.message;
-                if (messages != null)
+                if (errorClass.message != null)
                 {
-                    localExpectedErrorMessages.Add(errorClass.name, messages);
+                    localExpectedErrorMessages[errorClass.name] = errorClass.message;
                 }
             }
 
-            var expectedErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedErrorMessages).ToDictionary();
+            var expectedErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages?.ToDictionary(), localExpectedErrorMessages);
 
             var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
 
