@@ -14,7 +14,6 @@ using NewRelic.SystemInterfaces;
 using NewRelic.SystemInterfaces.Web;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -2054,11 +2053,18 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            var expectedErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages?.ToDictionary(), localExpectedErrorMessages);
+            var expectedErrorInfo = localExpectedErrorMessages;
+            if (_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages?.Count() > 0)
+            {
+                expectedErrorInfo = _serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages?.ToDictionary();
+            }
 
             var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
-
-            var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
+            var expectedClasses = _localConfiguration.errorCollector.expectedClasses.errorClass as IEnumerable<string>;
+            if (_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses?.Count() > 0)
+            {
+                expectedClasses = _serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses;
+            }
 
             var count = expectedErrorInfo.Count;
 
@@ -2080,7 +2086,13 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedStatusCodesArrayLocal = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
             var expectedStatusCodesArrayServer = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.Select(x => x.ToString());
 
-            var expectedStatusCodesArray = ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal);
+            var expectedStatusCodesArray = expectedStatusCodesArrayLocal as IEnumerable<string>;
+
+            if (expectedStatusCodesArrayServer?.Count() > 0)
+            {
+                expectedStatusCodesArray = expectedStatusCodesArrayServer;
+            }
+
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
             ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? (new string[0]);
@@ -2103,16 +2115,27 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            var ignoreErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreMessages, localIgnoreErrorMessages).ToDictionary();
+            var ignoreErrorInfo = localIgnoreErrorMessages;
+            if (_serverConfiguration.RpmConfig.ErrorCollectorIgnoreMessages?.Count() > 0)
+            {
+                ignoreErrorInfo = _serverConfiguration.RpmConfig.ErrorCollectorIgnoreMessages.ToDictionary();
+            }
 
             var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
-            var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
+            var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = _localConfiguration.errorCollector.ignoreErrors.exception as IEnumerable<string>;
+            if (_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore?.Count() > 0)
+            {
+                ignoreClassesFromErrorCollectorIgnoreErrorsConfig = _serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore;
+            }
 
             IgnoreErrorsForAgentSettings = ignoreClassesFromErrorCollectorIgnoreErrorsConfig;
 
-            var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass)
-                .Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);
+            var ignoreClasses = (_localConfiguration.errorCollector.ignoreClasses.errorClass as IEnumerable<string>).Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);
+            if (_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses?.Count() > 0)
+            {
+                ignoreClasses = _serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses.Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);
+            }
 
             var count = ignoreErrorInfo.Count;
 
@@ -2137,7 +2160,11 @@ namespace NewRelic.Agent.Core.Configuration
                 localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
             }
 
-            var ignoreStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, localStatusCodesToIgnore);
+            var ignoreStatusCodes = localStatusCodesToIgnore as IEnumerable<string>;
+            if (_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore?.Count() > 0)
+            {
+                ignoreStatusCodes = _serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore;
+            }
 
             foreach (var code in ignoreStatusCodes)
             {

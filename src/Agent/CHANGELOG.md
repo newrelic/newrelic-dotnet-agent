@@ -11,6 +11,7 @@ New Feature Description
 Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
 
 ### Fixes
+* Fixes issue [#301](https://github.com/newrelic/newrelic-dotnet-agent/issues/301) where the agent incorrectly parses server-side configuration causing agent to shutdown.([#310](https://github.com/newrelic/newrelic-dotnet-agent/pull/310))
 
 
 ## [8.33] - 2020-10-12
