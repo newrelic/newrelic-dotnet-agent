@@ -1155,33 +1155,30 @@ namespace NewRelic.Agent.Core.Configuration
 
             foreach (var singleCodeOrRange in expectedStatusCodeArray)
             {
+                MatchRule matchRule;
                 var index = singleCodeOrRange.IndexOf(HyphenChar);
                 if (index != -1)
                 {
                     var lowerBoundString = singleCodeOrRange.Substring(0, index).Trim();
                     var upperBoundString = singleCodeOrRange.Substring(index + 1).Trim();
 
-                    AddRule(StatusCodeInRangeMatchRule.GenerateRule(lowerBoundString, upperBoundString), singleCodeOrRange);
+                    matchRule = StatusCodeInRangeMatchRule.GenerateRule(lowerBoundString, upperBoundString);
                 }
                 else
                 {
-                    AddRule(StatusCodeExactMatchRule.GenerateRule(singleCodeOrRange), singleCodeOrRange);
+                    matchRule = StatusCodeExactMatchRule.GenerateRule(singleCodeOrRange);
                 }
+
+                if(matchRule == null)
+                {
+                    Log.Warn($"Cannot parse {singleCodeOrRange} status code. This status code format is not supported.");
+                    continue;
+                }
+
+                expectedStatusCodes.Add(matchRule);
             }
 
             return expectedStatusCodes;
-
-            void AddRule(MatchRule rule, string statusCode)
-            {
-                if (rule != null)
-                {
-                    expectedStatusCodes.Add(rule);
-                }
-                else
-                {
-                    Log.Warn($"Cannot parse {statusCode} status code. This status code format is not supported.");
-                }
-            }
         }
 
         public IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; private set; }
