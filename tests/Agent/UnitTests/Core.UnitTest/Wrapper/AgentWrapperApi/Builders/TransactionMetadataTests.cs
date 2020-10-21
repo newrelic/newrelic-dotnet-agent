@@ -142,44 +142,6 @@ namespace NewRelic.Agent.Core.Wrapper.AgentWrapperApi.Builders
                 );
         }
 
-        [Test]
-        public void AddRequestParameter_LastInWins()
-        {
-            var key = "testKey";
-            var valueA = "valueA";
-            var valueB = "valueB";
-
-            var metadata = new TransactionMetadata();
-            metadata.AddRequestParameter(key, valueA);
-            metadata.AddRequestParameter(key, valueB);
-
-            var immutableTransactionMetadata = metadata.ConvertToImmutableMetadata();
-
-            var requestParameters = immutableTransactionMetadata.RequestParameters.ToDictionary();
-
-            var result = requestParameters[key];
-
-            Assert.AreEqual(result, valueB);
-        }
-
-        [Test]
-        public void AddUserAttribute_LastInWins()
-        {
-            var key = "testKey";
-            var valueA = "valueA";
-            var valueB = "valueB";
-
-            var metadata = new TransactionMetadata();
-            metadata.AddUserAttribute(key, valueA);
-            metadata.AddUserAttribute(key, valueB);
-
-            var immutableTransactionMetadata = metadata.ConvertToImmutableMetadata();
-
-            var userAttributes = immutableTransactionMetadata.UserAttributes.ToDictionary();
-
-            var result = userAttributes[key];
-
-            Assert.AreEqual(result, valueB);
-        }
+        
     }
 }
