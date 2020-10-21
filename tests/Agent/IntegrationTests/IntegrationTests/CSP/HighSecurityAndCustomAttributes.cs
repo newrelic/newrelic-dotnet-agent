@@ -58,7 +58,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
             Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample);
 
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEventPayloads().FirstOrDefault();
+            var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
 
             var unexpectedErrorCustomAttributes = new List<string>
             {
@@ -68,7 +68,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
 
             NrAssert.Multiple(
                 () => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorCustomAttributes, ErrorTraceAttributeType.Intrinsic, errorTrace),
-                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorCustomAttributes, EventAttributeType.User, errorEventPayload.Events[0])
+                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorCustomAttributes, EventAttributeType.User, errorEvent)
             );
         }
     }

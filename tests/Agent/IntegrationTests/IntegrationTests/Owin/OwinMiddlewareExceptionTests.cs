@@ -83,7 +83,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assert.NotEmpty(errorTraces),
-                () => Assert.NotEmpty(_fixture.AgentLog.GetErrorEventPayloads()),
+                () => Assert.NotEmpty(errorEvents),
                 () => Assert.Equal("WebTransaction/StatusCode/500", errorTraces[0].Path),
                 () => Assert.Equal(expectedExceptionClassName, errorTraces[0].ExceptionClassName),
                 () => Assert.Equal(expectedExceptionMessage, errorTraces[0].Message),
