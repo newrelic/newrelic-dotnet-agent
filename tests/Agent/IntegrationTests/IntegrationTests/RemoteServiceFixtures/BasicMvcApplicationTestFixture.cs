@@ -427,8 +427,16 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
         public void GetBackgroundThreadWithError()
         {
-            var address = $"http://{DestinationServerName}:{Port}/CustomInstrumentationAsync/GetBackgroundThreadWithError";
-            DownloadStringAndAssertEqual(address, "Worked");
+            try
+            {
+                var address = $"http://{DestinationServerName}:{Port}/CustomInstrumentationAsync/GetBackgroundThreadWithError";
+                DownloadStringAndAssertEqual(address, "Worked");
+            }
+            catch (WebException)
+            {
+                // This is expected behavior.  We need to catch and swallow this exception here to
+                // keep it from bubbling up to the test framework and failing the test.
+            }
         }
 
         public string GetBrowserTimingHeader()
