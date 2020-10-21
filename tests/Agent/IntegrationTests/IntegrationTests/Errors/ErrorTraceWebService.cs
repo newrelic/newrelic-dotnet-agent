@@ -105,7 +105,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 () => Assert.True(transactionEvents.Count == 2, $"Expected 2 transaction event but found {transactionEvents.Count}"),
                 () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[0]),
                 () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvents[1]),
-                () => Assert.Single(errorEvents),
+                () => Assert.Equal(2, errorEvents.Count()),
                 () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents.FirstOrDefault())
             );
         }
