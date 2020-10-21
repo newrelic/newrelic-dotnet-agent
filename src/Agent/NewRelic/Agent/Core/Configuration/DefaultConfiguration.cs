@@ -2087,7 +2087,7 @@ namespace NewRelic.Agent.Core.Configuration
             var expectedStatusCodesArray = ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal);
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray;
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? (new string[0]);
 
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
