@@ -91,7 +91,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
                 () => Assert.Equal("ExceptionMessage", errorTraces[0].Message),
                 () => Assert.NotEmpty(errorTraces[0].Attributes.StackTrace),
                 () => Assert.Single(errorEvents),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0].Events[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvents[0])
             );
         }
 
@@ -135,8 +135,7 @@ namespace NewRelic.Agent.IntegrationTests.AspNetCore
 
         private readonly List<Assertions.ExpectedMetric> _unexpectedMetrics = new List<Assertions.ExpectedMetric>
         {
-			// SUPNET-492 (ASP.NET Core CORS MGI)
-			new Assertions.ExpectedMetric {metricName = @"WebTransaction/ASP/Home/About", callCount = 1},
+            new Assertions.ExpectedMetric {metricName = @"WebTransaction/ASP/Home/About", callCount = 1},
         };
 
     }

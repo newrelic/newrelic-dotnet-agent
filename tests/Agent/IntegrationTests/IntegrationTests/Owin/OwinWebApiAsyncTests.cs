@@ -212,7 +212,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             );
 
             var errorTrace = errorTraces.First();
-            var errorEvent = errorEvents.First().Events.First();
+            var errorEvent = errorEvents.First();
 
             NrAssert.Multiple
             (

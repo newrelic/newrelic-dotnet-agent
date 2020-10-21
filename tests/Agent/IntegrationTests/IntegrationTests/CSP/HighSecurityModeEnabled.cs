@@ -113,7 +113,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
             var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
 
-            var firstErrorEvent = errorEvents.FirstOrDefault()?.Events.FirstOrDefault();
+            var firstErrorEvent = errorEvents.FirstOrDefault();
             var firstErrorTrace = errorTraces.FirstOrDefault();
 
             var stackTrace = firstErrorTrace.Attributes.StackTrace.ToList();
