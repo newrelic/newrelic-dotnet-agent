@@ -116,7 +116,7 @@ namespace BasicMvcApplication.Controllers
         public ActionResult GetHtmlWithCallToGetBrowserTimingHeader()
         {
             NewRelic.Api.Agent.NewRelic.GetBrowserTimingHeader();
-            return View();
+            return View("Index");
         }
 
         public string NotHtmlContentType()
