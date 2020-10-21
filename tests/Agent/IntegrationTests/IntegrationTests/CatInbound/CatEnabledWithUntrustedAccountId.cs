@@ -12,13 +12,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CatInbound
 {
     [NetFrameworkTest]
-    public class CatEnabledWithUntrustedAccountId : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class CatEnabledWithUntrustedAccountId : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
         private HttpResponseHeaders _responseHeaders;
 
-        public CatEnabledWithUntrustedAccountId(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public CatEnabledWithUntrustedAccountId(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

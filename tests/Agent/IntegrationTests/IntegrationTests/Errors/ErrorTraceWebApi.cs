@@ -14,11 +14,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
     [NetFrameworkTest]
-    public class ErrorTraceWebApi : IClassFixture<RemoteServiceFixtures.OwinWebApiFixture>
+    public class ErrorTraceWebApi : NewRelicIntegrationTest<RemoteServiceFixtures.OwinWebApiFixture>
     {
         private readonly RemoteServiceFixtures.OwinWebApiFixture _fixture;
 
-        public ErrorTraceWebApi(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper testLogger)
+        public ErrorTraceWebApi(RemoteServiceFixtures.OwinWebApiFixture fixture, ITestOutputHelper testLogger) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = testLogger;
@@ -85,7 +85,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
             var metrics = _fixture.AgentLog.GetMetrics().ToList();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().ToList().FirstOrDefault();
             var transactionEvent = _fixture.AgentLog.GetTransactionEvents().ToList().FirstOrDefault();
-            var errorEvent = _fixture.AgentLog.GetErrorEvents().ToList().FirstOrDefault();
+            var errorEvent = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.IntegrationTests.Errors
                 () => Assert.Equal(expectedErrorMessage, errorTrace.Message),
                 () => Assert.NotEmpty(errorTrace.Attributes.StackTrace),
                 () => Assertions.TransactionEventHasAttributes(expectedAttributes, TransactionEventAttributeType.Intrinsic, transactionEvent),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvent.Events[0]),
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.Intrinsic, errorEvent),
                 () => Assertions.TransactionEventHasAttributes(expectedErrorTransactionEventAttributes2, TransactionEventAttributeType.Intrinsic, transactionEvent)
             );
         }

@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.Couchbase
 {
     [NetFrameworkTest]
-    public class CouchbaseReplaceTests : IClassFixture<RemoteServiceFixtures.CouchbaseBasicMvcFixture>
+    public class CouchbaseReplaceTests : NewRelicIntegrationTest<RemoteServiceFixtures.CouchbaseBasicMvcFixture>
     {
         private readonly RemoteServiceFixtures.CouchbaseBasicMvcFixture _fixture;
 
-        public CouchbaseReplaceTests(RemoteServiceFixtures.CouchbaseBasicMvcFixture fixture, ITestOutputHelper output)
+        public CouchbaseReplaceTests(RemoteServiceFixtures.CouchbaseBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

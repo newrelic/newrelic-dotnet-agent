@@ -831,7 +831,8 @@ namespace NewRelic.Agent.Core.Transactions
             {
                 if (parameter.Key != null && parameter.Value != null)
                 {
-                    TransactionMetadata.AddRequestParameter(parameter.Key, parameter.Value);
+                    var paramAttribute = _attribDefs.GetRequestParameterAttribute(parameter.Key);
+                    TransactionMetadata.UserAndRequestAttributes.TrySetValue(paramAttribute, parameter.Value);
                 }
             }
         }
@@ -847,7 +848,8 @@ namespace NewRelic.Agent.Core.Transactions
                 return this;
             }
 
-            TransactionMetadata.AddUserAttribute(key, value);
+            var customAttrib = _attribDefs.GetCustomAttributeForTransaction(key);
+            TransactionMetadata.UserAndRequestAttributes.TrySetValue(customAttrib, value);
 
             return this;
         }

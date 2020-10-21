@@ -11,11 +11,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Logging
 {
     [NetFrameworkTest]
-    public class LogLevelInfoAndAuditLogNotSetTests : IClassFixture<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
+    public class LogLevelInfoAndAuditLogNotSetTests : NewRelicIntegrationTest<RemoteServiceFixtures.BasicMvcApplicationTestFixture>
     {
         private readonly RemoteServiceFixtures.BasicMvcApplicationTestFixture _fixture;
 
-        public LogLevelInfoAndAuditLogNotSetTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
+        public LogLevelInfoAndAuditLogNotSetTests(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

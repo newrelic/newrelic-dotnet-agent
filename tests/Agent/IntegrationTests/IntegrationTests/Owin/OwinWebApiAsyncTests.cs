@@ -15,13 +15,14 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Owin
 {
     [NetFrameworkTest]
-    public class OwinWebApiAsyncTests : IClassFixture<OwinWebApiFixture>
+    public abstract class OwinWebApiAsyncTestsBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : OwinWebApiFixture
     {
         private readonly OwinWebApiFixture _fixture;
         private const int ExpectedTransactionCount = 8;
 
         // The base test class runs tests for Owin 2; the derived classes test Owin 3 and 4
-        public OwinWebApiAsyncTests(OwinWebApiFixture fixture, ITestOutputHelper output)
+        protected OwinWebApiAsyncTestsBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             var assemblyName = _fixture.AssemblyName;
@@ -211,7 +212,7 @@ namespace NewRelic.Agent.IntegrationTests.Owin
             );
 
             var errorTrace = errorTraces.First();
-            var errorEvent = errorEvents.First().Events.First();
+            var errorEvent = errorEvents.First();
 
             NrAssert.Multiple
             (
@@ -258,19 +259,27 @@ namespace NewRelic.Agent.IntegrationTests.Owin
         }
     }
 
-    public class Owin3WebApiAsyncTests : OwinWebApiAsyncTests, IClassFixture<Owin3WebApiFixture>
+    public class OwinWebApiAsyncTests : OwinWebApiAsyncTestsBase<OwinWebApiFixture>
+    {
+        public OwinWebApiAsyncTests(OwinWebApiFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class Owin3WebApiAsyncTests : OwinWebApiAsyncTestsBase<Owin3WebApiFixture>
     {
         public Owin3WebApiAsyncTests(Owin3WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
-    public class Owin4WebApiAsyncTests : OwinWebApiAsyncTests, IClassFixture<Owin4WebApiFixture>
+
+    public class Owin4WebApiAsyncTests : OwinWebApiAsyncTestsBase<Owin4WebApiFixture>
     {
         public Owin4WebApiAsyncTests(Owin4WebApiFixture fixture, ITestOutputHelper output)
             : base(fixture, output)
         {
         }
     }
-
 }

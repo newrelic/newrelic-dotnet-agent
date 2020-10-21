@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class MvcAsyncTests : IClassFixture<MvcAsyncFixture>
+    public class MvcAsyncTests : NewRelicIntegrationTest<MvcAsyncFixture>
     {
         private readonly MvcAsyncFixture _fixture;
         private const int ExpectedTransactionCount = 3;
@@ -22,7 +22,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
         private const string MetricNameFrameworkName = "MVC";
         private const string MetricNameAsyncAwaitControllerName = "AsyncAwaitController";
 
-        public MvcAsyncTests(MvcAsyncFixture fixture, ITestOutputHelper output)
+        public MvcAsyncTests(MvcAsyncFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

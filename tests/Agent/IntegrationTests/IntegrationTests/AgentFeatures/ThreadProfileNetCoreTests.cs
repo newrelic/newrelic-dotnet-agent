@@ -14,12 +14,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.AgentFeatures
 {
     [NetCoreTest]
-    public class ThreadProfileNetCoreTests : IClassFixture<AspNetCoreMvcWithCollectorFixture>
+    public class ThreadProfileNetCoreTests : NewRelicIntegrationTest<AspNetCoreMvcWithCollectorFixture>
     {
         private readonly AspNetCoreMvcWithCollectorFixture _fixture;
         private string _threadProfileString;
 
         public ThreadProfileNetCoreTests(AspNetCoreMvcWithCollectorFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

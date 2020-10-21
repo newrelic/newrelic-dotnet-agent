@@ -12,12 +12,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
 {
-    public abstract class MsSqlStoredProcedureUsingOleDbDriverTestsBase : IClassFixture<OleDbBasicMvcFixture>
+    public abstract class MsSqlStoredProcedureUsingOleDbDriverTestsBase : NewRelicIntegrationTest<OleDbBasicMvcFixture>
     {
         private readonly OleDbBasicMvcFixture _fixture;
         private readonly bool _paramsWithAtSigns;
 
-        public MsSqlStoredProcedureUsingOleDbDriverTestsBase(OleDbBasicMvcFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns)
+        public MsSqlStoredProcedureUsingOleDbDriverTestsBase(OleDbBasicMvcFixture fixture, ITestOutputHelper output, bool paramsWithAtSigns) : base(fixture)
         {
             _paramsWithAtSigns = paramsWithAtSigns;
 
@@ -103,7 +103,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     [NetFrameworkTest]
     public class MsSqlStoredProcedureUsingOleDbDriverTests : MsSqlStoredProcedureUsingOleDbDriverTestsBase
     {
-        public MsSqlStoredProcedureUsingOleDbDriverTests(OleDbBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, true)
+        public MsSqlStoredProcedureUsingOleDbDriverTests(OleDbBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture, output, true)
         {
         }
     }
@@ -111,7 +111,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.MsSql
     [NetFrameworkTest]
     public class MsSqlStoredProcedureUsingOleDbDriverTests_ParamsWithoutAtSigns : MsSqlStoredProcedureUsingOleDbDriverTestsBase
     {
-        public MsSqlStoredProcedureUsingOleDbDriverTests_ParamsWithoutAtSigns(OleDbBasicMvcFixture fixture, ITestOutputHelper output) : base(fixture, output, false)
+        public MsSqlStoredProcedureUsingOleDbDriverTests_ParamsWithoutAtSigns(OleDbBasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture, output, false)
         {
         }
     }

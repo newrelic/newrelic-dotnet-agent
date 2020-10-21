@@ -12,13 +12,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
 {
     [NetFrameworkTest]
-    public class ServiceStackApplicationTests : IClassFixture<ServiceStackApplicationFixture>
+    public class ServiceStackApplicationTests : NewRelicIntegrationTest<ServiceStackApplicationFixture>
     {
 
         private readonly ServiceStackApplicationFixture _fixture;
         private const int ExpectedTransactionCount = 1;
 
-        public ServiceStackApplicationTests(ServiceStackApplicationFixture fixture, ITestOutputHelper output)
+        public ServiceStackApplicationTests(ServiceStackApplicationFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

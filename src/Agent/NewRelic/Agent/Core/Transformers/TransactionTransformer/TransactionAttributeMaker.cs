@@ -192,16 +192,7 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
             _attribDefs.HostDisplayName.TrySetValue(attribValues, _configurationService.Configuration.ProcessHostDisplayName);
 
-            foreach(var reqParam in metadata.RequestParameters)
-            {
-                _attribDefs.GetRequestParameterAttribute(reqParam.Key).TrySetValue(attribValues, reqParam.Value);
-            }
-
-            foreach (var userAttrib in metadata.UserAttributes)
-            {
-                _attribDefs.GetCustomAttributeForTransaction(userAttrib.Key).TrySetValue(attribValues, userAttrib.Value);
-            }
-
+            
             if (_configurationService.Configuration.ErrorCollectorEnabled && metadata.ReadOnlyTransactionErrorState.HasError && metadata.ReadOnlyTransactionErrorState.ErrorData != null && metadata.ReadOnlyTransactionErrorState.ErrorData.CustomAttributes != null)
             {
                 foreach(var errAttrib in metadata.ReadOnlyTransactionErrorState.ErrorData.CustomAttributes)
@@ -210,6 +201,8 @@ namespace NewRelic.Agent.Core.Transformers.TransactionTransformer
 
                 }
             }
+
+            attribValues.AddRange(metadata.UserAndRequestAttributes);
         }
 
         private static bool IsCatParticipant(ImmutableTransaction immutableTransaction)

@@ -15,11 +15,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.CSP
 {
     [NetFrameworkTest]
-    public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : IClassFixture<SecurityPoliciesCustomAttributesWebApi>
+    public class SecurityPoliciesMostRestrictiveAndCustomAttributesTests : NewRelicIntegrationTest<SecurityPoliciesCustomAttributesWebApi>
     {
         private readonly SecurityPoliciesCustomAttributesWebApi _fixture;
 
-        public SecurityPoliciesMostRestrictiveAndCustomAttributesTests(SecurityPoliciesCustomAttributesWebApi fixture, ITestOutputHelper output)
+        public SecurityPoliciesMostRestrictiveAndCustomAttributesTests(SecurityPoliciesCustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -60,7 +60,7 @@ namespace NewRelic.Agent.IntegrationTests.CSP
             Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample);
 
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
+            var errorEventPayload = _fixture.AgentLog.GetErrorEventPayloads().FirstOrDefault();
 
             var unexpectedErrorCustomAttributes = new List<string>
             {

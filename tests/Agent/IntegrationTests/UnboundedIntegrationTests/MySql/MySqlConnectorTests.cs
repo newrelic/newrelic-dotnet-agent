@@ -14,12 +14,12 @@ using Xunit.Abstractions;
 
 namespace NewRelic.Agent.UnboundedIntegrationTests.MySql
 {
-    public abstract class MySqlConnectorTestBase : IClassFixture<RemoteServiceFixtures.MySqlConnectorBasicMvcFixture>
+    public abstract class MySqlConnectorTestBase : NewRelicIntegrationTest<RemoteServiceFixtures.MySqlConnectorBasicMvcFixture>
     {
         private readonly RemoteServiceFixtures.MySqlConnectorBasicMvcFixture _fixture;
         private readonly string _transactionName;
 
-        protected MySqlConnectorTestBase(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output, Action<RemoteServiceFixtures.MySqlConnectorBasicMvcFixture> exerciseApplication, string transactionName)
+        protected MySqlConnectorTestBase(RemoteServiceFixtures.MySqlConnectorBasicMvcFixture fixture, ITestOutputHelper output, Action<RemoteServiceFixtures.MySqlConnectorBasicMvcFixture> exerciseApplication, string transactionName) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;

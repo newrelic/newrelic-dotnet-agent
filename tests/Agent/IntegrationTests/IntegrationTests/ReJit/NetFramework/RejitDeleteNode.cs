@@ -19,11 +19,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetFramework
     /// Files: Integration.Testing.DeleteNodeTest.xml 
     /// </summary>
     [NetFrameworkTest]
-    public class RejitDeleteNode : IClassFixture<AspNetFrameworkReJitMvcApplicationFixture>
+    public class RejitDeleteNode : NewRelicIntegrationTest<AspNetFrameworkReJitMvcApplicationFixture>
     {
         private readonly AspNetFrameworkReJitMvcApplicationFixture _fixture;
 
         public RejitDeleteNode(AspNetFrameworkReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
 

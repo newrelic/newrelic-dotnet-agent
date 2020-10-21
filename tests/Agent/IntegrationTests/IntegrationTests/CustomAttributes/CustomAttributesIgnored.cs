@@ -15,11 +15,11 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
 
 {
     [NetFrameworkTest]
-    public class CustomAttributesIgnored : IClassFixture<RemoteServiceFixtures.CustomAttributesWebApi>
+    public class CustomAttributesIgnored : NewRelicIntegrationTest<RemoteServiceFixtures.CustomAttributesWebApi>
     {
         private readonly RemoteServiceFixtures.CustomAttributesWebApi _fixture;
 
-        public CustomAttributesIgnored(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output)
+        public CustomAttributesIgnored(RemoteServiceFixtures.CustomAttributesWebApi fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -116,8 +116,8 @@ namespace NewRelic.Agent.IntegrationTests.CustomAttributes
                 () => Assertions.TransactionTraceDoesNotHaveAttributes(unexpectedTransactionTraceAttributes, TransactionTraceAttributeType.User, transactionSample),
                 () => Assertions.ErrorTraceDoesNotHaveAttributes(unexpectedErrorTraceAttributes, ErrorTraceAttributeType.User, errorTrace),
                 () => Assertions.TransactionEventDoesNotHaveAttributes(unexpectedTranscationEventAttributes, TransactionEventAttributeType.User, transactionEvent),
-                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0]),
-                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventAttributes, EventAttributeType.User, errorEvents[0].Events[0])
+                () => Assertions.ErrorEventHasAttributes(expectedErrorEventAttributes, EventAttributeType.User, errorEvents[0]),
+                () => Assertions.ErrorEventDoesNotHaveAttributes(unexpectedErrorEventAttributes, EventAttributeType.User, errorEvents[0])
             );
 
         }

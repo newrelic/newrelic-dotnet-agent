@@ -19,11 +19,12 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
     /// Files: Integration.Testing.ChangeAttributeTest.xml
     /// </summary>
     [NetCoreTest]
-    public class RejitChangeAttributeValue : IClassFixture<AspNetCoreReJitMvcApplicationFixture>
+    public abstract class RejitChangeAttributeValueBase<TFixture> : NewRelicIntegrationTest<TFixture>
+        where TFixture : AspNetCoreReJitMvcApplicationFixture
     {
         private readonly AspNetCoreReJitMvcApplicationFixture _fixture;
 
-        public RejitChangeAttributeValue(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+        protected RejitChangeAttributeValueBase(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             _fixture = fixture;
 
@@ -93,7 +94,15 @@ namespace NewRelic.Agent.IntegrationTests.ReJit.NetCore
         }
     }
 
-    public class RejitChangeAttributeValueWithTieredCompilation : RejitChangeAttributeValue, IClassFixture<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
+    public class RejitChangeAttributeValue : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixture>
+    {
+        public RejitChangeAttributeValue(AspNetCoreReJitMvcApplicationFixture fixture, ITestOutputHelper output)
+            : base(fixture, output)
+        {
+        }
+    }
+
+    public class RejitChangeAttributeValueWithTieredCompilation : RejitChangeAttributeValueBase<AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation>
     {
         public RejitChangeAttributeValueWithTieredCompilation(AspNetCoreReJitMvcApplicationFixtureWithTieredCompilation fixture, ITestOutputHelper output)
             : base(fixture, output)

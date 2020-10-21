@@ -165,9 +165,8 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
 
         private ErrorEventEvents[] _errorEvents;
-        public ErrorEventEvents[] ErrorEvents => _errorEvents ?? (_errorEvents = AgentLog_Client.GetErrorEvents().SelectMany(ec => ec.Events)
-                        .Union(AgentLog_Service.GetErrorEvents().SelectMany(ec => ec.Events))
-                        .ToArray());
+        public ErrorEventEvents[] ErrorEvents => _errorEvents ?? (_errorEvents = AgentLog_Client.GetErrorEvents()
+                        .Union(AgentLog_Service.GetErrorEvents()).ToArray());
 
 
 
@@ -259,7 +258,7 @@ namespace NewRelic.Agent.IntegrationTests.WCF
 
 
         private ErrorEventEvents[] _errorEvents;
-        public ErrorEventEvents[] ErrorEvents => _errorEvents ?? (_errorEvents = _fixture.AgentLog.GetErrorEvents().SelectMany(ec => ec.Events).ToArray());
+        public ErrorEventEvents[] ErrorEvents => _errorEvents ?? (_errorEvents = _fixture.AgentLog.GetErrorEvents().ToArray());
 
         private IntegrationTestHelpers.Models.ErrorTrace[] _errorTraces;
         public IntegrationTestHelpers.Models.ErrorTrace[] ErrorTraces => _errorTraces ?? (_errorTraces = _fixture.AgentLog.GetErrorTraces().ToArray());

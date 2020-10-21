@@ -15,11 +15,11 @@
 //namespace NewRelic.Agent.UnboundedIntegrationTests.IbmDb2
 //{
 //    [NetFrameworkTest]
-//    public class IbmDb2Tests : IClassFixture<RemoteServiceFixtures.IbmDb2BasicMvcFixture>
+//    public class IbmDb2Tests : NewRelicIntegrationTest<RemoteServiceFixtures.IbmDb2BasicMvcFixture>
 //    {
 //        private readonly RemoteServiceFixtures.IbmDb2BasicMvcFixture _fixture;
 
-//        public IbmDb2Tests(RemoteServiceFixtures.IbmDb2BasicMvcFixture fixture, ITestOutputHelper output)
+//        public IbmDb2Tests(RemoteServiceFixtures.IbmDb2BasicMvcFixture fixture, ITestOutputHelper output)  : base(fixture)
 //        {
 //            _fixture = fixture;
 //            _fixture.TestLogger = output;

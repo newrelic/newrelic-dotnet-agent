@@ -162,14 +162,17 @@ namespace NewRelic.Agent.TestUtilities
                 classifications = new[] { AttributeClassification.Intrinsics, AttributeClassification.AgentAttributes, AttributeClassification.UserAttributes };
             }
 
-            var attribValues = new List<IAttributeValue>();
+            var attribValues = new Dictionary<string, object>();
 
             foreach (var classification in classifications)
             {
-                attribValues.AddRange(attribValueCollection.GetAttributeValues(classification));
+                foreach(var attribVal in attribValueCollection.GetAttributeValues(classification))
+                {
+                    attribValues[attribVal.AttributeDefinition.Name] = attribVal.Value;
+                }
             }
 
-            return attribValues.ToDictionary(x => x.AttributeDefinition.Name, x => x.Value);
+            return attribValues;
         }
 
 

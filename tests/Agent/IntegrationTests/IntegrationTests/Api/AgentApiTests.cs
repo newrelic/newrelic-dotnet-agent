@@ -13,12 +13,13 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Api
 {
     [NetFrameworkTest]
-    public class AgentApiTests : IClassFixture<RemoteServiceFixtures.AgentApiExecutor>
+    public class AgentApiTests : NewRelicIntegrationTest<RemoteServiceFixtures.AgentApiExecutor>
     {
 
         private readonly RemoteServiceFixtures.AgentApiExecutor _fixture;
 
         public AgentApiTests(RemoteServiceFixtures.AgentApiExecutor fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -55,18 +56,13 @@ namespace NewRelic.Agent.IntegrationTests.Api
 
             var actualMetrics = _fixture.AgentLog.GetMetrics();
             var errorTrace = _fixture.AgentLog.GetErrorTraces().FirstOrDefault();
-            var errorEventPayload = _fixture.AgentLog.GetErrorEvents().FirstOrDefault();
-
-            //order events chronologically
-            var errorEvents = errorEventPayload.Events
-                .Where(ev => ev.IntrinsicAttributes != null && ev.IntrinsicAttributes.ContainsKey("timestamp"))
-                .OrderBy(ev => ev.IntrinsicAttributes["timestamp"]).ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents().OrderBy(ev => ev.IntrinsicAttributes["timestamp"]).ToList();
 
             NrAssert.Multiple
                 (
                     () => Assertions.MetricsExist(expectedMetrics, actualMetrics),
                     () => Assert.NotNull(errorTrace),
-                    () => Assert.Equal("2", errorEventPayload.Additions.EventsSeen.ToString()),
+                    () => Assert.Equal(2, errorEvents.Count),
                     () => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEvents[0]),
                     () => Assertions.ErrorEventHasAttributes(expectedErrorEventIntrinsicAttributes, EventAttributeType.Intrinsic, errorEvents[1]),
                     () => Assertions.ErrorEventHasAttributes(expectedErrorEventCustomAttributes, EventAttributeType.User, errorEvents[1])

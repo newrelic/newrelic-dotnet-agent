@@ -27,11 +27,11 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
         }
     }
 
-    public abstract class FasterEventHarvestTests<TFixture> : IClassFixture<TFixture> where TFixture : ConsoleDynamicMethodFixture
+    public abstract class FasterEventHarvestTests<TFixture> : NewRelicIntegrationTest<TFixture> where TFixture : ConsoleDynamicMethodFixture
     {
         protected readonly TFixture Fixture;
 
-        public FasterEventHarvestTests(TFixture fixture, ITestOutputHelper output)
+        public FasterEventHarvestTests(TFixture fixture, ITestOutputHelper output) : base(fixture)
         {
             Fixture = fixture;
             Fixture.TestLogger = output;

@@ -13,11 +13,11 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.UnboundedIntegrationTests.RabbitMq
 {
     [NetFrameworkTest]
-    public class RabbitMqReceiveTests : IClassFixture<RemoteServiceFixtures.RabbitMqReceiverFixture>
+    public class RabbitMqReceiveTests : NewRelicIntegrationTest<RemoteServiceFixtures.RabbitMqReceiverFixture>
     {
         private readonly RemoteServiceFixtures.RabbitMqReceiverFixture _fixture;
 
-        public RabbitMqReceiveTests(RemoteServiceFixtures.RabbitMqReceiverFixture fixture, ITestOutputHelper output)
+        public RabbitMqReceiveTests(RemoteServiceFixtures.RabbitMqReceiverFixture fixture, ITestOutputHelper output)  : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
