@@ -1001,7 +1001,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         [TestCase("401", null, ExpectedResult = new[] { "401" })]
         public IEnumerable<object> ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
         {
-            _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = new ExpectedStatusCodes(server);
+            _serverConfig.RpmConfig.ErrorCollectorExpectedStatusCodes = server;
             _localConfig.errorCollector.expectedStatusCodes = (local);
 
             CreateDefaultConfiguration();

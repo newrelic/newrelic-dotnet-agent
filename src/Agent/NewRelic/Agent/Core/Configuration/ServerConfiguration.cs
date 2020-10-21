@@ -214,7 +214,7 @@ namespace NewRelic.Agent.Core.Configuration
             public IEnumerable<KeyValuePair<string, IEnumerable<string>>> ErrorCollectorExpectedMessages { get; set; }
 
             [JsonProperty("error_collector.expected_status_codes")]
-            public ExpectedStatusCodes ErrorCollectorExpectedStatusCodes { get; set; }
+            public IEnumerable<object> ErrorCollectorExpectedStatusCodes { get; set; }
 
             [JsonProperty("ignored_params")]
             public IEnumerable<string> ParametersToIgnore { get; set; }
@@ -328,16 +328,5 @@ namespace NewRelic.Agent.Core.Configuration
         {
             Log.ErrorFormat("Json serializer context path: {0}. Error message: {1}", errorContext.Path, errorContext.Error.Message);
         }
-    }
-
-    [JsonConverter(typeof(ExpectedStatusCodesConverter))]
-    public class ExpectedStatusCodes
-    {
-        public ExpectedStatusCodes(IEnumerable<string> expectedStatusCodesArray)
-        {
-            ExpectedStatusCodesArray = expectedStatusCodesArray;
-        }
-
-        public IEnumerable<string> ExpectedStatusCodesArray { get; private set; }
     }
 }

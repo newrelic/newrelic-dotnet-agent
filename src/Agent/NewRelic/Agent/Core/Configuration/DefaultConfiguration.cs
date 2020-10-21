@@ -1159,7 +1159,7 @@ namespace NewRelic.Agent.Core.Configuration
                 if (index != -1)
                 {
                     var lowerBoundString = singleCodeOrRange.Substring(0, index).Trim();
-                    var upperBoundString = singleCodeOrRange.Substring(index + 1, singleCodeOrRange.Length - index - 1).Trim();
+                    var upperBoundString = singleCodeOrRange.Substring(index + 1).Trim();
 
                     AddRule(StatusCodeInRangeMatchRule.GenerateRule(lowerBoundString, upperBoundString), singleCodeOrRange);
                 }
@@ -1906,7 +1906,6 @@ namespace NewRelic.Agent.Core.Configuration
 
         private static T ServerOverrides<T>(T server, T local) where T : class
         {
-            Debug.Assert(local != null);
             return server ?? local;
         }
 
@@ -2083,8 +2082,9 @@ namespace NewRelic.Agent.Core.Configuration
             }
 
             var expectedStatusCodesArrayLocal = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
+            var expectedStatusCodesArrayServer = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.Select(x => x.ToString());
 
-            var expectedStatusCodesArray = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.ExpectedStatusCodesArray, expectedStatusCodesArrayLocal);
+            var expectedStatusCodesArray = ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal);
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
             ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray;
