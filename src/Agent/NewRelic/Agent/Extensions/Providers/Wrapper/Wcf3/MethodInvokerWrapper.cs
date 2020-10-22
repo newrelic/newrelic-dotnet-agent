@@ -112,7 +112,11 @@ namespace NewRelic.Providers.Wrapper.Wcf3
             {
                 try
                 {
-                    headerValue = context.IncomingMessageHeaders.GetHeader<string>(key, string.Empty);
+                    var headerIdx = context.IncomingMessageHeaders.FindHeader(key, string.Empty);
+                    if (headerIdx != -1)
+                    {
+                        headerValue = context.IncomingMessageHeaders.GetHeader<string>(headerIdx);
+                    }
                 }
                 catch
                 {
