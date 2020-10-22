@@ -533,7 +533,7 @@ jobs:
         run: |
           mkdir all-integration-test-results
           Get-ChildItem -Path .\integration-test-results* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
-          shell: powershell
+        shell: powershell
         
       - name: Upload combined artifacts
         uses: actions/upload-artifact@v2
