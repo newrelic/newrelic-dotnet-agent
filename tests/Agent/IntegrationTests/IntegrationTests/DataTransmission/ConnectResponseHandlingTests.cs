@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTests.DataTransmission
                 {
                     _fixture.Get();
                     _fixture.AgentLog.WaitForLogLine(AgentLogFile.AgentConnectedLogLineRegex, TimeSpan.FromMinutes(1));
-                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(1));
+                    _fixture.AgentLog.WaitForLogLine(AgentLogFile.HarvestFinishedLogLineRegex, TimeSpan.FromMinutes(2));
                     _collectedRequests = _fixture.GetCollectedRequests();
                     _requestHeaderMapValidationData = _fixture.GetRequestHeaderMapValidationData();
                 }
