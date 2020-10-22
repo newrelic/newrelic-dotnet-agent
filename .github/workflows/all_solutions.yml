@@ -454,7 +454,7 @@ jobs:
       xunit_console: ${{ github.workspace }}/build/Tools/XUnit-Console/xunit.console.exe
       integration_tests_dll: ${{ github.workspace }}/tests/Agent/IntegrationTests/IntegrationTests/bin/Release/net461/NewRelic.Agent.IntegrationTests.dll
       # Make this variable true to enable extra data-gathering and logging to help troubleshoot test failures, at the cost of additional time and resources
-      enhanced_logging: true
+      enhanced_logging: false
       NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY : 1
       
     steps:
@@ -518,3 +518,26 @@ jobs:
             C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
           if-no-files-found: error
           
+  combine-integration-test-results:
+    needs: run-integration-tests
+    if: ${{ always() }}
+    name: Combine Integration Test Results
+        
+    runs-on: windows-2019
+        
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+        
+      - name: Combine Integration Results
+        run: |
+          mkdir all-integration-test-results
+          Get-ChildItem -Path .\integration-test-artifacts* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
+        shell: powershell
+        
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: all-integration-test-results-${{ github.run_id }}
+          path: ./all-integration-test-results
+          if-no-files-found: error
