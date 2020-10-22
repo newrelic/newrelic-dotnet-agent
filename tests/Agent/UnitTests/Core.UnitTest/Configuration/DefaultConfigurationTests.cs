@@ -1009,6 +1009,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             return _defaultConfig.ExpectedErrorStatusCodesForAgentSettings;
         }
 
+        [TestCase("401-404", new string[] { "401.5", "402.3"}, new bool[] { false, false})] //does not support full status codes
         [TestCase("400,401,404", new string[]{"400", "401", "402", "403", "404"},  new bool[] { true, true, false, false, true })]
         [TestCase("400, 401 ,404", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]
         [TestCase("400, 401,404, ", new string[] { "400", "401", "402", "403", "404" }, new bool[] { true, true, false, false, true })]

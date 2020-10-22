@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core.Configuration
                 ErrorCollectorIgnoreMessages = configuration.IgnoreErrorMessagesForAgentSettings,
                 ErrorCollectorExpectedClasses = configuration.ExpectedErrorClassesForAgentSettings,
                 ErrorCollectorExpectedMessages = configuration.ExpectedErrorMessagesForAgentSettings,
-                ErrorCollectoryExpectedStatusCodes = configuration.ExpectedErrorStatusCodesForAgentSettings,
+                ErrorCollectorExpectedStatusCodes = configuration.ExpectedErrorStatusCodesForAgentSettings,
                 TransactionTracerStackThreshold = configuration.TransactionTracerStackThreshold.TotalSeconds,
                 TransactionTracerExplainEnabled = configuration.SqlExplainPlansEnabled,
                 TransactionTracerExplainThreshold = configuration.SqlExplainPlanThreshold.TotalSeconds,

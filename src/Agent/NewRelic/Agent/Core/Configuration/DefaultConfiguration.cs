@@ -2054,6 +2054,8 @@ namespace NewRelic.Agent.Core.Configuration
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
             }
 
+            //Keeping the original expected messages configuration for agent setting report on connect before
+            //the expectedErrorInfo dictionary gets mixed up between expected messages and expected classes configurations.
             var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
 
             var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
@@ -2065,7 +2067,7 @@ namespace NewRelic.Agent.Core.Configuration
                 if (expectedErrorInfo.ContainsKey(className))
                 {
                     expectedErrorInfo[className] = Enumerable.Empty<string>();
-                    Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
+                    Log.Warn($"Expected Errors - {className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
                 }
                 else if (count >= MaxExptectedErrorConfigEntries)
                 {
@@ -2104,6 +2106,8 @@ namespace NewRelic.Agent.Core.Configuration
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
             }
 
+            //Keeping the original ignore messages configuration for agent setting report on connect before
+            //the ignoreErrorInfo dictionary gets mixed up between ignore messages and ignore classes configurations.
             var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
             var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
@@ -2118,7 +2122,7 @@ namespace NewRelic.Agent.Core.Configuration
                 if (ignoreErrorInfo.ContainsKey(className))
                 {
                     ignoreErrorInfo[className] = Enumerable.Empty<string>();
-                    Log.Warn($"{className} class is specified in both errorCollector.ignoreClasses and errorCollector.ingoreMessages configurations. Any errors of this class will be ignored.");
+                    Log.Warn($"Ignore Errors - {className} class is specified in both errorCollector.ignoreClasses and errorCollector.ingoreMessages configurations. Any errors of this class will be ignored.");
                 }
                 else if (count >= MaxIgnoreErrorConfigEntries)
                 {
