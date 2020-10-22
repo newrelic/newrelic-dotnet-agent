@@ -970,7 +970,6 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
         [TestCase(new[] { "local" }, new[] { "server" }, ExpectedResult = "server,server")]
         [TestCase(new[] { "local" }, null, ExpectedResult = "local,local")]
-        [TestCase(new[] { "local" }, new string[0], ExpectedResult = "local,local")]
         public string IgnoreAndExpectedClassesSetFromLocalAndServerOverrides(string[] local, string[] server)
         {
             _serverConfig.RpmConfig.ErrorCollectorExpectedClasses = server;
@@ -998,7 +997,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
 
 
         [TestCase("401", new[] { "405" }, ExpectedResult = new[] { "405" })]
-        [TestCase("401", new string[0], ExpectedResult = new[] { "401" })]
+        [TestCase("401", new string[0], ExpectedResult = new string[0])]
         [TestCase("401", null, ExpectedResult = new[] { "401" })]
         public IEnumerable<object> ExpectedStatusCodesSetFromLocalAndServerOverrides(string local, string[] server)
         {
@@ -1035,37 +1034,31 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             
         }
 
-        [TestCase("local", "server", ExpectedResult = "server,server")]
-        [TestCase("local", null, ExpectedResult = "local,local")]
-        public string IgnoreAndExpectedMessagesSetFromLocalAndServerOverrides(string local, string server)
+        [TestCase(true, ExpectedResult = "server,server")]
+        [TestCase(false, ExpectedResult = "local,local")]
+        public string IgnoreAndExpectedMessagesSetFromLocalAndServerOverrides(bool server)
         {
-            if (!string.IsNullOrEmpty(server))
+            if (server)
             {
                 _serverConfig.RpmConfig.ErrorCollectorExpectedMessages = new List<KeyValuePair<string, IEnumerable<string>>>
                 {
-                    new KeyValuePair<string, IEnumerable<string>> (server, new List<string>())
+                    new KeyValuePair<string, IEnumerable<string>> ("server", new List<string>())
                 };
 
                 _serverConfig.RpmConfig.ErrorCollectorIgnoreMessages = new List<KeyValuePair<string, IEnumerable<string>>>
                 {
-                    new KeyValuePair<string, IEnumerable<string>> (server, new List<string>())
+                    new KeyValuePair<string, IEnumerable<string>> ("server", new List<string>())
                 };
             }
-            else
-            {
-                _serverConfig.RpmConfig.ErrorCollectorExpectedMessages = new List<KeyValuePair<string, IEnumerable<string>>>();
-                _serverConfig.RpmConfig.ErrorCollectorIgnoreMessages = new List<KeyValuePair<string, IEnumerable<string>>>();
-            }
-
 
             _localConfig.errorCollector.expectedMessages = new List<ErrorMessagesCollectionErrorClass>()
             {
-                new ErrorMessagesCollectionErrorClass() {name = local}
+                new ErrorMessagesCollectionErrorClass() {name = "local"}
             };
 
             _localConfig.errorCollector.ignoreMessages = new List<ErrorMessagesCollectionErrorClass>()
             {
-                new ErrorMessagesCollectionErrorClass() {name = local}
+                new ErrorMessagesCollectionErrorClass() {name = "local"}
             };
 
             CreateDefaultConfiguration();
