@@ -103,6 +103,14 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
         {
             Assert.Throws<JsonSerializationException>(() => ServerConfiguration.FromJson("{}"));
         }
+
+        [TestCase("{\"agent_run_id\":42,\"agent_config\":{\"error_collector.expected_status_codes\":[401,402]}}", ExpectedResult = new[] { "401", "402" })]
+        [TestCase("{\"agent_run_id\":42,\"agent_config\":{\"error_collector.expected_status_codes\":[\"401\",\"402\"]}}", ExpectedResult = new[] { "401", "402" })]
+        public IEnumerable<string> can_deserialize_integer_array_or_string_array_for_expected_status_codes(string json)
+        {
+            var serverConfiguration = ServerConfiguration.FromJson(json);
+            return serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes;
+        }
     }
 
     [TestFixture]

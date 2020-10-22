@@ -1,11 +1,14 @@
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
+using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Core.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 namespace NewRelic.Agent.Core.Configuration
@@ -211,7 +214,7 @@ namespace NewRelic.Agent.Core.Configuration
             public IEnumerable<KeyValuePair<string, IEnumerable<string>>> ErrorCollectorExpectedMessages { get; set; }
 
             [JsonProperty("error_collector.expected_status_codes")]
-            public string ErrorCollectorExpectedStatusCodes { get; set; }
+            public IEnumerable<string> ErrorCollectorExpectedStatusCodes { get; set; }
 
             [JsonProperty("ignored_params")]
             public IEnumerable<string> ParametersToIgnore { get; set; }
