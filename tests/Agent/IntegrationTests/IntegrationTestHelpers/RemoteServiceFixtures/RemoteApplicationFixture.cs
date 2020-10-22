@@ -209,11 +209,18 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 try
                 {
                     var retryTest = false;
+                    var exceptionInExerciseApplication = false;
+                    var applicationHadNonZeroExitCode = false;
+
 
                     do
                     {
                         TestLogger?.WriteLine("Test Home" + RemoteApplication.DestinationNewRelicHomeDirectoryPath);
-                        retryTest = false; // reset for each loop iteration
+
+                        // reset these for each loop iteration
+                        exceptionInExerciseApplication = false;
+                        applicationHadNonZeroExitCode = false;
+                        retryTest = false;
 
                         RemoteApplication.TestLogger = new XUnitTestLogger(TestLogger);
 
@@ -233,7 +240,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                         }
                         catch (Exception ex)
                         {
-                            retryTest = true;
+                            exceptionInExerciseApplication = true;
                             TestLogger?.WriteLine("Exception occurred in try number " + (numberOfTries + 1) + " : " + ex.ToString());
                         }
                         finally
@@ -265,16 +272,16 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                             RemoteApplication.WaitForExit();
 
-                            var appIsExercisedNormally = RemoteApplication.ExitCode == 0;
-                            if (!appIsExercisedNormally)
-                            {
-                                retryTest = true;
-                            }
+                            applicationHadNonZeroExitCode = RemoteApplication.ExitCode != 0;
 
-                            TestLogger?.WriteLine($"Remote application exited with a {(appIsExercisedNormally ? "success" : "failure")} exit code of {RemoteApplication.ExitCode}.");
+                            TestLogger?.WriteLine($"Remote application exited with a {(applicationHadNonZeroExitCode ? "failure" : "success")} exit code of {RemoteApplication.ExitCode}.");
+
+                            retryTest = exceptionInExerciseApplication || applicationHadNonZeroExitCode;
 
                             if (retryTest)
                             {
+                                var message = $"Retrying test. Exception caught when exercising test app = {exceptionInExerciseApplication}, application had non-zero exit code = {applicationHadNonZeroExitCode}.";
+                                TestLogger?.WriteLine(message);
                                 Thread.Sleep(1000);
                                 numberOfTries++;
                             }
