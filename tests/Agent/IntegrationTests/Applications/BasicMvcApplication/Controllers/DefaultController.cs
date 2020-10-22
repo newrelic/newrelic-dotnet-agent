@@ -52,7 +52,9 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public ActionResult SimulateLostTransaction()
         {
-            WebRequest.Create("http://www.newrelic.com").GetResponse();
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+            WebRequest.Create("https://www.newrelic.com").GetResponse();
 
             // Simulate lost transaction by clearing HttpContext
             HttpContext?.Items?.Clear();
@@ -68,9 +70,11 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public async Task<string> HttpClient()
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
             // Do at least one request with a base address to ensure that we handle combining URLs correctly
-            await new HttpClient { BaseAddress = new Uri("http://www.newrelic.com") }.GetStringAsync("/about");
-            await new HttpClient().GetStringAsync("http://docs.newrelic.com");
+            await new HttpClient { BaseAddress = new Uri("https://www.newrelic.com") }.GetStringAsync("/about");
+            await new HttpClient().GetStringAsync("https://docs.newrelic.com");
 
             return "Worked";
         }
@@ -78,12 +82,14 @@ namespace BasicMvcApplication.Controllers
         [HttpGet]
         public async Task<string> HttpClientTaskCancelled()
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
             try
             {
                 using (var client = new HttpClient())
                 {
                     client.Timeout = new TimeSpan(5);
-                    await client.GetStringAsync("http://www.newrelic.com");
+                    await client.GetStringAsync("https://www.newrelic.org");
                 }
             }
             catch (Exception)
