@@ -2044,18 +2044,15 @@ namespace NewRelic.Agent.Core.Configuration
 
         private void ParseExpectedErrorConfigurations()
         {
-            var localExpectedErrorMessages = new Dictionary<string, IEnumerable<string>>();
+            var expectedErrorInfo = _serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages?.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 
-            foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
+            if (expectedErrorInfo == null)
             {
-                var messages = errorClass.message;
-                if (messages != null)
-                {
-                    localExpectedErrorMessages.Add(errorClass.name, messages);
-                }
+                expectedErrorInfo = _localConfiguration.errorCollector.expectedMessages
+                .Where(x => x.message != null)
+                .Select(x => new KeyValuePair<string, IEnumerable<string>>(x.name, x.message))
+                .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
             }
-
-            var expectedErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages, localExpectedErrorMessages).ToDictionary();
 
             var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
 
@@ -2069,22 +2066,25 @@ namespace NewRelic.Agent.Core.Configuration
                 {
                     expectedErrorInfo[className] = Enumerable.Empty<string>();
                     Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
-                    expectedMessages.Remove(className);
                 }
-                else if (count < MaxExptectedErrorConfigEntries)
+                else if (count >= MaxExptectedErrorConfigEntries)
                 {
-                    expectedErrorInfo.Add(className, Enumerable.Empty<string>());
+                    Log.Warn($"Expected Errors - {className} Exceeds the limit of {MaxExptectedErrorConfigEntries} and will be ignored.");
+                }
+                else
+                {
+                    expectedErrorInfo[className] = Enumerable.Empty<string>();
                     count++;
                 }
             }
 
             var expectedStatusCodesArrayLocal = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries);
-            var expectedStatusCodesArrayServer = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.Select(x => x.ToString());
+            var expectedStatusCodesArrayServer = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes;
 
             var expectedStatusCodesArray = ServerOverrides(expectedStatusCodesArrayServer, expectedStatusCodesArrayLocal);
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? (new string[0]);
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? new string[0];
 
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
             ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
@@ -2093,24 +2093,20 @@ namespace NewRelic.Agent.Core.Configuration
 
         private void ParseIgnoreErrorConfigurations()
         {
-            var localIgnoreErrorMessages = new Dictionary<string, IEnumerable<string>>();
+            var ignoreErrorInfo = _serverConfiguration.RpmConfig.ErrorCollectorIgnoreMessages?
+                .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 
-            foreach (var errorClass in _localConfiguration.errorCollector.ignoreMessages)
+            if (ignoreErrorInfo == null)
             {
-                var messages = errorClass.message;
-                if (messages != null)
-                {
-                    localIgnoreErrorMessages.Add(errorClass.name, messages);
-                }
+                ignoreErrorInfo = _localConfiguration.errorCollector.ignoreMessages
+                .Where(x => x.message != null)
+                .Select(x => new KeyValuePair<string, IEnumerable<string>>(x.name, x.message))
+                .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
             }
-
-            var ignoreErrorInfo = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreMessages, localIgnoreErrorMessages).ToDictionary();
 
             var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
             var ignoreClassesFromErrorCollectorIgnoreErrorsConfig = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore, _localConfiguration.errorCollector.ignoreErrors.exception);
-
-            IgnoreErrorsForAgentSettings = ignoreClassesFromErrorCollectorIgnoreErrorsConfig;
 
             var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass)
                 .Concat(ignoreClassesFromErrorCollectorIgnoreErrorsConfig);
@@ -2123,22 +2119,25 @@ namespace NewRelic.Agent.Core.Configuration
                 {
                     ignoreErrorInfo[className] = Enumerable.Empty<string>();
                     Log.Warn($"{className} class is specified in both errorCollector.ignoreClasses and errorCollector.ingoreMessages configurations. Any errors of this class will be ignored.");
-                    ignoreMessages.Remove(className);
                 }
-                else if (count < MaxIgnoreErrorConfigEntries)
+                else if (count >= MaxIgnoreErrorConfigEntries)
+                {
+                    Log.Warn($"Ignore Errors - {className} Exceeds the limit of {MaxIgnoreErrorConfigEntries} and will be ignored.");
+                }
+                else
                 {
                     ignoreErrorInfo.Add(className, Enumerable.Empty<string>());
                     count++;
                 }
             }
 
-            var localStatusCodesToIgnore = new List<string>();
-            foreach (var localCode in _localConfiguration.errorCollector.ignoreStatusCodes.code)
+            var ignoreStatusCodes = _serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore;
+            if (ignoreStatusCodes == null)
             {
-                localStatusCodesToIgnore.Add(localCode.ToString(CultureInfo.InvariantCulture));
+                ignoreStatusCodes = _localConfiguration.errorCollector.ignoreStatusCodes.code
+                    .Select(x => x.ToString(CultureInfo.InvariantCulture))
+                    .ToList();
             }
-
-            var ignoreStatusCodes = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorStatusCodesToIgnore, localStatusCodesToIgnore);
 
             foreach (var code in ignoreStatusCodes)
             {
@@ -2148,6 +2147,7 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
+            IgnoreErrorsForAgentSettings = ignoreClassesFromErrorCollectorIgnoreErrorsConfig;
             IgnoreErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreErrorInfo);
             IgnoreErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(ignoreMessages);
             IgnoreErrorClassesForAgentSettings = ignoreClasses;

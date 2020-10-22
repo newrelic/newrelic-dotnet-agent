@@ -1114,6 +1114,7 @@ namespace NewRelic.Agent.Core.Configuration.UnitTest
             var expectedErrorClasses = new[] { "ErrorClass1", "ErrorClass2" };
             var expectedErrorMessages = new Dictionary<string, IEnumerable<string>>
             {
+                { "ErrorClass2", new[] { "error message 1 in ErrorClass2" }  },
                 { "ErrorClass3", new[] { "error message 1 in ErrorClass3", "error message 2 in ErrorClass3" } }
             };
 
