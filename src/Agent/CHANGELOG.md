@@ -11,6 +11,7 @@ New Feature Description
 Fixes Issue [#XX](https://github.com/newrelic/newrelic-dotnet-agent/issues/XX)
 
 ### Fixes
+* Modifies WCF Instrumentation to address [#314](https://github.com/newrelic/newrelic-dotnet-agent/issues/314) by minimizing the reliance upon handled exceptions during the  attempt to capture CAT and DT payloads.
 
 
 ## [8.33] - 2020-10-12
