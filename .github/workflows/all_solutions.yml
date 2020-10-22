@@ -14,7 +14,16 @@ env:
 
 jobs:
 
+  cancel-previous-workflow-runs:
+    name: Cancel Previous Runs
+    runs-on: ubuntu-latest
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-test-windows-profiler:
+    needs: cancel-previous-workflow-runs
     name: Build Windows Profiler
 
     runs-on: windows-2019
@@ -69,6 +78,7 @@ jobs:
         if-no-files-found: error
 
   build-test-linux-profiler:
+    needs: cancel-previous-workflow-runs
     name: Build Linux Profiler
 
     runs-on: ubuntu-18.04
