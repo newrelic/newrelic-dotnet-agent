@@ -89,7 +89,7 @@ namespace NewRelic.Agent.Configuration
         uint ErrorsMaximumPerPeriod { get; }
         IEnumerable<MatchRule> ExpectedStatusCodes { get; }
         IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; }
-        IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; }
+        //IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; }
         IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; }
         IEnumerable<string> IgnoreErrorsForAgentSettings { get; }

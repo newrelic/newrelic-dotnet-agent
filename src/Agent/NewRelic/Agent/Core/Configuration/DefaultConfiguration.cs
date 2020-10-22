@@ -1183,7 +1183,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; private set; }
         public IEnumerable<MatchRule> ExpectedStatusCodes { get; private set; }
         public IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; private set; }
-        public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
+        //public IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; private set; }
         public IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; private set; }
 
         #endregion
@@ -2043,10 +2043,10 @@ namespace NewRelic.Agent.Core.Configuration
 
         private void ParseExpectedErrorConfigurations()
         {
+            //Keep first or Keep Last?
+            var expectedErrorInfo = _serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages?.ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepLast);
 
-            var expectedErrorInfo = _serverConfiguration.RpmConfig.ErrorCollectorExpectedMessages?.ToDictionary();
-
-            if (expectedErrorInfo == null || expectedErrorInfo.Count == 0)
+            if (expectedErrorInfo == null)  //OPEN QUESTION: ABOUT EMPTY UI (==0)
             {
                 foreach (var errorClass in _localConfiguration.errorCollector.expectedMessages)
                 {
@@ -2057,18 +2057,13 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
+            //expectedErrorInfo   is a Dictionary <Error Class, List<Messages>>
 
-
-
-            var expectedClasses = _serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses?.ToList();
-            if (expectedClasses == null || expectedClasses.Count == 0)
-            {
-                expectedClasses = _localConfiguration.errorCollector.expectedClasses.errorClass;
-            }
+            var expectedClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedClasses, _localConfiguration.errorCollector.expectedClasses.errorClass);
 
 
             //WHY DO WE HAVE A SECOND DICTIONARY OF THE SAME ITEMS??
-            var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
+            //var expectedMessages = new Dictionary<string, IEnumerable<string>>(expectedErrorInfo);
 
             var count = expectedErrorInfo.Count;
 
@@ -2076,13 +2071,13 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 if (expectedErrorInfo.ContainsKey(className))
                 {
-                    expectedErrorInfo[className] = Enumerable.Empty<string>();
-                    Log.Warn($"{className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
-                    expectedMessages.Remove(className);
+                    expectedErrorInfo[className] = Enumerable.Empty<string>();      //What is used in the error collector
+                    Log.Warn($"Expected Errors - {className} class is specified in both errorCollector.expectedClasses and errorCollector.expectedMessages configurations. Any errors of this class will be marked as expected.");
+                    //expectedMessages.Remove(className);                             //What is sent up in the connect to the back end... Never used again
                 }
                 else if (count >= MaxExptectedErrorConfigEntries)
                 {
-                    Log.Warn($"{className} Exceeds the limit of {MaxExptectedErrorConfigEntries} and will be ignored.");
+                    Log.Warn($"Expected Errors - {className} Exceeds the limit of {MaxExptectedErrorConfigEntries} and will be ignored.");
                 }
                 else
                 { 
@@ -2091,21 +2086,17 @@ namespace NewRelic.Agent.Core.Configuration
                 }
             }
 
-            var expectedStatusCodesArray = _serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.Select(x => x.ToString())?.ToList();
-            if(expectedStatusCodesArray == null || expectedStatusCodesArray.Count == 0)
-            {
-                expectedStatusCodesArray = _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries)?.ToList();
-            }
+            var expectedStatusCodesArray = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorExpectedStatusCodes?.Select(x => x.ToString()),
+                _localConfiguration.errorCollector.expectedStatusCodes?.Split(StringSeparators.Comma, StringSplitOptions.RemoveEmptyEntries));
 
             ExpectedStatusCodes = ParseExpectedStatusCodesArray(expectedStatusCodesArray);
 
-            //THIS IS NOT NEEDED.  Build it on the fly
-            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? new List<string>();
+            ExpectedErrorStatusCodesForAgentSettings = expectedStatusCodesArray ?? new string[0];
 
             ExpectedErrorsConfiguration = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedErrorInfo);
 
             //THIS DOESN'T FEEL LIKE IT'S NEEDED.  Build it on the fly.
-            ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
+            //ExpectedErrorMessagesForAgentSettings = new ReadOnlyDictionary<string, IEnumerable<string>>(expectedMessages);
 
             ExpectedErrorClassesForAgentSettings = expectedClasses;
         }
@@ -2115,7 +2106,7 @@ namespace NewRelic.Agent.Core.Configuration
             var ignoreErrorInfo = _serverConfiguration.RpmConfig.ErrorCollectorIgnoreMessages?
                 .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepFirst);
 
-            if (ignoreErrorInfo == null || ignoreErrorInfo.Count() == 0)
+            if (ignoreErrorInfo == null)
             {
                 ignoreErrorInfo = _localConfiguration.errorCollector.ignoreMessages
                     .Where(x => x.message != null)
@@ -2123,20 +2114,12 @@ namespace NewRelic.Agent.Core.Configuration
                     .ToDictionary(IEnumerableExtensions.DuplicateKeyBehavior.KeepLast);
             }
 
-            var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
+            //var ignoreMessages = new Dictionary<string, IEnumerable<string>>(ignoreErrorInfo);
 
+            var IgnoreErrorsForAgentSettings = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore,
+             _localConfiguration.errorCollector.ignoreErrors.exception);
 
-            var IgnoreErrorsForAgentSettings = _serverConfiguration.RpmConfig.ErrorCollectorErrorsToIgnore?.ToList();
-            if (IgnoreErrorsForAgentSettings == null || IgnoreErrorsForAgentSettings.Count == 0)
-            {
-                IgnoreErrorsForAgentSettings = _localConfiguration.errorCollector.ignoreErrors.exception;
-            }
-
-            var ignoreClasses = _serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses?.ToList();
-            if(ignoreClasses == null || ignoreClasses.Count == 0)
-            {
-                ignoreClasses = _localConfiguration.errorCollector.ignoreClasses.errorClass;
-            }
+            var ignoreClasses = ServerOverrides(_serverConfiguration.RpmConfig.ErrorCollectorIgnoreClasses, _localConfiguration.errorCollector.ignoreClasses.errorClass);
 
             var count = ignoreErrorInfo.Count;
 
@@ -2146,7 +2129,6 @@ namespace NewRelic.Agent.Core.Configuration
                 {
                     ignoreErrorInfo[className] = Enumerable.Empty<string>();
                     Log.Warn($"{className} class is specified in both errorCollector.ignoreClasses and errorCollector.ingoreMessages configurations. Any errors of this class will be ignored.");
-                    ignoreMessages.Remove(className);
                 }
                 else if (count < MaxIgnoreErrorConfigEntries)
                 {
@@ -2162,6 +2144,8 @@ namespace NewRelic.Agent.Core.Configuration
                     .Select(x => x.ToString(CultureInfo.InvariantCulture))
                     .ToList();
             }
+
+            //TODO:  Double-check this.  Are we mixing Error Types (System.NullRefException) with Status Codes (200,300,400)?
 
             foreach (var code in ignoreStatusCodes)
             {

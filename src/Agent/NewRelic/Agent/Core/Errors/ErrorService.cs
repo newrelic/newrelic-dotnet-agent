@@ -151,14 +151,12 @@ namespace NewRelic.Agent.Core.Errors
 
             if (source.TryGetValue(exceptionTypeName, out var messages))
             {
-                if (messages != Enumerable.Empty<string>())
-                {
-                    return ContainsSubstring(messages, exception.Message);
-                }
-                else
+                if (messages.Count() == 0)
                 {
                     return true;
                 }
+
+                return ContainsSubstring(messages, exception.Message);
             }
 
             return false;
