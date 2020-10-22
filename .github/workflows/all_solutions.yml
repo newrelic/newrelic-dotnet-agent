@@ -24,6 +24,7 @@ jobs:
 
   build-test-windows-profiler:
     needs: cancel-previous-workflow-runs
+    if: ${{ always() }}
     name: Build Windows Profiler
 
     runs-on: windows-2019
@@ -79,6 +80,7 @@ jobs:
 
   build-test-linux-profiler:
     needs: cancel-previous-workflow-runs
+    if: ${{ always() }}
     name: Build Linux Profiler
 
     runs-on: ubuntu-18.04
