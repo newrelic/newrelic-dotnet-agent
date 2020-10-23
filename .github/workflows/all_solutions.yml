@@ -533,9 +533,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: integration-test-artifacts-${{ matrix.namespace }}-${{ github.run_id }}
-          path: |
-            C:\IntegrationTestWorkingDirectory\**\*.log
-            C:\IntegrationTestWorkingDirectory\**\*.config
+        path: |
+          C:\IntegrationTestWorkingDirectory\**\*.log
+          C:\IntegrationTestWorkingDirectory\**\*.config
         if-no-files-found: error
 
     - name: Archive Test Artifacts
