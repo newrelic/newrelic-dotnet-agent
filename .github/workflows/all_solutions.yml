@@ -72,7 +72,7 @@ jobs:
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: profiler-${{ github.run_id }}
+        name: profiler
         path: |
           ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
         if-no-files-found: error
@@ -118,7 +118,7 @@ jobs:
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: profiler-${{ github.run_id }}
+        name: profiler
         path: |
           ${{ github.workspace }}/src/Agent/_profilerBuild/
         if-no-files-found: error
@@ -157,7 +157,7 @@ jobs:
     - name: Download Profiler Artifacts Before Agent Build
       uses: actions/download-artifact@v2
       with:
-        name: profiler-${{ github.run_id }}
+        name: profiler
         path: ${{ github.workspace }}/src/Agent/_profilerBuild/
     
     - name: Install dependencies for FullAgent.sln
@@ -181,7 +181,7 @@ jobs:
     - name: Archive FullAgent Home folders
       uses: actions/upload-artifact@v2
       with:
-        name: homefolders-${{ github.run_id }}
+        name: homefolders
         path: |
           ${{ github.workspace }}\src\Agent\newrelichome_x64
           ${{ github.workspace }}\src\Agent\newrelichome_x64_coreclr
@@ -259,90 +259,9 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: test-results-${{ github.run_id }}
+        name: test-results
         path: ${{ github.workspace }}\TestResults
         if-no-files-found: error
-
-  publish-test-results:
-    needs: build-test-fullagent-msi
-    if: ${{ always() }}
-    name: Publish Test Results
-
-    runs-on: windows-2019
-
-    env:
-      results_name: ""
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        ref: gh-pages
-        fetch-depth: 0
-
-    - name: Download Test Results Artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: test-results-${{ github.run_id }}
-        path: testresults
-
-    - name: Move Test Results
-      run: |
-        Write-Host "Change to testresults"
-        cd testresults
-
-        Write-Host "Create the folder"
-        $resultname = "fullagent_msi-${{ github.run_id }}".ToLower().Replace(" ", "")
-        Write-Host "::set-env name=results_name::$resultname"
-
-        Write-Host "Check if testresults folder exists, create if not."
-        if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults" )) {
-          New-Item -Path "${{ github.workspace }}\docs" -Name "testresults" -ItemType "directory" }
-        
-        Write-Host "Check if test run results ($resultname) folder exists, create if not."
-        if ( -Not (Test-Path "${{ github.workspace }}\docs\testresults\$resultname" )) {
-          New-Item -Path "${{ github.workspace }}\docs\testresults" -Name "$resultname" -ItemType "directory" }
-
-        Write-Host "Copy the files and overwrite if already exists"
-        Copy-Item .\* -Destination ${{ github.workspace }}\docs\testresults\$resultname\ -Force
-
-        Write-Host "Confirm Folder Exists"
-        Test-Path "${{ github.workspace }}\docs\testresults\$resultname"
-      shell: powershell
-
-    - name: Commit files
-      run: |
-        Write-Host "git config"
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-
-        Write-Host "Stage files in git"
-        $ErrorActionPreference = 'Continue'
-        git add -A
-
-        Write-Host "git commit"
-        git commit -am "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
-
-        Write-Host "git pull"
-        git pull
-      shell: powershell
-
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        branch: gh-pages
-        github_token: ${{ secrets.GITHUB_TOKEN }}    
-
-    - name: Create Check-run with test results
-      uses: LouisBrunner/checks-action@v1.0.0
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: "Test Results for ${{ github.workflow }} ${{ github.run_id }}"
-        status: completed
-        conclusion: neutral
-        output: |
-          { "summary": "${{ steps.test.outputs.summary }}",
-          "text_description": "[FullAgent Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/agent-results.html) [AWS Lambda Test Results](https://newrelic.github.io/newrelic-dotnet-agent/testresults/${{ env.results_name }}/lambda-results.html" }
 
   build-integration-tests:
     needs: build-test-fullagent-msi
@@ -377,7 +296,7 @@ jobs:
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: integrationtests-${{ github.run_id }}
+        name: integrationtests
         path: |
           ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
           ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
@@ -418,7 +337,7 @@ jobs:
     - name: Archive Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: unboundedintegrationtests-${{ github.run_id }}
+        name: unboundedintegrationtests
         path: |
           ${{ github.workspace }}\test.runsettings  # Force the artifacts to use repo root as root of package.
           ${{ github.workspace }}\tests\Agent\IntegrationTests\**\bin\**\*
@@ -494,13 +413,13 @@ jobs:
     - name: Download Agent Home Folders
       uses: actions/download-artifact@v2
       with:
-        name: homefolders-${{ github.run_id }}
+        name: homefolders
         path: src/Agent
 
     - name: Download Integration Test Artifacts
       uses: actions/download-artifact/@v2
       with:
-        name: integrationtests-${{ github.run_id }}
+        name: integrationtests
         # Should not need a path because the integration test artifacts are archived with the full directory structure
 
     - name: Install dependencies
@@ -532,7 +451,7 @@ jobs:
       if: ${{ failure() }}
       uses: actions/upload-artifact@v2
       with:
-        name: integration-test-artifacts-${{ matrix.namespace }}-${{ github.run_id }}
+        name: integration-test-artifacts
         path: |
           C:\IntegrationTestWorkingDirectory\**\*.log
           C:\IntegrationTestWorkingDirectory\**\*.config
@@ -542,7 +461,7 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: integration-test-artifacts-${{ matrix.namespace }}-${{ github.run_id }}
+        name: integration-test-artifacts
         path: |
           C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
         if-no-files-found: error
@@ -578,13 +497,13 @@ jobs:
     - name: Download Agent Home Folders
       uses: actions/download-artifact@v2
       with:
-        name: homefolders-${{ github.run_id }}
+        name: homefolders
         path: src/Agent
 
     - name: Download Unbounded Integration Test Artifacts
       uses: actions/download-artifact/@v2
       with:
-        name: unboundedintegrationtests-${{ github.run_id }}
+        name: unboundedintegrationtests
         # Should not need a path because the integration test artifacts are archived with the full directory structure
     
     - name: Setup TLS
@@ -664,7 +583,7 @@ jobs:
       if: ${{ failure() }}
       uses: actions/upload-artifact@v2
       with:
-        name: integration-test-artifacts-${{ matrix.namespace }}-${{ github.run_id }}
+        name: integration-test-artifacts
         path: |
           C:\IntegrationTestWorkingDirectory\**\*.log
           C:\IntegrationTestWorkingDirectory\**\*.config
@@ -674,7 +593,7 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: integration-test-artifacts-${{ matrix.namespace }}-${{ github.run_id }}
+        name: integration-test-artifacts
         path: |
           C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
         if-no-files-found: error
@@ -689,6 +608,8 @@ jobs:
     steps:
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v2
+      with:
+        name: integration-test-artifacts
       
     - name: Combine Integration Results
       run: |
@@ -699,6 +620,6 @@ jobs:
     - name: Upload combined artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: all-integration-test-results-${{ github.run_id }}
+        name: all-integration-test-results
         path: ./all-integration-test-results
         if-no-files-found: error
