@@ -47,6 +47,8 @@ namespace NewRelic.Agent.IntegrationTests.AgentFeatures
         public void Test()
         {
             NrAssert.Multiple(
+                () => Assert.NotNull(_browserTimingHeader),
+                () => Assert.NotNull(_htmlContentAfterCallToGetBrowserTiming),
                 () => Assert.Contains("NREUM", _browserTimingHeader),
                 ShouldNotAutoInstrumentAfterCallToGetBrowserTimingHeader
             );
