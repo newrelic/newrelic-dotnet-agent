@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewRelic.Agent.IntegrationTestHelpers;
@@ -38,7 +39,7 @@ namespace NewRelic.Agent.IntegrationTests.BasicInstrumentation
                 exerciseApplication: () =>
                 {
                     _fixture.InvokeAsyncCall();
-                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex);
+                    _fixture.AgentLog.WaitForLogLine(AgentLogBase.TransactionSampleLogLineRegex, TimeSpan.FromMinutes(2));
                 });
             _fixture.Initialize();
         }

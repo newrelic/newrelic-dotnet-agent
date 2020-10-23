@@ -4,10 +4,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
 using NewRelic.Agent.IntegrationTestHelpers;
 using NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures;
-using Xunit;
+using NewRelic.Testing.Assertions;
 
 namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
@@ -50,7 +49,14 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 
             TestLogger?.WriteLine($"[{nameof(AspNetCoreDistTraceRequestChainFixture)}]: Starting A -> B -> C request chain with URL: {firstCallUrl}");
 
-            DownloadStringAndAssertEqual(firstCallUrl, "Worked", headers);
+            if (thirdAppAction.IsEqualTo("CallError"))
+            {
+                DownloadStringAndAssertContains(firstCallUrl, "Exception occurred in ");
+            }
+            else
+            {
+                DownloadStringAndAssertEqual(firstCallUrl, "Worked", headers);
+            }
         }
 
         protected RemoteService SetupDistributedTracingApplication()

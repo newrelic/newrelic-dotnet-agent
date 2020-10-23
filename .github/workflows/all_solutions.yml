@@ -511,7 +511,7 @@ jobs:
 
     - name: Run Integration Tests
       run: |
-        if ($Env:enhanced_logging) {
+        if ($Env:enhanced_logging -eq $True) {
           Write-Host "List ports in use"
           netstat -no  
         }
@@ -519,7 +519,7 @@ jobs:
         Write-Host "Run tests"
         ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.xml
         
-        if ($Env:enhanced_logging) {
+        if ($Env:enhanced_logging -eq $True) {
           Write-Host "Get HostableWebCore errors (if any)"
           Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
 
@@ -644,14 +644,14 @@ jobs:
 
     - name: Run Unbounded Integration Tests
       run: |
-        if ($Env:enhanced_logging) {
+        if ($Env:enhanced_logging -eq $True) {
           Write-Host "List ports in use"
           netstat -no  
         }
 
         ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.html
 
-        if ($Env:enhanced_logging) {
+        if ($Env:enhanced_logging -eq $True) {
           Write-Host "Get HostableWebCore errors (if any)"
           Get-EventLog -LogName Application -Source HostableWebCore -ErrorAction:Ignore
 

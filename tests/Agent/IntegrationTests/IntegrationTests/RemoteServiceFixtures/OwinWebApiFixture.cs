@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Net;
@@ -149,7 +150,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
             var address = $"http://localhost:{Port}/AsyncAwait/ErrorResponse";
 
             var webClient = new WebClient();
-            var response = webClient.DownloadString(address);
+            try
+            {
+                var response = webClient.DownloadString(address);
+            }
+            catch (WebException)
+            {
+                // This is expected behavior.  We need to catch this exception here to make sure it doesn't
+                // bubble up to the test framework and fail the test.
+            }
         }
 
         public void GetManualTaskRunBlocked()

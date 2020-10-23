@@ -60,7 +60,7 @@ namespace NewRelic.Agent.Core.Configuration
         public IDictionary<string, IEnumerable<string>> ErrorCollectorExpectedMessages { get; set; }
 
         [JsonProperty("error_collector.expected_status_codes")]
-        public string ErrorCollectoryExpectedStatusCodes { get; set; }
+        public IEnumerable<string> ErrorCollectorExpectedStatusCodes { get; set; }
 
         [JsonProperty("transaction_tracer.stack_trace_threshold")]
         public double TransactionTracerStackThreshold { get; set; }

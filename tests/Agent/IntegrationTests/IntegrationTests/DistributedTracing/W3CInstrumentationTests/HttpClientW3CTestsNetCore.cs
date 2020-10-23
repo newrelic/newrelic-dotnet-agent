@@ -22,7 +22,7 @@ namespace NewRelic.Agent.IntegrationTests.DistributedTracing.W3CInstrumentationT
     {
         private readonly AspNetCoreDistTraceRequestChainFixture _fixture;
 
-        private const int ExpectedTransactionCount = 2;
+        private const int ExpectedTransactionCount = 1;
 
         private const string TestTraceId = "12345678901234567890123456789012";
         private const string TestTraceParent = "1234567890123456";
