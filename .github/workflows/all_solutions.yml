@@ -649,7 +649,7 @@ jobs:
           netstat -no  
         }
 
-        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -html ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.html
+        ${{ env.xunit_console }} ${{ env.unbounded_tests_dll }} -namespace NewRelic.Agent.UnboundedIntegrationTests.${{ matrix.namespace }} -parallel none -xmlv1 C:\IntegrationTestWorkingDirectory\TestResults\${{ matrix.namespace }}_testResults.html
 
         if ($Env:enhanced_logging) {
           Write-Host "Get HostableWebCore errors (if any)"
