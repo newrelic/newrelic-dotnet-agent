@@ -90,7 +90,7 @@ namespace NewRelic.Agent.Configuration
         IEnumerable<MatchRule> ExpectedStatusCodes { get; }
         IEnumerable<string> ExpectedErrorClassesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> ExpectedErrorMessagesForAgentSettings { get; }
-        string ExpectedErrorStatusCodesForAgentSettings { get; }
+        IEnumerable<string> ExpectedErrorStatusCodesForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> ExpectedErrorsConfiguration { get; }
         IEnumerable<string> IgnoreErrorsForAgentSettings { get; }
         IDictionary<string, IEnumerable<string>> IgnoreErrorsConfiguration { get; }

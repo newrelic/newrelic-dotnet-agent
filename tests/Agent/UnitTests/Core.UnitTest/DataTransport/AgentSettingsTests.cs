@@ -36,7 +36,7 @@ namespace NewRelic.Agent.Core.Configuration
             {
                 { "ExceptionClass2", new [] { "exception message 1" } }
             };
-        const string ErrorCollectorExpectedStatusCodes = "403,500";
+        readonly string[] ErrorCollectorExpectedStatusCodes = { "403", "500" };
         TimeSpan TransactionTracerStackThreshold = new TimeSpan(0, 0, 11);
         const bool TransactionTracerExplainEnabled = false;
         TimeSpan TransactionTracerExplainThreshold = new TimeSpan(0, 0, 12);
@@ -98,7 +98,7 @@ namespace NewRelic.Agent.Core.Configuration
                 ErrorCollectorIgnoreMessages = configuration.IgnoreErrorMessagesForAgentSettings,
                 ErrorCollectorExpectedClasses = configuration.ExpectedErrorClassesForAgentSettings,
                 ErrorCollectorExpectedMessages = configuration.ExpectedErrorMessagesForAgentSettings,
-                ErrorCollectoryExpectedStatusCodes = configuration.ExpectedErrorStatusCodesForAgentSettings,
+                ErrorCollectorExpectedStatusCodes = configuration.ExpectedErrorStatusCodesForAgentSettings,
                 TransactionTracerStackThreshold = configuration.TransactionTracerStackThreshold.TotalSeconds,
                 TransactionTracerExplainEnabled = configuration.SqlExplainPlansEnabled,
                 TransactionTracerExplainThreshold = configuration.SqlExplainPlanThreshold.TotalSeconds,
@@ -113,7 +113,7 @@ namespace NewRelic.Agent.Core.Configuration
 
             var json = JsonConvert.SerializeObject(agentSettings);
 
-            const string expectedJson = @"{""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""using_server_side_config"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""distributed_tracing.enabled"":true,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_errors"":[""401"",""404""],""error_collector.ignore_classes"":[""ExceptionClass1""],""error_collector.ignore_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_classes"":[""ExceptionClass1""],""error_collector.expected_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_status_codes"":""403,500"",""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000}";
+            const string expectedJson = @"{""apdex_t"":10.0,""cross_process_id"":""acctId#appId"",""encoding_key"":""thisistheencodingkey"",""trusted_account_ids"":[123456,98765],""max_stack_trace_lines"":100,""using_server_side_config"":false,""thread_profiler.enabled"":false,""cross_application_tracer.enabled"":false,""distributed_tracing.enabled"":true,""error_collector.enabled"":true,""error_collector.ignore_status_codes"":[""401"",""404""],""error_collector.ignore_errors"":[""401"",""404""],""error_collector.ignore_classes"":[""ExceptionClass1""],""error_collector.ignore_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_classes"":[""ExceptionClass1""],""error_collector.expected_messages"":{""ExceptionClass2"":[""exception message 1""]},""error_collector.expected_status_codes"":[""403"",""500""],""transaction_tracer.stack_trace_threshold"":11.0,""transaction_tracer.explain_enabled"":false,""transaction_tracer.max_sql_statements"":100,""transaction_tracer.max_explain_plans"":10,""transaction_tracer.explain_threshold"":12.0,""transaction_tracer.transaction_threshold"":13.0,""transaction_tracer.record_sql"":""obfuscate"",""slow_sql.enabled"":false,""browser_monitoring.auto_instrument"":true,""transaction_event.max_samples_stored"":10000}";
 
             Assert.AreEqual(expectedJson, json);
         }
