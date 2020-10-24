@@ -614,12 +614,12 @@ jobs:
     - name: Combine Integration Results
       run: |
         mkdir all-integration-test-results
-        Get-ChildItem -Path .\integration-test-artifacts* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
+        Get-ChildItem -Path ${{ github.workspace }}\integration-test-artifacts -Include *.xml -Recurse | ForEach-Object { cp $_.FullName ${{ github.workspace }}\all-integration-test-results }
       shell: powershell
       
     - name: Upload combined artifacts
       uses: actions/upload-artifact@v2
       with:
         name: all-integration-test-results
-        path: ./all-integration-test-results
+        path: ${{ github.workspace }}/all-integration-test-results
         if-no-files-found: error
