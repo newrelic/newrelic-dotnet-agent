@@ -32,13 +32,27 @@ jobs:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
       profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
-      #<other env vars here>
+      profiler_md5: ""
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
+
+    - name: MD5 Profiler
+      run: |
+        pip install checksumdir
+        $profsum = checksumdir -a md5 ${{ env.profiler_path }}
+        echo "profiler_md5=${profsum}" >> $GITHUB_ENV
+      shell: powershell
+
+    - name: Cache Profiler  https://unix.stackexchange.com/questions/35832/how-do-i-get-the-md5-sum-of-a-directorys-contents-as-one-sum
+      id: cache-profiler-win
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+        key: ${{ runner.os }}-primes
 
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.0.1
@@ -73,8 +87,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: profiler
-        path: |
-          ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
+        path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
         if-no-files-found: error
 
   build-test-linux-profiler:
@@ -613,7 +626,16 @@ jobs:
       
     - name: Combine Integration Results
       run: |
-        mkdir all-integration-test-results
+        Write-Host "Create all-integration-test-results"
+        Get-ChildItem
+        mkdir ${{ github.workspace }}\all-integration-test-results
+
+        Write-Host "Check all-integration-test-results"
+        Get-ChildItem -Path ${{ github.workspace }}
+
+        Write-Host "Check ${{ github.workspace }}\integration-test-artifacts"
+        Get-ChildItem -Path ${{ github.workspace }}\integration-test-artifacts
+
         Get-ChildItem -Path ${{ github.workspace }}\integration-test-artifacts -Include *.xml -Recurse | ForEach-Object { cp $_.FullName ${{ github.workspace }}\all-integration-test-results }
       shell: powershell
       
