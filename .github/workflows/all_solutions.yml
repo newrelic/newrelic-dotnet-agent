@@ -612,7 +612,7 @@ jobs:
         if-no-files-found: error
         
   combine-integration-test-results:
-    needs: run-integration-tests
+    needs: [ run-integration-tests, run-unbounded-tests ]
     if: ${{ always() }}
     name: Combine Integration Test Results
         
@@ -623,19 +623,11 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: integration-test-artifacts
+        path: ${{ github.workspace }}\integration-test-artifacts
       
     - name: Combine Integration Results
       run: |
-        Write-Host "Create all-integration-test-results"
-        Get-ChildItem
         mkdir ${{ github.workspace }}\all-integration-test-results
-
-        Write-Host "Check all-integration-test-results"
-        Get-ChildItem -Path ${{ github.workspace }}
-
-        Write-Host "Check ${{ github.workspace }}\integration-test-artifacts"
-        Get-ChildItem -Path ${{ github.workspace }}\integration-test-artifacts
-
         Get-ChildItem -Path ${{ github.workspace }}\integration-test-artifacts -Include *.xml -Recurse | ForEach-Object { cp $_.FullName ${{ github.workspace }}\all-integration-test-results }
       shell: powershell
       
