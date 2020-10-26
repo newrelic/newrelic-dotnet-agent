@@ -552,13 +552,10 @@ jobs:
       run: |
         Write-Host "Installing HostableWebCore Feature"
         Enable-WindowsOptionalFeature -Online -FeatureName IIS-HostableWebCore
-
-        if ("${{ matrix.namespace }}" -eq "Msmq") {
-          Write-Host "Installing Msmq Features"
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
-          Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
-        }
+        Write-Host "Installing Msmq Features"
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-HTTP -All
+        Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Triggers -All
 
         if ("${{ matrix.namespace }}" -eq "MsSql") {
           Write-Host "Installing MSSQL CLI"
@@ -609,31 +606,4 @@ jobs:
         name: integration-test-artifacts
         path: |
           C:\IntegrationTestWorkingDirectory\TestResults\**\*TestResults.xml
-        if-no-files-found: error
-        
-  combine-integration-test-results:
-    needs: [ run-integration-tests, run-unbounded-tests ]
-    if: ${{ always() }}
-    name: Combine Integration Test Results
-        
-    runs-on: windows-2019
-        
-    steps:
-    - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: integration-test-artifacts
-        path: ${{ github.workspace }}\integration-test-artifacts
-      
-    - name: Combine Integration Results
-      run: |
-        mkdir ${{ github.workspace }}\all-integration-test-results
-        Get-ChildItem -Path ${{ github.workspace }}\integration-test-artifacts -Include *.xml -Recurse | ForEach-Object { cp $_.FullName ${{ github.workspace }}\all-integration-test-results }
-      shell: powershell
-      
-    - name: Upload combined artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: all-integration-test-results
-        path: ${{ github.workspace }}/all-integration-test-results
         if-no-files-found: error
