@@ -32,27 +32,12 @@ jobs:
       profiler_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler
       profiler_solution_path: ${{ github.workspace }}\src\Agent\NewRelic\Profiler\NewRelic.Profiler.sln
       output_path: ${{ github.workspace }}\src\Agent\_profilerBuild
-      profiler_md5: ""
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-
-    - name: MD5 Profiler
-      run: |
-        pip install checksumdir
-        $profsum = checksumdir -a md5 ${{ env.profiler_path }}
-        echo "profiler_md5=${profsum}" >> $GITHUB_ENV
-      shell: powershell
-
-    - name: Cache Profiler  https://unix.stackexchange.com/questions/35832/how-do-i-get-the-md5-sum-of-a-directorys-contents-as-one-sum
-      id: cache-profiler-win
-      uses: actions/cache@v2
-      with:
-        path: ${{ github.workspace }}\src\Agent\_profilerBuild\**\*
-        key: ${{ runner.os }}-primes
 
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.0.1
